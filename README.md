@@ -40,6 +40,30 @@ node scripts/export-scene.mjs examples/reference-stage-scene.json --out examples
 
 此命令生成 HTML，不渲染 MP4。
 
+## 部署到 Vercel
+
+在 Vercel 导入此 GitHub 仓库，Root Directory 使用仓库根目录（留空或 `.`）。仓库中的 `vercel.json` 已配置：
+
+| 设置 | 值 |
+| --- | --- |
+| Framework Preset | Other |
+| Install Command | `npm ci` |
+| Build Command | `npm run build:site` |
+| Output Directory | `public` |
+
+不需要环境变量或常驻 Node 服务。关联 Git 后，推送到生产分支会触发 Vercel 构建。若之前部署提示找不到 `public`，使用包含此配置的新提交重新部署。
+
+`npm run build:site` 先重新构建组件，再将网页、浏览器模块、素材、缩略图和示例复制到 `public/`。部署首页直接打开组件目录；原有 `catalog.html?component=...`、`?scene=reference-stage` 等链接继续可用。此目录不包含 npm 依赖、审查记录、本地脚本或运行日志，也不提交到 Git。
+
+本地验证静态产物：
+
+```bash
+npm ci
+npm run build:site
+```
+
+随后用任意静态 HTTP 服务以 `public/` 为网站根目录预览。不要直接双击 HTML，浏览器模块需要通过 HTTP 加载。素材依赖保持原目录关系，不要只上传 `catalog.html`。
+
 ## 目录与说明
 
 | 路径 | 用途 |

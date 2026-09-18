@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
+    "build:site": "node scripts/build-site.mjs",
     "preview": "node scripts/server.mjs",
     "verify": "node scripts/verify.mjs",
     "verify:audio": "node scripts/verify-audio.mjs",

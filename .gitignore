@@ -4,3 +4,5 @@ reports/
 snapshots/effects/proof/
 QUALITY.md
 *.log
+public/
+.vercel/
