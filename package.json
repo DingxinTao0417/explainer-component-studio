@@ -1,0 +1,20 @@
+{
+  "name": "science-video-component-library",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "preview": "node scripts/server.mjs",
+    "verify": "node scripts/verify.mjs",
+    "verify:audio": "node scripts/verify-audio.mjs",
+    "export:scene": "node scripts/export-scene.mjs",
+    "snapshot": "node scripts/snapshot.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12",
+    "gsap": "3.14.2",
+    "hyperframes": "0.8.46",
+    "puppeteer-core": "25.11.0"
+  }
+}

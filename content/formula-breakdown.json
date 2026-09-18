@@ -1,0 +1,29 @@
+{
+  "eyebrow": "EXPLAIN / 结构与数据",
+  "title": "把公式变成可以理解的步骤",
+  "subtitle": "逐项解释公式的输入与含义，再给出一次演算。",
+  "badge": "示例数据",
+  "note": "演算用于说明关系，不是实际生产效率承诺。",
+  "code": "FORMULA-BREAKDOWN",
+  "terms": [
+    {
+      "symbol": "速度",
+      "meaning": "单位时间完成量",
+      "value": "24 个 / 小时"
+    },
+    {
+      "symbol": "时间",
+      "meaning": "实际投入时长",
+      "value": "3 小时"
+    },
+    {
+      "symbol": "产出",
+      "meaning": "完成的总数量",
+      "value": "72 个"
+    }
+  ],
+  "operators": [
+    "×",
+    "="
+  ]
+}

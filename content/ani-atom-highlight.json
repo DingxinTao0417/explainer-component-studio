@@ -1,0 +1,13 @@
+{
+  "x": 325,
+  "y": 249,
+  "objectWidth": 624,
+  "objectHeight": 206,
+  "shape": "rectangle",
+  "label": "重点检查",
+  "tone": "orange",
+  "state": "active",
+  "lineWidth": 6,
+  "dashed": false,
+  "fillOpacity": 0.055
+}

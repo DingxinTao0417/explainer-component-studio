@@ -1,0 +1,56 @@
+{
+  "title": "设置",
+  "account": "林同学",
+  "accountSubtitle": "Apple 账户、iCloud 等",
+  "groups": [
+    [
+      {
+        "label": "飞行模式",
+        "icon": "airplane",
+        "toggle": false
+      },
+      {
+        "label": "无线局域网",
+        "icon": "wifi",
+        "value": "Studio Wi-Fi"
+      },
+      {
+        "label": "蓝牙",
+        "icon": "bluetooth",
+        "value": "打开"
+      },
+      {
+        "label": "蜂窝网络",
+        "icon": "phone"
+      }
+    ],
+    [
+      {
+        "label": "通用",
+        "icon": "settings"
+      },
+      {
+        "label": "辅助功能",
+        "icon": "info"
+      },
+      {
+        "label": "相机",
+        "icon": "camera"
+      },
+      {
+        "label": "控制中心",
+        "icon": "sliders"
+      }
+    ],
+    [
+      {
+        "label": "显示与亮度",
+        "icon": "sun"
+      },
+      {
+        "label": "墙纸",
+        "icon": "image"
+      }
+    ]
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "title": "截取 5 条示意",
+  "subtitle": "完成日期在本月，且状态为已完成",
+  "footer": "只改变计入范围，原始五条记录仍然保留。",
+  "month": "2026-09",
+  "sourceLabel": "原始表格",
+  "headers": [
+    "订单号",
+    "下单日期",
+    "完成日期",
+    "状态"
+  ],
+  "rawHeader": "初次计入",
+  "finalHeader": "修正后计入",
+  "includedLabel": "计入",
+  "excludedLabel": "不计入",
+  "rawCountLabel": "本局部初次计入",
+  "finalCountLabel": "本局部符合",
+  "unit": "条",
+  "sampleNote": "不是月度总数",
+  "rows": [
+    {
+      "id": "A01",
+      "orderDate": "2026-09-01",
+      "completedDate": "2026-09-03",
+      "status": "已完成"
+    },
+    {
+      "id": "A02",
+      "orderDate": "2026-09-02",
+      "completedDate": "2026-09-05",
+      "status": "已完成"
+    },
+    {
+      "id": "A03",
+      "orderDate": "2026-09-04",
+      "completedDate": "2026-09-08",
+      "status": "已完成"
+    },
+    {
+      "id": "A04",
+      "orderDate": "2026-09-06",
+      "completedDate": "",
+      "status": "已取消"
+    },
+    {
+      "id": "A05",
+      "orderDate": "2026-09-10",
+      "completedDate": "",
+      "status": "待付款"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "title": "把新旧连起来",
+  "subtitle": "让新问题挂到已有经验上。",
+  "previewLabel": "AI 学习",
+  "requirementsTitle": "海报要求",
+  "fields": [
+    "主题",
+    "风格",
+    "尺寸"
+  ],
+  "steps": [
+    "检查",
+    "修改"
+  ],
+  "outputTitle": "改为竖版",
+  "resultLabel": "图像要求",
+  "questionTitle": "缺少相关经验时",
+  "question": "从哪里问起？",
+  "footer": "联系越具体，越容易知道下一步怎么做。"
+}

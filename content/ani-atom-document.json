@@ -1,0 +1,31 @@
+{
+  "x": 345,
+  "y": 58,
+  "objectWidth": 590,
+  "objectHeight": 600,
+  "title": "项目说明",
+  "subtitle": "把需要做的事写清楚",
+  "accent": "blue",
+  "rows": [
+    {
+      "label": "对象",
+      "text": "各组负责人",
+      "checked": true
+    },
+    {
+      "label": "任务",
+      "text": "填写本周完成与待办事项",
+      "checked": false
+    },
+    {
+      "label": "时间",
+      "text": "周五 17:00 前",
+      "checked": false
+    },
+    {
+      "label": "入口",
+      "text": "共享表格",
+      "checked": false
+    }
+  ]
+}

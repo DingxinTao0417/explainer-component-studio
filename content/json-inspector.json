@@ -1,0 +1,90 @@
+{
+  "appName": "数据检查器",
+  "workspace": "response.json",
+  "appIcon": "code",
+  "title": "响应数据",
+  "path": "$.data[0].duration",
+  "selected": "duration",
+  "fields": [
+    {
+      "key": "response",
+      "value": "Object",
+      "type": "object",
+      "depth": 0
+    },
+    {
+      "key": "success",
+      "value": "true",
+      "type": "boolean",
+      "depth": 1
+    },
+    {
+      "key": "data",
+      "value": "Array(2)",
+      "type": "array",
+      "depth": 1
+    },
+    {
+      "key": "0",
+      "value": "Object",
+      "type": "object",
+      "depth": 2
+    },
+    {
+      "key": "id",
+      "value": "\"scene-01\"",
+      "type": "string",
+      "depth": 3
+    },
+    {
+      "key": "component",
+      "value": "\"browser-window\"",
+      "type": "string",
+      "depth": 3
+    },
+    {
+      "key": "duration",
+      "value": "12.5",
+      "type": "number",
+      "depth": 3
+    },
+    {
+      "key": "enabled",
+      "value": "true",
+      "type": "boolean",
+      "depth": 3
+    },
+    {
+      "key": "captions",
+      "value": "Array(3)",
+      "type": "array",
+      "depth": 3
+    },
+    {
+      "key": "1",
+      "value": "Object",
+      "type": "object",
+      "depth": 2
+    },
+    {
+      "key": "total",
+      "value": "2",
+      "type": "number",
+      "depth": 1
+    },
+    {
+      "key": "version",
+      "value": "\"1.0\"",
+      "type": "string",
+      "depth": 1
+    }
+  ],
+  "detail": {
+    "key": "duration",
+    "type": "number",
+    "value": "12.5",
+    "description": "当前分镜的持续时长，单位为秒。",
+    "constraint": "大于 0 的有限数值",
+    "location": "data → 0 → duration"
+  }
+}

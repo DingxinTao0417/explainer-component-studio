@@ -1,0 +1,28 @@
+{
+  "title": "2026年9月",
+  "firstWeekday": 2,
+  "days": 30,
+  "today": 17,
+  "events": [
+    {
+      "day": 8,
+      "title": "内容选题",
+      "color": "#3484e8"
+    },
+    {
+      "day": 17,
+      "title": "制作评审 10:00",
+      "color": "#ed6556"
+    },
+    {
+      "day": 21,
+      "title": "录屏与配音",
+      "color": "#6caf9e"
+    },
+    {
+      "day": 25,
+      "title": "成片检查",
+      "color": "#956dcc"
+    }
+  ]
+}

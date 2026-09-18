@@ -1,0 +1,129 @@
+{
+  "title": "视频项目",
+  "path": [
+    "此电脑",
+    "本地磁盘 (D:)",
+    "视频项目"
+  ],
+  "search": "搜索 视频项目",
+  "locations": [
+    {
+      "label": "主文件夹",
+      "icon": "home"
+    },
+    {
+      "label": "桌面",
+      "icon": "monitor"
+    },
+    {
+      "label": "下载",
+      "icon": "download"
+    },
+    {
+      "label": "文档",
+      "icon": "file"
+    },
+    {
+      "label": "图片",
+      "icon": "image"
+    },
+    {
+      "label": "视频",
+      "icon": "video"
+    },
+    {
+      "label": "此电脑",
+      "icon": "monitor"
+    },
+    {
+      "label": "本地磁盘 (D:)",
+      "icon": "monitor"
+    }
+  ],
+  "activeLocation": "视频",
+  "columns": [
+    "名称",
+    "修改日期",
+    "类型",
+    "大小"
+  ],
+  "files": [
+    {
+      "name": "assets",
+      "kind": "folder",
+      "date": "2026/9/17  10:24",
+      "type": "文件夹",
+      "size": ""
+    },
+    {
+      "name": "compositions",
+      "kind": "folder",
+      "date": "2026/9/17  10:26",
+      "type": "文件夹",
+      "size": ""
+    },
+    {
+      "name": "renders",
+      "kind": "folder",
+      "date": "2026/9/17  11:08",
+      "type": "文件夹",
+      "size": ""
+    },
+    {
+      "name": "content.json",
+      "kind": "code",
+      "date": "2026/9/17  11:02",
+      "type": "JSON 文件",
+      "size": "8 KB"
+    },
+    {
+      "name": "index.html",
+      "kind": "code",
+      "date": "2026/9/17  11:04",
+      "type": "HTML 文档",
+      "size": "24 KB"
+    },
+    {
+      "name": "README.md",
+      "kind": "file",
+      "date": "2026/9/17  10:45",
+      "type": "MD 文件",
+      "size": "3 KB"
+    },
+    {
+      "name": "scene-01.mp4",
+      "kind": "video",
+      "date": "2026/9/17  11:08",
+      "type": "MP4 视频",
+      "size": "12,840 KB"
+    }
+  ],
+  "selected": 3,
+  "commands": [
+    {
+      "icon": "plus",
+      "label": "新建"
+    },
+    {
+      "icon": "copy",
+      "label": ""
+    },
+    {
+      "icon": "link",
+      "label": ""
+    },
+    {
+      "icon": "trash",
+      "label": ""
+    },
+    {
+      "icon": "list",
+      "label": "排序"
+    },
+    {
+      "icon": "grid",
+      "label": "查看"
+    }
+  ],
+  "status": "7 个项目　|　选中 1 个项目　8.00 KB"
+}

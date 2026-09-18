@@ -1,0 +1,88 @@
+{
+  "title": "进度提交通知",
+  "notice": "AI 生成可能有误，请核实",
+  "simulationLabel": "界面复刻 · 案例演示",
+  "brand": "豆包",
+  "brandSuffix": "工作",
+  "logoSrc": "",
+  "navigation": [
+    {
+      "label": "新工作任务",
+      "icon": "edit"
+    },
+    {
+      "label": "定时任务",
+      "icon": "clock"
+    },
+    {
+      "label": "插件·技能·伙伴",
+      "icon": "grid"
+    },
+    {
+      "label": "云盘",
+      "icon": "folder"
+    },
+    {
+      "label": "手机遥控电脑",
+      "icon": "phone"
+    }
+  ],
+  "pinnedLabel": "置顶",
+  "pinnedTitle": "主对话",
+  "projectsLabel": "项目",
+  "newProjectLabel": "新建项目",
+  "recentLabel": "最近",
+  "recentTasks": [],
+  "accountLabel": "用户",
+  "planLabel": "标准套餐",
+  "showSidebar": true,
+  "showSummary": true,
+  "summaryTitle": "对话摘要",
+  "artifactsLabel": "对话产物",
+  "skillsLabel": "技能",
+  "filesLabel": "最近文件",
+  "summary": {
+    "artifacts": [],
+    "files": []
+  },
+  "messages": [
+    {
+      "id": "request-vague",
+      "role": "user",
+      "text": "提醒大家交进度，正式一点。"
+    },
+    {
+      "id": "reply-vague",
+      "role": "assistant",
+      "text": "请各位积极配合，及时提交相关材料。"
+    },
+    {
+      "id": "request-clear",
+      "role": "user",
+      "text": "发给各组负责人。周五下午五点前，把这周做完了什么、还有什么没做完，填进这个共享表格。",
+      "linkLabel": "本周进度共享表格",
+      "linkNote": "演示占位"
+    },
+    {
+      "id": "reply-clear",
+      "role": "assistant",
+      "heading": "本周进度提交通知",
+      "text": "请各组负责人于周五 17:00 前，在共享表格中填写本周已完成事项和未完成事项。",
+      "linkLabel": "本周进度共享表格",
+      "linkNote": "演示占位",
+      "actions": true
+    }
+  ],
+  "draft": "",
+  "running": false,
+  "focused": false,
+  "placeholder": "发消息或创建任务... / 使用技能 @ 添加资料",
+  "environmentLabel": "本地电脑",
+  "projectLabel": "项目",
+  "permissionLabel": "全部允许",
+  "modeLabel": "自动",
+  "effortLabel": "高",
+  "workingLabel": "拟写正式进度提醒通知",
+  "homeTitle": "今天有什么工作要处理？",
+  "showHome": false
+}

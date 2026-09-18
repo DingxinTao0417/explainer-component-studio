@@ -1,0 +1,57 @@
+{
+  "title": "统计本月已完成订单",
+  "project": "演示项目",
+  "disclosure": "界面复刻 · 案例演示",
+  "showSidebar": true,
+  "sidebar": {
+    "sectionLabel": "任务",
+    "items": [
+      {
+        "id": "orders",
+        "label": "统计本月已完成订单",
+        "active": true
+      }
+    ],
+    "footer": "演示工作区"
+  },
+  "messages": [
+    {
+      "id": "request",
+      "role": "user",
+      "text": "按完成日期算这个月，只统计状态是已完成的。把算进去的订单也列出来。",
+      "attachments": [
+        {
+          "name": "orders-sample.csv",
+          "detail": "教学样本 · 5 条记录"
+        }
+      ]
+    },
+    {
+      "id": "response",
+      "role": "assistant",
+      "elapsed": "用时 2分03秒",
+      "text": "这 5 条样本中，A01、A02、A03 符合条件。已取消和待付款的两条不计入。",
+      "toolEvents": [
+        {
+          "id": "read-file",
+          "kind": "file",
+          "state": "complete",
+          "label": "已读取 orders-sample.csv",
+          "detail": "教学样本；整张表的月度总数尚未提供。"
+        }
+      ]
+    }
+  ],
+  "toolEvents": [],
+  "composer": {
+    "draft": "",
+    "placeholder": "随心输入",
+    "permission": "完全访问",
+    "model": "GPT-6 Astra",
+    "effort": "Ultra",
+    "running": false,
+    "attachments": []
+  },
+  "panel": null,
+  "panelWidth": 400
+}

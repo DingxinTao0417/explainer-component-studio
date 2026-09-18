@@ -1,0 +1,11 @@
+{
+  "x": 420,
+  "y": 237,
+  "objectWidth": 430,
+  "objectHeight": 232,
+  "shape": "decision",
+  "label": "符合要求？",
+  "caption": "按标准逐项判断",
+  "tone": "blue",
+  "state": "active"
+}

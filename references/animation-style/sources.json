@@ -1,0 +1,120 @@
+[
+  {
+    "component": "ani-order-filter",
+    "original_file": "D:\\workspace\\视频制作\\projects\\20260918_图式归纳\\图式归纳V8-分镜动画素材包-20260918(1)\\01-分镜\\S08.png",
+    "file": "references/animation-style/ani-order-filter.png",
+    "sha256": "2b862dd7a4b83a6e42666004ca2b4e5ba5fd53209a91e99f75d155a08e89917b",
+    "basis": "V8 · 五条样本与筛选",
+    "origin": "user-provided",
+    "use": "reference comparison only; not embedded in component graphics",
+    "motion_basis": "V8 static three-state boards; timing and interpolation authored here",
+    "license": "用户提供用于本次复刻；未声明公共领域或独立核验第三方许可"
+  },
+  {
+    "component": "ani-compare-extract",
+    "original_file": "D:\\workspace\\视频制作\\projects\\20260918_图式归纳\\图式归纳V8-分镜动画素材包-20260918(1)\\01-分镜\\S10.png",
+    "file": "references/animation-style/ani-compare-extract.png",
+    "sha256": "0da4518d345153abaf8f997b86be6a7638118de6a80ed9eb15e7b6b57dbd4c90",
+    "basis": "V8 · 两例比较与提炼",
+    "origin": "user-provided",
+    "use": "reference comparison only; not embedded in component graphics",
+    "motion_basis": "V8 static three-state boards; timing and interpolation authored here",
+    "license": "用户提供用于本次复刻；未声明公共领域或独立核验第三方许可"
+  },
+  {
+    "component": "ani-tool-workbench",
+    "original_file": "D:\\workspace\\视频制作\\hyperframes-explainer-template\\component-library\\reports\\animation-style\\reference-review-wechat\\07_输入检查再修改.png",
+    "original_archive": "D:/wechat/xwechat_files/wxid_m4cxd9mbbbkg22_7f8b/msg/file/2026-09/图生视频对照参考图_19场_20260917.zip",
+    "archive_member": "图生视频对照参考图/images/07_输入检查再修改.png",
+    "file": "references/animation-style/ani-tool-workbench.png",
+    "sha256": "bacb582777b29a5c97fd2cc254a55353e8cd310c1613fd1575eb063f925f5a37",
+    "basis": "19 场参考 · 输入、检查、修改",
+    "origin": "user-provided",
+    "use": "reference comparison only; not embedded in component graphics",
+    "motion_basis": "static image; motion newly authored",
+    "license": "用户提供用于本次复刻；未声明公共领域或独立核验第三方许可"
+  },
+  {
+    "component": "ani-file-collection",
+    "original_file": "D:\\workspace\\视频制作\\hyperframes-explainer-template\\component-library\\reports\\animation-style\\reference-review-wechat\\02_收藏不等于会.png",
+    "original_archive": "D:/wechat/xwechat_files/wxid_m4cxd9mbbbkg22_7f8b/msg/file/2026-09/图生视频对照参考图_19场_20260917.zip",
+    "archive_member": "图生视频对照参考图/images/02_收藏不等于会.png",
+    "file": "references/animation-style/ani-file-collection.png",
+    "sha256": "4f1471f94db9785448726f677d8544562e8bfa07e5b389152045b3581538803e",
+    "basis": "19 场参考 · 收藏不等于会",
+    "origin": "user-provided",
+    "use": "reference comparison only; not embedded in component graphics",
+    "motion_basis": "static image; motion newly authored",
+    "license": "用户提供用于本次复刻；未声明公共领域或独立核验第三方许可"
+  },
+  {
+    "component": "ani-method-transfer",
+    "original_file": "C:\\Users\\20825\\OneDrive\\桌面\\新建文件夹 (2)\\exec-78c560de-efd8-4aa3-9564-9e5ac471562e.png",
+    "file": "references/animation-style/ani-method-transfer.png",
+    "sha256": "8d4a20bd1e9fbc2b651b62151906a1ad155cebbe6fa1e1b00d6ac701ed8dab28",
+    "basis": "桌面参考 · 熟悉部分可复用",
+    "origin": "user-provided",
+    "use": "reference comparison only; not embedded in component graphics",
+    "motion_basis": "static image; motion newly authored",
+    "license": "用户提供用于本次复刻；未声明公共领域或独立核验第三方许可"
+  },
+  {
+    "component": "ani-knowledge-network",
+    "original_file": "D:\\workspace\\视频制作\\hyperframes-explainer-template\\component-library\\reports\\animation-style\\reference-review-wechat\\16_把新旧连起来.png",
+    "original_archive": "D:/wechat/xwechat_files/wxid_m4cxd9mbbbkg22_7f8b/msg/file/2026-09/图生视频对照参考图_19场_20260917.zip",
+    "archive_member": "图生视频对照参考图/images/16_把新旧连起来.png",
+    "file": "references/animation-style/ani-knowledge-network.png",
+    "sha256": "8073e03c50ccb1a9048c7b7306885bf34127709ddaa72131cfdbe744f45ba457",
+    "basis": "19 场参考 · 把新旧连起来",
+    "origin": "user-provided",
+    "use": "reference comparison only; not embedded in component graphics",
+    "motion_basis": "static image; motion newly authored",
+    "license": "用户提供用于本次复刻；未声明公共领域或独立核验第三方许可"
+  },
+  {
+    "component": "ani-capability-tiles",
+    "original_file": "D:\\workspace\\视频制作\\hyperframes-explainer-template\\component-library\\reports\\animation-style\\reference-review-wechat\\10_散落的知识砖.png",
+    "original_archive": "D:/wechat/xwechat_files/wxid_m4cxd9mbbbkg22_7f8b/msg/file/2026-09/图生视频对照参考图_19场_20260917.zip",
+    "archive_member": "图生视频对照参考图/images/10_散落的知识砖.png",
+    "file": "references/animation-style/ani-capability-tiles.png",
+    "sha256": "9b00065d02a197c9d7b2b6d544b9798f2761540c6558f42772e16f7c99cc1666",
+    "basis": "19 场参考 · 知识工具砖",
+    "origin": "user-provided",
+    "use": "reference comparison only; not embedded in component graphics",
+    "motion_basis": "static image; motion newly authored",
+    "license": "用户提供用于本次复刻；未声明公共领域或独立核验第三方许可"
+  },
+  {
+    "component": "ani-processing-machine",
+    "original_file": "D:\\workspace\\视频制作\\projects\\20260918_图式归纳\\图式归纳V8-分镜动画素材包-20260918(1)\\03-参考与素材\\当前风格母版.png",
+    "file": "references/animation-style/ani-processing-machine.png",
+    "sha256": "db488964f6cccc32114684fd039278da9c343e99b7427f2b99b59744eea7fbbb",
+    "basis": "V8 · 输入、处理、结果",
+    "origin": "user-provided",
+    "use": "reference comparison only; not embedded in component graphics",
+    "motion_basis": "static image; motion newly authored",
+    "license": "用户提供用于本次复刻；未声明公共领域或独立核验第三方许可"
+  },
+  {
+    "component": "ani-question-outro",
+    "original_file": "D:\\workspace\\视频制作\\projects\\20260918_图式归纳\\图式归纳V8-分镜动画素材包-20260918(1)\\01-分镜\\S12.png",
+    "file": "references/animation-style/ani-question-outro.png",
+    "sha256": "da2a358ed2766ecbc64d21a55fef58bfa62796afca094c51ee8bb4c0545d6dd1",
+    "basis": "V8 · 问题收尾",
+    "origin": "user-provided",
+    "use": "reference comparison only; not embedded in component graphics",
+    "motion_basis": "V8 static three-state boards; timing and interpolation authored here",
+    "license": "用户提供用于本次复刻；未声明公共领域或独立核验第三方许可"
+  },
+  {
+    "component": "ani-notice-check",
+    "original_file": "D:\\workspace\\视频制作\\projects\\20260918_图式归纳\\图式归纳V8-分镜动画素材包-20260918(1)\\03-参考与素材\\通知-独立母版.png",
+    "file": "references/animation-style/ani-notice-check.png",
+    "sha256": "590e28e8c491dac39e84f3ea946999b752e776dd7da6702ec7a8be8ac75f86fc",
+    "basis": "V8 · 通知独立母版",
+    "origin": "user-provided",
+    "use": "reference comparison only; not embedded in component graphics",
+    "motion_basis": "V8 static three-state boards; timing and interpolation authored here",
+    "license": "用户提供用于本次复刻；未声明公共领域或独立核验第三方许可"
+  }
+]

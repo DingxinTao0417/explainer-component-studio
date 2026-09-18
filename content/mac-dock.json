@@ -1,0 +1,42 @@
+{
+  "apps": [
+    [
+      "finder",
+      "访达"
+    ],
+    [
+      "safari",
+      "Safari"
+    ],
+    [
+      "mail",
+      "邮件"
+    ],
+    [
+      "calendar",
+      "日历"
+    ],
+    [
+      "notes",
+      "备忘录"
+    ],
+    [
+      "messages",
+      "信息"
+    ],
+    [
+      "settings",
+      "系统设置"
+    ],
+    [
+      "terminal",
+      "终端"
+    ]
+  ],
+  "selected": 1,
+  "desktopFiles": [
+    "视频制作",
+    "参考资料",
+    "课程讲稿.pdf"
+  ]
+}

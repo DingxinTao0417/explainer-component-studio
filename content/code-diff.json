@@ -1,0 +1,61 @@
+{
+  "project": "science-video",
+  "filename": "config.ts",
+  "branch": "feature/preview*",
+  "language": "TypeScript",
+  "position": "2 项更改",
+  "beforeLabel": "config.ts · HEAD",
+  "afterLabel": "config.ts · 工作区",
+  "before": [
+    "export const output = {",
+    {
+      "text": "  width: 960,",
+      "state": "remove"
+    },
+    {
+      "text": "  height: 540,",
+      "state": "remove"
+    },
+    "  fps: 30,",
+    "  format: 'mp4',",
+    "};",
+    "",
+    "export const theme = {",
+    {
+      "text": "  background: '#17201e',",
+      "state": "remove"
+    },
+    {
+      "text": "  accent: '#d8ae65',",
+      "state": "remove"
+    },
+    "  complete: '#81c9b0',",
+    "};"
+  ],
+  "after": [
+    "export const output = {",
+    {
+      "text": "  width: 1920,",
+      "state": "add"
+    },
+    {
+      "text": "  height: 1080,",
+      "state": "add"
+    },
+    "  fps: 30,",
+    "  format: 'mp4',",
+    "};",
+    "",
+    "export const theme = {",
+    {
+      "text": "  background: '#ffffff',",
+      "state": "add"
+    },
+    {
+      "text": "  accent: '#2563eb',",
+      "state": "add"
+    },
+    "  complete: '#81c9b0',",
+    "};"
+  ]
+}

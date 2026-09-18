@@ -1,0 +1,31 @@
+{
+  "kind": "curve",
+  "start": {
+    "x": 270,
+    "y": 448
+  },
+  "end": {
+    "x": 1000,
+    "y": 278
+  },
+  "controlPoints": [
+    {
+      "x": 500,
+      "y": 448
+    },
+    {
+      "x": 770,
+      "y": 278
+    }
+  ],
+  "waypoints": [],
+  "arrowStart": false,
+  "arrowEnd": true,
+  "tone": "blue",
+  "lineWidth": 8,
+  "cornerRadius": 28,
+  "dashed": false,
+  "label": "资料传递",
+  "labelX": 635,
+  "labelY": 307
+}

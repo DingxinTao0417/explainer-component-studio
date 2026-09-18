@@ -1,0 +1,15 @@
+{
+  "x": 290,
+  "y": 105,
+  "objectWidth": 700,
+  "objectHeight": 500,
+  "name": "项目资料",
+  "subtitle": "文件集中在一起",
+  "open": true,
+  "fileLabels": [
+    "需求",
+    "素材",
+    "结果"
+  ],
+  "accent": "blue"
+}

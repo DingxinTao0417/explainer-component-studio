@@ -1,0 +1,27 @@
+{
+  "title": "本周进度通知",
+  "subtitle": "从收件人角度核对",
+  "rows": [
+    {
+      "label": "对象",
+      "text": "各组负责人",
+      "icon": "people"
+    },
+    {
+      "label": "内容",
+      "text": "本周已完成、未完成事项",
+      "icon": "documents"
+    },
+    {
+      "label": "截止",
+      "text": "周五 17:00 前",
+      "icon": "calendar"
+    },
+    {
+      "label": "填写",
+      "text": "共享表格",
+      "icon": "link"
+    }
+  ],
+  "footnote": "轮到谁做、要做什么、几点前完成、在哪儿填，都找得到。"
+}

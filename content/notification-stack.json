@@ -1,0 +1,51 @@
+{
+  "title": "通知",
+  "clear": "全部清除",
+  "date": "9月17日，星期四",
+  "month": "2026年9月",
+  "weekdayLabels": [
+    "一",
+    "二",
+    "三",
+    "四",
+    "五",
+    "六",
+    "日"
+  ],
+  "monthStartOffset": 1,
+  "monthDays": 30,
+  "selectedDay": 17,
+  "notifications": [
+    {
+      "app": "视频工作台",
+      "icon": "video",
+      "time": "现在",
+      "title": "预览已准备就绪",
+      "body": "所有组件已加载，可以检查画面和动画时间点。",
+      "actions": [
+        "打开预览"
+      ]
+    },
+    {
+      "app": "文件资源管理器",
+      "icon": "folder",
+      "time": "5 分钟前",
+      "title": "素材已复制",
+      "body": "8 个项目已复制到“视频项目 / assets”。",
+      "actions": []
+    },
+    {
+      "app": "日历",
+      "icon": "calendar",
+      "time": "12 分钟前",
+      "title": "录制第二段讲解",
+      "body": "今天 14:00 — 14:30",
+      "actions": [
+        "稍后提醒",
+        "关闭"
+      ]
+    }
+  ],
+  "focus": "专注",
+  "focusTime": "30 分钟"
+}

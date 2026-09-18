@@ -1,0 +1,41 @@
+{
+  "documentLabel": "工作手记 / 01",
+  "title": "本周进度收集",
+  "originalLabel": "最初的一句话",
+  "original": "提醒大家交进度，正式一点。",
+  "marginNote": "还缺哪些信息？",
+  "checklistLabel": "发出前，逐项对照",
+  "checklist": [
+    "谁来交",
+    "交什么",
+    "几点前",
+    "在哪儿填"
+  ],
+  "documentNote": "站在收到通知的人那边，再读一遍。",
+  "notes": [
+    {
+      "label": "对象",
+      "value": "各组负责人",
+      "detail": "让该行动的人看得见",
+      "tone": "blue"
+    },
+    {
+      "label": "任务",
+      "value": "本周完成情况",
+      "detail": "已完成 + 未完成事项",
+      "tone": "mint"
+    },
+    {
+      "label": "时间",
+      "value": "周五 17:00 前",
+      "detail": "给出明确截止时间",
+      "tone": "cream"
+    },
+    {
+      "label": "入口",
+      "value": "共享表格",
+      "detail": "随通知附上链接",
+      "tone": "blue"
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "time": "9:41",
+  "date": "9月17日 星期四",
+  "battery": 100,
+  "media": {
+    "kind": "demo",
+    "src": "",
+    "fit": "contain",
+    "alt": ""
+  },
+  "appTitle": "文件",
+  "folderTitle": "视频制作",
+  "search": "搜索",
+  "sortLabel": "名称",
+  "itemCount": "8 个项目",
+  "sidebar": [
+    {
+      "label": "最近项目",
+      "icon": "refresh"
+    },
+    {
+      "label": "共享",
+      "icon": "link"
+    },
+    {
+      "label": "iCloud 云盘",
+      "icon": "folder"
+    },
+    {
+      "label": "我的 iPad",
+      "icon": "monitor"
+    },
+    {
+      "label": "最近删除",
+      "icon": "trash"
+    }
+  ],
+  "selectedSidebar": 2,
+  "tagsTitle": "标签",
+  "tags": [
+    {
+      "label": "重要",
+      "color": "#ff453a"
+    },
+    {
+      "label": "工作",
+      "color": "#0a84ff"
+    },
+    {
+      "label": "已完成",
+      "color": "#30b15a"
+    }
+  ],
+  "folders": [
+    {
+      "name": "01 原始素材",
+      "count": "24 项"
+    },
+    {
+      "name": "02 参考图片",
+      "count": "18 项"
+    },
+    {
+      "name": "03 录屏",
+      "count": "8 项"
+    },
+    {
+      "name": "04 配音",
+      "count": "5 项"
+    },
+    {
+      "name": "05 组件",
+      "count": "36 项"
+    },
+    {
+      "name": "06 动画",
+      "count": "12 项"
+    },
+    {
+      "name": "07 工程",
+      "count": "4 项"
+    },
+    {
+      "name": "08 成片",
+      "count": "3 项"
+    }
+  ]
+}

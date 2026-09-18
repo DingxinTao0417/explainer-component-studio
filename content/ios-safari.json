@@ -1,0 +1,20 @@
+{
+  "url": "docs.example.com",
+  "brand": "Studio Docs",
+  "title": "把复杂内容讲清楚",
+  "intro": "一份可复用的内容制作指南。",
+  "sections": [
+    {
+      "title": "先提出一个问题",
+      "detail": "用具体的困惑引出本期内容。"
+    },
+    {
+      "title": "展示真实操作",
+      "detail": "保留关键步骤和可核对的结果。"
+    },
+    {
+      "title": "用图解补充说明",
+      "detail": "只让需要强调的信息发生变化。"
+    }
+  ]
+}

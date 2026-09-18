@@ -1,0 +1,42 @@
+{
+  "eyebrow": "07 / 梳理顺序",
+  "title": "一条视频，如何一步步完成",
+  "subtitle": "把制作过程放在时间线上，每个阶段都有明确产物。",
+  "badge": "制作示例",
+  "footer": "示例内容可替换 · 白底 / 蓝色强调 / 薄荷绿完成态",
+  "series": "EXPLAIN / TIMELINE",
+  "events": [
+    {
+      "time": "09:00",
+      "title": "明确主题",
+      "detail": "确定观众与核心问题",
+      "status": "done"
+    },
+    {
+      "time": "10:00",
+      "title": "完成脚本",
+      "detail": "整理钩子、正文与结尾",
+      "status": "done"
+    },
+    {
+      "time": "13:00",
+      "title": "准备素材",
+      "detail": "参考图、录屏与配音",
+      "status": "active"
+    },
+    {
+      "time": "15:00",
+      "title": "组合画面",
+      "detail": "按配音组织镜头",
+      "status": "todo"
+    },
+    {
+      "time": "17:00",
+      "title": "检查交付",
+      "detail": "核对内容、字幕与声音",
+      "status": "todo"
+    }
+  ],
+  "activeLabel": "当前阶段",
+  "note": "时间为示例计划，可替换为日期、章节或里程碑。"
+}

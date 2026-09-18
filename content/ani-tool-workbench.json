@@ -1,0 +1,16 @@
+{
+  "title": "输入、检查，再修改",
+  "subtitle": "把要求写进去，把结果拿出来看。",
+  "toolLabel": "工具 A",
+  "requestLabel": "要求",
+  "request": "AI 学习海报",
+  "tags": [
+    "主题",
+    "尺寸"
+  ],
+  "revisionLabel": "修改",
+  "revision": "标题缩小",
+  "action": "生成",
+  "previewLabel": "AI 学习",
+  "footer": "检查结果，才能知道下一步该改哪里。"
+}

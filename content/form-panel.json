@@ -1,0 +1,65 @@
+{
+  "appTitle": "视频工作台",
+  "title": "创建项目",
+  "description": "为新的视频设置名称、保存位置和画面规格。",
+  "nav": [
+    {
+      "icon": "home",
+      "label": "主页"
+    },
+    {
+      "icon": "folder",
+      "label": "项目"
+    },
+    {
+      "icon": "settings",
+      "label": "设置"
+    }
+  ],
+  "activeNav": 1,
+  "fields": [
+    {
+      "label": "项目名称",
+      "value": "Codex 入门讲解",
+      "kind": "text",
+      "help": "使用简短、容易识别的名称。",
+      "focused": true
+    },
+    {
+      "label": "保存位置",
+      "value": "D:\\视频项目\\codex-intro",
+      "kind": "folder",
+      "help": ""
+    },
+    {
+      "label": "画面比例",
+      "value": "16:9 · 横屏",
+      "kind": "select",
+      "help": ""
+    },
+    {
+      "label": "项目帧率",
+      "value": "30 fps",
+      "kind": "select",
+      "help": ""
+    }
+  ],
+  "optionsTitle": "项目选项",
+  "options": [
+    {
+      "label": "创建素材文件夹",
+      "checked": true
+    },
+    {
+      "label": "启用自动保存",
+      "checked": true
+    },
+    {
+      "label": "创建后打开项目",
+      "checked": false
+    }
+  ],
+  "note": "设置可以随时在项目属性中修改。",
+  "cancel": "取消",
+  "submit": "创建项目"
+}

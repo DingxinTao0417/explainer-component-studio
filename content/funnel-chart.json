@@ -1,0 +1,27 @@
+{
+  "eyebrow": "EXPLAIN / 结构与数据",
+  "title": "从候选到最终成片",
+  "subtitle": "按阶段宽度展示数量递减，读出每一步的转化。",
+  "badge": "示例数据",
+  "note": "替换内容后，图形与数值一起更新。",
+  "code": "FUNNEL-CHART",
+  "stages": [
+    {
+      "label": "收集素材",
+      "value": 120
+    },
+    {
+      "label": "筛选可用",
+      "value": 84
+    },
+    {
+      "label": "进入分镜",
+      "value": 48
+    },
+    {
+      "label": "最终采用",
+      "value": 30
+    }
+  ],
+  "unit": "份"
+}

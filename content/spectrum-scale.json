@@ -1,0 +1,28 @@
+{
+  "eyebrow": "EXPLAIN / 结构与数据",
+  "title": "自动化是一条连续的尺度",
+  "subtitle": "在连续范围上定位多个对象，避免非黑即白的分类。",
+  "badge": "示例数据",
+  "note": "替换内容后，图形与数值一起更新。",
+  "code": "SPECTRUM-SCALE",
+  "left": "更多人工判断",
+  "right": "更多自动执行",
+  "markers": [
+    {
+      "label": "人工整理",
+      "value": 15
+    },
+    {
+      "label": "辅助生成",
+      "value": 42
+    },
+    {
+      "label": "规则流程",
+      "value": 70
+    },
+    {
+      "label": "自动批处理",
+      "value": 91
+    }
+  ]
+}

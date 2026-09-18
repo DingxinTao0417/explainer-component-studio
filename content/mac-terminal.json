@@ -1,0 +1,16 @@
+{
+  "title": "video-studio — zsh — 100×28",
+  "user": "lin@MacBook-Pro",
+  "folder": "video-studio",
+  "command": "npm run build",
+  "lines": [
+    "> science-video-studio@1.0.0 build",
+    "> node scripts/build.mjs",
+    "",
+    "✓ 内容校验完成",
+    "✓ 已生成可编辑组件",
+    "✓ 本地预览准备就绪",
+    "",
+    "完成。未渲染视频。"
+  ]
+}

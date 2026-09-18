@@ -1,0 +1,22 @@
+讲解组件库 · 精简交付包
+
+包含 123 个组件、104 种动画、13 种音效，以及 7 种边框、8 种背景、7 套外观组合。
+
+已排除：node_modules、reports、.runtime、snapshots/effects/proof、QUALITY.md。
+保留：组件源码、可编辑内容、素材及来源、预构建预览、目录缩略图、示例和运行脚本。
+vendor 是预览必须加载的浏览器运行文件，已保留；npm 开发依赖没有打包。
+原有指南中的历史审查报告链接不包含在此包内。
+
+预览（本机已安装 Node.js 即可，不需要 npm install）：
+1. 完整解压。
+2. 在 component-library 文件夹打开终端。
+3. 运行 node scripts/server.mjs --port 3031
+4. 浏览器打开 http://127.0.0.1:3031/catalog.html
+如果该端口已使用，可将 3031 换成其他空闲端口，打开对应地址。
+
+修改源码后重新构建：
+    npm ci
+    npm run build
+
+上传 Git 时保留 package.json 和 package-lock.json，不上传 node_modules、审查报告和运行日志。
+仓库已附带 .gitignore，新增开发依赖和审查记录会被忽略。

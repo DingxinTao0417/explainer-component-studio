@@ -1,0 +1,29 @@
+{
+  "eyebrow": "停下来，看一个细节",
+  "title": "要求落在纸上，才方便核对",
+  "mediaSrc": "assets/broll/planning.jpg",
+  "mediaType": "image",
+  "mediaAlt": "工作计划与笔记的实拍素材",
+  "mediaX": 50,
+  "mediaY": 50,
+  "focusX": 70,
+  "focusY": 56,
+  "focusWidth": 31,
+  "focusHeight": 47,
+  "focusLabel": "先把要求写下来",
+  "notes": [
+    {
+      "label": "对象",
+      "text": "这件事轮到谁做？"
+    },
+    {
+      "label": "动作",
+      "text": "具体要完成什么？"
+    },
+    {
+      "label": "检查",
+      "text": "拿什么判断做对了？"
+    }
+  ],
+  "footer": "旁白提示 · 可替换为自己的观察"
+}

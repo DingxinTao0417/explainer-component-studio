@@ -1,0 +1,54 @@
+{
+  "title": "Windows PowerShell",
+  "terminalLines": [
+    "PowerShell 7.4.6",
+    "PS D:\\video-project> Get-ChildItem",
+    "",
+    "    Directory: D:\\video-project",
+    "",
+    "Mode                 LastWriteTime         Length Name",
+    "----                 -------------         ------ ----",
+    "d----          2026/9/17     10:24                assets",
+    "d----          2026/9/17     10:26                compositions",
+    "-a---          2026/9/17     11:02           8124 content.json",
+    "",
+    "PS D:\\video-project>"
+  ],
+  "query": "> 新建",
+  "heading": "命令",
+  "commands": [
+    {
+      "icon": "plus",
+      "label": "新建标签页",
+      "detail": "使用默认配置文件",
+      "shortcut": "Ctrl+Shift+T"
+    },
+    {
+      "icon": "terminal",
+      "label": "新建标签页…",
+      "detail": "选择配置文件",
+      "shortcut": "›"
+    },
+    {
+      "icon": "monitor",
+      "label": "新建窗口",
+      "detail": "打开新的终端窗口",
+      "shortcut": "Ctrl+Shift+N"
+    },
+    {
+      "icon": "terminal",
+      "label": "新建 PowerShell 标签页",
+      "detail": "PowerShell",
+      "shortcut": ""
+    },
+    {
+      "icon": "terminal",
+      "label": "新建命令提示符标签页",
+      "detail": "Command Prompt",
+      "shortcut": ""
+    }
+  ],
+  "selected": 0,
+  "hint": "按 Enter 运行命令",
+  "dismiss": "Esc 关闭"
+}

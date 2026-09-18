@@ -1,0 +1,62 @@
+{
+  "tabs": [
+    {
+      "title": "项目文档",
+      "active": true
+    },
+    {
+      "title": "组件目录",
+      "active": false
+    }
+  ],
+  "url": "docs.example.com/getting-started",
+  "profile": "L",
+  "bookmarks": [
+    "工作台",
+    "文档",
+    "参考素材"
+  ],
+  "media": {
+    "kind": "demo",
+    "src": "",
+    "fit": "contain",
+    "alt": ""
+  },
+  "brand": "Studio Docs",
+  "nav": [
+    "指南",
+    "组件",
+    "示例",
+    "更新"
+  ],
+  "section": "开始使用",
+  "title": "创建你的第一个项目",
+  "intro": "将素材、内容和时间安排放在一起，开始制作一段清晰的讲解视频。",
+  "sidebar": [
+    "快速开始",
+    "项目结构",
+    "添加素材",
+    "时间轴",
+    "预览与导出"
+  ],
+  "activePage": 0,
+  "eyebrow": "指南 / 快速开始",
+  "steps": [
+    {
+      "title": "创建项目",
+      "body": "在工作目录中准备项目文件，并为每一段内容建立清晰的命名。"
+    },
+    {
+      "title": "替换内容",
+      "body": "编辑标题、说明和素材路径。组件会沿用统一的排版与视觉样式。"
+    }
+  ],
+  "code": "npm run build\nnpm run dev",
+  "tocTitle": "本页内容",
+  "toc": [
+    "创建项目",
+    "替换内容",
+    "下一步"
+  ],
+  "button": "下一步：添加素材"
+}

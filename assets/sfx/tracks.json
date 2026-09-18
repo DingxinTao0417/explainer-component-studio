@@ -1,0 +1,3247 @@
+{
+  "version": 1,
+  "sounds": [
+    {
+      "id": "click-soft",
+      "name": "轻触",
+      "src": "assets/sfx/click-soft.wav",
+      "duration": 0.164479,
+      "description": "安静的界面点按、选择与标签切换",
+      "defaultGain": 0.36,
+      "license": "Pixabay Content License",
+      "provenance": {
+        "provider": "media-use.bundled-sfx",
+        "prompt": "click-soft: 安静的界面点按、选择与标签切换",
+        "claimedOrigin": "Pixabay",
+        "sourceFile": ".media/sfx-source/click-soft.mp3",
+        "sourceSha256": "075e17bdac5c13662a1c9530050e0046f81d4138e00eb3bf30427a7b4404103d",
+        "license": "Pixabay Content License",
+        "licenseUrl": "https://pixabay.com/service/license-summary/",
+        "individualAuthorAndItemUrl": "not supplied by bundle",
+        "recordingOrSynthesis": "not established; not claimed as original recording"
+      },
+      "waveform": [
+        0.0055,
+        0.119,
+        0.3146,
+        0.1524,
+        0.2231,
+        0.0673,
+        0.0347,
+        0.0398,
+        0.7027,
+        0.333,
+        0.1188,
+        0.048,
+        0.0414,
+        0.0244,
+        0.0128,
+        0.0169,
+        0.0089,
+        0.0091,
+        0.0118,
+        0.0074,
+        0.0068,
+        0.0122,
+        0.0113,
+        0.0155,
+        0.0115,
+        0.0118,
+        0.1063,
+        0.1855,
+        0.1036,
+        0.0819,
+        0.2597,
+        0.5075,
+        0.1001,
+        0.0728,
+        0.0333,
+        0.0345,
+        0.0158,
+        0.0123,
+        0.0076,
+        0.0046,
+        0.0084,
+        0.0073,
+        0.0071,
+        0.0023,
+        0.0028,
+        0.0015,
+        0.0013,
+        0.0001
+      ]
+    },
+    {
+      "id": "click",
+      "name": "确认点按",
+      "src": "assets/sfx/click.wav",
+      "duration": 0.164479,
+      "description": "清晰的按钮点击、开关落位与操作确认",
+      "defaultGain": 0.42,
+      "license": "Pixabay Content License",
+      "provenance": {
+        "provider": "media-use.bundled-sfx",
+        "prompt": "click: 清晰的按钮点击、开关落位与操作确认",
+        "claimedOrigin": "Pixabay",
+        "sourceFile": ".media/sfx-source/click.mp3",
+        "sourceSha256": "075e17bdac5c13662a1c9530050e0046f81d4138e00eb3bf30427a7b4404103d",
+        "license": "Pixabay Content License",
+        "licenseUrl": "https://pixabay.com/service/license-summary/",
+        "individualAuthorAndItemUrl": "not supplied by bundle",
+        "recordingOrSynthesis": "not established; not claimed as original recording"
+      },
+      "waveform": [
+        0.0108,
+        0.2128,
+        0.5891,
+        0.3201,
+        0.3742,
+        0.0676,
+        0.0377,
+        0.0487,
+        0.6941,
+        0.3679,
+        0.1394,
+        0.0544,
+        0.044,
+        0.027,
+        0.0147,
+        0.019,
+        0.0105,
+        0.0096,
+        0.0125,
+        0.0074,
+        0.0089,
+        0.0128,
+        0.0118,
+        0.0163,
+        0.0094,
+        0.0158,
+        0.2468,
+        0.3159,
+        0.117,
+        0.0993,
+        0.3218,
+        0.5663,
+        0.1051,
+        0.0755,
+        0.0331,
+        0.0338,
+        0.0175,
+        0.0135,
+        0.0076,
+        0.0045,
+        0.0083,
+        0.0073,
+        0.0072,
+        0.0025,
+        0.003,
+        0.0016,
+        0.0014,
+        0.0002
+      ]
+    },
+    {
+      "id": "key-press",
+      "name": "单键",
+      "src": "assets/sfx/key-press.wav",
+      "duration": 0.097625,
+      "description": "命令输入、键盘快捷键与逐字提示",
+      "defaultGain": 0.34,
+      "license": "Pixabay Content License",
+      "provenance": {
+        "provider": "media-use.bundled-sfx",
+        "prompt": "key-press: 命令输入、键盘快捷键与逐字提示",
+        "claimedOrigin": "Pixabay",
+        "sourceFile": ".media/sfx-source/key-press.mp3",
+        "sourceSha256": "bcc892df0898bf466162f14233c3e92a8c1ea351f6affd8a3a7e56c9a760bb72",
+        "license": "Pixabay Content License",
+        "licenseUrl": "https://pixabay.com/service/license-summary/",
+        "individualAuthorAndItemUrl": "not supplied by bundle",
+        "recordingOrSynthesis": "not established; not claimed as original recording"
+      },
+      "waveform": [
+        0.0052,
+        0.0322,
+        0.7079,
+        0.2456,
+        0.0997,
+        0.1139,
+        0.0963,
+        0.0829,
+        0.0775,
+        0.061,
+        0.0465,
+        0.0424,
+        0.0255,
+        0.0297,
+        0.0147,
+        0.0195,
+        0.0141,
+        0.0129,
+        0.0046,
+        0.0091,
+        0.0099,
+        0.0085,
+        0.0082,
+        0.0062,
+        0.0115,
+        0.0099,
+        0.0107,
+        0.0091,
+        0.0064,
+        0.0077,
+        0.007,
+        0.0097,
+        0.0079,
+        0.011,
+        0.0115,
+        0.0225,
+        0.0192,
+        0.0225,
+        0.013,
+        0.0067,
+        0.0069,
+        0.0074,
+        0.006,
+        0.0049,
+        0.0026,
+        0.0016,
+        0.0011,
+        0.0005
+      ]
+    },
+    {
+      "id": "typing",
+      "name": "键入节奏",
+      "src": "assets/sfx/typing.wav",
+      "duration": 1.078667,
+      "description": "短促连续输入，适合终端与代码打字",
+      "defaultGain": 0.25,
+      "license": "Pixabay Content License",
+      "provenance": {
+        "provider": "media-use.bundled-sfx",
+        "prompt": "typing: 短促连续输入，适合终端与代码打字",
+        "claimedOrigin": "Pixabay",
+        "sourceFile": ".media/sfx-source/typing.mp3",
+        "sourceSha256": "944160652faeb7b32acc9341ede4d735a5c9a4ce3fe8509ef7eab91efb430487",
+        "license": "Pixabay Content License",
+        "licenseUrl": "https://pixabay.com/service/license-summary/",
+        "individualAuthorAndItemUrl": "not supplied by bundle",
+        "recordingOrSynthesis": "not established; not claimed as original recording"
+      },
+      "waveform": [
+        0.7076,
+        0.5085,
+        0.0506,
+        0.019,
+        0.0254,
+        0.3932,
+        0.0138,
+        0.2922,
+        0.2026,
+        0.2844,
+        0.022,
+        0.0084,
+        0.3989,
+        0.127,
+        0.0253,
+        0.0128,
+        0.3764,
+        0.0185,
+        0.0064,
+        0.0039,
+        0.0039,
+        0.1778,
+        0.2892,
+        0.2733,
+        0.0383,
+        0.0187,
+        0.1512,
+        0.1074,
+        0.0075,
+        0.0047,
+        0.0043,
+        0.0041,
+        0.578,
+        0.3439,
+        0.045,
+        0.0186,
+        0.1514,
+        0.0157,
+        0.0076,
+        0.0043,
+        0.0201,
+        0.4102,
+        0.2173,
+        0.0575,
+        0.0096,
+        0.0075,
+        0.0852,
+        0.0056
+      ]
+    },
+    {
+      "id": "pop",
+      "name": "轻弹",
+      "src": "assets/sfx/pop.wav",
+      "duration": 0.296542,
+      "description": "小卡片、标签、节点与角标出现",
+      "defaultGain": 0.36,
+      "license": "Pixabay Content License",
+      "provenance": {
+        "provider": "media-use.bundled-sfx",
+        "prompt": "pop: 小卡片、标签、节点与角标出现",
+        "claimedOrigin": "Pixabay",
+        "sourceFile": ".media/sfx-source/pop.mp3",
+        "sourceSha256": "19ab7193f626ff57fdeef60b45543bac416fcbcec803cfb417abe4b271c1b352",
+        "license": "Pixabay Content License",
+        "licenseUrl": "https://pixabay.com/service/license-summary/",
+        "individualAuthorAndItemUrl": "not supplied by bundle",
+        "recordingOrSynthesis": "not established; not claimed as original recording"
+      },
+      "waveform": [
+        0.0053,
+        0.0033,
+        0.0071,
+        0.0119,
+        0.012,
+        0.009,
+        0.0069,
+        0.0056,
+        0.0043,
+        0.0057,
+        0.0037,
+        0.003,
+        0.0026,
+        0.0035,
+        0.013,
+        0.7043,
+        0.4894,
+        0.3708,
+        0.3347,
+        0.2248,
+        0.0936,
+        0.0403,
+        0.0274,
+        0.0144,
+        0.0131,
+        0.0144,
+        0.0158,
+        0.0121,
+        0.0084,
+        0.0071,
+        0.0107,
+        0.0081,
+        0.0078,
+        0.0123,
+        0.014,
+        0.0086,
+        0.0073,
+        0.0087,
+        0.008,
+        0.0072,
+        0.0073,
+        0.004,
+        0.0043,
+        0.0018,
+        0.0022,
+        0.0013,
+        0.0008,
+        0.0004
+      ]
+    },
+    {
+      "id": "ping",
+      "name": "数据提示",
+      "src": "assets/sfx/ping.wav",
+      "duration": 0.638729,
+      "description": "数值到位、关键数据与注释点亮",
+      "defaultGain": 0.3,
+      "license": "Pixabay Content License",
+      "provenance": {
+        "provider": "media-use.bundled-sfx",
+        "prompt": "ping: 数值到位、关键数据与注释点亮",
+        "claimedOrigin": "Pixabay",
+        "sourceFile": ".media/sfx-source/ping.mp3",
+        "sourceSha256": "c54d088fa2709e6b3c9ce87594a9187d0d5338d3a8c683271f9c4353a8ee8c91",
+        "license": "Pixabay Content License",
+        "licenseUrl": "https://pixabay.com/service/license-summary/",
+        "individualAuthorAndItemUrl": "not supplied by bundle",
+        "recordingOrSynthesis": "not established; not claimed as original recording"
+      },
+      "waveform": [
+        0.7079,
+        0.5122,
+        0.2102,
+        0.1781,
+        0.1591,
+        0.1362,
+        0.1384,
+        0.131,
+        0.1314,
+        0.1127,
+        0.0993,
+        0.0965,
+        0.0884,
+        0.0813,
+        0.0742,
+        0.0644,
+        0.061,
+        0.0557,
+        0.0514,
+        0.047,
+        0.0439,
+        0.04,
+        0.0375,
+        0.035,
+        0.0317,
+        0.0295,
+        0.027,
+        0.026,
+        0.0233,
+        0.0216,
+        0.0203,
+        0.0188,
+        0.0173,
+        0.016,
+        0.0146,
+        0.0138,
+        0.0125,
+        0.0115,
+        0.011,
+        0.0099,
+        0.0092,
+        0.0086,
+        0.0079,
+        0.0073,
+        0.0068,
+        0.006,
+        0.0036,
+        0.0017
+      ]
+    },
+    {
+      "id": "notification",
+      "name": "消息到达",
+      "src": "assets/sfx/notification.wav",
+      "duration": 1.389792,
+      "description": "消息气泡、通知与工具结果出现",
+      "defaultGain": 0.28,
+      "license": "Pixabay Content License",
+      "provenance": {
+        "provider": "media-use.bundled-sfx",
+        "prompt": "notification: 消息气泡、通知与工具结果出现",
+        "claimedOrigin": "Pixabay",
+        "sourceFile": ".media/sfx-source/notification.mp3",
+        "sourceSha256": "b1559967dedb7994a82371f10cec9f7f3992e6b147b4cd88d62112bcdc3f9ba3",
+        "license": "Pixabay Content License",
+        "licenseUrl": "https://pixabay.com/service/license-summary/",
+        "individualAuthorAndItemUrl": "not supplied by bundle",
+        "recordingOrSynthesis": "not established; not claimed as original recording"
+      },
+      "waveform": [
+        0.6981,
+        0.2931,
+        0.2096,
+        0.1799,
+        0.6835,
+        0.5182,
+        0.3696,
+        0.3201,
+        0.2637,
+        0.2182,
+        0.1976,
+        0.1745,
+        0.1664,
+        0.1511,
+        0.1381,
+        0.1188,
+        0.1087,
+        0.0968,
+        0.0906,
+        0.0871,
+        0.0794,
+        0.0742,
+        0.0663,
+        0.0622,
+        0.0572,
+        0.0514,
+        0.0471,
+        0.0411,
+        0.0362,
+        0.0328,
+        0.0303,
+        0.0287,
+        0.026,
+        0.0233,
+        0.022,
+        0.0188,
+        0.017,
+        0.0164,
+        0.0156,
+        0.0141,
+        0.0118,
+        0.0103,
+        0.01,
+        0.0092,
+        0.0073,
+        0.006,
+        0.0059,
+        0.0039
+      ]
+    },
+    {
+      "id": "chime",
+      "name": "完成和弦",
+      "src": "assets/sfx/chime.wav",
+      "duration": 1.75,
+      "description": "成功、步骤完成与流程收束",
+      "defaultGain": 0.28,
+      "license": "Pixabay Content License",
+      "provenance": {
+        "provider": "media-use.bundled-sfx",
+        "prompt": "chime: 成功、步骤完成与流程收束",
+        "claimedOrigin": "Pixabay",
+        "sourceFile": ".media/sfx-source/chime.mp3",
+        "sourceSha256": "74823b1b27703c56e0652db838f503c150ce9c2442d47d27430af3d5121d6d12",
+        "license": "Pixabay Content License",
+        "licenseUrl": "https://pixabay.com/service/license-summary/",
+        "individualAuthorAndItemUrl": "not supplied by bundle",
+        "recordingOrSynthesis": "not established; not claimed as original recording"
+      },
+      "waveform": [
+        0.7079,
+        0.2319,
+        0.2498,
+        0.2132,
+        0.2236,
+        0.1986,
+        0.2009,
+        0.1953,
+        0.1971,
+        0.1793,
+        0.1811,
+        0.1625,
+        0.167,
+        0.1504,
+        0.1533,
+        0.1292,
+        0.1327,
+        0.1255,
+        0.1308,
+        0.1205,
+        0.128,
+        0.114,
+        0.1198,
+        0.112,
+        0.116,
+        0.1054,
+        0.1102,
+        0.0995,
+        0.1038,
+        0.0953,
+        0.0995,
+        0.0893,
+        0.0953,
+        0.0833,
+        0.0899,
+        0.0774,
+        0.0845,
+        0.0758,
+        0.0801,
+        0.063,
+        0.0679,
+        0.0528,
+        0.0568,
+        0.0431,
+        0.047,
+        0.0337,
+        0.0369,
+        0.016
+      ]
+    },
+    {
+      "id": "whoosh-short",
+      "name": "短滑动",
+      "src": "assets/sfx/whoosh-short.wav",
+      "duration": 0.335979,
+      "description": "面板轻移、抽屉展开与快速切换",
+      "defaultGain": 0.3,
+      "license": "Pixabay Content License",
+      "provenance": {
+        "provider": "media-use.bundled-sfx",
+        "prompt": "whoosh-short: 面板轻移、抽屉展开与快速切换",
+        "claimedOrigin": "Pixabay",
+        "sourceFile": ".media/sfx-source/whoosh-short.mp3",
+        "sourceSha256": "c2efd9d902a59bf9ec5019035d7deadd17762136896b6e3cb6dd99ea50997a30",
+        "license": "Pixabay Content License",
+        "licenseUrl": "https://pixabay.com/service/license-summary/",
+        "individualAuthorAndItemUrl": "not supplied by bundle",
+        "recordingOrSynthesis": "not established; not claimed as original recording"
+      },
+      "waveform": [
+        0.0066,
+        0.0202,
+        0.0337,
+        0.0257,
+        0.0699,
+        0.0931,
+        0.0472,
+        0.0811,
+        0.1256,
+        0.185,
+        0.306,
+        0.3699,
+        0.3815,
+        0.5786,
+        0.692,
+        0.5319,
+        0.622,
+        0.3789,
+        0.4164,
+        0.3343,
+        0.3886,
+        0.1587,
+        0.1886,
+        0.3012,
+        0.1799,
+        0.1287,
+        0.1217,
+        0.1022,
+        0.1112,
+        0.0996,
+        0.0503,
+        0.086,
+        0.0906,
+        0.0708,
+        0.029,
+        0.0234,
+        0.0167,
+        0.017,
+        0.0088,
+        0.0098,
+        0.0114,
+        0.0103,
+        0.0076,
+        0.0061,
+        0.0052,
+        0.0025,
+        0.0006,
+        0.0002
+      ]
+    },
+    {
+      "id": "whoosh",
+      "name": "柔和推移",
+      "src": "assets/sfx/whoosh.wav",
+      "duration": 0.335979,
+      "description": "较大区域切换、镜头聚焦与信息揭示",
+      "defaultGain": 0.28,
+      "license": "Pixabay Content License",
+      "provenance": {
+        "provider": "media-use.bundled-sfx",
+        "prompt": "whoosh: 较大区域切换、镜头聚焦与信息揭示",
+        "claimedOrigin": "Pixabay",
+        "sourceFile": ".media/sfx-source/whoosh.mp3",
+        "sourceSha256": "c2efd9d902a59bf9ec5019035d7deadd17762136896b6e3cb6dd99ea50997a30",
+        "license": "Pixabay Content License",
+        "licenseUrl": "https://pixabay.com/service/license-summary/",
+        "individualAuthorAndItemUrl": "not supplied by bundle",
+        "recordingOrSynthesis": "not established; not claimed as original recording"
+      },
+      "waveform": [
+        0.0063,
+        0.0199,
+        0.0331,
+        0.0252,
+        0.0702,
+        0.0928,
+        0.0464,
+        0.0812,
+        0.1254,
+        0.1852,
+        0.3057,
+        0.3674,
+        0.382,
+        0.5766,
+        0.691,
+        0.5321,
+        0.6207,
+        0.3766,
+        0.4149,
+        0.3338,
+        0.3891,
+        0.1573,
+        0.1885,
+        0.3006,
+        0.1798,
+        0.1286,
+        0.1216,
+        0.1016,
+        0.1111,
+        0.0991,
+        0.0499,
+        0.086,
+        0.0906,
+        0.0709,
+        0.0288,
+        0.0234,
+        0.0163,
+        0.0168,
+        0.0088,
+        0.0098,
+        0.0113,
+        0.0103,
+        0.0076,
+        0.0061,
+        0.0051,
+        0.0025,
+        0.0006,
+        0.0002
+      ]
+    },
+    {
+      "id": "sparkle",
+      "name": "轻亮点",
+      "src": "assets/sfx/sparkle.wav",
+      "duration": 1.35,
+      "description": "重点词、标记高光与小范围强调",
+      "defaultGain": 0.23,
+      "license": "Pixabay Content License",
+      "provenance": {
+        "provider": "media-use.bundled-sfx",
+        "prompt": "sparkle: 重点词、标记高光与小范围强调",
+        "claimedOrigin": "Pixabay",
+        "sourceFile": ".media/sfx-source/sparkle.mp3",
+        "sourceSha256": "a66b2829a307bcb5b1f6551d7cdc72fe45bbe9a91abfb994d28db8d5e4e42ea8",
+        "license": "Pixabay Content License",
+        "licenseUrl": "https://pixabay.com/service/license-summary/",
+        "individualAuthorAndItemUrl": "not supplied by bundle",
+        "recordingOrSynthesis": "not established; not claimed as original recording"
+      },
+      "waveform": [
+        0.6924,
+        0.4687,
+        0.6434,
+        0.5672,
+        0.5879,
+        0.4853,
+        0.498,
+        0.5304,
+        0.5513,
+        0.3477,
+        0.4025,
+        0.4092,
+        0.4697,
+        0.2578,
+        0.231,
+        0.237,
+        0.1828,
+        0.1917,
+        0.1839,
+        0.1472,
+        0.1042,
+        0.1111,
+        0.1369,
+        0.1466,
+        0.1504,
+        0.112,
+        0.1052,
+        0.0718,
+        0.0811,
+        0.0964,
+        0.0903,
+        0.1003,
+        0.0598,
+        0.0343,
+        0.0488,
+        0.0508,
+        0.0371,
+        0.0235,
+        0.0224,
+        0.0218,
+        0.0238,
+        0.0243,
+        0.0172,
+        0.0138,
+        0.0099,
+        0.0089,
+        0.0048,
+        0.0021
+      ]
+    },
+    {
+      "id": "error",
+      "name": "温和错误提示",
+      "src": "assets/sfx/error.wav",
+      "duration": 0.31925,
+      "description": "校验失败或撤销提醒，避免警报式高音量",
+      "defaultGain": 0.25,
+      "license": "Pixabay Content License",
+      "provenance": {
+        "provider": "media-use.bundled-sfx",
+        "prompt": "error: 校验失败或撤销提醒，避免警报式高音量",
+        "claimedOrigin": "Pixabay",
+        "sourceFile": ".media/sfx-source/error.mp3",
+        "sourceSha256": "b4882e3941ca496b5038e7c7d64318419da9f69d3da9540a1c693adc639cf121",
+        "license": "Pixabay Content License",
+        "licenseUrl": "https://pixabay.com/service/license-summary/",
+        "individualAuthorAndItemUrl": "not supplied by bundle",
+        "recordingOrSynthesis": "not established; not claimed as original recording"
+      },
+      "waveform": [
+        0.1289,
+        0.2022,
+        0.2203,
+        0.2068,
+        0.2046,
+        0.2342,
+        0.1973,
+        0.2123,
+        0.2298,
+        0.22,
+        0.2058,
+        0.2079,
+        0.0722,
+        0.0024,
+        0.0012,
+        0.0003,
+        0.0644,
+        0.2214,
+        0.2103,
+        0.2414,
+        0.2481,
+        0.2338,
+        0.2238,
+        0.203,
+        0.2075,
+        0.2112,
+        0.2139,
+        0.2075,
+        0.1979,
+        0.2043,
+        0.2123,
+        0.2054,
+        0.1895,
+        0.2043,
+        0.2068,
+        0.2173,
+        0.2202,
+        0.1978,
+        0.226,
+        0.2096,
+        0.2034,
+        0.196,
+        0.2075,
+        0.1702,
+        0.0994,
+        0.0048,
+        0.0025,
+        0.0005
+      ]
+    },
+    {
+      "id": "riser",
+      "name": "柔和渐进",
+      "src": "assets/sfx/riser.wav",
+      "duration": 1.55,
+      "description": "数据递增与进度完成前的轻量上升提示",
+      "defaultGain": 0.23,
+      "license": "Pixabay Content License",
+      "provenance": {
+        "provider": "media-use.bundled-sfx",
+        "prompt": "riser: 数据递增与进度完成前的轻量上升提示",
+        "claimedOrigin": "Pixabay",
+        "sourceFile": ".media/sfx-source/riser.mp3",
+        "sourceSha256": "d2f29d49f27dee7d3b25af22ffe5bebc39390cc5d5fb3b3e1c433499c77f3d1d",
+        "license": "Pixabay Content License",
+        "licenseUrl": "https://pixabay.com/service/license-summary/",
+        "individualAuthorAndItemUrl": "not supplied by bundle",
+        "recordingOrSynthesis": "not established; not claimed as original recording"
+      },
+      "waveform": [
+        0.0044,
+        0.0044,
+        0.0047,
+        0.008,
+        0.0068,
+        0.0076,
+        0.0085,
+        0.0082,
+        0.014,
+        0.0143,
+        0.0136,
+        0.0146,
+        0.0165,
+        0.0177,
+        0.0175,
+        0.023,
+        0.0339,
+        0.022,
+        0.027,
+        0.0296,
+        0.0351,
+        0.0418,
+        0.0317,
+        0.0472,
+        0.0603,
+        0.0631,
+        0.0527,
+        0.1062,
+        0.057,
+        0.0805,
+        0.0863,
+        0.0763,
+        0.1105,
+        0.064,
+        0.1061,
+        0.1247,
+        0.1444,
+        0.125,
+        0.1084,
+        0.1948,
+        0.2435,
+        0.1133,
+        0.2081,
+        0.1655,
+        0.1987,
+        0.1624,
+        0.1001,
+        0.039
+      ]
+    }
+  ],
+  "tracks": [
+    {
+      "id": "none",
+      "src": "assets/sfx/tracks/none.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [],
+      "peak": 0,
+      "peakDb": null,
+      "rms": 0,
+      "onset": null,
+      "ceilingScale": 1
+    },
+    {
+      "id": "fade-in",
+      "src": "assets/sfx/tracks/fade-in.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.24
+        }
+      ],
+      "peak": 0.166077,
+      "peakDb": -15.59,
+      "rms": 0.0061282123976031996,
+      "onset": 0.6018541666666667,
+      "ceilingScale": 1
+    },
+    {
+      "id": "slide-in",
+      "src": "assets/sfx/tracks/slide-in.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.35
+        },
+        {
+          "sound": "pop",
+          "name": "轻弹",
+          "at": 1.32,
+          "duration": 0.2965,
+          "gain": 0.2
+        }
+      ],
+      "peak": 0.242195,
+      "peakDb": -12.32,
+      "rms": 0.00942470133765302,
+      "onset": 0.6016666666666667,
+      "ceilingScale": 1
+    },
+    {
+      "id": "stagger",
+      "src": "assets/sfx/tracks/stagger.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "pop",
+          "name": "轻弹",
+          "at": 0.6,
+          "duration": 0.2965,
+          "gain": 0.2
+        },
+        {
+          "sound": "pop",
+          "name": "轻弹",
+          "at": 0.96,
+          "duration": 0.2965,
+          "gain": 0.22
+        },
+        {
+          "sound": "pop",
+          "name": "轻弹",
+          "at": 1.32,
+          "duration": 0.2965,
+          "gain": 0.24
+        },
+        {
+          "sound": "pop",
+          "name": "轻弹",
+          "at": 1.68,
+          "duration": 0.2965,
+          "gain": 0.26
+        },
+        {
+          "sound": "pop",
+          "name": "轻弹",
+          "at": 2.04,
+          "duration": 0.2965,
+          "gain": 0.24
+        }
+      ],
+      "peak": 0.183114,
+      "peakDb": -14.75,
+      "rms": 0.007792171403450888,
+      "onset": 0.6020416666666667,
+      "ceilingScale": 1
+    },
+    {
+      "id": "typewriter",
+      "src": "assets/sfx/tracks/typewriter.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "typing",
+          "name": "键入节奏",
+          "at": 0.6,
+          "duration": 1.0787,
+          "gain": 0.28
+        },
+        {
+          "sound": "typing",
+          "name": "键入节奏",
+          "at": 1.679,
+          "duration": 0.121,
+          "gain": 0.28
+        },
+        {
+          "sound": "key-press",
+          "name": "单键",
+          "at": 1.8,
+          "duration": 0.0976,
+          "gain": 0.3
+        }
+      ],
+      "peak": 0.19814,
+      "peakDb": -14.06,
+      "rms": 0.0040036024496996475,
+      "onset": 0.601625,
+      "ceilingScale": 1
+    },
+    {
+      "id": "line-highlight",
+      "src": "assets/sfx/tracks/line-highlight.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "click-soft",
+          "name": "轻触",
+          "at": 0.6,
+          "duration": 0.1645,
+          "gain": 0.28
+        },
+        {
+          "sound": "click-soft",
+          "name": "轻触",
+          "at": 1.68,
+          "duration": 0.1645,
+          "gain": 0.28
+        },
+        {
+          "sound": "click-soft",
+          "name": "轻触",
+          "at": 2.76,
+          "duration": 0.1645,
+          "gain": 0.28
+        },
+        {
+          "sound": "click-soft",
+          "name": "轻触",
+          "at": 3.84,
+          "duration": 0.1645,
+          "gain": 0.28
+        },
+        {
+          "sound": "click-soft",
+          "name": "轻触",
+          "at": 4.92,
+          "duration": 0.1645,
+          "gain": 0.28
+        }
+      ],
+      "peak": 0.196768,
+      "peakDb": -14.12,
+      "rms": 0.004556158902856679,
+      "onset": 0.6020208333333333,
+      "ceilingScale": 1
+    },
+    {
+      "id": "draw-path",
+      "src": "assets/sfx/tracks/draw-path.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.22
+        },
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 1.08,
+          "duration": 0.336,
+          "gain": 0.22
+        }
+      ],
+      "peak": 0.152237,
+      "peakDb": -16.35,
+      "rms": 0.00794438433779931,
+      "onset": 0.601875,
+      "ceilingScale": 1
+    },
+    {
+      "id": "click-ripple",
+      "src": "assets/sfx/tracks/click-ripple.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "click",
+          "name": "确认点按",
+          "at": 1.65,
+          "duration": 0.1645,
+          "gain": 0.48
+        }
+      ],
+      "peak": 0.333164,
+      "peakDb": -9.55,
+      "rms": 0.003995564264214752,
+      "onset": 1.651375,
+      "ceilingScale": 1
+    },
+    {
+      "id": "zoom-focus",
+      "src": "assets/sfx/tracks/zoom-focus.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh",
+          "name": "柔和推移",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.3
+        }
+      ],
+      "peak": 0.207289,
+      "peakDb": -13.67,
+      "rms": 0.007660502793460712,
+      "onset": 0.6017083333333333,
+      "ceilingScale": 1
+    },
+    {
+      "id": "spotlight",
+      "src": "assets/sfx/tracks/spotlight.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "ping",
+          "name": "数据提示",
+          "at": 0.65,
+          "duration": 0.6387,
+          "gain": 0.24
+        }
+      ],
+      "peak": 0.169893,
+      "peakDb": -15.4,
+      "rms": 0.00292782404299519,
+      "onset": 0.6517708333333333,
+      "ceilingScale": 1
+    },
+    {
+      "id": "split-reveal",
+      "src": "assets/sfx/tracks/split-reveal.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh",
+          "name": "柔和推移",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.32
+        }
+      ],
+      "peak": 0.221108,
+      "peakDb": -13.11,
+      "rms": 0.008171202986818,
+      "onset": 0.6016875,
+      "ceilingScale": 1
+    },
+    {
+      "id": "progress-fill",
+      "src": "assets/sfx/tracks/progress-fill.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "riser",
+          "name": "柔和渐进",
+          "at": 0.6,
+          "duration": 1.4,
+          "gain": 0.25
+        },
+        {
+          "sound": "ping",
+          "name": "数据提示",
+          "at": 2.1,
+          "duration": 0.6387,
+          "gain": 0.28
+        }
+      ],
+      "peak": 0.198208,
+      "peakDb": -14.06,
+      "rms": 0.0044042503449918495,
+      "onset": 0.6094166666666667,
+      "ceilingScale": 1
+    },
+    {
+      "id": "count-up",
+      "src": "assets/sfx/tracks/count-up.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "riser",
+          "name": "柔和渐进",
+          "at": 0.6,
+          "duration": 1.55,
+          "gain": 0.23
+        },
+        {
+          "sound": "chime",
+          "name": "完成和弦",
+          "at": 2.6,
+          "duration": 1.75,
+          "gain": 0.25
+        }
+      ],
+      "peak": 0.065376,
+      "peakDb": -23.69,
+      "rms": 0.008566098278667082,
+      "onset": 0.6094375,
+      "ceilingScale": 1
+    },
+    {
+      "id": "scroll-panel",
+      "src": "assets/sfx/tracks/scroll-panel.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh",
+          "name": "柔和推移",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.15
+        }
+      ],
+      "peak": 0.103645,
+      "peakDb": -19.69,
+      "rms": 0.003830251396730356,
+      "onset": 0.6029791666666666,
+      "ceilingScale": 1
+    },
+    {
+      "id": "word-emphasis",
+      "src": "assets/sfx/tracks/word-emphasis.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.25
+        }
+      ],
+      "peak": 0.172997,
+      "peakDb": -15.24,
+      "rms": 0.006383554586089252,
+      "onset": 0.6018333333333333,
+      "ceilingScale": 1
+    },
+    {
+      "id": "window-exit",
+      "src": "assets/sfx/tracks/window-exit.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh",
+          "name": "柔和推移",
+          "at": 3.35,
+          "duration": 0.336,
+          "gain": 0.32
+        }
+      ],
+      "peak": 0.221108,
+      "peakDb": -13.11,
+      "rms": 0.008171202986818,
+      "onset": 3.3516875,
+      "ceilingScale": 1
+    },
+    {
+      "id": "modal-pop",
+      "src": "assets/sfx/tracks/modal-pop.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "key-press",
+          "name": "单键",
+          "at": 0.6,
+          "duration": 0.0976,
+          "gain": 0.28
+        },
+        {
+          "sound": "pop",
+          "name": "轻弹",
+          "at": 0.67,
+          "duration": 0.2965,
+          "gain": 0.32
+        }
+      ],
+      "peak": 0.225371,
+      "peakDb": -12.94,
+      "rms": 0.00483944158734279,
+      "onset": 0.6015416666666666,
+      "ceilingScale": 1
+    },
+    {
+      "id": "toast-enter",
+      "src": "assets/sfx/tracks/toast-enter.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "notification",
+          "name": "消息到达",
+          "at": 0.6,
+          "duration": 1.3898,
+          "gain": 0.3
+        },
+        {
+          "sound": "pop",
+          "name": "轻弹",
+          "at": 1.35,
+          "duration": 0.2965,
+          "gain": 0.25
+        },
+        {
+          "sound": "pop",
+          "name": "轻弹",
+          "at": 2.1,
+          "duration": 0.2965,
+          "gain": 0.25
+        }
+      ],
+      "peak": 0.205055,
+      "peakDb": -13.76,
+      "rms": 0.01131580166453087,
+      "onset": 0.6020208333333333,
+      "ceilingScale": 1
+    },
+    {
+      "id": "menu-unfold",
+      "src": "assets/sfx/tracks/menu-unfold.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "click",
+          "name": "确认点按",
+          "at": 0.6,
+          "duration": 0.1645,
+          "gain": 0.32
+        },
+        {
+          "sound": "click-soft",
+          "name": "轻触",
+          "at": 1.5,
+          "duration": 0.1645,
+          "gain": 0.26
+        }
+      ],
+      "peak": 0.222109,
+      "peakDb": -13.07,
+      "rms": 0.0032672840348121346,
+      "onset": 0.6018333333333333,
+      "ceilingScale": 1
+    },
+    {
+      "id": "focus-ring",
+      "src": "assets/sfx/tracks/focus-ring.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "ping",
+          "name": "数据提示",
+          "at": 0.6,
+          "duration": 0.6387,
+          "gain": 0.27
+        }
+      ],
+      "peak": 0.191129,
+      "peakDb": -14.37,
+      "rms": 0.0032938020438225126,
+      "onset": 0.6015208333333333,
+      "ceilingScale": 1
+    },
+    {
+      "id": "marker-sweep",
+      "src": "assets/sfx/tracks/marker-sweep.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.23
+        }
+      ],
+      "peak": 0.159157,
+      "peakDb": -15.96,
+      "rms": 0.005872870215374199,
+      "onset": 0.6018541666666667,
+      "ceilingScale": 1
+    },
+    {
+      "id": "focus-hop",
+      "src": "assets/sfx/tracks/focus-hop.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "click-soft",
+          "name": "轻触",
+          "at": 0.6,
+          "duration": 0.1645,
+          "gain": 0.24
+        },
+        {
+          "sound": "click-soft",
+          "name": "轻触",
+          "at": 2,
+          "duration": 0.1645,
+          "gain": 0.24
+        },
+        {
+          "sound": "click-soft",
+          "name": "轻触",
+          "at": 3.4,
+          "duration": 0.1645,
+          "gain": 0.24
+        }
+      ],
+      "peak": 0.168658,
+      "peakDb": -15.46,
+      "rms": 0.0030250161551916397,
+      "onset": 0.6020208333333333,
+      "ceilingScale": 1
+    },
+    {
+      "id": "check-complete",
+      "src": "assets/sfx/tracks/check-complete.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "riser",
+          "name": "柔和渐进",
+          "at": 0.6,
+          "duration": 0.9,
+          "gain": 0.2
+        },
+        {
+          "sound": "chime",
+          "name": "完成和弦",
+          "at": 2.08,
+          "duration": 1.75,
+          "gain": 0.32
+        }
+      ],
+      "peak": 0.083682,
+      "peakDb": -21.55,
+      "rms": 0.010314298886751287,
+      "onset": 0.6094791666666667,
+      "ceilingScale": 1
+    },
+    {
+      "id": "row-reveal",
+      "src": "assets/sfx/tracks/row-reveal.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "typing",
+          "name": "键入节奏",
+          "at": 0.6,
+          "duration": 0.65,
+          "gain": 0.16
+        },
+        {
+          "sound": "click-soft",
+          "name": "轻触",
+          "at": 1.4,
+          "duration": 0.1645,
+          "gain": 0.25
+        }
+      ],
+      "peak": 0.175686,
+      "peakDb": -15.11,
+      "rms": 0.0024194665751331437,
+      "onset": 0.6017083333333333,
+      "ceilingScale": 1
+    },
+    {
+      "id": "chart-trace",
+      "src": "assets/sfx/tracks/chart-trace.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "riser",
+          "name": "柔和渐进",
+          "at": 0.6,
+          "duration": 1.4,
+          "gain": 0.18
+        },
+        {
+          "sound": "ping",
+          "name": "数据提示",
+          "at": 4,
+          "duration": 0.6387,
+          "gain": 0.25
+        }
+      ],
+      "peak": 0.176971,
+      "peakDb": -15.04,
+      "rms": 0.0036480807930131406,
+      "onset": 0.6095416666666666,
+      "ceilingScale": 1
+    },
+    {
+      "id": "card-stack",
+      "src": "assets/sfx/tracks/card-stack.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh",
+          "name": "柔和推移",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.3
+        },
+        {
+          "sound": "pop",
+          "name": "轻弹",
+          "at": 1.7,
+          "duration": 0.2965,
+          "gain": 0.22
+        }
+      ],
+      "peak": 0.207289,
+      "peakDb": -13.67,
+      "rms": 0.00833782913664882,
+      "onset": 0.6017083333333333,
+      "ceilingScale": 1
+    },
+    {
+      "id": "media-pan",
+      "src": "assets/sfx/tracks/media-pan.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh",
+          "name": "柔和推移",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.13
+        }
+      ],
+      "peak": 0.089825,
+      "peakDb": -20.93,
+      "rms": 0.0033195512099763666,
+      "onset": 0.6031041666666667,
+      "ceilingScale": 1
+    },
+    {
+      "id": "iris-reveal",
+      "src": "assets/sfx/tracks/iris-reveal.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh",
+          "name": "柔和推移",
+          "at": 2.1,
+          "duration": 0.336,
+          "gain": 0.24
+        }
+      ],
+      "peak": 0.165831,
+      "peakDb": -15.61,
+      "rms": 0.00612840223152124,
+      "onset": 2.1018541666666666,
+      "ceilingScale": 1
+    },
+    {
+      "id": "wipe-transition",
+      "src": "assets/sfx/tracks/wipe-transition.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh",
+          "name": "柔和推移",
+          "at": 2.1,
+          "duration": 0.336,
+          "gain": 0.24
+        }
+      ],
+      "peak": 0.165831,
+      "peakDb": -15.61,
+      "rms": 0.00612840223152124,
+      "onset": 2.1018541666666666,
+      "ceilingScale": 1
+    },
+    {
+      "id": "stamp-confirm",
+      "src": "assets/sfx/tracks/stamp-confirm.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "pop",
+          "name": "轻弹",
+          "at": 1,
+          "duration": 0.2965,
+          "gain": 0.38
+        },
+        {
+          "sound": "chime",
+          "name": "完成和弦",
+          "at": 1.1,
+          "duration": 1.75,
+          "gain": 0.27
+        }
+      ],
+      "peak": 0.267628,
+      "peakDb": -11.45,
+      "rms": 0.010376877262756731,
+      "onset": 1.0020208333333334,
+      "ceilingScale": 1
+    },
+    {
+      "id": "error-shake",
+      "src": "assets/sfx/tracks/error-shake.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "error",
+          "name": "温和错误提示",
+          "at": 0.6,
+          "duration": 0.3192,
+          "gain": 0.29
+        }
+      ],
+      "peak": 0.071942,
+      "peakDb": -22.86,
+      "rms": 0.00569675435658205,
+      "onset": 0.6015208333333333,
+      "ceilingScale": 1
+    },
+    {
+      "id": "scale-settle",
+      "src": "assets/sfx/tracks/scale-settle.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.19
+        }
+      ],
+      "peak": 0.131477,
+      "peakDb": -17.62,
+      "rms": 0.004851501485656914,
+      "onset": 0.602,
+      "ceilingScale": 1
+    },
+    {
+      "id": "curtain-open",
+      "src": "assets/sfx/tracks/curtain-open.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.19
+        }
+      ],
+      "peak": 0.131477,
+      "peakDb": -17.62,
+      "rms": 0.004851501485656914,
+      "onset": 0.602,
+      "ceilingScale": 1
+    },
+    {
+      "id": "blur-resolve",
+      "src": "assets/sfx/tracks/blur-resolve.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.19
+        }
+      ],
+      "peak": 0.131477,
+      "peakDb": -17.62,
+      "rms": 0.004851501485656914,
+      "onset": 0.602,
+      "ceilingScale": 1
+    },
+    {
+      "id": "mask-rise",
+      "src": "assets/sfx/tracks/mask-rise.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.19
+        }
+      ],
+      "peak": 0.131477,
+      "peakDb": -17.62,
+      "rms": 0.004851501485656914,
+      "onset": 0.602,
+      "ceilingScale": 1
+    },
+    {
+      "id": "cards-deal",
+      "src": "assets/sfx/tracks/cards-deal.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.19
+        }
+      ],
+      "peak": 0.131477,
+      "peakDb": -17.62,
+      "rms": 0.004851501485656914,
+      "onset": 0.602,
+      "ceilingScale": 1
+    },
+    {
+      "id": "center-stagger",
+      "src": "assets/sfx/tracks/center-stagger.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.19
+        }
+      ],
+      "peak": 0.131477,
+      "peakDb": -17.62,
+      "rms": 0.004851501485656914,
+      "onset": 0.602,
+      "ceilingScale": 1
+    },
+    {
+      "id": "border-assemble",
+      "src": "assets/sfx/tracks/border-assemble.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.19
+        }
+      ],
+      "peak": 0.131477,
+      "peakDb": -17.62,
+      "rms": 0.004851501485656914,
+      "onset": 0.602,
+      "ceilingScale": 1
+    },
+    {
+      "id": "toggle-switch",
+      "src": "assets/sfx/tracks/toggle-switch.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "click",
+          "name": "确认点按",
+          "at": 0.65,
+          "duration": 0.1645,
+          "gain": 0.2
+        },
+        {
+          "sound": "pop",
+          "name": "轻弹",
+          "at": 1.6,
+          "duration": 0.2965,
+          "gain": 0.15
+        }
+      ],
+      "peak": 0.138818,
+      "peakDb": -17.15,
+      "rms": 0.002794469495111502,
+      "onset": 0.652,
+      "ceilingScale": 1
+    },
+    {
+      "id": "drag-drop",
+      "src": "assets/sfx/tracks/drag-drop.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "click",
+          "name": "确认点按",
+          "at": 0.65,
+          "duration": 0.1645,
+          "gain": 0.2
+        },
+        {
+          "sound": "pop",
+          "name": "轻弹",
+          "at": 1.9,
+          "duration": 0.2965,
+          "gain": 0.15
+        }
+      ],
+      "peak": 0.138818,
+      "peakDb": -17.15,
+      "rms": 0.002794469495111502,
+      "onset": 0.652,
+      "ceilingScale": 1
+    },
+    {
+      "id": "text-select",
+      "src": "assets/sfx/tracks/text-select.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "click-soft",
+          "name": "轻触",
+          "at": 0.6,
+          "duration": 0.1645,
+          "gain": 0.2
+        },
+        {
+          "sound": "click",
+          "name": "确认点按",
+          "at": 1.65,
+          "duration": 0.1645,
+          "gain": 0.22
+        }
+      ],
+      "peak": 0.1527,
+      "peakDb": -16.32,
+      "rms": 0.0023392057597966874,
+      "onset": 0.6020416666666667,
+      "ceilingScale": 1
+    },
+    {
+      "id": "slider-drag",
+      "src": "assets/sfx/tracks/slider-drag.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "click",
+          "name": "确认点按",
+          "at": 0.65,
+          "duration": 0.1645,
+          "gain": 0.2
+        },
+        {
+          "sound": "pop",
+          "name": "轻弹",
+          "at": 1.6,
+          "duration": 0.2965,
+          "gain": 0.15
+        }
+      ],
+      "peak": 0.138818,
+      "peakDb": -17.15,
+      "rms": 0.002794469495111502,
+      "onset": 0.652,
+      "ceilingScale": 1
+    },
+    {
+      "id": "dashed-frame",
+      "src": "assets/sfx/tracks/dashed-frame.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "ping",
+          "name": "数据提示",
+          "at": 0.6,
+          "duration": 0.55,
+          "gain": 0.19
+        }
+      ],
+      "peak": 0.134498,
+      "peakDb": -17.43,
+      "rms": 0.0023164574083496285,
+      "onset": 0.6017916666666666,
+      "ceilingScale": 1
+    },
+    {
+      "id": "corner-brackets",
+      "src": "assets/sfx/tracks/corner-brackets.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "ping",
+          "name": "数据提示",
+          "at": 0.6,
+          "duration": 0.55,
+          "gain": 0.19
+        }
+      ],
+      "peak": 0.134498,
+      "peakDb": -17.43,
+      "rms": 0.0023164574083496285,
+      "onset": 0.6017916666666666,
+      "ceilingScale": 1
+    },
+    {
+      "id": "callout-pin",
+      "src": "assets/sfx/tracks/callout-pin.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "ping",
+          "name": "数据提示",
+          "at": 0.6,
+          "duration": 0.55,
+          "gain": 0.19
+        }
+      ],
+      "peak": 0.134498,
+      "peakDb": -17.43,
+      "rms": 0.0023164574083496285,
+      "onset": 0.6017916666666666,
+      "ceilingScale": 1
+    },
+    {
+      "id": "number-tags",
+      "src": "assets/sfx/tracks/number-tags.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "ping",
+          "name": "数据提示",
+          "at": 0.6,
+          "duration": 0.55,
+          "gain": 0.19
+        }
+      ],
+      "peak": 0.134498,
+      "peakDb": -17.43,
+      "rms": 0.0023164574083496285,
+      "onset": 0.6017916666666666,
+      "ceilingScale": 1
+    },
+    {
+      "id": "branch-reveal",
+      "src": "assets/sfx/tracks/branch-reveal.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.19
+        }
+      ],
+      "peak": 0.131477,
+      "peakDb": -17.62,
+      "rms": 0.004851501485656914,
+      "onset": 0.602,
+      "ceilingScale": 1
+    },
+    {
+      "id": "orbit-steps",
+      "src": "assets/sfx/tracks/orbit-steps.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.19
+        }
+      ],
+      "peak": 0.131477,
+      "peakDb": -17.62,
+      "rms": 0.004851501485656914,
+      "onset": 0.602,
+      "ceilingScale": 1
+    },
+    {
+      "id": "compare-sweep",
+      "src": "assets/sfx/tracks/compare-sweep.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.19
+        }
+      ],
+      "peak": 0.131477,
+      "peakDb": -17.62,
+      "rms": 0.004851501485656914,
+      "onset": 0.602,
+      "ceilingScale": 1
+    },
+    {
+      "id": "equation-build",
+      "src": "assets/sfx/tracks/equation-build.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.19
+        }
+      ],
+      "peak": 0.131477,
+      "peakDb": -17.62,
+      "rms": 0.004851501485656914,
+      "onset": 0.602,
+      "ceilingScale": 1
+    },
+    {
+      "id": "pyramid-build",
+      "src": "assets/sfx/tracks/pyramid-build.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.19
+        }
+      ],
+      "peak": 0.131477,
+      "peakDb": -17.62,
+      "rms": 0.004851501485656914,
+      "onset": 0.602,
+      "ceilingScale": 1
+    },
+    {
+      "id": "mindmap-expand",
+      "src": "assets/sfx/tracks/mindmap-expand.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.19
+        }
+      ],
+      "peak": 0.131477,
+      "peakDb": -17.62,
+      "rms": 0.004851501485656914,
+      "onset": 0.602,
+      "ceilingScale": 1
+    },
+    {
+      "id": "step-track",
+      "src": "assets/sfx/tracks/step-track.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.19
+        }
+      ],
+      "peak": 0.131477,
+      "peakDb": -17.62,
+      "rms": 0.004851501485656914,
+      "onset": 0.602,
+      "ceilingScale": 1
+    },
+    {
+      "id": "pan-scan",
+      "src": "assets/sfx/tracks/pan-scan.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh",
+          "name": "柔和推移",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.1
+        }
+      ],
+      "peak": 0.069096,
+      "peakDb": -23.21,
+      "rms": 0.002553500929587344,
+      "onset": 0.6047083333333333,
+      "ceilingScale": 1
+    },
+    {
+      "id": "dolly-out",
+      "src": "assets/sfx/tracks/dolly-out.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh",
+          "name": "柔和推移",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.1
+        }
+      ],
+      "peak": 0.069096,
+      "peakDb": -23.21,
+      "rms": 0.002553500929587344,
+      "onset": 0.6047083333333333,
+      "ceilingScale": 1
+    },
+    {
+      "id": "focus-return",
+      "src": "assets/sfx/tracks/focus-return.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh",
+          "name": "柔和推移",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.1
+        }
+      ],
+      "peak": 0.069096,
+      "peakDb": -23.21,
+      "rms": 0.002553500929587344,
+      "onset": 0.6047083333333333,
+      "ceilingScale": 1
+    },
+    {
+      "id": "focus-hop-camera",
+      "src": "assets/sfx/tracks/focus-hop-camera.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh",
+          "name": "柔和推移",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.1
+        }
+      ],
+      "peak": 0.069096,
+      "peakDb": -23.21,
+      "rms": 0.002553500929587344,
+      "onset": 0.6047083333333333,
+      "ceilingScale": 1
+    },
+    {
+      "id": "tilt-settle",
+      "src": "assets/sfx/tracks/tilt-settle.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh",
+          "name": "柔和推移",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.1
+        }
+      ],
+      "peak": 0.069096,
+      "peakDb": -23.21,
+      "rms": 0.002553500929587344,
+      "onset": 0.6047083333333333,
+      "ceilingScale": 1
+    },
+    {
+      "id": "parallax-depth",
+      "src": "assets/sfx/tracks/parallax-depth.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh",
+          "name": "柔和推移",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.1
+        }
+      ],
+      "peak": 0.069096,
+      "peakDb": -23.21,
+      "rms": 0.002553500929587344,
+      "onset": 0.6047083333333333,
+      "ceilingScale": 1
+    },
+    {
+      "id": "frame-push",
+      "src": "assets/sfx/tracks/frame-push.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh",
+          "name": "柔和推移",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.1
+        }
+      ],
+      "peak": 0.069096,
+      "peakDb": -23.21,
+      "rms": 0.002553500929587344,
+      "onset": 0.6047083333333333,
+      "ceilingScale": 1
+    },
+    {
+      "id": "dolly-diagonal",
+      "src": "assets/sfx/tracks/dolly-diagonal.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh",
+          "name": "柔和推移",
+          "at": 0.6,
+          "duration": 0.336,
+          "gain": 0.1
+        }
+      ],
+      "peak": 0.069096,
+      "peakDb": -23.21,
+      "rms": 0.002553500929587344,
+      "onset": 0.6047083333333333,
+      "ceilingScale": 1
+    },
+    {
+      "id": "donut-draw",
+      "src": "assets/sfx/tracks/donut-draw.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "riser",
+          "name": "柔和渐进",
+          "at": 0.6,
+          "duration": 1.5,
+          "gain": 0.16
+        },
+        {
+          "sound": "ping",
+          "name": "数据提示",
+          "at": 2.3,
+          "duration": 0.6387,
+          "gain": 0.18
+        }
+      ],
+      "peak": 0.127419,
+      "peakDb": -17.9,
+      "rms": 0.0029979500417685683,
+      "onset": 0.6127916666666666,
+      "ceilingScale": 1
+    },
+    {
+      "id": "scatter-pop",
+      "src": "assets/sfx/tracks/scatter-pop.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "riser",
+          "name": "柔和渐进",
+          "at": 0.6,
+          "duration": 1.5,
+          "gain": 0.16
+        },
+        {
+          "sound": "ping",
+          "name": "数据提示",
+          "at": 2.3,
+          "duration": 0.6387,
+          "gain": 0.18
+        }
+      ],
+      "peak": 0.127419,
+      "peakDb": -17.9,
+      "rms": 0.0029979500417685683,
+      "onset": 0.6127916666666666,
+      "ceilingScale": 1
+    },
+    {
+      "id": "heatmap-scan",
+      "src": "assets/sfx/tracks/heatmap-scan.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "riser",
+          "name": "柔和渐进",
+          "at": 0.6,
+          "duration": 1.5,
+          "gain": 0.16
+        },
+        {
+          "sound": "ping",
+          "name": "数据提示",
+          "at": 2.3,
+          "duration": 0.6387,
+          "gain": 0.18
+        }
+      ],
+      "peak": 0.127419,
+      "peakDb": -17.9,
+      "rms": 0.0029979500417685683,
+      "onset": 0.6127916666666666,
+      "ceilingScale": 1
+    },
+    {
+      "id": "funnel-reveal",
+      "src": "assets/sfx/tracks/funnel-reveal.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "riser",
+          "name": "柔和渐进",
+          "at": 0.6,
+          "duration": 1.5,
+          "gain": 0.16
+        },
+        {
+          "sound": "ping",
+          "name": "数据提示",
+          "at": 2.3,
+          "duration": 0.6387,
+          "gain": 0.18
+        }
+      ],
+      "peak": 0.127419,
+      "peakDb": -17.9,
+      "rms": 0.0029979500417685683,
+      "onset": 0.6127916666666666,
+      "ceilingScale": 1
+    },
+    {
+      "id": "radar-expand",
+      "src": "assets/sfx/tracks/radar-expand.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "riser",
+          "name": "柔和渐进",
+          "at": 0.6,
+          "duration": 1.5,
+          "gain": 0.16
+        },
+        {
+          "sound": "ping",
+          "name": "数据提示",
+          "at": 2.3,
+          "duration": 0.6387,
+          "gain": 0.18
+        }
+      ],
+      "peak": 0.127419,
+      "peakDb": -17.9,
+      "rms": 0.0029979500417685683,
+      "onset": 0.6127916666666666,
+      "ceilingScale": 1
+    },
+    {
+      "id": "chart-bars-cascade",
+      "src": "assets/sfx/tracks/chart-bars-cascade.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "riser",
+          "name": "柔和渐进",
+          "at": 0.6,
+          "duration": 1.5,
+          "gain": 0.16
+        },
+        {
+          "sound": "ping",
+          "name": "数据提示",
+          "at": 2.3,
+          "duration": 0.6387,
+          "gain": 0.18
+        }
+      ],
+      "peak": 0.127419,
+      "peakDb": -17.9,
+      "rms": 0.0029979500417685683,
+      "onset": 0.6127916666666666,
+      "ceilingScale": 1
+    },
+    {
+      "id": "fade-out",
+      "src": "assets/sfx/tracks/fade-out.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 3.3,
+          "duration": 0.336,
+          "gain": 0.22
+        }
+      ],
+      "peak": 0.152237,
+      "peakDb": -16.35,
+      "rms": 0.005617528037610174,
+      "onset": 3.301875,
+      "ceilingScale": 1
+    },
+    {
+      "id": "slide-out-left",
+      "src": "assets/sfx/tracks/slide-out-left.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 3.3,
+          "duration": 0.336,
+          "gain": 0.22
+        }
+      ],
+      "peak": 0.152237,
+      "peakDb": -16.35,
+      "rms": 0.005617528037610174,
+      "onset": 3.301875,
+      "ceilingScale": 1
+    },
+    {
+      "id": "lift-away",
+      "src": "assets/sfx/tracks/lift-away.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 3.3,
+          "duration": 0.336,
+          "gain": 0.22
+        }
+      ],
+      "peak": 0.152237,
+      "peakDb": -16.35,
+      "rms": 0.005617528037610174,
+      "onset": 3.301875,
+      "ceilingScale": 1
+    },
+    {
+      "id": "shrink-center",
+      "src": "assets/sfx/tracks/shrink-center.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 3.3,
+          "duration": 0.336,
+          "gain": 0.22
+        }
+      ],
+      "peak": 0.152237,
+      "peakDb": -16.35,
+      "rms": 0.005617528037610174,
+      "onset": 3.301875,
+      "ceilingScale": 1
+    },
+    {
+      "id": "iris-close",
+      "src": "assets/sfx/tracks/iris-close.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 3.3,
+          "duration": 0.336,
+          "gain": 0.22
+        }
+      ],
+      "peak": 0.152237,
+      "peakDb": -16.35,
+      "rms": 0.005617528037610174,
+      "onset": 3.301875,
+      "ceilingScale": 1
+    },
+    {
+      "id": "mask-retract",
+      "src": "assets/sfx/tracks/mask-retract.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 3.3,
+          "duration": 0.336,
+          "gain": 0.22
+        }
+      ],
+      "peak": 0.152237,
+      "peakDb": -16.35,
+      "rms": 0.005617528037610174,
+      "onset": 3.301875,
+      "ceilingScale": 1
+    },
+    {
+      "id": "stagger-out",
+      "src": "assets/sfx/tracks/stagger-out.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 3.3,
+          "duration": 0.336,
+          "gain": 0.22
+        }
+      ],
+      "peak": 0.152237,
+      "peakDb": -16.35,
+      "rms": 0.005617528037610174,
+      "onset": 3.301875,
+      "ceilingScale": 1
+    },
+    {
+      "id": "blur-out",
+      "src": "assets/sfx/tracks/blur-out.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 3.3,
+          "duration": 0.336,
+          "gain": 0.22
+        }
+      ],
+      "peak": 0.152237,
+      "peakDb": -16.35,
+      "rms": 0.005617528037610174,
+      "onset": 3.301875,
+      "ceilingScale": 1
+    },
+    {
+      "id": "split-away",
+      "src": "assets/sfx/tracks/split-away.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh-short",
+          "name": "短滑动",
+          "at": 3.3,
+          "duration": 0.336,
+          "gain": 0.22
+        }
+      ],
+      "peak": 0.152237,
+      "peakDb": -16.35,
+      "rms": 0.005617528037610174,
+      "onset": 3.301875,
+      "ceilingScale": 1
+    },
+    {
+      "id": "success-toast",
+      "src": "assets/sfx/tracks/success-toast.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "notification",
+          "name": "消息到达",
+          "at": 0.7,
+          "duration": 1.3898,
+          "gain": 0.2
+        }
+      ],
+      "peak": 0.136703,
+      "peakDb": -17.28,
+      "rms": 0.006668843138787464,
+      "onset": 0.7021041666666666,
+      "ceilingScale": 1
+    },
+    {
+      "id": "save-pulse",
+      "src": "assets/sfx/tracks/save-pulse.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "notification",
+          "name": "消息到达",
+          "at": 0.7,
+          "duration": 1.3898,
+          "gain": 0.2
+        }
+      ],
+      "peak": 0.136703,
+      "peakDb": -17.28,
+      "rms": 0.006668843138787464,
+      "onset": 0.7021041666666666,
+      "ceilingScale": 1
+    },
+    {
+      "id": "copy-confirm",
+      "src": "assets/sfx/tracks/copy-confirm.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "notification",
+          "name": "消息到达",
+          "at": 0.7,
+          "duration": 1.3898,
+          "gain": 0.2
+        }
+      ],
+      "peak": 0.136703,
+      "peakDb": -17.28,
+      "rms": 0.006668843138787464,
+      "onset": 0.7021041666666666,
+      "ceilingScale": 1
+    },
+    {
+      "id": "loading-resolve",
+      "src": "assets/sfx/tracks/loading-resolve.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "chime",
+          "name": "完成和弦",
+          "at": 2.35,
+          "duration": 1.75,
+          "gain": 0.2
+        }
+      ],
+      "peak": 0.052301,
+      "peakDb": -25.63,
+      "rms": 0.006429937332407247,
+      "onset": 2.3515625,
+      "ceilingScale": 1
+    },
+    {
+      "id": "warning-breathe",
+      "src": "assets/sfx/tracks/warning-breathe.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "ping",
+          "name": "数据提示",
+          "at": 0.7,
+          "duration": 0.6387,
+          "gain": 0.2
+        }
+      ],
+      "peak": 0.141577,
+      "peakDb": -16.98,
+      "rms": 0.002439853370348778,
+      "onset": 0.7017708333333333,
+      "ceilingScale": 1
+    },
+    {
+      "id": "notification-ping",
+      "src": "assets/sfx/tracks/notification-ping.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "notification",
+          "name": "消息到达",
+          "at": 0.7,
+          "duration": 1.3898,
+          "gain": 0.2
+        }
+      ],
+      "peak": 0.136703,
+      "peakDb": -17.28,
+      "rms": 0.006668843138787464,
+      "onset": 0.7021041666666666,
+      "ceilingScale": 1
+    },
+    {
+      "id": "soft-confetti",
+      "src": "assets/sfx/tracks/soft-confetti.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "notification",
+          "name": "消息到达",
+          "at": 0.7,
+          "duration": 1.3898,
+          "gain": 0.2
+        }
+      ],
+      "peak": 0.136703,
+      "peakDb": -17.28,
+      "rms": 0.006668843138787464,
+      "onset": 0.7021041666666666,
+      "ceilingScale": 1
+    },
+    {
+      "id": "curve-ribbon",
+      "src": "assets/sfx/tracks/curve-ribbon.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh",
+          "name": "柔和推移",
+          "at": 2.1,
+          "duration": 0.336,
+          "gain": 0.24
+        }
+      ],
+      "peak": 0.165831,
+      "peakDb": -15.61,
+      "rms": 0.00612840223152124,
+      "onset": 2.1018541666666666,
+      "ceilingScale": 1
+    },
+    {
+      "id": "diagonal-ribbon",
+      "src": "assets/sfx/tracks/diagonal-ribbon.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh",
+          "name": "柔和推移",
+          "at": 2.1,
+          "duration": 0.336,
+          "gain": 0.24
+        }
+      ],
+      "peak": 0.165831,
+      "peakDb": -15.61,
+      "rms": 0.00612840223152124,
+      "onset": 2.1018541666666666,
+      "ceilingScale": 1
+    },
+    {
+      "id": "shared-slide",
+      "src": "assets/sfx/tracks/shared-slide.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh",
+          "name": "柔和推移",
+          "at": 2.1,
+          "duration": 0.336,
+          "gain": 0.24
+        }
+      ],
+      "peak": 0.165831,
+      "peakDb": -15.61,
+      "rms": 0.00612840223152124,
+      "onset": 2.1018541666666666,
+      "ceilingScale": 1
+    },
+    {
+      "id": "soft-dissolve",
+      "src": "assets/sfx/tracks/soft-dissolve.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh",
+          "name": "柔和推移",
+          "at": 2.1,
+          "duration": 0.336,
+          "gain": 0.24
+        }
+      ],
+      "peak": 0.165831,
+      "peakDb": -15.61,
+      "rms": 0.00612840223152124,
+      "onset": 2.1018541666666666,
+      "ceilingScale": 1
+    },
+    {
+      "id": "zoom-through",
+      "src": "assets/sfx/tracks/zoom-through.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh",
+          "name": "柔和推移",
+          "at": 2.1,
+          "duration": 0.336,
+          "gain": 0.24
+        }
+      ],
+      "peak": 0.165831,
+      "peakDb": -15.61,
+      "rms": 0.00612840223152124,
+      "onset": 2.1018541666666666,
+      "ceilingScale": 1
+    },
+    {
+      "id": "card-lift",
+      "src": "assets/sfx/tracks/card-lift.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh",
+          "name": "柔和推移",
+          "at": 2.1,
+          "duration": 0.336,
+          "gain": 0.24
+        }
+      ],
+      "peak": 0.165831,
+      "peakDb": -15.61,
+      "rms": 0.00612840223152124,
+      "onset": 2.1018541666666666,
+      "ceilingScale": 1
+    },
+    {
+      "id": "blinds-swap",
+      "src": "assets/sfx/tracks/blinds-swap.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh",
+          "name": "柔和推移",
+          "at": 2.1,
+          "duration": 0.336,
+          "gain": 0.24
+        }
+      ],
+      "peak": 0.165831,
+      "peakDb": -15.61,
+      "rms": 0.00612840223152124,
+      "onset": 2.1018541666666666,
+      "ceilingScale": 1
+    },
+    {
+      "id": "liquid-sweep",
+      "src": "assets/sfx/tracks/liquid-sweep.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [
+        {
+          "sound": "whoosh",
+          "name": "柔和推移",
+          "at": 2.1,
+          "duration": 0.336,
+          "gain": 0.24
+        }
+      ],
+      "peak": 0.165831,
+      "peakDb": -15.61,
+      "rms": 0.00612840223152124,
+      "onset": 2.1018541666666666,
+      "ceilingScale": 1
+    },
+    {
+      "id": "grid-drift",
+      "src": "assets/sfx/tracks/grid-drift.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [],
+      "peak": 0,
+      "peakDb": null,
+      "rms": 0,
+      "onset": null,
+      "ceilingScale": 1
+    },
+    {
+      "id": "perspective-scroll",
+      "src": "assets/sfx/tracks/perspective-scroll.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [],
+      "peak": 0,
+      "peakDb": null,
+      "rms": 0,
+      "onset": null,
+      "ceilingScale": 1
+    },
+    {
+      "id": "dot-drift",
+      "src": "assets/sfx/tracks/dot-drift.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [],
+      "peak": 0,
+      "peakDb": null,
+      "rms": 0,
+      "onset": null,
+      "ceilingScale": 1
+    },
+    {
+      "id": "orb-parallax",
+      "src": "assets/sfx/tracks/orb-parallax.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [],
+      "peak": 0,
+      "peakDb": null,
+      "rms": 0,
+      "onset": null,
+      "ceilingScale": 1
+    },
+    {
+      "id": "contour-flow",
+      "src": "assets/sfx/tracks/contour-flow.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [],
+      "peak": 0,
+      "peakDb": null,
+      "rms": 0,
+      "onset": null,
+      "ceilingScale": 1
+    },
+    {
+      "id": "diagonal-hatch",
+      "src": "assets/sfx/tracks/diagonal-hatch.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [],
+      "peak": 0,
+      "peakDb": null,
+      "rms": 0,
+      "onset": null,
+      "ceilingScale": 1
+    },
+    {
+      "id": "ring-orbit",
+      "src": "assets/sfx/tracks/ring-orbit.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [],
+      "peak": 0,
+      "peakDb": null,
+      "rms": 0,
+      "onset": null,
+      "ceilingScale": 1
+    },
+    {
+      "id": "blueprint-pan",
+      "src": "assets/sfx/tracks/blueprint-pan.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [],
+      "peak": 0,
+      "peakDb": null,
+      "rms": 0,
+      "onset": null,
+      "ceilingScale": 1
+    },
+    {
+      "id": "wave-bands",
+      "src": "assets/sfx/tracks/wave-bands.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [],
+      "peak": 0,
+      "peakDb": null,
+      "rms": 0,
+      "onset": null,
+      "ceilingScale": 1
+    },
+    {
+      "id": "ambient-breath",
+      "src": "assets/sfx/tracks/ambient-breath.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [],
+      "peak": 0,
+      "peakDb": null,
+      "rms": 0,
+      "onset": null,
+      "ceilingScale": 1
+    },
+    {
+      "id": "ani-notice-verify",
+      "src": "assets/sfx/tracks/ani-notice-verify.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [],
+      "peak": 0,
+      "peakDb": null,
+      "rms": 0,
+      "onset": null,
+      "ceilingScale": 1
+    },
+    {
+      "id": "ani-diagram-build",
+      "src": "assets/sfx/tracks/ani-diagram-build.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [],
+      "peak": 0,
+      "peakDb": null,
+      "rms": 0,
+      "onset": null,
+      "ceilingScale": 1
+    },
+    {
+      "id": "ani-order-select",
+      "src": "assets/sfx/tracks/ani-order-select.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [],
+      "peak": 0,
+      "peakDb": null,
+      "rms": 0,
+      "onset": null,
+      "ceilingScale": 1
+    },
+    {
+      "id": "ani-machine-process",
+      "src": "assets/sfx/tracks/ani-machine-process.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [],
+      "peak": 0,
+      "peakDb": null,
+      "rms": 0,
+      "onset": null,
+      "ceilingScale": 1
+    }
+  ]
+}

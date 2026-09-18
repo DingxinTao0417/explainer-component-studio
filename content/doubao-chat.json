@@ -1,0 +1,105 @@
+{
+  "brand": "豆包",
+  "logoSrc": "assets/brands/doubao.png",
+  "showHomeLogo": false,
+  "title": "进度提交通知",
+  "notice": "AI 生成可能有误，请核实",
+  "simulationLabel": "界面复刻 · 案例演示",
+  "showSidebar": true,
+  "showHome": false,
+  "homeTitle": "有什么我能帮你的吗？",
+  "conversationModeLabel": "对话",
+  "workModeLabel": "工作",
+  "navigation": [
+    {
+      "label": "新工作任务",
+      "icon": "edit"
+    },
+    {
+      "label": "新对话",
+      "icon": "chat"
+    },
+    {
+      "label": "定时任务",
+      "icon": "clock"
+    },
+    {
+      "label": "插件·技能·伙伴",
+      "icon": "grid"
+    },
+    {
+      "label": "云盘",
+      "icon": "folder"
+    },
+    {
+      "label": "API 服务",
+      "icon": "code"
+    },
+    {
+      "label": "更多",
+      "icon": "more"
+    }
+  ],
+  "pinnedLabel": "置顶",
+  "pinnedTitle": "主对话",
+  "projectsLabel": "项目",
+  "newProjectLabel": "创建项目",
+  "recentLabel": "最近",
+  "recentTasks": [],
+  "accountLabel": "用户",
+  "planLabel": "标准套餐",
+  "messages": [
+    {
+      "id": "request-vague",
+      "role": "user",
+      "text": "提醒大家交进度，正式一点。"
+    },
+    {
+      "id": "reply-vague",
+      "role": "assistant",
+      "heading": "通知",
+      "text": "请各位积极配合，及时提交相关材料。",
+      "actions": true
+    }
+  ],
+  "suggestions": [
+    "帮我改得更简洁",
+    "检查通知是否交代清楚"
+  ],
+  "draft": "",
+  "running": false,
+  "focused": false,
+  "placeholder": "发消息或按住空格说话...",
+  "modeLabel": "对话",
+  "modelLabel": "豆包",
+  "speedLabel": "快速",
+  "maxTools": 3,
+  "tools": [
+    {
+      "label": "录音转写",
+      "icon": "mic"
+    },
+    {
+      "label": "图像生成",
+      "icon": "image"
+    },
+    {
+      "label": "PPT 生成",
+      "icon": "file"
+    },
+    {
+      "label": "帮我写作",
+      "icon": "edit"
+    },
+    {
+      "label": "视频生成",
+      "icon": "video"
+    },
+    {
+      "label": "AI 播客",
+      "icon": "volume"
+    }
+  ],
+  "workingLabel": "正在生成",
+  "composer": {}
+}

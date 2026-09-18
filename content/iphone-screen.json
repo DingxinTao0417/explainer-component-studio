@@ -1,0 +1,57 @@
+{
+  "time": "9:41",
+  "battery": 100,
+  "media": {
+    "kind": "demo",
+    "src": "",
+    "fit": "cover",
+    "alt": ""
+  },
+  "appTitle": "文件",
+  "folderTitle": "视频项目",
+  "backLabel": "浏览",
+  "search": "搜索",
+  "sortLabel": "名称",
+  "itemCount": "6 个项目",
+  "folders": [
+    {
+      "name": "参考素材",
+      "count": "12 项"
+    },
+    {
+      "name": "录屏",
+      "count": "8 项"
+    },
+    {
+      "name": "配音",
+      "count": "5 项"
+    },
+    {
+      "name": "图片",
+      "count": "16 项"
+    },
+    {
+      "name": "动画",
+      "count": "10 项"
+    },
+    {
+      "name": "导出",
+      "count": "3 项"
+    }
+  ],
+  "tabs": [
+    {
+      "label": "最近项目",
+      "icon": "refresh"
+    },
+    {
+      "label": "共享",
+      "icon": "link"
+    },
+    {
+      "label": "浏览",
+      "icon": "folder"
+    }
+  ],
+  "activeTab": 2
+}

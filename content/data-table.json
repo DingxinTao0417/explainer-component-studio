@@ -1,0 +1,94 @@
+{
+  "appName": "数据工作台",
+  "workspace": "science_video.db",
+  "appIcon": "grid",
+  "table": "scenes",
+  "tables": [
+    "scenes",
+    "assets",
+    "captions",
+    "render_jobs"
+  ],
+  "columns": [
+    {
+      "key": "id",
+      "label": "id",
+      "type": "integer"
+    },
+    {
+      "key": "title",
+      "label": "title",
+      "type": "text"
+    },
+    {
+      "key": "component",
+      "label": "component",
+      "type": "text"
+    },
+    {
+      "key": "duration",
+      "label": "duration",
+      "type": "real"
+    },
+    {
+      "key": "status",
+      "label": "status",
+      "type": "text"
+    }
+  ],
+  "rows": [
+    {
+      "id": 1,
+      "title": "开头钩子",
+      "component": "codex-chat",
+      "duration": 5,
+      "status": "完成"
+    },
+    {
+      "id": 2,
+      "title": "操作演示",
+      "component": "browser-window",
+      "duration": 12.5,
+      "status": "完成"
+    },
+    {
+      "id": 3,
+      "title": "命令执行",
+      "component": "terminal-session",
+      "duration": 8,
+      "status": "完成"
+    },
+    {
+      "id": 4,
+      "title": "配置说明",
+      "component": "code-editor",
+      "duration": 10,
+      "status": "编辑中"
+    },
+    {
+      "id": 5,
+      "title": "原理拆解",
+      "component": "flow-diagram",
+      "duration": 14,
+      "status": "待处理"
+    },
+    {
+      "id": 6,
+      "title": "前后对比",
+      "component": "before-after",
+      "duration": 8.5,
+      "status": "待处理"
+    },
+    {
+      "id": 7,
+      "title": "重点回顾",
+      "component": "summary-card",
+      "duration": 6,
+      "status": "待处理"
+    }
+  ],
+  "selectedId": 4,
+  "filter": "status != \"已归档\"",
+  "recordTitle": "当前记录",
+  "footer": "7 条记录 · 5 个字段"
+}

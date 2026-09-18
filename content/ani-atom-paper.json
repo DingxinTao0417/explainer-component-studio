@@ -1,0 +1,11 @@
+{
+  "x": 400,
+  "y": 80,
+  "objectWidth": 480,
+  "objectHeight": 550,
+  "foldSize": 54,
+  "foldSide": "right",
+  "depth": 10,
+  "ruling": "none",
+  "lineSpacing": 38
+}

@@ -1,0 +1,66 @@
+{
+  "eyebrow": "08 / 查看状态",
+  "title": "交付之前，把关键状态看清楚",
+  "subtitle": "进度、素材与验收放在同一页，减少遗漏。",
+  "badge": "示例数据",
+  "footer": "示例内容可替换 · 白底 / 蓝色强调 / 薄荷绿完成态",
+  "series": "EXPLAIN / STATUS",
+  "metrics": [
+    {
+      "label": "镜头完成",
+      "value": "8",
+      "unit": "/ 10",
+      "detail": "还有 2 个镜头需要调整",
+      "progress": 0.8
+    },
+    {
+      "label": "素材就绪",
+      "value": "24",
+      "unit": "/ 24",
+      "detail": "图片、录屏与配音已归档",
+      "progress": 1
+    },
+    {
+      "label": "验收通过",
+      "value": "6",
+      "unit": "/ 8",
+      "detail": "剩余字幕与片尾检查",
+      "progress": 0.75
+    }
+  ],
+  "progressTitle": "最近五次制作进度",
+  "progress": [
+    32,
+    46,
+    59,
+    68,
+    80
+  ],
+  "progressLabels": [
+    "第1次",
+    "第2次",
+    "第3次",
+    "第4次",
+    "第5次"
+  ],
+  "checklistTitle": "本次检查",
+  "checks": [
+    {
+      "label": "内容与引用",
+      "done": true
+    },
+    {
+      "label": "构图与清晰度",
+      "done": true
+    },
+    {
+      "label": "字幕时间点",
+      "done": false
+    },
+    {
+      "label": "配音与背景声",
+      "done": false
+    }
+  ],
+  "note": "这里只汇总示例状态，不代表已经执行检查。"
+}

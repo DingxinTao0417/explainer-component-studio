@@ -1,0 +1,89 @@
+{
+  "filename": "分镜脚本.md",
+  "filetype": "Markdown 文档",
+  "topActions": [
+    {
+      "icon": "copy",
+      "label": "复制"
+    },
+    {
+      "icon": "link",
+      "label": "重命名"
+    },
+    {
+      "icon": "upload",
+      "label": "共享"
+    },
+    {
+      "icon": "trash",
+      "label": "删除"
+    }
+  ],
+  "items": [
+    {
+      "icon": "file",
+      "label": "打开",
+      "shortcut": "Enter"
+    },
+    {
+      "icon": "code",
+      "label": "打开方式",
+      "submenu": true
+    },
+    {
+      "separator": true
+    },
+    {
+      "icon": "link",
+      "label": "复制文件地址",
+      "shortcut": "Ctrl+Shift+C"
+    },
+    {
+      "icon": "folder",
+      "label": "压缩为 ZIP 文件"
+    },
+    {
+      "icon": "check-circle",
+      "label": "添加到收藏夹"
+    },
+    {
+      "separator": true
+    },
+    {
+      "icon": "info",
+      "label": "属性",
+      "shortcut": "Alt+Enter"
+    },
+    {
+      "separator": true
+    },
+    {
+      "icon": "more",
+      "label": "显示更多选项",
+      "shortcut": "Shift+F10"
+    }
+  ],
+  "selected": 1,
+  "submenu": [
+    {
+      "icon": "code",
+      "label": "Visual Studio Code"
+    },
+    {
+      "icon": "file",
+      "label": "记事本"
+    },
+    {
+      "icon": "globe",
+      "label": "Google Chrome"
+    },
+    {
+      "separator": true
+    },
+    {
+      "icon": "search",
+      "label": "选择其他应用"
+    }
+  ],
+  "selectedSub": 0
+}

@@ -1,0 +1,14 @@
+{
+  "title": "熟悉部分可复用",
+  "subtitle": "原来的办法，可以带到新问题里。",
+  "windowLabel": "熟悉的工具",
+  "previewLabel": "AI 学习",
+  "steps": [
+    "要求",
+    "检查",
+    "修改"
+  ],
+  "trayTitle": "图像要求",
+  "newLabel": "新差异",
+  "footer": "先认出能复用的部分，再处理真正不同的地方。"
+}

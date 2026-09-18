@@ -1,0 +1,53 @@
+{
+  "title": "PowerShell",
+  "path": "D:\\workspace\\science-video",
+  "greeting": "PowerShell 7.5.2",
+  "command": "npm run build",
+  "lines": [
+    {
+      "text": "> science-video@1.0.0 build",
+      "tone": "muted"
+    },
+    {
+      "text": "> node scripts/build.mjs",
+      "tone": "muted"
+    },
+    {
+      "text": "",
+      "tone": "muted"
+    },
+    {
+      "text": "✓ 读取内容配置 content.json",
+      "tone": "success"
+    },
+    {
+      "text": "✓ 校验 7 个分镜与配音时长",
+      "tone": "success"
+    },
+    {
+      "text": "✓ 编译可复用动画组件",
+      "tone": "success"
+    },
+    {
+      "text": "✓ 生成 compositions/index.html",
+      "tone": "success"
+    },
+    {
+      "text": "",
+      "tone": "muted"
+    },
+    {
+      "text": "构建成功。预览已准备就绪。",
+      "tone": "normal"
+    },
+    {
+      "text": "  Local:   http://localhost:3027",
+      "tone": "link"
+    },
+    {
+      "text": "  Duration: 76.6 s     Resolution: 1920 × 1080",
+      "tone": "muted"
+    }
+  ],
+  "nextCommand": "npm run check"
+}

@@ -1,0 +1,5194 @@
+[
+  {
+    "id": "ani-order-filter",
+    "name": "动画风 · 订单条件筛选",
+    "category": "动画风",
+    "description": "从五条局部记录展示筛选口径：先计入五条，按完成日期与状态改为三条。取消及未付记录留在原位，样本与月度总数明确区分。",
+    "width": 1280,
+    "height": 720,
+    "reference": {
+      "basis": "用户 V8 的 S07/S08 静态分镜与 M04 三态板，原生 SVG 可编辑重建。",
+      "source": "reports/animation-style/reference-review-v8/REVIEW.md",
+      "level": "reference-reconstruction"
+    },
+    "defaultEffect": "ani-order-select",
+    "content": "content/ani-order-filter.json",
+    "preview": "previews/ani-order-filter.html",
+    "composition": "compositions/ani-order-filter.html",
+    "variables": [
+      {
+        "id": "title",
+        "type": "string",
+        "label": "title",
+        "default": "截取 5 条示意"
+      },
+      {
+        "id": "subtitle",
+        "type": "string",
+        "label": "subtitle",
+        "default": "完成日期在本月，且状态为已完成"
+      },
+      {
+        "id": "footer",
+        "type": "string",
+        "label": "footer",
+        "default": "只改变计入范围，原始五条记录仍然保留。"
+      },
+      {
+        "id": "month",
+        "type": "string",
+        "label": "month",
+        "default": "2026-09"
+      },
+      {
+        "id": "sourceLabel",
+        "type": "string",
+        "label": "sourceLabel",
+        "default": "原始表格"
+      },
+      {
+        "id": "rawHeader",
+        "type": "string",
+        "label": "rawHeader",
+        "default": "初次计入"
+      },
+      {
+        "id": "finalHeader",
+        "type": "string",
+        "label": "finalHeader",
+        "default": "修正后计入"
+      },
+      {
+        "id": "includedLabel",
+        "type": "string",
+        "label": "includedLabel",
+        "default": "计入"
+      },
+      {
+        "id": "excludedLabel",
+        "type": "string",
+        "label": "excludedLabel",
+        "default": "不计入"
+      },
+      {
+        "id": "rawCountLabel",
+        "type": "string",
+        "label": "rawCountLabel",
+        "default": "本局部初次计入"
+      },
+      {
+        "id": "finalCountLabel",
+        "type": "string",
+        "label": "finalCountLabel",
+        "default": "本局部符合"
+      },
+      {
+        "id": "unit",
+        "type": "string",
+        "label": "unit",
+        "default": "条"
+      },
+      {
+        "id": "sampleNote",
+        "type": "string",
+        "label": "sampleNote",
+        "default": "不是月度总数"
+      },
+      {
+        "id": "propsJson",
+        "type": "string",
+        "label": "完整组件内容 JSON（覆盖同名字段）",
+        "default": "{}"
+      },
+      {
+        "id": "effect",
+        "type": "enum",
+        "label": "动画效果",
+        "default": "ani-order-select",
+        "options": [
+          {
+            "value": "none",
+            "label": "无动画"
+          },
+          {
+            "value": "fade-in",
+            "label": "淡入呈现"
+          },
+          {
+            "value": "slide-in",
+            "label": "窗口滑入"
+          },
+          {
+            "value": "stagger",
+            "label": "步骤依次出现"
+          },
+          {
+            "value": "typewriter",
+            "label": "逐字输入"
+          },
+          {
+            "value": "line-highlight",
+            "label": "逐行聚焦"
+          },
+          {
+            "value": "draw-path",
+            "label": "连线生长"
+          },
+          {
+            "value": "click-ripple",
+            "label": "光标点击"
+          },
+          {
+            "value": "zoom-focus",
+            "label": "镜头推近"
+          },
+          {
+            "value": "spotlight",
+            "label": "局部聚光"
+          },
+          {
+            "value": "split-reveal",
+            "label": "前后揭示"
+          },
+          {
+            "value": "progress-fill",
+            "label": "数值进度增长"
+          },
+          {
+            "value": "count-up",
+            "label": "数字递增"
+          },
+          {
+            "value": "scroll-panel",
+            "label": "内容滚动"
+          },
+          {
+            "value": "word-emphasis",
+            "label": "关键词划线"
+          },
+          {
+            "value": "window-exit",
+            "label": "窗口收起"
+          },
+          {
+            "value": "modal-pop",
+            "label": "命令面板弹出"
+          },
+          {
+            "value": "toast-enter",
+            "label": "通知送达"
+          },
+          {
+            "value": "menu-unfold",
+            "label": "级联菜单展开"
+          },
+          {
+            "value": "focus-ring",
+            "label": "目标描边"
+          },
+          {
+            "value": "marker-sweep",
+            "label": "荧光笔扫读"
+          },
+          {
+            "value": "focus-hop",
+            "label": "焦点巡游"
+          },
+          {
+            "value": "check-complete",
+            "label": "任务完成"
+          },
+          {
+            "value": "row-reveal",
+            "label": "表格载入"
+          },
+          {
+            "value": "chart-trace",
+            "label": "趋势追踪读数"
+          },
+          {
+            "value": "card-stack",
+            "label": "结构分层展开"
+          },
+          {
+            "value": "media-pan",
+            "label": "素材缓慢平移"
+          },
+          {
+            "value": "iris-reveal",
+            "label": "圆形画面交接"
+          },
+          {
+            "value": "wipe-transition",
+            "label": "三层短遮幅转场"
+          },
+          {
+            "value": "stamp-confirm",
+            "label": "确认印记"
+          },
+          {
+            "value": "error-shake",
+            "label": "输入纠错提示"
+          },
+          {
+            "value": "scale-settle",
+            "label": "轻缩放落位"
+          },
+          {
+            "value": "curtain-open",
+            "label": "双侧帘幕开场"
+          },
+          {
+            "value": "blur-resolve",
+            "label": "由虚到实"
+          },
+          {
+            "value": "mask-rise",
+            "label": "窗口裁切入场"
+          },
+          {
+            "value": "cards-deal",
+            "label": "卡片发牌"
+          },
+          {
+            "value": "center-stagger",
+            "label": "由中央展开"
+          },
+          {
+            "value": "border-assemble",
+            "label": "边框构建开场"
+          },
+          {
+            "value": "toggle-switch",
+            "label": "开关切换"
+          },
+          {
+            "value": "drag-drop",
+            "label": "任务拖放"
+          },
+          {
+            "value": "text-select",
+            "label": "拖选文本"
+          },
+          {
+            "value": "slider-drag",
+            "label": "滑块调节"
+          },
+          {
+            "value": "dashed-frame",
+            "label": "虚线边框绘制"
+          },
+          {
+            "value": "corner-brackets",
+            "label": "四角定位"
+          },
+          {
+            "value": "callout-pin",
+            "label": "引线标注"
+          },
+          {
+            "value": "number-tags",
+            "label": "编号标记"
+          },
+          {
+            "value": "branch-reveal",
+            "label": "条件分支展开"
+          },
+          {
+            "value": "orbit-steps",
+            "label": "循环路径行进"
+          },
+          {
+            "value": "compare-sweep",
+            "label": "对比扫描线"
+          },
+          {
+            "value": "equation-build",
+            "label": "公式逐项组合"
+          },
+          {
+            "value": "pyramid-build",
+            "label": "层级从基础构建"
+          },
+          {
+            "value": "mindmap-expand",
+            "label": "思维导图扩散"
+          },
+          {
+            "value": "step-track",
+            "label": "步骤状态推进"
+          },
+          {
+            "value": "pan-scan",
+            "label": "横向阅读镜头"
+          },
+          {
+            "value": "dolly-out",
+            "label": "拉远建立全局"
+          },
+          {
+            "value": "focus-return",
+            "label": "推近后回到全景"
+          },
+          {
+            "value": "focus-hop-camera",
+            "label": "两处重点切换"
+          },
+          {
+            "value": "tilt-settle",
+            "label": "轻透视扶正"
+          },
+          {
+            "value": "parallax-depth",
+            "label": "前后层视差"
+          },
+          {
+            "value": "frame-push",
+            "label": "框内缓慢推进"
+          },
+          {
+            "value": "dolly-diagonal",
+            "label": "斜向缓慢取景"
+          },
+          {
+            "value": "donut-draw",
+            "label": "环形比例绘制"
+          },
+          {
+            "value": "scatter-pop",
+            "label": "散点落位"
+          },
+          {
+            "value": "heatmap-scan",
+            "label": "热力数据扫描"
+          },
+          {
+            "value": "funnel-reveal",
+            "label": "漏斗逐层转化"
+          },
+          {
+            "value": "radar-expand",
+            "label": "雷达轮廓建立"
+          },
+          {
+            "value": "chart-bars-cascade",
+            "label": "时间区间展开"
+          },
+          {
+            "value": "fade-out",
+            "label": "柔和淡出"
+          },
+          {
+            "value": "slide-out-left",
+            "label": "向左滑出"
+          },
+          {
+            "value": "lift-away",
+            "label": "向上离场"
+          },
+          {
+            "value": "shrink-center",
+            "label": "缩向中心"
+          },
+          {
+            "value": "iris-close",
+            "label": "圆形收幕"
+          },
+          {
+            "value": "mask-retract",
+            "label": "从右向左收回"
+          },
+          {
+            "value": "stagger-out",
+            "label": "内容依次离场"
+          },
+          {
+            "value": "blur-out",
+            "label": "散焦离场"
+          },
+          {
+            "value": "split-away",
+            "label": "左右分离退场"
+          },
+          {
+            "value": "success-toast",
+            "label": "操作成功提示"
+          },
+          {
+            "value": "save-pulse",
+            "label": "保存状态脉冲"
+          },
+          {
+            "value": "copy-confirm",
+            "label": "复制确认"
+          },
+          {
+            "value": "loading-resolve",
+            "label": "等待到完成"
+          },
+          {
+            "value": "warning-breathe",
+            "label": "注意事项提示"
+          },
+          {
+            "value": "notification-ping",
+            "label": "通知提示圈"
+          },
+          {
+            "value": "soft-confetti",
+            "label": "克制的完成粒子"
+          },
+          {
+            "value": "curve-ribbon",
+            "label": "三层弧带转场"
+          },
+          {
+            "value": "diagonal-ribbon",
+            "label": "斜向圆角带转场"
+          },
+          {
+            "value": "shared-slide",
+            "label": "同场横移交接"
+          },
+          {
+            "value": "soft-dissolve",
+            "label": "柔焦交叠"
+          },
+          {
+            "value": "zoom-through",
+            "label": "推近穿越"
+          },
+          {
+            "value": "card-lift",
+            "label": "卡片抬起换页"
+          },
+          {
+            "value": "blinds-swap",
+            "label": "分栏接力换页"
+          },
+          {
+            "value": "liquid-sweep",
+            "label": "柔曲线扫过"
+          },
+          {
+            "value": "grid-drift",
+            "label": "细网格缓移"
+          },
+          {
+            "value": "perspective-scroll",
+            "label": "透视网格滚动"
+          },
+          {
+            "value": "dot-drift",
+            "label": "细点阵漂移"
+          },
+          {
+            "value": "orb-parallax",
+            "label": "边角圆形视差"
+          },
+          {
+            "value": "contour-flow",
+            "label": "等高曲线流动"
+          },
+          {
+            "value": "diagonal-hatch",
+            "label": "斜纹背景滑动"
+          },
+          {
+            "value": "ring-orbit",
+            "label": "环形轨道漂移"
+          },
+          {
+            "value": "blueprint-pan",
+            "label": "蓝图坐标平移"
+          },
+          {
+            "value": "wave-bands",
+            "label": "柔和波带流动"
+          },
+          {
+            "value": "ambient-breath",
+            "label": "淡色光晕呼吸"
+          },
+          {
+            "value": "ani-notice-verify",
+            "label": "通知逐项核对"
+          },
+          {
+            "value": "ani-diagram-build",
+            "label": "图解逐步建立"
+          },
+          {
+            "value": "ani-order-select",
+            "label": "订单条件筛选"
+          },
+          {
+            "value": "ani-machine-process",
+            "label": "材料加工过程"
+          }
+        ]
+      },
+      {
+        "id": "effectOptionsJson",
+        "type": "string",
+        "label": "动画参数 JSON",
+        "default": "{}"
+      },
+      {
+        "id": "soundEnabled",
+        "type": "boolean",
+        "label": "配套音效",
+        "default": true
+      },
+      {
+        "id": "soundGain",
+        "type": "number",
+        "label": "音效音量",
+        "default": 0.65,
+        "min": 0,
+        "max": 1,
+        "step": 0.05
+      }
+    ],
+    "referenceImage": "references/animation-style/ani-order-filter.png",
+    "referenceLabel": "V8 · 五条样本与筛选"
+  },
+  {
+    "id": "ani-compare-extract",
+    "name": "动画风 · 两例对照与归纳",
+    "category": "动画风",
+    "description": "保留通知与订单的不同结构，对齐两边相同的步骤，再汇聚到图式归纳与本例办法。",
+    "width": 1280,
+    "height": 720,
+    "reference": {
+      "basis": "用户 V8 的 S10 静态分镜与 M05 下行，原生 SVG 可编辑重建。",
+      "source": "reports/animation-style/reference-review-v8/REVIEW.md",
+      "level": "reference-reconstruction"
+    },
+    "defaultEffect": "ani-diagram-build",
+    "content": "content/ani-compare-extract.json",
+    "preview": "previews/ani-compare-extract.html",
+    "composition": "compositions/ani-compare-extract.html",
+    "variables": [
+      {
+        "id": "title",
+        "type": "string",
+        "label": "title",
+        "default": "图式归纳"
+      },
+      {
+        "id": "subtitle",
+        "type": "string",
+        "label": "subtitle",
+        "default": "从不同例子，找共同思路"
+      },
+      {
+        "id": "footer",
+        "type": "string",
+        "label": "footer",
+        "default": "本例办法：补清要求，再检查"
+      },
+      {
+        "id": "leftTitle",
+        "type": "string",
+        "label": "leftTitle",
+        "default": "本周进度通知"
+      },
+      {
+        "id": "rightTitle",
+        "type": "string",
+        "label": "rightTitle",
+        "default": "截取 5 条示意"
+      },
+      {
+        "id": "relationLabel",
+        "type": "string",
+        "label": "relationLabel",
+        "default": "比较与提炼"
+      },
+      {
+        "id": "sampleNote",
+        "type": "string",
+        "label": "sampleNote",
+        "default": "样本不是月度总数"
+      },
+      {
+        "id": "month",
+        "type": "string",
+        "label": "month",
+        "default": "2026-09"
+      },
+      {
+        "id": "propsJson",
+        "type": "string",
+        "label": "完整组件内容 JSON（覆盖同名字段）",
+        "default": "{}"
+      },
+      {
+        "id": "effect",
+        "type": "enum",
+        "label": "动画效果",
+        "default": "ani-diagram-build",
+        "options": [
+          {
+            "value": "none",
+            "label": "无动画"
+          },
+          {
+            "value": "fade-in",
+            "label": "淡入呈现"
+          },
+          {
+            "value": "slide-in",
+            "label": "窗口滑入"
+          },
+          {
+            "value": "stagger",
+            "label": "步骤依次出现"
+          },
+          {
+            "value": "typewriter",
+            "label": "逐字输入"
+          },
+          {
+            "value": "line-highlight",
+            "label": "逐行聚焦"
+          },
+          {
+            "value": "draw-path",
+            "label": "连线生长"
+          },
+          {
+            "value": "click-ripple",
+            "label": "光标点击"
+          },
+          {
+            "value": "zoom-focus",
+            "label": "镜头推近"
+          },
+          {
+            "value": "spotlight",
+            "label": "局部聚光"
+          },
+          {
+            "value": "split-reveal",
+            "label": "前后揭示"
+          },
+          {
+            "value": "progress-fill",
+            "label": "数值进度增长"
+          },
+          {
+            "value": "count-up",
+            "label": "数字递增"
+          },
+          {
+            "value": "scroll-panel",
+            "label": "内容滚动"
+          },
+          {
+            "value": "word-emphasis",
+            "label": "关键词划线"
+          },
+          {
+            "value": "window-exit",
+            "label": "窗口收起"
+          },
+          {
+            "value": "modal-pop",
+            "label": "命令面板弹出"
+          },
+          {
+            "value": "toast-enter",
+            "label": "通知送达"
+          },
+          {
+            "value": "menu-unfold",
+            "label": "级联菜单展开"
+          },
+          {
+            "value": "focus-ring",
+            "label": "目标描边"
+          },
+          {
+            "value": "marker-sweep",
+            "label": "荧光笔扫读"
+          },
+          {
+            "value": "focus-hop",
+            "label": "焦点巡游"
+          },
+          {
+            "value": "check-complete",
+            "label": "任务完成"
+          },
+          {
+            "value": "row-reveal",
+            "label": "表格载入"
+          },
+          {
+            "value": "chart-trace",
+            "label": "趋势追踪读数"
+          },
+          {
+            "value": "card-stack",
+            "label": "结构分层展开"
+          },
+          {
+            "value": "media-pan",
+            "label": "素材缓慢平移"
+          },
+          {
+            "value": "iris-reveal",
+            "label": "圆形画面交接"
+          },
+          {
+            "value": "wipe-transition",
+            "label": "三层短遮幅转场"
+          },
+          {
+            "value": "stamp-confirm",
+            "label": "确认印记"
+          },
+          {
+            "value": "error-shake",
+            "label": "输入纠错提示"
+          },
+          {
+            "value": "scale-settle",
+            "label": "轻缩放落位"
+          },
+          {
+            "value": "curtain-open",
+            "label": "双侧帘幕开场"
+          },
+          {
+            "value": "blur-resolve",
+            "label": "由虚到实"
+          },
+          {
+            "value": "mask-rise",
+            "label": "窗口裁切入场"
+          },
+          {
+            "value": "cards-deal",
+            "label": "卡片发牌"
+          },
+          {
+            "value": "center-stagger",
+            "label": "由中央展开"
+          },
+          {
+            "value": "border-assemble",
+            "label": "边框构建开场"
+          },
+          {
+            "value": "toggle-switch",
+            "label": "开关切换"
+          },
+          {
+            "value": "drag-drop",
+            "label": "任务拖放"
+          },
+          {
+            "value": "text-select",
+            "label": "拖选文本"
+          },
+          {
+            "value": "slider-drag",
+            "label": "滑块调节"
+          },
+          {
+            "value": "dashed-frame",
+            "label": "虚线边框绘制"
+          },
+          {
+            "value": "corner-brackets",
+            "label": "四角定位"
+          },
+          {
+            "value": "callout-pin",
+            "label": "引线标注"
+          },
+          {
+            "value": "number-tags",
+            "label": "编号标记"
+          },
+          {
+            "value": "branch-reveal",
+            "label": "条件分支展开"
+          },
+          {
+            "value": "orbit-steps",
+            "label": "循环路径行进"
+          },
+          {
+            "value": "compare-sweep",
+            "label": "对比扫描线"
+          },
+          {
+            "value": "equation-build",
+            "label": "公式逐项组合"
+          },
+          {
+            "value": "pyramid-build",
+            "label": "层级从基础构建"
+          },
+          {
+            "value": "mindmap-expand",
+            "label": "思维导图扩散"
+          },
+          {
+            "value": "step-track",
+            "label": "步骤状态推进"
+          },
+          {
+            "value": "pan-scan",
+            "label": "横向阅读镜头"
+          },
+          {
+            "value": "dolly-out",
+            "label": "拉远建立全局"
+          },
+          {
+            "value": "focus-return",
+            "label": "推近后回到全景"
+          },
+          {
+            "value": "focus-hop-camera",
+            "label": "两处重点切换"
+          },
+          {
+            "value": "tilt-settle",
+            "label": "轻透视扶正"
+          },
+          {
+            "value": "parallax-depth",
+            "label": "前后层视差"
+          },
+          {
+            "value": "frame-push",
+            "label": "框内缓慢推进"
+          },
+          {
+            "value": "dolly-diagonal",
+            "label": "斜向缓慢取景"
+          },
+          {
+            "value": "donut-draw",
+            "label": "环形比例绘制"
+          },
+          {
+            "value": "scatter-pop",
+            "label": "散点落位"
+          },
+          {
+            "value": "heatmap-scan",
+            "label": "热力数据扫描"
+          },
+          {
+            "value": "funnel-reveal",
+            "label": "漏斗逐层转化"
+          },
+          {
+            "value": "radar-expand",
+            "label": "雷达轮廓建立"
+          },
+          {
+            "value": "chart-bars-cascade",
+            "label": "时间区间展开"
+          },
+          {
+            "value": "fade-out",
+            "label": "柔和淡出"
+          },
+          {
+            "value": "slide-out-left",
+            "label": "向左滑出"
+          },
+          {
+            "value": "lift-away",
+            "label": "向上离场"
+          },
+          {
+            "value": "shrink-center",
+            "label": "缩向中心"
+          },
+          {
+            "value": "iris-close",
+            "label": "圆形收幕"
+          },
+          {
+            "value": "mask-retract",
+            "label": "从右向左收回"
+          },
+          {
+            "value": "stagger-out",
+            "label": "内容依次离场"
+          },
+          {
+            "value": "blur-out",
+            "label": "散焦离场"
+          },
+          {
+            "value": "split-away",
+            "label": "左右分离退场"
+          },
+          {
+            "value": "success-toast",
+            "label": "操作成功提示"
+          },
+          {
+            "value": "save-pulse",
+            "label": "保存状态脉冲"
+          },
+          {
+            "value": "copy-confirm",
+            "label": "复制确认"
+          },
+          {
+            "value": "loading-resolve",
+            "label": "等待到完成"
+          },
+          {
+            "value": "warning-breathe",
+            "label": "注意事项提示"
+          },
+          {
+            "value": "notification-ping",
+            "label": "通知提示圈"
+          },
+          {
+            "value": "soft-confetti",
+            "label": "克制的完成粒子"
+          },
+          {
+            "value": "curve-ribbon",
+            "label": "三层弧带转场"
+          },
+          {
+            "value": "diagonal-ribbon",
+            "label": "斜向圆角带转场"
+          },
+          {
+            "value": "shared-slide",
+            "label": "同场横移交接"
+          },
+          {
+            "value": "soft-dissolve",
+            "label": "柔焦交叠"
+          },
+          {
+            "value": "zoom-through",
+            "label": "推近穿越"
+          },
+          {
+            "value": "card-lift",
+            "label": "卡片抬起换页"
+          },
+          {
+            "value": "blinds-swap",
+            "label": "分栏接力换页"
+          },
+          {
+            "value": "liquid-sweep",
+            "label": "柔曲线扫过"
+          },
+          {
+            "value": "grid-drift",
+            "label": "细网格缓移"
+          },
+          {
+            "value": "perspective-scroll",
+            "label": "透视网格滚动"
+          },
+          {
+            "value": "dot-drift",
+            "label": "细点阵漂移"
+          },
+          {
+            "value": "orb-parallax",
+            "label": "边角圆形视差"
+          },
+          {
+            "value": "contour-flow",
+            "label": "等高曲线流动"
+          },
+          {
+            "value": "diagonal-hatch",
+            "label": "斜纹背景滑动"
+          },
+          {
+            "value": "ring-orbit",
+            "label": "环形轨道漂移"
+          },
+          {
+            "value": "blueprint-pan",
+            "label": "蓝图坐标平移"
+          },
+          {
+            "value": "wave-bands",
+            "label": "柔和波带流动"
+          },
+          {
+            "value": "ambient-breath",
+            "label": "淡色光晕呼吸"
+          },
+          {
+            "value": "ani-notice-verify",
+            "label": "通知逐项核对"
+          },
+          {
+            "value": "ani-diagram-build",
+            "label": "图解逐步建立"
+          },
+          {
+            "value": "ani-order-select",
+            "label": "订单条件筛选"
+          },
+          {
+            "value": "ani-machine-process",
+            "label": "材料加工过程"
+          }
+        ]
+      },
+      {
+        "id": "effectOptionsJson",
+        "type": "string",
+        "label": "动画参数 JSON",
+        "default": "{}"
+      },
+      {
+        "id": "soundEnabled",
+        "type": "boolean",
+        "label": "配套音效",
+        "default": true
+      },
+      {
+        "id": "soundGain",
+        "type": "number",
+        "label": "音效音量",
+        "default": 0.65,
+        "min": 0,
+        "max": 1,
+        "step": 0.05
+      }
+    ],
+    "referenceImage": "references/animation-style/ani-compare-extract.png",
+    "referenceLabel": "V8 · 两例比较与提炼"
+  },
+  {
+    "id": "ani-tool-workbench",
+    "name": "动画风 · 输入、检查与修改",
+    "category": "动画风",
+    "description": "完整工具窗口搭配要求纸、雪山预览与检查放大镜，表达先输入、再检查、再修改的工作过程。",
+    "width": 1280,
+    "height": 720,
+    "reference": {
+      "basis": "用户提供的静帧参考 07_输入检查再修改.png；原生 SVG 几何重建，运动为新编排，不称 1:1 或逐帧复刻。",
+      "source": "reports/animation-style/reference-review-wechat/07_输入检查再修改.png",
+      "level": "designed"
+    },
+    "defaultEffect": "ani-diagram-build",
+    "content": "content/ani-tool-workbench.json",
+    "preview": "previews/ani-tool-workbench.html",
+    "composition": "compositions/ani-tool-workbench.html",
+    "variables": [
+      {
+        "id": "title",
+        "type": "string",
+        "label": "title",
+        "default": "输入、检查，再修改"
+      },
+      {
+        "id": "subtitle",
+        "type": "string",
+        "label": "subtitle",
+        "default": "把要求写进去，把结果拿出来看。"
+      },
+      {
+        "id": "toolLabel",
+        "type": "string",
+        "label": "toolLabel",
+        "default": "工具 A"
+      },
+      {
+        "id": "requestLabel",
+        "type": "string",
+        "label": "requestLabel",
+        "default": "要求"
+      },
+      {
+        "id": "request",
+        "type": "string",
+        "label": "request",
+        "default": "AI 学习海报"
+      },
+      {
+        "id": "revisionLabel",
+        "type": "string",
+        "label": "revisionLabel",
+        "default": "修改"
+      },
+      {
+        "id": "revision",
+        "type": "string",
+        "label": "revision",
+        "default": "标题缩小"
+      },
+      {
+        "id": "action",
+        "type": "string",
+        "label": "action",
+        "default": "生成"
+      },
+      {
+        "id": "previewLabel",
+        "type": "string",
+        "label": "previewLabel",
+        "default": "AI 学习"
+      },
+      {
+        "id": "footer",
+        "type": "string",
+        "label": "footer",
+        "default": "检查结果，才能知道下一步该改哪里。"
+      },
+      {
+        "id": "propsJson",
+        "type": "string",
+        "label": "完整组件内容 JSON（覆盖同名字段）",
+        "default": "{}"
+      },
+      {
+        "id": "effect",
+        "type": "enum",
+        "label": "动画效果",
+        "default": "ani-diagram-build",
+        "options": [
+          {
+            "value": "none",
+            "label": "无动画"
+          },
+          {
+            "value": "fade-in",
+            "label": "淡入呈现"
+          },
+          {
+            "value": "slide-in",
+            "label": "窗口滑入"
+          },
+          {
+            "value": "stagger",
+            "label": "步骤依次出现"
+          },
+          {
+            "value": "typewriter",
+            "label": "逐字输入"
+          },
+          {
+            "value": "line-highlight",
+            "label": "逐行聚焦"
+          },
+          {
+            "value": "draw-path",
+            "label": "连线生长"
+          },
+          {
+            "value": "click-ripple",
+            "label": "光标点击"
+          },
+          {
+            "value": "zoom-focus",
+            "label": "镜头推近"
+          },
+          {
+            "value": "spotlight",
+            "label": "局部聚光"
+          },
+          {
+            "value": "split-reveal",
+            "label": "前后揭示"
+          },
+          {
+            "value": "progress-fill",
+            "label": "数值进度增长"
+          },
+          {
+            "value": "count-up",
+            "label": "数字递增"
+          },
+          {
+            "value": "scroll-panel",
+            "label": "内容滚动"
+          },
+          {
+            "value": "word-emphasis",
+            "label": "关键词划线"
+          },
+          {
+            "value": "window-exit",
+            "label": "窗口收起"
+          },
+          {
+            "value": "modal-pop",
+            "label": "命令面板弹出"
+          },
+          {
+            "value": "toast-enter",
+            "label": "通知送达"
+          },
+          {
+            "value": "menu-unfold",
+            "label": "级联菜单展开"
+          },
+          {
+            "value": "focus-ring",
+            "label": "目标描边"
+          },
+          {
+            "value": "marker-sweep",
+            "label": "荧光笔扫读"
+          },
+          {
+            "value": "focus-hop",
+            "label": "焦点巡游"
+          },
+          {
+            "value": "check-complete",
+            "label": "任务完成"
+          },
+          {
+            "value": "row-reveal",
+            "label": "表格载入"
+          },
+          {
+            "value": "chart-trace",
+            "label": "趋势追踪读数"
+          },
+          {
+            "value": "card-stack",
+            "label": "结构分层展开"
+          },
+          {
+            "value": "media-pan",
+            "label": "素材缓慢平移"
+          },
+          {
+            "value": "iris-reveal",
+            "label": "圆形画面交接"
+          },
+          {
+            "value": "wipe-transition",
+            "label": "三层短遮幅转场"
+          },
+          {
+            "value": "stamp-confirm",
+            "label": "确认印记"
+          },
+          {
+            "value": "error-shake",
+            "label": "输入纠错提示"
+          },
+          {
+            "value": "scale-settle",
+            "label": "轻缩放落位"
+          },
+          {
+            "value": "curtain-open",
+            "label": "双侧帘幕开场"
+          },
+          {
+            "value": "blur-resolve",
+            "label": "由虚到实"
+          },
+          {
+            "value": "mask-rise",
+            "label": "窗口裁切入场"
+          },
+          {
+            "value": "cards-deal",
+            "label": "卡片发牌"
+          },
+          {
+            "value": "center-stagger",
+            "label": "由中央展开"
+          },
+          {
+            "value": "border-assemble",
+            "label": "边框构建开场"
+          },
+          {
+            "value": "toggle-switch",
+            "label": "开关切换"
+          },
+          {
+            "value": "drag-drop",
+            "label": "任务拖放"
+          },
+          {
+            "value": "text-select",
+            "label": "拖选文本"
+          },
+          {
+            "value": "slider-drag",
+            "label": "滑块调节"
+          },
+          {
+            "value": "dashed-frame",
+            "label": "虚线边框绘制"
+          },
+          {
+            "value": "corner-brackets",
+            "label": "四角定位"
+          },
+          {
+            "value": "callout-pin",
+            "label": "引线标注"
+          },
+          {
+            "value": "number-tags",
+            "label": "编号标记"
+          },
+          {
+            "value": "branch-reveal",
+            "label": "条件分支展开"
+          },
+          {
+            "value": "orbit-steps",
+            "label": "循环路径行进"
+          },
+          {
+            "value": "compare-sweep",
+            "label": "对比扫描线"
+          },
+          {
+            "value": "equation-build",
+            "label": "公式逐项组合"
+          },
+          {
+            "value": "pyramid-build",
+            "label": "层级从基础构建"
+          },
+          {
+            "value": "mindmap-expand",
+            "label": "思维导图扩散"
+          },
+          {
+            "value": "step-track",
+            "label": "步骤状态推进"
+          },
+          {
+            "value": "pan-scan",
+            "label": "横向阅读镜头"
+          },
+          {
+            "value": "dolly-out",
+            "label": "拉远建立全局"
+          },
+          {
+            "value": "focus-return",
+            "label": "推近后回到全景"
+          },
+          {
+            "value": "focus-hop-camera",
+            "label": "两处重点切换"
+          },
+          {
+            "value": "tilt-settle",
+            "label": "轻透视扶正"
+          },
+          {
+            "value": "parallax-depth",
+            "label": "前后层视差"
+          },
+          {
+            "value": "frame-push",
+            "label": "框内缓慢推进"
+          },
+          {
+            "value": "dolly-diagonal",
+            "label": "斜向缓慢取景"
+          },
+          {
+            "value": "donut-draw",
+            "label": "环形比例绘制"
+          },
+          {
+            "value": "scatter-pop",
+            "label": "散点落位"
+          },
+          {
+            "value": "heatmap-scan",
+            "label": "热力数据扫描"
+          },
+          {
+            "value": "funnel-reveal",
+            "label": "漏斗逐层转化"
+          },
+          {
+            "value": "radar-expand",
+            "label": "雷达轮廓建立"
+          },
+          {
+            "value": "chart-bars-cascade",
+            "label": "时间区间展开"
+          },
+          {
+            "value": "fade-out",
+            "label": "柔和淡出"
+          },
+          {
+            "value": "slide-out-left",
+            "label": "向左滑出"
+          },
+          {
+            "value": "lift-away",
+            "label": "向上离场"
+          },
+          {
+            "value": "shrink-center",
+            "label": "缩向中心"
+          },
+          {
+            "value": "iris-close",
+            "label": "圆形收幕"
+          },
+          {
+            "value": "mask-retract",
+            "label": "从右向左收回"
+          },
+          {
+            "value": "stagger-out",
+            "label": "内容依次离场"
+          },
+          {
+            "value": "blur-out",
+            "label": "散焦离场"
+          },
+          {
+            "value": "split-away",
+            "label": "左右分离退场"
+          },
+          {
+            "value": "success-toast",
+            "label": "操作成功提示"
+          },
+          {
+            "value": "save-pulse",
+            "label": "保存状态脉冲"
+          },
+          {
+            "value": "copy-confirm",
+            "label": "复制确认"
+          },
+          {
+            "value": "loading-resolve",
+            "label": "等待到完成"
+          },
+          {
+            "value": "warning-breathe",
+            "label": "注意事项提示"
+          },
+          {
+            "value": "notification-ping",
+            "label": "通知提示圈"
+          },
+          {
+            "value": "soft-confetti",
+            "label": "克制的完成粒子"
+          },
+          {
+            "value": "curve-ribbon",
+            "label": "三层弧带转场"
+          },
+          {
+            "value": "diagonal-ribbon",
+            "label": "斜向圆角带转场"
+          },
+          {
+            "value": "shared-slide",
+            "label": "同场横移交接"
+          },
+          {
+            "value": "soft-dissolve",
+            "label": "柔焦交叠"
+          },
+          {
+            "value": "zoom-through",
+            "label": "推近穿越"
+          },
+          {
+            "value": "card-lift",
+            "label": "卡片抬起换页"
+          },
+          {
+            "value": "blinds-swap",
+            "label": "分栏接力换页"
+          },
+          {
+            "value": "liquid-sweep",
+            "label": "柔曲线扫过"
+          },
+          {
+            "value": "grid-drift",
+            "label": "细网格缓移"
+          },
+          {
+            "value": "perspective-scroll",
+            "label": "透视网格滚动"
+          },
+          {
+            "value": "dot-drift",
+            "label": "细点阵漂移"
+          },
+          {
+            "value": "orb-parallax",
+            "label": "边角圆形视差"
+          },
+          {
+            "value": "contour-flow",
+            "label": "等高曲线流动"
+          },
+          {
+            "value": "diagonal-hatch",
+            "label": "斜纹背景滑动"
+          },
+          {
+            "value": "ring-orbit",
+            "label": "环形轨道漂移"
+          },
+          {
+            "value": "blueprint-pan",
+            "label": "蓝图坐标平移"
+          },
+          {
+            "value": "wave-bands",
+            "label": "柔和波带流动"
+          },
+          {
+            "value": "ambient-breath",
+            "label": "淡色光晕呼吸"
+          },
+          {
+            "value": "ani-notice-verify",
+            "label": "通知逐项核对"
+          },
+          {
+            "value": "ani-diagram-build",
+            "label": "图解逐步建立"
+          },
+          {
+            "value": "ani-order-select",
+            "label": "订单条件筛选"
+          },
+          {
+            "value": "ani-machine-process",
+            "label": "材料加工过程"
+          }
+        ]
+      },
+      {
+        "id": "effectOptionsJson",
+        "type": "string",
+        "label": "动画参数 JSON",
+        "default": "{}"
+      },
+      {
+        "id": "soundEnabled",
+        "type": "boolean",
+        "label": "配套音效",
+        "default": true
+      },
+      {
+        "id": "soundGain",
+        "type": "number",
+        "label": "音效音量",
+        "default": 0.65,
+        "min": 0,
+        "max": 1,
+        "step": 0.05
+      }
+    ],
+    "referenceImage": "references/animation-style/ani-tool-workbench.png",
+    "referenceLabel": "19 场参考 · 输入、检查、修改"
+  },
+  {
+    "id": "ani-file-collection",
+    "name": "动画风 · 收藏不等于会",
+    "category": "动画风",
+    "description": "折角教程纸收进文件夹，与右侧实际操作窗口形成对照；收藏列表和窗口标签可编辑。",
+    "width": 1280,
+    "height": 720,
+    "reference": {
+      "basis": "用户提供的静帧参考 02_收藏不等于会.png；原生 SVG 几何重建，运动为新编排，不称 1:1 或逐帧复刻。",
+      "source": "reports/animation-style/reference-review-wechat/02_收藏不等于会.png",
+      "level": "designed"
+    },
+    "defaultEffect": "ani-diagram-build",
+    "content": "content/ani-file-collection.json",
+    "preview": "previews/ani-file-collection.html",
+    "composition": "compositions/ani-file-collection.html",
+    "variables": [
+      {
+        "id": "title",
+        "type": "string",
+        "label": "title",
+        "default": "收藏，不等于会"
+      },
+      {
+        "id": "subtitle",
+        "type": "string",
+        "label": "subtitle",
+        "default": "材料存起来之后，还需要自己做一次。"
+      },
+      {
+        "id": "folderLabel",
+        "type": "string",
+        "label": "folderLabel",
+        "default": "收藏的教程"
+      },
+      {
+        "id": "windowLabel",
+        "type": "string",
+        "label": "windowLabel",
+        "default": "实际操作"
+      },
+      {
+        "id": "previewLabel",
+        "type": "string",
+        "label": "previewLabel",
+        "default": "AI 学习"
+      },
+      {
+        "id": "result",
+        "type": "string",
+        "label": "result",
+        "default": "≠"
+      },
+      {
+        "id": "footer",
+        "type": "string",
+        "label": "footer",
+        "default": "从“我看过”走到“我能做”。"
+      },
+      {
+        "id": "propsJson",
+        "type": "string",
+        "label": "完整组件内容 JSON（覆盖同名字段）",
+        "default": "{}"
+      },
+      {
+        "id": "effect",
+        "type": "enum",
+        "label": "动画效果",
+        "default": "ani-diagram-build",
+        "options": [
+          {
+            "value": "none",
+            "label": "无动画"
+          },
+          {
+            "value": "fade-in",
+            "label": "淡入呈现"
+          },
+          {
+            "value": "slide-in",
+            "label": "窗口滑入"
+          },
+          {
+            "value": "stagger",
+            "label": "步骤依次出现"
+          },
+          {
+            "value": "typewriter",
+            "label": "逐字输入"
+          },
+          {
+            "value": "line-highlight",
+            "label": "逐行聚焦"
+          },
+          {
+            "value": "draw-path",
+            "label": "连线生长"
+          },
+          {
+            "value": "click-ripple",
+            "label": "光标点击"
+          },
+          {
+            "value": "zoom-focus",
+            "label": "镜头推近"
+          },
+          {
+            "value": "spotlight",
+            "label": "局部聚光"
+          },
+          {
+            "value": "split-reveal",
+            "label": "前后揭示"
+          },
+          {
+            "value": "progress-fill",
+            "label": "数值进度增长"
+          },
+          {
+            "value": "count-up",
+            "label": "数字递增"
+          },
+          {
+            "value": "scroll-panel",
+            "label": "内容滚动"
+          },
+          {
+            "value": "word-emphasis",
+            "label": "关键词划线"
+          },
+          {
+            "value": "window-exit",
+            "label": "窗口收起"
+          },
+          {
+            "value": "modal-pop",
+            "label": "命令面板弹出"
+          },
+          {
+            "value": "toast-enter",
+            "label": "通知送达"
+          },
+          {
+            "value": "menu-unfold",
+            "label": "级联菜单展开"
+          },
+          {
+            "value": "focus-ring",
+            "label": "目标描边"
+          },
+          {
+            "value": "marker-sweep",
+            "label": "荧光笔扫读"
+          },
+          {
+            "value": "focus-hop",
+            "label": "焦点巡游"
+          },
+          {
+            "value": "check-complete",
+            "label": "任务完成"
+          },
+          {
+            "value": "row-reveal",
+            "label": "表格载入"
+          },
+          {
+            "value": "chart-trace",
+            "label": "趋势追踪读数"
+          },
+          {
+            "value": "card-stack",
+            "label": "结构分层展开"
+          },
+          {
+            "value": "media-pan",
+            "label": "素材缓慢平移"
+          },
+          {
+            "value": "iris-reveal",
+            "label": "圆形画面交接"
+          },
+          {
+            "value": "wipe-transition",
+            "label": "三层短遮幅转场"
+          },
+          {
+            "value": "stamp-confirm",
+            "label": "确认印记"
+          },
+          {
+            "value": "error-shake",
+            "label": "输入纠错提示"
+          },
+          {
+            "value": "scale-settle",
+            "label": "轻缩放落位"
+          },
+          {
+            "value": "curtain-open",
+            "label": "双侧帘幕开场"
+          },
+          {
+            "value": "blur-resolve",
+            "label": "由虚到实"
+          },
+          {
+            "value": "mask-rise",
+            "label": "窗口裁切入场"
+          },
+          {
+            "value": "cards-deal",
+            "label": "卡片发牌"
+          },
+          {
+            "value": "center-stagger",
+            "label": "由中央展开"
+          },
+          {
+            "value": "border-assemble",
+            "label": "边框构建开场"
+          },
+          {
+            "value": "toggle-switch",
+            "label": "开关切换"
+          },
+          {
+            "value": "drag-drop",
+            "label": "任务拖放"
+          },
+          {
+            "value": "text-select",
+            "label": "拖选文本"
+          },
+          {
+            "value": "slider-drag",
+            "label": "滑块调节"
+          },
+          {
+            "value": "dashed-frame",
+            "label": "虚线边框绘制"
+          },
+          {
+            "value": "corner-brackets",
+            "label": "四角定位"
+          },
+          {
+            "value": "callout-pin",
+            "label": "引线标注"
+          },
+          {
+            "value": "number-tags",
+            "label": "编号标记"
+          },
+          {
+            "value": "branch-reveal",
+            "label": "条件分支展开"
+          },
+          {
+            "value": "orbit-steps",
+            "label": "循环路径行进"
+          },
+          {
+            "value": "compare-sweep",
+            "label": "对比扫描线"
+          },
+          {
+            "value": "equation-build",
+            "label": "公式逐项组合"
+          },
+          {
+            "value": "pyramid-build",
+            "label": "层级从基础构建"
+          },
+          {
+            "value": "mindmap-expand",
+            "label": "思维导图扩散"
+          },
+          {
+            "value": "step-track",
+            "label": "步骤状态推进"
+          },
+          {
+            "value": "pan-scan",
+            "label": "横向阅读镜头"
+          },
+          {
+            "value": "dolly-out",
+            "label": "拉远建立全局"
+          },
+          {
+            "value": "focus-return",
+            "label": "推近后回到全景"
+          },
+          {
+            "value": "focus-hop-camera",
+            "label": "两处重点切换"
+          },
+          {
+            "value": "tilt-settle",
+            "label": "轻透视扶正"
+          },
+          {
+            "value": "parallax-depth",
+            "label": "前后层视差"
+          },
+          {
+            "value": "frame-push",
+            "label": "框内缓慢推进"
+          },
+          {
+            "value": "dolly-diagonal",
+            "label": "斜向缓慢取景"
+          },
+          {
+            "value": "donut-draw",
+            "label": "环形比例绘制"
+          },
+          {
+            "value": "scatter-pop",
+            "label": "散点落位"
+          },
+          {
+            "value": "heatmap-scan",
+            "label": "热力数据扫描"
+          },
+          {
+            "value": "funnel-reveal",
+            "label": "漏斗逐层转化"
+          },
+          {
+            "value": "radar-expand",
+            "label": "雷达轮廓建立"
+          },
+          {
+            "value": "chart-bars-cascade",
+            "label": "时间区间展开"
+          },
+          {
+            "value": "fade-out",
+            "label": "柔和淡出"
+          },
+          {
+            "value": "slide-out-left",
+            "label": "向左滑出"
+          },
+          {
+            "value": "lift-away",
+            "label": "向上离场"
+          },
+          {
+            "value": "shrink-center",
+            "label": "缩向中心"
+          },
+          {
+            "value": "iris-close",
+            "label": "圆形收幕"
+          },
+          {
+            "value": "mask-retract",
+            "label": "从右向左收回"
+          },
+          {
+            "value": "stagger-out",
+            "label": "内容依次离场"
+          },
+          {
+            "value": "blur-out",
+            "label": "散焦离场"
+          },
+          {
+            "value": "split-away",
+            "label": "左右分离退场"
+          },
+          {
+            "value": "success-toast",
+            "label": "操作成功提示"
+          },
+          {
+            "value": "save-pulse",
+            "label": "保存状态脉冲"
+          },
+          {
+            "value": "copy-confirm",
+            "label": "复制确认"
+          },
+          {
+            "value": "loading-resolve",
+            "label": "等待到完成"
+          },
+          {
+            "value": "warning-breathe",
+            "label": "注意事项提示"
+          },
+          {
+            "value": "notification-ping",
+            "label": "通知提示圈"
+          },
+          {
+            "value": "soft-confetti",
+            "label": "克制的完成粒子"
+          },
+          {
+            "value": "curve-ribbon",
+            "label": "三层弧带转场"
+          },
+          {
+            "value": "diagonal-ribbon",
+            "label": "斜向圆角带转场"
+          },
+          {
+            "value": "shared-slide",
+            "label": "同场横移交接"
+          },
+          {
+            "value": "soft-dissolve",
+            "label": "柔焦交叠"
+          },
+          {
+            "value": "zoom-through",
+            "label": "推近穿越"
+          },
+          {
+            "value": "card-lift",
+            "label": "卡片抬起换页"
+          },
+          {
+            "value": "blinds-swap",
+            "label": "分栏接力换页"
+          },
+          {
+            "value": "liquid-sweep",
+            "label": "柔曲线扫过"
+          },
+          {
+            "value": "grid-drift",
+            "label": "细网格缓移"
+          },
+          {
+            "value": "perspective-scroll",
+            "label": "透视网格滚动"
+          },
+          {
+            "value": "dot-drift",
+            "label": "细点阵漂移"
+          },
+          {
+            "value": "orb-parallax",
+            "label": "边角圆形视差"
+          },
+          {
+            "value": "contour-flow",
+            "label": "等高曲线流动"
+          },
+          {
+            "value": "diagonal-hatch",
+            "label": "斜纹背景滑动"
+          },
+          {
+            "value": "ring-orbit",
+            "label": "环形轨道漂移"
+          },
+          {
+            "value": "blueprint-pan",
+            "label": "蓝图坐标平移"
+          },
+          {
+            "value": "wave-bands",
+            "label": "柔和波带流动"
+          },
+          {
+            "value": "ambient-breath",
+            "label": "淡色光晕呼吸"
+          },
+          {
+            "value": "ani-notice-verify",
+            "label": "通知逐项核对"
+          },
+          {
+            "value": "ani-diagram-build",
+            "label": "图解逐步建立"
+          },
+          {
+            "value": "ani-order-select",
+            "label": "订单条件筛选"
+          },
+          {
+            "value": "ani-machine-process",
+            "label": "材料加工过程"
+          }
+        ]
+      },
+      {
+        "id": "effectOptionsJson",
+        "type": "string",
+        "label": "动画参数 JSON",
+        "default": "{}"
+      },
+      {
+        "id": "soundEnabled",
+        "type": "boolean",
+        "label": "配套音效",
+        "default": true
+      },
+      {
+        "id": "soundGain",
+        "type": "number",
+        "label": "音效音量",
+        "default": 0.65,
+        "min": 0,
+        "max": 1,
+        "step": 0.05
+      }
+    ],
+    "referenceImage": "references/animation-style/ani-file-collection.png",
+    "referenceLabel": "19 场参考 · 收藏不等于会"
+  },
+  {
+    "id": "ani-method-transfer",
+    "name": "动画风 · 熟悉部分可复用",
+    "category": "动画风",
+    "description": "从熟悉工具提取要求、检查、修改，送进带厚度的复用托盘，给新差异留出独立槽位。",
+    "width": 1280,
+    "height": 720,
+    "reference": {
+      "basis": "用户提供的静帧参考 12_熟悉部分与新差异.png；原生 SVG 几何重建，运动为新编排，不称 1:1 或逐帧复刻。",
+      "source": "reports/animation-style/reference-review-wechat/12_熟悉部分与新差异.png",
+      "level": "designed"
+    },
+    "defaultEffect": "ani-diagram-build",
+    "content": "content/ani-method-transfer.json",
+    "preview": "previews/ani-method-transfer.html",
+    "composition": "compositions/ani-method-transfer.html",
+    "variables": [
+      {
+        "id": "title",
+        "type": "string",
+        "label": "title",
+        "default": "熟悉部分可复用"
+      },
+      {
+        "id": "subtitle",
+        "type": "string",
+        "label": "subtitle",
+        "default": "原来的办法，可以带到新问题里。"
+      },
+      {
+        "id": "windowLabel",
+        "type": "string",
+        "label": "windowLabel",
+        "default": "熟悉的工具"
+      },
+      {
+        "id": "previewLabel",
+        "type": "string",
+        "label": "previewLabel",
+        "default": "AI 学习"
+      },
+      {
+        "id": "trayTitle",
+        "type": "string",
+        "label": "trayTitle",
+        "default": "图像要求"
+      },
+      {
+        "id": "newLabel",
+        "type": "string",
+        "label": "newLabel",
+        "default": "新差异"
+      },
+      {
+        "id": "footer",
+        "type": "string",
+        "label": "footer",
+        "default": "先认出能复用的部分，再处理真正不同的地方。"
+      },
+      {
+        "id": "propsJson",
+        "type": "string",
+        "label": "完整组件内容 JSON（覆盖同名字段）",
+        "default": "{}"
+      },
+      {
+        "id": "effect",
+        "type": "enum",
+        "label": "动画效果",
+        "default": "ani-diagram-build",
+        "options": [
+          {
+            "value": "none",
+            "label": "无动画"
+          },
+          {
+            "value": "fade-in",
+            "label": "淡入呈现"
+          },
+          {
+            "value": "slide-in",
+            "label": "窗口滑入"
+          },
+          {
+            "value": "stagger",
+            "label": "步骤依次出现"
+          },
+          {
+            "value": "typewriter",
+            "label": "逐字输入"
+          },
+          {
+            "value": "line-highlight",
+            "label": "逐行聚焦"
+          },
+          {
+            "value": "draw-path",
+            "label": "连线生长"
+          },
+          {
+            "value": "click-ripple",
+            "label": "光标点击"
+          },
+          {
+            "value": "zoom-focus",
+            "label": "镜头推近"
+          },
+          {
+            "value": "spotlight",
+            "label": "局部聚光"
+          },
+          {
+            "value": "split-reveal",
+            "label": "前后揭示"
+          },
+          {
+            "value": "progress-fill",
+            "label": "数值进度增长"
+          },
+          {
+            "value": "count-up",
+            "label": "数字递增"
+          },
+          {
+            "value": "scroll-panel",
+            "label": "内容滚动"
+          },
+          {
+            "value": "word-emphasis",
+            "label": "关键词划线"
+          },
+          {
+            "value": "window-exit",
+            "label": "窗口收起"
+          },
+          {
+            "value": "modal-pop",
+            "label": "命令面板弹出"
+          },
+          {
+            "value": "toast-enter",
+            "label": "通知送达"
+          },
+          {
+            "value": "menu-unfold",
+            "label": "级联菜单展开"
+          },
+          {
+            "value": "focus-ring",
+            "label": "目标描边"
+          },
+          {
+            "value": "marker-sweep",
+            "label": "荧光笔扫读"
+          },
+          {
+            "value": "focus-hop",
+            "label": "焦点巡游"
+          },
+          {
+            "value": "check-complete",
+            "label": "任务完成"
+          },
+          {
+            "value": "row-reveal",
+            "label": "表格载入"
+          },
+          {
+            "value": "chart-trace",
+            "label": "趋势追踪读数"
+          },
+          {
+            "value": "card-stack",
+            "label": "结构分层展开"
+          },
+          {
+            "value": "media-pan",
+            "label": "素材缓慢平移"
+          },
+          {
+            "value": "iris-reveal",
+            "label": "圆形画面交接"
+          },
+          {
+            "value": "wipe-transition",
+            "label": "三层短遮幅转场"
+          },
+          {
+            "value": "stamp-confirm",
+            "label": "确认印记"
+          },
+          {
+            "value": "error-shake",
+            "label": "输入纠错提示"
+          },
+          {
+            "value": "scale-settle",
+            "label": "轻缩放落位"
+          },
+          {
+            "value": "curtain-open",
+            "label": "双侧帘幕开场"
+          },
+          {
+            "value": "blur-resolve",
+            "label": "由虚到实"
+          },
+          {
+            "value": "mask-rise",
+            "label": "窗口裁切入场"
+          },
+          {
+            "value": "cards-deal",
+            "label": "卡片发牌"
+          },
+          {
+            "value": "center-stagger",
+            "label": "由中央展开"
+          },
+          {
+            "value": "border-assemble",
+            "label": "边框构建开场"
+          },
+          {
+            "value": "toggle-switch",
+            "label": "开关切换"
+          },
+          {
+            "value": "drag-drop",
+            "label": "任务拖放"
+          },
+          {
+            "value": "text-select",
+            "label": "拖选文本"
+          },
+          {
+            "value": "slider-drag",
+            "label": "滑块调节"
+          },
+          {
+            "value": "dashed-frame",
+            "label": "虚线边框绘制"
+          },
+          {
+            "value": "corner-brackets",
+            "label": "四角定位"
+          },
+          {
+            "value": "callout-pin",
+            "label": "引线标注"
+          },
+          {
+            "value": "number-tags",
+            "label": "编号标记"
+          },
+          {
+            "value": "branch-reveal",
+            "label": "条件分支展开"
+          },
+          {
+            "value": "orbit-steps",
+            "label": "循环路径行进"
+          },
+          {
+            "value": "compare-sweep",
+            "label": "对比扫描线"
+          },
+          {
+            "value": "equation-build",
+            "label": "公式逐项组合"
+          },
+          {
+            "value": "pyramid-build",
+            "label": "层级从基础构建"
+          },
+          {
+            "value": "mindmap-expand",
+            "label": "思维导图扩散"
+          },
+          {
+            "value": "step-track",
+            "label": "步骤状态推进"
+          },
+          {
+            "value": "pan-scan",
+            "label": "横向阅读镜头"
+          },
+          {
+            "value": "dolly-out",
+            "label": "拉远建立全局"
+          },
+          {
+            "value": "focus-return",
+            "label": "推近后回到全景"
+          },
+          {
+            "value": "focus-hop-camera",
+            "label": "两处重点切换"
+          },
+          {
+            "value": "tilt-settle",
+            "label": "轻透视扶正"
+          },
+          {
+            "value": "parallax-depth",
+            "label": "前后层视差"
+          },
+          {
+            "value": "frame-push",
+            "label": "框内缓慢推进"
+          },
+          {
+            "value": "dolly-diagonal",
+            "label": "斜向缓慢取景"
+          },
+          {
+            "value": "donut-draw",
+            "label": "环形比例绘制"
+          },
+          {
+            "value": "scatter-pop",
+            "label": "散点落位"
+          },
+          {
+            "value": "heatmap-scan",
+            "label": "热力数据扫描"
+          },
+          {
+            "value": "funnel-reveal",
+            "label": "漏斗逐层转化"
+          },
+          {
+            "value": "radar-expand",
+            "label": "雷达轮廓建立"
+          },
+          {
+            "value": "chart-bars-cascade",
+            "label": "时间区间展开"
+          },
+          {
+            "value": "fade-out",
+            "label": "柔和淡出"
+          },
+          {
+            "value": "slide-out-left",
+            "label": "向左滑出"
+          },
+          {
+            "value": "lift-away",
+            "label": "向上离场"
+          },
+          {
+            "value": "shrink-center",
+            "label": "缩向中心"
+          },
+          {
+            "value": "iris-close",
+            "label": "圆形收幕"
+          },
+          {
+            "value": "mask-retract",
+            "label": "从右向左收回"
+          },
+          {
+            "value": "stagger-out",
+            "label": "内容依次离场"
+          },
+          {
+            "value": "blur-out",
+            "label": "散焦离场"
+          },
+          {
+            "value": "split-away",
+            "label": "左右分离退场"
+          },
+          {
+            "value": "success-toast",
+            "label": "操作成功提示"
+          },
+          {
+            "value": "save-pulse",
+            "label": "保存状态脉冲"
+          },
+          {
+            "value": "copy-confirm",
+            "label": "复制确认"
+          },
+          {
+            "value": "loading-resolve",
+            "label": "等待到完成"
+          },
+          {
+            "value": "warning-breathe",
+            "label": "注意事项提示"
+          },
+          {
+            "value": "notification-ping",
+            "label": "通知提示圈"
+          },
+          {
+            "value": "soft-confetti",
+            "label": "克制的完成粒子"
+          },
+          {
+            "value": "curve-ribbon",
+            "label": "三层弧带转场"
+          },
+          {
+            "value": "diagonal-ribbon",
+            "label": "斜向圆角带转场"
+          },
+          {
+            "value": "shared-slide",
+            "label": "同场横移交接"
+          },
+          {
+            "value": "soft-dissolve",
+            "label": "柔焦交叠"
+          },
+          {
+            "value": "zoom-through",
+            "label": "推近穿越"
+          },
+          {
+            "value": "card-lift",
+            "label": "卡片抬起换页"
+          },
+          {
+            "value": "blinds-swap",
+            "label": "分栏接力换页"
+          },
+          {
+            "value": "liquid-sweep",
+            "label": "柔曲线扫过"
+          },
+          {
+            "value": "grid-drift",
+            "label": "细网格缓移"
+          },
+          {
+            "value": "perspective-scroll",
+            "label": "透视网格滚动"
+          },
+          {
+            "value": "dot-drift",
+            "label": "细点阵漂移"
+          },
+          {
+            "value": "orb-parallax",
+            "label": "边角圆形视差"
+          },
+          {
+            "value": "contour-flow",
+            "label": "等高曲线流动"
+          },
+          {
+            "value": "diagonal-hatch",
+            "label": "斜纹背景滑动"
+          },
+          {
+            "value": "ring-orbit",
+            "label": "环形轨道漂移"
+          },
+          {
+            "value": "blueprint-pan",
+            "label": "蓝图坐标平移"
+          },
+          {
+            "value": "wave-bands",
+            "label": "柔和波带流动"
+          },
+          {
+            "value": "ambient-breath",
+            "label": "淡色光晕呼吸"
+          },
+          {
+            "value": "ani-notice-verify",
+            "label": "通知逐项核对"
+          },
+          {
+            "value": "ani-diagram-build",
+            "label": "图解逐步建立"
+          },
+          {
+            "value": "ani-order-select",
+            "label": "订单条件筛选"
+          },
+          {
+            "value": "ani-machine-process",
+            "label": "材料加工过程"
+          }
+        ]
+      },
+      {
+        "id": "effectOptionsJson",
+        "type": "string",
+        "label": "动画参数 JSON",
+        "default": "{}"
+      },
+      {
+        "id": "soundEnabled",
+        "type": "boolean",
+        "label": "配套音效",
+        "default": true
+      },
+      {
+        "id": "soundGain",
+        "type": "number",
+        "label": "音效音量",
+        "default": 0.65,
+        "min": 0,
+        "max": 1,
+        "step": 0.05
+      }
+    ],
+    "referenceImage": "references/animation-style/ani-method-transfer.png",
+    "referenceLabel": "桌面参考 · 熟悉部分可复用"
+  },
+  {
+    "id": "ani-knowledge-network",
+    "name": "动画风 · 把新旧连起来",
+    "category": "动画风",
+    "description": "已有资料与成品进入要求结构，经检查和修改连到新的竖版任务；对象、字段和结果可编辑。",
+    "width": 1280,
+    "height": 720,
+    "reference": {
+      "basis": "用户提供的静帧参考 16_把新旧连起来.png；原生 SVG 几何重建，运动为新编排，不称 1:1 或逐帧复刻。",
+      "source": "reports/animation-style/reference-review-wechat/16_把新旧连起来.png",
+      "level": "designed"
+    },
+    "defaultEffect": "ani-diagram-build",
+    "content": "content/ani-knowledge-network.json",
+    "preview": "previews/ani-knowledge-network.html",
+    "composition": "compositions/ani-knowledge-network.html",
+    "variables": [
+      {
+        "id": "title",
+        "type": "string",
+        "label": "title",
+        "default": "把新旧连起来"
+      },
+      {
+        "id": "subtitle",
+        "type": "string",
+        "label": "subtitle",
+        "default": "让新问题挂到已有经验上。"
+      },
+      {
+        "id": "previewLabel",
+        "type": "string",
+        "label": "previewLabel",
+        "default": "AI 学习"
+      },
+      {
+        "id": "requirementsTitle",
+        "type": "string",
+        "label": "requirementsTitle",
+        "default": "海报要求"
+      },
+      {
+        "id": "outputTitle",
+        "type": "string",
+        "label": "outputTitle",
+        "default": "改为竖版"
+      },
+      {
+        "id": "resultLabel",
+        "type": "string",
+        "label": "resultLabel",
+        "default": "图像要求"
+      },
+      {
+        "id": "questionTitle",
+        "type": "string",
+        "label": "questionTitle",
+        "default": "缺少相关经验时"
+      },
+      {
+        "id": "question",
+        "type": "string",
+        "label": "question",
+        "default": "从哪里问起？"
+      },
+      {
+        "id": "footer",
+        "type": "string",
+        "label": "footer",
+        "default": "联系越具体，越容易知道下一步怎么做。"
+      },
+      {
+        "id": "propsJson",
+        "type": "string",
+        "label": "完整组件内容 JSON（覆盖同名字段）",
+        "default": "{}"
+      },
+      {
+        "id": "effect",
+        "type": "enum",
+        "label": "动画效果",
+        "default": "ani-diagram-build",
+        "options": [
+          {
+            "value": "none",
+            "label": "无动画"
+          },
+          {
+            "value": "fade-in",
+            "label": "淡入呈现"
+          },
+          {
+            "value": "slide-in",
+            "label": "窗口滑入"
+          },
+          {
+            "value": "stagger",
+            "label": "步骤依次出现"
+          },
+          {
+            "value": "typewriter",
+            "label": "逐字输入"
+          },
+          {
+            "value": "line-highlight",
+            "label": "逐行聚焦"
+          },
+          {
+            "value": "draw-path",
+            "label": "连线生长"
+          },
+          {
+            "value": "click-ripple",
+            "label": "光标点击"
+          },
+          {
+            "value": "zoom-focus",
+            "label": "镜头推近"
+          },
+          {
+            "value": "spotlight",
+            "label": "局部聚光"
+          },
+          {
+            "value": "split-reveal",
+            "label": "前后揭示"
+          },
+          {
+            "value": "progress-fill",
+            "label": "数值进度增长"
+          },
+          {
+            "value": "count-up",
+            "label": "数字递增"
+          },
+          {
+            "value": "scroll-panel",
+            "label": "内容滚动"
+          },
+          {
+            "value": "word-emphasis",
+            "label": "关键词划线"
+          },
+          {
+            "value": "window-exit",
+            "label": "窗口收起"
+          },
+          {
+            "value": "modal-pop",
+            "label": "命令面板弹出"
+          },
+          {
+            "value": "toast-enter",
+            "label": "通知送达"
+          },
+          {
+            "value": "menu-unfold",
+            "label": "级联菜单展开"
+          },
+          {
+            "value": "focus-ring",
+            "label": "目标描边"
+          },
+          {
+            "value": "marker-sweep",
+            "label": "荧光笔扫读"
+          },
+          {
+            "value": "focus-hop",
+            "label": "焦点巡游"
+          },
+          {
+            "value": "check-complete",
+            "label": "任务完成"
+          },
+          {
+            "value": "row-reveal",
+            "label": "表格载入"
+          },
+          {
+            "value": "chart-trace",
+            "label": "趋势追踪读数"
+          },
+          {
+            "value": "card-stack",
+            "label": "结构分层展开"
+          },
+          {
+            "value": "media-pan",
+            "label": "素材缓慢平移"
+          },
+          {
+            "value": "iris-reveal",
+            "label": "圆形画面交接"
+          },
+          {
+            "value": "wipe-transition",
+            "label": "三层短遮幅转场"
+          },
+          {
+            "value": "stamp-confirm",
+            "label": "确认印记"
+          },
+          {
+            "value": "error-shake",
+            "label": "输入纠错提示"
+          },
+          {
+            "value": "scale-settle",
+            "label": "轻缩放落位"
+          },
+          {
+            "value": "curtain-open",
+            "label": "双侧帘幕开场"
+          },
+          {
+            "value": "blur-resolve",
+            "label": "由虚到实"
+          },
+          {
+            "value": "mask-rise",
+            "label": "窗口裁切入场"
+          },
+          {
+            "value": "cards-deal",
+            "label": "卡片发牌"
+          },
+          {
+            "value": "center-stagger",
+            "label": "由中央展开"
+          },
+          {
+            "value": "border-assemble",
+            "label": "边框构建开场"
+          },
+          {
+            "value": "toggle-switch",
+            "label": "开关切换"
+          },
+          {
+            "value": "drag-drop",
+            "label": "任务拖放"
+          },
+          {
+            "value": "text-select",
+            "label": "拖选文本"
+          },
+          {
+            "value": "slider-drag",
+            "label": "滑块调节"
+          },
+          {
+            "value": "dashed-frame",
+            "label": "虚线边框绘制"
+          },
+          {
+            "value": "corner-brackets",
+            "label": "四角定位"
+          },
+          {
+            "value": "callout-pin",
+            "label": "引线标注"
+          },
+          {
+            "value": "number-tags",
+            "label": "编号标记"
+          },
+          {
+            "value": "branch-reveal",
+            "label": "条件分支展开"
+          },
+          {
+            "value": "orbit-steps",
+            "label": "循环路径行进"
+          },
+          {
+            "value": "compare-sweep",
+            "label": "对比扫描线"
+          },
+          {
+            "value": "equation-build",
+            "label": "公式逐项组合"
+          },
+          {
+            "value": "pyramid-build",
+            "label": "层级从基础构建"
+          },
+          {
+            "value": "mindmap-expand",
+            "label": "思维导图扩散"
+          },
+          {
+            "value": "step-track",
+            "label": "步骤状态推进"
+          },
+          {
+            "value": "pan-scan",
+            "label": "横向阅读镜头"
+          },
+          {
+            "value": "dolly-out",
+            "label": "拉远建立全局"
+          },
+          {
+            "value": "focus-return",
+            "label": "推近后回到全景"
+          },
+          {
+            "value": "focus-hop-camera",
+            "label": "两处重点切换"
+          },
+          {
+            "value": "tilt-settle",
+            "label": "轻透视扶正"
+          },
+          {
+            "value": "parallax-depth",
+            "label": "前后层视差"
+          },
+          {
+            "value": "frame-push",
+            "label": "框内缓慢推进"
+          },
+          {
+            "value": "dolly-diagonal",
+            "label": "斜向缓慢取景"
+          },
+          {
+            "value": "donut-draw",
+            "label": "环形比例绘制"
+          },
+          {
+            "value": "scatter-pop",
+            "label": "散点落位"
+          },
+          {
+            "value": "heatmap-scan",
+            "label": "热力数据扫描"
+          },
+          {
+            "value": "funnel-reveal",
+            "label": "漏斗逐层转化"
+          },
+          {
+            "value": "radar-expand",
+            "label": "雷达轮廓建立"
+          },
+          {
+            "value": "chart-bars-cascade",
+            "label": "时间区间展开"
+          },
+          {
+            "value": "fade-out",
+            "label": "柔和淡出"
+          },
+          {
+            "value": "slide-out-left",
+            "label": "向左滑出"
+          },
+          {
+            "value": "lift-away",
+            "label": "向上离场"
+          },
+          {
+            "value": "shrink-center",
+            "label": "缩向中心"
+          },
+          {
+            "value": "iris-close",
+            "label": "圆形收幕"
+          },
+          {
+            "value": "mask-retract",
+            "label": "从右向左收回"
+          },
+          {
+            "value": "stagger-out",
+            "label": "内容依次离场"
+          },
+          {
+            "value": "blur-out",
+            "label": "散焦离场"
+          },
+          {
+            "value": "split-away",
+            "label": "左右分离退场"
+          },
+          {
+            "value": "success-toast",
+            "label": "操作成功提示"
+          },
+          {
+            "value": "save-pulse",
+            "label": "保存状态脉冲"
+          },
+          {
+            "value": "copy-confirm",
+            "label": "复制确认"
+          },
+          {
+            "value": "loading-resolve",
+            "label": "等待到完成"
+          },
+          {
+            "value": "warning-breathe",
+            "label": "注意事项提示"
+          },
+          {
+            "value": "notification-ping",
+            "label": "通知提示圈"
+          },
+          {
+            "value": "soft-confetti",
+            "label": "克制的完成粒子"
+          },
+          {
+            "value": "curve-ribbon",
+            "label": "三层弧带转场"
+          },
+          {
+            "value": "diagonal-ribbon",
+            "label": "斜向圆角带转场"
+          },
+          {
+            "value": "shared-slide",
+            "label": "同场横移交接"
+          },
+          {
+            "value": "soft-dissolve",
+            "label": "柔焦交叠"
+          },
+          {
+            "value": "zoom-through",
+            "label": "推近穿越"
+          },
+          {
+            "value": "card-lift",
+            "label": "卡片抬起换页"
+          },
+          {
+            "value": "blinds-swap",
+            "label": "分栏接力换页"
+          },
+          {
+            "value": "liquid-sweep",
+            "label": "柔曲线扫过"
+          },
+          {
+            "value": "grid-drift",
+            "label": "细网格缓移"
+          },
+          {
+            "value": "perspective-scroll",
+            "label": "透视网格滚动"
+          },
+          {
+            "value": "dot-drift",
+            "label": "细点阵漂移"
+          },
+          {
+            "value": "orb-parallax",
+            "label": "边角圆形视差"
+          },
+          {
+            "value": "contour-flow",
+            "label": "等高曲线流动"
+          },
+          {
+            "value": "diagonal-hatch",
+            "label": "斜纹背景滑动"
+          },
+          {
+            "value": "ring-orbit",
+            "label": "环形轨道漂移"
+          },
+          {
+            "value": "blueprint-pan",
+            "label": "蓝图坐标平移"
+          },
+          {
+            "value": "wave-bands",
+            "label": "柔和波带流动"
+          },
+          {
+            "value": "ambient-breath",
+            "label": "淡色光晕呼吸"
+          },
+          {
+            "value": "ani-notice-verify",
+            "label": "通知逐项核对"
+          },
+          {
+            "value": "ani-diagram-build",
+            "label": "图解逐步建立"
+          },
+          {
+            "value": "ani-order-select",
+            "label": "订单条件筛选"
+          },
+          {
+            "value": "ani-machine-process",
+            "label": "材料加工过程"
+          }
+        ]
+      },
+      {
+        "id": "effectOptionsJson",
+        "type": "string",
+        "label": "动画参数 JSON",
+        "default": "{}"
+      },
+      {
+        "id": "soundEnabled",
+        "type": "boolean",
+        "label": "配套音效",
+        "default": true
+      },
+      {
+        "id": "soundGain",
+        "type": "number",
+        "label": "音效音量",
+        "default": 0.65,
+        "min": 0,
+        "max": 1,
+        "step": 0.05
+      }
+    ],
+    "referenceImage": "references/animation-style/ani-knowledge-network.png",
+    "referenceLabel": "19 场参考 · 把新旧连起来"
+  },
+  {
+    "id": "ani-capability-tiles",
+    "name": "动画风 · 散落知识砖",
+    "category": "动画风",
+    "description": "六块具有厚度的工具砖分别承载要求、配色、尺寸、版式、检查和修改，与工具结果窗口并置。",
+    "width": 1280,
+    "height": 720,
+    "reference": {
+      "basis": "用户提供的静帧参考 10_散落的知识砖.png；原生 SVG 几何重建，运动为新编排，不称 1:1 或逐帧复刻。",
+      "source": "reports/animation-style/reference-review-wechat/10_散落的知识砖.png",
+      "level": "designed"
+    },
+    "defaultEffect": "ani-diagram-build",
+    "content": "content/ani-capability-tiles.json",
+    "preview": "previews/ani-capability-tiles.html",
+    "composition": "compositions/ani-capability-tiles.html",
+    "variables": [
+      {
+        "id": "title",
+        "type": "string",
+        "label": "title",
+        "default": "学一个，扔一个"
+      },
+      {
+        "id": "subtitle",
+        "type": "string",
+        "label": "subtitle",
+        "default": "零散技巧，需要连成自己的方法。"
+      },
+      {
+        "id": "windowLabel",
+        "type": "string",
+        "label": "windowLabel",
+        "default": "AI 工具 B"
+      },
+      {
+        "id": "previewLabel",
+        "type": "string",
+        "label": "previewLabel",
+        "default": "AI 学习"
+      },
+      {
+        "id": "result",
+        "type": "string",
+        "label": "result",
+        "default": "把本事连起来"
+      },
+      {
+        "id": "footer",
+        "type": "string",
+        "label": "footer",
+        "default": "让一次学会的内容，成为下一次能用的经验。"
+      },
+      {
+        "id": "propsJson",
+        "type": "string",
+        "label": "完整组件内容 JSON（覆盖同名字段）",
+        "default": "{}"
+      },
+      {
+        "id": "effect",
+        "type": "enum",
+        "label": "动画效果",
+        "default": "ani-diagram-build",
+        "options": [
+          {
+            "value": "none",
+            "label": "无动画"
+          },
+          {
+            "value": "fade-in",
+            "label": "淡入呈现"
+          },
+          {
+            "value": "slide-in",
+            "label": "窗口滑入"
+          },
+          {
+            "value": "stagger",
+            "label": "步骤依次出现"
+          },
+          {
+            "value": "typewriter",
+            "label": "逐字输入"
+          },
+          {
+            "value": "line-highlight",
+            "label": "逐行聚焦"
+          },
+          {
+            "value": "draw-path",
+            "label": "连线生长"
+          },
+          {
+            "value": "click-ripple",
+            "label": "光标点击"
+          },
+          {
+            "value": "zoom-focus",
+            "label": "镜头推近"
+          },
+          {
+            "value": "spotlight",
+            "label": "局部聚光"
+          },
+          {
+            "value": "split-reveal",
+            "label": "前后揭示"
+          },
+          {
+            "value": "progress-fill",
+            "label": "数值进度增长"
+          },
+          {
+            "value": "count-up",
+            "label": "数字递增"
+          },
+          {
+            "value": "scroll-panel",
+            "label": "内容滚动"
+          },
+          {
+            "value": "word-emphasis",
+            "label": "关键词划线"
+          },
+          {
+            "value": "window-exit",
+            "label": "窗口收起"
+          },
+          {
+            "value": "modal-pop",
+            "label": "命令面板弹出"
+          },
+          {
+            "value": "toast-enter",
+            "label": "通知送达"
+          },
+          {
+            "value": "menu-unfold",
+            "label": "级联菜单展开"
+          },
+          {
+            "value": "focus-ring",
+            "label": "目标描边"
+          },
+          {
+            "value": "marker-sweep",
+            "label": "荧光笔扫读"
+          },
+          {
+            "value": "focus-hop",
+            "label": "焦点巡游"
+          },
+          {
+            "value": "check-complete",
+            "label": "任务完成"
+          },
+          {
+            "value": "row-reveal",
+            "label": "表格载入"
+          },
+          {
+            "value": "chart-trace",
+            "label": "趋势追踪读数"
+          },
+          {
+            "value": "card-stack",
+            "label": "结构分层展开"
+          },
+          {
+            "value": "media-pan",
+            "label": "素材缓慢平移"
+          },
+          {
+            "value": "iris-reveal",
+            "label": "圆形画面交接"
+          },
+          {
+            "value": "wipe-transition",
+            "label": "三层短遮幅转场"
+          },
+          {
+            "value": "stamp-confirm",
+            "label": "确认印记"
+          },
+          {
+            "value": "error-shake",
+            "label": "输入纠错提示"
+          },
+          {
+            "value": "scale-settle",
+            "label": "轻缩放落位"
+          },
+          {
+            "value": "curtain-open",
+            "label": "双侧帘幕开场"
+          },
+          {
+            "value": "blur-resolve",
+            "label": "由虚到实"
+          },
+          {
+            "value": "mask-rise",
+            "label": "窗口裁切入场"
+          },
+          {
+            "value": "cards-deal",
+            "label": "卡片发牌"
+          },
+          {
+            "value": "center-stagger",
+            "label": "由中央展开"
+          },
+          {
+            "value": "border-assemble",
+            "label": "边框构建开场"
+          },
+          {
+            "value": "toggle-switch",
+            "label": "开关切换"
+          },
+          {
+            "value": "drag-drop",
+            "label": "任务拖放"
+          },
+          {
+            "value": "text-select",
+            "label": "拖选文本"
+          },
+          {
+            "value": "slider-drag",
+            "label": "滑块调节"
+          },
+          {
+            "value": "dashed-frame",
+            "label": "虚线边框绘制"
+          },
+          {
+            "value": "corner-brackets",
+            "label": "四角定位"
+          },
+          {
+            "value": "callout-pin",
+            "label": "引线标注"
+          },
+          {
+            "value": "number-tags",
+            "label": "编号标记"
+          },
+          {
+            "value": "branch-reveal",
+            "label": "条件分支展开"
+          },
+          {
+            "value": "orbit-steps",
+            "label": "循环路径行进"
+          },
+          {
+            "value": "compare-sweep",
+            "label": "对比扫描线"
+          },
+          {
+            "value": "equation-build",
+            "label": "公式逐项组合"
+          },
+          {
+            "value": "pyramid-build",
+            "label": "层级从基础构建"
+          },
+          {
+            "value": "mindmap-expand",
+            "label": "思维导图扩散"
+          },
+          {
+            "value": "step-track",
+            "label": "步骤状态推进"
+          },
+          {
+            "value": "pan-scan",
+            "label": "横向阅读镜头"
+          },
+          {
+            "value": "dolly-out",
+            "label": "拉远建立全局"
+          },
+          {
+            "value": "focus-return",
+            "label": "推近后回到全景"
+          },
+          {
+            "value": "focus-hop-camera",
+            "label": "两处重点切换"
+          },
+          {
+            "value": "tilt-settle",
+            "label": "轻透视扶正"
+          },
+          {
+            "value": "parallax-depth",
+            "label": "前后层视差"
+          },
+          {
+            "value": "frame-push",
+            "label": "框内缓慢推进"
+          },
+          {
+            "value": "dolly-diagonal",
+            "label": "斜向缓慢取景"
+          },
+          {
+            "value": "donut-draw",
+            "label": "环形比例绘制"
+          },
+          {
+            "value": "scatter-pop",
+            "label": "散点落位"
+          },
+          {
+            "value": "heatmap-scan",
+            "label": "热力数据扫描"
+          },
+          {
+            "value": "funnel-reveal",
+            "label": "漏斗逐层转化"
+          },
+          {
+            "value": "radar-expand",
+            "label": "雷达轮廓建立"
+          },
+          {
+            "value": "chart-bars-cascade",
+            "label": "时间区间展开"
+          },
+          {
+            "value": "fade-out",
+            "label": "柔和淡出"
+          },
+          {
+            "value": "slide-out-left",
+            "label": "向左滑出"
+          },
+          {
+            "value": "lift-away",
+            "label": "向上离场"
+          },
+          {
+            "value": "shrink-center",
+            "label": "缩向中心"
+          },
+          {
+            "value": "iris-close",
+            "label": "圆形收幕"
+          },
+          {
+            "value": "mask-retract",
+            "label": "从右向左收回"
+          },
+          {
+            "value": "stagger-out",
+            "label": "内容依次离场"
+          },
+          {
+            "value": "blur-out",
+            "label": "散焦离场"
+          },
+          {
+            "value": "split-away",
+            "label": "左右分离退场"
+          },
+          {
+            "value": "success-toast",
+            "label": "操作成功提示"
+          },
+          {
+            "value": "save-pulse",
+            "label": "保存状态脉冲"
+          },
+          {
+            "value": "copy-confirm",
+            "label": "复制确认"
+          },
+          {
+            "value": "loading-resolve",
+            "label": "等待到完成"
+          },
+          {
+            "value": "warning-breathe",
+            "label": "注意事项提示"
+          },
+          {
+            "value": "notification-ping",
+            "label": "通知提示圈"
+          },
+          {
+            "value": "soft-confetti",
+            "label": "克制的完成粒子"
+          },
+          {
+            "value": "curve-ribbon",
+            "label": "三层弧带转场"
+          },
+          {
+            "value": "diagonal-ribbon",
+            "label": "斜向圆角带转场"
+          },
+          {
+            "value": "shared-slide",
+            "label": "同场横移交接"
+          },
+          {
+            "value": "soft-dissolve",
+            "label": "柔焦交叠"
+          },
+          {
+            "value": "zoom-through",
+            "label": "推近穿越"
+          },
+          {
+            "value": "card-lift",
+            "label": "卡片抬起换页"
+          },
+          {
+            "value": "blinds-swap",
+            "label": "分栏接力换页"
+          },
+          {
+            "value": "liquid-sweep",
+            "label": "柔曲线扫过"
+          },
+          {
+            "value": "grid-drift",
+            "label": "细网格缓移"
+          },
+          {
+            "value": "perspective-scroll",
+            "label": "透视网格滚动"
+          },
+          {
+            "value": "dot-drift",
+            "label": "细点阵漂移"
+          },
+          {
+            "value": "orb-parallax",
+            "label": "边角圆形视差"
+          },
+          {
+            "value": "contour-flow",
+            "label": "等高曲线流动"
+          },
+          {
+            "value": "diagonal-hatch",
+            "label": "斜纹背景滑动"
+          },
+          {
+            "value": "ring-orbit",
+            "label": "环形轨道漂移"
+          },
+          {
+            "value": "blueprint-pan",
+            "label": "蓝图坐标平移"
+          },
+          {
+            "value": "wave-bands",
+            "label": "柔和波带流动"
+          },
+          {
+            "value": "ambient-breath",
+            "label": "淡色光晕呼吸"
+          },
+          {
+            "value": "ani-notice-verify",
+            "label": "通知逐项核对"
+          },
+          {
+            "value": "ani-diagram-build",
+            "label": "图解逐步建立"
+          },
+          {
+            "value": "ani-order-select",
+            "label": "订单条件筛选"
+          },
+          {
+            "value": "ani-machine-process",
+            "label": "材料加工过程"
+          }
+        ]
+      },
+      {
+        "id": "effectOptionsJson",
+        "type": "string",
+        "label": "动画参数 JSON",
+        "default": "{}"
+      },
+      {
+        "id": "soundEnabled",
+        "type": "boolean",
+        "label": "配套音效",
+        "default": true
+      },
+      {
+        "id": "soundGain",
+        "type": "number",
+        "label": "音效音量",
+        "default": 0.65,
+        "min": 0,
+        "max": 1,
+        "step": 0.05
+      }
+    ],
+    "referenceImage": "references/animation-style/ani-capability-tiles.png",
+    "referenceLabel": "19 场参考 · 知识工具砖"
+  },
+  {
+    "id": "ani-processing-machine",
+    "name": "动画风 · 输入处理装置",
+    "category": "动画风",
+    "description": "文件送入三通道装置，内部处理后生成对应结果；输入、处理标签和输出内容可替换。",
+    "width": 1280,
+    "height": 720,
+    "reference": {
+      "level": "designed",
+      "basis": "按用户提供的 V8 原生图解母版重建 SVG 几何。保持对象结构与状态语义，具体补间为本次设计；不是实际软件截图。",
+      "source": "references/animation-style/sources.json"
+    },
+    "defaultEffect": "ani-machine-process",
+    "content": "content/ani-processing-machine.json",
+    "preview": "previews/ani-processing-machine.html",
+    "composition": "compositions/ani-processing-machine.html",
+    "variables": [
+      {
+        "id": "title",
+        "type": "string",
+        "label": "title",
+        "default": "让过程看得见"
+      },
+      {
+        "id": "subtitle",
+        "type": "string",
+        "label": "subtitle",
+        "default": "输入材料，经过处理，留下可核对的结果。"
+      },
+      {
+        "id": "inputTitle",
+        "type": "string",
+        "label": "inputTitle",
+        "default": "输入"
+      },
+      {
+        "id": "processTitle",
+        "type": "string",
+        "label": "processTitle",
+        "default": "处理过程"
+      },
+      {
+        "id": "outputTitle",
+        "type": "string",
+        "label": "outputTitle",
+        "default": "结果"
+      },
+      {
+        "id": "footer",
+        "type": "string",
+        "label": "footer",
+        "default": "讲到哪一步，画面就变化到哪一步。"
+      },
+      {
+        "id": "propsJson",
+        "type": "string",
+        "label": "完整组件内容 JSON（覆盖同名字段）",
+        "default": "{}"
+      },
+      {
+        "id": "effect",
+        "type": "enum",
+        "label": "动画效果",
+        "default": "ani-machine-process",
+        "options": [
+          {
+            "value": "none",
+            "label": "无动画"
+          },
+          {
+            "value": "fade-in",
+            "label": "淡入呈现"
+          },
+          {
+            "value": "slide-in",
+            "label": "窗口滑入"
+          },
+          {
+            "value": "stagger",
+            "label": "步骤依次出现"
+          },
+          {
+            "value": "typewriter",
+            "label": "逐字输入"
+          },
+          {
+            "value": "line-highlight",
+            "label": "逐行聚焦"
+          },
+          {
+            "value": "draw-path",
+            "label": "连线生长"
+          },
+          {
+            "value": "click-ripple",
+            "label": "光标点击"
+          },
+          {
+            "value": "zoom-focus",
+            "label": "镜头推近"
+          },
+          {
+            "value": "spotlight",
+            "label": "局部聚光"
+          },
+          {
+            "value": "split-reveal",
+            "label": "前后揭示"
+          },
+          {
+            "value": "progress-fill",
+            "label": "数值进度增长"
+          },
+          {
+            "value": "count-up",
+            "label": "数字递增"
+          },
+          {
+            "value": "scroll-panel",
+            "label": "内容滚动"
+          },
+          {
+            "value": "word-emphasis",
+            "label": "关键词划线"
+          },
+          {
+            "value": "window-exit",
+            "label": "窗口收起"
+          },
+          {
+            "value": "modal-pop",
+            "label": "命令面板弹出"
+          },
+          {
+            "value": "toast-enter",
+            "label": "通知送达"
+          },
+          {
+            "value": "menu-unfold",
+            "label": "级联菜单展开"
+          },
+          {
+            "value": "focus-ring",
+            "label": "目标描边"
+          },
+          {
+            "value": "marker-sweep",
+            "label": "荧光笔扫读"
+          },
+          {
+            "value": "focus-hop",
+            "label": "焦点巡游"
+          },
+          {
+            "value": "check-complete",
+            "label": "任务完成"
+          },
+          {
+            "value": "row-reveal",
+            "label": "表格载入"
+          },
+          {
+            "value": "chart-trace",
+            "label": "趋势追踪读数"
+          },
+          {
+            "value": "card-stack",
+            "label": "结构分层展开"
+          },
+          {
+            "value": "media-pan",
+            "label": "素材缓慢平移"
+          },
+          {
+            "value": "iris-reveal",
+            "label": "圆形画面交接"
+          },
+          {
+            "value": "wipe-transition",
+            "label": "三层短遮幅转场"
+          },
+          {
+            "value": "stamp-confirm",
+            "label": "确认印记"
+          },
+          {
+            "value": "error-shake",
+            "label": "输入纠错提示"
+          },
+          {
+            "value": "scale-settle",
+            "label": "轻缩放落位"
+          },
+          {
+            "value": "curtain-open",
+            "label": "双侧帘幕开场"
+          },
+          {
+            "value": "blur-resolve",
+            "label": "由虚到实"
+          },
+          {
+            "value": "mask-rise",
+            "label": "窗口裁切入场"
+          },
+          {
+            "value": "cards-deal",
+            "label": "卡片发牌"
+          },
+          {
+            "value": "center-stagger",
+            "label": "由中央展开"
+          },
+          {
+            "value": "border-assemble",
+            "label": "边框构建开场"
+          },
+          {
+            "value": "toggle-switch",
+            "label": "开关切换"
+          },
+          {
+            "value": "drag-drop",
+            "label": "任务拖放"
+          },
+          {
+            "value": "text-select",
+            "label": "拖选文本"
+          },
+          {
+            "value": "slider-drag",
+            "label": "滑块调节"
+          },
+          {
+            "value": "dashed-frame",
+            "label": "虚线边框绘制"
+          },
+          {
+            "value": "corner-brackets",
+            "label": "四角定位"
+          },
+          {
+            "value": "callout-pin",
+            "label": "引线标注"
+          },
+          {
+            "value": "number-tags",
+            "label": "编号标记"
+          },
+          {
+            "value": "branch-reveal",
+            "label": "条件分支展开"
+          },
+          {
+            "value": "orbit-steps",
+            "label": "循环路径行进"
+          },
+          {
+            "value": "compare-sweep",
+            "label": "对比扫描线"
+          },
+          {
+            "value": "equation-build",
+            "label": "公式逐项组合"
+          },
+          {
+            "value": "pyramid-build",
+            "label": "层级从基础构建"
+          },
+          {
+            "value": "mindmap-expand",
+            "label": "思维导图扩散"
+          },
+          {
+            "value": "step-track",
+            "label": "步骤状态推进"
+          },
+          {
+            "value": "pan-scan",
+            "label": "横向阅读镜头"
+          },
+          {
+            "value": "dolly-out",
+            "label": "拉远建立全局"
+          },
+          {
+            "value": "focus-return",
+            "label": "推近后回到全景"
+          },
+          {
+            "value": "focus-hop-camera",
+            "label": "两处重点切换"
+          },
+          {
+            "value": "tilt-settle",
+            "label": "轻透视扶正"
+          },
+          {
+            "value": "parallax-depth",
+            "label": "前后层视差"
+          },
+          {
+            "value": "frame-push",
+            "label": "框内缓慢推进"
+          },
+          {
+            "value": "dolly-diagonal",
+            "label": "斜向缓慢取景"
+          },
+          {
+            "value": "donut-draw",
+            "label": "环形比例绘制"
+          },
+          {
+            "value": "scatter-pop",
+            "label": "散点落位"
+          },
+          {
+            "value": "heatmap-scan",
+            "label": "热力数据扫描"
+          },
+          {
+            "value": "funnel-reveal",
+            "label": "漏斗逐层转化"
+          },
+          {
+            "value": "radar-expand",
+            "label": "雷达轮廓建立"
+          },
+          {
+            "value": "chart-bars-cascade",
+            "label": "时间区间展开"
+          },
+          {
+            "value": "fade-out",
+            "label": "柔和淡出"
+          },
+          {
+            "value": "slide-out-left",
+            "label": "向左滑出"
+          },
+          {
+            "value": "lift-away",
+            "label": "向上离场"
+          },
+          {
+            "value": "shrink-center",
+            "label": "缩向中心"
+          },
+          {
+            "value": "iris-close",
+            "label": "圆形收幕"
+          },
+          {
+            "value": "mask-retract",
+            "label": "从右向左收回"
+          },
+          {
+            "value": "stagger-out",
+            "label": "内容依次离场"
+          },
+          {
+            "value": "blur-out",
+            "label": "散焦离场"
+          },
+          {
+            "value": "split-away",
+            "label": "左右分离退场"
+          },
+          {
+            "value": "success-toast",
+            "label": "操作成功提示"
+          },
+          {
+            "value": "save-pulse",
+            "label": "保存状态脉冲"
+          },
+          {
+            "value": "copy-confirm",
+            "label": "复制确认"
+          },
+          {
+            "value": "loading-resolve",
+            "label": "等待到完成"
+          },
+          {
+            "value": "warning-breathe",
+            "label": "注意事项提示"
+          },
+          {
+            "value": "notification-ping",
+            "label": "通知提示圈"
+          },
+          {
+            "value": "soft-confetti",
+            "label": "克制的完成粒子"
+          },
+          {
+            "value": "curve-ribbon",
+            "label": "三层弧带转场"
+          },
+          {
+            "value": "diagonal-ribbon",
+            "label": "斜向圆角带转场"
+          },
+          {
+            "value": "shared-slide",
+            "label": "同场横移交接"
+          },
+          {
+            "value": "soft-dissolve",
+            "label": "柔焦交叠"
+          },
+          {
+            "value": "zoom-through",
+            "label": "推近穿越"
+          },
+          {
+            "value": "card-lift",
+            "label": "卡片抬起换页"
+          },
+          {
+            "value": "blinds-swap",
+            "label": "分栏接力换页"
+          },
+          {
+            "value": "liquid-sweep",
+            "label": "柔曲线扫过"
+          },
+          {
+            "value": "grid-drift",
+            "label": "细网格缓移"
+          },
+          {
+            "value": "perspective-scroll",
+            "label": "透视网格滚动"
+          },
+          {
+            "value": "dot-drift",
+            "label": "细点阵漂移"
+          },
+          {
+            "value": "orb-parallax",
+            "label": "边角圆形视差"
+          },
+          {
+            "value": "contour-flow",
+            "label": "等高曲线流动"
+          },
+          {
+            "value": "diagonal-hatch",
+            "label": "斜纹背景滑动"
+          },
+          {
+            "value": "ring-orbit",
+            "label": "环形轨道漂移"
+          },
+          {
+            "value": "blueprint-pan",
+            "label": "蓝图坐标平移"
+          },
+          {
+            "value": "wave-bands",
+            "label": "柔和波带流动"
+          },
+          {
+            "value": "ambient-breath",
+            "label": "淡色光晕呼吸"
+          },
+          {
+            "value": "ani-notice-verify",
+            "label": "通知逐项核对"
+          },
+          {
+            "value": "ani-diagram-build",
+            "label": "图解逐步建立"
+          },
+          {
+            "value": "ani-order-select",
+            "label": "订单条件筛选"
+          },
+          {
+            "value": "ani-machine-process",
+            "label": "材料加工过程"
+          }
+        ]
+      },
+      {
+        "id": "effectOptionsJson",
+        "type": "string",
+        "label": "动画参数 JSON",
+        "default": "{}"
+      },
+      {
+        "id": "soundEnabled",
+        "type": "boolean",
+        "label": "配套音效",
+        "default": true
+      },
+      {
+        "id": "soundGain",
+        "type": "number",
+        "label": "音效音量",
+        "default": 0.65,
+        "min": 0,
+        "max": 1,
+        "step": 0.05
+      }
+    ],
+    "referenceImage": "references/animation-style/ani-processing-machine.png",
+    "referenceLabel": "V8 · 输入、处理、结果"
+  },
+  {
+    "id": "ani-question-outro",
+    "name": "动画风 · 问题与预告",
+    "category": "动画风",
+    "description": "保留两个案例对象，将当前问题引向下一期；大字问题牌、橙色问号和预告标签依次出现。",
+    "width": 1280,
+    "height": 720,
+    "reference": {
+      "level": "designed",
+      "basis": "按用户提供的 V8 原生图解母版重建 SVG 几何。保持对象结构与状态语义，具体补间为本次设计；不是实际软件截图。",
+      "source": "references/animation-style/sources.json"
+    },
+    "defaultEffect": "ani-diagram-build",
+    "content": "content/ani-question-outro.json",
+    "preview": "previews/ani-question-outro.html",
+    "composition": "compositions/ani-question-outro.html",
+    "variables": [
+      {
+        "id": "title",
+        "type": "string",
+        "label": "title",
+        "default": "明明学过，"
+      },
+      {
+        "id": "subtitle",
+        "type": "string",
+        "label": "subtitle",
+        "default": "为什么想不起来用？"
+      },
+      {
+        "id": "footer",
+        "type": "string",
+        "label": "footer",
+        "default": "下期：远迁移"
+      },
+      {
+        "id": "propsJson",
+        "type": "string",
+        "label": "完整组件内容 JSON（覆盖同名字段）",
+        "default": "{}"
+      },
+      {
+        "id": "effect",
+        "type": "enum",
+        "label": "动画效果",
+        "default": "ani-diagram-build",
+        "options": [
+          {
+            "value": "none",
+            "label": "无动画"
+          },
+          {
+            "value": "fade-in",
+            "label": "淡入呈现"
+          },
+          {
+            "value": "slide-in",
+            "label": "窗口滑入"
+          },
+          {
+            "value": "stagger",
+            "label": "步骤依次出现"
+          },
+          {
+            "value": "typewriter",
+            "label": "逐字输入"
+          },
+          {
+            "value": "line-highlight",
+            "label": "逐行聚焦"
+          },
+          {
+            "value": "draw-path",
+            "label": "连线生长"
+          },
+          {
+            "value": "click-ripple",
+            "label": "光标点击"
+          },
+          {
+            "value": "zoom-focus",
+            "label": "镜头推近"
+          },
+          {
+            "value": "spotlight",
+            "label": "局部聚光"
+          },
+          {
+            "value": "split-reveal",
+            "label": "前后揭示"
+          },
+          {
+            "value": "progress-fill",
+            "label": "数值进度增长"
+          },
+          {
+            "value": "count-up",
+            "label": "数字递增"
+          },
+          {
+            "value": "scroll-panel",
+            "label": "内容滚动"
+          },
+          {
+            "value": "word-emphasis",
+            "label": "关键词划线"
+          },
+          {
+            "value": "window-exit",
+            "label": "窗口收起"
+          },
+          {
+            "value": "modal-pop",
+            "label": "命令面板弹出"
+          },
+          {
+            "value": "toast-enter",
+            "label": "通知送达"
+          },
+          {
+            "value": "menu-unfold",
+            "label": "级联菜单展开"
+          },
+          {
+            "value": "focus-ring",
+            "label": "目标描边"
+          },
+          {
+            "value": "marker-sweep",
+            "label": "荧光笔扫读"
+          },
+          {
+            "value": "focus-hop",
+            "label": "焦点巡游"
+          },
+          {
+            "value": "check-complete",
+            "label": "任务完成"
+          },
+          {
+            "value": "row-reveal",
+            "label": "表格载入"
+          },
+          {
+            "value": "chart-trace",
+            "label": "趋势追踪读数"
+          },
+          {
+            "value": "card-stack",
+            "label": "结构分层展开"
+          },
+          {
+            "value": "media-pan",
+            "label": "素材缓慢平移"
+          },
+          {
+            "value": "iris-reveal",
+            "label": "圆形画面交接"
+          },
+          {
+            "value": "wipe-transition",
+            "label": "三层短遮幅转场"
+          },
+          {
+            "value": "stamp-confirm",
+            "label": "确认印记"
+          },
+          {
+            "value": "error-shake",
+            "label": "输入纠错提示"
+          },
+          {
+            "value": "scale-settle",
+            "label": "轻缩放落位"
+          },
+          {
+            "value": "curtain-open",
+            "label": "双侧帘幕开场"
+          },
+          {
+            "value": "blur-resolve",
+            "label": "由虚到实"
+          },
+          {
+            "value": "mask-rise",
+            "label": "窗口裁切入场"
+          },
+          {
+            "value": "cards-deal",
+            "label": "卡片发牌"
+          },
+          {
+            "value": "center-stagger",
+            "label": "由中央展开"
+          },
+          {
+            "value": "border-assemble",
+            "label": "边框构建开场"
+          },
+          {
+            "value": "toggle-switch",
+            "label": "开关切换"
+          },
+          {
+            "value": "drag-drop",
+            "label": "任务拖放"
+          },
+          {
+            "value": "text-select",
+            "label": "拖选文本"
+          },
+          {
+            "value": "slider-drag",
+            "label": "滑块调节"
+          },
+          {
+            "value": "dashed-frame",
+            "label": "虚线边框绘制"
+          },
+          {
+            "value": "corner-brackets",
+            "label": "四角定位"
+          },
+          {
+            "value": "callout-pin",
+            "label": "引线标注"
+          },
+          {
+            "value": "number-tags",
+            "label": "编号标记"
+          },
+          {
+            "value": "branch-reveal",
+            "label": "条件分支展开"
+          },
+          {
+            "value": "orbit-steps",
+            "label": "循环路径行进"
+          },
+          {
+            "value": "compare-sweep",
+            "label": "对比扫描线"
+          },
+          {
+            "value": "equation-build",
+            "label": "公式逐项组合"
+          },
+          {
+            "value": "pyramid-build",
+            "label": "层级从基础构建"
+          },
+          {
+            "value": "mindmap-expand",
+            "label": "思维导图扩散"
+          },
+          {
+            "value": "step-track",
+            "label": "步骤状态推进"
+          },
+          {
+            "value": "pan-scan",
+            "label": "横向阅读镜头"
+          },
+          {
+            "value": "dolly-out",
+            "label": "拉远建立全局"
+          },
+          {
+            "value": "focus-return",
+            "label": "推近后回到全景"
+          },
+          {
+            "value": "focus-hop-camera",
+            "label": "两处重点切换"
+          },
+          {
+            "value": "tilt-settle",
+            "label": "轻透视扶正"
+          },
+          {
+            "value": "parallax-depth",
+            "label": "前后层视差"
+          },
+          {
+            "value": "frame-push",
+            "label": "框内缓慢推进"
+          },
+          {
+            "value": "dolly-diagonal",
+            "label": "斜向缓慢取景"
+          },
+          {
+            "value": "donut-draw",
+            "label": "环形比例绘制"
+          },
+          {
+            "value": "scatter-pop",
+            "label": "散点落位"
+          },
+          {
+            "value": "heatmap-scan",
+            "label": "热力数据扫描"
+          },
+          {
+            "value": "funnel-reveal",
+            "label": "漏斗逐层转化"
+          },
+          {
+            "value": "radar-expand",
+            "label": "雷达轮廓建立"
+          },
+          {
+            "value": "chart-bars-cascade",
+            "label": "时间区间展开"
+          },
+          {
+            "value": "fade-out",
+            "label": "柔和淡出"
+          },
+          {
+            "value": "slide-out-left",
+            "label": "向左滑出"
+          },
+          {
+            "value": "lift-away",
+            "label": "向上离场"
+          },
+          {
+            "value": "shrink-center",
+            "label": "缩向中心"
+          },
+          {
+            "value": "iris-close",
+            "label": "圆形收幕"
+          },
+          {
+            "value": "mask-retract",
+            "label": "从右向左收回"
+          },
+          {
+            "value": "stagger-out",
+            "label": "内容依次离场"
+          },
+          {
+            "value": "blur-out",
+            "label": "散焦离场"
+          },
+          {
+            "value": "split-away",
+            "label": "左右分离退场"
+          },
+          {
+            "value": "success-toast",
+            "label": "操作成功提示"
+          },
+          {
+            "value": "save-pulse",
+            "label": "保存状态脉冲"
+          },
+          {
+            "value": "copy-confirm",
+            "label": "复制确认"
+          },
+          {
+            "value": "loading-resolve",
+            "label": "等待到完成"
+          },
+          {
+            "value": "warning-breathe",
+            "label": "注意事项提示"
+          },
+          {
+            "value": "notification-ping",
+            "label": "通知提示圈"
+          },
+          {
+            "value": "soft-confetti",
+            "label": "克制的完成粒子"
+          },
+          {
+            "value": "curve-ribbon",
+            "label": "三层弧带转场"
+          },
+          {
+            "value": "diagonal-ribbon",
+            "label": "斜向圆角带转场"
+          },
+          {
+            "value": "shared-slide",
+            "label": "同场横移交接"
+          },
+          {
+            "value": "soft-dissolve",
+            "label": "柔焦交叠"
+          },
+          {
+            "value": "zoom-through",
+            "label": "推近穿越"
+          },
+          {
+            "value": "card-lift",
+            "label": "卡片抬起换页"
+          },
+          {
+            "value": "blinds-swap",
+            "label": "分栏接力换页"
+          },
+          {
+            "value": "liquid-sweep",
+            "label": "柔曲线扫过"
+          },
+          {
+            "value": "grid-drift",
+            "label": "细网格缓移"
+          },
+          {
+            "value": "perspective-scroll",
+            "label": "透视网格滚动"
+          },
+          {
+            "value": "dot-drift",
+            "label": "细点阵漂移"
+          },
+          {
+            "value": "orb-parallax",
+            "label": "边角圆形视差"
+          },
+          {
+            "value": "contour-flow",
+            "label": "等高曲线流动"
+          },
+          {
+            "value": "diagonal-hatch",
+            "label": "斜纹背景滑动"
+          },
+          {
+            "value": "ring-orbit",
+            "label": "环形轨道漂移"
+          },
+          {
+            "value": "blueprint-pan",
+            "label": "蓝图坐标平移"
+          },
+          {
+            "value": "wave-bands",
+            "label": "柔和波带流动"
+          },
+          {
+            "value": "ambient-breath",
+            "label": "淡色光晕呼吸"
+          },
+          {
+            "value": "ani-notice-verify",
+            "label": "通知逐项核对"
+          },
+          {
+            "value": "ani-diagram-build",
+            "label": "图解逐步建立"
+          },
+          {
+            "value": "ani-order-select",
+            "label": "订单条件筛选"
+          },
+          {
+            "value": "ani-machine-process",
+            "label": "材料加工过程"
+          }
+        ]
+      },
+      {
+        "id": "effectOptionsJson",
+        "type": "string",
+        "label": "动画参数 JSON",
+        "default": "{}"
+      },
+      {
+        "id": "soundEnabled",
+        "type": "boolean",
+        "label": "配套音效",
+        "default": true
+      },
+      {
+        "id": "soundGain",
+        "type": "number",
+        "label": "音效音量",
+        "default": 0.65,
+        "min": 0,
+        "max": 1,
+        "step": 0.05
+      }
+    ],
+    "referenceImage": "references/animation-style/ani-question-outro.png",
+    "referenceLabel": "V8 · 问题收尾"
+  },
+  {
+    "id": "ani-notice-check",
+    "name": "动画风 · 通知逐项核对",
+    "category": "动画风",
+    "description": "根据 V8 通知母版复刻折角纸张、深蓝描边、钴蓝标题牌与四行彩色图标，逐项核对后保留检查结果。全部图形与文字可编辑。",
+    "width": 1280,
+    "height": 720,
+    "reference": {
+      "basis": "用户提供的 V8 分镜与动画素材包：通知-独立母版.png、S05.png、M03.png 上行。SVG 几何重建；动态顺序参考静态动作板，未宣称逐帧复刻。",
+      "source": "reports/animation-style/reference-review-v8/REVIEW.md",
+      "level": "reference-reconstruction"
+    },
+    "defaultEffect": "ani-notice-verify",
+    "content": "content/ani-notice-check.json",
+    "preview": "previews/ani-notice-check.html",
+    "composition": "compositions/ani-notice-check.html",
+    "variables": [
+      {
+        "id": "title",
+        "type": "string",
+        "label": "title",
+        "default": "本周进度通知"
+      },
+      {
+        "id": "subtitle",
+        "type": "string",
+        "label": "subtitle",
+        "default": "从收件人角度核对"
+      },
+      {
+        "id": "footnote",
+        "type": "string",
+        "label": "footnote",
+        "default": "轮到谁做、要做什么、几点前完成、在哪儿填，都找得到。"
+      },
+      {
+        "id": "propsJson",
+        "type": "string",
+        "label": "完整组件内容 JSON（覆盖同名字段）",
+        "default": "{}"
+      },
+      {
+        "id": "effect",
+        "type": "enum",
+        "label": "动画效果",
+        "default": "ani-notice-verify",
+        "options": [
+          {
+            "value": "none",
+            "label": "无动画"
+          },
+          {
+            "value": "fade-in",
+            "label": "淡入呈现"
+          },
+          {
+            "value": "slide-in",
+            "label": "窗口滑入"
+          },
+          {
+            "value": "stagger",
+            "label": "步骤依次出现"
+          },
+          {
+            "value": "typewriter",
+            "label": "逐字输入"
+          },
+          {
+            "value": "line-highlight",
+            "label": "逐行聚焦"
+          },
+          {
+            "value": "draw-path",
+            "label": "连线生长"
+          },
+          {
+            "value": "click-ripple",
+            "label": "光标点击"
+          },
+          {
+            "value": "zoom-focus",
+            "label": "镜头推近"
+          },
+          {
+            "value": "spotlight",
+            "label": "局部聚光"
+          },
+          {
+            "value": "split-reveal",
+            "label": "前后揭示"
+          },
+          {
+            "value": "progress-fill",
+            "label": "数值进度增长"
+          },
+          {
+            "value": "count-up",
+            "label": "数字递增"
+          },
+          {
+            "value": "scroll-panel",
+            "label": "内容滚动"
+          },
+          {
+            "value": "word-emphasis",
+            "label": "关键词划线"
+          },
+          {
+            "value": "window-exit",
+            "label": "窗口收起"
+          },
+          {
+            "value": "modal-pop",
+            "label": "命令面板弹出"
+          },
+          {
+            "value": "toast-enter",
+            "label": "通知送达"
+          },
+          {
+            "value": "menu-unfold",
+            "label": "级联菜单展开"
+          },
+          {
+            "value": "focus-ring",
+            "label": "目标描边"
+          },
+          {
+            "value": "marker-sweep",
+            "label": "荧光笔扫读"
+          },
+          {
+            "value": "focus-hop",
+            "label": "焦点巡游"
+          },
+          {
+            "value": "check-complete",
+            "label": "任务完成"
+          },
+          {
+            "value": "row-reveal",
+            "label": "表格载入"
+          },
+          {
+            "value": "chart-trace",
+            "label": "趋势追踪读数"
+          },
+          {
+            "value": "card-stack",
+            "label": "结构分层展开"
+          },
+          {
+            "value": "media-pan",
+            "label": "素材缓慢平移"
+          },
+          {
+            "value": "iris-reveal",
+            "label": "圆形画面交接"
+          },
+          {
+            "value": "wipe-transition",
+            "label": "三层短遮幅转场"
+          },
+          {
+            "value": "stamp-confirm",
+            "label": "确认印记"
+          },
+          {
+            "value": "error-shake",
+            "label": "输入纠错提示"
+          },
+          {
+            "value": "scale-settle",
+            "label": "轻缩放落位"
+          },
+          {
+            "value": "curtain-open",
+            "label": "双侧帘幕开场"
+          },
+          {
+            "value": "blur-resolve",
+            "label": "由虚到实"
+          },
+          {
+            "value": "mask-rise",
+            "label": "窗口裁切入场"
+          },
+          {
+            "value": "cards-deal",
+            "label": "卡片发牌"
+          },
+          {
+            "value": "center-stagger",
+            "label": "由中央展开"
+          },
+          {
+            "value": "border-assemble",
+            "label": "边框构建开场"
+          },
+          {
+            "value": "toggle-switch",
+            "label": "开关切换"
+          },
+          {
+            "value": "drag-drop",
+            "label": "任务拖放"
+          },
+          {
+            "value": "text-select",
+            "label": "拖选文本"
+          },
+          {
+            "value": "slider-drag",
+            "label": "滑块调节"
+          },
+          {
+            "value": "dashed-frame",
+            "label": "虚线边框绘制"
+          },
+          {
+            "value": "corner-brackets",
+            "label": "四角定位"
+          },
+          {
+            "value": "callout-pin",
+            "label": "引线标注"
+          },
+          {
+            "value": "number-tags",
+            "label": "编号标记"
+          },
+          {
+            "value": "branch-reveal",
+            "label": "条件分支展开"
+          },
+          {
+            "value": "orbit-steps",
+            "label": "循环路径行进"
+          },
+          {
+            "value": "compare-sweep",
+            "label": "对比扫描线"
+          },
+          {
+            "value": "equation-build",
+            "label": "公式逐项组合"
+          },
+          {
+            "value": "pyramid-build",
+            "label": "层级从基础构建"
+          },
+          {
+            "value": "mindmap-expand",
+            "label": "思维导图扩散"
+          },
+          {
+            "value": "step-track",
+            "label": "步骤状态推进"
+          },
+          {
+            "value": "pan-scan",
+            "label": "横向阅读镜头"
+          },
+          {
+            "value": "dolly-out",
+            "label": "拉远建立全局"
+          },
+          {
+            "value": "focus-return",
+            "label": "推近后回到全景"
+          },
+          {
+            "value": "focus-hop-camera",
+            "label": "两处重点切换"
+          },
+          {
+            "value": "tilt-settle",
+            "label": "轻透视扶正"
+          },
+          {
+            "value": "parallax-depth",
+            "label": "前后层视差"
+          },
+          {
+            "value": "frame-push",
+            "label": "框内缓慢推进"
+          },
+          {
+            "value": "dolly-diagonal",
+            "label": "斜向缓慢取景"
+          },
+          {
+            "value": "donut-draw",
+            "label": "环形比例绘制"
+          },
+          {
+            "value": "scatter-pop",
+            "label": "散点落位"
+          },
+          {
+            "value": "heatmap-scan",
+            "label": "热力数据扫描"
+          },
+          {
+            "value": "funnel-reveal",
+            "label": "漏斗逐层转化"
+          },
+          {
+            "value": "radar-expand",
+            "label": "雷达轮廓建立"
+          },
+          {
+            "value": "chart-bars-cascade",
+            "label": "时间区间展开"
+          },
+          {
+            "value": "fade-out",
+            "label": "柔和淡出"
+          },
+          {
+            "value": "slide-out-left",
+            "label": "向左滑出"
+          },
+          {
+            "value": "lift-away",
+            "label": "向上离场"
+          },
+          {
+            "value": "shrink-center",
+            "label": "缩向中心"
+          },
+          {
+            "value": "iris-close",
+            "label": "圆形收幕"
+          },
+          {
+            "value": "mask-retract",
+            "label": "从右向左收回"
+          },
+          {
+            "value": "stagger-out",
+            "label": "内容依次离场"
+          },
+          {
+            "value": "blur-out",
+            "label": "散焦离场"
+          },
+          {
+            "value": "split-away",
+            "label": "左右分离退场"
+          },
+          {
+            "value": "success-toast",
+            "label": "操作成功提示"
+          },
+          {
+            "value": "save-pulse",
+            "label": "保存状态脉冲"
+          },
+          {
+            "value": "copy-confirm",
+            "label": "复制确认"
+          },
+          {
+            "value": "loading-resolve",
+            "label": "等待到完成"
+          },
+          {
+            "value": "warning-breathe",
+            "label": "注意事项提示"
+          },
+          {
+            "value": "notification-ping",
+            "label": "通知提示圈"
+          },
+          {
+            "value": "soft-confetti",
+            "label": "克制的完成粒子"
+          },
+          {
+            "value": "curve-ribbon",
+            "label": "三层弧带转场"
+          },
+          {
+            "value": "diagonal-ribbon",
+            "label": "斜向圆角带转场"
+          },
+          {
+            "value": "shared-slide",
+            "label": "同场横移交接"
+          },
+          {
+            "value": "soft-dissolve",
+            "label": "柔焦交叠"
+          },
+          {
+            "value": "zoom-through",
+            "label": "推近穿越"
+          },
+          {
+            "value": "card-lift",
+            "label": "卡片抬起换页"
+          },
+          {
+            "value": "blinds-swap",
+            "label": "分栏接力换页"
+          },
+          {
+            "value": "liquid-sweep",
+            "label": "柔曲线扫过"
+          },
+          {
+            "value": "grid-drift",
+            "label": "细网格缓移"
+          },
+          {
+            "value": "perspective-scroll",
+            "label": "透视网格滚动"
+          },
+          {
+            "value": "dot-drift",
+            "label": "细点阵漂移"
+          },
+          {
+            "value": "orb-parallax",
+            "label": "边角圆形视差"
+          },
+          {
+            "value": "contour-flow",
+            "label": "等高曲线流动"
+          },
+          {
+            "value": "diagonal-hatch",
+            "label": "斜纹背景滑动"
+          },
+          {
+            "value": "ring-orbit",
+            "label": "环形轨道漂移"
+          },
+          {
+            "value": "blueprint-pan",
+            "label": "蓝图坐标平移"
+          },
+          {
+            "value": "wave-bands",
+            "label": "柔和波带流动"
+          },
+          {
+            "value": "ambient-breath",
+            "label": "淡色光晕呼吸"
+          },
+          {
+            "value": "ani-notice-verify",
+            "label": "通知逐项核对"
+          },
+          {
+            "value": "ani-diagram-build",
+            "label": "图解逐步建立"
+          },
+          {
+            "value": "ani-order-select",
+            "label": "订单条件筛选"
+          },
+          {
+            "value": "ani-machine-process",
+            "label": "材料加工过程"
+          }
+        ]
+      },
+      {
+        "id": "effectOptionsJson",
+        "type": "string",
+        "label": "动画参数 JSON",
+        "default": "{}"
+      },
+      {
+        "id": "soundEnabled",
+        "type": "boolean",
+        "label": "配套音效",
+        "default": true
+      },
+      {
+        "id": "soundGain",
+        "type": "number",
+        "label": "音效音量",
+        "default": 0.65,
+        "min": 0,
+        "max": 1,
+        "step": 0.05
+      }
+    ],
+    "referenceImage": "references/animation-style/ani-notice-check.png",
+    "referenceLabel": "V8 · 通知独立母版"
+  }
+]

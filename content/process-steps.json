@@ -1,0 +1,30 @@
+{
+  "eyebrow": "EXPLAIN / 结构与数据",
+  "title": "先给内容，再得到可制作的分镜",
+  "subtitle": "给每一步分配编号、动作与结果，适合操作教学。",
+  "badge": "示例数据",
+  "note": "替换内容后，图形与数值一起更新。",
+  "code": "PROCESS-STEPS",
+  "steps": [
+    {
+      "title": "输入主题",
+      "detail": "问题与受众",
+      "result": "明确目标"
+    },
+    {
+      "title": "编排结构",
+      "detail": "钩子与正文",
+      "result": "形成讲稿"
+    },
+    {
+      "title": "安排画面",
+      "detail": "录屏与图解",
+      "result": "得到分镜"
+    },
+    {
+      "title": "检查交付",
+      "detail": "事实与节奏",
+      "result": "可进入制作"
+    }
+  ]
+}

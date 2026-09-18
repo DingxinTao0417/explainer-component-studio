@@ -1,0 +1,25 @@
+{
+  "query": "视频制作",
+  "results": [
+    {
+      "name": "视频制作",
+      "detail": "文稿 / 项目文件夹",
+      "kind": "folder"
+    },
+    {
+      "name": "视频制作计划.md",
+      "detail": "今天 09:12 · Markdown 文稿",
+      "kind": "file"
+    },
+    {
+      "name": "视频制作参考.pdf",
+      "detail": "昨天 18:22 · PDF 文稿",
+      "kind": "file"
+    },
+    {
+      "name": "视频制作教程",
+      "detail": "在网页中搜索",
+      "kind": "globe"
+    }
+  ]
+}

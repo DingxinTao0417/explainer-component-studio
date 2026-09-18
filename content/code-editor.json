@@ -1,0 +1,79 @@
+{
+  "project": "science-video",
+  "filename": "config.ts",
+  "branch": "main*",
+  "language": "TypeScript",
+  "position": "行 10，列 3",
+  "files": [
+    {
+      "name": "SCIENCE-VIDEO",
+      "kind": "folder",
+      "depth": 0
+    },
+    {
+      "name": "public",
+      "kind": "folder",
+      "depth": 1,
+      "open": false
+    },
+    {
+      "name": "src",
+      "kind": "folder",
+      "depth": 1
+    },
+    {
+      "name": "components",
+      "kind": "folder",
+      "depth": 2,
+      "open": false
+    },
+    {
+      "name": "config.ts",
+      "depth": 2,
+      "badge": "M"
+    },
+    {
+      "name": "timeline.ts",
+      "depth": 2
+    },
+    {
+      "name": "index.ts",
+      "depth": 2
+    },
+    {
+      "name": "tests",
+      "kind": "folder",
+      "depth": 1,
+      "open": false
+    },
+    {
+      "name": "package.json",
+      "depth": 1
+    },
+    {
+      "name": "README.md",
+      "depth": 1
+    }
+  ],
+  "code": [
+    "import { createTimeline } from './timeline';",
+    "",
+    "// 先定义内容，再交给时间轴编排",
+    "export const video = {",
+    "  title: '把复杂概念讲清楚',",
+    "  width: 1920,",
+    "  height: 1080,",
+    "  fps: 30,",
+    "  scenes: [",
+    "    { id: 'intro', duration: 4.5 },",
+    "    { id: 'explain', duration: 12 },",
+    "    { id: 'summary', duration: 5 },",
+    "  ],",
+    "};",
+    "",
+    "const timeline = createTimeline(video);",
+    "timeline.validate();"
+  ],
+  "highlightLine": 10,
+  "secondaryTab": "timeline.ts"
+}

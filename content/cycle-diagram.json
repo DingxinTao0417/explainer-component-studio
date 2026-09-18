@@ -1,0 +1,27 @@
+{
+  "eyebrow": "EXPLAIN / 结构与数据",
+  "title": "一次改进，来自一轮反馈",
+  "subtitle": "把执行、观察与修正连接成可重复的循环。",
+  "badge": "示例数据",
+  "note": "替换内容后，图形与数值一起更新。",
+  "code": "CYCLE-DIAGRAM",
+  "center": "持续迭代",
+  "steps": [
+    {
+      "title": "提出假设",
+      "detail": "写清预期"
+    },
+    {
+      "title": "执行实验",
+      "detail": "保持条件"
+    },
+    {
+      "title": "观察结果",
+      "detail": "记录证据"
+    },
+    {
+      "title": "修正方法",
+      "detail": "进入下一轮"
+    }
+  ]
+}

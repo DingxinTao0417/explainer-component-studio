@@ -1,0 +1,52 @@
+{
+  "appName": "API 工作台",
+  "workspace": "科普视频项目",
+  "appIcon": "globe",
+  "requestName": "读取组件列表",
+  "method": "GET",
+  "url": "https://api.example.com/v1/components",
+  "status": "200 OK",
+  "latency": "128 ms",
+  "responseSize": "1.24 KB",
+  "requests": [
+    {
+      "method": "GET",
+      "name": "读取组件列表"
+    },
+    {
+      "method": "GET",
+      "name": "获取分镜配置"
+    },
+    {
+      "method": "POST",
+      "name": "创建预览任务"
+    },
+    {
+      "method": "GET",
+      "name": "查询任务状态"
+    }
+  ],
+  "params": [
+    {
+      "key": "category",
+      "value": "software",
+      "description": "按组件类别筛选"
+    },
+    {
+      "key": "limit",
+      "value": "30",
+      "description": "返回结果数量"
+    }
+  ],
+  "response": [
+    "{",
+    "  \"success\": true,",
+    "  \"data\": [",
+    "    { \"id\": \"browser-window\", \"name\": \"浏览器窗口\" },",
+    "    { \"id\": \"terminal-session\", \"name\": \"终端会话\" },",
+    "    { \"id\": \"code-editor\", \"name\": \"代码编辑器\" }",
+    "  ],",
+    "  \"total\": 30",
+    "}"
+  ]
+}

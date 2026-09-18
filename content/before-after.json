@@ -1,0 +1,45 @@
+{
+  "eyebrow": "01 / 对照观察",
+  "title": "同样的任务，换一种组织方式",
+  "subtitle": "保持任务不变，让整理方式的差异清楚可见。",
+  "badge": "前后对比",
+  "footer": "示例内容可替换 · 白底 / 蓝色强调 / 薄荷绿完成态",
+  "series": "EXPLAIN / COMPARE",
+  "beforeLabel": "整理前",
+  "beforeNote": "信息散落在同一张清单里",
+  "afterLabel": "整理后",
+  "afterNote": "按状态组织，下一步更明确",
+  "tasks": [
+    {
+      "title": "整理参考资料",
+      "detail": "8 篇文章 · 2 份报告",
+      "state": "done"
+    },
+    {
+      "title": "完成第一版脚本",
+      "detail": "开头 · 正文 · 结尾",
+      "state": "active"
+    },
+    {
+      "title": "录制操作过程",
+      "detail": "项目创建与设置",
+      "state": "todo"
+    }
+  ],
+  "columns": [
+    {
+      "state": "todo",
+      "label": "待开始"
+    },
+    {
+      "state": "active",
+      "label": "进行中"
+    },
+    {
+      "state": "done",
+      "label": "已完成"
+    }
+  ],
+  "resultLabel": "变化要点",
+  "result": "资料、执行与验收各有位置，减少反复寻找。"
+}

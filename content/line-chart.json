@@ -1,0 +1,41 @@
+{
+  "eyebrow": "05 / 观察趋势",
+  "title": "一次改进，要看连续的变化",
+  "subtitle": "用同一把尺子观察趋势，避免只看某一个高点。",
+  "badge": "示例数据",
+  "footer": "示例内容可替换 · 白底 / 蓝色强调 / 薄荷绿完成态",
+  "series": "EXPLAIN / TREND",
+  "chartTitle": "每周完成任务数",
+  "unit": "项",
+  "max": 40,
+  "target": 30,
+  "targetLabel": "参考目标",
+  "values": [
+    {
+      "label": "第1周",
+      "value": 12
+    },
+    {
+      "label": "第2周",
+      "value": 17
+    },
+    {
+      "label": "第3周",
+      "value": 15
+    },
+    {
+      "label": "第4周",
+      "value": 24
+    },
+    {
+      "label": "第5周",
+      "value": 29
+    },
+    {
+      "label": "第6周",
+      "value": 34
+    }
+  ],
+  "selected": 4,
+  "note": "折线只连接示例观测值；不代表对未来表现的预测。"
+}

@@ -1,0 +1,25 @@
+{
+  "x": 300,
+  "y": 92,
+  "objectWidth": 680,
+  "objectHeight": 520,
+  "files": [
+    {
+      "name": "需求说明",
+      "fileType": "text",
+      "accent": "blue"
+    },
+    {
+      "name": "参考素材",
+      "fileType": "image",
+      "accent": "purple"
+    },
+    {
+      "name": "结果记录",
+      "fileType": "table",
+      "accent": "green"
+    }
+  ],
+  "meta": "整理后的资料",
+  "layout": "stack"
+}

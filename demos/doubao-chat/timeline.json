@@ -1,0 +1,187 @@
+[
+  {
+    "id": "home",
+    "label": "首页",
+    "start": 0,
+    "end": 1.2,
+    "props": {
+      "title": "进度提交提醒",
+      "showHome": true,
+      "messages": [],
+      "suggestions": []
+    }
+  },
+  {
+    "id": "draft",
+    "label": "输入",
+    "start": 1.2,
+    "end": 4.2,
+    "props": {
+      "title": "进度提交提醒",
+      "messages": [],
+      "composer": {
+        "draft": "提醒大家交进度，正式一点。",
+        "focused": true
+      },
+      "suggestions": []
+    },
+    "type": "draft",
+    "typeAt": 1.3,
+    "typeDuration": 2.3
+  },
+  {
+    "id": "running",
+    "label": "生成",
+    "start": 4.2,
+    "end": 5.2,
+    "props": {
+      "title": "进度提交提醒",
+      "messages": [
+        {
+          "id": "u1",
+          "role": "user",
+          "text": "提醒大家交进度，正式一点。"
+        }
+      ],
+      "composer": {
+        "running": true
+      },
+      "suggestions": []
+    }
+  },
+  {
+    "id": "reply",
+    "label": "结果",
+    "start": 5.2,
+    "end": 9,
+    "props": {
+      "title": "进度提交提醒",
+      "messages": [
+        {
+          "id": "u1",
+          "role": "user",
+          "text": "提醒大家交进度，正式一点。"
+        },
+        {
+          "id": "a1",
+          "role": "assistant",
+          "heading": "通知",
+          "text": "请各位积极配合，及时提交相关材料。",
+          "actions": true
+        }
+      ],
+      "suggestions": [
+        "补充通知对象",
+        "明确提交时间和入口"
+      ]
+    },
+    "type": "a1",
+    "typeAt": 5.25,
+    "typeDuration": 1.8
+  },
+  {
+    "id": "refine",
+    "label": "补充要求",
+    "start": 9,
+    "end": 13,
+    "props": {
+      "title": "进度提交提醒",
+      "messages": [
+        {
+          "id": "u1",
+          "role": "user",
+          "text": "提醒大家交进度，正式一点。"
+        },
+        {
+          "id": "a1",
+          "role": "assistant",
+          "heading": "通知",
+          "text": "请各位积极配合，及时提交相关材料。",
+          "actions": true
+        }
+      ],
+      "composer": {
+        "draft": "发给各组负责人。周五下午五点前，把本周已完成和未完成事项，填进共享表格。\n共享表格（演示入口）",
+        "focused": true
+      },
+      "suggestions": []
+    },
+    "type": "draft",
+    "typeAt": 9.1,
+    "typeDuration": 3.4
+  },
+  {
+    "id": "updating",
+    "label": "更新",
+    "start": 13,
+    "end": 14,
+    "props": {
+      "title": "进度提交提醒",
+      "messages": [
+        {
+          "id": "u1",
+          "role": "user",
+          "text": "提醒大家交进度，正式一点。"
+        },
+        {
+          "id": "a1",
+          "role": "assistant",
+          "heading": "通知",
+          "text": "请各位积极配合，及时提交相关材料。",
+          "actions": true
+        },
+        {
+          "id": "u2",
+          "role": "user",
+          "text": "发给各组负责人。周五下午五点前，把本周已完成和未完成事项，填进共享表格。\n共享表格（演示入口）"
+        }
+      ],
+      "composer": {
+        "running": true
+      },
+      "suggestions": []
+    }
+  },
+  {
+    "id": "final",
+    "label": "核对",
+    "start": 14,
+    "end": 20,
+    "props": {
+      "title": "进度提交提醒",
+      "messages": [
+        {
+          "id": "u1",
+          "role": "user",
+          "text": "提醒大家交进度，正式一点。"
+        },
+        {
+          "id": "a1",
+          "role": "assistant",
+          "heading": "通知",
+          "text": "请各位积极配合，及时提交相关材料。",
+          "actions": true
+        },
+        {
+          "id": "u2",
+          "role": "user",
+          "text": "发给各组负责人。周五下午五点前，把本周已完成和未完成事项，填进共享表格。\n共享表格（演示入口）"
+        },
+        {
+          "id": "a2",
+          "role": "assistant",
+          "heading": "本周进度提交通知",
+          "paragraphs": [
+            "请各组负责人于周五下午五点前，将本周已完成和未完成事项填入共享表格。",
+            "填写入口：共享表格（演示入口）"
+          ],
+          "actions": true
+        }
+      ],
+      "suggestions": []
+    },
+    "type": "a2",
+    "typeAt": 14.1,
+    "typeDuration": 2.7
+  }
+]

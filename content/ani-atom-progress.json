@@ -1,0 +1,17 @@
+{
+  "x": 235,
+  "y": 245,
+  "objectWidth": 800,
+  "objectHeight": 192,
+  "title": "完成进度",
+  "value": 60,
+  "steps": [
+    "准备",
+    "执行",
+    "检查",
+    "完成"
+  ],
+  "tone": "blue",
+  "state": "active",
+  "showValue": true
+}

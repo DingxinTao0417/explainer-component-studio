@@ -1,0 +1,51 @@
+{
+  "appName": "测试工作台",
+  "workspace": "science-video",
+  "appIcon": "check-circle",
+  "suite": "components / browser.spec.ts",
+  "duration": "2.41 s",
+  "tests": [
+    {
+      "name": "正确显示浏览器标题与地址",
+      "status": "passed",
+      "time": "142 ms"
+    },
+    {
+      "name": "替换录屏素材后比例保持正确",
+      "status": "passed",
+      "time": "388 ms"
+    },
+    {
+      "name": "长标题在可用区域内省略",
+      "status": "passed",
+      "time": "96 ms"
+    },
+    {
+      "name": "区域聚焦只改变指定目标",
+      "status": "passed",
+      "time": "421 ms"
+    },
+    {
+      "name": "倒序跳转后画面状态一致",
+      "status": "passed",
+      "time": "532 ms"
+    },
+    {
+      "name": "中文与特殊字符安全显示",
+      "status": "passed",
+      "time": "108 ms"
+    }
+  ],
+  "output": [
+    "RUN  components/browser.spec.ts",
+    "",
+    "✓ 正确显示浏览器标题与地址",
+    "✓ 替换录屏素材后比例保持正确",
+    "✓ 倒序跳转后画面状态一致",
+    "",
+    "Test Files  1 passed (1)",
+    "     Tests  6 passed (6)",
+    "  Duration  2.41s"
+  ],
+  "runLabel": "本次运行"
+}

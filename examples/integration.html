@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <base href="../">
+  <title>同组件多实例 · HyperFrames 接入示例</title>
+  <script src="vendor/gsap.min.js"></script>
+  <style>
+    html,body{margin:0;width:1920px;height:1080px;background:#fff}
+    #root{position:relative;width:100%;height:100%;overflow:hidden}
+    .flow-slot{position:absolute;top:96px;width:1280px;height:800px;transform:scale(.68);transform-origin:top left}
+    #flow-left{left:40px}#flow-right{left:1010px}
+    #composer-bottom{position:absolute;left:560px;top:800px;width:800px;height:160px}
+  </style>
+</head>
+<body>
+  <div id="root" data-composition-id="component-integration" data-width="1920" data-height="1080" data-duration="8">
+    <!-- Same authored composition id is intentional. HyperFrames assigns distinct runtime instance ids. -->
+    <div id="flow-left" class="flow-slot" data-composition-id="flowchart"
+      data-composition-src="compositions/flowchart.html"
+      data-variable-values='{"title":"第一段：准备内容","propsJson":"{\"subtitle\":\"从主题、逐字稿到可用素材\"}","effect":"none"}'
+      data-start="0" data-duration="8" data-track-index="1" data-width="1280" data-height="800"></div>
+    <div id="flow-right" class="flow-slot" data-composition-id="flowchart"
+      data-composition-src="compositions/flowchart.html"
+      data-variable-values='{"title":"第二段：制作成片","propsJson":"{\"subtitle\":\"同一个模板，独立内容与动画配置\"}","effect":"none"}'
+      data-start="0" data-duration="8" data-track-index="2" data-width="1280" data-height="800"></div>
+    <div id="composer-bottom" data-composition-id="codex-composer"
+      data-composition-src="compositions/codex-composer.html"
+      data-variable-values='{"draft":"把这两个步骤整理成一段科普讲解视频。"}'
+      data-start="0" data-duration="8" data-track-index="3" data-width="800" data-height="160"></div>
+  </div>
+  <script>window.__timelines=window.__timelines||{};window.__timelines['component-integration']=gsap.timeline({paused:true}).to({t:0},{t:8,duration:8,ease:'none'});</script>
+  <!-- Local runtime makes this file inspectable in a plain browser; HyperFrames also supplies its runtime. -->
+  <script src="vendor/hyperframe-runtime.js"></script>
+</body>
+</html>

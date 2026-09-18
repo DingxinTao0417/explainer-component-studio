@@ -1,0 +1,27 @@
+{
+  "eyebrow": "EXPLAIN / 结构与数据",
+  "title": "制作时间花在了哪里",
+  "subtitle": "把整体拆成几部分，同时保留数量与百分比。",
+  "badge": "示例数据",
+  "note": "替换内容后，图形与数值一起更新。",
+  "code": "DONUT-CHART",
+  "items": [
+    {
+      "label": "内容编导",
+      "value": 42
+    },
+    {
+      "label": "素材准备",
+      "value": 28
+    },
+    {
+      "label": "剪辑与动画",
+      "value": 20
+    },
+    {
+      "label": "复核",
+      "value": 10
+    }
+  ],
+  "unit": "小时"
+}

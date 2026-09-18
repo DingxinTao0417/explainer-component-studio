@@ -1,0 +1,25 @@
+{
+  "x": 140,
+  "y": 96,
+  "objectWidth": 990,
+  "objectHeight": 518,
+  "tabs": [
+    "项目资料",
+    "工作记录"
+  ],
+  "activeTab": 0,
+  "address": "workspace.example / project",
+  "heading": "项目资料",
+  "body": [
+    "需求说明与参考材料放在同一个工作区。",
+    "先确认目标，再逐项查看已有的信息。"
+  ],
+  "items": [
+    "需求说明",
+    "参考材料",
+    "验收标准"
+  ],
+  "imageSrc": "",
+  "imageAlt": "可替换的页面图片",
+  "imageFit": "contain"
+}

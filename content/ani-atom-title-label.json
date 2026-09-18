@@ -1,0 +1,10 @@
+{
+  "x": 330,
+  "y": 276,
+  "objectWidth": 620,
+  "objectHeight": 158,
+  "label": "先补清要求",
+  "caption": "完成后，再按要求检查",
+  "accent": "blue",
+  "variant": "filled"
+}
