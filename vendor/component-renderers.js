@@ -88,14 +88,8 @@ var ComponentLibraryRuntime = (() => {
     return { ...h, uid: (name) => h.uid(`${prefix}-${++n3}-${name}`) };
   };
   var text = (x, y, label2, size, h, extra2 = "") => `<text x="${x}" y="${y}" font-size="${size}" fill="${tokens.ink}" ${extra2}>${h.esc(label2 ?? "")}</text>`;
-  var initialRows = [
-    { id: "A01", orderDate: "2026-09-01", completedDate: "2026-09-03", status: "\u5DF2\u5B8C\u6210" },
-    { id: "A02", orderDate: "2026-09-02", completedDate: "2026-09-05", status: "\u5DF2\u5B8C\u6210" },
-    { id: "A03", orderDate: "2026-09-04", completedDate: "2026-09-08", status: "\u5DF2\u5B8C\u6210" },
-    { id: "A04", orderDate: "2026-09-06", completedDate: "", status: "\u5DF2\u53D6\u6D88" },
-    { id: "A05", orderDate: "2026-09-10", completedDate: "", status: "\u5F85\u4ED8\u6B3E" }
-  ];
-  var matches = (r, month) => r.status === "\u5DF2\u5B8C\u6210" && String(r.completedDate || "").startsWith(month + "-");
+  var rowState = (r) => r.state || { "\u5DF2\u5B8C\u6210": "complete", "\u5DF2\u53D6\u6D88": "cancelled", "\u5F85\u4ED8\u6B3E": "pending" }[r.status] || r.status;
+  var matches = (r, month, matchState = "complete") => rowState(r) === matchState && String(r.completedDate || "").startsWith(month + "-");
   var dateLabel = (v) => /^\d{4}-\d\d-\d\d$/.test(String(v)) ? String(v).slice(5) : String(v || "\u2014");
   function validateRows(rows2) {
     if (!Array.isArray(rows2) || rows2.length !== 5) throw new Error("animation order scenes require exactly five sample rows");
@@ -105,26 +99,70 @@ var ComponentLibraryRuntime = (() => {
     const fs = Math.min(height * 0.64, fit(label2, 23, w - 14));
     return `<g><rect x="${x + 2}" y="${y + 3}" width="${w}" height="${height}" rx="11" fill="${tokens.shadow}"/><rect data-ani-status-bg x="${x}" y="${y}" width="${w}" height="${height}" rx="11" fill="${color2}" stroke="${tokens.ink}" stroke-width="1.5"/><path d="M${x + 11} ${y + 5}H${x + w - 14}" stroke="white" stroke-opacity=".27" stroke-width="2" stroke-linecap="round"/>${text(x + w / 2, y + height * 0.71, label2, fs, h, 'text-anchor="middle" style="fill:' + (color2 === tokens.orange || color2 === "#9aa3b1" ? tokens.ink : "white") + '"')}</g>`;
   }
-  function sourceSheet(h, label2) {
+  function sourceSheet(h, label2, note) {
     const rows2 = Array.from({ length: 11 }, (_, i) => Array.from({ length: 3 }, (_2, j) => `<rect x="${66 + j * 61}" y="${252 + i * 20}" width="51" height="12" rx="2" fill="${i >= 3 && i <= 7 ? "#aedcff" : "#dce8f2"}"/>`).join("")).join("");
-    return `<g data-ani-enter>${paper(45, 218, 225, 296, { fold: 28, depth: 9 }, h)}${banner(63, 183, 186, label2, tokens.green, h)}${rows2}<rect x="59" y="307" width="198" height="103" rx="4" fill="none" stroke="${tokens.blue}" stroke-width="3" stroke-dasharray="7 5"/>${text(157, 548, "\u539F\u59CB\u8BB0\u5F55\u4FDD\u7559", 18, h, 'text-anchor="middle" fill="#55749b"')}</g>`;
+    return `<g data-ani-enter>${paper(45, 218, 225, 296, { fold: 28, depth: 9 }, h)}${banner(63, 183, 186, label2, tokens.green, h)}${rows2}<rect x="59" y="307" width="198" height="103" rx="4" fill="none" stroke="${tokens.blue}" stroke-width="3" stroke-dasharray="7 5"/>${text(157, 548, note, 18, h, 'text-anchor="middle" fill="#55749b"')}</g>`;
   }
   var orderDefaults = {
-    title: "\u622A\u53D6 5 \u6761\u793A\u610F",
-    subtitle: "\u5B8C\u6210\u65E5\u671F\u5728\u672C\u6708\uFF0C\u4E14\u72B6\u6001\u4E3A\u5DF2\u5B8C\u6210",
-    footer: "\u53EA\u6539\u53D8\u8BA1\u5165\u8303\u56F4\uFF0C\u539F\u59CB\u4E94\u6761\u8BB0\u5F55\u4ECD\u7136\u4FDD\u7559\u3002",
-    month: "2026-09",
-    sourceLabel: "\u539F\u59CB\u8868\u683C",
-    headers: ["\u8BA2\u5355\u53F7", "\u4E0B\u5355\u65E5\u671F", "\u5B8C\u6210\u65E5\u671F", "\u72B6\u6001"],
-    rawHeader: "\u521D\u6B21\u8BA1\u5165",
-    finalHeader: "\u4FEE\u6B63\u540E\u8BA1\u5165",
-    includedLabel: "\u8BA1\u5165",
-    excludedLabel: "\u4E0D\u8BA1\u5165",
-    rawCountLabel: "\u672C\u5C40\u90E8\u521D\u6B21\u8BA1\u5165",
-    finalCountLabel: "\u672C\u5C40\u90E8\u7B26\u5408",
-    unit: "\u6761",
-    sampleNote: "\u4E0D\u662F\u6708\u5EA6\u603B\u6570",
-    rows: initialRows
+    "title": "\u8868\u683C\u6807\u9898",
+    "subtitle": "\u7B5B\u9009\u6761\u4EF6\u8BF4\u660E",
+    "footer": "\u8865\u5145\u8BF4\u660E\u6587\u5B57",
+    "month": "2026-01",
+    "sourceLabel": "\u6765\u6E90\u8868\u683C",
+    "headers": [
+      "\u7F16\u53F7",
+      "\u65E5\u671F A",
+      "\u65E5\u671F B",
+      "\u72B6\u6001"
+    ],
+    "rawHeader": "\u521D\u59CB\u7ED3\u679C",
+    "finalHeader": "\u7B5B\u9009\u7ED3\u679C",
+    "includedLabel": "\u4FDD\u7559",
+    "excludedLabel": "\u6392\u9664",
+    "rawCountLabel": "\u521D\u59CB\u8BB0\u5F55",
+    "finalCountLabel": "\u7B26\u5408\u6761\u4EF6",
+    "unit": "\u6761",
+    "sampleNote": "\u7ED3\u679C\u8BF4\u660E",
+    "rows": [
+      {
+        "id": "R01",
+        "orderDate": "2026-01-01",
+        "completedDate": "2026-01-03",
+        "status": "\u72B6\u6001 A",
+        "state": "complete"
+      },
+      {
+        "id": "R02",
+        "orderDate": "2026-01-02",
+        "completedDate": "2026-01-04",
+        "status": "\u72B6\u6001 A",
+        "state": "complete"
+      },
+      {
+        "id": "R03",
+        "orderDate": "2026-01-03",
+        "completedDate": "2026-01-05",
+        "status": "\u72B6\u6001 A",
+        "state": "complete"
+      },
+      {
+        "id": "R04",
+        "orderDate": "2026-01-04",
+        "completedDate": "",
+        "status": "\u72B6\u6001 B",
+        "state": "cancelled"
+      },
+      {
+        "id": "R05",
+        "orderDate": "2026-01-05",
+        "completedDate": "",
+        "status": "\u72B6\u6001 C",
+        "state": "pending"
+      }
+    ],
+    "sourceNote": "\u6765\u6E90\u8BF4\u660E",
+    "periodLabel": "\u65F6\u95F4\u8303\u56F4",
+    "matchState": "complete"
   };
   function renderOrder(p, helpers2) {
     validateRows(p.rows);
@@ -134,11 +172,11 @@ var ComponentLibraryRuntime = (() => {
     const x = 326, y = 180, width = 888, head = 58, rowH = 64, cols = [126, 157, 169, 180, 256];
     const starts = [x];
     cols.forEach((w, i) => starts.push(starts[i] + w));
-    const count = p.rows.filter((r) => matches(r, p.month)).length;
+    const count = p.rows.filter((r) => matches(r, p.month, p.matchState)).length;
     const header = p.headers.map((label2, i) => text(starts[i] + cols[i] / 2, y + 38, label2, fit(label2, 26, cols[i] - 16), h, 'text-anchor="middle"')).join("");
     const headLast = `<g data-ani-raw>${text(starts[4] + cols[4] / 2, y + 38, p.rawHeader, 26, h, 'text-anchor="middle"')}</g><g data-ani-final>${text(starts[4] + cols[4] / 2, y + 38, p.finalHeader, 26, h, 'text-anchor="middle"')}</g>`;
     const rows2 = p.rows.map((r, i) => {
-      const yy = y + head + i * rowH, ok = matches(r, p.month), statusColor = r.status === "\u5DF2\u5B8C\u6210" ? tokens.green : r.status === "\u5DF2\u53D6\u6D88" ? "#9aa3b1" : tokens.orange;
+      const yy = y + head + i * rowH, ok = matches(r, p.month, p.matchState), statusColor = rowState(r) === "complete" ? tokens.green : rowState(r) === "cancelled" ? "#9aa3b1" : tokens.orange;
       const cells = [r.id, dateLabel(r.orderDate), dateLabel(r.completedDate)].map((v, k) => text(starts[k] + cols[k] / 2, yy + 41, v, 28, h, 'text-anchor="middle"')).join("");
       const raw = `<g data-ani-raw><circle cx="${starts[4] + 57}" cy="${yy + 32}" r="11" fill="${tokens.blue}"/>${text(starts[4] + 86, yy + 41, p.includedLabel, 27, h)}</g>`;
       const final = `<g data-ani-final>${ok ? `<circle cx="${starts[4] + 57}" cy="${yy + 32}" r="11" fill="${tokens.green}"/>` : `<path d="M${starts[4] + 47} ${yy + 32}H${starts[4] + 67}" stroke="#727d8d" stroke-width="4" stroke-linecap="round"/>`}${text(starts[4] + 86, yy + 41, ok ? p.includedLabel : p.excludedLabel, 27, h)}</g>`;
@@ -146,23 +184,94 @@ var ComponentLibraryRuntime = (() => {
     }).join("");
     const grid = starts.slice(1, -1).map((xx) => `<path d="M${xx} ${y}V${y + head + 5 * rowH}"/>`).join("") + Array.from({ length: 5 }, (_, i) => `<path d="M${x} ${y + head + i * rowH}H${x + width}"/>`).join("");
     const countGroup = (which, label2, n3) => `<g data-ani-${which}><rect x="380" y="595" width="442" height="62" rx="20" fill="#e6f4ff" stroke="#6eaff6" stroke-width="2.5"/>${text(601, 636, label2 + " " + n3 + " " + p.unit, fit(label2 + " " + n3 + " " + p.unit, 28, 406), h, 'text-anchor="middle"')}</g>`;
-    const content2 = `${sourceSheet(h, p.sourceLabel)}<path d="M258 307L310 238V516L258 410Z" fill="#cceaff" fill-opacity=".65" stroke="#89bffc" stroke-width="2"/>${paper(309, 139, 920, 437, { fold: 18, depth: 10 }, h)}${banner(337, 65, 440, p.title, tokens.blue, h)}${text(805, 101, p.month + " \xB7 \u539F\u8868\u5C40\u90E8", 23, h)}${text(807, 130, p.subtitle, fit(p.subtitle, 19, 388), h)}<rect x="${x}" y="${y}" width="${width}" height="${head + 5 * rowH}" rx="13" fill="#fff" stroke="${tokens.ink}" stroke-width="3"/><path d="M${x + 13} ${y}H${x + width - 13}Q${x + width} ${y} ${x + width} ${y + 13}V${y + head}H${x}V${y + 13}Q${x} ${y} ${x + 13} ${y}Z" fill="#dceeff"/>${rows2}${header}${headLast}<g stroke="#7b97bf" stroke-width="1.3" fill="none">${grid}</g><rect x="${x}" y="${y}" width="${width}" height="${head + 5 * rowH}" rx="13" fill="none" stroke="${tokens.ink}" stroke-width="2.5"/>${countGroup("raw", p.rawCountLabel, p.rows.length)}${countGroup("final", p.finalCountLabel, count)}<rect x="855" y="595" width="345" height="62" rx="20" fill="#e9f5ff" stroke="#91bdeb" stroke-width="2.5"/>${text(1027, 636, p.sampleNote, fit(p.sampleNote, 29, 310), h, 'text-anchor="middle"')}<g data-ani-pop>${text(778, 694, p.footer, fit(p.footer, 21, 910), h, 'text-anchor="middle" fill="#55749b"')}</g>`;
+    const content2 = `${sourceSheet(h, p.sourceLabel, p.sourceNote)}<path d="M258 307L310 238V516L258 410Z" fill="#cceaff" fill-opacity=".65" stroke="#89bffc" stroke-width="2"/>${paper(309, 139, 920, 437, { fold: 18, depth: 10 }, h)}${banner(337, 65, 440, p.title, tokens.blue, h)}${text(805, 101, p.month + " \xB7 " + p.periodLabel, 23, h)}${text(807, 130, p.subtitle, fit(p.subtitle, 19, 388), h)}<rect x="${x}" y="${y}" width="${width}" height="${head + 5 * rowH}" rx="13" fill="#fff" stroke="${tokens.ink}" stroke-width="3"/><path d="M${x + 13} ${y}H${x + width - 13}Q${x + width} ${y} ${x + width} ${y + 13}V${y + head}H${x}V${y + 13}Q${x} ${y} ${x + 13} ${y}Z" fill="#dceeff"/>${rows2}${header}${headLast}<g stroke="#7b97bf" stroke-width="1.3" fill="none">${grid}</g><rect x="${x}" y="${y}" width="${width}" height="${head + 5 * rowH}" rx="13" fill="none" stroke="${tokens.ink}" stroke-width="2.5"/>${countGroup("raw", p.rawCountLabel, p.rows.length)}${countGroup("final", p.finalCountLabel, count)}<rect x="855" y="595" width="345" height="62" rx="20" fill="#e9f5ff" stroke="#91bdeb" stroke-width="2.5"/>${text(1027, 636, p.sampleNote, fit(p.sampleNote, 29, 310), h, 'text-anchor="middle"')}<g data-ani-pop>${text(778, 694, p.footer, fit(p.footer, 21, 910), h, 'text-anchor="middle" fill="#55749b"')}</g>`;
     return svgScene(content2, h);
   }
   var compareDefaults = {
-    title: "\u56FE\u5F0F\u5F52\u7EB3",
-    subtitle: "\u4ECE\u4E0D\u540C\u4F8B\u5B50\uFF0C\u627E\u5171\u540C\u601D\u8DEF",
-    footer: "\u672C\u4F8B\u529E\u6CD5\uFF1A\u8865\u6E05\u8981\u6C42\uFF0C\u518D\u68C0\u67E5",
-    leftTitle: "\u672C\u5468\u8FDB\u5EA6\u901A\u77E5",
-    rightTitle: "\u622A\u53D6 5 \u6761\u793A\u610F",
-    leftSteps: ["\u8865\u6E05\u8981\u6C42", "\u5BF9\u7167\u68C0\u67E5"],
-    rightSteps: ["\u8865\u6E05\u8981\u6C42", "\u5BF9\u7167\u68C0\u67E5"],
-    relationLabel: "\u6BD4\u8F83\u4E0E\u63D0\u70BC",
-    sampleNote: "\u6837\u672C\u4E0D\u662F\u6708\u5EA6\u603B\u6570",
-    fields: [{ label: "\u5BF9\u8C61", text: "\u5404\u7EC4\u8D1F\u8D23\u4EBA", icon: "people" }, { label: "\u5185\u5BB9", text: "\u672C\u5468\u5DF2\u5B8C\u6210\u3001\u672A\u5B8C\u6210\u4E8B\u9879", icon: "documents" }, { label: "\u622A\u6B62", text: "\u5468\u4E94 17:00 \u524D", icon: "calendar" }, { label: "\u586B\u5199", text: "\u5171\u4EAB\u8868\u683C", icon: "link" }],
-    headers: ["\u8BA2\u5355\u53F7", "\u5B8C\u6210\u65E5\u671F", "\u72B6\u6001", "\u8BA1\u5165"],
-    month: "2026-09",
-    rows: initialRows
+    "title": "\u7ED3\u679C\u6807\u9898",
+    "subtitle": "\u7ED3\u679C\u8BF4\u660E\u6587\u5B57",
+    "footer": "\u603B\u7ED3\u8BF4\u660E\u6587\u5B57",
+    "leftTitle": "\u6587\u6863\u6807\u9898",
+    "rightTitle": "\u8868\u683C\u6807\u9898",
+    "leftSteps": [
+      "\u6B65\u9AA4 A",
+      "\u6B65\u9AA4 B"
+    ],
+    "rightSteps": [
+      "\u6B65\u9AA4 A",
+      "\u6B65\u9AA4 B"
+    ],
+    "relationLabel": "\u5173\u7CFB\u8BF4\u660E",
+    "sampleNote": "\u8865\u5145\u8BF4\u660E",
+    "fields": [
+      {
+        "label": "\u5B57\u6BB5A",
+        "text": "\u5185\u5BB9 A",
+        "icon": "people"
+      },
+      {
+        "label": "\u5B57\u6BB5B",
+        "text": "\u5185\u5BB9 B",
+        "icon": "documents"
+      },
+      {
+        "label": "\u5B57\u6BB5C",
+        "text": "\u5185\u5BB9 C",
+        "icon": "calendar"
+      },
+      {
+        "label": "\u5B57\u6BB5D",
+        "text": "\u5185\u5BB9 D",
+        "icon": "link"
+      }
+    ],
+    "headers": [
+      "\u7F16\u53F7",
+      "\u65E5\u671F",
+      "\u72B6\u6001",
+      "\u7ED3\u679C"
+    ],
+    "month": "2026-01",
+    "rows": [
+      {
+        "id": "R01",
+        "orderDate": "2026-01-01",
+        "completedDate": "2026-01-03",
+        "status": "\u72B6\u6001 A",
+        "state": "complete"
+      },
+      {
+        "id": "R02",
+        "orderDate": "2026-01-02",
+        "completedDate": "2026-01-04",
+        "status": "\u72B6\u6001 A",
+        "state": "complete"
+      },
+      {
+        "id": "R03",
+        "orderDate": "2026-01-03",
+        "completedDate": "2026-01-05",
+        "status": "\u72B6\u6001 A",
+        "state": "complete"
+      },
+      {
+        "id": "R04",
+        "orderDate": "2026-01-04",
+        "completedDate": "",
+        "status": "\u72B6\u6001 B",
+        "state": "cancelled"
+      },
+      {
+        "id": "R05",
+        "orderDate": "2026-01-05",
+        "completedDate": "",
+        "status": "\u72B6\u6001 C",
+        "state": "pending"
+      }
+    ],
+    "includedLabel": "\u4FDD\u7559",
+    "excludedLabel": "\u6392\u9664",
+    "matchState": "complete"
   };
   function renderCompare(p, helpers2) {
     validateRows(p.rows);
@@ -176,8 +285,8 @@ var ComponentLibraryRuntime = (() => {
     colW.forEach((w, i) => starts.push(starts[i] + w));
     const hdr = p.headers.map((v, i) => text(starts[i] + colW[i] / 2, y + 27, v, fit(v, 20, colW[i] - 10), h, 'text-anchor="middle"')).join("");
     const rightRows = p.rows.map((r, i) => {
-      const yy = y + header + i * rowH, ok = matches(r, p.month);
-      return `<rect x="${x + 1}" y="${yy}" width="${width - 2}" height="${rowH}" fill="${i % 2 ? "#f4faff" : "#fff"}"/>${text(starts[0] + 48, yy + 27, r.id, 21, h, 'text-anchor="middle"')}${text(starts[1] + 55.5, yy + 27, dateLabel(r.completedDate), 21, h, 'text-anchor="middle"')}${badge(starts[2] + 13, yy + 5, colW[2] - 26, r.status, r.status === "\u5DF2\u5B8C\u6210" ? tokens.green : r.status === "\u5DF2\u53D6\u6D88" ? "#9aa3b1" : tokens.orange, h, 28)}${ok ? `<circle cx="${starts[3] + 26}" cy="${yy + 20}" r="7" fill="${tokens.green}"/>` : `<path d="M${starts[3] + 19} ${yy + 20}H${starts[3] + 33}" stroke="#788393" stroke-width="3"/>`}${text(starts[3] + 44, yy + 27, ok ? "\u8BA1\u5165" : "\u4E0D\u8BA1\u5165", 19, h)}`;
+      const yy = y + header + i * rowH, ok = matches(r, p.month, p.matchState);
+      return `<rect x="${x + 1}" y="${yy}" width="${width - 2}" height="${rowH}" fill="${i % 2 ? "#f4faff" : "#fff"}"/>${text(starts[0] + 48, yy + 27, r.id, 21, h, 'text-anchor="middle"')}${text(starts[1] + 55.5, yy + 27, dateLabel(r.completedDate), 21, h, 'text-anchor="middle"')}${badge(starts[2] + 13, yy + 5, colW[2] - 26, r.status, rowState(r) === "complete" ? tokens.green : rowState(r) === "cancelled" ? "#9aa3b1" : tokens.orange, h, 28)}${ok ? `<circle cx="${starts[3] + 26}" cy="${yy + 20}" r="7" fill="${tokens.green}"/>` : `<path d="M${starts[3] + 19} ${yy + 20}H${starts[3] + 33}" stroke="#788393" stroke-width="3"/>`}${text(starts[3] + 44, yy + 27, ok ? p.includedLabel : p.excludedLabel, 19, h)}`;
     }).join("");
     const grid = starts.slice(1, -1).map((xx) => `<path d="M${xx} ${y}V${y + header + 5 * rowH}"/>`).join("") + Array.from({ length: 5 }, (_, i) => `<path d="M${x} ${y + header + i * rowH}H${x + width}"/>`).join("");
     const left = `<g data-ani-enter>${paper(61, 88, 505, 305, { fold: 38, depth: 10 }, h)}${banner(143, 48, 332, p.leftTitle, tokens.blue, h)}${leftFields}</g>`;
@@ -190,10 +299,10 @@ var ComponentLibraryRuntime = (() => {
     return svgScene(`${left}${right}<g data-ani-compare-flow>${links}${bridge}${result}${footer2}</g>${steps}`, h);
   }
   var components = [
-    { id: "ani-order-filter", name: "\u52A8\u753B\u98CE \xB7 \u8BA2\u5355\u6761\u4EF6\u7B5B\u9009", category: "\u52A8\u753B\u98CE", description: "\u4ECE\u4E94\u6761\u5C40\u90E8\u8BB0\u5F55\u5C55\u793A\u7B5B\u9009\u53E3\u5F84\uFF1A\u5148\u8BA1\u5165\u4E94\u6761\uFF0C\u6309\u5B8C\u6210\u65E5\u671F\u4E0E\u72B6\u6001\u6539\u4E3A\u4E09\u6761\u3002\u53D6\u6D88\u53CA\u672A\u4ED8\u8BB0\u5F55\u7559\u5728\u539F\u4F4D\uFF0C\u6837\u672C\u4E0E\u6708\u5EA6\u603B\u6570\u660E\u786E\u533A\u5206\u3002", width: 1280, height: 720, defaultEffect: "ani-order-select", defaults: orderDefaults, reference: { basis: "\u7528\u6237 V8 \u7684 S07/S08 \u9759\u6001\u5206\u955C\u4E0E M04 \u4E09\u6001\u677F\uFF0C\u539F\u751F SVG \u53EF\u7F16\u8F91\u91CD\u5EFA\u3002", source: "reports/animation-style/reference-review-v8/REVIEW.md", level: "reference-reconstruction" }, render(p, h) {
+    { id: "ani-order-filter", name: "\u52A8\u753B\u98CE \xB7 \u6761\u4EF6\u7B5B\u9009\u8868\u683C", category: "\u52A8\u753B\u98CE", description: "\u7528\u4E94\u6761\u793A\u4F8B\u8BB0\u5F55\u5C55\u793A\u6761\u4EF6\u7B5B\u9009\uFF1B\u663E\u793A\u6807\u7B7E\u4E0E\u7B5B\u9009\u72B6\u6001\u5206\u522B\u914D\u7F6E\uFF0C\u539F\u59CB\u8BB0\u5F55\u4FDD\u7559\u3002", width: 1280, height: 720, defaultEffect: "ani-order-select", defaults: orderDefaults, reference: { basis: "\u7528\u6237 V8 \u7684 S07/S08 \u9759\u6001\u5206\u955C\u4E0E M04 \u4E09\u6001\u677F\uFF0C\u539F\u751F SVG \u53EF\u7F16\u8F91\u91CD\u5EFA\u3002", source: "reports/animation-style/reference-review-v8/REVIEW.md", level: "reference-reconstruction" }, render(p, h) {
       return renderOrder({ ...orderDefaults, ...p }, h);
     } },
-    { id: "ani-compare-extract", name: "\u52A8\u753B\u98CE \xB7 \u4E24\u4F8B\u5BF9\u7167\u4E0E\u5F52\u7EB3", category: "\u52A8\u753B\u98CE", description: "\u4FDD\u7559\u901A\u77E5\u4E0E\u8BA2\u5355\u7684\u4E0D\u540C\u7ED3\u6784\uFF0C\u5BF9\u9F50\u4E24\u8FB9\u76F8\u540C\u7684\u6B65\u9AA4\uFF0C\u518D\u6C47\u805A\u5230\u56FE\u5F0F\u5F52\u7EB3\u4E0E\u672C\u4F8B\u529E\u6CD5\u3002", width: 1280, height: 720, defaultEffect: "ani-diagram-build", defaults: compareDefaults, reference: { basis: "\u7528\u6237 V8 \u7684 S10 \u9759\u6001\u5206\u955C\u4E0E M05 \u4E0B\u884C\uFF0C\u539F\u751F SVG \u53EF\u7F16\u8F91\u91CD\u5EFA\u3002", source: "reports/animation-style/reference-review-v8/REVIEW.md", level: "reference-reconstruction" }, render(p, h) {
+    { id: "ani-compare-extract", name: "\u52A8\u753B\u98CE \xB7 \u4E24\u4F8B\u5BF9\u7167\u4E0E\u5F52\u7EB3", category: "\u52A8\u753B\u98CE", description: "\u5E76\u6392\u5448\u73B0\u6587\u6863\u4E0E\u8868\u683C\uFF0C\u5148\u663E\u793A\u6B65\u9AA4\uFF0C\u518D\u7ED8\u5236\u6C47\u805A\u8FDE\u7EBF\uFF0C\u6700\u540E\u663E\u793A\u7ED3\u679C\u4E0E\u603B\u7ED3\u3002", width: 1280, height: 720, defaultEffect: "ani-diagram-build", defaults: compareDefaults, reference: { basis: "\u7528\u6237 V8 \u7684 S10 \u9759\u6001\u5206\u955C\u4E0E M05 \u4E0B\u884C\uFF0C\u539F\u751F SVG \u53EF\u7F16\u8F91\u91CD\u5EFA\u3002", source: "reports/animation-style/reference-review-v8/REVIEW.md", level: "reference-reconstruction" }, render(p, h) {
       return renderCompare({ ...compareDefaults, ...p }, h);
     } }
   ];
@@ -247,7 +356,15 @@ var ComponentLibraryRuntime = (() => {
     const s = size / 30;
     return `<g transform="translate(${cx - size / 2} ${cy - size / 2}) scale(${s})" fill="none" stroke="#527094" stroke-width="2.5" stroke-linecap="round"><rect x="6" y="13" width="18" height="14" rx="3"/><path d="M10 13V8a5 5 0 0 1 10 0v5"/><path d="M15 19v3"/></g>`;
   }
-  var windowDefaults = { x: 175, y: 125, objectWidth: 930, objectHeight: 450, title: "\u5DE5\u4F5C\u7A97\u53E3", showControls: true, chromeHeight: 52 };
+  var windowDefaults = {
+    "x": 175,
+    "y": 125,
+    "objectWidth": 930,
+    "objectHeight": 450,
+    "title": "\u7A97\u53E3\u6807\u9898",
+    "showControls": true,
+    "chromeHeight": 52
+  };
   function renderWindowAtom(props, h) {
     const p = { ...windowDefaults, ...props }, g = geo(p, 260, 140), ch = num2(p.chromeHeight, "chromeHeight", 36, 84);
     if (ch > g.h - 50) throw Error("\u7A97\u53E3\u6807\u9898\u680F\u8FC7\u9AD8\u3002");
@@ -255,7 +372,18 @@ var ComponentLibraryRuntime = (() => {
     const chrome = `<path d="M18 0H${g.w - 18}Q${g.w} 0 ${g.w} 18V${ch}H0V18Q0 0 18 0Z" fill="#66a8f1"/><path d="M1 ${ch}H${g.w - 1}" stroke="${tokens.ink}" stroke-width="2.2"/>${controls2}${text2(h, g.w - 22, ch * 0.66, p.title, Math.min(25, ch * 0.46), g.w - (p.showControls ? 140 : 44), 'text-anchor="end"')}`;
     return group("window", g, `${panel(g.w, g.h)}${chrome}<rect width="${g.w}" height="${g.h}" rx="14" fill="none" stroke="${tokens.ink}" stroke-width="3"/>`);
   }
-  var tabsDefaults = { x: 220, y: 302, objectWidth: 830, objectHeight: 66, tabs: ["\u9879\u76EE\u8D44\u6599", "\u5DE5\u4F5C\u8BB0\u5F55", "\u53C2\u8003\u7D20\u6750"], activeTab: 0 };
+  var tabsDefaults = {
+    "x": 220,
+    "y": 302,
+    "objectWidth": 830,
+    "objectHeight": 66,
+    "tabs": [
+      "\u6807\u7B7E\u9875 A",
+      "\u6807\u7B7E\u9875 B",
+      "\u6807\u7B7E\u9875 C"
+    ],
+    "activeTab": 0
+  };
   function renderTabsAtom(props, h) {
     const p = { ...tabsDefaults, ...props }, g = geo(p, 240, 56);
     if (!Array.isArray(p.tabs) || p.tabs.length < 1 || p.tabs.length > 5) throw Error("\u6807\u7B7E\u680F\u652F\u6301 1\u20135 \u4E2A\u6807\u7B7E\u3002");
@@ -268,12 +396,28 @@ var ComponentLibraryRuntime = (() => {
     }).join("");
     return group("tabs", g, `<rect x="5" y="8" width="${g.w}" height="${g.h}" rx="12" fill="${tokens.shadow}"/><rect width="${g.w}" height="${g.h}" rx="12" fill="#94c6f8" stroke="${tokens.ink}" stroke-width="2.5"/>${tabs2}<path d="M1 ${g.h - 5}H${g.w - 1}" stroke="${tokens.ink}" stroke-width="2"/>`);
   }
-  var addressDefaults = { x: 230, y: 307, objectWidth: 810, objectHeight: 64, address: "workspace.example / project", showLock: true };
+  var addressDefaults = {
+    "x": 230,
+    "y": 307,
+    "objectWidth": 810,
+    "objectHeight": 64,
+    "address": "www.example.com/page",
+    "showLock": true
+  };
   function renderAddressAtom(props, h) {
     const p = { ...addressDefaults, ...props }, g = geo(p, 220, 42), isLock = Boolean(p.showLock), left = isLock ? 60 : 24, fs = Math.min(26, g.h * 0.39);
     return group("address", g, `${panel(g.w, g.h, "#edf7ff", Math.min(17, g.h * 0.27), 5)}${isLock ? lock(30, g.h / 2, Math.min(29, g.h * 0.47)) : ""}${text2(h, left, g.h / 2 + fs * 0.34, p.address, fs, g.w - left - 24, 'style="fill:#527094"')}`);
   }
-  var buttonDefaults = { x: 467, y: 301, objectWidth: 338, objectHeight: 88, label: "\u5F00\u59CB\u5904\u7406", state: "normal", accent: "blue", icon: "play" };
+  var buttonDefaults = {
+    "x": 467,
+    "y": 301,
+    "objectWidth": 338,
+    "objectHeight": 88,
+    "label": "\u64CD\u4F5C\u6309\u94AE",
+    "state": "normal",
+    "accent": "blue",
+    "icon": "play"
+  };
   function renderButtonAtom(props, h) {
     const p = { ...buttonDefaults, ...props }, g = geo(p, 100, 42);
     choice(p.state, ["normal", "pressed", "disabled"], "state");
@@ -284,7 +428,17 @@ var ComponentLibraryRuntime = (() => {
     const textW = units2(label2) * fs, total = textW + (hasIcon ? size + 15 : 0), begin = (g.w - total) / 2;
     return group("button", { ...g, state: p.state }, `<rect x="${depth}" y="${depth + offset}" width="${g.w}" height="${g.h}" rx="${r}" fill="${disabled ? "#ced9e5" : tokens.shadow}"/><g transform="translate(0 ${offset})"><rect width="${g.w}" height="${g.h}" rx="${r}" fill="${fill}" stroke="${tokens.ink}" stroke-width="3"/><rect x="6" y="6" width="${g.w - 12}" height="${g.h - 12}" rx="${Math.max(6, r - 4)}" fill="none" stroke="${disabled ? "#f4f8fb" : "#a5d9ff"}" stroke-width="2"/><path d="M17 12H${Math.min(g.w - 17, 76)}" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity="${disabled ? 0.45 : 0.65}"/>${hasIcon ? symbol(p.icon, begin + size / 2, g.h / 2, size, fg) : ""}${text2(h, begin + (hasIcon ? size + 15 : 0), g.h / 2 + fs * 0.34, label2, fs, textW + 1, `style="fill:${fg}"`)}</g>`);
   }
-  var inputDefaults = { x: 260, y: 298, objectWidth: 750, objectHeight: 78, value: "\u628A\u6807\u9898\u7F29\u77ED\u5230 12 \u4E2A\u5B57", placeholder: "\u8F93\u5165\u4F60\u7684\u8981\u6C42", state: "input", errorText: "\u8BF7\u8865\u5145\u5177\u4F53\u8981\u6C42", showCaret: true };
+  var inputDefaults = {
+    "x": 260,
+    "y": 298,
+    "objectWidth": 750,
+    "objectHeight": 78,
+    "value": "\u793A\u4F8B\u8F93\u5165\u5185\u5BB9",
+    "placeholder": "\u8BF7\u8F93\u5165\u5185\u5BB9",
+    "state": "input",
+    "errorText": "\u8F93\u5165\u63D0\u793A\u6587\u5B57",
+    "showCaret": true
+  };
   function renderInputAtom(props, h) {
     const p = { ...inputDefaults, ...props };
     choice(p.state, ["empty", "input", "error"], "state");
@@ -294,7 +448,15 @@ var ComponentLibraryRuntime = (() => {
     const lineEnd = Math.min(g.w - right, 25 + units2(s) * fitted + 5);
     return group("input", { ...g, state: p.state }, `${panel(g.w, g.h, error ? "#fff8ed" : "#fff", 13, 6)}<rect width="${g.w}" height="${g.h}" rx="13" fill="none" stroke="${stroke}" stroke-width="${empty ? 2.6 : 3.4}"/>${text2(h, 25, g.h / 2 + fitted * 0.34, s, fitted, g.w - 30 - right, `style="fill:${fg}"`, 18)}${p.showCaret && !empty && !error ? `<path d="M${lineEnd} ${g.h * 0.26}V${g.h * 0.73}" stroke="${tokens.blue}" stroke-width="2.5" stroke-linecap="round"/>` : ""}${error ? `${symbol("error", g.w - 28, g.h / 2, 28, "#8b4709")}${text2(h, 6, g.h + 37, p.errorText, 21, g.w - 12, 'style="fill:#8b4709"')}` : ""}`);
   }
-  var statusDefaults = { x: 495, y: 304, objectWidth: 280, objectHeight: 76, label: "\u5DF2\u5B8C\u6210", state: "success", showIcon: true };
+  var statusDefaults = {
+    "x": 495,
+    "y": 304,
+    "objectWidth": 280,
+    "objectHeight": 76,
+    "label": "\u5DF2\u5B8C\u6210",
+    "state": "success",
+    "showIcon": true
+  };
   function renderStatusAtom(props, h) {
     const p = { ...statusDefaults, ...props }, g = geo(p, 110, 44);
     choice(p.state, ["success", "pending", "error", "neutral", "info"], "state");
@@ -303,7 +465,14 @@ var ComponentLibraryRuntime = (() => {
     const total = units2(label2) * fs + (p.showIcon ? size + 10 : 0), left = (g.w - total) / 2;
     return group("status", { ...g, state: p.state }, `<rect x="5" y="7" width="${g.w}" height="${g.h}" rx="${g.h / 2}" fill="${tokens.shadow}"/><rect width="${g.w}" height="${g.h}" rx="${g.h / 2}" fill="${look.fill}" stroke="${tokens.ink}" stroke-width="2.6"/><path d="M${g.h * 0.4} 9H${Math.min(g.w - g.h * 0.4, g.h * 0.4 + 52)}" stroke="#fff" stroke-width="2.4" opacity=".5" stroke-linecap="round"/>${p.showIcon ? symbol(look.icon, left + size / 2, g.h / 2, size, look.fg) : ""}${text2(h, left + (p.showIcon ? size + 10 : 0), g.h / 2 + fs * 0.34, label2, fs, units2(label2) * fs + 1, `style="fill:${look.fg}"`)}`);
   }
-  var checkboxDefaults = { x: 377, y: 304, objectWidth: 526, objectHeight: 76, label: "\u5DF2\u5BF9\u7167\u8981\u6C42\u68C0\u67E5", state: "checked" };
+  var checkboxDefaults = {
+    "x": 377,
+    "y": 304,
+    "objectWidth": 526,
+    "objectHeight": 76,
+    "label": "\u9009\u9879\u540D\u79F0",
+    "state": "checked"
+  };
   function renderCheckboxAtom(props, h) {
     const p = { ...checkboxDefaults, ...props }, g = geo(p, 60, 38);
     choice(p.state, ["unchecked", "checked", "error"], "state");
@@ -315,7 +484,14 @@ var ComponentLibraryRuntime = (() => {
     }
     return group("checkbox", { ...g, state: p.state }, `<rect x="5" y="${yy + 6}" width="${side}" height="${side}" rx="${r}" fill="${tokens.shadow}"/><rect y="${yy}" width="${side}" height="${side}" rx="${r}" fill="${fill}" stroke="${error ? "#9c600e" : tokens.ink}" stroke-width="3"/>${checked ? symbol("check", side / 2, g.h / 2, side * 0.7, "#fff") : error ? symbol("error", side / 2, g.h / 2, side * 0.6, "#915109") : ""}${labelSvg}`);
   }
-  var cursorDefaults = { x: 535, y: 234, objectWidth: 185, objectHeight: 235, mode: "pointer", accent: "blue" };
+  var cursorDefaults = {
+    "x": 535,
+    "y": 234,
+    "objectWidth": 185,
+    "objectHeight": 235,
+    "mode": "pointer",
+    "accent": "blue"
+  };
   function renderCursorAtom(props, h) {
     const p = { ...cursorDefaults, ...props }, g = geo(p, 50, 70);
     choice(p.mode, ["pointer", "click"], "mode");
@@ -372,12 +548,48 @@ var ComponentLibraryRuntime = (() => {
   }
   var outer = (type, g, body) => `<g data-atom="${type}" data-motion="item" transform="translate(${g.x} ${g.y})" font-family="Microsoft YaHei,Segoe UI,sans-serif" font-weight="750">${body}</g>`;
   var preview = (body) => `<section class="ani-data-atom"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">${body}</svg></section>`;
-  var cellDefaults = { x: 445, y: 275, objectWidth: 390, objectHeight: 160, text: "\u672C\u6708\u5DF2\u5B8C\u6210", tone: "green", selected: true };
+  var cellDefaults = {
+    "x": 445,
+    "y": 275,
+    "objectWidth": 390,
+    "objectHeight": 160,
+    "text": "\u5355\u5143\u683C\u5185\u5BB9",
+    "tone": "green",
+    "selected": true
+  };
   function renderCellAtom(props, h) {
     const p = { ...cellDefaults, ...props }, g = geom(p, 180);
     return outer("cell", g, `<rect x="6" y="7" width="${g.w}" height="${g.height}" rx="10" fill="${tokens.shadow}"/>${content(p, 0, g.w, g.height, h)}<rect width="${g.w}" height="${g.height}" rx="2" fill="none" stroke="${p.selected ? tokens.blue : tokens.ink}" stroke-width="${p.selected ? 4 : 2.5}"/>${p.selected ? `<rect x="${g.w - 5}" y="${g.height - 5}" width="10" height="10" rx="2" fill="${tokens.blue}"/>` : ""}`);
   }
-  var tableRowDefaults = { x: 180, y: 292, objectWidth: 920, objectHeight: 128, cells: [{ text: "A01" }, { text: "09-03" }, { text: "\u5DF2\u5B8C\u6210", tone: "green" }, { text: "\u8BA1\u5165", tone: "blue" }], weights: [1, 1.2, 1.3, 1.2], selected: false };
+  var tableRowDefaults = {
+    "x": 180,
+    "y": 292,
+    "objectWidth": 920,
+    "objectHeight": 128,
+    "cells": [
+      {
+        "text": "\u9879\u76EE A"
+      },
+      {
+        "text": "\u5185\u5BB9 A"
+      },
+      {
+        "text": "\u72B6\u6001 A",
+        "tone": "green"
+      },
+      {
+        "text": "\u7ED3\u679C A",
+        "tone": "blue"
+      }
+    ],
+    "weights": [
+      1,
+      1.2,
+      1.3,
+      1.2
+    ],
+    "selected": false
+  };
   function renderTableRowAtom(props, h) {
     const p = { ...tableRowDefaults, ...props }, g = geom(p, 360);
     if (!Array.isArray(p.cells) || p.cells.length < 2 || p.cells.length > 6) throw Error("\u8868\u683C\u884C cells \u652F\u6301 2\u20136 \u4E2A\u5355\u5143\u683C\u3002");
@@ -465,7 +677,17 @@ var ComponentLibraryRuntime = (() => {
   function preview2(group4, label2, h) {
     return `<section class="ani-atom-scene"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" role="img" aria-label="${h.esc(label2)}" style="${font2};fill:${tokens.ink};background:transparent">${group4}</svg></section>`;
   }
-  var nodeDefaults = { x: 420, y: 237, objectWidth: 430, objectHeight: 232, shape: "decision", label: "\u7B26\u5408\u8981\u6C42\uFF1F", caption: "\u6309\u6807\u51C6\u9010\u9879\u5224\u65AD", tone: "blue", state: "active" };
+  var nodeDefaults = {
+    "x": 420,
+    "y": 237,
+    "objectWidth": 430,
+    "objectHeight": 232,
+    "shape": "decision",
+    "label": "\u5224\u65AD\u6761\u4EF6\uFF1F",
+    "caption": "\u8282\u70B9\u8BF4\u660E",
+    "tone": "blue",
+    "state": "active"
+  };
   function renderNodeAtom(props, h) {
     const p = { ...nodeDefaults, ...props }, { x, y, w, height } = geometry(p, 190, 108), colors3 = palette(p);
     choice2(p.shape, "shape", ["step", "decision", "terminal"]);
@@ -481,7 +703,18 @@ var ComponentLibraryRuntime = (() => {
     const gleam = diamond ? `M${w * 0.23} ${height * 0.37}L${w * 0.5} 9L${w * 0.77} ${height * 0.37}` : `M22 9H${Math.min(w - 26, 156)}`;
     return `<g data-atom="node" data-node-shape="${p.shape}" data-state="${p.state}" transform="translate(${x} ${y})" style="${font2}" data-text-panel="node" data-panel-bounds="${(w - contentWidth) / 2} ${height * 0.25} ${contentWidth} ${height * 0.52}">${pathFace(d, colors3.wash, p.state === "normal" ? tokens.ink : colors3.color)}<path d="${gleam}" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" opacity=".9"/>${txt(w / 2, mainY, label2, labelSize, h, 'text-anchor="middle"')}${caption ? txt(w / 2, subY, caption, captionSize, h, 'text-anchor="middle" fill="#4e6d91"') : ""}</g>`;
   }
-  var calloutDefaults = { x: 375, y: 225, objectWidth: 520, objectHeight: 244, title: "\u6838\u5BF9\u8FD9\u4E00\u70B9", body: "\u8981\u6C42\u5199\u6E05\u695A\u540E\uFF0C\u518D\u7528\u7ED3\u679C\u9010\u9879\u6838\u5BF9\u3002", direction: "bottom", pointerOffset: 0.25, tone: "blue", state: "normal" };
+  var calloutDefaults = {
+    "x": 375,
+    "y": 225,
+    "objectWidth": 520,
+    "objectHeight": 244,
+    "title": "\u6807\u6CE8\u6807\u9898",
+    "body": "\u6807\u6CE8\u6B63\u6587\u5185\u5BB9\uFF0C\u53EF\u66FF\u6362\u4E3A\u8865\u5145\u8BF4\u660E\u3002",
+    "direction": "bottom",
+    "pointerOffset": 0.25,
+    "tone": "blue",
+    "state": "normal"
+  };
   function renderCalloutAtom(props, h) {
     const p = { ...calloutDefaults, ...props }, { x, y, w, height } = geometry(p, 240, 132), colors3 = palette(p);
     choice2(p.direction, "direction", ["none", "top", "right", "bottom", "left"]);
@@ -501,7 +734,19 @@ var ComponentLibraryRuntime = (() => {
     if (bodyTop + lines3.length * lineHeight > by + bh - 12) throw new Error("Callout body does not fit; enlarge objectHeight or shorten the text");
     return `<g data-atom="callout" data-pointer="${p.direction}" data-state="${p.state}" transform="translate(${x} ${y})" style="${font2}">${pathFace(d, "#fbfeff")}<path d="M${bx + 22} ${by + 14}H${bx + Math.min(bw - 23, 129)}" stroke="${colors3.color}" stroke-width="5" stroke-linecap="round"/><g data-text-panel="callout-body" data-panel-bounds="${bx + 23} ${by + 23} ${bw - 46} ${bh - 40}">${title ? txt(bx + 27, by + titleSize + 26, title, titleSize, h) : ""}${lines3.map((line3, i) => txt(bx + 27, bodyTop + bodySize + i * lineHeight, line3, bodySize, h, 'fill="#42648b"')).join("")}</g></g>`;
   }
-  var highlightDefaults = { x: 325, y: 249, objectWidth: 624, objectHeight: 206, shape: "rectangle", label: "\u91CD\u70B9\u68C0\u67E5", tone: "orange", state: "active", lineWidth: 6, dashed: false, fillOpacity: 0.055 };
+  var highlightDefaults = {
+    "x": 325,
+    "y": 249,
+    "objectWidth": 624,
+    "objectHeight": 206,
+    "shape": "rectangle",
+    "label": "\u6807\u6CE8\u6587\u5B57",
+    "tone": "orange",
+    "state": "active",
+    "lineWidth": 6,
+    "dashed": false,
+    "fillOpacity": 0.055
+  };
   function renderHighlightAtom(props, h) {
     const p = { ...highlightDefaults, ...props }, { x, y, w, height } = geometry(p, 90, 54), colors3 = palette(p);
     choice2(p.shape, "shape", ["rectangle", "circle", "underline"]);
@@ -519,7 +764,23 @@ var ComponentLibraryRuntime = (() => {
     const size = label2 ? fit2(label2, Math.min(31, height * 0.25), textWidth, 17) : 0;
     return `<g data-atom="highlight" data-highlight-shape="${p.shape}" data-state="${p.state}" transform="translate(${x} ${y})" style="${font2}">${art}${label2 ? txt(labelX, labelY, label2, size, h, 'text-anchor="middle"') : ""}</g>`;
   }
-  var progressDefaults = { x: 235, y: 245, objectWidth: 800, objectHeight: 192, title: "\u5B8C\u6210\u8FDB\u5EA6", value: 60, steps: ["\u51C6\u5907", "\u6267\u884C", "\u68C0\u67E5", "\u5B8C\u6210"], tone: "blue", state: "active", showValue: true };
+  var progressDefaults = {
+    "x": 235,
+    "y": 245,
+    "objectWidth": 800,
+    "objectHeight": 192,
+    "title": "\u8FDB\u5EA6\u6807\u9898",
+    "value": 60,
+    "steps": [
+      "\u6B65\u9AA4 A",
+      "\u6B65\u9AA4 B",
+      "\u6B65\u9AA4 C",
+      "\u6B65\u9AA4 D"
+    ],
+    "tone": "blue",
+    "state": "active",
+    "showValue": true
+  };
   function renderProgressAtom(props, h) {
     const p = { ...progressDefaults, ...props }, { x, y, w, height } = geometry(p, 360, 166), colors3 = palette(p), value = number(p.value, "value", 0, 100), title = copy2(p.title, "title", 42);
     if (!Array.isArray(p.steps) || p.steps.length < 2 || p.steps.length > 6) throw new Error("Progress steps require 2\u20136 labels");
@@ -533,7 +794,17 @@ var ComponentLibraryRuntime = (() => {
     if (labelY + 10 > height) throw new Error("Progress objectHeight must leave room for step labels");
     return `<g data-atom="progress" data-state="${p.state}" data-value="${value}" transform="translate(${x} ${y})" style="${font2}" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${value}" aria-label="${h.esc(title || "\u8FDB\u5EA6")}">${title ? txt(0, 31, title, titleSize, h) : ""}${p.showValue ? txt(w, 32, value + "%", 32, h, 'text-anchor="end"') : ""}<rect x="4" y="${trackY + 6}" width="${trackWidth}" height="${trackHeight}" rx="13.5" fill="${tokens.shadow}"/><rect x="0" y="${trackY}" width="${trackWidth}" height="${trackHeight}" rx="13.5" fill="#edf5ff" stroke="${tokens.ink}" stroke-width="2.7"/>${value > 0 ? `<rect data-atom-progress-fill x="1.7" y="${trackY + 1.7}" width="${fillWidth}" height="${trackHeight - 3.4}" rx="${Math.min(11.8, Math.max(0, fillWidth / 2))}" fill="${color2}"/>` : ""}<path d="M8 ${nodeY}H${w - 8}" stroke="#b9d3e9" stroke-width="3"/>${steps}</g>`;
   }
-  var symbolDefaults = { x: 487, y: 204, objectWidth: 294, objectHeight: 302, kind: "magnifier", label: "\u68C0\u67E5", tone: "blue", state: "normal", rotation: 0 };
+  var symbolDefaults = {
+    "x": 487,
+    "y": 204,
+    "objectWidth": 294,
+    "objectHeight": 302,
+    "kind": "magnifier",
+    "label": "\u56FE\u6807\u6807\u7B7E",
+    "tone": "blue",
+    "state": "normal",
+    "rotation": 0
+  };
   var symbolKinds = ["magnifier", "pencil", "gear", "link", "check", "document", "documents", "table", "calendar", "people"];
   function renderSymbolAtom(props, h) {
     const p = { ...symbolDefaults, ...props }, { x, y, w, height } = geometry(p, 100, 110), colors3 = palette(p);
@@ -581,7 +852,16 @@ var ComponentLibraryRuntime = (() => {
   }
   var group2 = (type, p, w, h, content2) => `<g data-atom="${type}" data-fit="contain" data-motion="item" transform="${position(p, w, h)}" font-family="Microsoft YaHei,Segoe UI,sans-serif" font-weight="750">${content2}</g>`;
   var canvas2 = (content2) => `<section class="ani-atom-stage" style="width:100%;height:100%;background:transparent"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" style="font-family:'Microsoft YaHei','Segoe UI',sans-serif;font-weight:750" fill="${tokens.ink}">${content2}</svg></section>`;
-  var fileDefaults = { x: 465, y: 115, objectWidth: 350, objectHeight: 470, name: "\u9879\u76EE\u8D44\u6599", meta: "\u53EF\u7F16\u8F91\u6587\u4EF6", fileType: "image", accent: "blue" };
+  var fileDefaults = {
+    "x": 465,
+    "y": 115,
+    "objectWidth": 350,
+    "objectHeight": 470,
+    "name": "\u793A\u4F8B\u6587\u4EF6",
+    "meta": "\u6587\u4EF6\u8BF4\u660E",
+    "fileType": "image",
+    "accent": "blue"
+  };
   function fileSymbol(type, c) {
     if (type === "image") return `<rect x="82" y="91" width="150" height="111" rx="13" fill="${c}" stroke="${tokens.ink}" stroke-width="3"/><circle cx="120" cy="124" r="12" fill="#e9f8ff"/><path d="M93 188L132 146L156 168L180 135L219 188Z" fill="#e9f8ff"/>`;
     if (type === "table") return `<rect x="79" y="86" width="156" height="122" rx="10" fill="#f0fbf7" stroke="${tokens.ink}" stroke-width="3"/><path d="M81 118H233M81 149H233M81 178H233M128 87V207M184 87V207" fill="none" stroke="${c}" stroke-width="3"/><path d="M89 87H225Q234 87 234 97V117H80V97Q80 87 89 87Z" fill="${c}"/>`;
@@ -620,7 +900,37 @@ var ComponentLibraryRuntime = (() => {
     const content2 = `${fileSymbol(p.fileType, c)}<path d="M49 244H263M49 263H238" stroke="#bdd5e9" stroke-width="8" stroke-linecap="round"/><g data-text-panel="file-name" data-panel-bounds="31 282 254 104" aria-label="${h.esc(raw)}">${nameText}</g>${label(h, 158, single ? 363 : 396, p.meta, single ? 21 : 18, 244, 'text-anchor="middle"')}`;
     return group2("file", p, 320, 430, paper(0, 0, 310, 416, { fold: 50, depth: 9, content: content2 }, scope(h, "file")));
   }
-  var documentDefaults = { x: 345, y: 58, objectWidth: 590, objectHeight: 600, title: "\u9879\u76EE\u8BF4\u660E", subtitle: "\u628A\u9700\u8981\u505A\u7684\u4E8B\u5199\u6E05\u695A", accent: "blue", rows: [{ label: "\u5BF9\u8C61", text: "\u5404\u7EC4\u8D1F\u8D23\u4EBA", checked: true }, { label: "\u4EFB\u52A1", text: "\u586B\u5199\u672C\u5468\u5B8C\u6210\u4E0E\u5F85\u529E\u4E8B\u9879", checked: false }, { label: "\u65F6\u95F4", text: "\u5468\u4E94 17:00 \u524D", checked: false }, { label: "\u5165\u53E3", text: "\u5171\u4EAB\u8868\u683C", checked: false }] };
+  var documentDefaults = {
+    "x": 345,
+    "y": 58,
+    "objectWidth": 590,
+    "objectHeight": 600,
+    "title": "\u6587\u6863\u6807\u9898",
+    "subtitle": "\u6587\u6863\u8BF4\u660E\u6587\u5B57",
+    "accent": "blue",
+    "rows": [
+      {
+        "label": "\u5B57\u6BB5 A",
+        "text": "\u5185\u5BB9 A",
+        "checked": true
+      },
+      {
+        "label": "\u5B57\u6BB5 B",
+        "text": "\u5185\u5BB9 B",
+        "checked": false
+      },
+      {
+        "label": "\u5B57\u6BB5 C",
+        "text": "\u5185\u5BB9 C",
+        "checked": false
+      },
+      {
+        "label": "\u5B57\u6BB5 D",
+        "text": "\u5185\u5BB9 D",
+        "checked": false
+      }
+    ]
+  };
   function renderDocumentAtom(props, h) {
     const p = { ...documentDefaults, ...props };
     if (!Array.isArray(p.rows) || p.rows.length < 1 || p.rows.length > 6) throw Error("\u6587\u6863 rows \u652F\u6301 1\u20136 \u884C\u3002");
@@ -633,19 +943,33 @@ var ComponentLibraryRuntime = (() => {
     const content2 = `${banner(100, 25, 352, p.title, color(p.accent), scope(h, "document-title"))}${label(h, 280, 122, p.subtitle, 23, 467, 'text-anchor="middle"')}${rows2}`;
     return group2("document", p, 580, 590, paper(0, 0, 561, 571, { fold: 43, depth: 10, content: content2 }, scope(h, "document")));
   }
-  var folderDefaults = { x: 290, y: 105, objectWidth: 700, objectHeight: 500, name: "\u9879\u76EE\u8D44\u6599", subtitle: "\u6587\u4EF6\u96C6\u4E2D\u5728\u4E00\u8D77", open: true, fileLabels: ["\u9700\u6C42", "\u7D20\u6750", "\u7ED3\u679C"], accent: "blue" };
+  var folderDefaults = {
+    "x": 290,
+    "y": 105,
+    "objectWidth": 700,
+    "objectHeight": 500,
+    "name": "\u6587\u4EF6\u5939\u540D\u79F0",
+    "subtitle": "\u6587\u4EF6\u5939\u8BF4\u660E",
+    "open": true,
+    "fileLabels": [
+      "\u6587\u4EF6 A",
+      "\u6587\u4EF6 B",
+      "\u6587\u4EF6 C"
+    ],
+    "accent": "blue"
+  };
   function renderFolderAtom(props, h) {
     const p = { ...folderDefaults, ...props };
     if (!Array.isArray(p.fileLabels) || p.fileLabels.length > 4) throw Error("\u6587\u4EF6\u5939 fileLabels \u652F\u6301 0\u20134 \u9879\u3002");
     const c = color(p.accent);
     const back = `<path d="M58 198Q50 175 78 175H283L316 204H641Q668 204 660 231L604 447H107Z" fill="#82bef0" stroke="${tokens.ink}" stroke-width="4"/>`;
-    const files2 = p.open ? p.fileLabels.map((name, i) => {
+    const files = p.open ? p.fileLabels.map((name, i) => {
       const x = 104 + i * (440 / Math.max(1, p.fileLabels.length)), y = 59 + (i % 2 ? 0 : 18);
       return `<g transform="rotate(${(i - (p.fileLabels.length - 1) / 2) * 5} ${x + 86} ${y + 116})">${paper(x, y, 165, 247, { fold: 31, depth: 7, content: `<rect x="27" y="33" width="43" height="42" rx="7" fill="${c}"/><path d="M39 53H59M49 43V63" stroke="white" stroke-width="3"/>${label(h, 27, 112, name, 25, 115)}<path d="M29 146H135M29 170H128M29 194H109" stroke="#bdd4e7" stroke-width="7" stroke-linecap="round"/>` }, scope(h, "folder-file-" + i))}</g>`;
     }).join("") : "";
     const top = p.open ? 253 : 207;
     const front = `<path d="M77 ${top + 12}Q70 ${top - 9} 94 ${top - 9}H276L305 ${top + 9}H637Q662 ${top + 9} 653 ${top + 34}L608 451Q604 469 585 469H126Q109 469 105 451Z" transform="translate(9 10)" fill="${tokens.shadow}"/><path d="M77 ${top + 12}Q70 ${top - 9} 94 ${top - 9}H276L305 ${top + 9}H637Q662 ${top + 9} 653 ${top + 34}L608 451Q604 469 585 469H126Q109 469 105 451Z" fill="#d6edff" stroke="${tokens.ink}" stroke-width="4"/><path d="M111 ${top + 24}H611" stroke="white" stroke-width="5" stroke-linecap="round"/><rect x="166" y="324" width="396" height="93" rx="15" fill="#f8fdff" stroke="#a8cae8" stroke-width="2"/>${label(h, 364, 367, p.name, 33, 358, 'text-anchor="middle"')}${label(h, 364, 397, p.subtitle, 19, 355, 'text-anchor="middle"')}`;
-    return group2("folder", p, 720, 490, back + files2 + front);
+    return group2("folder", p, 720, 490, back + files + front);
   }
   var common2 = { category: "\u52A8\u753B\u98CE \xB7 \u57FA\u7840\u7EC4\u4EF6", width: 1280, height: 720, defaultEffect: "none", reference: { level: "designed", basis: "\u4ECE\u7528\u6237\u63D0\u4F9B\u7684\u84DD\u8272\u63D2\u753B\u53C2\u8003\u548C\u73B0\u6709\u52A8\u753B\u98CE\u573A\u666F\u7EC6\u62C6\uFF1B\u900F\u660E\u753B\u5E03\u3001\u72EC\u7ACB\u5BF9\u8C61\uFF0C\u53EF\u7F16\u8F91\u4E0E\u7EC4\u5408\u3002", source: "references/animation-style/sources.json" } };
   var components5 = [
@@ -696,7 +1020,17 @@ var ComponentLibraryRuntime = (() => {
     if (size < min) throw Error(`${name}\u8FC7\u957F\uFF0C\u8BF7\u4F7F\u7528\u77ED\u8BED\u3002`);
     return size;
   }
-  var paperDefaults = { x: 400, y: 80, objectWidth: 480, objectHeight: 550, foldSize: 54, foldSide: "right", depth: 10, ruling: "none", lineSpacing: 38 };
+  var paperDefaults = {
+    "x": 400,
+    "y": 80,
+    "objectWidth": 480,
+    "objectHeight": 550,
+    "foldSize": 54,
+    "foldSide": "right",
+    "depth": 10,
+    "ruling": "none",
+    "lineSpacing": 38
+  };
   function renderPaperAtom(props, helpers2) {
     const p = { ...paperDefaults, ...props }, h = scope2(helpers2, "paper-part"), g = geom2(p, 160, 140), depth = num4(p.depth, "depth", 0, 18), w = g.w - depth - 4, height = g.h - depth - 4;
     const fold = Math.min(num4(p.foldSize, "foldSize", 16, 100), w * 0.24, height * 0.2), spacing = num4(p.lineSpacing, "lineSpacing", 24, 64);
@@ -709,7 +1043,20 @@ var ComponentLibraryRuntime = (() => {
     const shape = paper(2, 2, w, height, { fold, depth, content: ruled ? `<path d="${ruled}" stroke="#b9d6ed" stroke-width="1.6" fill="none"/>` : "" }, h);
     return group3("paper", g, p.foldSide === "left" ? `<g transform="translate(${g.w} 0) scale(-1 1)">${shape}</g>` : shape);
   }
-  var textDefaults = { x: 180, y: 200, objectWidth: 920, objectHeight: 300, title: "\u5148\u628A\u8981\u6C42\u8BF4\u6E05\u695A", text: "\u8C01\u6765\u505A\u3001\u505A\u4EC0\u4E48\u3001\u4EC0\u4E48\u65F6\u5019\u5B8C\u6210\u3002\n\u5B8C\u6210\u540E\uFF0C\u62FF\u7ED3\u679C\u5BF9\u7167\u8FD9\u4E9B\u8981\u6C42\u518D\u68C0\u67E5\u3002", fontSize: 32, titleSize: 44, lineHeight: 1.5, align: "left", variant: "paragraph", accent: "blue" };
+  var textDefaults = {
+    "x": 180,
+    "y": 200,
+    "objectWidth": 920,
+    "objectHeight": 300,
+    "title": "\u4E3B\u6807\u9898",
+    "text": "\u6B63\u6587\u7B2C\u4E00\u884C\uFF0C\u66FF\u6362\u4E3A\u9700\u8981\u5C55\u793A\u7684\u5185\u5BB9\u3002\n\u6B63\u6587\u7B2C\u4E8C\u884C\uFF0C\u53EF\u4EE5\u7EE7\u7EED\u8865\u5145\u8BF4\u660E\u3002",
+    "fontSize": 32,
+    "titleSize": 44,
+    "lineHeight": 1.5,
+    "align": "left",
+    "variant": "paragraph",
+    "accent": "blue"
+  };
   function renderTextAtom(props, helpers2) {
     const p = { ...textDefaults, ...props }, h = scope2(helpers2, "text-part"), g = geom2(p, 160, 80), fs = num4(p.fontSize, "fontSize", 20, 64), ts = num4(p.titleSize, "titleSize", 24, 76), lh = num4(p.lineHeight, "lineHeight", 1.2, 1.9), accent = tone(p.accent);
     if (!["left", "center", "right"].includes(p.align) || !["paragraph", "bullets"].includes(p.variant)) throw Error("align \u4F7F\u7528 left/center/right\uFF1Bvariant \u4F7F\u7528 paragraph/bullets\u3002");
@@ -733,7 +1080,17 @@ var ComponentLibraryRuntime = (() => {
     });
     return group3("text", g, content2);
   }
-  var documentRowDefaults = { x: 190, y: 276, objectWidth: 900, objectHeight: 144, label: "\u4EFB\u52A1", text: "\u586B\u5199\u672C\u5468\u5B8C\u6210\u4E0E\u5F85\u529E\u4E8B\u9879", status: "complete", accent: "blue", fontSize: 30 };
+  var documentRowDefaults = {
+    "x": 190,
+    "y": 276,
+    "objectWidth": 900,
+    "objectHeight": 144,
+    "label": "\u5B57\u6BB5",
+    "text": "\u5B57\u6BB5\u5185\u5BB9",
+    "status": "complete",
+    "accent": "blue",
+    "fontSize": 30
+  };
   function renderDocumentRowAtom(props, helpers2) {
     const p = { ...documentRowDefaults, ...props }, h = scope2(helpers2, "row-part"), g = geom2(p, 340, 88), accent = tone(p.accent), fs = num4(p.fontSize, "fontSize", 22, 42);
     if (!["none", "pending", "complete", "warning"].includes(p.status)) throw Error("status \u4F7F\u7528 none/pending/complete/warning\u3002");
@@ -749,7 +1106,31 @@ var ComponentLibraryRuntime = (() => {
     if (p.status === "warning") content2 += `<path d="M${cx} ${cy - 20}L${cx + 21} ${cy + 17}H${cx - 21}Z" fill="${tokens.orange}" stroke="${tokens.ink}" stroke-width="2" stroke-linejoin="round"/>${text3(h, cx, cy + 11, "!", 26, 'text-anchor="middle" font-weight="900"')}`;
     return group3("document-row", g, `<g data-text-panel="document-row" data-panel-bounds="2 2 ${g.w - 8} ${g.h - 12}">${content2}</g>`);
   }
-  var fileStackDefaults = { x: 300, y: 92, objectWidth: 680, objectHeight: 520, files: [{ name: "\u9700\u6C42\u8BF4\u660E", fileType: "text", accent: "blue" }, { name: "\u53C2\u8003\u7D20\u6750", fileType: "image", accent: "purple" }, { name: "\u7ED3\u679C\u8BB0\u5F55", fileType: "table", accent: "green" }], meta: "\u6574\u7406\u540E\u7684\u8D44\u6599", layout: "stack" };
+  var fileStackDefaults = {
+    "x": 300,
+    "y": 92,
+    "objectWidth": 680,
+    "objectHeight": 520,
+    "files": [
+      {
+        "name": "\u6587\u4EF6 A",
+        "fileType": "text",
+        "accent": "blue"
+      },
+      {
+        "name": "\u6587\u4EF6 B",
+        "fileType": "image",
+        "accent": "purple"
+      },
+      {
+        "name": "\u6587\u4EF6 C",
+        "fileType": "table",
+        "accent": "green"
+      }
+    ],
+    "meta": "\u6587\u4EF6\u8BF4\u660E",
+    "layout": "stack"
+  };
   function renderFileStackAtom(props, helpers2) {
     const p = { ...fileStackDefaults, ...props }, g = geom2(p, 220, 200);
     if (!Array.isArray(p.files) || p.files.length < 2 || p.files.length > 5) throw Error("\u6587\u4EF6\u5806\u53E0 files \u652F\u6301 2\u20135 \u4E2A\u6587\u4EF6\u3002");
@@ -762,7 +1143,16 @@ var ComponentLibraryRuntime = (() => {
     }).join("");
     return group3("file-stack", g, `<g data-fit="contain" transform="translate(${dx} ${dy}) scale(${scale})">${layers}</g>`);
   }
-  var titleLabelDefaults = { x: 330, y: 276, objectWidth: 620, objectHeight: 158, label: "\u5148\u8865\u6E05\u8981\u6C42", caption: "\u5B8C\u6210\u540E\uFF0C\u518D\u6309\u8981\u6C42\u68C0\u67E5", accent: "blue", variant: "filled" };
+  var titleLabelDefaults = {
+    "x": 330,
+    "y": 276,
+    "objectWidth": 620,
+    "objectHeight": 158,
+    "label": "\u6807\u9898\u6587\u5B57",
+    "caption": "\u8BF4\u660E\u6587\u5B57",
+    "accent": "blue",
+    "variant": "filled"
+  };
   function renderTitleLabelAtom(props, helpers2) {
     const p = { ...titleLabelDefaults, ...props }, h = scope2(helpers2, "title-part"), g = geom2(p, 180, 68), accent = tone(p.accent), hasCaption = Boolean(String(p.caption ?? ""));
     if (!["filled", "outline"].includes(p.variant)) throw Error("variant \u4F7F\u7528 filled/outline\u3002");
@@ -879,20 +1269,81 @@ var ComponentLibraryRuntime = (() => {
     return `<section class="ani-atom-scene"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" role="img" aria-label="${h.esc(label2)}" style="${font4};fill:${tokens.ink};background:transparent">${group4}</svg></section>`;
   }
   var tableDefaults = {
-    x: 140,
-    y: 152,
-    objectWidth: 990,
-    objectHeight: 416,
-    columns: [{ key: "id", label: "\u8BA2\u5355\u53F7", weight: 1 }, { key: "date", label: "\u5B8C\u6210\u65E5\u671F", weight: 1.3 }, { key: "status", label: "\u72B6\u6001", weight: 1.3 }, { key: "included", label: "\u662F\u5426\u8BA1\u5165", weight: 1.1 }],
-    rows: [
-      { id: "A01", date: "09-03", status: { label: "\u5DF2\u5B8C\u6210", tone: "green" }, included: "\u8BA1\u5165" },
-      { id: "A02", date: "09-05", status: { label: "\u5DF2\u5B8C\u6210", tone: "green" }, included: "\u8BA1\u5165" },
-      { id: "A03", date: "09-08", status: { label: "\u5DF2\u5B8C\u6210", tone: "green" }, included: "\u8BA1\u5165" },
-      { id: "A04", date: "\u2014", status: { label: "\u5DF2\u53D6\u6D88", tone: "gray" }, included: "\u4E0D\u8BA1\u5165" },
-      { id: "A05", date: "\u2014", status: { label: "\u5F85\u4ED8\u6B3E", tone: "orange" }, included: "\u4E0D\u8BA1\u5165" }
+    "x": 140,
+    "y": 152,
+    "objectWidth": 990,
+    "objectHeight": 416,
+    "columns": [
+      {
+        "key": "id",
+        "label": "\u5B57\u6BB5 A",
+        "weight": 1
+      },
+      {
+        "key": "date",
+        "label": "\u5B57\u6BB5 B",
+        "weight": 1.3
+      },
+      {
+        "key": "status",
+        "label": "\u5B57\u6BB5 C",
+        "weight": 1.3
+      },
+      {
+        "key": "included",
+        "label": "\u5B57\u6BB5 D",
+        "weight": 1.1
+      }
     ],
-    headerFill: "#dceeff",
-    striped: true
+    "rows": [
+      {
+        "id": "R01",
+        "date": "01-01",
+        "status": {
+          "label": "\u72B6\u6001 A",
+          "tone": "green"
+        },
+        "included": "\u7ED3\u679C A"
+      },
+      {
+        "id": "R02",
+        "date": "01-02",
+        "status": {
+          "label": "\u72B6\u6001 A",
+          "tone": "green"
+        },
+        "included": "\u7ED3\u679C A"
+      },
+      {
+        "id": "R03",
+        "date": "01-03",
+        "status": {
+          "label": "\u72B6\u6001 A",
+          "tone": "green"
+        },
+        "included": "\u7ED3\u679C A"
+      },
+      {
+        "id": "R04",
+        "date": "\u2014",
+        "status": {
+          "label": "\u72B6\u6001 B",
+          "tone": "gray"
+        },
+        "included": "\u7ED3\u679C B"
+      },
+      {
+        "id": "R05",
+        "date": "\u2014",
+        "status": {
+          "label": "\u72B6\u6001 C",
+          "tone": "orange"
+        },
+        "included": "\u7ED3\u679C B"
+      }
+    ],
+    "headerFill": "#dceeff",
+    "striped": true
   };
   function renderTableAtom(props, helpers2) {
     const p = { ...tableDefaults, ...props }, h = scope3(helpers2, "atom-table"), { x, y, w, height } = geometry2(p, 400, 210);
@@ -929,19 +1380,29 @@ var ComponentLibraryRuntime = (() => {
     return `<g data-atom="table" transform="translate(${x} ${y})" style="${font4}" fill="${tokens.ink}">${frame(w, height)}<rect x="12" y="12" width="${w - 24}" height="${header}" rx="8" fill="${headerFill}"/>${rows2}${heads}<path d="${lines3}" fill="none" stroke="#8ba7ce" stroke-width="1.2"/><rect x="12" y="12" width="${w - 24}" height="${height - 26}" rx="8" fill="none" stroke="${tokens.ink}" stroke-width="2"/></g>`;
   }
   var browserDefaults = {
-    x: 140,
-    y: 96,
-    objectWidth: 990,
-    objectHeight: 518,
-    tabs: ["\u9879\u76EE\u8D44\u6599", "\u5DE5\u4F5C\u8BB0\u5F55"],
-    activeTab: 0,
-    address: "workspace.example / project",
-    heading: "\u9879\u76EE\u8D44\u6599",
-    body: ["\u9700\u6C42\u8BF4\u660E\u4E0E\u53C2\u8003\u6750\u6599\u653E\u5728\u540C\u4E00\u4E2A\u5DE5\u4F5C\u533A\u3002", "\u5148\u786E\u8BA4\u76EE\u6807\uFF0C\u518D\u9010\u9879\u67E5\u770B\u5DF2\u6709\u7684\u4FE1\u606F\u3002"],
-    items: ["\u9700\u6C42\u8BF4\u660E", "\u53C2\u8003\u6750\u6599", "\u9A8C\u6536\u6807\u51C6"],
-    imageSrc: "",
-    imageAlt: "\u53EF\u66FF\u6362\u7684\u9875\u9762\u56FE\u7247",
-    imageFit: "contain"
+    "x": 140,
+    "y": 96,
+    "objectWidth": 990,
+    "objectHeight": 518,
+    "tabs": [
+      "\u6807\u7B7E\u9875 A",
+      "\u6807\u7B7E\u9875 B"
+    ],
+    "activeTab": 0,
+    "address": "www.example.com/page",
+    "heading": "\u9875\u9762\u6807\u9898",
+    "body": [
+      "\u6B63\u6587\u7B2C\u4E00\u6BB5\uFF0C\u66FF\u6362\u4E3A\u9700\u8981\u5C55\u793A\u7684\u5185\u5BB9\u3002",
+      "\u6B63\u6587\u7B2C\u4E8C\u6BB5\uFF0C\u652F\u6301\u7EE7\u7EED\u8865\u5145\u8BF4\u660E\u3002"
+    ],
+    "items": [
+      "\u9879\u76EE A",
+      "\u9879\u76EE B",
+      "\u9879\u76EE C"
+    ],
+    "imageSrc": "",
+    "imageAlt": "\u53EF\u66FF\u6362\u7684\u9875\u9762\u56FE\u7247",
+    "imageFit": "contain"
   };
   function mediaPath(v) {
     return normalizeMediaProps({ imageSrc: String(v || "") }).imageSrc;
@@ -992,7 +1453,37 @@ var ComponentLibraryRuntime = (() => {
     }
     return `<g data-atom="browser" transform="translate(${x} ${y})" style="${font4}" fill="${tokens.ink}">${frame(w, height)}${chrome}${body}<rect width="${w}" height="${height}" rx="18" fill="none" stroke="${tokens.ink}" stroke-width="3.5"/></g>`;
   }
-  var connectorDefaults = { kind: "curve", start: { x: 270, y: 448 }, end: { x: 1e3, y: 278 }, controlPoints: [{ x: 500, y: 448 }, { x: 770, y: 278 }], waypoints: [], arrowStart: false, arrowEnd: true, tone: "blue", lineWidth: 8, cornerRadius: 28, dashed: false, label: "\u8D44\u6599\u4F20\u9012", labelX: 635, labelY: 307 };
+  var connectorDefaults = {
+    "kind": "curve",
+    "start": {
+      "x": 270,
+      "y": 448
+    },
+    "end": {
+      "x": 1e3,
+      "y": 278
+    },
+    "controlPoints": [
+      {
+        "x": 500,
+        "y": 448
+      },
+      {
+        "x": 770,
+        "y": 278
+      }
+    ],
+    "waypoints": [],
+    "arrowStart": false,
+    "arrowEnd": true,
+    "tone": "blue",
+    "lineWidth": 8,
+    "cornerRadius": 28,
+    "dashed": false,
+    "label": "\u8FDE\u63A5\u8BF4\u660E",
+    "labelX": 635,
+    "labelY": 307
+  };
   var point = (p, name) => ({ x: number2(p?.x, name + ".x", 16, 1264), y: number2(p?.y, name + ".y", 16, 704) });
   var direction = (a, b) => {
     const d = Math.hypot(b.x - a.x, b.y - a.y);
@@ -1113,47 +1604,58 @@ var ComponentLibraryRuntime = (() => {
   } });
   var components8 = [
     create("ani-tool-workbench", "\u8F93\u5165\u3001\u68C0\u67E5\u4E0E\u4FEE\u6539", "\u5B8C\u6574\u5DE5\u5177\u7A97\u53E3\u642D\u914D\u8981\u6C42\u7EB8\u3001\u96EA\u5C71\u9884\u89C8\u4E0E\u68C0\u67E5\u653E\u5927\u955C\uFF0C\u8868\u8FBE\u5148\u8F93\u5165\u3001\u518D\u68C0\u67E5\u3001\u518D\u4FEE\u6539\u7684\u5DE5\u4F5C\u8FC7\u7A0B\u3002", {
-      title: "\u8F93\u5165\u3001\u68C0\u67E5\uFF0C\u518D\u4FEE\u6539",
-      subtitle: "\u628A\u8981\u6C42\u5199\u8FDB\u53BB\uFF0C\u628A\u7ED3\u679C\u62FF\u51FA\u6765\u770B\u3002",
-      toolLabel: "\u5DE5\u5177 A",
-      requestLabel: "\u8981\u6C42",
-      request: "AI \u5B66\u4E60\u6D77\u62A5",
-      tags: ["\u4E3B\u9898", "\u5C3A\u5BF8"],
-      revisionLabel: "\u4FEE\u6539",
-      revision: "\u6807\u9898\u7F29\u5C0F",
-      action: "\u751F\u6210",
-      previewLabel: "AI \u5B66\u4E60",
-      footer: "\u68C0\u67E5\u7ED3\u679C\uFF0C\u624D\u80FD\u77E5\u9053\u4E0B\u4E00\u6B65\u8BE5\u6539\u54EA\u91CC\u3002"
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "toolLabel": "\u7A97\u53E3\u6807\u9898",
+      "requestLabel": "\u8F93\u5165",
+      "request": "\u8F93\u5165\u5185\u5BB9",
+      "tags": [
+        "\u6807\u7B7E A",
+        "\u6807\u7B7E B"
+      ],
+      "revisionLabel": "\u4FEE\u6539",
+      "revision": "\u4FEE\u6539\u5185\u5BB9",
+      "action": "\u751F\u6210",
+      "previewLabel": "\u9884\u89C8\u6807\u9898",
+      "footer": "\u9875\u811A\u8BF4\u660E\u6587\u5B57"
     }, "07_\u8F93\u5165\u68C0\u67E5\u518D\u4FEE\u6539.png", (p, h) => {
       if (!Array.isArray(p.tags) || p.tags.length !== 2) throw new Error("\u5DE5\u4F5C\u53F0 tags \u9700\u8981\u4E24\u4E2A\u6807\u7B7E");
       const win = `${shell(222, 156, 866, 468, p.toolLabel, scope4(h, "window"))}<rect x="240" y="213" width="269" height="388" rx="13" fill="white" stroke="#c1d9f2" stroke-width="2"/><rect x="528" y="213" width="541" height="388" rx="13" fill="white" stroke="#c1d9f2" stroke-width="2"/>${text4(260, 253, p.requestLabel, 25, 220, h)}<rect x="259" y="269" width="230" height="57" rx="11" fill="#fff" stroke="${tokens.ink}" stroke-width="2"/>${text4(275, 306, p.request, 25, 200, h)}${p.tags.map((v, i) => `<rect x="${258 + i * 121}" y="346" width="110" height="49" rx="22" fill="#e7f5ff" stroke="#9bc9ee" stroke-width="1.6"/>${text4(313 + i * 121, 377, v, 21, 94, h, 'text-anchor="middle"')}`).join("")}${text4(261, 441, p.revisionLabel, 25, 220, h)}<rect x="259" y="456" width="230" height="56" rx="11" fill="white" stroke="${tokens.ink}" stroke-width="2"/>${text4(275, 491, p.revision, 25, 200, h)}<rect x="259" y="533" width="230" height="51" rx="11" fill="${tokens.blue}" stroke="${tokens.ink}" stroke-width="2.5"/>${text4(374, 568, p.action, 29, 198, h, 'text-anchor="middle" fill="white"')}${mountains(545, 232, 507, 350, scope4(h, "hero"))}`;
       const paperArt = paper(48, 266, 156, 243, { fold: 31, content: `${symbol2("image", 39, 31, 79, h)}<path d="M24 145H126M24 165H119M24 185H105" stroke="#bbcee1" stroke-width="9" stroke-linecap="round"/>` }, scope4(h, "request-paper"));
       return svgScene(`${heading(p, h)}${line("M116 546V587Q116 606 136 606H220")}${line("M1088 493H1168Q1195 493 1195 518V558", tokens.green, 3.5)}${enter(`<g transform="rotate(-8 128 387)">${paperArt}</g>`)}${enter(gear(1096, 206, 128, h))}${enter(win)}${enter(`<rect x="569" y="263" width="169" height="49" rx="7" fill="white" stroke="${tokens.orange}" stroke-width="3"/>${text4(653, 296, p.previewLabel, 26, 147, h, 'text-anchor="middle"')}`)}${pop(`${magnifier(729, 256, 137, h)}<path d="M731 255l-6-17M745 256l12-12M754 271l18-1" stroke="${tokens.orange}" stroke-width="5" stroke-linecap="round"/>`)}${node(116, 546)}${node(1195, 558)}${footer(p, h)}`, h);
     }),
-    create("ani-file-collection", "\u6536\u85CF\u4E0D\u7B49\u4E8E\u4F1A", "\u6298\u89D2\u6559\u7A0B\u7EB8\u6536\u8FDB\u6587\u4EF6\u5939\uFF0C\u4E0E\u53F3\u4FA7\u5B9E\u9645\u64CD\u4F5C\u7A97\u53E3\u5F62\u6210\u5BF9\u7167\uFF1B\u6536\u85CF\u5217\u8868\u548C\u7A97\u53E3\u6807\u7B7E\u53EF\u7F16\u8F91\u3002", {
-      title: "\u6536\u85CF\uFF0C\u4E0D\u7B49\u4E8E\u4F1A",
-      subtitle: "\u6750\u6599\u5B58\u8D77\u6765\u4E4B\u540E\uFF0C\u8FD8\u9700\u8981\u81EA\u5DF1\u505A\u4E00\u6B21\u3002",
-      files: ["\u5F00\u59CB", "\u68C0\u67E5", "\u8C03\u6574"],
-      folderLabel: "\u6536\u85CF\u7684\u6559\u7A0B",
-      windowLabel: "\u5B9E\u9645\u64CD\u4F5C",
-      previewLabel: "AI \u5B66\u4E60",
-      result: "\u2260",
-      footer: "\u4ECE\u201C\u6211\u770B\u8FC7\u201D\u8D70\u5230\u201C\u6211\u80FD\u505A\u201D\u3002"
+    create("ani-file-collection", "\u6587\u4EF6\u5939\u4E0E\u7A97\u53E3\u5BF9\u7167", "\u6587\u4EF6\u5361\u7247\u3001\u6587\u4EF6\u5939\u4E0E\u6D4F\u89C8\u5668\u7A97\u53E3\u5E76\u6392\u5C55\u793A\uFF1B\u6587\u4EF6\u540D\u79F0\u3001\u6807\u7B7E\u4E0E\u8BF4\u660E\u5747\u53EF\u66FF\u6362\u3002", {
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "files": [
+        "\u6587\u4EF6 A",
+        "\u6587\u4EF6 B",
+        "\u6587\u4EF6 C"
+      ],
+      "folderLabel": "\u6587\u4EF6\u5939\u540D\u79F0",
+      "windowLabel": "\u7A97\u53E3\u6807\u9898",
+      "previewLabel": "\u9884\u89C8\u6807\u9898",
+      "result": "\u2260",
+      "footer": "\u9875\u811A\u8BF4\u660E\u6587\u5B57"
     }, "02_\u6536\u85CF\u4E0D\u7B49\u4E8E\u4F1A.png", (p, h) => {
       if (!Array.isArray(p.files) || p.files.length !== 3) throw new Error("\u6536\u85CF\u7EC4\u4EF6 files \u9700\u8981\u4E09\u9879");
-      const files2 = p.files.map((v, i) => enter(`<g transform="rotate(${[-9, 0, 8][i]} ${160 + i * 125} 343)">${paper(84 + i * 131, 245 - i * 7, 162, 233, { fold: 32, content: `<rect x="25" y="38" width="47" height="42" rx="7" fill="${tokens.blue}"/><path d="M43 49L58 59L43 69Z" fill="white"/>${text4(83, 68, v, 24, 66, h)}<path d="M26 112H134M26 137H132M26 162H120" stroke="#b7cee3" stroke-width="8" stroke-linecap="round"/>` }, scope4(h, "file-" + i))}</g>`)).join("");
+      const files = p.files.map((v, i) => enter(`<g transform="rotate(${[-9, 0, 8][i]} ${160 + i * 125} 343)">${paper(84 + i * 131, 245 - i * 7, 162, 233, { fold: 32, content: `<rect x="25" y="38" width="47" height="42" rx="7" fill="${tokens.blue}"/><path d="M43 49L58 59L43 69Z" fill="white"/>${text4(83, 68, v, 24, 66, h)}<path d="M26 112H134M26 137H132M26 162H120" stroke="#b7cee3" stroke-width="8" stroke-linecap="round"/>` }, scope4(h, "file-" + i))}</g>`)).join("");
       const folder = `<ellipse cx="323" cy="622" rx="255" ry="24" fill="#e2f1ff"/><path d="M82 423Q76 404 96 399H266L289 421H541Q563 421 556 447L519 610H119Z" fill="#8ac7f5" stroke="${tokens.ink}" stroke-width="3"/><path d="M80 456Q74 433 98 433H242L260 451H527Q547 451 542 474L518 612Q516 624 501 624H118Q101 624 98 608Z" fill="#d6edff" stroke="${tokens.ink}" stroke-width="3.3"/><path d="M114 479H499" stroke="white" stroke-width="4" opacity=".85"/><rect x="132" y="496" width="295" height="74" rx="12" fill="#f7fcff" stroke="#adceea" stroke-width="1.7"/>${text4(154, 541, p.folderLabel, 29, 256, h)}`;
-      return svgScene(`${heading(p, h)}${files2}${enter(folder)}${enter(miniWindow(726, 259, 478, 350, p, scope4(h, "demo")))}${enter(gear(1123, 547, 107, h))}${pop(text4(627, 479, p.result, 112, 135, h, 'text-anchor="middle" fill="#b56a00"'))}${footer(p, h)}`, h);
+      return svgScene(`${heading(p, h)}${files}${enter(folder)}${enter(miniWindow(726, 259, 478, 350, p, scope4(h, "demo")))}${enter(gear(1123, 547, 107, h))}${pop(text4(627, 479, p.result, 112, 135, h, 'text-anchor="middle" fill="#b56a00"'))}${footer(p, h)}`, h);
     }),
-    create("ani-method-transfer", "\u719F\u6089\u90E8\u5206\u53EF\u590D\u7528", "\u4ECE\u719F\u6089\u5DE5\u5177\u63D0\u53D6\u8981\u6C42\u3001\u68C0\u67E5\u3001\u4FEE\u6539\uFF0C\u9001\u8FDB\u5E26\u539A\u5EA6\u7684\u590D\u7528\u6258\u76D8\uFF0C\u7ED9\u65B0\u5DEE\u5F02\u7559\u51FA\u72EC\u7ACB\u69FD\u4F4D\u3002", {
-      title: "\u719F\u6089\u90E8\u5206\u53EF\u590D\u7528",
-      subtitle: "\u539F\u6765\u7684\u529E\u6CD5\uFF0C\u53EF\u4EE5\u5E26\u5230\u65B0\u95EE\u9898\u91CC\u3002",
-      windowLabel: "\u719F\u6089\u7684\u5DE5\u5177",
-      previewLabel: "AI \u5B66\u4E60",
-      steps: ["\u8981\u6C42", "\u68C0\u67E5", "\u4FEE\u6539"],
-      trayTitle: "\u56FE\u50CF\u8981\u6C42",
-      newLabel: "\u65B0\u5DEE\u5F02",
-      footer: "\u5148\u8BA4\u51FA\u80FD\u590D\u7528\u7684\u90E8\u5206\uFF0C\u518D\u5904\u7406\u771F\u6B63\u4E0D\u540C\u7684\u5730\u65B9\u3002"
+    create("ani-method-transfer", "\u7A97\u53E3\u4E0E\u90E8\u4EF6\u7EC4\u5408", "\u6D4F\u89C8\u5668\u3001\u6587\u4EF6\u5361\u7247\u4E0E\u5BB9\u5668\u901A\u8FC7\u8FDE\u7EBF\u7EC4\u5408\uFF1B\u6B65\u9AA4\u3001\u5BB9\u5668\u6807\u9898\u548C\u65B0\u589E\u9879\u5206\u522B\u53EF\u7F16\u8F91\u3002", {
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "windowLabel": "\u7A97\u53E3\u6807\u9898",
+      "previewLabel": "\u9884\u89C8\u6807\u9898",
+      "steps": [
+        "\u6B65\u9AA4 A",
+        "\u6B65\u9AA4 B",
+        "\u6B65\u9AA4 C"
+      ],
+      "trayTitle": "\u5BB9\u5668\u6807\u9898",
+      "newLabel": "\u65B0\u589E\u9879",
+      "footer": "\u9875\u811A\u8BF4\u660E\u6587\u5B57"
     }, "12_\u719F\u6089\u90E8\u5206\u4E0E\u65B0\u5DEE\u5F02.png", (p, h) => {
       if (!Array.isArray(p.steps) || p.steps.length !== 3) throw new Error("\u590D\u7528\u6258\u76D8 steps \u9700\u8981\u4E09\u9879");
       const methods = p.steps.map((v, i) => enter(`<g data-method-card="${i}">${document2(64 + i * 165, 474, 126, 154, v, ["image", "check", "pencil"][i], scope4(h, "source-" + i))}</g>`)).join("");
@@ -1164,18 +1666,25 @@ var ComponentLibraryRuntime = (() => {
       const connections = connection("requirements-check", "M190 551H229", 210, 551) + connection("check-revision", "M355 551H394", 375, 551) + connection("revision-tray", "M520 551H555Q584 551 584 519V478Q584 449 614 449H646", 615, 449);
       return svgScene(`${heading(p, h)}${connections}${enter(miniWindow(61, 163, 486, 270, p, scope4(h, "known-window")))}${methods}${enter(lid)}${enter(`<g data-method-tray>${tray}</g>`)}${slots}${pop(`<rect x="1056" y="443" width="98" height="88" rx="8" fill="#fffaf0" stroke="#f4a126" stroke-width="2.5" stroke-dasharray="7 5"/>${text4(1111, 575, p.newLabel, 27, 107, h, 'text-anchor="middle"')}`)}${footer(p, h)}`, h);
     }),
-    create("ani-knowledge-network", "\u628A\u65B0\u65E7\u8FDE\u8D77\u6765", "\u5DF2\u6709\u8D44\u6599\u4E0E\u6210\u54C1\u8FDB\u5165\u8981\u6C42\u7ED3\u6784\uFF0C\u7ECF\u68C0\u67E5\u548C\u4FEE\u6539\u8FDE\u5230\u65B0\u7684\u7AD6\u7248\u4EFB\u52A1\uFF1B\u5BF9\u8C61\u3001\u5B57\u6BB5\u548C\u7ED3\u679C\u53EF\u7F16\u8F91\u3002", {
-      title: "\u628A\u65B0\u65E7\u8FDE\u8D77\u6765",
-      subtitle: "\u8BA9\u65B0\u95EE\u9898\u6302\u5230\u5DF2\u6709\u7ECF\u9A8C\u4E0A\u3002",
-      previewLabel: "AI \u5B66\u4E60",
-      requirementsTitle: "\u6D77\u62A5\u8981\u6C42",
-      fields: ["\u4E3B\u9898", "\u98CE\u683C", "\u5C3A\u5BF8"],
-      steps: ["\u68C0\u67E5", "\u4FEE\u6539"],
-      outputTitle: "\u6539\u4E3A\u7AD6\u7248",
-      resultLabel: "\u56FE\u50CF\u8981\u6C42",
-      questionTitle: "\u7F3A\u5C11\u76F8\u5173\u7ECF\u9A8C\u65F6",
-      question: "\u4ECE\u54EA\u91CC\u95EE\u8D77\uFF1F",
-      footer: "\u8054\u7CFB\u8D8A\u5177\u4F53\uFF0C\u8D8A\u5BB9\u6613\u77E5\u9053\u4E0B\u4E00\u6B65\u600E\u4E48\u505A\u3002"
+    create("ani-knowledge-network", "\u6587\u6863\u4E0E\u7A97\u53E3\u8FDE\u7EBF", "\u6587\u4EF6\u3001\u9884\u89C8\u7A97\u53E3\u4E0E\u6587\u6863\u901A\u8FC7\u8FDE\u7EBF\u7EC4\u6210\u56FE\u89E3\uFF1B\u5B57\u6BB5\u3001\u6B65\u9AA4\u3001\u8F93\u51FA\u548C\u6CE8\u91CA\u53EF\u7F16\u8F91\u3002", {
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "previewLabel": "\u9884\u89C8\u6807\u9898",
+      "requirementsTitle": "\u6587\u6863\u6807\u9898",
+      "fields": [
+        "\u5B57\u6BB5 A",
+        "\u5B57\u6BB5 B",
+        "\u5B57\u6BB5 C"
+      ],
+      "steps": [
+        "\u6B65\u9AA4 A",
+        "\u6B65\u9AA4 B"
+      ],
+      "outputTitle": "\u8F93\u51FA\u6807\u9898",
+      "resultLabel": "\u7ED3\u679C\u6807\u7B7E",
+      "questionTitle": "\u95EE\u9898\u6807\u9898",
+      "question": "\u95EE\u9898\u5185\u5BB9\uFF1F",
+      "footer": "\u9875\u811A\u8BF4\u660E\u6587\u5B57"
     }, "16_\u628A\u65B0\u65E7\u8FDE\u8D77\u6765.png", (p, h) => {
       if (!Array.isArray(p.fields) || p.fields.length !== 3 || !Array.isArray(p.steps) || p.steps.length !== 2) throw new Error("\u77E5\u8BC6\u7F51\u7EDC\u9700\u8981\u4E09\u4E2A fields \u548C\u4E24\u4E2A steps");
       const docs = [0, 1, 2].reverse().map((i) => enter(paper(75 + i * 63, 204 - i * 24, 115, 150, { fold: 25, depth: 7, content: `${icon(["document", "table", "document"][i], 24, 16, 54, h)}<path d="M21 95H87M21 115H73" stroke="#b3ccdf" stroke-width="6" stroke-linecap="round"/>` }, scope4(h, "knowledge-" + i)))).join("");
@@ -1184,14 +1693,21 @@ var ComponentLibraryRuntime = (() => {
       const result = paper(962, 156, 243, 328, { fold: 39, depth: 11, content: `${text4(25, 56, p.outputTitle, 30, 195, h)}<rect x="53" y="81" width="141" height="218" rx="4" fill="none" stroke="#7ca2c5" stroke-width="2" stroke-dasharray="6 5"/>${mountains(64, 91, 119, 197, scope4(h, "portrait"))}` }, scope4(h, "result-paper"));
       return svgScene(`${heading(p, h)}${line("M313 277H368V365H449", "#6590b7", 2.4)}${line("M355 542H390V365H449", "#6590b7", 2.4)}${line("M628 442V469H529V490M628 469H714V490M529 560V588H630V606M714 560V588H630", "#6590b7", 2.4)}${line("M784 388H962", tokens.green, 4)}${docs}${enter(`${mountains(70, 430, 288, 207, scope4(h, "old-image"))}${text4(86, 466, p.previewLabel, 26, 245, h)}`)}${enter(center)}${steps}${enter(`<rect x="513" y="608" width="236" height="51" rx="12" fill="#edf7ff" stroke="${tokens.ink}" stroke-width="2.3"/>${symbol2("image", 527, 617, 34, h)}${text4(579, 643, p.resultLabel, 26, 155, h)}`)}${pop(result)}${pop(`<rect x="930" y="527" width="285" height="123" rx="13" fill="#fff6e7" stroke="${tokens.orange}" stroke-width="1.6"/>${text4(952, 564, p.questionTitle, 25, 244, h)}<circle cx="963" cy="605" r="20" fill="white" stroke="${tokens.orange}" stroke-width="2.5" stroke-dasharray="6 4"/>${text4(993, 615, p.question, 25, 197, h)}`)}${node(784, 388)}${node(962, 388)}${footer(p, h)}`, h);
     }),
-    create("ani-capability-tiles", "\u6563\u843D\u77E5\u8BC6\u7816", "\u516D\u5757\u5177\u6709\u539A\u5EA6\u7684\u5DE5\u5177\u7816\u5206\u522B\u627F\u8F7D\u8981\u6C42\u3001\u914D\u8272\u3001\u5C3A\u5BF8\u3001\u7248\u5F0F\u3001\u68C0\u67E5\u548C\u4FEE\u6539\uFF0C\u4E0E\u5DE5\u5177\u7ED3\u679C\u7A97\u53E3\u5E76\u7F6E\u3002", {
-      title: "\u5B66\u4E00\u4E2A\uFF0C\u6254\u4E00\u4E2A",
-      subtitle: "\u96F6\u6563\u6280\u5DE7\uFF0C\u9700\u8981\u8FDE\u6210\u81EA\u5DF1\u7684\u65B9\u6CD5\u3002",
-      tiles: ["\u8981\u6C42", "\u914D\u8272", "\u5C3A\u5BF8", "\u7248\u5F0F", "\u68C0\u67E5", "\u4FEE\u6539"],
-      windowLabel: "AI \u5DE5\u5177 B",
-      previewLabel: "AI \u5B66\u4E60",
-      result: "\u628A\u672C\u4E8B\u8FDE\u8D77\u6765",
-      footer: "\u8BA9\u4E00\u6B21\u5B66\u4F1A\u7684\u5185\u5BB9\uFF0C\u6210\u4E3A\u4E0B\u4E00\u6B21\u80FD\u7528\u7684\u7ECF\u9A8C\u3002"
+    create("ani-capability-tiles", "\u56FE\u6807\u5361\u7247\u7EC4", "\u516D\u5757\u5E26\u56FE\u6807\u7684\u5361\u7247\u4E0E\u9884\u89C8\u7A97\u53E3\u5E76\u7F6E\uFF1B\u5361\u7247\u6807\u7B7E\u3001\u7A97\u53E3\u6807\u9898\u548C\u7ED3\u679C\u6587\u5B57\u53EF\u7F16\u8F91\u3002", {
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "tiles": [
+        "\u6807\u7B7E A",
+        "\u6807\u7B7E B",
+        "\u6807\u7B7E C",
+        "\u6807\u7B7E D",
+        "\u6807\u7B7E E",
+        "\u6807\u7B7E F"
+      ],
+      "windowLabel": "\u7A97\u53E3\u6807\u9898",
+      "previewLabel": "\u9884\u89C8\u6807\u9898",
+      "result": "\u7ED3\u679C\u8BF4\u660E",
+      "footer": "\u9875\u811A\u8BF4\u660E\u6587\u5B57"
     }, "10_\u6563\u843D\u7684\u77E5\u8BC6\u7816.png", (p, h) => {
       if (!Array.isArray(p.tiles) || p.tiles.length !== 6) throw new Error("\u77E5\u8BC6\u7816 tiles \u9700\u8981\u516D\u9879");
       const pos = [[81, 235, -8], [321, 251, 7], [557, 223, -9], [169, 458, 7], [445, 471, -8], [747, 456, -10]], kinds = ["document", "palette", "ruler", "layout", "check", "pencil"];
@@ -1232,21 +1748,94 @@ var ComponentLibraryRuntime = (() => {
   }
   var common4 = { category: "\u52A8\u753B\u98CE", width: 1280, height: 720, reference: { level: "designed", basis: "\u6309\u7528\u6237\u63D0\u4F9B\u7684 V8 \u539F\u751F\u56FE\u89E3\u6BCD\u7248\u91CD\u5EFA SVG \u51E0\u4F55\u3002\u4FDD\u6301\u5BF9\u8C61\u7ED3\u6784\u4E0E\u72B6\u6001\u8BED\u4E49\uFF0C\u5177\u4F53\u8865\u95F4\u4E3A\u672C\u6B21\u8BBE\u8BA1\uFF1B\u4E0D\u662F\u5B9E\u9645\u8F6F\u4EF6\u622A\u56FE\u3002", source: "references/animation-style/sources.json" } };
   var components9 = [
-    { ...common4, id: "ani-processing-machine", name: "\u52A8\u753B\u98CE \xB7 \u8F93\u5165\u5904\u7406\u88C5\u7F6E", description: "\u6587\u4EF6\u9001\u5165\u4E09\u901A\u9053\u88C5\u7F6E\uFF0C\u5185\u90E8\u5904\u7406\u540E\u751F\u6210\u5BF9\u5E94\u7ED3\u679C\uFF1B\u8F93\u5165\u3001\u5904\u7406\u6807\u7B7E\u548C\u8F93\u51FA\u5185\u5BB9\u53EF\u66FF\u6362\u3002", defaultEffect: "ani-machine-process", defaults: { title: "\u8BA9\u8FC7\u7A0B\u770B\u5F97\u89C1", subtitle: "\u8F93\u5165\u6750\u6599\uFF0C\u7ECF\u8FC7\u5904\u7406\uFF0C\u7559\u4E0B\u53EF\u6838\u5BF9\u7684\u7ED3\u679C\u3002", inputTitle: "\u8F93\u5165", processTitle: "\u5904\u7406\u8FC7\u7A0B", outputTitle: "\u7ED3\u679C", inputs: [{ label: "\u6587\u672C", icon: "document" }, { label: "\u56FE\u7247", icon: "documents" }, { label: "\u6570\u636E", icon: "table" }], outputs: [{ label: "\u5185\u5BB9\u5DF2\u6574\u7406", icon: "document" }, { label: "\u753B\u9762\u5DF2\u751F\u6210", icon: "documents" }, { label: "\u6570\u636E\u5DF2\u6C47\u603B", icon: "table" }], footer: "\u8BB2\u5230\u54EA\u4E00\u6B65\uFF0C\u753B\u9762\u5C31\u53D8\u5316\u5230\u54EA\u4E00\u6B65\u3002" }, render: processing },
-    { ...common4, id: "ani-question-outro", name: "\u52A8\u753B\u98CE \xB7 \u95EE\u9898\u4E0E\u9884\u544A", description: "\u4FDD\u7559\u4E24\u4E2A\u6848\u4F8B\u5BF9\u8C61\uFF0C\u5C06\u5F53\u524D\u95EE\u9898\u5F15\u5411\u4E0B\u4E00\u671F\uFF1B\u5927\u5B57\u95EE\u9898\u724C\u3001\u6A59\u8272\u95EE\u53F7\u548C\u9884\u544A\u6807\u7B7E\u4F9D\u6B21\u51FA\u73B0\u3002", defaultEffect: "ani-diagram-build", defaults: { title: "\u660E\u660E\u5B66\u8FC7\uFF0C", subtitle: "\u4E3A\u4EC0\u4E48\u60F3\u4E0D\u8D77\u6765\u7528\uFF1F", footer: "\u4E0B\u671F\uFF1A\u8FDC\u8FC1\u79FB", examples: [{ title: "\u672C\u5468\u8FDB\u5EA6\u901A\u77E5", lines: ["\u8C01\u6765\u505A\u3001\u505A\u4EC0\u4E48", "\u4EC0\u4E48\u65F6\u5019\u5B8C\u6210", "\u5230\u54EA\u91CC\u586B\u5199"] }, { title: "\u8BA2\u5355\u660E\u7EC6", lines: ["\u6309\u54EA\u4E2A\u65E5\u671F", "\u7EDF\u8BA1\u54EA\u4E9B\u72B6\u6001", "\u5BF9\u7167\u539F\u59CB\u8BB0\u5F55"] }] }, render: question }
+    { ...common4, id: "ani-processing-machine", name: "\u52A8\u753B\u98CE \xB7 \u8F93\u5165\u5904\u7406\u88C5\u7F6E", description: "\u6587\u4EF6\u9001\u5165\u4E09\u901A\u9053\u88C5\u7F6E\uFF0C\u5185\u90E8\u5904\u7406\u540E\u751F\u6210\u5BF9\u5E94\u7ED3\u679C\uFF1B\u8F93\u5165\u3001\u5904\u7406\u6807\u7B7E\u548C\u8F93\u51FA\u5185\u5BB9\u53EF\u66FF\u6362\u3002", defaultEffect: "ani-machine-process", defaults: {
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "inputTitle": "\u8F93\u5165",
+      "processTitle": "\u5904\u7406",
+      "outputTitle": "\u8F93\u51FA",
+      "inputs": [
+        {
+          "label": "\u8F93\u5165 A",
+          "icon": "document"
+        },
+        {
+          "label": "\u8F93\u5165 B",
+          "icon": "documents"
+        },
+        {
+          "label": "\u8F93\u5165 C",
+          "icon": "table"
+        }
+      ],
+      "outputs": [
+        {
+          "label": "\u8F93\u51FA A",
+          "icon": "document"
+        },
+        {
+          "label": "\u8F93\u51FA B",
+          "icon": "documents"
+        },
+        {
+          "label": "\u8F93\u51FA C",
+          "icon": "table"
+        }
+      ],
+      "footer": "\u9875\u811A\u8BF4\u660E\u6587\u5B57"
+    }, render: processing },
+    { ...common4, id: "ani-question-outro", name: "\u52A8\u753B\u98CE \xB7 \u95EE\u9898\u4E0E\u9884\u544A", description: "\u4FDD\u7559\u4E24\u4E2A\u6848\u4F8B\u5BF9\u8C61\uFF0C\u5C06\u5F53\u524D\u95EE\u9898\u5F15\u5411\u4E0B\u4E00\u671F\uFF1B\u5927\u5B57\u95EE\u9898\u724C\u3001\u6A59\u8272\u95EE\u53F7\u548C\u9884\u544A\u6807\u7B7E\u4F9D\u6B21\u51FA\u73B0\u3002", defaultEffect: "ani-diagram-build", defaults: {
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "footer": "\u9875\u811A\u8BF4\u660E\u6587\u5B57",
+      "examples": [
+        {
+          "title": "\u9762\u677F A",
+          "lines": [
+            "\u8BF4\u660E\u5185\u5BB9 A",
+            "\u8BF4\u660E\u5185\u5BB9 B",
+            "\u8BF4\u660E\u5185\u5BB9 C"
+          ]
+        },
+        {
+          "title": "\u9762\u677F B",
+          "lines": [
+            "\u8BF4\u660E\u5185\u5BB9 A",
+            "\u8BF4\u660E\u5185\u5BB9 B",
+            "\u8BF4\u660E\u5185\u5BB9 C"
+          ]
+        }
+      ]
+    }, render: question }
   ];
 
   // families/animation-style.mjs
   var defaults = {
-    title: "\u672C\u5468\u8FDB\u5EA6\u901A\u77E5",
-    subtitle: "\u4ECE\u6536\u4EF6\u4EBA\u89D2\u5EA6\u6838\u5BF9",
-    rows: [
-      { label: "\u5BF9\u8C61", text: "\u5404\u7EC4\u8D1F\u8D23\u4EBA", icon: "people" },
-      { label: "\u5185\u5BB9", text: "\u672C\u5468\u5DF2\u5B8C\u6210\u3001\u672A\u5B8C\u6210\u4E8B\u9879", icon: "documents" },
-      { label: "\u622A\u6B62", text: "\u5468\u4E94 17:00 \u524D", icon: "calendar" },
-      { label: "\u586B\u5199", text: "\u5171\u4EAB\u8868\u683C", icon: "link" }
+    "title": "\u6587\u6863\u6807\u9898",
+    "subtitle": "\u6587\u6863\u8BF4\u660E",
+    "rows": [
+      {
+        "label": "\u5B57\u6BB5A",
+        "text": "\u5B57\u6BB5\u5185\u5BB9 A",
+        "icon": "people"
+      },
+      {
+        "label": "\u5B57\u6BB5B",
+        "text": "\u5B57\u6BB5\u5185\u5BB9 B",
+        "icon": "documents"
+      },
+      {
+        "label": "\u5B57\u6BB5C",
+        "text": "\u5B57\u6BB5\u5185\u5BB9 C",
+        "icon": "calendar"
+      },
+      {
+        "label": "\u5B57\u6BB5D",
+        "text": "\u5B57\u6BB5\u5185\u5BB9 D",
+        "icon": "link"
+      }
     ],
-    footnote: "\u8F6E\u5230\u8C01\u505A\u3001\u8981\u505A\u4EC0\u4E48\u3001\u51E0\u70B9\u524D\u5B8C\u6210\u3001\u5728\u54EA\u513F\u586B\uFF0C\u90FD\u627E\u5F97\u5230\u3002"
+    "footnote": "\u8865\u5145\u8BF4\u660E\u6587\u5B57"
   };
   var charUnits = (s) => Array.from(String(s ?? "")).reduce((sum, c) => sum + (/[\u0000-\u00ff]/.test(c) ? 0.54 : 1), 0);
   function renderNotice(p, h) {
@@ -1269,7 +1858,7 @@ var ComponentLibraryRuntime = (() => {
   }
   var components10 = [{
     id: "ani-notice-check",
-    name: "\u52A8\u753B\u98CE \xB7 \u901A\u77E5\u9010\u9879\u6838\u5BF9",
+    name: "\u52A8\u753B\u98CE \xB7 \u6587\u6863\u9010\u9879\u6838\u5BF9",
     category: "\u52A8\u753B\u98CE",
     description: "\u6839\u636E V8 \u901A\u77E5\u6BCD\u7248\u590D\u523B\u6298\u89D2\u7EB8\u5F20\u3001\u6DF1\u84DD\u63CF\u8FB9\u3001\u94B4\u84DD\u6807\u9898\u724C\u4E0E\u56DB\u884C\u5F69\u8272\u56FE\u6807\uFF0C\u9010\u9879\u6838\u5BF9\u540E\u4FDD\u7559\u68C0\u67E5\u7ED3\u679C\u3002\u5168\u90E8\u56FE\u5F62\u4E0E\u6587\u5B57\u53EF\u7F16\u8F91\u3002",
     width: 1280,
@@ -1321,33 +1910,568 @@ var ComponentLibraryRuntime = (() => {
 `;
 
   // families/apple-macos-extra.mjs
-  var files = [["\u8BFE\u7A0B\u8BB2\u7A3F.md", "\u4ECA\u5929 09:12", "Markdown \u6587\u7A3F", "16 KB"], ["\u5206\u955C\u6E05\u5355.csv", "\u6628\u5929 18:20", "CSV \u6587\u7A3F", "8 KB"], ["\u53C2\u8003\u622A\u56FE.png", "\u6628\u5929 16:40", "PNG \u56FE\u50CF", "2.4 MB"], ["\u5236\u4F5C\u6307\u5357.pdf", "\u6628\u5929 14:08", "PDF \u6587\u7A3F", "1.2 MB"]];
   var components11 = [
-    component("mac-calendar", "macOS \xB7 \u65E5\u5386", "\u6708\u89C6\u56FE\u3001\u65E5\u5386\u5206\u7EC4\u548C\u4E8B\u4EF6\u5361\u7247\uFF0C\u4E8B\u4EF6\u4F4D\u7F6E\u7531\u65E5\u671F\u914D\u7F6E\u3002", { title: "2026\u5E749\u6708", firstWeekday: 2, days: 30, today: 17, events: [{ day: 8, title: "\u5185\u5BB9\u9009\u9898", color: "#3484e8" }, { day: 17, title: "\u5236\u4F5C\u8BC4\u5BA1 10:00", color: "#ed6556" }, { day: 21, title: "\u5F55\u5C4F\u4E0E\u914D\u97F3", color: "#6caf9e" }, { day: 25, title: "\u6210\u7247\u68C0\u67E5", color: "#956dcc" }] }, (p, h) => desktop(h, window(h, "\u65E5\u5386", `<div class="ap-split"><aside class="ap-calendar-side"><div class="ap-search">${ai(h, "search", 13)} \u641C\u7D22</div><label>iCloud</label>${["\u5DE5\u4F5C", "\u4E2A\u4EBA", "\u5BB6\u5EAD", "\u751F\u65E5"].map((x, i) => `<p><i style="background:${["#3484e8", "#ed6556", "#6caf9e", "#956dcc"][i]}">\u2713</i>${x}</p>`).join("")}<label>\u5176\u4ED6</label><p><i style="background:#999">\u2713</i>\u4E2D\u56FD\u8282\u5047\u65E5</p></aside><main class="ap-calendar-main"><h1>${h.esc(p.title)}</h1><div class="ap-weeknames">${["\u5468\u65E5", "\u5468\u4E00", "\u5468\u4E8C", "\u5468\u4E09", "\u5468\u56DB", "\u5468\u4E94", "\u5468\u516D"].map((x) => `<span>${x}</span>`).join("")}</div><div class="ap-month-grid">${Array.from({ length: 35 }, (_, i) => {
+    component("mac-calendar", "macOS \xB7 \u65E5\u5386", "\u6708\u89C6\u56FE\u3001\u65E5\u5386\u5206\u7EC4\u548C\u4E8B\u4EF6\u5361\u7247\uFF0C\u4E8B\u4EF6\u4F4D\u7F6E\u7531\u65E5\u671F\u914D\u7F6E\u3002", {
+      "title": "2026\u5E749\u6708",
+      "firstWeekday": 2,
+      "days": 30,
+      "today": 17,
+      "events": [
+        {
+          "day": 8,
+          "title": "\u65E5\u7A0B A",
+          "color": "#3484e8"
+        },
+        {
+          "day": 17,
+          "title": "\u65E5\u7A0B B",
+          "color": "#ed6556"
+        },
+        {
+          "day": 21,
+          "title": "\u65E5\u7A0B C",
+          "color": "#6caf9e"
+        },
+        {
+          "day": 25,
+          "title": "\u65E5\u7A0B D",
+          "color": "#956dcc"
+        }
+      ]
+    }, (p, h) => desktop(h, window(h, "\u65E5\u5386", `<div class="ap-split"><aside class="ap-calendar-side"><div class="ap-search">${ai(h, "search", 13)} \u641C\u7D22</div><label>iCloud</label>${["\u5DE5\u4F5C", "\u4E2A\u4EBA", "\u5BB6\u5EAD", "\u751F\u65E5"].map((x, i) => `<p><i style="background:${["#3484e8", "#ed6556", "#6caf9e", "#956dcc"][i]}">\u2713</i>${x}</p>`).join("")}<label>\u5176\u4ED6</label><p><i style="background:#999">\u2713</i>\u4E2D\u56FD\u8282\u5047\u65E5</p></aside><main class="ap-calendar-main"><h1>${h.esc(p.title)}</h1><div class="ap-weeknames">${["\u5468\u65E5", "\u5468\u4E00", "\u5468\u4E8C", "\u5468\u4E09", "\u5468\u56DB", "\u5468\u4E94", "\u5468\u516D"].map((x) => `<span>${x}</span>`).join("")}</div><div class="ap-month-grid">${Array.from({ length: 35 }, (_, i) => {
       const d = i - Number(p.firstWeekday) + 1;
       return `<div class="${d < 1 || d > p.days ? "empty" : ""}" data-motion="item"><b class="${d === p.today ? "today" : ""}">${d >= 1 && d <= p.days ? d : ""}</b>${array(p.events).filter((x) => Number(x.day) === d).map((x) => `<p style="--event:${/^#[0-9a-f]{6}$/i.test(x.color) ? x.color : "#3484e8"}">${h.esc(x.title)}</p>`).join("")}</div>`;
     }).join("")}</div></main></div>`, { toolbar: `${ai(h, "panel")}${ai(h, "plus")}<span class="ap-spacer"></span><div class="ap-segments">\u65E5\u3000\u3000\u5468\u3000\u3000<b>\u6708</b>\u3000\u3000\u5E74</div><span class="ap-spacer"></span>${ai(h, "chevron-left")}<span class="ap-button">\u4ECA\u5929</span>${ai(h, "chevron-right")}` }), "\u65E5\u5386")),
-    component("mac-mail", "macOS \xB7 \u90AE\u4EF6", "\u90AE\u7BB1\u3001\u90AE\u4EF6\u5217\u8868\u548C\u6B63\u6587\u4E09\u680F\uFF0C\u53EF\u914D\u7F6E\u53D1\u4EF6\u4EBA\u3001\u4E3B\u9898\u4E0E\u6B63\u6587\u3002", { subject: "\u672C\u5468\u8BFE\u7A0B\u7684\u5236\u4F5C\u5B89\u6392", sender: "\u9648\u8001\u5E08", email: "chen@example.com", to: "\u6797\u540C\u5B66", date: "2026\u5E749\u670817\u65E5 09:20", messages: [["\u9648\u8001\u5E08", "\u672C\u5468\u8BFE\u7A0B\u7684\u5236\u4F5C\u5B89\u6392", "\u5148\u6574\u7406\u8BB2\u7A3F\uFF0C\u518D\u51C6\u5907\u6F14\u793A\u7D20\u6750\u3002", "09:20"], ["\u6797\u540C\u5B66", "\u53C2\u8003\u8D44\u6599\u6574\u7406\u5B8C\u6210", "\u8BF7\u67E5\u6536\u9644\u4EF6\u4E2D\u7684\u5185\u5BB9\u6E05\u5355\u3002", "\u6628\u5929"], ["\u9879\u76EE\u7EC4", "\u5468\u4E94\u7684\u8BFE\u7A0B\u8BC4\u5BA1", "\u8BC4\u5BA1\u65F6\u95F4\u4E3A\u5468\u4E94\u4E0B\u5348\u4E09\u70B9\u3002", "\u661F\u671F\u4E8C"]], paragraphs: ["\u6797\u540C\u5B66\uFF0C\u4F60\u597D\uFF1A", "\u672C\u5468\u6211\u4EEC\u5148\u5B8C\u6210\u7B2C\u4E00\u8282\u8BFE\u7A0B\u3002\u8BF7\u6309\u987A\u5E8F\u51C6\u5907\u4EE5\u4E0B\u5185\u5BB9\uFF1A", "1. \u6574\u7406\u4E3B\u9898\u548C\u9010\u5B57\u7A3F\uFF0C\u6807\u8BB0\u9700\u8981\u5C55\u793A\u7684\u6570\u636E\u3002", "2. \u5F55\u5236\u771F\u5B9E\u64CD\u4F5C\u8FC7\u7A0B\uFF0C\u4FDD\u7559\u9F20\u6807\u548C\u72B6\u6001\u53D8\u5316\u3002", "3. \u68C0\u67E5\u5B57\u5E55\u3001\u753B\u9762\u91CD\u70B9\u548C\u8BB2\u89E3\u8282\u594F\u3002", "\u6709\u9700\u8981\u8865\u5145\u7684\u5185\u5BB9\uFF0C\u6211\u4EEC\u5728\u8BC4\u5BA1\u65F6\u4E00\u8D77\u786E\u8BA4\u3002"] }, (p, h) => desktop(h, window(h, "\u90AE\u4EF6", `<div class="ap-split">${sidebar(h, "\u6536\u4EF6\u7BB1", ["\u6240\u6709\u6536\u4EF6\u7BB1", "\u6536\u4EF6\u7BB1", "\u5DF2\u53D1\u9001", "\u8349\u7A3F", "\u5F52\u6863", "\u5E9F\u7EB8\u7BD3"])}<div class="ap-mail-list">${array(p.messages, 8).map((m, i) => `<article class="${i === 0 ? "active" : ""}" data-motion="item"><small>${h.esc(m[3])}</small><b>${h.esc(m[0])}</b><strong>${h.esc(m[1])}</strong><p>${h.esc(m[2])}</p></article>`).join("")}</div><article class="ap-mail-message"><header><span class="ap-avatar">\u9648</span><div><h1>${h.esc(p.subject)}</h1><p><b>${h.esc(p.sender)}</b> &lt;${h.esc(p.email)}&gt;</p><small>\u6536\u4EF6\u4EBA\uFF1A${h.esc(p.to)}</small></div><time>${h.esc(p.date)}</time></header>${array(p.paragraphs).map((x) => `<p>${h.esc(x)}</p>`).join("")}</article></div>`, { toolbar: `${ai(h, "panel")}${ai(h, "mail")}${ai(h, "edit")}<span class="ap-spacer"></span>${ai(h, "trash")}${ai(h, "folder")}${ai(h, "undo")}${ai(h, "share")}<span class="ap-search">${ai(h, "search", 14)} \u641C\u7D22</span>` }), "\u90AE\u4EF6")),
-    component("mac-preview", "macOS \xB7 \u9884\u89C8 PDF", "\u539F\u751F\u7F29\u7565\u56FE\u4FA7\u680F\u3001\u9875\u6570\u3001\u7F29\u653E\u5DE5\u5177\u4E0E\u53EF\u66FF\u6362\u6587\u6863\u9875\u3002", { filename: "\u5236\u4F5C\u6307\u5357.pdf", page: 2, pages: 6, title: "\u5982\u4F55\u7EC4\u7EC7\u4E00\u4E2A\u6E05\u695A\u7684\u8BB2\u89E3", subtitle: "\u8BFE\u7A0B\u8BBE\u8BA1 / 02", paragraphs: ["\u5148\u786E\u5B9A\u89C2\u4F17\u9700\u8981\u89E3\u51B3\u7684\u95EE\u9898\uFF0C\u518D\u9009\u62E9\u80FD\u8BC1\u660E\u89C2\u70B9\u7684\u753B\u9762\u3002", "\u8BB2\u89E3\u7ED3\u6784\u7531\u4E09\u4E2A\u90E8\u5206\u7EC4\u6210\uFF1A\u95EE\u9898\u3001\u65B9\u6CD5\u548C\u9A8C\u8BC1\u3002\u6BCF\u4E00\u90E8\u5206\u90FD\u9700\u8981\u5BF9\u5E94\u7684\u6750\u6599\u3002"], steps: ["\u63D0\u51FA\u95EE\u9898", "\u6F14\u793A\u65B9\u6CD5", "\u9A8C\u8BC1\u7ED3\u679C"] }, (p, h) => desktop(h, window(h, p.filename, `<div class="ap-split"><aside class="ap-pdf-thumbs">${Array.from({ length: Math.min(7, Number(p.pages)) }, (_, i) => `<div class="${i + 1 === p.page ? "active" : ""}" data-motion="item"><article><b>${i === 0 ? "\u5236\u4F5C\u6307\u5357" : i === 1 ? "\u8BB2\u89E3\u7ED3\u6784" : "\u8BFE\u7A0B\u7B14\u8BB0"}</b><hr><p></p><p></p><p></p><i></i></article><small>${i + 1}</small></div>`).join("")}</aside><main class="ap-pdf-canvas"><article class="ap-paper" data-motion="focus"><small>${h.esc(p.subtitle)}</small><h1>${h.esc(p.title)}</h1>${array(p.paragraphs).map((x) => `<p>${h.esc(x)}</p>`).join("")}<div class="ap-paper-steps">${array(p.steps, 4).map((x, i) => `<section data-motion="item"><b>0${i + 1}</b><h3>${h.esc(x)}</h3></section>`).join("")}</div><footer>\u5185\u5BB9\u5236\u4F5C\u5DE5\u4F5C\u5BA4<span>${h.esc(p.page)}</span></footer></article></main></div>`, { toolbar: `${ai(h, "panel")}<b>${h.esc(p.filename)}</b><span class="ap-tiny">\u7B2C ${h.esc(p.page)} \u9875\uFF0C\u5171 ${h.esc(p.pages)} \u9875</span><span class="ap-spacer"></span>${ai(h, "minus")}${ai(h, "plus")}${ai(h, "share")}${ai(h, "edit")}${ai(h, "search")}` }), "\u9884\u89C8")),
-    component("mac-activity-monitor", "macOS \xB7 \u6D3B\u52A8\u76D1\u89C6\u5668", "\u8FDB\u7A0B\u5217\u8868\u548C\u5E95\u90E8 CPU \u56FE\u8868\uFF0C\u6570\u636E\u53EF\u66FF\u6362\uFF0C\u4E0D\u7ED1\u5B9A\u771F\u5B9E\u8BBE\u5907\u8BFB\u6570\u3002", { tab: "CPU", system: 5.6, user: 12.8, idle: 81.6, rows: [["HyperFrames", "8.3", "00:22.10", "16", "7", "28210"], ["WindowServer", "6.1", "02:14.82", "19", "4", "391"], ["Google Chrome", "4.8", "01:02.37", "28", "8", "12110"], ["Codex", "3.5", "00:45.12", "22", "6", "30418"], ["Finder", "0.3", "00:09.16", "5", "2", "422"], ["kernel_task", "0.2", "05:02.42", "181", "0", "0"]] }, (p, h) => desktop(h, window(h, "\u6D3B\u52A8\u76D1\u89C6\u5668", `<div class="ap-activity"><div class="ap-process-table"><div class="ap-process-row head">${["\u8FDB\u7A0B\u540D\u79F0", "% CPU", "CPU \u65F6\u95F4", "\u7EBF\u7A0B", "\u5524\u9192\u6B21\u6570", "PID"].map((x) => `<span>${x}</span>`).join("")}</div>${array(p.rows, 15).map((r, i) => `<div class="ap-process-row ${!i ? "active" : ""}" data-motion="item">${r.map((x) => `<span>${h.esc(x)}</span>`).join("")}</div>`).join("")}</div><footer><div><p><i class="red"></i>\u7CFB\u7EDF\uFF1A<b>${h.esc(p.system)}%</b></p><p><i class="blue"></i>\u7528\u6237\uFF1A<b>${h.esc(p.user)}%</b></p><p>\u95F2\u7F6E\uFF1A<b>${h.esc(p.idle)}%</b></p></div><section><small>CPU \u8D1F\u8F7D</small><svg viewBox="0 0 230 80"><path d="M0 73 12 69 24 70 36 40 48 66 60 62 72 67 84 34 96 65 108 64 120 46 132 60 144 28 156 63 168 52 180 56 192 38 204 61 216 65 230 53V80H0Z" fill="#6cafeb"/><path data-motion="line" d="M0 74 12 72 24 73 36 66 48 74 60 70 72 74 84 62 96 73 108 71 120 68 132 73 144 59 156 73 168 69 180 73 192 64 204 72 216 73 230 69" fill="none" stroke="#de6f75" stroke-width="2"/></svg></section><div><p>\u7EBF\u7A0B\uFF1A<b>1,402</b></p><p>\u8FDB\u7A0B\uFF1A<b>${array(p.rows).length}</b></p><small>\u793A\u4F8B\u6570\u636E</small></div></footer></div>`, { toolbar: `${ai(h, "x")}${ai(h, "info")}<span class="ap-spacer"></span><div class="ap-segments"><b>${h.esc(p.tab)}</b>\u3000\u5185\u5B58\u3000\u80FD\u8017\u3000\u78C1\u76D8\u3000\u7F51\u7EDC</div><span class="ap-spacer"></span><span class="ap-search">${ai(h, "search", 14)} \u641C\u7D22</span>` }), "\u6D3B\u52A8\u76D1\u89C6\u5668")),
-    component("mac-file-dialog", "macOS \xB7 \u4FDD\u5B58\u5BF9\u8BDD\u6846", "\u4FDD\u5B58\u540D\u79F0\u3001\u4F4D\u7F6E\u3001\u6587\u4EF6\u5217\u8868\u548C\u786E\u8BA4\u64CD\u4F5C\uFF0C\u53EF\u7528\u4E8E\u5BFC\u51FA\u6B65\u9AA4\u6F14\u793A\u3002", { title: "\u5BFC\u51FA\u6587\u7A3F", filename: "\u8BFE\u7A0B\u8BB2\u7A3F.pdf", folder: "\u6587\u7A3F", format: "PDF", files, button: "\u5B58\u50A8" }, (p, h) => desktop(h, `<div class="ap-dialog-backdrop">${window(h, "\u5236\u4F5C\u6307\u5357", `<div class="ap-document-ghost"><h1>\u8BFE\u7A0B\u5236\u4F5C\u6307\u5357</h1><p>\u51C6\u5907\u8BB2\u7A3F\u4E0E\u7D20\u6750\uFF0C\u7136\u540E\u5BFC\u51FA\u5E76\u6838\u5BF9\u3002</p></div>`)}</div><div class="ap-save-sheet"><header>${h.esc(p.title)}</header><div class="ap-save-fields"><label>\u5B58\u50A8\u4E3A\uFF1A<span data-motion="focus">${h.esc(p.filename)}</span></label><label>\u6807\u7B7E\uFF1A<span class="empty">\u6DFB\u52A0\u6807\u7B7E\u2026</span></label><label>\u4F4D\u7F6E\uFF1A<b>${ai(h, "folder", 15)} ${h.esc(p.folder)}\u3000\u2304</b></label></div><div class="ap-save-files">${sidebar(h, p.folder)}<div class="ap-main">${table(h, ["\u540D\u79F0", "\u4FEE\u6539\u65E5\u671F", "\u79CD\u7C7B", "\u5927\u5C0F"], p.files, -1)}</div></div><footer><label>\u683C\u5F0F\uFF1A<span class="ap-button">${h.esc(p.format)}\u3000\u2304</span></label><span class="ap-spacer"></span><button class="ap-button">\u53D6\u6D88</button><button class="ap-button primary" data-motion="focus">${h.esc(p.button)}</button></footer></div>`, "\u9884\u89C8")),
-    component("mac-alert", "macOS \xB7 \u6743\u9650\u63D0\u793A", "\u5C45\u4E2D\u7684\u7CFB\u7EDF\u8B66\u544A\u4E0E\u7EB5\u5411\u64CD\u4F5C\u6309\u94AE\uFF0C\u6807\u9898\u3001\u8BF4\u660E\u548C\u9009\u9879\u72EC\u7ACB\u914D\u7F6E\u3002", { app: "\u5C4F\u5E55\u5F55\u5236", title: "\u201C\u5C4F\u5E55\u5F55\u5236\u201D\u60F3\u8981\u8BBF\u95EE\u4F60\u7684\u9EA6\u514B\u98CE", message: "\u5141\u8BB8\u8BBF\u95EE\u9EA6\u514B\u98CE\uFF0C\u4EE5\u4FBF\u5728\u5F55\u5236\u753B\u9762\u65F6\u52A0\u5165\u4F60\u7684\u8BB2\u89E3\u3002\u4F60\u53EF\u4EE5\u968F\u65F6\u5728\u7CFB\u7EDF\u8BBE\u7F6E\u4E2D\u66F4\u6539\u6B64\u6743\u9650\u3002", primary: "\u5141\u8BB8", secondary: "\u4E0D\u5141\u8BB8" }, (p, h) => desktop(h, `<div class="ap-alert"><div class="ap-alert-icon">${appIcon(h, "settings", 60)}</div><h1>${h.esc(p.title)}</h1><p>${h.esc(p.message)}</p><button data-motion="focus" class="ap-alert-primary">${h.esc(p.primary)}</button><button>${h.esc(p.secondary)}</button></div>`, p.app, true)),
-    component("mac-context-menu", "macOS \xB7 \u53F3\u952E\u83DC\u5355", "macOS \u7A84\u884C\u8DDD\u83DC\u5355\u3001\u5206\u9694\u7EBF\u3001\u5FEB\u6377\u952E\u4E0E\u7EA7\u8054\u5B50\u83DC\u5355\u3002", { filename: "\u8BFE\u7A0B\u8BB2\u7A3F.md", items: [["\u6253\u5F00", "\u2318O"], ["\u6253\u5F00\u65B9\u5F0F", "\u203A"], ["\u79FB\u5230\u5E9F\u7EB8\u7BD3", "\u2318\u232B"], ["---", ""], ["\u663E\u793A\u7B80\u4ECB", "\u2318I"], ["\u91CD\u65B0\u547D\u540D", ""], ["\u590D\u5236", "\u2318D"], ["\u5236\u4F5C\u66FF\u8EAB", ""], ["\u5FEB\u901F\u67E5\u770B", "\u7A7A\u683C"], ["---", ""], ["\u5171\u4EAB", "\u203A"], ["\u62F7\u8D1D\u201C\u8BFE\u7A0B\u8BB2\u7A3F.md\u201D", "\u2318C"]], selected: 1, submenu: ["\u6587\u672C\u7F16\u8F91\uFF08\u9ED8\u8BA4\uFF09", "Visual Studio Code", "\u5907\u5FD8\u5F55", "\u5176\u4ED6\u2026"] }, (p, h) => desktop(h, `${window(h, "\u6587\u7A3F", `<div class="ap-split">${sidebar(h)}<div class="ap-main">${table(h, ["\u540D\u79F0", "\u4FEE\u6539\u65E5\u671F", "\u79CD\u7C7B", "\u5927\u5C0F"], files.map((r, i) => i ? r : [p.filename, ...r.slice(1)]), 0)}</div></div>`)}<div class="ap-context"><div class="ap-context-main">${array(p.items, 18).map((x, i) => x[0] === "---" ? "<hr>" : `<div class="${i === p.selected ? "active" : ""}" data-motion="item"><span>${h.esc(x[0])}</span><small>${h.esc(x[1])}</small></div>`).join("")}</div><div class="ap-context-sub">${array(p.submenu, 7).map((x) => `<div>${h.esc(x)}</div>`).join("")}</div></div>`)),
-    component("mac-dock", "macOS \xB7 \u7A0B\u5E8F\u575E", "\u684C\u9762\u5E95\u90E8\u73BB\u7483\u5E95\u677F\u3001\u5E94\u7528\u56FE\u6807\u3001\u8FD0\u884C\u6307\u793A\u548C\u60AC\u505C\u63D0\u793A\u3002", { apps: [["finder", "\u8BBF\u8FBE"], ["safari", "Safari"], ["mail", "\u90AE\u4EF6"], ["calendar", "\u65E5\u5386"], ["notes", "\u5907\u5FD8\u5F55"], ["messages", "\u4FE1\u606F"], ["settings", "\u7CFB\u7EDF\u8BBE\u7F6E"], ["terminal", "\u7EC8\u7AEF"]], selected: 1, desktopFiles: ["\u89C6\u9891\u5236\u4F5C", "\u53C2\u8003\u8D44\u6599", "\u8BFE\u7A0B\u8BB2\u7A3F.pdf"] }, (p, h) => desktop(h, `<div class="ap-desktop-files">${array(p.desktopFiles, 5).map((x, i) => `<div data-motion="item">${ai(h, i === 2 ? "file" : "folder", 56)}<p>${h.esc(x)}</p></div>`).join("")}</div><div class="ap-dock">${array(p.apps, 12).map((x, i) => `<div class="ap-dock-item ${i === p.selected ? "active" : ""}" data-motion="item" data-app="${h.esc(x[0])}">${i === p.selected ? `<span class="ap-dock-tip">${h.esc(x[1])}</span>` : ""}${appIcon(h, x[0], 58)}<i></i></div>`).join("")}<b class="ap-dock-separator"></b><div class="ap-dock-item">${appIcon(h, "files", 58)}</div><div class="ap-dock-trash">${ai(h, "trash", 40)}</div></div>`, "\u8BBF\u8FBE", true))
+    component("mac-mail", "macOS \xB7 \u90AE\u4EF6", "\u90AE\u7BB1\u3001\u90AE\u4EF6\u5217\u8868\u548C\u6B63\u6587\u4E09\u680F\uFF0C\u53EF\u914D\u7F6E\u53D1\u4EF6\u4EBA\u3001\u4E3B\u9898\u4E0E\u6B63\u6587\u3002", {
+      "subject": "\u90AE\u4EF6\u4E3B\u9898",
+      "sender": "\u53D1\u4EF6\u4EBA",
+      "email": "sender@example.com",
+      "to": "\u6536\u4EF6\u4EBA",
+      "date": "2026\u5E749\u670817\u65E5 09:20",
+      "messages": [
+        [
+          "\u53D1\u4EF6\u4EBA A",
+          "\u90AE\u4EF6\u4E3B\u9898 A",
+          "\u90AE\u4EF6\u6458\u8981 A",
+          "09:20"
+        ],
+        [
+          "\u53D1\u4EF6\u4EBA B",
+          "\u90AE\u4EF6\u4E3B\u9898 B",
+          "\u90AE\u4EF6\u6458\u8981 B",
+          "\u6628\u5929"
+        ],
+        [
+          "\u53D1\u4EF6\u4EBA C",
+          "\u90AE\u4EF6\u4E3B\u9898 C",
+          "\u90AE\u4EF6\u6458\u8981 C",
+          "\u661F\u671F\u4E8C"
+        ]
+      ],
+      "paragraphs": [
+        "\u6536\u4EF6\u4EBA\uFF0C\u4F60\u597D\uFF1A",
+        "\u6B63\u6587\u7B2C\u4E00\u6BB5\uFF0C\u66FF\u6362\u4E3A\u9700\u8981\u5C55\u793A\u7684\u5185\u5BB9\u3002",
+        "\u6B63\u6587\u7B2C\u4E8C\u6BB5\uFF0C\u652F\u6301\u7EE7\u7EED\u8865\u5145\u8BF4\u660E\u3002",
+        "1. \u8981\u70B9\u5185\u5BB9 A",
+        "2. \u8981\u70B9\u5185\u5BB9 B",
+        "3. \u8981\u70B9\u5185\u5BB9 C"
+      ],
+      "senderInitial": "\u53D1"
+    }, (p, h) => desktop(h, window(h, "\u90AE\u4EF6", `<div class="ap-split">${sidebar(h, "\u6536\u4EF6\u7BB1", ["\u6240\u6709\u6536\u4EF6\u7BB1", "\u6536\u4EF6\u7BB1", "\u5DF2\u53D1\u9001", "\u8349\u7A3F", "\u5F52\u6863", "\u5E9F\u7EB8\u7BD3"])}<div class="ap-mail-list">${array(p.messages, 8).map((m, i) => `<article class="${i === 0 ? "active" : ""}" data-motion="item"><small>${h.esc(m[3])}</small><b>${h.esc(m[0])}</b><strong>${h.esc(m[1])}</strong><p>${h.esc(m[2])}</p></article>`).join("")}</div><article class="ap-mail-message"><header><span class="ap-avatar">${h.esc(p.senderInitial)}</span><div><h1>${h.esc(p.subject)}</h1><p><b>${h.esc(p.sender)}</b> &lt;${h.esc(p.email)}&gt;</p><small>\u6536\u4EF6\u4EBA\uFF1A${h.esc(p.to)}</small></div><time>${h.esc(p.date)}</time></header>${array(p.paragraphs).map((x) => `<p>${h.esc(x)}</p>`).join("")}</article></div>`, { toolbar: `${ai(h, "panel")}${ai(h, "mail")}${ai(h, "edit")}<span class="ap-spacer"></span>${ai(h, "trash")}${ai(h, "folder")}${ai(h, "undo")}${ai(h, "share")}<span class="ap-search">${ai(h, "search", 14)} \u641C\u7D22</span>` }), "\u90AE\u4EF6")),
+    component("mac-preview", "macOS \xB7 \u9884\u89C8 PDF", "\u539F\u751F\u7F29\u7565\u56FE\u4FA7\u680F\u3001\u9875\u6570\u3001\u7F29\u653E\u5DE5\u5177\u4E0E\u53EF\u66FF\u6362\u6587\u6863\u9875\u3002", {
+      "filename": "\u793A\u4F8B\u6587\u6863.pdf",
+      "page": 2,
+      "pages": 6,
+      "title": "\u6587\u6863\u6807\u9898",
+      "subtitle": "\u7AE0\u8282 / 02",
+      "paragraphs": [
+        "\u6B63\u6587\u7B2C\u4E00\u6BB5\uFF0C\u66FF\u6362\u4E3A\u9700\u8981\u5C55\u793A\u7684\u5185\u5BB9\u3002",
+        "\u6B63\u6587\u7B2C\u4E8C\u6BB5\uFF0C\u652F\u6301\u7EE7\u7EED\u8865\u5145\u8BF4\u660E\u3002"
+      ],
+      "steps": [
+        "\u6B65\u9AA4 A",
+        "\u6B65\u9AA4 B",
+        "\u6B65\u9AA4 C"
+      ],
+      "thumbnailTitles": [
+        "\u9875\u9762 A",
+        "\u9875\u9762 B",
+        "\u9875\u9762 C",
+        "\u9875\u9762 D",
+        "\u9875\u9762 E",
+        "\u9875\u9762 F"
+      ],
+      "documentFooter": "\u9875\u811A\u8BF4\u660E"
+    }, (p, h) => desktop(h, window(h, p.filename, `<div class="ap-split"><aside class="ap-pdf-thumbs">${Array.from({ length: Math.min(7, Number(p.pages)) }, (_, i) => `<div class="${i + 1 === p.page ? "active" : ""}" data-motion="item"><article><b>${h.esc(p.thumbnailTitles?.[i] || "\u9875\u9762 " + (i + 1))}</b><hr><p></p><p></p><p></p><i></i></article><small>${i + 1}</small></div>`).join("")}</aside><main class="ap-pdf-canvas"><article class="ap-paper" data-motion="focus"><small>${h.esc(p.subtitle)}</small><h1>${h.esc(p.title)}</h1>${array(p.paragraphs).map((x) => `<p>${h.esc(x)}</p>`).join("")}<div class="ap-paper-steps">${array(p.steps, 4).map((x, i) => `<section data-motion="item"><b>0${i + 1}</b><h3>${h.esc(x)}</h3></section>`).join("")}</div><footer>${h.esc(p.documentFooter)}<span>${h.esc(p.page)}</span></footer></article></main></div>`, { toolbar: `${ai(h, "panel")}<b>${h.esc(p.filename)}</b><span class="ap-tiny">\u7B2C ${h.esc(p.page)} \u9875\uFF0C\u5171 ${h.esc(p.pages)} \u9875</span><span class="ap-spacer"></span>${ai(h, "minus")}${ai(h, "plus")}${ai(h, "share")}${ai(h, "edit")}${ai(h, "search")}` }), "\u9884\u89C8")),
+    component("mac-activity-monitor", "macOS \xB7 \u6D3B\u52A8\u76D1\u89C6\u5668", "\u8FDB\u7A0B\u5217\u8868\u548C\u5E95\u90E8 CPU \u56FE\u8868\uFF0C\u6570\u636E\u53EF\u66FF\u6362\uFF0C\u4E0D\u7ED1\u5B9A\u771F\u5B9E\u8BBE\u5907\u8BFB\u6570\u3002", {
+      "tab": "CPU",
+      "system": 5.6,
+      "user": 12.8,
+      "idle": 81.6,
+      "rows": [
+        [
+          "Process-A",
+          "8.3",
+          "00:22.10",
+          "16",
+          "7",
+          "28210"
+        ],
+        [
+          "Process-B",
+          "6.1",
+          "02:14.82",
+          "19",
+          "4",
+          "391"
+        ],
+        [
+          "Process-C",
+          "4.8",
+          "01:02.37",
+          "28",
+          "8",
+          "12110"
+        ],
+        [
+          "Process-D",
+          "3.5",
+          "00:45.12",
+          "22",
+          "6",
+          "30418"
+        ],
+        [
+          "Process-E",
+          "0.3",
+          "00:09.16",
+          "5",
+          "2",
+          "422"
+        ],
+        [
+          "Process-F",
+          "0.2",
+          "05:02.42",
+          "181",
+          "0",
+          "0"
+        ]
+      ]
+    }, (p, h) => desktop(h, window(h, "\u6D3B\u52A8\u76D1\u89C6\u5668", `<div class="ap-activity"><div class="ap-process-table"><div class="ap-process-row head">${["\u8FDB\u7A0B\u540D\u79F0", "% CPU", "CPU \u65F6\u95F4", "\u7EBF\u7A0B", "\u5524\u9192\u6B21\u6570", "PID"].map((x) => `<span>${x}</span>`).join("")}</div>${array(p.rows, 15).map((r, i) => `<div class="ap-process-row ${!i ? "active" : ""}" data-motion="item">${r.map((x) => `<span>${h.esc(x)}</span>`).join("")}</div>`).join("")}</div><footer><div><p><i class="red"></i>\u7CFB\u7EDF\uFF1A<b>${h.esc(p.system)}%</b></p><p><i class="blue"></i>\u7528\u6237\uFF1A<b>${h.esc(p.user)}%</b></p><p>\u95F2\u7F6E\uFF1A<b>${h.esc(p.idle)}%</b></p></div><section><small>CPU \u8D1F\u8F7D</small><svg viewBox="0 0 230 80"><path d="M0 73 12 69 24 70 36 40 48 66 60 62 72 67 84 34 96 65 108 64 120 46 132 60 144 28 156 63 168 52 180 56 192 38 204 61 216 65 230 53V80H0Z" fill="#6cafeb"/><path data-motion="line" d="M0 74 12 72 24 73 36 66 48 74 60 70 72 74 84 62 96 73 108 71 120 68 132 73 144 59 156 73 168 69 180 73 192 64 204 72 216 73 230 69" fill="none" stroke="#de6f75" stroke-width="2"/></svg></section><div><p>\u7EBF\u7A0B\uFF1A<b>1,402</b></p><p>\u8FDB\u7A0B\uFF1A<b>${array(p.rows).length}</b></p><small>\u793A\u4F8B\u6570\u636E</small></div></footer></div>`, { toolbar: `${ai(h, "x")}${ai(h, "info")}<span class="ap-spacer"></span><div class="ap-segments"><b>${h.esc(p.tab)}</b>\u3000\u5185\u5B58\u3000\u80FD\u8017\u3000\u78C1\u76D8\u3000\u7F51\u7EDC</div><span class="ap-spacer"></span><span class="ap-search">${ai(h, "search", 14)} \u641C\u7D22</span>` }), "\u6D3B\u52A8\u76D1\u89C6\u5668")),
+    component("mac-file-dialog", "macOS \xB7 \u4FDD\u5B58\u5BF9\u8BDD\u6846", "\u4FDD\u5B58\u540D\u79F0\u3001\u4F4D\u7F6E\u3001\u6587\u4EF6\u5217\u8868\u548C\u786E\u8BA4\u64CD\u4F5C\uFF0C\u53EF\u7528\u4E8E\u5BFC\u51FA\u6B65\u9AA4\u6F14\u793A\u3002", {
+      "title": "\u4FDD\u5B58\u6587\u6863",
+      "filename": "\u793A\u4F8B\u6587\u6863.pdf",
+      "folder": "\u6587\u7A3F",
+      "format": "PDF",
+      "files": [
+        [
+          "\u793A\u4F8B\u6587\u6863.md",
+          "\u4ECA\u5929 09:12",
+          "Markdown \u6587\u7A3F",
+          "16 KB"
+        ],
+        [
+          "\u793A\u4F8B\u6570\u636E.csv",
+          "\u6628\u5929 18:20",
+          "CSV \u6587\u7A3F",
+          "8 KB"
+        ],
+        [
+          "\u793A\u4F8B\u56FE\u7247.png",
+          "\u6628\u5929 16:40",
+          "PNG \u56FE\u50CF",
+          "2.4 MB"
+        ],
+        [
+          "\u793A\u4F8B\u6587\u6863.pdf",
+          "\u6628\u5929 14:08",
+          "PDF \u6587\u7A3F",
+          "1.2 MB"
+        ]
+      ],
+      "button": "\u5B58\u50A8",
+      "documentTitle": "\u6587\u6863\u6807\u9898",
+      "documentBody": "\u6B63\u6587\u5185\u5BB9\uFF0C\u53EF\u66FF\u6362\u4E3A\u9700\u8981\u5C55\u793A\u7684\u6587\u5B57\u3002"
+    }, (p, h) => desktop(h, `<div class="ap-dialog-backdrop">${window(h, p.documentTitle, `<div class="ap-document-ghost"><h1>${h.esc(p.documentTitle)}</h1><p>${h.esc(p.documentBody)}</p></div>`)}</div><div class="ap-save-sheet"><header>${h.esc(p.title)}</header><div class="ap-save-fields"><label>\u5B58\u50A8\u4E3A\uFF1A<span data-motion="focus">${h.esc(p.filename)}</span></label><label>\u6807\u7B7E\uFF1A<span class="empty">\u6DFB\u52A0\u6807\u7B7E\u2026</span></label><label>\u4F4D\u7F6E\uFF1A<b>${ai(h, "folder", 15)} ${h.esc(p.folder)}\u3000\u2304</b></label></div><div class="ap-save-files">${sidebar(h, p.folder)}<div class="ap-main">${table(h, ["\u540D\u79F0", "\u4FEE\u6539\u65E5\u671F", "\u79CD\u7C7B", "\u5927\u5C0F"], p.files, -1)}</div></div><footer><label>\u683C\u5F0F\uFF1A<span class="ap-button">${h.esc(p.format)}\u3000\u2304</span></label><span class="ap-spacer"></span><button class="ap-button">\u53D6\u6D88</button><button class="ap-button primary" data-motion="focus">${h.esc(p.button)}</button></footer></div>`, "\u9884\u89C8")),
+    component("mac-alert", "macOS \xB7 \u6743\u9650\u63D0\u793A", "\u5C45\u4E2D\u7684\u7CFB\u7EDF\u8B66\u544A\u4E0E\u7EB5\u5411\u64CD\u4F5C\u6309\u94AE\uFF0C\u6807\u9898\u3001\u8BF4\u660E\u548C\u9009\u9879\u72EC\u7ACB\u914D\u7F6E\u3002", {
+      "app": "\u793A\u4F8B\u5E94\u7528",
+      "title": "\u786E\u8BA4\u64CD\u4F5C",
+      "message": "\u63D0\u793A\u5185\u5BB9\u3002\u53EF\u66FF\u6362\u4E3A\u9700\u8981\u8BF4\u660E\u7684\u64CD\u4F5C\u4E0E\u5F71\u54CD\u3002",
+      "primary": "\u786E\u8BA4",
+      "secondary": "\u53D6\u6D88"
+    }, (p, h) => desktop(h, `<div class="ap-alert"><div class="ap-alert-icon">${appIcon(h, "settings", 60)}</div><h1>${h.esc(p.title)}</h1><p>${h.esc(p.message)}</p><button data-motion="focus" class="ap-alert-primary">${h.esc(p.primary)}</button><button>${h.esc(p.secondary)}</button></div>`, p.app, true)),
+    component("mac-context-menu", "macOS \xB7 \u53F3\u952E\u83DC\u5355", "macOS \u7A84\u884C\u8DDD\u83DC\u5355\u3001\u5206\u9694\u7EBF\u3001\u5FEB\u6377\u952E\u4E0E\u7EA7\u8054\u5B50\u83DC\u5355\u3002", {
+      "filename": "\u793A\u4F8B\u6587\u6863.md",
+      "items": [
+        [
+          "\u6253\u5F00",
+          "\u2318O"
+        ],
+        [
+          "\u6253\u5F00\u65B9\u5F0F",
+          "\u203A"
+        ],
+        [
+          "\u79FB\u5230\u5E9F\u7EB8\u7BD3",
+          "\u2318\u232B"
+        ],
+        [
+          "---",
+          ""
+        ],
+        [
+          "\u663E\u793A\u7B80\u4ECB",
+          "\u2318I"
+        ],
+        [
+          "\u91CD\u65B0\u547D\u540D",
+          ""
+        ],
+        [
+          "\u590D\u5236",
+          "\u2318D"
+        ],
+        [
+          "\u5236\u4F5C\u66FF\u8EAB",
+          ""
+        ],
+        [
+          "\u5FEB\u901F\u67E5\u770B",
+          "\u7A7A\u683C"
+        ],
+        [
+          "---",
+          ""
+        ],
+        [
+          "\u5171\u4EAB",
+          "\u203A"
+        ],
+        [
+          "\u62F7\u8D1D\u201C\u793A\u4F8B\u6587\u6863.md\u201D",
+          "\u2318C"
+        ]
+      ],
+      "selected": 1,
+      "submenu": [
+        "\u6587\u672C\u7F16\u8F91\uFF08\u9ED8\u8BA4\uFF09",
+        "Visual Studio Code",
+        "\u5907\u5FD8\u5F55",
+        "\u5176\u4ED6\u2026"
+      ],
+      "files": [
+        [
+          "\u793A\u4F8B\u6587\u6863.md",
+          "\u4ECA\u5929 09:12",
+          "Markdown \u6587\u7A3F",
+          "16 KB"
+        ],
+        [
+          "\u793A\u4F8B\u6570\u636E.csv",
+          "\u6628\u5929 18:20",
+          "CSV \u6587\u7A3F",
+          "8 KB"
+        ],
+        [
+          "\u793A\u4F8B\u56FE\u7247.png",
+          "\u6628\u5929 16:40",
+          "PNG \u56FE\u50CF",
+          "2.4 MB"
+        ],
+        [
+          "\u793A\u4F8B\u6587\u6863.pdf",
+          "\u6628\u5929 14:08",
+          "PDF \u6587\u7A3F",
+          "1.2 MB"
+        ]
+      ]
+    }, (p, h) => desktop(h, `${window(h, "\u6587\u7A3F", `<div class="ap-split">${sidebar(h)}<div class="ap-main">${table(h, ["\u540D\u79F0", "\u4FEE\u6539\u65E5\u671F", "\u79CD\u7C7B", "\u5927\u5C0F"], p.files.map((r, i) => i ? r : [p.filename, ...r.slice(1)]), 0)}</div></div>`)}<div class="ap-context"><div class="ap-context-main">${array(p.items, 18).map((x, i) => x[0] === "---" ? "<hr>" : `<div class="${i === p.selected ? "active" : ""}" data-motion="item"><span>${h.esc(x[0])}</span><small>${h.esc(x[1])}</small></div>`).join("")}</div><div class="ap-context-sub">${array(p.submenu, 7).map((x) => `<div>${h.esc(x)}</div>`).join("")}</div></div>`)),
+    component("mac-dock", "macOS \xB7 \u7A0B\u5E8F\u575E", "\u684C\u9762\u5E95\u90E8\u73BB\u7483\u5E95\u677F\u3001\u5E94\u7528\u56FE\u6807\u3001\u8FD0\u884C\u6307\u793A\u548C\u60AC\u505C\u63D0\u793A\u3002", {
+      "apps": [
+        [
+          "finder",
+          "\u8BBF\u8FBE"
+        ],
+        [
+          "safari",
+          "Safari"
+        ],
+        [
+          "mail",
+          "\u90AE\u4EF6"
+        ],
+        [
+          "calendar",
+          "\u65E5\u5386"
+        ],
+        [
+          "notes",
+          "\u5907\u5FD8\u5F55"
+        ],
+        [
+          "messages",
+          "\u4FE1\u606F"
+        ],
+        [
+          "settings",
+          "\u7CFB\u7EDF\u8BBE\u7F6E"
+        ],
+        [
+          "terminal",
+          "\u7EC8\u7AEF"
+        ]
+      ],
+      "selected": 1,
+      "desktopFiles": [
+        "\u793A\u4F8B\u6587\u4EF6\u5939",
+        "\u793A\u4F8B\u8D44\u6599",
+        "\u793A\u4F8B\u6587\u6863.pdf"
+      ]
+    }, (p, h) => desktop(h, `<div class="ap-desktop-files">${array(p.desktopFiles, 5).map((x, i) => `<div data-motion="item">${ai(h, i === 2 ? "file" : "folder", 56)}<p>${h.esc(x)}</p></div>`).join("")}</div><div class="ap-dock">${array(p.apps, 12).map((x, i) => `<div class="ap-dock-item ${i === p.selected ? "active" : ""}" data-motion="item" data-app="${h.esc(x[0])}">${i === p.selected ? `<span class="ap-dock-tip">${h.esc(x[1])}</span>` : ""}${appIcon(h, x[0], 58)}<i></i></div>`).join("")}<b class="ap-dock-separator"></b><div class="ap-dock-item">${appIcon(h, "files", 58)}</div><div class="ap-dock-trash">${ai(h, "trash", 40)}</div></div>`, "\u8BBF\u8FBE", true))
   ];
 
   // families/apple-macos.mjs
-  var fileRows = [["\u9879\u76EE\u7D20\u6750", "\u4ECA\u5929 09:30", "\u6587\u4EF6\u5939", "\u2014"], ["\u8BFE\u7A0B\u8BB2\u7A3F.md", "\u4ECA\u5929 09:12", "Markdown \u6587\u7A3F", "16 KB"], ["\u5206\u955C\u6E05\u5355.csv", "\u6628\u5929 18:20", "CSV \u6587\u7A3F", "8 KB"], ["\u53C2\u8003\u622A\u56FE.png", "\u6628\u5929 16:40", "PNG \u56FE\u50CF", "2.4 MB"], ["\u64CD\u4F5C\u5F55\u5C4F.mov", "\u6628\u5929 15:06", "QuickTime \u5F71\u7247", "86 MB"], ["\u914D\u97F3.wav", "9\u670815\u65E5 11:24", "WAV \u97F3\u9891", "24 MB"], ["README.md", "9\u670814\u65E5 14:08", "Markdown \u6587\u7A3F", "4 KB"]];
-  var noteDefault = { title: "\u79D1\u666E\u89C6\u9891\u5236\u4F5C\u8BA1\u5212", folder: "\u5DE5\u4F5C", date: "2026\u5E749\u670817\u65E5 09:41", notes: ["\u79D1\u666E\u89C6\u9891\u5236\u4F5C\u8BA1\u5212", "\u7B2C\u4E00\u6BB5\u7684\u5F00\u5934", "\u8D44\u6599\u4E0E\u5F15\u7528", "\u5F55\u5C4F\u64CD\u4F5C\u6E05\u5355"], paragraphs: ["\u5148\u628A\u89C2\u4F17\u7684\u95EE\u9898\u5199\u6210\u4E00\u53E5\u8BDD\uFF0C\u518D\u51B3\u5B9A\u753B\u9762\u600E\u6837\u914D\u5408\u3002", "\u672C\u5468\u5148\u5B8C\u6210\u7B2C\u4E00\u6BB5\uFF0C\u4FDD\u6301\u8BB2\u7A3F\u3001\u53C2\u8003\u56FE\u548C\u6F14\u793A\u5185\u5BB9\u4E00\u81F4\u3002"], checklist: ["\u786E\u5B9A\u5F00\u5934\u94A9\u5B50", "\u6574\u7406\u53C2\u8003\u4F9D\u636E", "\u51C6\u5907\u771F\u5B9E\u5F55\u5C4F", "\u68C0\u67E5\u5B57\u5E55\u4E0E\u58F0\u97F3"] };
-  var notesBody = (p, h) => `<aside class="ap-note-list">${array(p.notes).map((x, i) => `<article class="${i === 0 ? "active" : ""}" data-motion="item"><b>${h.esc(x)}</b><p>09:41 <span>${i === 0 ? "\u5148\u628A\u89C2\u4F17\u7684\u95EE\u9898\u5199\u6E05\u695A" : "\u5DE5\u4F5C\u7B14\u8BB0\u4E0E\u8BB0\u5F55"}</span></p><small>\u25B1 ${h.esc(p.folder)}</small></article>`).join("")}</aside><div class="ap-note-page"><small>${h.esc(p.date)}</small><h1>${h.esc(p.title)}</h1>${array(p.paragraphs).map((x) => `<p>${h.esc(x)}</p>`).join("")}<h2>\u5236\u4F5C\u6E05\u5355</h2>${array(p.checklist).map((x, i) => `<div class="ap-note-check" data-motion="item"><i class="${i < 2 ? "done" : ""}">${i < 2 ? "\u2713" : ""}</i>${h.esc(x)}</div>`).join("")}</div>`;
+  var noteDefault = {
+    "title": "\u7B14\u8BB0\u6807\u9898",
+    "folder": "\u793A\u4F8B\u6587\u4EF6\u5939",
+    "date": "2026\u5E749\u670817\u65E5 09:41",
+    "notes": [
+      "\u7B14\u8BB0\u6807\u9898 A",
+      "\u7B14\u8BB0\u6807\u9898 B",
+      "\u7B14\u8BB0\u6807\u9898 C",
+      "\u7B14\u8BB0\u6807\u9898 D"
+    ],
+    "paragraphs": [
+      "\u6B63\u6587\u7B2C\u4E00\u6BB5\uFF0C\u66FF\u6362\u4E3A\u9700\u8981\u5C55\u793A\u7684\u5185\u5BB9\u3002",
+      "\u6B63\u6587\u7B2C\u4E8C\u6BB5\uFF0C\u652F\u6301\u7EE7\u7EED\u8865\u5145\u8BF4\u660E\u3002"
+    ],
+    "checklist": [
+      "\u5F85\u529E\u4E8B\u9879 A",
+      "\u5F85\u529E\u4E8B\u9879 B",
+      "\u5F85\u529E\u4E8B\u9879 C",
+      "\u5F85\u529E\u4E8B\u9879 D"
+    ],
+    "noteSummaries": [
+      "\u7B14\u8BB0\u6458\u8981 A",
+      "\u7B14\u8BB0\u6458\u8981 B",
+      "\u7B14\u8BB0\u6458\u8981 C",
+      "\u7B14\u8BB0\u6458\u8981 D"
+    ],
+    "checklistTitle": "\u68C0\u67E5\u9879"
+  };
+  var notesBody = (p, h) => `<aside class="ap-note-list">${array(p.notes).map((x, i) => `<article class="${i === 0 ? "active" : ""}" data-motion="item"><b>${h.esc(x)}</b><p>09:41 <span>${h.esc(p.noteSummaries?.[i] || "\u7B14\u8BB0\u6458\u8981")}</span></p><small>\u25B1 ${h.esc(p.folder)}</small></article>`).join("")}</aside><div class="ap-note-page"><small>${h.esc(p.date)}</small><h1>${h.esc(p.title)}</h1>${array(p.paragraphs).map((x) => `<p>${h.esc(x)}</p>`).join("")}<h2>${h.esc(p.checklistTitle)}</h2>${array(p.checklist).map((x, i) => `<div class="ap-note-check" data-motion="item"><i class="${i < 2 ? "done" : ""}">${i < 2 ? "\u2713" : ""}</i>${h.esc(x)}</div>`).join("")}</div>`;
   var components12 = [
-    component("mac-finder", "macOS \xB7 \u8BBF\u8FBE", "\u539F\u751F\u4FA7\u680F\u3001\u5DE5\u5177\u680F\u4E0E\u6587\u4EF6\u5217\u8868\uFF0C\u53EF\u66FF\u6362\u76EE\u5F55\u3001\u6587\u4EF6\u548C\u9009\u62E9\u72B6\u6001\u3002", { title: "\u6587\u7A3F", path: "iCloud \u4E91\u76D8 \u203A \u6587\u7A3F \u203A \u89C6\u9891\u5236\u4F5C", files: fileRows, selected: 1 }, (p, h) => desktop(h, window(h, p.title, `<div class="ap-split">${sidebar(h, p.title)}<div class="ap-main">${table(h, ["\u540D\u79F0", "\u4FEE\u6539\u65E5\u671F", "\u79CD\u7C7B", "\u5927\u5C0F"], array(p.files), p.selected)}<div class="ap-bottom">${h.esc(p.path)}\u3000 \xB7\u3000${p.files.length} \u4E2A\u9879\u76EE</div></div></div>`, { toolbar: `${ai(h, "chevron-left")}${ai(h, "chevron-right")}<b>${h.esc(p.title)}</b><span class="ap-spacer"></span>${ai(h, "grid")}${ai(h, "list")}${ai(h, "columns")}${ai(h, "share")}${ai(h, "more")}<span class="ap-search">${ai(h, "search", 14)} \u641C\u7D22</span>` }))),
-    component("mac-safari", "macOS \xB7 Safari \u6D4F\u89C8\u5668", "macOS \u7684\u72EC\u7ACB\u5DE5\u5177\u680F\u3001\u5730\u5740\u680F\u4E0E\u6807\u7B7E\u9875\uFF0C\u7F51\u9875\u6B63\u6587\u53EF\u7F16\u8F91\u3002", { title: "\u5236\u4F5C\u6307\u5357", url: "docs.example.com", tabs: ["\u5236\u4F5C\u6307\u5357", "\u7EC4\u4EF6\u76EE\u5F55"], heading: "\u628A\u77E5\u8BC6\u53D8\u6210\u80FD\u770B\u61C2\u7684\u753B\u9762", intro: "\u4ECE\u4E00\u4E2A\u95EE\u9898\u51FA\u53D1\uFF0C\u7528\u6E05\u6670\u7684\u7ED3\u6784\u3001\u771F\u5B9E\u7D20\u6750\u548C\u51C6\u786E\u7684\u56FE\u89E3\u5B8C\u6210\u8BB2\u89E3\u3002", sections: [{ title: "\u51C6\u5907\u5185\u5BB9", detail: "\u6574\u7406\u4E3B\u9898\u3001\u53D7\u4F17\u3001\u9010\u5B57\u7A3F\u4E0E\u53C2\u8003\u6765\u6E90\u3002" }, { title: "\u9009\u62E9\u753B\u9762", detail: "\u6839\u636E\u5185\u5BB9\u9009\u62E9\u5F55\u5C4F\u3001\u56FE\u89E3\u3001\u56FE\u7247\u6216\u89C6\u9891\u3002" }, { title: "\u68C0\u67E5\u7ED3\u679C", detail: "\u786E\u8BA4\u6587\u5B57\u53EF\u8BFB\u3001\u4E8B\u5B9E\u51C6\u786E\u3001\u58F0\u753B\u540C\u6B65\u3002" }] }, (p, h) => desktop(h, window(h, p.title, `<div class="ap-safari-tabs">${array(p.tabs, 5).map((x, i) => `<div class="${!i ? "active" : ""}">${h.esc(i === 0 ? p.title : x)}<span>\xD7</span></div>`).join("")}</div><div class="ap-safari-page"><nav><b>Studio Docs</b><span>\u6587\u6863\u3000\u7EC4\u4EF6\u3000\u793A\u4F8B</span><button>\u5F00\u59CB\u5236\u4F5C</button></nav><div class="ap-site-body"><aside>\u5F00\u59CB\u4F7F\u7528<b>\u5236\u4F5C\u6307\u5357</b><span>\u5185\u5BB9\u4E0E\u5206\u955C</span><span>\u7D20\u6750\u7BA1\u7406</span><span>\u9884\u89C8\u4E0E\u5BFC\u51FA</span></aside><article><small>\u6587\u6863 / \u5236\u4F5C\u6307\u5357</small><h1>${h.esc(p.heading)}</h1><p>${h.esc(p.intro)}</p>${array(p.sections, 4).map((x) => `<section data-motion="item"><h2>${h.esc(x.title)}</h2><p>${h.esc(x.detail)}</p></section>`).join("")}<div class="ap-site-code" data-motion="focus">npm run build<br>npm run preview</div></article></div></div>`, { toolbar: `${ai(h, "panel")}${ai(h, "chevron-left")}${ai(h, "chevron-right")}<div class="ap-safari-address">${ai(h, "lock", 12)} ${h.esc(p.url)}<span>${ai(h, "refresh", 13)}</span></div>${ai(h, "share")}${ai(h, "plus")}${ai(h, "copy")}` }), "Safari")),
-    component("mac-terminal", "macOS \xB7 \u7EC8\u7AEF", "\u4FDD\u7559 macOS \u7A97\u53E3\u5F62\u5236\u4E0E shell \u63D0\u793A\u7B26\uFF0C\u53EF\u66FF\u6362\u547D\u4EE4\u4E0E\u8F93\u51FA\u3002", { title: "video-studio \u2014 zsh \u2014 100\xD728", user: "lin@MacBook-Pro", folder: "video-studio", command: "npm run build", lines: ["> science-video-studio@1.0.0 build", "> node scripts/build.mjs", "", "\u2713 \u5185\u5BB9\u6821\u9A8C\u5B8C\u6210", "\u2713 \u5DF2\u751F\u6210\u53EF\u7F16\u8F91\u7EC4\u4EF6", "\u2713 \u672C\u5730\u9884\u89C8\u51C6\u5907\u5C31\u7EEA", "", "\u5B8C\u6210\u3002\u672A\u6E32\u67D3\u89C6\u9891\u3002"] }, (p, h) => desktop(h, window(h, p.title, `<div class="ap-terminal"><div>Last login: Thu Sep 17 09:38:24 on ttys001</div><div><span>${h.esc(p.user)}</span> ${h.esc(p.folder)} % <b data-motion="type">${h.esc(p.command)}</b></div>${array(p.lines, 18).map((x) => `<div data-output-line>${h.esc(x) || "&nbsp;"}</div>`).join("")}<div>${h.esc(p.user)} ${h.esc(p.folder)} % <i></i></div></div>`, { cls: "ap-terminal-window" }), "\u7EC8\u7AEF")),
-    component("mac-system-settings", "macOS \xB7 \u7CFB\u7EDF\u8BBE\u7F6E", "\u8BBE\u7F6E\u4FA7\u680F\u3001\u5206\u7EC4\u9762\u677F\u3001\u5F00\u5173\u548C\u8BE6\u60C5\u884C\uFF0C\u53EF\u7528\u4E8E\u6559\u7A0B\u5B9A\u4F4D\u3002", { title: "\u901A\u7528", account: "\u6797\u540C\u5B66", subtitle: "Apple \u8D26\u6237", rows: [["\u5173\u4E8E\u672C\u673A", "MacBook Pro"], ["\u8F6F\u4EF6\u66F4\u65B0", "\u5DF2\u662F\u6700\u65B0"], ["\u50A8\u5B58\u7A7A\u95F4", "128 GB \u53EF\u7528"], ["\u9694\u7A7A\u6295\u9001\u4E0E\u63A5\u529B", ""], ["\u767B\u5F55\u9879\u4E0E\u6269\u5C55", ""], ["\u8BED\u8A00\u4E0E\u5730\u533A", "\u7B80\u4F53\u4E2D\u6587"], ["\u65E5\u671F\u4E0E\u65F6\u95F4", "\u81EA\u52A8\u8BBE\u7F6E"], ["\u5171\u4EAB", "\u5173\u95ED"]] }, (p, h) => desktop(h, window(h, p.title, `<div class="ap-split"><aside class="ap-settings-sidebar"><div class="ap-search">${ai(h, "search", 13)} \u641C\u7D22</div><div class="ap-account"><b>\u6797</b><div><strong>${h.esc(p.account)}</strong><small>${h.esc(p.subtitle)}</small></div></div>${["Wi-Fi", "\u84DD\u7259", "\u7F51\u7EDC", "\u901A\u77E5", "\u58F0\u97F3", "\u4E13\u6CE8\u6A21\u5F0F", "\u5C4F\u5E55\u4F7F\u7528\u65F6\u95F4", "\u901A\u7528", "\u8F85\u52A9\u529F\u80FD", "\u5916\u89C2", "\u63A7\u5236\u4E2D\u5FC3", "\u684C\u9762\u4E0E\u7A0B\u5E8F\u575E", "\u663E\u793A\u5668", "\u5899\u7EB8", "\u9690\u79C1\u4E0E\u5B89\u5168\u6027"].map((x, i) => `<div class="ap-setting-nav ${x === p.title ? "active" : ""}" data-motion="item"><i style="background:${["#248cef", "#258cf1", "#278ce8", "#ef514a", "#e7638c", "#7767c9", "#5856d6", "#9095a0"][i % 8]}">${ai(h, ["wifi", "bluetooth", "globe", "bell", "volume", "moon", "clock", "settings"][i % 8], 14)}</i>${x}</div>`).join("")}</aside><div class="ap-settings-main"><h2>${h.esc(p.title)}</h2><div class="ap-settings-hero">${appIcon(h, "settings", 54)}<b>${h.esc(p.title)}</b><p>\u7BA1\u7406\u8BBE\u5907\u7684\u6574\u4F53\u8BBE\u7F6E\u548C\u504F\u597D\u3002</p></div><div class="ap-setting-group">${array(p.rows, 10).map((x, i) => `<div data-motion="focus" class="ap-native-row">${ai(h, ["info", "refresh", "folder", "airdrop", "grid", "globe", "clock", "share"][i], 18)}<b>${h.esc(x[0])}</b><span>${h.esc(x[1])}\u3000\u203A</span></div>`).join("")}</div></div></div>`, { style: "left:211px;top:56px;width:858px;height:700px", toolbar: `<span class="ap-spacer"></span>${ai(h, "chevron-left")}${ai(h, "chevron-right")}<span class="ap-spacer"></span>` }), "\u7CFB\u7EDF\u8BBE\u7F6E")),
-    component("mac-spotlight", "macOS \xB7 \u805A\u7126\u641C\u7D22", "\u72EC\u7ACB\u641C\u7D22\u6D6E\u5C42\u3001\u5206\u7C7B\u7ED3\u679C\u548C\u9884\u89C8\uFF0C\u53EF\u66FF\u6362\u641C\u7D22\u8BCD\u4E0E\u5339\u914D\u9879\u3002", { query: "\u89C6\u9891\u5236\u4F5C", results: [{ name: "\u89C6\u9891\u5236\u4F5C", detail: "\u6587\u7A3F / \u9879\u76EE\u6587\u4EF6\u5939", kind: "folder" }, { name: "\u89C6\u9891\u5236\u4F5C\u8BA1\u5212.md", detail: "\u4ECA\u5929 09:12 \xB7 Markdown \u6587\u7A3F", kind: "file" }, { name: "\u89C6\u9891\u5236\u4F5C\u53C2\u8003.pdf", detail: "\u6628\u5929 18:22 \xB7 PDF \u6587\u7A3F", kind: "file" }, { name: "\u89C6\u9891\u5236\u4F5C\u6559\u7A0B", detail: "\u5728\u7F51\u9875\u4E2D\u641C\u7D22", kind: "globe" }] }, (p, h) => desktop(h, `<div class="ap-spotlight"><div class="ap-spot-search">${ai(h, "search", 28)}<span data-motion="type">${h.esc(p.query)}</span></div><div class="ap-spot-body"><div><label>\u6700\u4F73\u5339\u914D</label>${array(p.results, 7).map((r, i) => `<article class="${i === 0 ? "active" : ""}" data-motion="item">${ai(h, r.kind, 28)}<div><b>${h.esc(r.name)}</b><small>${h.esc(r.detail)}</small></div>${i === 0 ? "<span>\u21B5</span>" : ""}</article>`).join("")}</div><aside>${appIcon(h, "files", 76)}<h2>${h.esc(p.results[0]?.name)}</h2><p>\u6587\u4EF6\u5939</p><hr><small>\u4F4D\u7F6E\u3000iCloud \u4E91\u76D8 / \u6587\u7A3F</small><small>\u4FEE\u6539\u3000\u4ECA\u5929 09:30</small><small>\u5927\u5C0F\u30008 \u4E2A\u9879\u76EE</small></aside></div><footer>\u6309\u56DE\u8F66\u952E\u6253\u5F00\u3000 \xB7\u3000\u6309\u4F4F \u2318 \u67E5\u770B\u4F4D\u7F6E</footer></div>`, "\u8BBF\u8FBE", true)),
-    component("mac-control-center", "macOS \xB7 \u63A7\u5236\u4E2D\u5FC3", "\u6309\u5B98\u65B9\u5206\u7EC4\u7EC4\u7EC7\u7F51\u7EDC\u3001\u4E13\u6CE8\u3001\u663E\u793A\u548C\u58F0\u97F3\u63A7\u5236\u3002", { wifi: "Studio Wi-Fi", bluetooth: "\u5DF2\u6253\u5F00", airdrop: "\u4EC5\u9650\u8054\u7CFB\u4EBA", focus: "\u4E13\u6CE8\u6A21\u5F0F", brightness: 65, volume: 42, track: "\u672A\u5728\u64AD\u653E" }, (p, h) => desktop(h, `<div class="ap-control"><div class="ap-control-grid"><section class="ap-connect">${[["wifi", "Wi-Fi", p.wifi], ["bluetooth", "\u84DD\u7259", p.bluetooth], ["airdrop", "\u9694\u7A7A\u6295\u9001", p.airdrop]].map((x) => `<div data-motion="item"><i>${ai(h, x[0], 19)}</i><span><b>${h.esc(x[1])}</b><small>${h.esc(x[2])}</small></span></div>`).join("")}</section><section class="ap-focus" data-motion="focus">${ai(h, "moon", 24)}<b>${h.esc(p.focus)}</b></section><section class="ap-control-small">${ai(h, "panel", 24)}<span>\u53F0\u524D\u8C03\u5EA6</span></section><section class="ap-control-small">${ai(h, "copy", 24)}<span>\u5C4F\u5E55\u955C\u50CF</span></section></div>${[["\u663E\u793A\u5668", "sun", p.brightness], ["\u58F0\u97F3", "volume", p.volume]].map((x) => `<section class="ap-control-slider" data-motion="focus"><b>${x[0]}</b><div><i style="width:${Math.max(0, Math.min(100, Number(x[2])))}%"></i><span>${ai(h, x[1], 15)}</span></div></section>`).join("")}<section class="ap-control-playing">${appIcon(h, "notes", 37)}<b>${h.esc(p.track)}</b>${ai(h, "play", 17)}</section></div>`, "\u8BBF\u8FBE", true)),
-    component("mac-notification-center", "macOS \xB7 \u901A\u77E5\u4E0E\u5C0F\u7EC4\u4EF6", "\u53F3\u4FA7\u901A\u77E5\u548C\u65E5\u5386\u5C0F\u7EC4\u4EF6\uFF0C\u6309\u771F\u5B9E\u684C\u9762\u9762\u677F\u5BC6\u5EA6\u7EC4\u7EC7\u3002", { date: "9\u670817\u65E5 \u661F\u671F\u56DB", events: [{ app: "\u65E5\u5386", title: "\u5236\u4F5C\u8BC4\u5BA1", body: "\u4ECA\u5929 10:00\u201310:30", time: "9\u5206\u949F\u524D" }, { app: "\u63D0\u9192\u4E8B\u9879", title: "\u68C0\u67E5\u7B2C\u4E00\u7248", body: "\u6838\u5BF9\u5B57\u5E55\u3001\u58F0\u97F3\u548C\u64CD\u4F5C\u6B65\u9AA4\u3002", time: "24\u5206\u949F\u524D" }, { app: "\u4FE1\u606F", title: "\u6797\u540C\u5B66", body: "\u53C2\u8003\u8D44\u6599\u5DF2\u7ECF\u6574\u7406\u5230\u9879\u76EE\u6587\u4EF6\u5939\u3002", time: "1\u5C0F\u65F6\u524D" }] }, (p, h) => desktop(h, `<div class="ap-notifications"><header>${h.esc(p.date)}</header><div class="ap-widget-pair"><section><small>\u661F\u671F\u56DB</small><b>17</b><p>\u4ECA\u5929\u6709 2 \u4E2A\u65E5\u7A0B</p></section><section><small>\u4E0B\u4E00\u9879\u65E5\u7A0B</small><h3>\u5236\u4F5C\u8BC4\u5BA1</h3><p>10:00\u201310:30</p><i>\u5DE5\u4F5C\u65E5\u5386</i></section></div>${array(p.events, 5).map((x, i) => `<article class="ap-notification" data-motion="item">${appIcon(h, ["calendar", "notes", "messages"][i % 3], 30)}<div><small>${h.esc(x.app)}<span>${h.esc(x.time)}</span></small><b>${h.esc(x.title)}</b><p>${h.esc(x.body)}</p></div></article>`).join("")}<div class="ap-notification-edit">\u7F16\u8F91\u5C0F\u7EC4\u4EF6</div></div>`, "\u8BBF\u8FBE", true)),
+    component("mac-finder", "macOS \xB7 \u8BBF\u8FBE", "\u539F\u751F\u4FA7\u680F\u3001\u5DE5\u5177\u680F\u4E0E\u6587\u4EF6\u5217\u8868\uFF0C\u53EF\u66FF\u6362\u76EE\u5F55\u3001\u6587\u4EF6\u548C\u9009\u62E9\u72B6\u6001\u3002", {
+      "title": "\u6587\u7A3F",
+      "path": "iCloud \u4E91\u76D8 \u203A \u6587\u7A3F \u203A \u793A\u4F8B\u6587\u4EF6\u5939",
+      "files": [
+        [
+          "\u793A\u4F8B\u6587\u4EF6\u5939",
+          "\u4ECA\u5929 09:30",
+          "\u6587\u4EF6\u5939",
+          "\u2014"
+        ],
+        [
+          "\u793A\u4F8B\u6587\u6863.md",
+          "\u4ECA\u5929 09:12",
+          "Markdown \u6587\u7A3F",
+          "16 KB"
+        ],
+        [
+          "\u793A\u4F8B\u6570\u636E.csv",
+          "\u6628\u5929 18:20",
+          "CSV \u6587\u7A3F",
+          "8 KB"
+        ],
+        [
+          "\u793A\u4F8B\u56FE\u7247.png",
+          "\u6628\u5929 16:40",
+          "PNG \u56FE\u50CF",
+          "2.4 MB"
+        ],
+        [
+          "\u793A\u4F8B\u89C6\u9891.mov",
+          "\u6628\u5929 15:06",
+          "QuickTime \u5F71\u7247",
+          "86 MB"
+        ],
+        [
+          "\u793A\u4F8B\u97F3\u9891.wav",
+          "9\u670815\u65E5 11:24",
+          "WAV \u97F3\u9891",
+          "24 MB"
+        ],
+        [
+          "README.md",
+          "9\u670814\u65E5 14:08",
+          "Markdown \u6587\u7A3F",
+          "4 KB"
+        ]
+      ],
+      "selected": 1
+    }, (p, h) => desktop(h, window(h, p.title, `<div class="ap-split">${sidebar(h, p.title)}<div class="ap-main">${table(h, ["\u540D\u79F0", "\u4FEE\u6539\u65E5\u671F", "\u79CD\u7C7B", "\u5927\u5C0F"], array(p.files), p.selected)}<div class="ap-bottom">${h.esc(p.path)}\u3000 \xB7\u3000${p.files.length} \u4E2A\u9879\u76EE</div></div></div>`, { toolbar: `${ai(h, "chevron-left")}${ai(h, "chevron-right")}<b>${h.esc(p.title)}</b><span class="ap-spacer"></span>${ai(h, "grid")}${ai(h, "list")}${ai(h, "columns")}${ai(h, "share")}${ai(h, "more")}<span class="ap-search">${ai(h, "search", 14)} \u641C\u7D22</span>` }))),
+    component("mac-safari", "macOS \xB7 Safari \u6D4F\u89C8\u5668", "macOS \u7684\u72EC\u7ACB\u5DE5\u5177\u680F\u3001\u5730\u5740\u680F\u4E0E\u6807\u7B7E\u9875\uFF0C\u7F51\u9875\u6B63\u6587\u53EF\u7F16\u8F91\u3002", {
+      "title": "\u9875\u9762\u6807\u9898",
+      "url": "www.example.com",
+      "tabs": [
+        "\u6807\u7B7E\u9875 A",
+        "\u6807\u7B7E\u9875 B"
+      ],
+      "heading": "\u9875\u9762\u4E3B\u6807\u9898",
+      "intro": "\u9875\u9762\u7B80\u4ECB\uFF0C\u53EF\u66FF\u6362\u4E3A\u9700\u8981\u5C55\u793A\u7684\u8BF4\u660E\u3002",
+      "sections": [
+        {
+          "title": "\u7AE0\u8282\u6807\u9898 A",
+          "detail": "\u7AE0\u8282\u8BF4\u660E A"
+        },
+        {
+          "title": "\u7AE0\u8282\u6807\u9898 B",
+          "detail": "\u7AE0\u8282\u8BF4\u660E B"
+        },
+        {
+          "title": "\u7AE0\u8282\u6807\u9898 C",
+          "detail": "\u7AE0\u8282\u8BF4\u660E C"
+        }
+      ],
+      "brand": "\u793A\u4F8B\u7AD9\u70B9",
+      "navigation": [
+        "\u680F\u76EE A",
+        "\u680F\u76EE B",
+        "\u680F\u76EE C"
+      ],
+      "actionLabel": "\u64CD\u4F5C\u6309\u94AE",
+      "sidebarTitle": "\u5BFC\u822A\u6807\u9898",
+      "sidebarItems": [
+        "\u9875\u9762 A",
+        "\u9875\u9762 B",
+        "\u9875\u9762 C",
+        "\u9875\u9762 D"
+      ],
+      "eyebrow": "\u680F\u76EE / \u9875\u9762",
+      "commands": [
+        "node example.js",
+        "node example.js --preview"
+      ]
+    }, (p, h) => desktop(h, window(h, p.title, `<div class="ap-safari-tabs">${array(p.tabs, 5).map((x, i) => `<div class="${!i ? "active" : ""}">${h.esc(i === 0 ? p.title : x)}<span>\xD7</span></div>`).join("")}</div><div class="ap-safari-page"><nav><b>${h.esc(p.brand)}</b><span>${array(p.navigation, 3).map(h.esc).join("\u3000")}</span><button>${h.esc(p.actionLabel)}</button></nav><div class="ap-site-body"><aside>${h.esc(p.sidebarTitle)}${array(p.sidebarItems, 4).map((x, i) => i ? `<span>${h.esc(x)}</span>` : `<b>${h.esc(x)}</b>`).join("")}</aside><article><small>${h.esc(p.eyebrow)}</small><h1>${h.esc(p.heading)}</h1><p>${h.esc(p.intro)}</p>${array(p.sections, 4).map((x) => `<section data-motion="item"><h2>${h.esc(x.title)}</h2><p>${h.esc(x.detail)}</p></section>`).join("")}<div class="ap-site-code" data-motion="focus">${array(p.commands, 2).map(h.esc).join("<br>")}</div></article></div></div>`, { toolbar: `${ai(h, "panel")}${ai(h, "chevron-left")}${ai(h, "chevron-right")}<div class="ap-safari-address">${ai(h, "lock", 12)} ${h.esc(p.url)}<span>${ai(h, "refresh", 13)}</span></div>${ai(h, "share")}${ai(h, "plus")}${ai(h, "copy")}` }), "Safari")),
+    component("mac-terminal", "macOS \xB7 \u7EC8\u7AEF", "\u4FDD\u7559 macOS \u7A97\u53E3\u5F62\u5236\u4E0E shell \u63D0\u793A\u7B26\uFF0C\u53EF\u66FF\u6362\u547D\u4EE4\u4E0E\u8F93\u51FA\u3002", {
+      "title": "example-project \u2014 zsh \u2014 100\xD728",
+      "user": "user@MacBook-Pro",
+      "folder": "example-project",
+      "command": "node example.js",
+      "lines": [
+        "\u793A\u4F8B\u8F93\u51FA A",
+        "\u793A\u4F8B\u8F93\u51FA B",
+        "",
+        "\u2713 \u6B65\u9AA4 A \u5DF2\u5B8C\u6210",
+        "\u2713 \u6B65\u9AA4 B \u5DF2\u5B8C\u6210",
+        "",
+        "\u5904\u7406\u5B8C\u6210\u3002"
+      ]
+    }, (p, h) => desktop(h, window(h, p.title, `<div class="ap-terminal"><div>Last login: Thu Sep 17 09:38:24 on ttys001</div><div><span>${h.esc(p.user)}</span> ${h.esc(p.folder)} % <b data-motion="type">${h.esc(p.command)}</b></div>${array(p.lines, 18).map((x) => `<div data-output-line>${h.esc(x) || "&nbsp;"}</div>`).join("")}<div>${h.esc(p.user)} ${h.esc(p.folder)} % <i></i></div></div>`, { cls: "ap-terminal-window" }), "\u7EC8\u7AEF")),
+    component("mac-system-settings", "macOS \xB7 \u7CFB\u7EDF\u8BBE\u7F6E", "\u8BBE\u7F6E\u4FA7\u680F\u3001\u5206\u7EC4\u9762\u677F\u3001\u5F00\u5173\u548C\u8BE6\u60C5\u884C\uFF0C\u53EF\u7528\u4E8E\u6559\u7A0B\u5B9A\u4F4D\u3002", {
+      "title": "\u901A\u7528",
+      "account": "\u793A\u4F8B\u7528\u6237",
+      "subtitle": "Apple \u8D26\u6237",
+      "rows": [
+        [
+          "\u5173\u4E8E\u672C\u673A",
+          "MacBook Pro"
+        ],
+        [
+          "\u8F6F\u4EF6\u66F4\u65B0",
+          "\u5DF2\u662F\u6700\u65B0"
+        ],
+        [
+          "\u50A8\u5B58\u7A7A\u95F4",
+          "128 GB \u53EF\u7528"
+        ],
+        [
+          "\u9694\u7A7A\u6295\u9001\u4E0E\u63A5\u529B",
+          ""
+        ],
+        [
+          "\u767B\u5F55\u9879\u4E0E\u6269\u5C55",
+          ""
+        ],
+        [
+          "\u8BED\u8A00\u4E0E\u5730\u533A",
+          "\u7B80\u4F53\u4E2D\u6587"
+        ],
+        [
+          "\u65E5\u671F\u4E0E\u65F6\u95F4",
+          "\u81EA\u52A8\u8BBE\u7F6E"
+        ],
+        [
+          "\u5171\u4EAB",
+          "\u5173\u95ED"
+        ]
+      ],
+      "accountInitial": "\u7528"
+    }, (p, h) => desktop(h, window(h, p.title, `<div class="ap-split"><aside class="ap-settings-sidebar"><div class="ap-search">${ai(h, "search", 13)} \u641C\u7D22</div><div class="ap-account"><b>${h.esc(p.accountInitial)}</b><div><strong>${h.esc(p.account)}</strong><small>${h.esc(p.subtitle)}</small></div></div>${["Wi-Fi", "\u84DD\u7259", "\u7F51\u7EDC", "\u901A\u77E5", "\u58F0\u97F3", "\u4E13\u6CE8\u6A21\u5F0F", "\u5C4F\u5E55\u4F7F\u7528\u65F6\u95F4", "\u901A\u7528", "\u8F85\u52A9\u529F\u80FD", "\u5916\u89C2", "\u63A7\u5236\u4E2D\u5FC3", "\u684C\u9762\u4E0E\u7A0B\u5E8F\u575E", "\u663E\u793A\u5668", "\u5899\u7EB8", "\u9690\u79C1\u4E0E\u5B89\u5168\u6027"].map((x, i) => `<div class="ap-setting-nav ${x === p.title ? "active" : ""}" data-motion="item"><i style="background:${["#248cef", "#258cf1", "#278ce8", "#ef514a", "#e7638c", "#7767c9", "#5856d6", "#9095a0"][i % 8]}">${ai(h, ["wifi", "bluetooth", "globe", "bell", "volume", "moon", "clock", "settings"][i % 8], 14)}</i>${x}</div>`).join("")}</aside><div class="ap-settings-main"><h2>${h.esc(p.title)}</h2><div class="ap-settings-hero">${appIcon(h, "settings", 54)}<b>${h.esc(p.title)}</b><p>\u7BA1\u7406\u8BBE\u5907\u7684\u6574\u4F53\u8BBE\u7F6E\u548C\u504F\u597D\u3002</p></div><div class="ap-setting-group">${array(p.rows, 10).map((x, i) => `<div data-motion="focus" class="ap-native-row">${ai(h, ["info", "refresh", "folder", "airdrop", "grid", "globe", "clock", "share"][i], 18)}<b>${h.esc(x[0])}</b><span>${h.esc(x[1])}\u3000\u203A</span></div>`).join("")}</div></div></div>`, { style: "left:211px;top:56px;width:858px;height:700px", toolbar: `<span class="ap-spacer"></span>${ai(h, "chevron-left")}${ai(h, "chevron-right")}<span class="ap-spacer"></span>` }), "\u7CFB\u7EDF\u8BBE\u7F6E")),
+    component("mac-spotlight", "macOS \xB7 \u805A\u7126\u641C\u7D22", "\u72EC\u7ACB\u641C\u7D22\u6D6E\u5C42\u3001\u5206\u7C7B\u7ED3\u679C\u548C\u9884\u89C8\uFF0C\u53EF\u66FF\u6362\u641C\u7D22\u8BCD\u4E0E\u5339\u914D\u9879\u3002", {
+      "query": "\u793A\u4F8B",
+      "results": [
+        {
+          "name": "\u793A\u4F8B\u6587\u4EF6\u5939",
+          "detail": "\u6587\u7A3F / \u6587\u4EF6\u5939",
+          "kind": "folder"
+        },
+        {
+          "name": "\u793A\u4F8B\u6587\u6863.md",
+          "detail": "\u4ECA\u5929 09:12 \xB7 Markdown \u6587\u7A3F",
+          "kind": "file"
+        },
+        {
+          "name": "\u793A\u4F8B\u6587\u6863.pdf",
+          "detail": "\u6628\u5929 18:22 \xB7 PDF \u6587\u7A3F",
+          "kind": "file"
+        },
+        {
+          "name": "\u793A\u4F8B",
+          "detail": "\u5728\u7F51\u9875\u4E2D\u641C\u7D22",
+          "kind": "globe"
+        }
+      ]
+    }, (p, h) => desktop(h, `<div class="ap-spotlight"><div class="ap-spot-search">${ai(h, "search", 28)}<span data-motion="type">${h.esc(p.query)}</span></div><div class="ap-spot-body"><div><label>\u6700\u4F73\u5339\u914D</label>${array(p.results, 7).map((r, i) => `<article class="${i === 0 ? "active" : ""}" data-motion="item">${ai(h, r.kind, 28)}<div><b>${h.esc(r.name)}</b><small>${h.esc(r.detail)}</small></div>${i === 0 ? "<span>\u21B5</span>" : ""}</article>`).join("")}</div><aside>${appIcon(h, "files", 76)}<h2>${h.esc(p.results[0]?.name)}</h2><p>\u6587\u4EF6\u5939</p><hr><small>\u4F4D\u7F6E\u3000iCloud \u4E91\u76D8 / \u6587\u7A3F</small><small>\u4FEE\u6539\u3000\u4ECA\u5929 09:30</small><small>\u5927\u5C0F\u30008 \u4E2A\u9879\u76EE</small></aside></div><footer>\u6309\u56DE\u8F66\u952E\u6253\u5F00\u3000 \xB7\u3000\u6309\u4F4F \u2318 \u67E5\u770B\u4F4D\u7F6E</footer></div>`, "\u8BBF\u8FBE", true)),
+    component("mac-control-center", "macOS \xB7 \u63A7\u5236\u4E2D\u5FC3", "\u6309\u5B98\u65B9\u5206\u7EC4\u7EC4\u7EC7\u7F51\u7EDC\u3001\u4E13\u6CE8\u3001\u663E\u793A\u548C\u58F0\u97F3\u63A7\u5236\u3002", {
+      "wifi": "Example Wi-Fi",
+      "bluetooth": "\u5DF2\u6253\u5F00",
+      "airdrop": "\u4EC5\u9650\u8054\u7CFB\u4EBA",
+      "focus": "\u4E13\u6CE8\u6A21\u5F0F",
+      "brightness": 65,
+      "volume": 42,
+      "track": "\u672A\u5728\u64AD\u653E"
+    }, (p, h) => desktop(h, `<div class="ap-control"><div class="ap-control-grid"><section class="ap-connect">${[["wifi", "Wi-Fi", p.wifi], ["bluetooth", "\u84DD\u7259", p.bluetooth], ["airdrop", "\u9694\u7A7A\u6295\u9001", p.airdrop]].map((x) => `<div data-motion="item"><i>${ai(h, x[0], 19)}</i><span><b>${h.esc(x[1])}</b><small>${h.esc(x[2])}</small></span></div>`).join("")}</section><section class="ap-focus" data-motion="focus">${ai(h, "moon", 24)}<b>${h.esc(p.focus)}</b></section><section class="ap-control-small">${ai(h, "panel", 24)}<span>\u53F0\u524D\u8C03\u5EA6</span></section><section class="ap-control-small">${ai(h, "copy", 24)}<span>\u5C4F\u5E55\u955C\u50CF</span></section></div>${[["\u663E\u793A\u5668", "sun", p.brightness], ["\u58F0\u97F3", "volume", p.volume]].map((x) => `<section class="ap-control-slider" data-motion="focus"><b>${x[0]}</b><div><i style="width:${Math.max(0, Math.min(100, Number(x[2])))}%"></i><span>${ai(h, x[1], 15)}</span></div></section>`).join("")}<section class="ap-control-playing">${appIcon(h, "notes", 37)}<b>${h.esc(p.track)}</b>${ai(h, "play", 17)}</section></div>`, "\u8BBF\u8FBE", true)),
+    component("mac-notification-center", "macOS \xB7 \u901A\u77E5\u4E0E\u5C0F\u7EC4\u4EF6", "\u53F3\u4FA7\u901A\u77E5\u548C\u65E5\u5386\u5C0F\u7EC4\u4EF6\uFF0C\u6309\u771F\u5B9E\u684C\u9762\u9762\u677F\u5BC6\u5EA6\u7EC4\u7EC7\u3002", {
+      "date": "9\u670817\u65E5 \u661F\u671F\u56DB",
+      "events": [
+        {
+          "app": "\u65E5\u5386",
+          "title": "\u65E5\u7A0B\u6807\u9898",
+          "body": "\u4ECA\u5929 10:00\u201310:30",
+          "time": "9\u5206\u949F\u524D"
+        },
+        {
+          "app": "\u63D0\u9192\u4E8B\u9879",
+          "title": "\u63D0\u9192\u6807\u9898",
+          "body": "\u63D0\u9192\u6B63\u6587\u5185\u5BB9\u3002",
+          "time": "24\u5206\u949F\u524D"
+        },
+        {
+          "app": "\u4FE1\u606F",
+          "title": "\u8054\u7CFB\u4EBA",
+          "body": "\u6D88\u606F\u6B63\u6587\u5185\u5BB9\u3002",
+          "time": "1\u5C0F\u65F6\u524D"
+        }
+      ],
+      "weekday": "\u661F\u671F\u56DB",
+      "day": 17,
+      "agendaSummary": "\u65E5\u7A0B\u6458\u8981",
+      "nextEventTitle": "\u65E5\u7A0B\u6807\u9898",
+      "nextEventTime": "10:00\u201310:30",
+      "calendarLabel": "\u793A\u4F8B\u65E5\u5386"
+    }, (p, h) => desktop(h, `<div class="ap-notifications"><header>${h.esc(p.date)}</header><div class="ap-widget-pair"><section><small>${h.esc(p.weekday)}</small><b>${h.esc(p.day)}</b><p>${h.esc(p.agendaSummary)}</p></section><section><small>\u4E0B\u4E00\u9879\u65E5\u7A0B</small><h3>${h.esc(p.nextEventTitle)}</h3><p>${h.esc(p.nextEventTime)}</p><i>${h.esc(p.calendarLabel)}</i></section></div>${array(p.events, 5).map((x, i) => `<article class="ap-notification" data-motion="item">${appIcon(h, ["calendar", "notes", "messages"][i % 3], 30)}<div><small>${h.esc(x.app)}<span>${h.esc(x.time)}</span></small><b>${h.esc(x.title)}</b><p>${h.esc(x.body)}</p></div></article>`).join("")}<div class="ap-notification-edit">\u7F16\u8F91\u5C0F\u7EC4\u4EF6</div></div>`, "\u8BBF\u8FBE", true)),
     component("mac-notes", "macOS \xB7 \u5907\u5FD8\u5F55", "\u6587\u4EF6\u5939\u3001\u7B14\u8BB0\u5217\u8868\u4E0E\u6B63\u6587\u4E09\u680F\uFF0C\u652F\u6301\u6E05\u5355\u548C\u6BB5\u843D\u66FF\u6362\u3002", noteDefault, (p, h) => desktop(h, window(h, "\u5907\u5FD8\u5F55", `<div class="ap-split">${sidebar(h, p.folder, ["\u6240\u6709 iCloud", "\u5907\u5FD8\u5F55", "\u5DE5\u4F5C", "\u4E2A\u4EBA", "\u6700\u8FD1\u5220\u9664"])}${notesBody(p, h)}</div>`, { toolbar: `${ai(h, "panel")}${ai(h, "trash")}<span class="ap-spacer"></span>${ai(h, "edit")}${ai(h, "check-circle")}<b>Aa</b>${ai(h, "grid")}${ai(h, "share")}${ai(h, "search")}` }), "\u5907\u5FD8\u5F55"))
   ];
   var css2 = commonCSS + `
@@ -1361,14 +2485,265 @@ var ComponentLibraryRuntime = (() => {
   var paragraphs = (h, p) => array(p).map((x) => `<p>${h.esc(x)}</p>`).join("");
   var pad = (h, body) => `<section class="am-stage"><div class="am-ipad"><div class="am-pad-screen"><header class="am-pad-status">9:41\u30009\u670817\u65E5 \u661F\u671F\u56DB<span>\u25CF \u25CF \u25CF</span><i>${ai(h, "wifi", 14)}\u300085% ${ai(h, "battery", 21)}</i></header>${body}<div class="am-home"></div></div></div></section>`;
   var components13 = [
-    component("ios-settings", "iPhone \xB7 \u8BBE\u7F6E", "iOS 18 \u8BBE\u7F6E\u9996\u9875\u3001\u8D26\u6237\u5361\u7247\u3001\u641C\u7D22\u548C\u5206\u7EC4\u5217\u8868\u3002", { title: "\u8BBE\u7F6E", account: "\u6797\u540C\u5B66", accountSubtitle: "Apple \u8D26\u6237\u3001iCloud \u7B49", groups: [[{ label: "\u98DE\u884C\u6A21\u5F0F", icon: "airplane", toggle: false }, { label: "\u65E0\u7EBF\u5C40\u57DF\u7F51", icon: "wifi", value: "Studio Wi-Fi" }, { label: "\u84DD\u7259", icon: "bluetooth", value: "\u6253\u5F00" }, { label: "\u8702\u7A9D\u7F51\u7EDC", icon: "phone" }], [{ label: "\u901A\u7528", icon: "settings" }, { label: "\u8F85\u52A9\u529F\u80FD", icon: "info" }, { label: "\u76F8\u673A", icon: "camera" }, { label: "\u63A7\u5236\u4E2D\u5FC3", icon: "sliders" }], [{ label: "\u663E\u793A\u4E0E\u4EAE\u5EA6", icon: "sun" }, { label: "\u5899\u7EB8", icon: "image" }]] }, (p, h) => phone(p, h, `<div class="am-settings"><h1>${h.esc(p.title)}</h1><div class="am-search">${ai(h, "search", 16)} \u641C\u7D22 ${ai(h, "mic", 16)}</div><div class="am-account"><b>\u6797</b><div><strong>${h.esc(p.account)}</strong><small>${h.esc(p.accountSubtitle)}</small></div><span>\u203A</span></div>${array(p.groups, 4).map((g) => `<section class="am-group">${array(g, 6).map((x, i) => iosRow(h, x, i)).join("")}</section>`).join("")}</div>`, "am-settings-screen"), true),
-    component("ios-messages", "iPhone \xB7 \u4FE1\u606F", "\u8054\u7CFB\u4EBA\u680F\u3001\u6536\u53D1\u6C14\u6CE1\u3001\u53D1\u9001\u72B6\u6001\u548C\u8F93\u5165\u680F\uFF0C\u9002\u5408\u6F14\u793A\u6C9F\u901A\u6D41\u7A0B\u3002", { name: "\u9648\u8001\u5E08", initial: "\u9648", date: "\u4ECA\u5929 09:41", messages: [{ from: "them", text: "\u7B2C\u4E00\u6BB5\u7684\u5185\u5BB9\u51C6\u5907\u597D\u4E86\u5417\uFF1F" }, { from: "me", text: "\u8BB2\u7A3F\u548C\u53C2\u8003\u56FE\u90FD\u51C6\u5907\u597D\u4E86\u3002" }, { from: "me", text: "\u6211\u4F1A\u5148\u5F55\u5236\u64CD\u4F5C\uFF0C\u518D\u8865\u4E0A\u56FE\u89E3\u3002" }, { from: "them", text: "\u53EF\u4EE5\uFF0C\u8BB0\u5F97\u5C55\u793A\u6BCF\u4E00\u6B65\u7684\u7ED3\u679C\u3002" }, { from: "me", text: "\u597D\uFF0C\u6211\u4F1A\u628A\u5173\u952E\u4F4D\u7F6E\u653E\u5927\u8BB2\u89E3\u3002" }], draft: "", status: "\u5DF2\u9001\u8FBE" }, (p, h) => phone(p, h, `<div class="am-message-head"><span>${ai(h, "chevron-left", 27)}</span><div><i>${h.esc(p.initial)}</i><b>${h.esc(p.name)} \u203A</b></div>${ai(h, "video", 24)}</div><div class="am-messages"><small>${h.esc(p.date)}</small>${array(p.messages, 8).map((x) => `<article class="${x.from === "me" ? "me" : "them"}" data-motion="item">${h.esc(x.text)}</article>`).join("")}<em>${h.esc(p.status)}</em></div><footer class="am-message-compose">${ai(h, "plus", 27)}<div>${h.esc(p.draft || "iMessage \u4FE1\u606F")}${ai(h, "mic", 17)}</div></footer>`), true),
-    component("ios-safari", "iPhone \xB7 Safari \u6D4F\u89C8\u5668", "\u5E95\u90E8\u5730\u5740\u680F\u548C\u6D4F\u89C8\u5668\u64CD\u4F5C\u6761\uFF1B\u652F\u6301\u66FF\u6362\u7F51\u9875\u6B63\u6587\u3002", { url: "docs.example.com", brand: "Studio Docs", title: "\u628A\u590D\u6742\u5185\u5BB9\u8BB2\u6E05\u695A", intro: "\u4E00\u4EFD\u53EF\u590D\u7528\u7684\u5185\u5BB9\u5236\u4F5C\u6307\u5357\u3002", sections: [{ title: "\u5148\u63D0\u51FA\u4E00\u4E2A\u95EE\u9898", detail: "\u7528\u5177\u4F53\u7684\u56F0\u60D1\u5F15\u51FA\u672C\u671F\u5185\u5BB9\u3002" }, { title: "\u5C55\u793A\u771F\u5B9E\u64CD\u4F5C", detail: "\u4FDD\u7559\u5173\u952E\u6B65\u9AA4\u548C\u53EF\u6838\u5BF9\u7684\u7ED3\u679C\u3002" }, { title: "\u7528\u56FE\u89E3\u8865\u5145\u8BF4\u660E", detail: "\u53EA\u8BA9\u9700\u8981\u5F3A\u8C03\u7684\u4FE1\u606F\u53D1\u751F\u53D8\u5316\u3002" }] }, (p, h) => phone(p, h, `<div class="am-safari-site"><header><b>${h.esc(p.brand)}</b>${ai(h, "menu", 21)}</header><small>\u6587\u6863 / \u5236\u4F5C\u6307\u5357</small><h1>${h.esc(p.title)}</h1><p>${h.esc(p.intro)}</p>${array(p.sections, 4).map((s, i) => `<section data-motion="item"><b>0${i + 1}</b><h2>${h.esc(s.title)}</h2><p>${h.esc(s.detail)}</p></section>`).join("")}</div><footer class="am-safari-bottom"><div class="am-safari-url">aA <span>${ai(h, "lock", 11)} ${h.esc(p.url)}</span>${ai(h, "refresh", 18)}</div><nav>${ai(h, "chevron-left", 23)}${ai(h, "chevron-right", 23)}${ai(h, "share", 23)}${ai(h, "file", 23)}${ai(h, "copy", 23)}</nav></footer>`), true),
-    component("ios-notes", "iPhone \xB7 \u5907\u5FD8\u5F55", "\u539F\u751F\u5BFC\u822A\u3001\u65E5\u671F\u3001\u6807\u9898\u3001\u6BB5\u843D\u4E0E\u5706\u5F62\u6E05\u5355\u3002", { folder: "\u5DE5\u4F5C", title: "\u7B2C\u4E00\u8282\u8BFE\u7684\u5236\u4F5C\u6E05\u5355", date: "2026\u5E749\u670817\u65E5 09:41", paragraphs: ["\u8FD9\u8282\u8BFE\u5148\u56DE\u7B54\u4E00\u4E2A\u95EE\u9898\uFF1A\u5982\u4F55\u628A\u62BD\u8C61\u6982\u5FF5\u8BB2\u5F97\u5177\u4F53\uFF1F", "\u6BCF\u4E00\u53E5\u8BB2\u89E3\u90FD\u8981\u6709\u5BF9\u5E94\u7684\u753B\u9762\u3002"], checklist: [{ text: "\u786E\u5B9A\u89C2\u4F17\u7684\u95EE\u9898", done: true }, { text: "\u51C6\u5907\u8BB2\u7A3F\u548C\u6765\u6E90", done: true }, { text: "\u5F55\u5236\u771F\u5B9E\u64CD\u4F5C", done: false }, { text: "\u52A0\u5165\u91CD\u70B9\u56FE\u89E3", done: false }, { text: "\u68C0\u67E5\u5B57\u5E55\u548C\u58F0\u97F3", done: false }] }, (p, h) => phone(p, h, `${nav(h, "", p.folder, "\u2022\u2022\u2022")}<article class="am-note"><time>${h.esc(p.date)}</time><h1>${h.esc(p.title)}</h1>${paragraphs(h, p.paragraphs)}${array(p.checklist, 8).map((x) => `<div class="am-check" data-motion="item"><i class="${x.done ? "done" : ""}">${x.done ? "\u2713" : ""}</i>${h.esc(x.text)}</div>`).join("")}</article><footer class="am-note-tools">${ai(h, "check-circle", 23)}${ai(h, "camera", 23)}${ai(h, "edit", 23)}${ai(h, "grid", 23)}</footer>`, "am-note-screen"), true),
-    component("ios-control-center", "iPhone \xB7 \u63A7\u5236\u4E2D\u5FC3", "iOS 18 \u63A7\u4EF6\u5206\u7EC4\u3001\u5927\u6ED1\u5757\u3001\u64AD\u653E\u5361\u7247\u4E0E\u5706\u5F62\u5FEB\u6377\u64CD\u4F5C\u3002", { network: "Studio Wi-Fi", track: "\u672A\u5728\u64AD\u653E", focus: "\u4E13\u6CE8\u6A21\u5F0F", brightness: 67, volume: 41 }, (p, h) => phone(p, h, `<div class="am-control-top">${ai(h, "plus", 25)}<span>\u25EF</span></div><div class="am-control-grid"><section class="am-connect"><i class="flight">${ai(h, "airplane", 23)}</i><i class="cell">${ai(h, "phone", 23)}</i><i class="wifi">${ai(h, "wifi", 23)}</i><i class="bluetooth">${ai(h, "bluetooth", 23)}</i></section><section class="am-player"><b>${h.esc(p.track)}</b><div>\u25C0\u25C0 ${ai(h, "play", 27)} \u25B6\u25B6</div><small>${h.esc(p.network)}</small></section><i class="am-control-circle">${ai(h, "rotate", 25)}</i><i class="am-control-circle">${ai(h, "copy", 25)}</i><section class="am-vertical-slider" data-motion="focus"><i style="height:${Math.max(0, Math.min(100, Number(p.brightness)))}%"></i><b>${ai(h, "sun", 29)}</b></section><section class="am-vertical-slider" data-motion="focus"><i style="height:${Math.max(0, Math.min(100, Number(p.volume)))}%"></i><b>${ai(h, "volume", 29)}</b></section><section class="am-control-focus">${ai(h, "moon", 24)}<b>${h.esc(p.focus)}</b><span>\u203A</span></section>${["flash", "clock", "camera", "phone", "mic", "sun", "battery", "settings"].map((x) => `<i class="am-control-circle" data-motion="item">${ai(h, x, 26)}</i>`).join("")}</div>`, "am-control-screen"), true),
-    component("ios-share-sheet", "iPhone \xB7 \u5206\u4EAB\u9762\u677F", "\u5185\u5BB9\u6458\u8981\u3001\u5EFA\u8BAE\u8054\u7CFB\u4EBA\u3001\u5E94\u7528\u6A2A\u6392\u548C\u7CFB\u7EDF\u64CD\u4F5C\u5217\u8868\u3002", { title: "\u8BFE\u7A0B\u5236\u4F5C\u6307\u5357.pdf", detail: "PDF \u6587\u7A3F \xB7 1.2 MB", people: ["\u9648\u8001\u5E08", "\u6797\u540C\u5B66", "\u9879\u76EE\u7EC4"], apps: [["airdrop", "\u9694\u7A7A\u6295\u9001"], ["messages", "\u4FE1\u606F"], ["mail", "\u90AE\u4EF6"], ["notes", "\u5907\u5FD8\u5F55"]], actions: ["\u62F7\u8D1D", "\u6DFB\u52A0\u5230\u9605\u8BFB\u5217\u8868", "\u5B58\u50A8\u5230\u201C\u6587\u4EF6\u201D", "\u6253\u5370", "\u6807\u8BB0"] }, (p, h) => phone(p, h, `<div class="am-share-context"><h2>\u8BFE\u7A0B\u5236\u4F5C\u6307\u5357</h2><p>\u8BB2\u7A3F\u3001\u7D20\u6750\u548C\u56FE\u89E3\u9700\u8981\u4E00\u8D77\u6838\u5BF9\u3002</p></div><div class="am-share-sheet"><div class="am-grabber"></div><header>${appIcon(h, "preview", 42)}<div><b>${h.esc(p.title)}</b><small>${h.esc(p.detail)}</small></div><i>\xD7</i></header><div class="am-share-people">${array(p.people, 4).map((x, i) => `<div data-motion="item"><b style="background:${["#82a6c7", "#b0a3c8", "#99b9ac"][i % 3]}">${h.esc(x[0])}</b><small>${h.esc(x)}</small></div>`).join("")}</div><div class="am-share-apps">${array(p.apps, 4).map((x) => `<div>${x[0] === "airdrop" ? `<i>${ai(h, "airdrop", 33)}</i>` : appIcon(h, x[0], 49)}<small>${h.esc(x[1])}</small></div>`).join("")}</div><section class="am-group">${array(p.actions, 6).map((x, i) => `<div class="am-share-action" data-motion="item">${h.esc(x)}${ai(h, ["copy", "file", "folder", "download", "edit"][i % 5], 20)}</div>`).join("")}</section></div>`, "am-share-screen"), true),
-    component("ipad-split-view", "iPad \xB7 \u5206\u5C4F\u5DE5\u4F5C\u53F0", "iPadOS 18 \u5206\u5C4F Safari \u4E0E\u5907\u5FD8\u5F55\uFF0C\u4FDD\u7559\u5206\u9694\u6761\u548C\u5404\u81EA\u5DE5\u5177\u680F\u3002", { url: "docs.example.com", webTitle: "\u4E00\u8282\u8BFE\u7684\u5185\u5BB9\u7ED3\u6784", webIntro: "\u4ECE\u95EE\u9898\u5F00\u59CB\uFF0C\u4EE5\u53EF\u9A8C\u8BC1\u7684\u7ED3\u679C\u7ED3\u675F\u3002", sections: [["\u63D0\u51FA\u95EE\u9898", "\u89C2\u4F17\u4E3A\u4EC0\u4E48\u9700\u8981\u8FD9\u8282\u8BFE\uFF1F"], ["\u6F14\u793A\u65B9\u6CD5", "\u9010\u6B65\u5C55\u793A\u64CD\u4F5C\u548C\u5224\u65AD\u4F9D\u636E\u3002"], ["\u9A8C\u8BC1\u7ED3\u679C", "\u7528\u5BF9\u7167\u753B\u9762\u56DE\u987E\u53D8\u5316\u3002"]], noteTitle: "\u8BFE\u7A0B\u7B14\u8BB0", notes: ["\u5F00\u5934\uFF1A\u7ED9\u89C2\u4F17\u4E00\u4E2A\u5177\u4F53\u7684\u95EE\u9898\u3002", "\u6B63\u6587\uFF1A\u6BCF\u4E00\u6B65\u53EA\u5F3A\u8C03\u4E00\u4EF6\u4E8B\u3002", "\u7ED3\u5C3E\uFF1A\u5C55\u793A\u524D\u540E\u5BF9\u7167\uFF0C\u7ED9\u51FA\u4E0B\u4E00\u6B65\u3002"] }, (p, h) => pad(h, `<div class="am-pad-split"><section class="am-pad-browser"><div class="am-pad-multi">\u2022\u2022\u2022</div><nav>${ai(h, "panel")}${ai(h, "chevron-left")}${ai(h, "chevron-right")}<span>${ai(h, "lock", 12)} ${h.esc(p.url)}</span>${ai(h, "share")}${ai(h, "plus")}</nav><article><small>Studio Docs / \u5185\u5BB9\u8BBE\u8BA1</small><h1>${h.esc(p.webTitle)}</h1><p>${h.esc(p.webIntro)}</p>${array(p.sections, 5).map((s, i) => `<section data-motion="item"><b>0${i + 1}</b><h2>${h.esc(s[0])}</h2><p>${h.esc(s[1])}</p></section>`).join("")}</article></section><div class="am-pad-divider"><i></i></div><section class="am-pad-note"><div class="am-pad-multi">\u2022\u2022\u2022</div><nav>${ai(h, "panel")}<span></span>${ai(h, "share")}${ai(h, "edit")}</nav><article><small>2026\u5E749\u670817\u65E5 09:41</small><h1>${h.esc(p.noteTitle)}</h1>${array(p.notes, 7).map((x) => `<p data-motion="item">${h.esc(x)}</p>`).join("")}<div class="am-pad-note-check">\u25CB\u3000\u5F55\u5C4F\u65F6\u653E\u5927\u5173\u952E\u533A\u57DF</div><div class="am-pad-note-check">\u25CB\u3000\u6838\u5BF9\u5F15\u7528\u548C\u6570\u636E\u6765\u6E90</div></article></section></div>`), true),
-    component("ipad-files", "iPad \xB7 \u6587\u4EF6 App", "iPad \u539F\u751F\u4FA7\u680F\u3001\u6D4F\u89C8\u5BFC\u822A\u3001\u6587\u4EF6\u7F29\u7565\u56FE\u4E0E\u9009\u62E9\u6A21\u5F0F\u3002", { folder: "\u89C6\u9891\u5236\u4F5C", location: "iCloud \u4E91\u76D8", files: [{ name: "\u8BB2\u7A3F", type: "folder", detail: "4 \u4E2A\u9879\u76EE" }, { name: "\u5F55\u5C4F\u7D20\u6750", type: "folder", detail: "8 \u4E2A\u9879\u76EE" }, { name: "\u8BFE\u7A0B\u8BA1\u5212.pdf", type: "file", detail: "1.2 MB" }, { name: "\u5206\u955C\u6E05\u5355.csv", type: "file", detail: "8 KB" }, { name: "\u53C2\u8003\u8D44\u6599", type: "folder", detail: "6 \u4E2A\u9879\u76EE" }, { name: "\u65C1\u767D.wav", type: "music", detail: "24 MB" }, { name: "README.md", type: "file", detail: "4 KB" }, { name: "\u64CD\u4F5C\u6F14\u793A.mov", type: "video", detail: "86 MB" }] }, (p, h) => pad(h, `<div class="am-files"><aside><h1>\u6D4F\u89C8</h1><label>\u4F4D\u7F6E</label>${["\u6211\u7684 iPad", "iCloud \u4E91\u76D8", "\u4E0B\u8F7D", "\u6700\u8FD1\u5220\u9664"].map((x, i) => `<p class="${x === p.location ? "active" : ""}">${ai(h, ["phone", "folder", "download", "trash"][i], 21)}${x}</p>`).join("")}<label>\u4E2A\u4EBA\u6536\u85CF</label><p>${ai(h, "folder", 21)} \u89C6\u9891\u5236\u4F5C</p><label>\u6807\u7B7E</label>${["\u5DE5\u4F5C", "\u4E2A\u4EBA", "\u5F85\u5904\u7406"].map((x, i) => `<p><i style="background:${["#e56962", "#edb749", "#82baa7"][i]}"></i>${x}</p>`).join("")}</aside><main><nav><span>${ai(h, "chevron-left", 21)} ${h.esc(p.location)}</span><b>${h.esc(p.folder)}</b><span>\u9009\u62E9\u3000\u2022\u2022\u2022</span></nav><div class="am-search">${ai(h, "search", 15)} \u641C\u7D22</div><div class="am-file-controls">\u6309\u540D\u79F0\u3000\u2304<span>${ai(h, "grid", 19)}</span></div><div class="am-files-grid">${array(p.files, 12).map((f) => `<div data-motion="item"><i class="${f.type === "folder" ? "folder" : "document"}">${ai(h, f.type, 57)}</i><b>${h.esc(f.name)}</b><small>${h.esc(f.detail)}</small></div>`).join("")}</div><footer>${array(p.files).length} \u4E2A\u9879\u76EE</footer></main></div>`), true)
+    component("ios-settings", "iPhone \xB7 \u8BBE\u7F6E", "iOS 18 \u8BBE\u7F6E\u9996\u9875\u3001\u8D26\u6237\u5361\u7247\u3001\u641C\u7D22\u548C\u5206\u7EC4\u5217\u8868\u3002", {
+      "title": "\u8BBE\u7F6E",
+      "account": "\u793A\u4F8B\u7528\u6237",
+      "accountSubtitle": "Apple \u8D26\u6237\u3001iCloud \u7B49",
+      "groups": [
+        [
+          {
+            "label": "\u98DE\u884C\u6A21\u5F0F",
+            "icon": "airplane",
+            "toggle": false
+          },
+          {
+            "label": "\u65E0\u7EBF\u5C40\u57DF\u7F51",
+            "icon": "wifi",
+            "value": "Example Wi-Fi"
+          },
+          {
+            "label": "\u84DD\u7259",
+            "icon": "bluetooth",
+            "value": "\u6253\u5F00"
+          },
+          {
+            "label": "\u8702\u7A9D\u7F51\u7EDC",
+            "icon": "phone"
+          }
+        ],
+        [
+          {
+            "label": "\u901A\u7528",
+            "icon": "settings"
+          },
+          {
+            "label": "\u8F85\u52A9\u529F\u80FD",
+            "icon": "info"
+          },
+          {
+            "label": "\u76F8\u673A",
+            "icon": "camera"
+          },
+          {
+            "label": "\u63A7\u5236\u4E2D\u5FC3",
+            "icon": "sliders"
+          }
+        ],
+        [
+          {
+            "label": "\u663E\u793A\u4E0E\u4EAE\u5EA6",
+            "icon": "sun"
+          },
+          {
+            "label": "\u5899\u7EB8",
+            "icon": "image"
+          }
+        ]
+      ],
+      "accountInitial": "\u7528"
+    }, (p, h) => phone(p, h, `<div class="am-settings"><h1>${h.esc(p.title)}</h1><div class="am-search">${ai(h, "search", 16)} \u641C\u7D22 ${ai(h, "mic", 16)}</div><div class="am-account"><b>${h.esc(p.accountInitial)}</b><div><strong>${h.esc(p.account)}</strong><small>${h.esc(p.accountSubtitle)}</small></div><span>\u203A</span></div>${array(p.groups, 4).map((g) => `<section class="am-group">${array(g, 6).map((x, i) => iosRow(h, x, i)).join("")}</section>`).join("")}</div>`, "am-settings-screen"), true),
+    component("ios-messages", "iPhone \xB7 \u4FE1\u606F", "\u8054\u7CFB\u4EBA\u680F\u3001\u6536\u53D1\u6C14\u6CE1\u3001\u53D1\u9001\u72B6\u6001\u548C\u8F93\u5165\u680F\uFF0C\u9002\u5408\u6F14\u793A\u6C9F\u901A\u6D41\u7A0B\u3002", {
+      "name": "\u8054\u7CFB\u4EBA",
+      "initial": "\u8054",
+      "date": "\u4ECA\u5929 09:41",
+      "messages": [
+        {
+          "from": "them",
+          "text": "\u63A5\u6536\u6D88\u606F A\uFF0C\u53EF\u66FF\u6362\u4E3A\u9700\u8981\u5C55\u793A\u7684\u5185\u5BB9\u3002"
+        },
+        {
+          "from": "me",
+          "text": "\u53D1\u9001\u6D88\u606F B\uFF0C\u53EF\u66FF\u6362\u4E3A\u9700\u8981\u5C55\u793A\u7684\u5185\u5BB9\u3002"
+        },
+        {
+          "from": "me",
+          "text": "\u53D1\u9001\u6D88\u606F C\uFF0C\u53EF\u66FF\u6362\u4E3A\u9700\u8981\u5C55\u793A\u7684\u5185\u5BB9\u3002"
+        },
+        {
+          "from": "them",
+          "text": "\u63A5\u6536\u6D88\u606F D\uFF0C\u53EF\u66FF\u6362\u4E3A\u9700\u8981\u5C55\u793A\u7684\u5185\u5BB9\u3002"
+        },
+        {
+          "from": "me",
+          "text": "\u53D1\u9001\u6D88\u606F E\uFF0C\u53EF\u66FF\u6362\u4E3A\u9700\u8981\u5C55\u793A\u7684\u5185\u5BB9\u3002"
+        }
+      ],
+      "draft": "",
+      "status": "\u5DF2\u9001\u8FBE"
+    }, (p, h) => phone(p, h, `<div class="am-message-head"><span>${ai(h, "chevron-left", 27)}</span><div><i>${h.esc(p.initial)}</i><b>${h.esc(p.name)} \u203A</b></div>${ai(h, "video", 24)}</div><div class="am-messages"><small>${h.esc(p.date)}</small>${array(p.messages, 8).map((x) => `<article class="${x.from === "me" ? "me" : "them"}" data-motion="item">${h.esc(x.text)}</article>`).join("")}<em>${h.esc(p.status)}</em></div><footer class="am-message-compose">${ai(h, "plus", 27)}<div>${h.esc(p.draft || "iMessage \u4FE1\u606F")}${ai(h, "mic", 17)}</div></footer>`), true),
+    component("ios-safari", "iPhone \xB7 Safari \u6D4F\u89C8\u5668", "\u5E95\u90E8\u5730\u5740\u680F\u548C\u6D4F\u89C8\u5668\u64CD\u4F5C\u6761\uFF1B\u652F\u6301\u66FF\u6362\u7F51\u9875\u6B63\u6587\u3002", {
+      "url": "www.example.com",
+      "brand": "\u793A\u4F8B\u7AD9\u70B9",
+      "title": "\u9875\u9762\u4E3B\u6807\u9898",
+      "intro": "\u9875\u9762\u7B80\u4ECB\u6587\u5B57\u3002",
+      "sections": [
+        {
+          "title": "\u7AE0\u8282\u6807\u9898 A",
+          "detail": "\u7AE0\u8282\u8BF4\u660E A"
+        },
+        {
+          "title": "\u7AE0\u8282\u6807\u9898 B",
+          "detail": "\u7AE0\u8282\u8BF4\u660E B"
+        },
+        {
+          "title": "\u7AE0\u8282\u6807\u9898 C",
+          "detail": "\u7AE0\u8282\u8BF4\u660E C"
+        }
+      ],
+      "eyebrow": "\u680F\u76EE / \u9875\u9762"
+    }, (p, h) => phone(p, h, `<div class="am-safari-site"><header><b>${h.esc(p.brand)}</b>${ai(h, "menu", 21)}</header><small>${h.esc(p.eyebrow)}</small><h1>${h.esc(p.title)}</h1><p>${h.esc(p.intro)}</p>${array(p.sections, 4).map((s, i) => `<section data-motion="item"><b>0${i + 1}</b><h2>${h.esc(s.title)}</h2><p>${h.esc(s.detail)}</p></section>`).join("")}</div><footer class="am-safari-bottom"><div class="am-safari-url">aA <span>${ai(h, "lock", 11)} ${h.esc(p.url)}</span>${ai(h, "refresh", 18)}</div><nav>${ai(h, "chevron-left", 23)}${ai(h, "chevron-right", 23)}${ai(h, "share", 23)}${ai(h, "file", 23)}${ai(h, "copy", 23)}</nav></footer>`), true),
+    component("ios-notes", "iPhone \xB7 \u5907\u5FD8\u5F55", "\u539F\u751F\u5BFC\u822A\u3001\u65E5\u671F\u3001\u6807\u9898\u3001\u6BB5\u843D\u4E0E\u5706\u5F62\u6E05\u5355\u3002", {
+      "folder": "\u793A\u4F8B\u6587\u4EF6\u5939",
+      "title": "\u7B14\u8BB0\u6807\u9898",
+      "date": "2026\u5E749\u670817\u65E5 09:41",
+      "paragraphs": [
+        "\u6B63\u6587\u7B2C\u4E00\u6BB5\uFF0C\u66FF\u6362\u4E3A\u9700\u8981\u5C55\u793A\u7684\u5185\u5BB9\u3002",
+        "\u6B63\u6587\u7B2C\u4E8C\u6BB5\uFF0C\u652F\u6301\u7EE7\u7EED\u8865\u5145\u8BF4\u660E\u3002"
+      ],
+      "checklist": [
+        {
+          "text": "\u5F85\u529E\u4E8B\u9879 A",
+          "done": true
+        },
+        {
+          "text": "\u5F85\u529E\u4E8B\u9879 B",
+          "done": true
+        },
+        {
+          "text": "\u5F85\u529E\u4E8B\u9879 C",
+          "done": false
+        },
+        {
+          "text": "\u5F85\u529E\u4E8B\u9879 D",
+          "done": false
+        },
+        {
+          "text": "\u5F85\u529E\u4E8B\u9879 E",
+          "done": false
+        }
+      ]
+    }, (p, h) => phone(p, h, `${nav(h, "", p.folder, "\u2022\u2022\u2022")}<article class="am-note"><time>${h.esc(p.date)}</time><h1>${h.esc(p.title)}</h1>${paragraphs(h, p.paragraphs)}${array(p.checklist, 8).map((x) => `<div class="am-check" data-motion="item"><i class="${x.done ? "done" : ""}">${x.done ? "\u2713" : ""}</i>${h.esc(x.text)}</div>`).join("")}</article><footer class="am-note-tools">${ai(h, "check-circle", 23)}${ai(h, "camera", 23)}${ai(h, "edit", 23)}${ai(h, "grid", 23)}</footer>`, "am-note-screen"), true),
+    component("ios-control-center", "iPhone \xB7 \u63A7\u5236\u4E2D\u5FC3", "iOS 18 \u63A7\u4EF6\u5206\u7EC4\u3001\u5927\u6ED1\u5757\u3001\u64AD\u653E\u5361\u7247\u4E0E\u5706\u5F62\u5FEB\u6377\u64CD\u4F5C\u3002", {
+      "network": "Example Wi-Fi",
+      "track": "\u672A\u5728\u64AD\u653E",
+      "focus": "\u4E13\u6CE8\u6A21\u5F0F",
+      "brightness": 67,
+      "volume": 41
+    }, (p, h) => phone(p, h, `<div class="am-control-top">${ai(h, "plus", 25)}<span>\u25EF</span></div><div class="am-control-grid"><section class="am-connect"><i class="flight">${ai(h, "airplane", 23)}</i><i class="cell">${ai(h, "phone", 23)}</i><i class="wifi">${ai(h, "wifi", 23)}</i><i class="bluetooth">${ai(h, "bluetooth", 23)}</i></section><section class="am-player"><b>${h.esc(p.track)}</b><div>\u25C0\u25C0 ${ai(h, "play", 27)} \u25B6\u25B6</div><small>${h.esc(p.network)}</small></section><i class="am-control-circle">${ai(h, "rotate", 25)}</i><i class="am-control-circle">${ai(h, "copy", 25)}</i><section class="am-vertical-slider" data-motion="focus"><i style="height:${Math.max(0, Math.min(100, Number(p.brightness)))}%"></i><b>${ai(h, "sun", 29)}</b></section><section class="am-vertical-slider" data-motion="focus"><i style="height:${Math.max(0, Math.min(100, Number(p.volume)))}%"></i><b>${ai(h, "volume", 29)}</b></section><section class="am-control-focus">${ai(h, "moon", 24)}<b>${h.esc(p.focus)}</b><span>\u203A</span></section>${["flash", "clock", "camera", "phone", "mic", "sun", "battery", "settings"].map((x) => `<i class="am-control-circle" data-motion="item">${ai(h, x, 26)}</i>`).join("")}</div>`, "am-control-screen"), true),
+    component("ios-share-sheet", "iPhone \xB7 \u5206\u4EAB\u9762\u677F", "\u5185\u5BB9\u6458\u8981\u3001\u5EFA\u8BAE\u8054\u7CFB\u4EBA\u3001\u5E94\u7528\u6A2A\u6392\u548C\u7CFB\u7EDF\u64CD\u4F5C\u5217\u8868\u3002", {
+      "title": "\u793A\u4F8B\u6587\u6863.pdf",
+      "detail": "PDF \u6587\u7A3F \xB7 1.2 MB",
+      "people": [
+        "\u8054\u7CFB\u4EBA A",
+        "\u8054\u7CFB\u4EBA B",
+        "\u8054\u7CFB\u4EBA C"
+      ],
+      "apps": [
+        [
+          "airdrop",
+          "\u9694\u7A7A\u6295\u9001"
+        ],
+        [
+          "messages",
+          "\u4FE1\u606F"
+        ],
+        [
+          "mail",
+          "\u90AE\u4EF6"
+        ],
+        [
+          "notes",
+          "\u5907\u5FD8\u5F55"
+        ]
+      ],
+      "actions": [
+        "\u62F7\u8D1D",
+        "\u6DFB\u52A0\u5230\u9605\u8BFB\u5217\u8868",
+        "\u5B58\u50A8\u5230\u201C\u6587\u4EF6\u201D",
+        "\u6253\u5370",
+        "\u6807\u8BB0"
+      ],
+      "documentTitle": "\u6587\u6863\u6807\u9898",
+      "documentBody": "\u6B63\u6587\u5185\u5BB9\uFF0C\u53EF\u66FF\u6362\u4E3A\u9700\u8981\u5C55\u793A\u7684\u6587\u5B57\u3002"
+    }, (p, h) => phone(p, h, `<div class="am-share-context"><h2>${h.esc(p.documentTitle)}</h2><p>${h.esc(p.documentBody)}</p></div><div class="am-share-sheet"><div class="am-grabber"></div><header>${appIcon(h, "preview", 42)}<div><b>${h.esc(p.title)}</b><small>${h.esc(p.detail)}</small></div><i>\xD7</i></header><div class="am-share-people">${array(p.people, 4).map((x, i) => `<div data-motion="item"><b style="background:${["#82a6c7", "#b0a3c8", "#99b9ac"][i % 3]}">${h.esc(x[0])}</b><small>${h.esc(x)}</small></div>`).join("")}</div><div class="am-share-apps">${array(p.apps, 4).map((x) => `<div>${x[0] === "airdrop" ? `<i>${ai(h, "airdrop", 33)}</i>` : appIcon(h, x[0], 49)}<small>${h.esc(x[1])}</small></div>`).join("")}</div><section class="am-group">${array(p.actions, 6).map((x, i) => `<div class="am-share-action" data-motion="item">${h.esc(x)}${ai(h, ["copy", "file", "folder", "download", "edit"][i % 5], 20)}</div>`).join("")}</section></div>`, "am-share-screen"), true),
+    component("ipad-split-view", "iPad \xB7 \u5206\u5C4F\u5DE5\u4F5C\u53F0", "iPadOS 18 \u5206\u5C4F Safari \u4E0E\u5907\u5FD8\u5F55\uFF0C\u4FDD\u7559\u5206\u9694\u6761\u548C\u5404\u81EA\u5DE5\u5177\u680F\u3002", {
+      "url": "www.example.com",
+      "webTitle": "\u9875\u9762\u4E3B\u6807\u9898",
+      "webIntro": "\u9875\u9762\u7B80\u4ECB\u6587\u5B57\u3002",
+      "sections": [
+        [
+          "\u7AE0\u8282 A",
+          "\u7AE0\u8282\u8BF4\u660E A"
+        ],
+        [
+          "\u7AE0\u8282 B",
+          "\u7AE0\u8282\u8BF4\u660E B"
+        ],
+        [
+          "\u7AE0\u8282 C",
+          "\u7AE0\u8282\u8BF4\u660E C"
+        ]
+      ],
+      "noteTitle": "\u7B14\u8BB0\u6807\u9898",
+      "notes": [
+        "\u7B14\u8BB0\u5185\u5BB9 A",
+        "\u7B14\u8BB0\u5185\u5BB9 B",
+        "\u7B14\u8BB0\u5185\u5BB9 C"
+      ],
+      "webEyebrow": "\u680F\u76EE / \u9875\u9762",
+      "noteDate": "2026\u5E741\u67085\u65E5 09:41",
+      "checklist": [
+        "\u5F85\u529E\u5185\u5BB9 A",
+        "\u5F85\u529E\u5185\u5BB9 B"
+      ]
+    }, (p, h) => pad(h, `<div class="am-pad-split"><section class="am-pad-browser"><div class="am-pad-multi">\u2022\u2022\u2022</div><nav>${ai(h, "panel")}${ai(h, "chevron-left")}${ai(h, "chevron-right")}<span>${ai(h, "lock", 12)} ${h.esc(p.url)}</span>${ai(h, "share")}${ai(h, "plus")}</nav><article><small>${h.esc(p.webEyebrow)}</small><h1>${h.esc(p.webTitle)}</h1><p>${h.esc(p.webIntro)}</p>${array(p.sections, 5).map((s, i) => `<section data-motion="item"><b>0${i + 1}</b><h2>${h.esc(s[0])}</h2><p>${h.esc(s[1])}</p></section>`).join("")}</article></section><div class="am-pad-divider"><i></i></div><section class="am-pad-note"><div class="am-pad-multi">\u2022\u2022\u2022</div><nav>${ai(h, "panel")}<span></span>${ai(h, "share")}${ai(h, "edit")}</nav><article><small>${h.esc(p.noteDate)}</small><h1>${h.esc(p.noteTitle)}</h1>${array(p.notes, 7).map((x) => `<p data-motion="item">${h.esc(x)}</p>`).join("")}${array(p.checklist, 2).map((x) => `<div class="am-pad-note-check">\u25CB\u3000${h.esc(x)}</div>`).join("")}</article></section></div>`), true),
+    component("ipad-files", "iPad \xB7 \u6587\u4EF6 App", "iPad \u539F\u751F\u4FA7\u680F\u3001\u6D4F\u89C8\u5BFC\u822A\u3001\u6587\u4EF6\u7F29\u7565\u56FE\u4E0E\u9009\u62E9\u6A21\u5F0F\u3002", {
+      "folder": "\u793A\u4F8B\u6587\u4EF6\u5939",
+      "location": "iCloud \u4E91\u76D8",
+      "files": [
+        {
+          "name": "\u6587\u4EF6\u5939 A",
+          "type": "folder",
+          "detail": "4 \u4E2A\u9879\u76EE"
+        },
+        {
+          "name": "\u6587\u4EF6\u5939 B",
+          "type": "folder",
+          "detail": "8 \u4E2A\u9879\u76EE"
+        },
+        {
+          "name": "\u793A\u4F8B\u6587\u6863.pdf",
+          "type": "file",
+          "detail": "1.2 MB"
+        },
+        {
+          "name": "\u793A\u4F8B\u6570\u636E.csv",
+          "type": "file",
+          "detail": "8 KB"
+        },
+        {
+          "name": "\u6587\u4EF6\u5939 C",
+          "type": "folder",
+          "detail": "6 \u4E2A\u9879\u76EE"
+        },
+        {
+          "name": "\u793A\u4F8B\u97F3\u9891.wav",
+          "type": "music",
+          "detail": "24 MB"
+        },
+        {
+          "name": "README.md",
+          "type": "file",
+          "detail": "4 KB"
+        },
+        {
+          "name": "\u793A\u4F8B\u89C6\u9891.mov",
+          "type": "video",
+          "detail": "86 MB"
+        }
+      ],
+      "favoriteLabel": "\u793A\u4F8B\u6587\u4EF6\u5939"
+    }, (p, h) => pad(h, `<div class="am-files"><aside><h1>\u6D4F\u89C8</h1><label>\u4F4D\u7F6E</label>${["\u6211\u7684 iPad", "iCloud \u4E91\u76D8", "\u4E0B\u8F7D", "\u6700\u8FD1\u5220\u9664"].map((x, i) => `<p class="${x === p.location ? "active" : ""}">${ai(h, ["phone", "folder", "download", "trash"][i], 21)}${x}</p>`).join("")}<label>\u4E2A\u4EBA\u6536\u85CF</label><p>${ai(h, "folder", 21)} ${h.esc(p.favoriteLabel)}</p><label>\u6807\u7B7E</label>${["\u5DE5\u4F5C", "\u4E2A\u4EBA", "\u5F85\u5904\u7406"].map((x, i) => `<p><i style="background:${["#e56962", "#edb749", "#82baa7"][i]}"></i>${x}</p>`).join("")}</aside><main><nav><span>${ai(h, "chevron-left", 21)} ${h.esc(p.location)}</span><b>${h.esc(p.folder)}</b><span>\u9009\u62E9\u3000\u2022\u2022\u2022</span></nav><div class="am-search">${ai(h, "search", 15)} \u641C\u7D22</div><div class="am-file-controls">\u6309\u540D\u79F0\u3000\u2304<span>${ai(h, "grid", 19)}</span></div><div class="am-files-grid">${array(p.files, 12).map((f) => `<div data-motion="item"><i class="${f.type === "folder" ? "folder" : "document"}">${ai(h, f.type, 57)}</i><b>${h.esc(f.name)}</b><small>${h.esc(f.detail)}</small></div>`).join("")}</div><footer>${array(p.files).length} \u4E2A\u9879\u76EE</footer></main></div>`), true)
   ];
 
   // families/broll-graphics.mjs
@@ -1400,52 +2775,146 @@ var ComponentLibraryRuntime = (() => {
   });
   var desk = (id, content2) => '<section class="brg-desk brg-' + id + '"><div class="brg-light" aria-hidden="true"></div>' + content2 + "</section>";
   var components14 = [
-    create2("broll-brief-desk", "\u684C\u9762\u4FBF\u7B7E \xB7 \u8865\u9F50\u8981\u6C42", "\u4FEF\u62CD\u7EB8\u5F20\u4E0E\u56DB\u5F20\u4FBF\u7B7E\uFF0C\u628A\u6A21\u7CCA\u4EFB\u52A1\u8865\u6210\u5BF9\u8C61\u3001\u4EFB\u52A1\u3001\u65F6\u95F4\u548C\u5165\u53E3\uFF1B\u6240\u6709\u6B63\u6587\u53EF\u7F16\u8F91\u3002", {
-      documentLabel: "\u5DE5\u4F5C\u624B\u8BB0 / 01",
-      title: "\u672C\u5468\u8FDB\u5EA6\u6536\u96C6",
-      originalLabel: "\u6700\u521D\u7684\u4E00\u53E5\u8BDD",
-      original: "\u63D0\u9192\u5927\u5BB6\u4EA4\u8FDB\u5EA6\uFF0C\u6B63\u5F0F\u4E00\u70B9\u3002",
-      marginNote: "\u8FD8\u7F3A\u54EA\u4E9B\u4FE1\u606F\uFF1F",
-      checklistLabel: "\u53D1\u51FA\u524D\uFF0C\u9010\u9879\u5BF9\u7167",
-      checklist: ["\u8C01\u6765\u4EA4", "\u4EA4\u4EC0\u4E48", "\u51E0\u70B9\u524D", "\u5728\u54EA\u513F\u586B"],
-      documentNote: "\u7AD9\u5728\u6536\u5230\u901A\u77E5\u7684\u4EBA\u90A3\u8FB9\uFF0C\u518D\u8BFB\u4E00\u904D\u3002",
-      notes: [
-        { label: "\u5BF9\u8C61", value: "\u5404\u7EC4\u8D1F\u8D23\u4EBA", detail: "\u8BA9\u8BE5\u884C\u52A8\u7684\u4EBA\u770B\u5F97\u89C1", tone: "blue" },
-        { label: "\u4EFB\u52A1", value: "\u672C\u5468\u5B8C\u6210\u60C5\u51B5", detail: "\u5DF2\u5B8C\u6210 + \u672A\u5B8C\u6210\u4E8B\u9879", tone: "mint" },
-        { label: "\u65F6\u95F4", value: "\u5468\u4E94 17:00 \u524D", detail: "\u7ED9\u51FA\u660E\u786E\u622A\u6B62\u65F6\u95F4", tone: "cream" },
-        { label: "\u5165\u53E3", value: "\u5171\u4EAB\u8868\u683C", detail: "\u968F\u901A\u77E5\u9644\u4E0A\u94FE\u63A5", tone: "blue" }
+    create2("broll-brief-desk", "\u684C\u9762\u6587\u6863\u4E0E\u4FBF\u7B7E", "\u4FEF\u62CD\u7EB8\u5F20\u4E0E\u56DB\u5F20\u4FBF\u7B7E\uFF0C\u628A\u6A21\u7CCA\u4EFB\u52A1\u8865\u6210\u5BF9\u8C61\u3001\u4EFB\u52A1\u3001\u65F6\u95F4\u548C\u5165\u53E3\uFF1B\u6240\u6709\u6B63\u6587\u53EF\u7F16\u8F91\u3002", {
+      "documentLabel": "\u6587\u6863 / 01",
+      "title": "\u6587\u6863\u6807\u9898",
+      "originalLabel": "\u5185\u5BB9\u6807\u7B7E",
+      "original": "\u6B63\u6587\u5185\u5BB9\uFF0C\u53EF\u66FF\u6362\u4E3A\u9700\u8981\u5C55\u793A\u7684\u6587\u5B57\u3002",
+      "marginNote": "\u6279\u6CE8\u5185\u5BB9",
+      "checklistLabel": "\u68C0\u67E5\u9879\u6807\u9898",
+      "checklist": [
+        "\u68C0\u67E5\u9879 A",
+        "\u68C0\u67E5\u9879 B",
+        "\u68C0\u67E5\u9879 C",
+        "\u68C0\u67E5\u9879 D"
+      ],
+      "documentNote": "\u8865\u5145\u8BF4\u660E\u6587\u5B57",
+      "notes": [
+        {
+          "label": "\u5B57\u6BB5 A",
+          "value": "\u5185\u5BB9 A",
+          "detail": "\u8BF4\u660E\u6587\u5B57 A",
+          "tone": "blue"
+        },
+        {
+          "label": "\u5B57\u6BB5 B",
+          "value": "\u5185\u5BB9 B",
+          "detail": "\u8BF4\u660E\u6587\u5B57 B",
+          "tone": "mint"
+        },
+        {
+          "label": "\u5B57\u6BB5 C",
+          "value": "\u5185\u5BB9 C",
+          "detail": "\u8BF4\u660E\u6587\u5B57 C",
+          "tone": "cream"
+        },
+        {
+          "label": "\u5B57\u6BB5 D",
+          "value": "\u5185\u5BB9 D",
+          "detail": "\u8BF4\u660E\u6587\u5B57 D",
+          "tone": "blue"
+        }
       ]
     }, (p, h) => {
       const e = h.esc;
       return desk("brief", '<div class="brg-brief-paper-wrap" data-motion="item" data-broll-part="paper"><article class="brg-paper brg-brief-paper">' + clip + '<div class="brg-paper-meta">' + e(p.documentLabel) + "</div><h2>" + e(p.title) + '</h2><div class="brg-original"><small>' + e(p.originalLabel) + "</small><p>" + e(p.original) + '</p><svg class="brg-underline" viewBox="0 0 430 24" aria-hidden="true"><path data-motion="line" d="M6 10Q144 2 422 11M40 18Q241 7 382 17" fill="none" stroke="#d98371" stroke-width="2.2" stroke-linecap="round"/></svg></div><div class="brg-margin-note" data-motion="emphasis" data-broll-part="mark">' + e(p.marginNote) + '</div><div class="brg-checklist-title">' + e(p.checklistLabel) + '</div><div class="brg-paper-checks">' + textList(p.checklist, 4).map((x) => '<div><span data-motion="reveal" data-broll-part="tick">' + tick + "</span><p>" + e(x) + "</p></div>").join("") + '</div><p class="brg-document-note">' + e(p.documentNote) + "</p>" + corner + '</article></div><div class="brg-notes-grid">' + list(p.notes, 4).map((x, i) => '<div class="brg-note-wrap brg-note-slot-' + i + '" data-motion="item" data-broll-part="note"><article class="brg-sticky brg-tone-' + tone2(x.tone, i) + '"><i class="brg-tape" aria-hidden="true"></i><div class="brg-sticky-top"><span>' + e(x.label) + "</span><small>" + String(i + 1).padStart(2, "0") + "</small></div><strong>" + e(x.value) + "</strong><p>" + e(x.detail) + "</p></article></div>").join("") + "</div>" + pencil + '<div class="brg-paperclip" aria-hidden="true"></div>');
     }),
-    create2("broll-message-pile", "\u6D88\u606F\u7EB8\u6761 \xB7 \u4ECE\u6A21\u7CCA\u5230\u660E\u786E", "\u62BD\u8C61\u6D88\u606F\u7EB8\u6761\u5806\u79EF\u5728\u684C\u4E0A\uFF0C\u95EE\u9898\u6807\u7B7E\u4E0E\u53F3\u4FA7\u660E\u786E\u901A\u77E5\u5F62\u6210\u5BF9\u7167\uFF1B\u4E0D\u4EFF\u5192\u4EFB\u4F55\u8F6F\u4EF6\u754C\u9762\u3002", {
-      trayLabel: "\u5F85\u7406\u6E05\u7684\u6D88\u606F",
-      clearLabel: "\u8865\u5145\u540E\u7684\u901A\u77E5",
-      clearTitle: "\u672C\u5468\u8FDB\u5EA6\uFF0C\u6309\u8FD9\u4EFD\u4EA4",
-      messages: [
-        { author: "\u7B2C\u4E00\u53E5", text: "\u63D0\u9192\u5927\u5BB6\u4EA4\u8FDB\u5EA6\uFF0C\u6B63\u5F0F\u4E00\u70B9\u3002", question: "\u8C01\u6765\u4EA4\uFF1F", tone: "blue" },
-        { author: "\u518D\u8865\u4E00\u53E5", text: "\u5199\u5177\u4F53\u4E00\u70B9\uFF0C\u5C3D\u5FEB\u4EA4\u3002", question: "\u51E0\u70B9\u524D\uFF1F", tone: "cream" },
-        { author: "\u6536\u5230\u540E", text: "\u6536\u5230\u3002\u5177\u4F53\u586B\u5728\u54EA\u91CC\uFF1F", question: "\u5165\u53E3\u5462\uFF1F", tone: "coral" }
+    create2("broll-message-pile", "\u6D88\u606F\u4E0E\u7ED3\u679C\u5361\u7247", "\u62BD\u8C61\u6D88\u606F\u7EB8\u6761\u5806\u79EF\u5728\u684C\u4E0A\uFF0C\u95EE\u9898\u6807\u7B7E\u4E0E\u53F3\u4FA7\u660E\u786E\u901A\u77E5\u5F62\u6210\u5BF9\u7167\uFF1B\u4E0D\u4EFF\u5192\u4EFB\u4F55\u8F6F\u4EF6\u754C\u9762\u3002", {
+      "trayLabel": "\u6D88\u606F\u5217\u8868",
+      "clearLabel": "\u6574\u7406\u7ED3\u679C",
+      "clearTitle": "\u7ED3\u679C\u6807\u9898",
+      "messages": [
+        {
+          "author": "\u53D1\u9001\u4EBA A",
+          "text": "\u6D88\u606F\u5185\u5BB9 A",
+          "question": "\u6279\u6CE8 A",
+          "tone": "blue"
+        },
+        {
+          "author": "\u53D1\u9001\u4EBA B",
+          "text": "\u6D88\u606F\u5185\u5BB9 B",
+          "question": "\u6279\u6CE8 B",
+          "tone": "cream"
+        },
+        {
+          "author": "\u53D1\u9001\u4EBA C",
+          "text": "\u6D88\u606F\u5185\u5BB9 C",
+          "question": "\u6279\u6CE8 C",
+          "tone": "coral"
+        }
       ],
-      fields: [{ label: "\u5BF9\u8C61", value: "\u5404\u7EC4\u8D1F\u8D23\u4EBA" }, { label: "\u5185\u5BB9", value: "\u672C\u5468\u5B8C\u6210 / \u672A\u5B8C\u6210\u4E8B\u9879" }, { label: "\u622A\u6B62", value: "\u5468\u4E94 17:00 \u524D" }, { label: "\u63D0\u4EA4", value: "\u5171\u4EAB\u8868\u683C\uFF08\u9644\u94FE\u63A5\uFF09" }],
-      resultNote: "\u4E00\u5F20\u7EB8\uFF0C\u5C31\u80FD\u627E\u5230\u4E0B\u4E00\u6B65\u3002",
-      indexLabel: "\u6574\u7406 / 02"
+      "fields": [
+        {
+          "label": "\u5B57\u6BB5 A",
+          "value": "\u5185\u5BB9 A"
+        },
+        {
+          "label": "\u5B57\u6BB5 B",
+          "value": "\u5185\u5BB9 B"
+        },
+        {
+          "label": "\u5B57\u6BB5 C",
+          "value": "\u5185\u5BB9 C"
+        },
+        {
+          "label": "\u5B57\u6BB5 D",
+          "value": "\u5185\u5BB9 D"
+        }
+      ],
+      "resultNote": "\u7ED3\u679C\u8BF4\u660E\u6587\u5B57",
+      "indexLabel": "\u680F\u76EE / 02"
     }, (p, h) => {
       const e = h.esc;
       return desk("messages", '<div class="brg-message-backboard"><div class="brg-tray-label">' + e(p.trayLabel) + '</div><div class="brg-grid-paper" aria-hidden="true"></div></div><div class="brg-message-pile">' + list(p.messages, 3).map((x, i) => '<div class="brg-message-wrap brg-message-slot-' + i + '" data-motion="item" data-broll-part="message"><article class="brg-message-slip brg-tone-' + tone2(x.tone, i) + '"><div class="brg-slip-meta"><span>' + e(x.author) + "</span><small>" + String(i + 1).padStart(2, "0") + "</small></div><p>" + e(x.text) + '</p><span class="brg-question" data-motion="emphasis" data-broll-part="mark">' + e(x.question) + "</span></article></div>").join("") + '</div><svg class="brg-sort-arrow" viewBox="0 0 146 130" aria-hidden="true"><path data-motion="line" d="M9 94C59 90 48 24 121 31M104 14l20 17-19 18" fill="none" stroke="#8b9f91" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 8"/></svg><div class="brg-clear-paper-wrap" data-motion="reveal" data-broll-part="paper"><article class="brg-paper brg-clear-paper"><div class="brg-green-tab">' + e(p.clearLabel) + '</div><div class="brg-paper-meta">' + e(p.indexLabel) + "</div><h2>" + e(p.clearTitle) + '</h2><div class="brg-clear-fields">' + list(p.fields, 4).map((x) => '<div data-motion="item"><span>' + e(x.label) + "</span><strong>" + e(x.value) + '</strong><i data-motion="reveal" data-broll-part="tick">' + tick + "</i></div>").join("") + '</div><p class="brg-clear-note">' + e(p.resultNote) + "</p>" + corner + '</article></div><div class="brg-message-clip brg-paperclip" aria-hidden="true"></div>');
     }),
-    create2("broll-revision-stack", "\u7A3F\u7EB8\u53E0\u5C42 \xB7 \u4FEE\u6539\u4E0E\u6838\u5BF9", "\u4E09\u7248\u7A3F\u7EB8\u548C\u84DD\u8272\u6807\u6CE8\u5448\u73B0\u9010\u6B21\u4FEE\u8BA2\uFF0C\u6700\u65B0\u4E00\u9875\u5F62\u6210\u53EF\u6838\u5BF9\u6E05\u5355\uFF1B\u7248\u672C\u3001\u7F3A\u53E3\u3001\u6B63\u6587\u5747\u53EF\u66FF\u6362\u3002", {
-      earlier: [
-        { version: "v1", label: "\u5148\u5199\u51FA\u6765", title: "\u8BF7\u4EA4\u8FDB\u5EA6", lines: ["\u8BF7\u5404\u4F4D\u79EF\u6781\u914D\u5408\u3002", "\u53CA\u65F6\u63D0\u4EA4\u76F8\u5173\u6750\u6599\u3002"], gap: "\u7F3A\u5C11\u5BF9\u8C61", note: "\u8C01\u6765\u4EA4\uFF1F" },
-        { version: "v2", label: "\u628A\u4FE1\u606F\u8865\u4E0A", title: "\u5404\u7EC4\u8D1F\u8D23\u4EBA", lines: ["\u5468\u4E94 17:00 \u524D\u3002", "\u586B\u62A5\u672C\u5468\u5B8C\u6210\u60C5\u51B5\u3002"], gap: "\u8FD8\u7F3A\u5165\u53E3", note: "\u5F80\u54EA\u513F\u586B\uFF1F" }
+    create2("broll-revision-stack", "\u6587\u6863\u7248\u672C\u53E0\u5C42", "\u4E09\u7248\u7A3F\u7EB8\u548C\u84DD\u8272\u6807\u6CE8\u5448\u73B0\u9010\u6B21\u4FEE\u8BA2\uFF0C\u6700\u65B0\u4E00\u9875\u5F62\u6210\u53EF\u6838\u5BF9\u6E05\u5355\uFF1B\u7248\u672C\u3001\u7F3A\u53E3\u3001\u6B63\u6587\u5747\u53EF\u66FF\u6362\u3002", {
+      "earlier": [
+        {
+          "version": "v1",
+          "label": "\u7248\u672C\u8BF4\u660E A",
+          "title": "\u6587\u6863\u6807\u9898 A",
+          "lines": [
+            "\u6B63\u6587\u5185\u5BB9 A",
+            "\u6B63\u6587\u5185\u5BB9 B"
+          ],
+          "gap": "\u4FEE\u6539\u6807\u8BB0",
+          "note": "\u6279\u6CE8\u5185\u5BB9"
+        },
+        {
+          "version": "v2",
+          "label": "\u7248\u672C\u8BF4\u660E B",
+          "title": "\u6587\u6863\u6807\u9898 B",
+          "lines": [
+            "\u6B63\u6587\u5185\u5BB9 A",
+            "\u6B63\u6587\u5185\u5BB9 B"
+          ],
+          "gap": "\u4FEE\u6539\u6807\u8BB0",
+          "note": "\u6279\u6CE8\u5185\u5BB9"
+        }
       ],
-      latestVersion: "v3",
-      latestLabel: "\u5BF9\u7167\u8981\u6C42\u518D\u770B\u4E00\u904D",
-      latestTitle: "\u4EA4\u4EE3\u6E05\u695A\uFF0C\u518D\u53D1\u51FA",
-      checks: [{ label: "\u5BF9\u8C61", value: "\u5404\u7EC4\u8D1F\u8D23\u4EBA" }, { label: "\u5185\u5BB9", value: "\u5DF2\u5B8C\u6210 / \u672A\u5B8C\u6210" }, { label: "\u622A\u6B62", value: "\u5468\u4E94 17:00 \u524D" }, { label: "\u5165\u53E3", value: "\u5171\u4EAB\u8868\u683C\u94FE\u63A5" }],
-      stamp: "\u5DF2\u6838\u5BF9",
-      bottomNote: "\u4FEE\u6539\u6709\u4F9D\u636E\uFF0C\u68C0\u67E5\u4E5F\u6709\u4F9D\u636E\u3002"
+      "latestVersion": "v3",
+      "latestLabel": "\u7248\u672C\u8BF4\u660E C",
+      "latestTitle": "\u6587\u6863\u6807\u9898 C",
+      "checks": [
+        {
+          "label": "\u5B57\u6BB5 A",
+          "value": "\u5185\u5BB9 A"
+        },
+        {
+          "label": "\u5B57\u6BB5 B",
+          "value": "\u5185\u5BB9 B"
+        },
+        {
+          "label": "\u5B57\u6BB5 C",
+          "value": "\u5185\u5BB9 C"
+        },
+        {
+          "label": "\u5B57\u6BB5 D",
+          "value": "\u5185\u5BB9 D"
+        }
+      ],
+      "stamp": "\u5DF2\u6838\u5BF9",
+      "bottomNote": "\u8865\u5145\u8BF4\u660E\u6587\u5B57"
     }, (p, h) => {
       const e = h.esc;
       return desk("revisions", '<div class="brg-revision-shadow" aria-hidden="true"></div>' + list(p.earlier, 2).map((x, i) => '<div class="brg-revision-wrap brg-old-revision brg-revision-' + i + '" data-motion="item" data-broll-part="paper"><article class="brg-paper brg-revision-paper"><div class="brg-version">' + e(x.version) + "</div><small>" + e(x.label) + "</small><h2>" + e(x.title) + '</h2><div class="brg-draft-lines">' + textList(x.lines, 3).map((line3) => "<p>" + e(line3) + "</p>").join("") + '</div><div class="brg-red-gap" data-motion="emphasis" data-broll-part="mark"><span>' + e(x.gap) + '</span><svg viewBox="0 0 260 63" aria-hidden="true"><path data-motion="line" d="M243 17C198-1 38-3 15 26S78 60 162 55 259 36 244 20C220 8 190 4 169 7" fill="none" stroke="#cb8271" stroke-width="2.1" stroke-linecap="round"/></svg></div><p class="brg-red-note">' + e(x.note) + '</p><div class="brg-ruled-filler" aria-hidden="true"></div>' + corner + "</article></div>").join("") + '<div class="brg-revision-wrap brg-latest-revision" data-motion="reveal" data-broll-part="paper"><article class="brg-paper brg-revision-paper"><div class="brg-version brg-version-final">' + e(p.latestVersion) + "</div><small>" + e(p.latestLabel) + "</small><h2>" + e(p.latestTitle) + '</h2><div class="brg-revision-checks">' + list(p.checks, 4).map((x) => '<div><span data-motion="reveal" data-broll-part="tick">' + tick + "</span><p><small>" + e(x.label) + "</small><strong>" + e(x.value) + "</strong></p></div>").join("") + '</div><span class="brg-stamp" data-motion="emphasis" data-broll-part="mark">' + e(p.stamp) + "</span>" + corner + '</article></div><div class="brg-revision-bottom" data-motion="reveal">' + e(p.bottomNote) + '</div><div class="brg-red-pencil">' + pencil + "</div>");
@@ -1485,7 +2954,19 @@ var ComponentLibraryRuntime = (() => {
       width: 1280,
       height: 800,
       reference: reference5,
-      defaults: { eyebrow: "\u5DE5\u4F5C\u4E2D\u7684\u4E00\u4E2A\u77AC\u95F4", title: "\u5148\u628A\u8981\u6C42\u8BF4\u6E05\u695A", caption: "\u52A8\u624B\u4E4B\u524D\uFF0C\u628A\u5BF9\u8C61\u3001\u5185\u5BB9\u548C\u65F6\u95F4\u5199\u4E0B\u6765\u3002", mediaSrc: "assets/broll/office.mp4", mediaType: "video", mediaAlt: "\u529E\u516C\u684C\u524D\u4F7F\u7528\u952E\u76D8\u7684\u5B9E\u62CD\u7D20\u6750", mediaX: 50, mediaY: 50, mediaStart: 0, showCaption: true, tag: "\u65E5\u5E38\u5DE5\u4F5C" },
+      defaults: {
+        "eyebrow": "\u680F\u76EE / 01",
+        "title": "\u4E3B\u6807\u9898",
+        "caption": "\u5B57\u5E55\u8BF4\u660E\u6587\u5B57",
+        "mediaSrc": "assets/broll/office.mp4",
+        "mediaType": "video",
+        "mediaAlt": "\u529E\u516C\u684C\u524D\u4F7F\u7528\u952E\u76D8\u7684\u5B9E\u62CD\u7D20\u6750",
+        "mediaX": 50,
+        "mediaY": 50,
+        "mediaStart": 0,
+        "showCaption": true,
+        "tag": "\u793A\u4F8B\u6807\u7B7E"
+      },
       render(props, h) {
         const p = { ...this.defaults, ...props };
         return `<section class="brm-scene brm-cutaway"><div class="brm-shot-window"><div class="brm-shot-motion" data-broll-part="camera" data-motion="focus">${media({ src: p.mediaSrc, type: p.mediaType, alt: p.mediaAlt, x: p.mediaX, y: p.mediaY, mediaStart: p.mediaStart }, h)}</div></div><div class="brm-cutaway-top"><span>${h.esc(p.eyebrow)}</span>${tag(p.tag, h)}</div>${p.showCaption ? `<div class="brm-caption" data-broll-part="caption" data-motion="reveal"><div class="brm-rule"></div><h2>${h.esc(p.title)}</h2><p>${h.esc(p.caption)}</p></div>` : ""}</section>`;
@@ -1499,7 +2980,40 @@ var ComponentLibraryRuntime = (() => {
       width: 1280,
       height: 800,
       reference: reference5,
-      defaults: { eyebrow: "\u4ECE\u60F3\u6CD5\u5230\u884C\u52A8", title: "\u5199\u4E0B\u6765\uFF0C\u505A\u4E00\u904D\uFF0C\u518D\u6838\u5BF9", caption: "\u540C\u4E00\u4E2A\u76EE\u6807\uFF0C\u53EF\u4EE5\u4ECE\u4E0D\u540C\u89D2\u5EA6\u89C2\u5BDF\u3002", media: [{ src: "assets/broll/planning.jpg", type: "image", alt: "\u7EB8\u4E0A\u8BB0\u5F55\u8BA1\u5212", label: "\u5148\u7406\u6E05", detail: "\u628A\u8981\u6C42\u5199\u4E0B\u6765", x: 50, y: 50 }, { src: "assets/broll/keyboard.jpg", type: "image", alt: "\u952E\u76D8\u64CD\u4F5C", label: "\u518D\u52A8\u624B", detail: "\u5B8C\u6210\u4E00\u6B21\u64CD\u4F5C", x: 50, y: 50 }, { src: "assets/broll/teamwork.jpg", type: "image", alt: "\u56E2\u961F\u534F\u4F5C\u8BA8\u8BBA", label: "\u518D\u6838\u5BF9", detail: "\u5BF9\u7167\u7ED3\u679C\u770B\u4E00\u904D", x: 50, y: 50 }] },
+      defaults: {
+        "eyebrow": "\u680F\u76EE / 02",
+        "title": "\u4E3B\u6807\u9898",
+        "caption": "\u5B57\u5E55\u8BF4\u660E\u6587\u5B57",
+        "media": [
+          {
+            "src": "assets/broll/planning.jpg",
+            "type": "image",
+            "alt": "\u7EB8\u4E0A\u8BB0\u5F55\u8BA1\u5212",
+            "label": "\u753B\u9762 A",
+            "detail": "\u753B\u9762\u8BF4\u660E A",
+            "x": 50,
+            "y": 50
+          },
+          {
+            "src": "assets/broll/keyboard.jpg",
+            "type": "image",
+            "alt": "\u952E\u76D8\u64CD\u4F5C",
+            "label": "\u753B\u9762 B",
+            "detail": "\u753B\u9762\u8BF4\u660E B",
+            "x": 50,
+            "y": 50
+          },
+          {
+            "src": "assets/broll/teamwork.jpg",
+            "type": "image",
+            "alt": "\u56E2\u961F\u534F\u4F5C\u8BA8\u8BBA",
+            "label": "\u753B\u9762 C",
+            "detail": "\u753B\u9762\u8BF4\u660E C",
+            "x": 50,
+            "y": 50
+          }
+        ]
+      },
       render(props, h) {
         const p = { ...this.defaults, ...props }, shots = array2(p.media, 3);
         if (shots.length !== 3) throw Error("\u4E09\u955C\u5934\u7EC4\u63A5\u9700\u8981\u4E09\u4E2A media \u7D20\u6750");
@@ -1514,7 +3028,35 @@ var ComponentLibraryRuntime = (() => {
       width: 1280,
       height: 800,
       reference: reference5,
-      defaults: { eyebrow: "\u505C\u4E0B\u6765\uFF0C\u770B\u4E00\u4E2A\u7EC6\u8282", title: "\u8981\u6C42\u843D\u5728\u7EB8\u4E0A\uFF0C\u624D\u65B9\u4FBF\u6838\u5BF9", mediaSrc: "assets/broll/planning.jpg", mediaType: "image", mediaAlt: "\u5DE5\u4F5C\u8BA1\u5212\u4E0E\u7B14\u8BB0\u7684\u5B9E\u62CD\u7D20\u6750", mediaX: 50, mediaY: 50, focusX: 70, focusY: 56, focusWidth: 31, focusHeight: 47, focusLabel: "\u5148\u628A\u8981\u6C42\u5199\u4E0B\u6765", notes: [{ label: "\u5BF9\u8C61", text: "\u8FD9\u4EF6\u4E8B\u8F6E\u5230\u8C01\u505A\uFF1F" }, { label: "\u52A8\u4F5C", text: "\u5177\u4F53\u8981\u5B8C\u6210\u4EC0\u4E48\uFF1F" }, { label: "\u68C0\u67E5", text: "\u62FF\u4EC0\u4E48\u5224\u65AD\u505A\u5BF9\u4E86\uFF1F" }], footer: "\u65C1\u767D\u63D0\u793A \xB7 \u53EF\u66FF\u6362\u4E3A\u81EA\u5DF1\u7684\u89C2\u5BDF" },
+      defaults: {
+        "eyebrow": "\u680F\u76EE / 03",
+        "title": "\u4E3B\u6807\u9898",
+        "mediaSrc": "assets/broll/planning.jpg",
+        "mediaType": "image",
+        "mediaAlt": "\u5DE5\u4F5C\u8BA1\u5212\u4E0E\u7B14\u8BB0\u7684\u5B9E\u62CD\u7D20\u6750",
+        "mediaX": 50,
+        "mediaY": 50,
+        "focusX": 70,
+        "focusY": 56,
+        "focusWidth": 31,
+        "focusHeight": 47,
+        "focusLabel": "\u5C40\u90E8\u6807\u6CE8",
+        "notes": [
+          {
+            "label": "\u8981\u70B9 A",
+            "text": "\u8981\u70B9\u5185\u5BB9 A"
+          },
+          {
+            "label": "\u8981\u70B9 B",
+            "text": "\u8981\u70B9\u5185\u5BB9 B"
+          },
+          {
+            "label": "\u8981\u70B9 C",
+            "text": "\u8981\u70B9\u5185\u5BB9 C"
+          }
+        ],
+        "footer": "\u9875\u811A\u8BF4\u660E\u6587\u5B57"
+      },
       render(props, h) {
         const p = { ...this.defaults, ...props }, w = clamp(p.focusWidth, 10, 75, 30), ht = clamp(p.focusHeight, 10, 65, 30), x = clamp(p.focusX, w / 2, 100 - w / 2, 45), y = clamp(p.focusY, ht / 2, 100 - ht / 2, 48);
         return `<section class="brm-scene brm-detail"><header class="brm-editorial-head"><span>${h.esc(p.eyebrow)}</span><span>DETAIL / 01</span></header><div class="brm-detail-layout"><div class="brm-detail-image"><div class="brm-shot-motion" data-broll-part="camera">${media({ src: p.mediaSrc, type: p.mediaType, alt: p.mediaAlt, x: p.mediaX, y: p.mediaY }, h)}</div><div class="brm-focus-box" data-broll-part="focus" data-motion="focus" style="left:${x - w / 2}%;top:${y - ht / 2}%;width:${w}%;height:${ht}%"><i></i><i></i><i></i><i></i></div><div class="brm-focus-label" data-broll-part="caption">${h.esc(p.focusLabel)}</div></div><aside class="brm-observation"><h2>${h.esc(p.title)}</h2>${array2(p.notes, 3).map((n3, i) => `<div class="brm-note" data-broll-part="note" data-motion="item"><span>0${i + 1} / ${h.esc(n3.label)}</span><p>${h.esc(n3.text)}</p></div>`).join("")}<small>${h.esc(p.footer)}</small></aside></div></section>`;
@@ -1538,7 +3080,7 @@ var ComponentLibraryRuntime = (() => {
     const p = object(value), columns = array3(p.columns), rows2 = array3(p.rows);
     const selected = new Set(array3(p.selectedIds).map(String)), included = new Set(array3(p.includedIds).map(String));
     return `<section class="cxw-table-result" data-part="teaching-table" data-state="${h.esc(state(p.state))}">
-    <div class="cxw-table-heading"><strong>${h.esc(p.title || "\u8BA2\u5355\u6837\u672C\u660E\u7EC6")}</strong><span>${h.esc(p.badge || "\u6559\u5B66\u6570\u636E")}</span></div>
+    <div class="cxw-table-heading"><strong>${h.esc(p.title || "\u8868\u683C\u6807\u9898")}</strong><span>${h.esc(p.badge || "\u6559\u5B66\u6570\u636E")}</span></div>
     ${p.note ? `<p class="cxw-table-note">${h.esc(p.note)}</p>` : ""}
     <div class="cxw-table-viewport"><table><thead><tr>${columns.map((c) => `<th scope="col" data-field="${h.esc(c.key)}">${h.esc(c.label || c.key)}</th>`).join("")}</tr></thead><tbody>${rows2.map((row, index) => {
       const id = String(row.id ?? row.orderId ?? index), isIncluded = included.has(id), isSelected = selected.has(id);
@@ -1597,19 +3139,61 @@ var ComponentLibraryRuntime = (() => {
     return `<aside class="cxw-preview-panel" data-part="preview-panel"><header><span>${icon2(h, p.kind === "table" ? "grid" : "file", 15)}${h.esc(p.title || "\u6587\u4EF6\u9884\u89C8")}</span><span>${icon2(h, "more", 17)}${icon2(h, "x", 15)}</span></header><div class="cxw-panel-body" data-motion="scroll">${p.kind === "table" ? teachingTable(p.table, h) : `<div class="cxw-document">${p.heading ? `<h3>${h.esc(p.heading)}</h3>` : ""}${array3(p.paragraphs).map((t) => `<p>${h.esc(t)}</p>`).join("")}${p.code ? `<pre>${h.esc(p.code)}</pre>` : ""}</div>`}</div></aside>`;
   }
   var defaults2 = {
-    title: "\u7EDF\u8BA1\u672C\u6708\u5DF2\u5B8C\u6210\u8BA2\u5355",
-    project: "\u6F14\u793A\u9879\u76EE",
-    disclosure: "\u754C\u9762\u590D\u523B \xB7 \u6848\u4F8B\u6F14\u793A",
-    showSidebar: true,
-    sidebar: { sectionLabel: "\u4EFB\u52A1", items: [{ id: "orders", label: "\u7EDF\u8BA1\u672C\u6708\u5DF2\u5B8C\u6210\u8BA2\u5355", active: true }], footer: "\u6F14\u793A\u5DE5\u4F5C\u533A" },
-    messages: [
-      { id: "request", role: "user", text: "\u6309\u5B8C\u6210\u65E5\u671F\u7B97\u8FD9\u4E2A\u6708\uFF0C\u53EA\u7EDF\u8BA1\u72B6\u6001\u662F\u5DF2\u5B8C\u6210\u7684\u3002\u628A\u7B97\u8FDB\u53BB\u7684\u8BA2\u5355\u4E5F\u5217\u51FA\u6765\u3002", attachments: [{ name: "orders-sample.csv", detail: "\u6559\u5B66\u6837\u672C \xB7 5 \u6761\u8BB0\u5F55" }] },
-      { id: "response", role: "assistant", elapsed: "\u7528\u65F6 2\u520603\u79D2", text: "\u8FD9 5 \u6761\u6837\u672C\u4E2D\uFF0CA01\u3001A02\u3001A03 \u7B26\u5408\u6761\u4EF6\u3002\u5DF2\u53D6\u6D88\u548C\u5F85\u4ED8\u6B3E\u7684\u4E24\u6761\u4E0D\u8BA1\u5165\u3002", toolEvents: [{ id: "read-file", kind: "file", state: "complete", label: "\u5DF2\u8BFB\u53D6 orders-sample.csv", detail: "\u6559\u5B66\u6837\u672C\uFF1B\u6574\u5F20\u8868\u7684\u6708\u5EA6\u603B\u6570\u5C1A\u672A\u63D0\u4F9B\u3002" }] }
+    "title": "\u4EFB\u52A1\u6807\u9898",
+    "project": "\u793A\u4F8B\u9879\u76EE",
+    "disclosure": "\u754C\u9762\u590D\u523B \xB7 \u6848\u4F8B\u6F14\u793A",
+    "showSidebar": true,
+    "sidebar": {
+      "sectionLabel": "\u4EFB\u52A1",
+      "items": [
+        {
+          "id": "example-task",
+          "label": "\u4EFB\u52A1\u6807\u9898",
+          "active": true
+        }
+      ],
+      "footer": "\u793A\u4F8B\u5DE5\u4F5C\u533A"
+    },
+    "messages": [
+      {
+        "id": "request",
+        "role": "user",
+        "text": "\u7528\u6237\u6D88\u606F\u5185\u5BB9\u3002\u53EF\u66FF\u6362\u8F93\u5165\u8981\u6C42\u548C\u9644\u4EF6\u3002",
+        "attachments": [
+          {
+            "name": "example.csv",
+            "detail": "\u793A\u4F8B\u9644\u4EF6 \xB7 5 \u6761\u8BB0\u5F55"
+          }
+        ]
+      },
+      {
+        "id": "response",
+        "role": "assistant",
+        "elapsed": "\u7528\u65F6 10\u79D2",
+        "text": "\u56DE\u590D\u5185\u5BB9\u3002\u8FD9\u91CC\u5C55\u793A\u6D88\u606F\u6B63\u6587\u4E0E\u5DE5\u5177\u6267\u884C\u72B6\u6001\u3002",
+        "toolEvents": [
+          {
+            "id": "read-file",
+            "kind": "file",
+            "state": "complete",
+            "label": "\u5DF2\u8BFB\u53D6 example.csv",
+            "detail": "\u5DE5\u5177\u6267\u884C\u8BF4\u660E"
+          }
+        ]
+      }
     ],
-    toolEvents: [],
-    composer: { draft: "", placeholder: "\u968F\u5FC3\u8F93\u5165", permission: "\u5B8C\u5168\u8BBF\u95EE", model: "GPT-6 Astra", effort: "Ultra", running: false, attachments: [] },
-    panel: null,
-    panelWidth: 400
+    "toolEvents": [],
+    "composer": {
+      "draft": "",
+      "placeholder": "\u968F\u5FC3\u8F93\u5165",
+      "permission": "\u5B8C\u5168\u8BBF\u95EE",
+      "model": "GPT-6 Astra",
+      "effort": "Ultra",
+      "running": false,
+      "attachments": []
+    },
+    "panel": null,
+    "panelWidth": 400
   };
   var components16 = [{
     id: "codex-workflow",
@@ -1618,7 +3202,7 @@ var ComponentLibraryRuntime = (() => {
     width: 1280,
     height: 800,
     description: "\u4F9D\u636E\u672C\u673A\u754C\u9762\u89C2\u5BDF\u91CD\u5EFA\u7684\u53EF\u7F16\u8F91\u591A\u8F6E\u5DE5\u4F5C\u533A\uFF1B\u652F\u6301\u9644\u4EF6\u3001\u8FD0\u884C\u8BB0\u5F55\u3001\u5E95\u90E8\u8F93\u5165\u533A\u53CA\u53EF\u9009\u6559\u5B66\u6587\u4EF6\u9884\u89C8\u3002",
-    reference: { basis: "2026-09-18 \u672C\u673A Codex \u754C\u9762\u89C2\u5BDF\uFF1B\u8F93\u5165\u6846\u6CBF\u7528\u73B0\u6709 measured \u7EC4\u4EF6\u7684\u5B57\u4F53\u3001\u95F4\u8DDD\u4E0E\u63A7\u4EF6\u5F62\u72B6\u3002\u5168\u5DE5\u4F5C\u533A\u53CA\u9884\u89C8\u5185\u5BB9\u672A\u9010\u50CF\u7D20\u9A8C\u6536\u3002", source: "../component-reference/high-fidelity/references/codex-current-window.png", level: "documented" },
+    reference: { basis: "\u4EE5 2026-09-18 \u672C\u673A Codex \u754C\u9762\u89C2\u5BDF\u4E3A\u539F\u578B\uFF1B\u6CBF\u7528\u63A7\u4EF6\u5F62\u72B6\uFF0C\u6B63\u6587 18px\uFF0C\u5185\u5BB9\u533A\u4E0E\u8F93\u5165\u533A\u7EDF\u4E00\u5BBD\u5EA6\uFF0C\u4FA7\u680F\u53CA\u6587\u4EF6\u9884\u89C8\u6309\u53EF\u8BFB\u6027\u8C03\u6574\u3002\u5168\u5DE5\u4F5C\u533A\u672A\u9010\u50CF\u7D20\u9A8C\u6536\u3002", source: "../component-reference/high-fidelity/references/codex-current-window.png", level: "documented" },
     defaults: defaults2,
     render(props, h) {
       const incoming = object(props), p = { ...defaults2, ...incoming, sidebar: { ...defaults2.sidebar, ...object(incoming.sidebar) }, composer: { ...defaults2.composer, ...object(incoming.composer) } };
@@ -1631,7 +3215,7 @@ var ComponentLibraryRuntime = (() => {
   }];
 
   // families/codex.mjs
-  var native = { basis: "Windows Codex 26.915.3509.0\uFF1B\u672C\u673A\u771F\u5B9E\u622A\u56FE\u4E0E\u5B89\u88C5\u5305 UI \u5B57\u4F53/\u95F4\u8DDD token", source: "../component-reference/high-fidelity/references/codex-current-window.png", level: "measured" };
+  var native = { basis: "\u4EE5 Windows Codex 26.915.3509.0 \u672C\u673A\u622A\u56FE\u4E0E\u5B89\u88C5\u5305 UI token \u4E3A\u539F\u578B\uFF1B\u7EC4\u4EF6\u6B63\u6587\u8C03\u81F3 18px\uFF0C\u6309\u9884\u89C8\u53EF\u8BFB\u6027\u4F18\u5316\u5185\u5BB9\u5BBD\u5EA6\u548C\u8F93\u5165\u533A\uFF0C\u4E0D\u4F5C\u4E3A\u9010\u50CF\u7D20\u622A\u56FE\u3002", source: "../component-reference/high-fidelity/references/codex-current-window.png", level: "documented" };
   function composer2(p, h) {
     return `<div class="cx-composer" data-motion="focus"><div class="cx-editor ${p.draft ? "cx-has-draft" : ""}" data-motion="type">${h.esc(p.draft || p.placeholder || "\u968F\u5FC3\u8F93\u5165")}</div><div class="cx-composer-footer"><div class="cx-composer-start"><span class="cx-square-icon">${h.icon("plus", 18)}</span><span class="cx-permission">${h.icon("shield", 15)}${h.esc(p.permission || "\u5B8C\u5168\u8BBF\u95EE")}</span></div><div class="cx-composer-end"><span class="cx-context"></span><span class="cx-model">${h.esc(p.model || "GPT-6 Astra")} <span class="cx-effort">${h.esc(p.effort || "Ultra")}</span>${h.icon("chevron-down", 11)}</span><span class="cx-square-icon">${h.icon("mic", 17)}</span><span class="cx-send">${p.running ? '<span class="cx-stop"></span>' : h.icon("arrow-up", 17)}</span></div></div></div>`;
   }
@@ -1639,16 +3223,68 @@ var ComponentLibraryRuntime = (() => {
     return `<div class="cx-tool-card" data-motion="item"><div class="cx-file-icon">${h.icon("file", 23)}<span>+</span></div><div class="cx-file-copy"><div>${h.esc(p.verb || "\u5DF2\u7F16\u8F91")} ${h.esc(p.file || "App.tsx")}</div><div class="cx-diff-stat"><span>+${h.esc(p.added ?? 18)}</span><span>-${h.esc(p.removed ?? 4)}</span></div></div><div class="cx-tool-actions"><span>${h.esc(p.undoLabel || "\u64A4\u9500")}${h.icon("undo", 14)}</span><button>${h.esc(p.reviewLabel || "\u5BA1\u6838")}</button></div></div>`;
   }
   var components17 = [
-    { id: "codex-chat", name: "Codex \u5BF9\u8BDD\u7A97\u53E3", category: "Codex", description: "\u6309\u672C\u673A Codex \u91CD\u5EFA\u7684\u9ED1\u8272\u7528\u6237\u6D88\u606F\u3001\u65E0\u6C14\u6CE1\u56DE\u590D\u3001\u6267\u884C\u8BB0\u5F55\u548C\u5E95\u90E8\u8F93\u5165\u680F\u3002", width: 1280, height: 800, reference: native, defaults: { title: "\u4FEE\u590D\u79FB\u52A8\u7AEF\u9875\u9762\u5E03\u5C40", userMessage: "\u68C0\u67E5\u79FB\u52A8\u7AEF\u6309\u94AE\u88AB\u906E\u6321\u7684\u95EE\u9898\u3002\u53EA\u4FEE\u6539\u5E03\u5C40\u76F8\u5173\u4EE3\u7801\uFF0C\u4FDD\u6301\u684C\u9762\u7AEF\u6548\u679C\u4E0D\u53D8\u3002", status: "\u5DF2\u5904\u7406 38\u79D2", reply: "\u5DF2\u7ECF\u4FEE\u590D\u79FB\u52A8\u7AEF\u6309\u94AE\u88AB\u906E\u6321\u7684\u95EE\u9898\u3002\u6309\u94AE\u73B0\u5728\u4F1A\u968F\u5BB9\u5668\u5BBD\u5EA6\u6B63\u5E38\u6362\u884C\uFF0C\u684C\u9762\u7AEF\u5E03\u5C40\u4FDD\u6301\u539F\u6709\u6837\u5F0F\u3002", details: ["\u8C03\u6574\u4E86\u6309\u94AE\u5BB9\u5668\u7684\u6362\u884C\u89C4\u5219\u548C\u6700\u5C0F\u5BBD\u5EA6\u3002", "\u5728\u7A84\u5C4F\u4E0E\u684C\u9762\u5C3A\u5BF8\u4E0B\u68C0\u67E5\u4E86\u5E03\u5C40\u3002"], command: "npm run test -- --run", commandResult: "12 \u4E2A\u6D4B\u8BD5\u901A\u8FC7", file: "src/components/ActionBar.tsx", added: 18, removed: 4, placeholder: "\u968F\u5FC3\u8F93\u5165", draft: "", model: "GPT-6 Astra", effort: "Ultra", permission: "\u5B8C\u5168\u8BBF\u95EE", running: false }, render(p, h) {
-      return `<section class="cx-thread"><header class="cx-thread-header"><div>${h.icon("folder", 18)}<span>${h.esc(p.title)}</span></div><div class="cx-header-controls">${h.icon("more", 19)}<span>${h.icon("upload", 15)} \u5206\u4EAB</span>${h.icon("panel", 17)}</div></header><div class="cx-conversation"><div class="cx-user-row"><div class="cx-user-bubble" data-motion="item">${h.esc(p.userMessage)}</div></div><div class="cx-status">${h.esc(p.status)}</div><div class="cx-assistant" data-motion="item"><p>${h.esc(p.reply)}</p><ul>${p.details.map((t) => `<li>${h.esc(t)}</li>`).join("")}</ul></div><div class="cx-execution" data-motion="item">${h.icon("terminal", 14)}<span>\u5DF2\u8FD0\u884C ${h.esc(p.command)}</span>${h.icon("chevron-down", 12)}</div><div class="cx-test-note">${h.icon("check", 15)}${h.esc(p.commandResult)}</div>${toolCard(p, h)}<div class="cx-answer-tools">${h.icon("copy", 15)}${h.icon("more", 17)}</div></div><div class="cx-fixed-composer">${composer2(p, h)}</div></section>`;
+    { id: "codex-chat", name: "Codex \u5BF9\u8BDD\u7A97\u53E3", category: "Codex", description: "\u6309\u672C\u673A Codex \u91CD\u5EFA\u7684\u9ED1\u8272\u7528\u6237\u6D88\u606F\u3001\u65E0\u6C14\u6CE1\u56DE\u590D\u3001\u6267\u884C\u8BB0\u5F55\u548C\u5E95\u90E8\u8F93\u5165\u680F\u3002", width: 1280, height: 800, reference: native, defaults: {
+      "title": "\u4EFB\u52A1\u6807\u9898",
+      "userMessage": "\u7528\u6237\u6D88\u606F\u5185\u5BB9\u3002\u53EF\u586B\u5199\u4EFB\u52A1\u3001\u8865\u5145\u4FE1\u606F\u4E0E\u9884\u671F\u7ED3\u679C\u3002",
+      "status": "\u5DF2\u5904\u7406 10\u79D2",
+      "reply": "\u56DE\u590D\u5185\u5BB9\u3002\u53EF\u66FF\u6362\u4E3A\u9700\u8981\u5C55\u793A\u7684\u56DE\u7B54\u3002",
+      "details": [
+        "\u56DE\u590D\u8981\u70B9 A",
+        "\u56DE\u590D\u8981\u70B9 B"
+      ],
+      "command": "node example.js",
+      "commandResult": "\u793A\u4F8B\u8F93\u51FA",
+      "file": "src/example.ts",
+      "added": 8,
+      "removed": 2,
+      "placeholder": "\u968F\u5FC3\u8F93\u5165",
+      "draft": "",
+      "model": "GPT-6 Astra",
+      "effort": "Ultra",
+      "permission": "\u5B8C\u5168\u8BBF\u95EE",
+      "running": false
+    }, render(p, h) {
+      return `<section class="cx-thread"><header class="cx-thread-header"><div>${h.icon("folder", 18)}<span>${h.esc(p.title)}</span></div><div class="cx-header-controls">${h.icon("more", 19)}<span>${h.icon("upload", 15)} \u5206\u4EAB</span>${h.icon("panel", 17)}</div></header><div class="cx-conversation-viewport" data-part="viewport"><div class="cx-conversation" data-part="message-list" data-motion="scroll"><div class="cx-user-row"><div class="cx-user-bubble" data-motion="item">${h.esc(p.userMessage)}</div></div><div class="cx-status">${h.esc(p.status)}</div><div class="cx-assistant" data-motion="item"><p>${h.esc(p.reply)}</p><ul>${p.details.map((t) => `<li>${h.esc(t)}</li>`).join("")}</ul></div><div class="cx-execution" data-motion="item">${h.icon("terminal", 14)}<span>\u5DF2\u8FD0\u884C ${h.esc(p.command)}</span>${h.icon("chevron-down", 12)}</div><div class="cx-test-note">${h.icon("check", 15)}${h.esc(p.commandResult)}</div>${toolCard(p, h)}<div class="cx-answer-tools">${h.icon("copy", 15)}${h.icon("more", 17)}</div></div></div><div class="cx-fixed-composer">${composer2(p, h)}</div></section>`;
     } },
-    { id: "codex-composer", name: "Codex \u8F93\u5165\u6846", category: "Codex", description: "\u72EC\u7ACB\u590D\u7528\u7684\u539F\u5C3A\u5BF8\u8F93\u5165\u533A\u3001\u6743\u9650\u6807\u7B7E\u3001\u6A21\u578B\u9009\u62E9\u5668\u3001\u9EA6\u514B\u98CE\u548C\u53D1\u9001/\u505C\u6B62\u6309\u94AE\u3002", width: 800, height: 160, reference: native, defaults: { placeholder: "\u968F\u5FC3\u8F93\u5165", draft: "", permission: "\u5B8C\u5168\u8BBF\u95EE", model: "GPT-6 Astra", effort: "Ultra", running: true }, render(p, h) {
+    { id: "codex-composer", name: "Codex \u8F93\u5165\u6846", category: "Codex", description: "\u72EC\u7ACB\u590D\u7528\u7684\u8F93\u5165\u533A\u3001\u6743\u9650\u6807\u7B7E\u3001\u6A21\u578B\u9009\u62E9\u5668\u3001\u9EA6\u514B\u98CE\u548C\u53D1\u9001/\u505C\u6B62\u6309\u94AE\u3002", width: 800, height: 160, reference: native, defaults: {
+      "placeholder": "\u968F\u5FC3\u8F93\u5165",
+      "draft": "",
+      "permission": "\u5B8C\u5168\u8BBF\u95EE",
+      "model": "GPT-6 Astra",
+      "effort": "Ultra",
+      "running": true
+    }, render(p, h) {
       return `<section class="cx-composer-island">${composer2(p, h)}</section>`;
     } },
-    { id: "codex-tool-result", name: "Codex \u6587\u4EF6\u4FEE\u6539\u5361", category: "Codex", description: "\u6587\u4EF6\u540D\u3001\u589E\u5220\u884C\u7EDF\u8BA1\u3001\u64A4\u9500\u4E0E\u5BA1\u6838\u5165\u53E3\uFF1B\u53EF\u63A5\u5728\u4EFB\u610F\u8BB2\u89E3\u753B\u9762\u4E2D\u3002", width: 800, height: 200, reference: native, defaults: { verb: "\u5DF2\u7F16\u8F91", file: "\u63D0\u793A\u8BCD.md", added: 37, removed: 0, undoLabel: "\u64A4\u9500", reviewLabel: "\u5BA1\u6838" }, render(p, h) {
+    { id: "codex-tool-result", name: "Codex \u6587\u4EF6\u4FEE\u6539\u5361", category: "Codex", description: "\u6587\u4EF6\u540D\u3001\u589E\u5220\u884C\u7EDF\u8BA1\u3001\u64A4\u9500\u4E0E\u5BA1\u6838\u5165\u53E3\uFF1B\u53EF\u63A5\u5728\u4EFB\u610F\u8BB2\u89E3\u753B\u9762\u4E2D\u3002", width: 800, height: 200, reference: native, defaults: {
+      "verb": "\u5DF2\u7F16\u8F91",
+      "file": "\u793A\u4F8B\u6587\u4EF6.md",
+      "added": 8,
+      "removed": 2,
+      "undoLabel": "\u64A4\u9500",
+      "reviewLabel": "\u5BA1\u6838"
+    }, render(p, h) {
       return `<section class="cx-tool-island">${toolCard(p, h)}</section>`;
     } },
-    { id: "codex-plan", name: "Codex \u6267\u884C\u8BA1\u5212", category: "Codex", description: "\u6309 Codex \u539F\u751F\u6587\u5B57\u5BC6\u5EA6\u4E0E\u7070\u8272\u8FB9\u754C\u7EC4\u7EC7\u7684\u53EF\u7F16\u8F91\u8BA1\u5212\u6E05\u5355\u3002", width: 800, height: 420, reference: { ...native, level: "documented", basis: "Codex \u672C\u673A\u6392\u7248 token \u4E0E\u4EFB\u52A1\u72B6\u6001\u7ED3\u6784\uFF1B\u8BA1\u5212\u4E13\u7528\u72B6\u6001\u5C1A\u672A\u9010\u50CF\u7D20\u6BD4\u5BF9" }, defaults: { title: "\u66F4\u65B0\u8BA1\u5212", summary: "\u5148\u5B9A\u4F4D\u95EE\u9898\uFF0C\u518D\u4FEE\u6539\u548C\u9A8C\u8BC1\u3002", steps: [{ text: "\u68C0\u67E5\u76F8\u5173\u7EC4\u4EF6\u548C\u73B0\u6709\u6D4B\u8BD5", state: "done" }, { text: "\u4FEE\u590D\u7A84\u5C4F\u5E03\u5C40\u5E76\u68C0\u67E5\u684C\u9762\u89C6\u56FE", state: "active" }, { text: "\u8FD0\u884C\u6D4B\u8BD5\u5E76\u6574\u7406\u4FEE\u6539\u8BF4\u660E", state: "pending" }], footer: "2 / 3 \xB7 \u6B63\u5728\u5904\u7406" }, render(p, h) {
+    { id: "codex-plan", name: "Codex \u6267\u884C\u8BA1\u5212", category: "Codex", description: "\u6309 Codex \u5B57\u4F53\u5C42\u7EA7\u4E0E\u7070\u8272\u8FB9\u754C\u7EC4\u7EC7\u7684\u53EF\u7F16\u8F91\u8BA1\u5212\u6E05\u5355\u3002", width: 800, height: 420, reference: { ...native, level: "documented", basis: "Codex \u672C\u673A\u6392\u7248 token \u4E0E\u4EFB\u52A1\u72B6\u6001\u7ED3\u6784\uFF1B\u8BA1\u5212\u4E13\u7528\u72B6\u6001\u5C1A\u672A\u9010\u50CF\u7D20\u6BD4\u5BF9" }, defaults: {
+      "title": "\u66F4\u65B0\u8BA1\u5212",
+      "summary": "\u8BA1\u5212\u8BF4\u660E\u6587\u5B57",
+      "steps": [
+        {
+          "text": "\u6B65\u9AA4 A",
+          "state": "done"
+        },
+        {
+          "text": "\u6B65\u9AA4 B",
+          "state": "active"
+        },
+        {
+          "text": "\u6B65\u9AA4 C",
+          "state": "pending"
+        }
+      ],
+      "footer": "2 / 3 \xB7 \u6B63\u5728\u5904\u7406"
+    }, render(p, h) {
       return `<section class="cx-plan-island"><div class="cx-plan"><header>${h.icon("list", 18)}<strong>${h.esc(p.title)}</strong><span>${h.icon("chevron-down", 14)}</span></header><p>${h.esc(p.summary)}</p><div class="cx-plan-steps">${p.steps.map((s) => `<div class="cx-plan-step cx-plan-${h.esc(s.state)}" data-motion="item"><span class="cx-plan-state">${s.state === "done" ? h.icon("check", 15) : s.state === "active" ? "<i></i>" : ""}</span><span>${h.esc(s.text)}</span></div>`).join("")}</div><footer>${h.esc(p.footer)}</footer></div></section>`;
     } }
   ];
@@ -1709,10 +3345,8 @@ var ComponentLibraryRuntime = (() => {
     return `<article class="dev-stage"><div class="dev-window dev-vscode">${titlebar(p, h)}<div class="dev-workbench">${activity(h, active)}${sidebar5 ? `<aside class="dev-sidebar">${sidebar5}</aside>` : ""}<main class="dev-editor">${body}</main></div>${status(p, h)}</div></article>`;
   }
   function simpleHead(p, h, label2) {
-    return `<div class="dev-tool-title"><span>${h.icon(p.appIcon || "code", 18)}<b>${h.esc(p.appName || label2)}</b><span class="dev-tool-divider"></span>${h.esc(p.workspace || "\u79D1\u666E\u89C6\u9891\u9879\u76EE")}</span><div>${h.icon("search", 16)}${h.icon("settings", 16)}${controls(h)}</div></div>`;
+    return `<div class="dev-tool-title"><span>${h.icon(p.appIcon || "code", 18)}<b>${h.esc(p.appName || label2)}</b><span class="dev-tool-divider"></span>${h.esc(p.workspace || "\u793A\u4F8B\u9879\u76EE")}</span><div>${h.icon("search", 16)}${h.icon("settings", 16)}${controls(h)}</div></div>`;
   }
-  var sampleFiles = [{ name: "SCIENCE-VIDEO", kind: "folder", depth: 0 }, { name: "public", kind: "folder", depth: 1, open: false }, { name: "src", kind: "folder", depth: 1 }, { name: "components", kind: "folder", depth: 2, open: false }, { name: "config.ts", depth: 2, badge: "M" }, { name: "timeline.ts", depth: 2 }, { name: "index.ts", depth: 2 }, { name: "tests", kind: "folder", depth: 1, open: false }, { name: "package.json", depth: 1 }, { name: "README.md", depth: 1 }];
-  var sampleCode = ["import { createTimeline } from './timeline';", "", "// \u5148\u5B9A\u4E49\u5185\u5BB9\uFF0C\u518D\u4EA4\u7ED9\u65F6\u95F4\u8F74\u7F16\u6392", "export const video = {", "  title: '\u628A\u590D\u6742\u6982\u5FF5\u8BB2\u6E05\u695A',", "  width: 1920,", "  height: 1080,", "  fps: 30,", "  scenes: [", "    { id: 'intro', duration: 4.5 },", "    { id: 'explain', duration: 12 },", "    { id: 'summary', duration: 5 },", "  ],", "};", "", "const timeline = createTimeline(video);", "timeline.validate();"];
   var components18 = [
     {
       id: "terminal-session",
@@ -1722,7 +3356,43 @@ var ComponentLibraryRuntime = (() => {
       height: 800,
       description: "Windows \u6807\u7B7E\u680F\u4E0E\u7A97\u53E3\u6309\u94AE\u3001PowerShell \u63D0\u793A\u7B26\u3001\u5206\u7EA7\u65E5\u5FD7\u53CA\u53EF\u9010\u884C\u63ED\u793A\u7684\u8F93\u51FA\u3002\u547D\u4EE4\u4EC5\u7528\u4E8E\u52A8\u753B\u5C55\u793A\uFF0C\u4E0D\u4F1A\u6267\u884C\u3002",
       reference: documented("Windows Terminal \u7684\u6807\u7B7E\u3001\u52A0\u53F7\u3001\u4E0B\u62C9\u4E0E\u53F3\u4FA7\u7A97\u53E3\u6309\u94AE\u4F9D\u5FAE\u8F6F\u5B98\u65B9\u754C\u9762\u5F62\u5236\uFF1B\u7EC8\u7AEF\u6B63\u6587\u4E3A\u81EA\u5B9A\u4E49\u9AD8\u5BF9\u6BD4\u914D\u8272\uFF0C\u672A\u505A\u540C\u5C3A\u5BF8\u622A\u56FE\u9A8C\u6536\u3002", "https://learn.microsoft.com/en-us/windows/terminal/customize-settings/appearance"),
-      defaults: { title: "PowerShell", path: "D:\\workspace\\science-video", greeting: "PowerShell 7.5.2", command: "npm run build", lines: [{ text: "> science-video@1.0.0 build", tone: "muted" }, { text: "> node scripts/build.mjs", tone: "muted" }, { text: "", tone: "muted" }, { text: "\u2713 \u8BFB\u53D6\u5185\u5BB9\u914D\u7F6E content.json", tone: "success" }, { text: "\u2713 \u6821\u9A8C 7 \u4E2A\u5206\u955C\u4E0E\u914D\u97F3\u65F6\u957F", tone: "success" }, { text: "\u2713 \u7F16\u8BD1\u53EF\u590D\u7528\u52A8\u753B\u7EC4\u4EF6", tone: "success" }, { text: "\u2713 \u751F\u6210 compositions/index.html", tone: "success" }, { text: "", tone: "muted" }, { text: "\u6784\u5EFA\u6210\u529F\u3002\u9884\u89C8\u5DF2\u51C6\u5907\u5C31\u7EEA\u3002", tone: "normal" }, { text: "  Local:   http://localhost:3027", tone: "link" }, { text: "  Duration: 76.6 s     Resolution: 1920 \xD7 1080", tone: "muted" }], nextCommand: "npm run check" },
+      defaults: {
+        "title": "PowerShell",
+        "path": "D:\\example-project",
+        "greeting": "PowerShell",
+        "command": "node example.js",
+        "lines": [
+          {
+            "text": "\u793A\u4F8B\u8F93\u51FA A",
+            "tone": "normal"
+          },
+          {
+            "text": "\u793A\u4F8B\u8F93\u51FA B",
+            "tone": "muted"
+          },
+          {
+            "text": "",
+            "tone": "muted"
+          },
+          {
+            "text": "\u2713 \u6B65\u9AA4 A \u5DF2\u5B8C\u6210",
+            "tone": "success"
+          },
+          {
+            "text": "\u2713 \u6B65\u9AA4 B \u5DF2\u5B8C\u6210",
+            "tone": "success"
+          },
+          {
+            "text": "",
+            "tone": "muted"
+          },
+          {
+            "text": "\u5904\u7406\u5B8C\u6210\u3002",
+            "tone": "normal"
+          }
+        ],
+        "nextCommand": "node verify.js"
+      },
       render(props, h) {
         const p = cfg(this, props);
         return `<article class="dev-stage"><div class="dev-window dev-terminal"><div class="dev-terminal-title"><div class="dev-terminal-tab">${h.icon("terminal", 18)}<span>${h.esc(p.title)}</span>${h.icon("x", 14)}</div><span class="dev-terminal-new">${h.icon("plus", 17)}${h.icon("chevron-down", 13)}</span>${controls(h)}</div><div class="dev-terminal-body"><div class="dev-terminal-greeting">${h.esc(p.greeting)}</div><div class="dev-command-row"><span class="dev-prompt">PS ${h.esc(p.path)}&gt;</span> <span data-motion="type">${h.esc(p.command)}</span></div><div class="dev-terminal-output">${arr(p.lines).map((l) => `<div class="dev-log-${cls(l.tone, ["muted", "success", "error", "link", "normal"], "normal")}" data-motion="line" data-output-line>${h.esc(l.text) || "&#160;"}</div>`).join("")}</div><div class="dev-command-row dev-terminal-last" data-output-line><span class="dev-prompt">PS ${h.esc(p.path)}&gt;</span> <span>${h.esc(p.nextCommand)}</span><span class="dev-terminal-caret" data-motion="cursor"></span></div></div></div></article>`;
@@ -1736,10 +3406,70 @@ var ComponentLibraryRuntime = (() => {
       height: 800,
       description: "\u5B8C\u6574\u6D3B\u52A8\u680F\u3001\u8D44\u6E90\u7BA1\u7406\u5668\u3001\u6587\u4EF6\u9875\u7B7E\u3001\u9762\u5305\u5C51\u3001\u884C\u53F7\u3001\u4EE3\u7801\u7F29\u7565\u56FE\u548C\u84DD\u8272\u72B6\u6001\u680F\u3002\u4EE3\u7801\u7531\u53EF\u7F16\u8F91\u6587\u672C\u751F\u6210\u8BED\u6CD5\u914D\u8272\u3002",
       reference: documented("VS Code Windows \u5E03\u5C40\u53CA Light+ \u914D\u8272\u7ED3\u6784\u3002\u56FE\u6807\u4E3A\u7EDF\u4E00\u77E2\u91CF\u8FD1\u4F3C\uFF0C\u672A\u4E0E\u7279\u5B9A\u7248\u672C\u505A\u50CF\u7D20\u5DEE\u5F02\u9A8C\u6536\u3002", [vscodeRef, themeRef]),
-      defaults: { project: "science-video", filename: "config.ts", branch: "main*", language: "TypeScript", position: "\u884C 10\uFF0C\u5217 3", files: sampleFiles, code: sampleCode, highlightLine: 10, secondaryTab: "timeline.ts" },
+      defaults: {
+        "project": "example-project",
+        "filename": "example.ts",
+        "branch": "main*",
+        "language": "TypeScript",
+        "position": "\u884C 10\uFF0C\u5217 3",
+        "files": [
+          {
+            "name": "EXAMPLE-PROJECT",
+            "kind": "folder",
+            "depth": 0
+          },
+          {
+            "name": "src",
+            "kind": "folder",
+            "depth": 1
+          },
+          {
+            "name": "example.ts",
+            "depth": 2,
+            "badge": "M"
+          },
+          {
+            "name": "helper.ts",
+            "depth": 2
+          },
+          {
+            "name": "tests",
+            "kind": "folder",
+            "depth": 1,
+            "open": false
+          },
+          {
+            "name": "package.json",
+            "depth": 1
+          },
+          {
+            "name": "README.md",
+            "depth": 1
+          }
+        ],
+        "code": [
+          "import { formatValue } from './helper';",
+          "",
+          "// \u793A\u4F8B\u4EE3\u7801\uFF1A\u66FF\u6362\u4E3A\u9700\u8981\u5C55\u793A\u7684\u903B\u8F91",
+          "export const example = {",
+          "  title: '\u793A\u4F8B\u6807\u9898',",
+          "  enabled: true,",
+          "  items: [",
+          "    { id: 1, value: 10 },",
+          "    { id: 2, value: 20 },",
+          "  ],",
+          "};",
+          "",
+          "const result = formatValue(example.title);",
+          "console.log(result);"
+        ],
+        "highlightLine": 10,
+        "secondaryTab": "helper.ts",
+        "symbol": "example"
+      },
       render(props, h) {
         const p = cfg(this, props);
-        return shell2(p, h, `${tabs([{ name: p.filename, kind: "TS" }, { name: p.secondaryTab, kind: "TS" }], h)}${crumbs(["src", p.filename, "video"], h)}<div class="dev-source-area" data-motion="scroll">${codeLines(p.code, h, { highlight: n(p.highlightLine), motion: "highlight" })}${miniMap(p.code, h)}</div><div class="dev-panel-tabs"><b>\u95EE\u9898</b><span>\u8F93\u51FA</span><span>\u8C03\u8BD5\u63A7\u5236\u53F0</span><span>\u7EC8\u7AEF</span><span>\u7AEF\u53E3</span></div><div class="dev-panel-message">\u5DE5\u4F5C\u533A\u4E2D\u5C1A\u672A\u68C0\u6D4B\u5230\u4EFB\u4F55\u95EE\u9898\u3002</div>`, { sidebar: `<div class="dev-sidebar-heading">\u8D44\u6E90\u7BA1\u7406\u5668 ${h.icon("more", 17)}</div><div class="dev-tree-group">${h.icon("chevron-down", 13)} \u6253\u5F00\u7684\u7F16\u8F91\u5668</div><div class="dev-open-file">${h.icon("x", 13)} <span class="dev-filetype">TS</span> ${h.esc(p.filename)}</div>${tree(p.files, h, p.filename)}<div class="dev-sidebar-bottom">${h.icon("chevron-right", 13)} \u5927\u7EB2</div>` });
+        return shell2(p, h, `${tabs([{ name: p.filename, kind: "TS" }, { name: p.secondaryTab, kind: "TS" }], h)}${crumbs(["src", p.filename, p.symbol], h)}<div class="dev-source-area" data-motion="scroll">${codeLines(p.code, h, { highlight: n(p.highlightLine), motion: "highlight" })}${miniMap(p.code, h)}</div><div class="dev-panel-tabs"><b>\u95EE\u9898</b><span>\u8F93\u51FA</span><span>\u8C03\u8BD5\u63A7\u5236\u53F0</span><span>\u7EC8\u7AEF</span><span>\u7AEF\u53E3</span></div><div class="dev-panel-message">\u5DE5\u4F5C\u533A\u4E2D\u5C1A\u672A\u68C0\u6D4B\u5230\u4EFB\u4F55\u95EE\u9898\u3002</div>`, { sidebar: `<div class="dev-sidebar-heading">\u8D44\u6E90\u7BA1\u7406\u5668 ${h.icon("more", 17)}</div><div class="dev-tree-group">${h.icon("chevron-down", 13)} \u6253\u5F00\u7684\u7F16\u8F91\u5668</div><div class="dev-open-file">${h.icon("x", 13)} <span class="dev-filetype">TS</span> ${h.esc(p.filename)}</div>${tree(p.files, h, p.filename)}<div class="dev-sidebar-bottom">${h.icon("chevron-right", 13)} \u5927\u7EB2</div>` });
       }
     },
     {
@@ -1750,7 +3480,41 @@ var ComponentLibraryRuntime = (() => {
       height: 800,
       description: "\u540C\u4E00\u6587\u4EF6\u7684\u5DE6\u53F3\u7248\u672C\u3001\u5220\u9664\u4E0E\u65B0\u589E\u6574\u884C\u80CC\u666F\u3001\u884C\u53F7\u548C\u4FEE\u6539\u5217\u8868\uFF1B\u9002\u5408\u89E3\u91CA\u4FEE\u590D\u524D\u540E\u53D8\u5316\u3002",
       reference: documented("\u4F9D\u636E VS Code \u5B98\u65B9 Diff editor \u7684\u53CC\u680F\u5E03\u5C40\u4E0E Source Control \u7ED3\u6784\uFF0C\u914D\u8272\u9009\u7528 Light+\uFF1B\u672A\u5B8C\u6210\u5BF9\u5E94\u7248\u672C\u622A\u56FE\u6BD4\u5BF9\u3002", "https://code.visualstudio.com/docs/sourcecontrol/overview"),
-      defaults: { project: "science-video", filename: "config.ts", branch: "feature/preview*", language: "TypeScript", position: "2 \u9879\u66F4\u6539", beforeLabel: "config.ts \xB7 HEAD", afterLabel: "config.ts \xB7 \u5DE5\u4F5C\u533A", before: ["export const output = {", { text: "  width: 960,", state: "remove" }, { text: "  height: 540,", state: "remove" }, "  fps: 30,", "  format: 'mp4',", "};", "", "export const theme = {", { text: "  background: '#17201e',", state: "remove" }, { text: "  accent: '#d8ae65',", state: "remove" }, "  complete: '#81c9b0',", "};"], after: ["export const output = {", { text: "  width: 1920,", state: "add" }, { text: "  height: 1080,", state: "add" }, "  fps: 30,", "  format: 'mp4',", "};", "", "export const theme = {", { text: "  background: '#ffffff',", state: "add" }, { text: "  accent: '#2563eb',", state: "add" }, "  complete: '#81c9b0',", "};"] },
+      defaults: {
+        "project": "example-project",
+        "filename": "example.ts",
+        "branch": "feature/example*",
+        "language": "TypeScript",
+        "position": "2 \u9879\u66F4\u6539",
+        "beforeLabel": "example.ts \xB7 HEAD",
+        "afterLabel": "example.ts \xB7 \u5DE5\u4F5C\u533A",
+        "before": [
+          "export const example = {",
+          {
+            "text": "  title: '\u539F\u59CB\u6807\u9898',",
+            "state": "remove"
+          },
+          {
+            "text": "  count: 10,",
+            "state": "remove"
+          },
+          "  enabled: true,",
+          "};"
+        ],
+        "after": [
+          "export const example = {",
+          {
+            "text": "  title: '\u66F4\u65B0\u6807\u9898',",
+            "state": "add"
+          },
+          {
+            "text": "  count: 20,",
+            "state": "add"
+          },
+          "  enabled: true,",
+          "};"
+        ]
+      },
       render(props, h) {
         const p = cfg(this, props);
         return shell2(p, h, `${tabs([{ name: p.filename, kind: "TS" }], h)}<div class="dev-diff-heading"><span>${h.esc(p.beforeLabel)}</span><span>${h.esc(p.afterLabel)}<i>\u5DF2\u4FEE\u6539</i></span></div><div class="dev-diff-body"><div>${codeLines(p.before, h, { compact: true })}</div><div>${codeLines(p.after, h, { compact: true })}</div></div><div class="dev-diff-caption">${h.icon("info", 15)} \u5DE6\u4FA7\uFF1A\u539F\u59CB\u6587\u4EF6<span></span>\u53F3\u4FA7\uFF1A\u5F53\u524D\u5DE5\u4F5C\u533A</div>`, { active: "git-branch", sidebar: `<div class="dev-sidebar-heading">\u6E90\u4EE3\u7801\u7BA1\u7406 ${h.icon("more", 17)}</div><div class="dev-scm-input">\u6D88\u606F\uFF08Ctrl+Enter \u63D0\u4EA4\uFF09</div><div class="dev-scm-button">${h.icon("check", 15)} \u63D0\u4EA4</div><div class="dev-tree-group">${h.icon("chevron-down", 13)} \u66F4\u6539 <span>1</span></div><div class="dev-tree-row dev-tree-selected"><span class="dev-filetype">TS</span>${h.esc(p.filename)}<span class="dev-tree-badge">M</span></div>` });
@@ -1764,7 +3528,61 @@ var ComponentLibraryRuntime = (() => {
       height: 800,
       description: "\u53EF\u5C55\u5F00\u5C42\u7EA7\u7684\u8D44\u6E90\u7BA1\u7406\u5668\u4E0E\u9009\u4E2D\u6587\u4EF6\u9884\u89C8\uFF1B\u6BCF\u4E2A\u6587\u4EF6\u7684\u6DF1\u5EA6\u3001\u7C7B\u578B\u548C\u4FEE\u6539\u72B6\u6001\u72EC\u7ACB\u914D\u7F6E\u3002",
       reference: documented("\u53C2\u8003 VS Code Explorer\u3001\u6253\u5F00\u7F16\u8F91\u5668\u4E0E Breadcrumbs \u5B98\u65B9\u754C\u9762\u3002\u6587\u4EF6\u6570\u636E\u4E0E\u53F3\u4FA7\u5185\u5BB9\u53EF\u66FF\u6362\u3002", vscodeRef),
-      defaults: { project: "science-video", filename: "content.json", language: "JSON", position: "\u884C 8\uFF0C\u5217 18", branch: "main", files: [{ name: "SCIENCE-VIDEO", kind: "folder", depth: 0 }, { name: "assets", kind: "folder", depth: 1 }, { name: "audio", kind: "folder", depth: 2 }, { name: "intro.wav", depth: 3 }, { name: "explain.wav", depth: 3 }, { name: "images", kind: "folder", depth: 2, open: false }, { name: "recordings", kind: "folder", depth: 2 }, { name: "browser-demo.mp4", depth: 3 }, { name: "components", kind: "folder", depth: 1 }, { name: "browser.html", depth: 2 }, { name: "terminal.html", depth: 2 }, { name: "scripts", kind: "folder", depth: 1, open: false }, { name: "content.json", depth: 1, badge: "M" }, { name: "package.json", depth: 1 }, { name: "README.md", depth: 1 }], code: ["{", '  "title": "AI \u79D1\u666E\u5165\u95E8",', '  "aspectRatio": "16:9",', '  "theme": "white-blue",', '  "scenes": [', "    {", '      "component": "browser-window",', '      "source": "assets/recordings/browser-demo.mp4",', '      "duration": 12,', '      "caption": "\u4ECE\u4E00\u4E2A\u6E05\u695A\u7684\u95EE\u9898\u5F00\u59CB"', "    },", "    {", '      "component": "terminal-session",', '      "duration": 8', "    }", "  ]", "}"] },
+      defaults: {
+        "project": "example-project",
+        "filename": "example.json",
+        "language": "JSON",
+        "position": "\u884C 3\uFF0C\u5217 3",
+        "branch": "main",
+        "files": [
+          {
+            "name": "EXAMPLE-PROJECT",
+            "kind": "folder",
+            "depth": 0
+          },
+          {
+            "name": "assets",
+            "kind": "folder",
+            "depth": 1
+          },
+          {
+            "name": "example.png",
+            "depth": 2
+          },
+          {
+            "name": "src",
+            "kind": "folder",
+            "depth": 1
+          },
+          {
+            "name": "example.ts",
+            "depth": 2
+          },
+          {
+            "name": "example.json",
+            "depth": 1,
+            "badge": "M"
+          },
+          {
+            "name": "package.json",
+            "depth": 1
+          },
+          {
+            "name": "README.md",
+            "depth": 1
+          }
+        ],
+        "code": [
+          "{",
+          '  "title": "\u793A\u4F8B\u6807\u9898",',
+          '  "enabled": true,',
+          '  "items": [',
+          '    { "id": 1, "label": "\u9879\u76EE A", "value": 10 },',
+          '    { "id": 2, "label": "\u9879\u76EE B", "value": 20 }',
+          "  ]",
+          "}"
+        ]
+      },
       render(props, h) {
         const p = cfg(this, props);
         return shell2(p, h, `${tabs([{ name: p.filename, kind: "{}" }], h)}${crumbs([p.project, p.filename], h)}<div class="dev-source-area">${codeLines(p.code, h)}${miniMap(p.code, h)}</div>`, { sidebar: `<div class="dev-sidebar-heading">\u8D44\u6E90\u7BA1\u7406\u5668 ${h.icon("more", 17)}</div>${tree(p.files, h, p.filename)}<div class="dev-sidebar-bottom">${h.icon("chevron-right", 13)} \u65F6\u95F4\u7EBF</div>` });
@@ -1778,10 +3596,61 @@ var ComponentLibraryRuntime = (() => {
       height: 800,
       description: "\u539F\u521B API \u5BA2\u6237\u7AEF\u754C\u9762\uFF0C\u5305\u542B\u8BF7\u6C42\u5217\u8868\u3001\u5730\u5740\u680F\u3001\u53C2\u6570\u8868\u3001\u54CD\u5E94\u72B6\u6001\u4E0E JSON \u6B63\u6587\u3002\u4E0D\u4F1A\u53D1\u9001\u7F51\u7EDC\u8BF7\u6C42\u3002",
       reference: designed("\u6309\u5E38\u89C1 API \u5BA2\u6237\u7AEF\u4FE1\u606F\u7ED3\u6784\u539F\u521B\uFF1AHTTP \u65B9\u6CD5\u3001\u8BF7\u6C42\u53C2\u6570\u3001\u54CD\u5E94\u72B6\u6001\u4E0E\u683C\u5F0F\u5316 JSON\u3002\u4E0D\u662F Postman \u622A\u56FE\u590D\u523B\u3002"),
-      defaults: { appName: "API \u5DE5\u4F5C\u53F0", workspace: "\u79D1\u666E\u89C6\u9891\u9879\u76EE", appIcon: "globe", requestName: "\u8BFB\u53D6\u7EC4\u4EF6\u5217\u8868", method: "GET", url: "https://api.example.com/v1/components", status: "200 OK", latency: "128 ms", responseSize: "1.24 KB", requests: [{ method: "GET", name: "\u8BFB\u53D6\u7EC4\u4EF6\u5217\u8868" }, { method: "GET", name: "\u83B7\u53D6\u5206\u955C\u914D\u7F6E" }, { method: "POST", name: "\u521B\u5EFA\u9884\u89C8\u4EFB\u52A1" }, { method: "GET", name: "\u67E5\u8BE2\u4EFB\u52A1\u72B6\u6001" }], params: [{ key: "category", value: "software", description: "\u6309\u7EC4\u4EF6\u7C7B\u522B\u7B5B\u9009" }, { key: "limit", value: "30", description: "\u8FD4\u56DE\u7ED3\u679C\u6570\u91CF" }], response: ["{", '  "success": true,', '  "data": [', '    { "id": "browser-window", "name": "\u6D4F\u89C8\u5668\u7A97\u53E3" },', '    { "id": "terminal-session", "name": "\u7EC8\u7AEF\u4F1A\u8BDD" },', '    { "id": "code-editor", "name": "\u4EE3\u7801\u7F16\u8F91\u5668" }', "  ],", '  "total": 30', "}"] },
+      defaults: {
+        "appName": "API \u5DE5\u4F5C\u53F0",
+        "workspace": "\u793A\u4F8B\u5DE5\u4F5C\u533A",
+        "appIcon": "globe",
+        "requestName": "\u793A\u4F8B\u8BF7\u6C42 A",
+        "method": "GET",
+        "url": "https://api.example.com/v1/items",
+        "status": "200 OK",
+        "latency": "128 ms",
+        "responseSize": "1.24 KB",
+        "requests": [
+          {
+            "method": "GET",
+            "name": "\u793A\u4F8B\u8BF7\u6C42 A"
+          },
+          {
+            "method": "GET",
+            "name": "\u793A\u4F8B\u8BF7\u6C42 B"
+          },
+          {
+            "method": "POST",
+            "name": "\u793A\u4F8B\u8BF7\u6C42 C"
+          },
+          {
+            "method": "GET",
+            "name": "\u793A\u4F8B\u8BF7\u6C42 D"
+          }
+        ],
+        "params": [
+          {
+            "key": "category",
+            "value": "example",
+            "description": "\u53C2\u6570\u8BF4\u660E A"
+          },
+          {
+            "key": "limit",
+            "value": "2",
+            "description": "\u53C2\u6570\u8BF4\u660E B"
+          }
+        ],
+        "response": [
+          "{",
+          '  "success": true,',
+          '  "data": [',
+          '    { "id": 1, "label": "\u9879\u76EE A" },',
+          '    { "id": 2, "label": "\u9879\u76EE B" }',
+          "  ],",
+          '  "total": 2',
+          "}"
+        ],
+        "collectionTitle": "\u8BF7\u6C42\u5206\u7EC4"
+      },
       render(props, h) {
         const p = cfg(this, props);
-        return `<article class="dev-stage"><div class="dev-window dev-tool">${simpleHead(p, h, "API \u5DE5\u4F5C\u53F0")}<div class="dev-tool-body"><aside class="dev-http-sidebar"><div class="dev-sidebar-heading">\u96C6\u5408 ${h.icon("plus", 17)}</div><div class="dev-tree-group">${h.icon("chevron-down", 14)} \u89C6\u9891\u7EC4\u4EF6 API</div>${arr(p.requests).map((r, i) => `<div class="dev-http-request ${i === 0 ? "dev-http-selected" : ""}"><b class="${r.method === "POST" ? "dev-http-post" : ""}">${h.esc(r.method)}</b><span>${h.esc(r.name)}</span></div>`).join("")}</aside><main class="dev-http-main"><div class="dev-http-breadcrumb">\u96C6\u5408 ${h.icon("chevron-right", 14)} \u89C6\u9891\u7EC4\u4EF6 API ${h.icon("chevron-right", 14)} ${h.esc(p.requestName)}<span>${h.icon("more", 18)}</span></div><div class="dev-http-url" data-motion="focus"><b>${h.esc(p.method)} ${h.icon("chevron-down", 13)}</b><span>${h.esc(p.url)}</span><div>\u53D1\u9001 ${h.icon("chevron-down", 14)}</div></div><div class="dev-tool-tabs"><b>\u53C2\u6570 <i>${arr(p.params).length}</i></b><span>\u8EAB\u4EFD\u9A8C\u8BC1</span><span>\u8BF7\u6C42\u5934 <i>2</i></span><span>\u8BF7\u6C42\u4F53</span><span>\u8BBE\u7F6E</span></div><div class="dev-http-params-title">\u67E5\u8BE2\u53C2\u6570</div><div class="dev-params-table"><div class="dev-param-row dev-param-head"><span></span><span>KEY</span><span>VALUE</span><span>DESCRIPTION</span></div>${arr(p.params).map((r) => `<div class="dev-param-row" data-motion="item"><span class="dev-checkbox-checked">${h.icon("check", 12)}</span><code>${h.esc(r.key)}</code><code>${h.esc(r.value)}</code><span>${h.esc(r.description)}</span></div>`).join("")}<div class="dev-param-row dev-param-empty"><span class="dev-checkbox"></span><span>\u952E</span><span>\u503C</span><span>\u63CF\u8FF0</span></div></div><div class="dev-response-head"><b>\u54CD\u5E94</b><span class="dev-http-status" data-motion="highlight">${h.esc(p.status)}</span><span>${h.esc(p.latency)}</span><span>${h.esc(p.responseSize)}</span></div><div class="dev-tool-tabs dev-response-tabs"><b>\u6B63\u6587</b><span>Cookies</span><span>\u54CD\u5E94\u5934</span><span class="dev-flex-fill"></span><span>JSON ${h.icon("chevron-down", 12)}</span>${h.icon("copy", 15)}</div><div class="dev-response-code">${codeLines(p.response, h, { compact: true })}</div></main></div><div class="dev-tool-status">${h.icon("check-circle", 14)} \u672C\u5730\u793A\u4F8B\u6570\u636E<span>\u8BF7\u6C42\u672A\u5B9E\u9645\u53D1\u9001</span></div></div></article>`;
+        return `<article class="dev-stage"><div class="dev-window dev-tool">${simpleHead(p, h, "API \u5DE5\u4F5C\u53F0")}<div class="dev-tool-body"><aside class="dev-http-sidebar"><div class="dev-sidebar-heading">\u96C6\u5408 ${h.icon("plus", 17)}</div><div class="dev-tree-group">${h.icon("chevron-down", 14)} ${h.esc(p.collectionTitle)}</div>${arr(p.requests).map((r, i) => `<div class="dev-http-request ${i === 0 ? "dev-http-selected" : ""}"><b class="${r.method === "POST" ? "dev-http-post" : ""}">${h.esc(r.method)}</b><span>${h.esc(r.name)}</span></div>`).join("")}</aside><main class="dev-http-main"><div class="dev-http-breadcrumb">\u96C6\u5408 ${h.icon("chevron-right", 14)} ${h.esc(p.collectionTitle)} ${h.icon("chevron-right", 14)} ${h.esc(p.requestName)}<span>${h.icon("more", 18)}</span></div><div class="dev-http-url" data-motion="focus"><b>${h.esc(p.method)} ${h.icon("chevron-down", 13)}</b><span>${h.esc(p.url)}</span><div>\u53D1\u9001 ${h.icon("chevron-down", 14)}</div></div><div class="dev-tool-tabs"><b>\u53C2\u6570 <i>${arr(p.params).length}</i></b><span>\u8EAB\u4EFD\u9A8C\u8BC1</span><span>\u8BF7\u6C42\u5934 <i>2</i></span><span>\u8BF7\u6C42\u4F53</span><span>\u8BBE\u7F6E</span></div><div class="dev-http-params-title">\u67E5\u8BE2\u53C2\u6570</div><div class="dev-params-table"><div class="dev-param-row dev-param-head"><span></span><span>KEY</span><span>VALUE</span><span>DESCRIPTION</span></div>${arr(p.params).map((r) => `<div class="dev-param-row" data-motion="item"><span class="dev-checkbox-checked">${h.icon("check", 12)}</span><code>${h.esc(r.key)}</code><code>${h.esc(r.value)}</code><span>${h.esc(r.description)}</span></div>`).join("")}<div class="dev-param-row dev-param-empty"><span class="dev-checkbox"></span><span>\u952E</span><span>\u503C</span><span>\u63CF\u8FF0</span></div></div><div class="dev-response-head"><b>\u54CD\u5E94</b><span class="dev-http-status" data-motion="highlight">${h.esc(p.status)}</span><span>${h.esc(p.latency)}</span><span>${h.esc(p.responseSize)}</span></div><div class="dev-tool-tabs dev-response-tabs"><b>\u6B63\u6587</b><span>Cookies</span><span>\u54CD\u5E94\u5934</span><span class="dev-flex-fill"></span><span>JSON ${h.icon("chevron-down", 12)}</span>${h.icon("copy", 15)}</div><div class="dev-response-code">${codeLines(p.response, h, { compact: true })}</div></main></div><div class="dev-tool-status">${h.icon("check-circle", 14)} \u672C\u5730\u793A\u4F8B\u6570\u636E<span>\u8BF7\u6C42\u672A\u5B9E\u9645\u53D1\u9001</span></div></div></article>`;
       }
     },
     {
@@ -1792,7 +3661,84 @@ var ComponentLibraryRuntime = (() => {
       height: 800,
       description: "\u539F\u521B\u6570\u636E\u68C0\u67E5\u9762\u677F\uFF0C\u53EF\u5C55\u793A\u5D4C\u5957\u5BF9\u8C61\u3001\u6570\u636E\u7C7B\u578B\u3001\u8DEF\u5F84\u4E0E\u5B57\u6BB5\u8BE6\u60C5\u3002\u9002\u5408\u8BB2\u89E3 API \u6570\u636E\u6216\u914D\u7F6E\u7ED3\u6784\u3002",
       reference: designed("\u539F\u521B JSON Inspector\uFF0C\u4F7F\u7528\u5F00\u53D1\u8005\u5DE5\u5177\u7684\u5C55\u5F00\u6811\u548C\u7C7B\u578B\u4FE1\u606F\u7EA6\u5B9A\uFF1B\u4E0D\u58F0\u79F0\u5BF9\u5E94 Chrome DevTools \u6216\u7279\u5B9A\u8F6F\u4EF6\u622A\u56FE\u3002"),
-      defaults: { appName: "\u6570\u636E\u68C0\u67E5\u5668", workspace: "response.json", appIcon: "code", title: "\u54CD\u5E94\u6570\u636E", path: "$.data[0].duration", selected: "duration", fields: [{ key: "response", value: "Object", type: "object", depth: 0 }, { key: "success", value: "true", type: "boolean", depth: 1 }, { key: "data", value: "Array(2)", type: "array", depth: 1 }, { key: "0", value: "Object", type: "object", depth: 2 }, { key: "id", value: '"scene-01"', type: "string", depth: 3 }, { key: "component", value: '"browser-window"', type: "string", depth: 3 }, { key: "duration", value: "12.5", type: "number", depth: 3 }, { key: "enabled", value: "true", type: "boolean", depth: 3 }, { key: "captions", value: "Array(3)", type: "array", depth: 3 }, { key: "1", value: "Object", type: "object", depth: 2 }, { key: "total", value: "2", type: "number", depth: 1 }, { key: "version", value: '"1.0"', type: "string", depth: 1 }], detail: { key: "duration", type: "number", value: "12.5", description: "\u5F53\u524D\u5206\u955C\u7684\u6301\u7EED\u65F6\u957F\uFF0C\u5355\u4F4D\u4E3A\u79D2\u3002", constraint: "\u5927\u4E8E 0 \u7684\u6709\u9650\u6570\u503C", location: "data \u2192 0 \u2192 duration" } },
+      defaults: {
+        "appName": "\u6570\u636E\u68C0\u67E5\u5668",
+        "workspace": "response.json",
+        "appIcon": "code",
+        "title": "\u793A\u4F8B\u6570\u636E",
+        "path": "$.data[0].value",
+        "selected": "value",
+        "fields": [
+          {
+            "key": "response",
+            "value": "Object",
+            "type": "object",
+            "depth": 0
+          },
+          {
+            "key": "success",
+            "value": "true",
+            "type": "boolean",
+            "depth": 1
+          },
+          {
+            "key": "data",
+            "value": "Array(2)",
+            "type": "array",
+            "depth": 1
+          },
+          {
+            "key": "0",
+            "value": "Object",
+            "type": "object",
+            "depth": 2
+          },
+          {
+            "key": "id",
+            "value": "1",
+            "type": "number",
+            "depth": 3
+          },
+          {
+            "key": "label",
+            "value": '"\u9879\u76EE A"',
+            "type": "string",
+            "depth": 3
+          },
+          {
+            "key": "value",
+            "value": "10",
+            "type": "number",
+            "depth": 3
+          },
+          {
+            "key": "enabled",
+            "value": "true",
+            "type": "boolean",
+            "depth": 3
+          },
+          {
+            "key": "1",
+            "value": "Object",
+            "type": "object",
+            "depth": 2
+          },
+          {
+            "key": "total",
+            "value": "2",
+            "type": "number",
+            "depth": 1
+          }
+        ],
+        "detail": {
+          "key": "value",
+          "type": "number",
+          "value": "10",
+          "description": "\u5B57\u6BB5\u8BF4\u660E\u6587\u5B57",
+          "constraint": "\u5927\u4E8E 0 \u7684\u6709\u9650\u6570\u503C",
+          "location": "data \u2192 0 \u2192 value"
+        }
+      },
       render(props, h) {
         const p = cfg(this, props);
         const d = p.detail || {};
@@ -1807,7 +3753,65 @@ var ComponentLibraryRuntime = (() => {
       height: 800,
       description: "VS Code \u98CE\u683C Markdown \u53CC\u680F\uFF0C\u5DE6\u4FA7\u53EF\u7F16\u8F91\u6E90\u6587\u672C\uFF0C\u53F3\u4FA7\u6807\u9898\u3001\u4EFB\u52A1\u5217\u8868\u3001\u5F15\u7528\u548C\u4EE3\u7801\u5757\u3002",
       reference: documented("VS Code Markdown \u5B98\u65B9\u9884\u89C8\u5E03\u5C40\uFF1B\u6E32\u67D3\u91C7\u7528\u53EF\u7F16\u8F91\u7ED3\u6784\u5316\u6570\u636E\uFF0C\u4E0D\u6267\u884C\u5D4C\u5165 HTML\u3002", "https://code.visualstudio.com/docs/languages/markdown"),
-      defaults: { project: "science-video", filename: "README.md", branch: "main", language: "Markdown", position: "\u884C 8\uFF0C\u5217 1", title: "\u79D1\u666E\u89C6\u9891\u5236\u4F5C\u6D41\u7A0B", intro: "\u628A\u5185\u5BB9\u3001\u7D20\u6750\u548C\u52A8\u753B\u5206\u5F00\u7BA1\u7406\uFF0C\u8BA9\u6BCF\u4E00\u96C6\u90FD\u80FD\u5FEB\u901F\u590D\u7528\u3002", sectionTitle: "\u5236\u4F5C\u6B65\u9AA4", tasks: [{ text: "\u786E\u5B9A\u4E3B\u9898\u4E0E\u5F00\u5934\u94A9\u5B50", done: true }, { text: "\u51C6\u5907\u914D\u97F3\u548C\u771F\u5B9E\u5F55\u5C4F", done: true }, { text: "\u66FF\u6362\u6A21\u677F\u5185\u5BB9\u5E76\u68C0\u67E5\u8282\u594F", done: false }, { text: "\u9884\u89C8\u786E\u8BA4\u540E\u5BFC\u51FA\u89C6\u9891", done: false }], note: "\u5148\u505A\u4E00\u4E2A\u6709\u4EE3\u8868\u6027\u7684\u573A\u666F\uFF0C\u786E\u8BA4\u98CE\u683C\u540E\u518D\u5C55\u5F00\u6574\u96C6\u3002", command: "npm run build\nnpm run dev", sections: [{ title: "\u4EA4\u4ED8\u4E0E\u5F52\u6863", text: "\u786E\u8BA4\u5B57\u5E55\u4E0E\u914D\u97F3\u4E00\u81F4\uFF0C\u68C0\u67E5\u6BCF\u4E2A\u753B\u9762\u7684\u7D20\u6750\u6765\u6E90\u3002\u628A\u672C\u96C6\u7684\u5185\u5BB9\u914D\u7F6E\u3001\u5F55\u5C4F\u548C\u56FE\u7247\u4FDD\u5B58\u5728\u540C\u4E00\u76EE\u5F55\u3002" }, { title: "\u5F00\u59CB\u4E0B\u4E00\u96C6", text: "\u590D\u5236\u4E0A\u4E00\u96C6\u7684\u5185\u5BB9\u914D\u7F6E\uFF0C\u66FF\u6362\u4E3B\u9898\u3001\u955C\u5934\u548C\u7D20\u6750\u3002\u5148\u9884\u89C8\u5173\u952E\u573A\u666F\uFF0C\u518D\u8C03\u6574\u6574\u4F53\u8282\u594F\u3002" }], source: ["# \u79D1\u666E\u89C6\u9891\u5236\u4F5C\u6D41\u7A0B", "", "\u628A\u5185\u5BB9\u3001\u7D20\u6750\u548C\u52A8\u753B\u5206\u5F00\u7BA1\u7406\uFF0C", "\u8BA9\u6BCF\u4E00\u96C6\u90FD\u80FD\u5FEB\u901F\u590D\u7528\u3002", "", "## \u5236\u4F5C\u6B65\u9AA4", "", "- [x] \u786E\u5B9A\u4E3B\u9898\u4E0E\u5F00\u5934\u94A9\u5B50", "- [x] \u51C6\u5907\u914D\u97F3\u548C\u771F\u5B9E\u5F55\u5C4F", "- [ ] \u66FF\u6362\u6A21\u677F\u5185\u5BB9\u5E76\u68C0\u67E5\u8282\u594F", "- [ ] \u9884\u89C8\u786E\u8BA4\u540E\u5BFC\u51FA\u89C6\u9891", "", "> \u5148\u505A\u4E00\u4E2A\u6709\u4EE3\u8868\u6027\u7684\u573A\u666F\uFF0C", "> \u786E\u8BA4\u98CE\u683C\u540E\u518D\u5C55\u5F00\u6574\u96C6\u3002", "", "```powershell", "npm run build", "npm run dev", "```"] },
+      defaults: {
+        "project": "example-project",
+        "filename": "README.md",
+        "branch": "main",
+        "language": "Markdown",
+        "position": "\u884C 8\uFF0C\u5217 1",
+        "title": "\u6587\u6863\u6807\u9898",
+        "intro": "\u6587\u6863\u7B80\u4ECB\u3002\u66FF\u6362\u4E3A\u9700\u8981\u5C55\u793A\u7684\u8BF4\u660E\u3002",
+        "sectionTitle": "\u7AE0\u8282\u6807\u9898",
+        "tasks": [
+          {
+            "text": "\u5F85\u529E\u4E8B\u9879 A",
+            "done": true
+          },
+          {
+            "text": "\u5F85\u529E\u4E8B\u9879 B",
+            "done": true
+          },
+          {
+            "text": "\u5F85\u529E\u4E8B\u9879 C",
+            "done": false
+          },
+          {
+            "text": "\u5F85\u529E\u4E8B\u9879 D",
+            "done": false
+          }
+        ],
+        "note": "\u63D0\u793A\u5185\u5BB9\uFF0C\u53EF\u66FF\u6362\u4E3A\u8865\u5145\u8BF4\u660E\u3002",
+        "command": "node example.js\nnode verify.js",
+        "sections": [
+          {
+            "title": "\u7AE0\u8282\u6807\u9898 A",
+            "text": "\u6B63\u6587\u7B2C\u4E00\u6BB5\uFF0C\u66FF\u6362\u4E3A\u9700\u8981\u5C55\u793A\u7684\u5185\u5BB9\u3002"
+          },
+          {
+            "title": "\u7AE0\u8282\u6807\u9898 B",
+            "text": "\u6B63\u6587\u7B2C\u4E8C\u6BB5\uFF0C\u652F\u6301\u7EE7\u7EED\u8865\u5145\u8BF4\u660E\u3002"
+          }
+        ],
+        "source": [
+          "# \u6587\u6863\u6807\u9898",
+          "",
+          "\u6587\u6863\u7B80\u4ECB\u3002\u66FF\u6362\u4E3A\u9700\u8981\u5C55\u793A\u7684\u8BF4\u660E\u3002",
+          "",
+          "## \u7AE0\u8282\u6807\u9898",
+          "",
+          "- [x] \u5F85\u529E\u4E8B\u9879 A",
+          "- [x] \u5F85\u529E\u4E8B\u9879 B",
+          "- [ ] \u5F85\u529E\u4E8B\u9879 C",
+          "- [ ] \u5F85\u529E\u4E8B\u9879 D",
+          "",
+          "> \u63D0\u793A\u5185\u5BB9\uFF0C\u53EF\u66FF\u6362\u4E3A\u8865\u5145\u8BF4\u660E\u3002",
+          "",
+          "```shell",
+          "node example.js",
+          "node verify.js",
+          "```"
+        ]
+      },
       render(props, h) {
         const p = cfg(this, props);
         return shell2(p, h, `<div class="dev-markdown-split"><section>${tabs([{ name: p.filename, kind: "M\u2193" }], h)}${crumbs([p.project, p.filename], h)}${codeLines(p.source, h, { compact: true })}</section><section>${tabs([{ name: `\u9884\u89C8 ${p.filename}`, kind: "M\u2193" }], h)}<div class="dev-markdown-scroll-viewport"><div class="dev-markdown-preview" data-motion="scroll"><h1 data-motion="reveal">${h.esc(p.title)}</h1><p>${h.esc(p.intro)}</p><h2>${h.esc(p.sectionTitle)}</h2><ul>${arr(p.tasks).map((t) => `<li data-motion="item"><span class="${t.done ? "dev-checkbox-checked" : "dev-checkbox"}">${t.done ? h.icon("check", 12) : ""}</span>${h.esc(t.text)}</li>`).join("")}</ul><blockquote>${h.esc(p.note)}</blockquote><pre>${h.esc(p.command)}</pre>${arr(p.sections).map((s) => `<h2>${h.esc(s.title)}</h2><p>${h.esc(s.text)}</p>`).join("")}</div></div></section></div>`);
@@ -1821,7 +3825,77 @@ var ComponentLibraryRuntime = (() => {
       height: 800,
       description: "\u63D0\u4EA4\u5217\u8868\u3001\u5206\u652F\u56FE\u7EBF\u3001\u7248\u672C\u6807\u8BB0\u548C\u9009\u4E2D\u63D0\u4EA4\u8BE6\u60C5\uFF0C\u9002\u5408\u89E3\u91CA\u7248\u672C\u8FED\u4EE3\u548C\u529F\u80FD\u5206\u652F\u3002",
       reference: documented("\u53C2\u7167 VS Code Source Control Graph \u7684\u63D0\u4EA4\u5217\u8868\u4E0E\u5206\u652F\u7ED3\u6784\uFF1B\u8BE6\u60C5\u9762\u677F\u4E3A\u8BB2\u89E3\u7528\u9014\u8C03\u6574\uFF0C\u5C1A\u672A\u505A\u540C\u5C3A\u5BF8\u622A\u56FE\u5BF9\u6807\u3002", "https://code.visualstudio.com/docs/sourcecontrol/history"),
-      defaults: { project: "science-video", branch: "main", language: "Git", position: "\u5DE5\u4F5C\u533A\u5E72\u51C0", commits: [{ message: "\u5408\u5E76\u6D4F\u89C8\u5668\u7EC4\u4EF6\u4E0E\u5B57\u5E55\u7CFB\u7EDF", hash: "e7a4c19", author: "\u5C0F\u6797", time: "10 \u5206\u949F\u524D", branch: "main", lane: 0 }, { message: "\u5B8C\u5584\u5F55\u5C4F\u533A\u57DF\u805A\u7126\u6548\u679C", hash: "cf821d0", author: "\u5C0F\u6797", time: "32 \u5206\u949F\u524D", branch: "feature/focus", lane: 1 }, { message: "\u4FEE\u590D\u957F\u6807\u9898\u6362\u884C\u4E0E\u5B89\u5168\u8FB9\u8DDD", hash: "c92e517", author: "\u5C0F\u6797", time: "1 \u5C0F\u65F6\u524D", lane: 0 }, { message: "\u65B0\u589E\u7EC8\u7AEF\u4E0E\u4EE3\u7801\u7F16\u8F91\u5668\u7EC4\u4EF6", hash: "85a46bf", author: "\u5C0F\u6797", time: "2 \u5C0F\u65F6\u524D", lane: 1 }, { message: "\u7EDF\u4E00\u767D\u5E95\u84DD\u8272\u89C6\u89C9\u89C4\u8303", hash: "7db821a", author: "\u5C0F\u6797", time: "\u6628\u5929", lane: 0 }, { message: "\u5EFA\u7ACB\u53EF\u590D\u7528\u89C6\u9891\u5DE5\u7A0B", hash: "096bcfe", author: "\u5C0F\u6797", time: "\u6628\u5929", lane: 0 }], selectedHash: "e7a4c19", changedFiles: [{ name: "components/browser.html", add: 36, remove: 8 }, { name: "components/captions.html", add: 24, remove: 6 }, { name: "content.json", add: 12, remove: 3 }], detail: "\u5C06\u5F55\u5C4F\u5BB9\u5668\u3001\u5B57\u5E55\u5B89\u5168\u533A\u4E0E\u533A\u57DF\u805A\u7126\u52A8\u753B\u6574\u5408\u5230\u540C\u4E00\u5957\u65F6\u95F4\u8F74\u3002" },
+      defaults: {
+        "project": "example-project",
+        "branch": "main",
+        "language": "Git",
+        "position": "\u5DE5\u4F5C\u533A\u5E72\u51C0",
+        "commits": [
+          {
+            "message": "\u63D0\u4EA4\u8BF4\u660E A",
+            "hash": "e7a4c19",
+            "author": "\u793A\u4F8B\u7528\u6237",
+            "time": "10 \u5206\u949F\u524D",
+            "branch": "main",
+            "lane": 0
+          },
+          {
+            "message": "\u63D0\u4EA4\u8BF4\u660E B",
+            "hash": "cf821d0",
+            "author": "\u793A\u4F8B\u7528\u6237",
+            "time": "32 \u5206\u949F\u524D",
+            "branch": "feature/example",
+            "lane": 1
+          },
+          {
+            "message": "\u63D0\u4EA4\u8BF4\u660E C",
+            "hash": "c92e517",
+            "author": "\u793A\u4F8B\u7528\u6237",
+            "time": "1 \u5C0F\u65F6\u524D",
+            "lane": 0
+          },
+          {
+            "message": "\u63D0\u4EA4\u8BF4\u660E D",
+            "hash": "85a46bf",
+            "author": "\u793A\u4F8B\u7528\u6237",
+            "time": "2 \u5C0F\u65F6\u524D",
+            "lane": 1
+          },
+          {
+            "message": "\u63D0\u4EA4\u8BF4\u660E E",
+            "hash": "7db821a",
+            "author": "\u793A\u4F8B\u7528\u6237",
+            "time": "\u6628\u5929",
+            "lane": 0
+          },
+          {
+            "message": "\u63D0\u4EA4\u8BF4\u660E F",
+            "hash": "096bcfe",
+            "author": "\u793A\u4F8B\u7528\u6237",
+            "time": "\u6628\u5929",
+            "lane": 0
+          }
+        ],
+        "selectedHash": "e7a4c19",
+        "changedFiles": [
+          {
+            "name": "src/example.ts",
+            "add": 8,
+            "remove": 2
+          },
+          {
+            "name": "tests/example.test.ts",
+            "add": 4,
+            "remove": 1
+          },
+          {
+            "name": "example.json",
+            "add": 2,
+            "remove": 0
+          }
+        ],
+        "detail": "\u5F53\u524D\u63D0\u4EA4\u7684\u53D8\u66F4\u8BF4\u660E\u3002"
+      },
       render(props, h) {
         const p = cfg(this, props);
         const selected = arr(p.commits).find((c) => c.hash === p.selectedHash) || arr(p.commits)[0] || {};
@@ -1836,7 +3910,60 @@ var ComponentLibraryRuntime = (() => {
       height: 800,
       description: "\u539F\u521B\u6D4B\u8BD5\u5DE5\u4F5C\u53F0\uFF0C\u5C55\u793A\u5957\u4EF6\u3001\u9010\u6761\u7ED3\u679C\u3001\u8017\u65F6\u4E0E\u63A7\u5236\u53F0\u8F93\u51FA\uFF0C\u53EF\u914D\u7F6E\u6210\u529F\u3001\u5931\u8D25\u548C\u8DF3\u8FC7\u72B6\u6001\u3002",
       reference: designed("\u539F\u521B\u684C\u9762\u6D4B\u8BD5\u5DE5\u4F5C\u53F0\uFF1B\u91C7\u7528\u6D4B\u8BD5\u8FD0\u884C\u5668\u901A\u7528\u7684\u5957\u4EF6\u6811\u3001\u7ED3\u679C\u3001\u8017\u65F6\u4E0E\u65AD\u8A00\u4FE1\u606F\u5E03\u5C40\uFF0C\u4E0D\u5192\u5145\u67D0\u4E2A\u6D4B\u8BD5\u4EA7\u54C1\u3002"),
-      defaults: { appName: "\u6D4B\u8BD5\u5DE5\u4F5C\u53F0", workspace: "science-video", appIcon: "check-circle", suite: "components / browser.spec.ts", duration: "2.41 s", tests: [{ name: "\u6B63\u786E\u663E\u793A\u6D4F\u89C8\u5668\u6807\u9898\u4E0E\u5730\u5740", status: "passed", time: "142 ms" }, { name: "\u66FF\u6362\u5F55\u5C4F\u7D20\u6750\u540E\u6BD4\u4F8B\u4FDD\u6301\u6B63\u786E", status: "passed", time: "388 ms" }, { name: "\u957F\u6807\u9898\u5728\u53EF\u7528\u533A\u57DF\u5185\u7701\u7565", status: "passed", time: "96 ms" }, { name: "\u533A\u57DF\u805A\u7126\u53EA\u6539\u53D8\u6307\u5B9A\u76EE\u6807", status: "passed", time: "421 ms" }, { name: "\u5012\u5E8F\u8DF3\u8F6C\u540E\u753B\u9762\u72B6\u6001\u4E00\u81F4", status: "passed", time: "532 ms" }, { name: "\u4E2D\u6587\u4E0E\u7279\u6B8A\u5B57\u7B26\u5B89\u5168\u663E\u793A", status: "passed", time: "108 ms" }], output: ["RUN  components/browser.spec.ts", "", "\u2713 \u6B63\u786E\u663E\u793A\u6D4F\u89C8\u5668\u6807\u9898\u4E0E\u5730\u5740", "\u2713 \u66FF\u6362\u5F55\u5C4F\u7D20\u6750\u540E\u6BD4\u4F8B\u4FDD\u6301\u6B63\u786E", "\u2713 \u5012\u5E8F\u8DF3\u8F6C\u540E\u753B\u9762\u72B6\u6001\u4E00\u81F4", "", "Test Files  1 passed (1)", "     Tests  6 passed (6)", "  Duration  2.41s"], runLabel: "\u672C\u6B21\u8FD0\u884C" },
+      defaults: {
+        "appName": "\u6D4B\u8BD5\u5DE5\u4F5C\u53F0",
+        "workspace": "example-project",
+        "appIcon": "check-circle",
+        "suite": "tests / example.test.ts",
+        "duration": "2.41 s",
+        "tests": [
+          {
+            "name": "\u6D4B\u8BD5\u7528\u4F8B A",
+            "status": "passed",
+            "time": "142 ms"
+          },
+          {
+            "name": "\u6D4B\u8BD5\u7528\u4F8B B",
+            "status": "passed",
+            "time": "388 ms"
+          },
+          {
+            "name": "\u6D4B\u8BD5\u7528\u4F8B C",
+            "status": "passed",
+            "time": "96 ms"
+          },
+          {
+            "name": "\u6D4B\u8BD5\u7528\u4F8B D",
+            "status": "passed",
+            "time": "421 ms"
+          },
+          {
+            "name": "\u6D4B\u8BD5\u7528\u4F8B E",
+            "status": "passed",
+            "time": "532 ms"
+          },
+          {
+            "name": "\u6D4B\u8BD5\u7528\u4F8B F",
+            "status": "passed",
+            "time": "108 ms"
+          }
+        ],
+        "output": [
+          "RUN  tests/example.test.ts",
+          "",
+          "\u2713 \u6D4B\u8BD5\u7528\u4F8B A",
+          "\u2713 \u6D4B\u8BD5\u7528\u4F8B B",
+          "\u2713 \u6D4B\u8BD5\u7528\u4F8B C",
+          "\u2713 \u6D4B\u8BD5\u7528\u4F8B D",
+          "\u2713 \u6D4B\u8BD5\u7528\u4F8B E",
+          "\u2713 \u6D4B\u8BD5\u7528\u4F8B F",
+          "",
+          "Test Files  1 passed (1)",
+          "     Tests  6 passed (6)",
+          "  Duration  2.41s"
+        ],
+        "runLabel": "\u672C\u6B21\u8FD0\u884C"
+      },
       render(props, h) {
         const p = cfg(this, props);
         const tests = arr(p.tests), passed = tests.filter((t) => t.status === "passed").length, failed = tests.filter((t) => t.status === "failed").length;
@@ -1851,7 +3978,100 @@ var ComponentLibraryRuntime = (() => {
       height: 800,
       description: "\u539F\u521B\u6570\u636E\u7BA1\u7406\u5668\uFF0C\u5305\u542B\u6570\u636E\u5E93\u5BFC\u822A\u3001\u5B57\u6BB5\u7C7B\u578B\u3001\u9009\u4E2D\u5355\u5143\u683C\u3001\u72B6\u6001\u6807\u7B7E\u3001\u8BB0\u5F55\u8BE6\u60C5\u4E0E\u5206\u9875\u3002",
       reference: designed("\u539F\u521B\u6570\u636E\u5E93\u5BA2\u6237\u7AEF\u754C\u9762\uFF1B\u4EE5\u771F\u5B9E\u6570\u636E\u8868\u7684\u5B57\u6BB5\u3001\u4E3B\u952E\u3001\u7C7B\u578B\u3001\u72B6\u6001\u4E0E\u5206\u9875\u6784\u6210\uFF0C\u4E0D\u5BF9\u5E94\u7279\u5B9A\u5546\u7528\u4EA7\u54C1\u3002"),
-      defaults: { appName: "\u6570\u636E\u5DE5\u4F5C\u53F0", workspace: "science_video.db", appIcon: "grid", table: "scenes", tables: ["scenes", "assets", "captions", "render_jobs"], columns: [{ key: "id", label: "id", type: "integer" }, { key: "title", label: "title", type: "text" }, { key: "component", label: "component", type: "text" }, { key: "duration", label: "duration", type: "real" }, { key: "status", label: "status", type: "text" }], rows: [{ id: 1, title: "\u5F00\u5934\u94A9\u5B50", component: "codex-chat", duration: 5, status: "\u5B8C\u6210" }, { id: 2, title: "\u64CD\u4F5C\u6F14\u793A", component: "browser-window", duration: 12.5, status: "\u5B8C\u6210" }, { id: 3, title: "\u547D\u4EE4\u6267\u884C", component: "terminal-session", duration: 8, status: "\u5B8C\u6210" }, { id: 4, title: "\u914D\u7F6E\u8BF4\u660E", component: "code-editor", duration: 10, status: "\u7F16\u8F91\u4E2D" }, { id: 5, title: "\u539F\u7406\u62C6\u89E3", component: "flow-diagram", duration: 14, status: "\u5F85\u5904\u7406" }, { id: 6, title: "\u524D\u540E\u5BF9\u6BD4", component: "before-after", duration: 8.5, status: "\u5F85\u5904\u7406" }, { id: 7, title: "\u91CD\u70B9\u56DE\u987E", component: "summary-card", duration: 6, status: "\u5F85\u5904\u7406" }], selectedId: 4, filter: 'status != "\u5DF2\u5F52\u6863"', recordTitle: "\u5F53\u524D\u8BB0\u5F55", footer: "7 \u6761\u8BB0\u5F55 \xB7 5 \u4E2A\u5B57\u6BB5" },
+      defaults: {
+        "appName": "\u6570\u636E\u5DE5\u4F5C\u53F0",
+        "workspace": "example.db",
+        "appIcon": "grid",
+        "table": "items",
+        "tables": [
+          "items",
+          "groups",
+          "events",
+          "settings"
+        ],
+        "columns": [
+          {
+            "key": "id",
+            "label": "\u7F16\u53F7",
+            "type": "integer"
+          },
+          {
+            "key": "title",
+            "label": "\u5B57\u6BB5 A",
+            "type": "text"
+          },
+          {
+            "key": "component",
+            "label": "\u5B57\u6BB5 B",
+            "type": "text"
+          },
+          {
+            "key": "duration",
+            "label": "\u6570\u503C",
+            "type": "real"
+          },
+          {
+            "key": "status",
+            "label": "\u72B6\u6001",
+            "type": "text"
+          }
+        ],
+        "rows": [
+          {
+            "id": 1,
+            "title": "\u9879\u76EE A",
+            "component": "\u5185\u5BB9 A",
+            "duration": 5,
+            "status": "\u5B8C\u6210"
+          },
+          {
+            "id": 2,
+            "title": "\u9879\u76EE B",
+            "component": "\u5185\u5BB9 B",
+            "duration": 12.5,
+            "status": "\u5B8C\u6210"
+          },
+          {
+            "id": 3,
+            "title": "\u9879\u76EE C",
+            "component": "\u5185\u5BB9 C",
+            "duration": 8,
+            "status": "\u5B8C\u6210"
+          },
+          {
+            "id": 4,
+            "title": "\u9879\u76EE D",
+            "component": "\u5185\u5BB9 D",
+            "duration": 10,
+            "status": "\u7F16\u8F91\u4E2D"
+          },
+          {
+            "id": 5,
+            "title": "\u9879\u76EE E",
+            "component": "\u5185\u5BB9 E",
+            "duration": 14,
+            "status": "\u5F85\u5904\u7406"
+          },
+          {
+            "id": 6,
+            "title": "\u9879\u76EE F",
+            "component": "\u5185\u5BB9 F",
+            "duration": 8.5,
+            "status": "\u5F85\u5904\u7406"
+          },
+          {
+            "id": 7,
+            "title": "\u9879\u76EE G",
+            "component": "\u5185\u5BB9 G",
+            "duration": 6,
+            "status": "\u5F85\u5904\u7406"
+          }
+        ],
+        "selectedId": 4,
+        "filter": 'status != "\u5DF2\u5F52\u6863"',
+        "recordTitle": "\u5F53\u524D\u8BB0\u5F55",
+        "footer": "7 \u6761\u8BB0\u5F55 \xB7 5 \u4E2A\u5B57\u6BB5"
+      },
       render(props, h) {
         const p = cfg(this, props);
         const row = arr(p.rows).find((r) => String(r.id) === String(p.selectedId)) || arr(p.rows)[0] || {};
@@ -1912,46 +4132,117 @@ var ComponentLibraryRuntime = (() => {
     height: 800,
     reference: { basis: "2026-09-18 \u901A\u8FC7\u6D4F\u89C8\u5668\u89C2\u5BDF www.doubao.com/chat/ \u666E\u901A\u5BF9\u8BDD\u6A21\u5F0F\uFF0C1920\xD7910\uFF1B\u672C\u7EC4\u4EF6\u6309 1280\xD7800 \u9002\u914D\u3002\u684C\u9762 app \u622A\u56FE\u56E0\u81EA\u52A8\u5316\u8EAB\u4EFD\u6821\u9A8C\u5F02\u5E38\u672A\u6210\u529F\uFF0C\u4E0D\u5BA3\u79F0\u684C\u9762\u9010\u50CF\u7D20\u5BF9\u9F50\u3002", source: "https://www.doubao.com/chat/\uFF1Breports/doubao-chat-notes.md", level: "documented" },
     defaults: {
-      brand: "\u8C46\u5305",
-      logoSrc: "assets/brands/doubao.png",
-      showHomeLogo: false,
-      title: "\u8FDB\u5EA6\u63D0\u4EA4\u901A\u77E5",
-      notice: "AI \u751F\u6210\u53EF\u80FD\u6709\u8BEF\uFF0C\u8BF7\u6838\u5B9E",
-      simulationLabel: "\u754C\u9762\u590D\u523B \xB7 \u6848\u4F8B\u6F14\u793A",
-      showSidebar: true,
-      showHome: false,
-      homeTitle: "\u6709\u4EC0\u4E48\u6211\u80FD\u5E2E\u4F60\u7684\u5417\uFF1F",
-      conversationModeLabel: "\u5BF9\u8BDD",
-      workModeLabel: "\u5DE5\u4F5C",
-      navigation: [{ label: "\u65B0\u5DE5\u4F5C\u4EFB\u52A1", icon: "edit" }, { label: "\u65B0\u5BF9\u8BDD", icon: "chat" }, { label: "\u5B9A\u65F6\u4EFB\u52A1", icon: "clock" }, { label: "\u63D2\u4EF6\xB7\u6280\u80FD\xB7\u4F19\u4F34", icon: "grid" }, { label: "\u4E91\u76D8", icon: "folder" }, { label: "API \u670D\u52A1", icon: "code" }, { label: "\u66F4\u591A", icon: "more" }],
-      pinnedLabel: "\u7F6E\u9876",
-      pinnedTitle: "\u4E3B\u5BF9\u8BDD",
-      projectsLabel: "\u9879\u76EE",
-      newProjectLabel: "\u521B\u5EFA\u9879\u76EE",
-      recentLabel: "\u6700\u8FD1",
-      recentTasks: [],
-      accountLabel: "\u7528\u6237",
-      planLabel: "\u6807\u51C6\u5957\u9910",
-      messages: [{ id: "request-vague", role: "user", text: "\u63D0\u9192\u5927\u5BB6\u4EA4\u8FDB\u5EA6\uFF0C\u6B63\u5F0F\u4E00\u70B9\u3002" }, { id: "reply-vague", role: "assistant", heading: "\u901A\u77E5", text: "\u8BF7\u5404\u4F4D\u79EF\u6781\u914D\u5408\uFF0C\u53CA\u65F6\u63D0\u4EA4\u76F8\u5173\u6750\u6599\u3002", actions: true }],
-      suggestions: ["\u5E2E\u6211\u6539\u5F97\u66F4\u7B80\u6D01", "\u68C0\u67E5\u901A\u77E5\u662F\u5426\u4EA4\u4EE3\u6E05\u695A"],
-      draft: "",
-      running: false,
-      focused: false,
-      placeholder: "\u53D1\u6D88\u606F\u6216\u6309\u4F4F\u7A7A\u683C\u8BF4\u8BDD...",
-      modeLabel: "\u5BF9\u8BDD",
-      modelLabel: "\u8C46\u5305",
-      speedLabel: "\u5FEB\u901F",
-      maxTools: 3,
-      tools: [{ label: "\u5F55\u97F3\u8F6C\u5199", icon: "mic" }, { label: "\u56FE\u50CF\u751F\u6210", icon: "image" }, { label: "PPT \u751F\u6210", icon: "file" }, { label: "\u5E2E\u6211\u5199\u4F5C", icon: "edit" }, { label: "\u89C6\u9891\u751F\u6210", icon: "video" }, { label: "AI \u64AD\u5BA2", icon: "volume" }],
-      workingLabel: "\u6B63\u5728\u751F\u6210",
-      composer: {}
+      "brand": "\u8C46\u5305",
+      "logoSrc": "assets/brands/doubao.png",
+      "showHomeLogo": false,
+      "title": "\u5BF9\u8BDD\u6807\u9898",
+      "notice": "AI \u751F\u6210\u53EF\u80FD\u6709\u8BEF\uFF0C\u8BF7\u6838\u5B9E",
+      "simulationLabel": "\u754C\u9762\u590D\u523B \xB7 \u6848\u4F8B\u6F14\u793A",
+      "showSidebar": true,
+      "showHome": false,
+      "homeTitle": "\u6709\u4EC0\u4E48\u6211\u80FD\u5E2E\u4F60\u7684\u5417\uFF1F",
+      "conversationModeLabel": "\u5BF9\u8BDD",
+      "workModeLabel": "\u5DE5\u4F5C",
+      "navigation": [
+        {
+          "label": "\u65B0\u5DE5\u4F5C\u4EFB\u52A1",
+          "icon": "edit"
+        },
+        {
+          "label": "\u65B0\u5BF9\u8BDD",
+          "icon": "chat"
+        },
+        {
+          "label": "\u5B9A\u65F6\u4EFB\u52A1",
+          "icon": "clock"
+        },
+        {
+          "label": "\u63D2\u4EF6\xB7\u6280\u80FD\xB7\u4F19\u4F34",
+          "icon": "grid"
+        },
+        {
+          "label": "\u4E91\u76D8",
+          "icon": "folder"
+        },
+        {
+          "label": "API \u670D\u52A1",
+          "icon": "code"
+        },
+        {
+          "label": "\u66F4\u591A",
+          "icon": "more"
+        }
+      ],
+      "pinnedLabel": "\u7F6E\u9876",
+      "pinnedTitle": "\u793A\u4F8B\u5BF9\u8BDD",
+      "projectsLabel": "\u9879\u76EE",
+      "newProjectLabel": "\u521B\u5EFA\u9879\u76EE",
+      "recentLabel": "\u6700\u8FD1",
+      "recentTasks": [],
+      "accountLabel": "\u7528\u6237",
+      "planLabel": "\u6807\u51C6\u5957\u9910",
+      "messages": [
+        {
+          "id": "request-vague",
+          "role": "user",
+          "text": "\u7528\u6237\u6D88\u606F\u5185\u5BB9\u3002\u53EF\u66FF\u6362\u4E3A\u4F60\u7684\u8F93\u5165\u3002"
+        },
+        {
+          "id": "reply-vague",
+          "role": "assistant",
+          "heading": "\u56DE\u590D\u6807\u9898",
+          "text": "\u56DE\u590D\u6B63\u6587\u5185\u5BB9\u3002\u652F\u6301\u6BB5\u843D\u3001\u8981\u70B9\u4E0E\u540E\u7EED\u8865\u5145\u3002",
+          "actions": true
+        }
+      ],
+      "suggestions": [
+        "\u540E\u7EED\u95EE\u9898 A",
+        "\u540E\u7EED\u95EE\u9898 B"
+      ],
+      "draft": "",
+      "running": false,
+      "focused": false,
+      "placeholder": "\u53D1\u6D88\u606F\u6216\u6309\u4F4F\u7A7A\u683C\u8BF4\u8BDD...",
+      "modeLabel": "\u5BF9\u8BDD",
+      "modelLabel": "\u8C46\u5305",
+      "speedLabel": "\u5FEB\u901F",
+      "maxTools": 3,
+      "tools": [
+        {
+          "label": "\u5F55\u97F3\u8F6C\u5199",
+          "icon": "mic"
+        },
+        {
+          "label": "\u56FE\u50CF\u751F\u6210",
+          "icon": "image"
+        },
+        {
+          "label": "PPT \u751F\u6210",
+          "icon": "file"
+        },
+        {
+          "label": "\u5E2E\u6211\u5199\u4F5C",
+          "icon": "edit"
+        },
+        {
+          "label": "\u89C6\u9891\u751F\u6210",
+          "icon": "video"
+        },
+        {
+          "label": "AI \u64AD\u5BA2",
+          "icon": "volume"
+        }
+      ],
+      "workingLabel": "\u6B63\u5728\u751F\u6210",
+      "composer": {}
     },
     render(props, h) {
       const p = { ...this.defaults, ...props }, c = { ...p, ...p.composer }, running = Boolean(c.running);
       const requestedHeight = Number(c.height ?? p.composerHeight), draft = str(c.draft);
-      const height = Number.isFinite(requestedHeight) && requestedHeight > 0 ? Math.max(99, Math.min(188, requestedHeight)) : draft.length > 60 ? 148 : 99;
+      const lines3 = draft.split(/\r?\n/).reduce((sum, line3) => sum + Math.max(1, Math.ceil(line3.length / 40)), 0);
+      const height = Number.isFinite(requestedHeight) && requestedHeight > 0 ? Math.max(120, Math.min(240, requestedHeight)) : Math.min(240, Math.max(120, lines3 * 28 + 72));
       const messages = arr2(p.messages), isHome = p.showHome && !messages.length;
-      return `<section class="dbchat-app${p.showSidebar === false ? " dbchat-no-sidebar" : ""}" data-simulation="true" data-state="${running ? "running" : draft ? "draft" : "idle"}" style="--dbchat-composer-height:${height}px">${p.showSidebar === false ? "" : sidebar3(p, h)}<main class="dbchat-main"><header class="dbchat-header"><div class="dbchat-header-left">${h.icon("panel", 18)}${isHome ? "" : h.icon("edit", 17)}</div>${isHome ? "" : `<div class="dbchat-thread-title"><strong>${h.esc(p.title)}</strong><small>${h.esc(p.notice)}</small></div>`}<div class="dbchat-header-right">${h.icon("volume", 17)}${h.icon("more", 18)}</div></header><div class="dbchat-simulation" data-part="disclosure">${h.esc(p.disclosure || p.simulationLabel || "\u754C\u9762\u590D\u523B \xB7 \u6848\u4F8B\u6F14\u793A")}</div><div class="dbchat-conversation" data-part="conversation"><div class="dbchat-viewport" data-part="viewport" data-motion="scroll"><div class="dbchat-messages" data-part="message-list" data-motion="scroll">${isHome ? home(p, h) : messages.map((m, i) => message2(m, i, h)).join("")}${running ? `<div class="dbchat-working" data-part="status" data-state="running" data-motion="reveal"><span>${h.esc(p.workingLabel)}</span><i>\xB7\xB7\xB7</i></div>` : ""}${!isHome && !running && arr2(p.suggestions).length ? `<div class="dbchat-suggestions" data-part="suggestions">${p.suggestions.map((text6, index) => `<span data-suggestion-index="${index}" data-motion="item">${h.esc(text6)}${h.icon("arrow-right", 13)}</span>`).join("")}</div>` : ""}</div></div></div><div class="dbchat-composer-anchor">${composer3(p, h)}</div></main></section>`;
+      return `<section class="dbchat-app${p.showSidebar === false ? " dbchat-no-sidebar" : ""}" data-simulation="true" data-state="${running ? "running" : draft ? "draft" : "idle"}" style="--dbchat-composer-height:${height}px">${p.showSidebar === false ? "" : sidebar3(p, h)}<main class="dbchat-main"><header class="dbchat-header"><div class="dbchat-header-left">${h.icon("panel", 18)}${isHome ? "" : h.icon("edit", 17)}</div>${isHome ? "" : `<div class="dbchat-thread-title"><strong>${h.esc(p.title)}</strong><small>${h.esc(p.notice)}</small></div>`}<div class="dbchat-header-right">${h.icon("volume", 17)}${h.icon("more", 18)}</div></header><div class="dbchat-simulation" data-part="disclosure">${h.esc(p.disclosure || p.simulationLabel || "\u754C\u9762\u590D\u523B \xB7 \u6848\u4F8B\u6F14\u793A")}</div><div class="dbchat-conversation" data-part="conversation"><div class="dbchat-viewport" data-part="viewport"><div class="dbchat-messages" data-part="message-list" data-motion="scroll">${isHome ? home(p, h) : messages.map((m, i) => message2(m, i, h)).join("")}${running ? `<div class="dbchat-working" data-part="status" data-state="running" data-motion="reveal"><span>${h.esc(p.workingLabel)}</span><i>\xB7\xB7\xB7</i></div>` : ""}${!isHome && !running && arr2(p.suggestions).length ? `<div class="dbchat-suggestions" data-part="suggestions">${p.suggestions.map((text6, index) => `<span data-suggestion-index="${index}" data-motion="item">${h.esc(text6)}${h.icon("arrow-right", 13)}</span>`).join("")}</div>` : ""}</div></div></div><div class="dbchat-composer-anchor">${composer3(p, h)}</div></main></section>`;
     }
   }];
 
@@ -2011,69 +4302,116 @@ var ComponentLibraryRuntime = (() => {
   }
   var components20 = [{
     id: "doubao-workflow",
-    name: "\u8C46\u5305\u5DE5\u4F5C \xB7 \u901A\u77E5\u5BF9\u8BDD",
+    name: "\u8C46\u5305\u5DE5\u4F5C \xB7 \u591A\u8F6E\u5BF9\u8BDD",
     category: "\u8C46\u5305\u5DE5\u4F5C",
     description: "\u6309\u684C\u9762\u8C46\u5305\u5DE5\u4F5C\u7684\u4FA7\u680F\u3001\u7070\u8272\u7528\u6237\u6D88\u606F\u3001\u65E0\u6C14\u6CE1\u6B63\u6587\u3001\u8F93\u5165\u680F\u53CA\u5BF9\u8BDD\u6458\u8981\u7ED3\u6784\u5236\u4F5C\u7684\u53EF\u7F16\u8F91\u6559\u5B66\u6A21\u62DF\u3002",
     width: 1280,
     height: 800,
     reference: {
-      basis: "2026-09-18 \u672C\u673A Windows \u8C46\u5305\u5DE5\u4F5C\u684C\u9762\u754C\u9762\u89C2\u5BDF\uFF1A1193\xD7794\uFF0C280px \u5DE6\u4FA7\u680F\u4E0E 280px \u5BF9\u8BDD\u6458\u8981\uFF1B\u672C\u7EC4\u4EF6\u6269\u5C55\u4E3A 1280\xD7800\uFF0C\u672A\u505A\u5168\u72B6\u6001\u9010\u50CF\u7D20\u9A8C\u6536\u3002",
+      basis: "\u4EE5 2026-09-18 \u672C\u673A Windows \u8C46\u5305\u5DE5\u4F5C\u754C\u9762\u89C2\u5BDF\u4E3A\u539F\u578B\uFF1B\u7EC4\u4EF6\u4E3A 1280\xD7800\uFF0C\u4FA7\u680F\u53CA\u6458\u8981\u5404 240px\u3001\u6B63\u6587 18px\uFF0C\u6309\u9884\u89C8\u53EF\u8BFB\u6027\u8C03\u6574\u6392\u7248\uFF0C\u672A\u505A\u5168\u72B6\u6001\u9010\u50CF\u7D20\u9A8C\u6536\u3002",
       source: "\u672C\u673A DoubaoWork.ChatApp \u5B9E\u9645\u754C\u9762\u89C2\u5BDF\uFF1Breports/doubao-work-notes.md",
       level: "documented"
     },
     defaults: {
-      title: "\u8FDB\u5EA6\u63D0\u4EA4\u901A\u77E5",
-      notice: "AI \u751F\u6210\u53EF\u80FD\u6709\u8BEF\uFF0C\u8BF7\u6838\u5B9E",
-      simulationLabel: "\u754C\u9762\u590D\u523B \xB7 \u6848\u4F8B\u6F14\u793A",
-      brand: "\u8C46\u5305",
-      brandSuffix: "\u5DE5\u4F5C",
-      logoSrc: "",
-      navigation: [{ label: "\u65B0\u5DE5\u4F5C\u4EFB\u52A1", icon: "edit" }, { label: "\u5B9A\u65F6\u4EFB\u52A1", icon: "clock" }, { label: "\u63D2\u4EF6\xB7\u6280\u80FD\xB7\u4F19\u4F34", icon: "grid" }, { label: "\u4E91\u76D8", icon: "folder" }, { label: "\u624B\u673A\u9065\u63A7\u7535\u8111", icon: "phone" }],
-      pinnedLabel: "\u7F6E\u9876",
-      pinnedTitle: "\u4E3B\u5BF9\u8BDD",
-      projectsLabel: "\u9879\u76EE",
-      newProjectLabel: "\u65B0\u5EFA\u9879\u76EE",
-      recentLabel: "\u6700\u8FD1",
-      recentTasks: [],
-      accountLabel: "\u7528\u6237",
-      planLabel: "\u6807\u51C6\u5957\u9910",
-      showSidebar: true,
-      showSummary: true,
-      summaryTitle: "\u5BF9\u8BDD\u6458\u8981",
-      artifactsLabel: "\u5BF9\u8BDD\u4EA7\u7269",
-      skillsLabel: "\u6280\u80FD",
-      filesLabel: "\u6700\u8FD1\u6587\u4EF6",
-      summary: { artifacts: [], files: [] },
-      messages: [
-        { id: "request-vague", role: "user", text: "\u63D0\u9192\u5927\u5BB6\u4EA4\u8FDB\u5EA6\uFF0C\u6B63\u5F0F\u4E00\u70B9\u3002" },
-        { id: "reply-vague", role: "assistant", text: "\u8BF7\u5404\u4F4D\u79EF\u6781\u914D\u5408\uFF0C\u53CA\u65F6\u63D0\u4EA4\u76F8\u5173\u6750\u6599\u3002" },
-        { id: "request-clear", role: "user", text: "\u53D1\u7ED9\u5404\u7EC4\u8D1F\u8D23\u4EBA\u3002\u5468\u4E94\u4E0B\u5348\u4E94\u70B9\u524D\uFF0C\u628A\u8FD9\u5468\u505A\u5B8C\u4E86\u4EC0\u4E48\u3001\u8FD8\u6709\u4EC0\u4E48\u6CA1\u505A\u5B8C\uFF0C\u586B\u8FDB\u8FD9\u4E2A\u5171\u4EAB\u8868\u683C\u3002", linkLabel: "\u672C\u5468\u8FDB\u5EA6\u5171\u4EAB\u8868\u683C", linkNote: "\u6F14\u793A\u5360\u4F4D" },
-        { id: "reply-clear", role: "assistant", heading: "\u672C\u5468\u8FDB\u5EA6\u63D0\u4EA4\u901A\u77E5", text: "\u8BF7\u5404\u7EC4\u8D1F\u8D23\u4EBA\u4E8E\u5468\u4E94 17:00 \u524D\uFF0C\u5728\u5171\u4EAB\u8868\u683C\u4E2D\u586B\u5199\u672C\u5468\u5DF2\u5B8C\u6210\u4E8B\u9879\u548C\u672A\u5B8C\u6210\u4E8B\u9879\u3002", linkLabel: "\u672C\u5468\u8FDB\u5EA6\u5171\u4EAB\u8868\u683C", linkNote: "\u6F14\u793A\u5360\u4F4D", actions: true }
+      "title": "\u4EFB\u52A1\u6807\u9898",
+      "notice": "AI \u751F\u6210\u53EF\u80FD\u6709\u8BEF\uFF0C\u8BF7\u6838\u5B9E",
+      "simulationLabel": "\u754C\u9762\u590D\u523B \xB7 \u6848\u4F8B\u6F14\u793A",
+      "brand": "\u8C46\u5305",
+      "brandSuffix": "\u5DE5\u4F5C",
+      "logoSrc": "",
+      "navigation": [
+        {
+          "label": "\u65B0\u5DE5\u4F5C\u4EFB\u52A1",
+          "icon": "edit"
+        },
+        {
+          "label": "\u5B9A\u65F6\u4EFB\u52A1",
+          "icon": "clock"
+        },
+        {
+          "label": "\u63D2\u4EF6\xB7\u6280\u80FD\xB7\u4F19\u4F34",
+          "icon": "grid"
+        },
+        {
+          "label": "\u4E91\u76D8",
+          "icon": "folder"
+        },
+        {
+          "label": "\u624B\u673A\u9065\u63A7\u7535\u8111",
+          "icon": "phone"
+        }
       ],
-      draft: "",
-      running: false,
-      focused: false,
-      placeholder: "\u53D1\u6D88\u606F\u6216\u521B\u5EFA\u4EFB\u52A1... / \u4F7F\u7528\u6280\u80FD @ \u6DFB\u52A0\u8D44\u6599",
-      environmentLabel: "\u672C\u5730\u7535\u8111",
-      projectLabel: "\u9879\u76EE",
-      permissionLabel: "\u5168\u90E8\u5141\u8BB8",
-      modeLabel: "\u81EA\u52A8",
-      effortLabel: "\u9AD8",
-      workingLabel: "\u62DF\u5199\u6B63\u5F0F\u8FDB\u5EA6\u63D0\u9192\u901A\u77E5",
-      homeTitle: "\u4ECA\u5929\u6709\u4EC0\u4E48\u5DE5\u4F5C\u8981\u5904\u7406\uFF1F",
-      showHome: false
+      "pinnedLabel": "\u7F6E\u9876",
+      "pinnedTitle": "\u793A\u4F8B\u5BF9\u8BDD",
+      "projectsLabel": "\u9879\u76EE",
+      "newProjectLabel": "\u65B0\u5EFA\u9879\u76EE",
+      "recentLabel": "\u6700\u8FD1",
+      "recentTasks": [],
+      "accountLabel": "\u7528\u6237",
+      "planLabel": "\u6807\u51C6\u5957\u9910",
+      "showSidebar": true,
+      "showSummary": true,
+      "summaryTitle": "\u5BF9\u8BDD\u6458\u8981",
+      "artifactsLabel": "\u5BF9\u8BDD\u4EA7\u7269",
+      "skillsLabel": "\u6280\u80FD",
+      "filesLabel": "\u6700\u8FD1\u6587\u4EF6",
+      "summary": {
+        "artifacts": [],
+        "files": []
+      },
+      "messages": [
+        {
+          "id": "request-vague",
+          "role": "user",
+          "text": "\u7528\u6237\u6D88\u606F A\uFF1A\u586B\u5199\u521D\u59CB\u8981\u6C42\u3002"
+        },
+        {
+          "id": "reply-vague",
+          "role": "assistant",
+          "text": "\u56DE\u590D\u5185\u5BB9 A\uFF1A\u5C55\u793A\u521D\u6B65\u7ED3\u679C\u3002"
+        },
+        {
+          "id": "request-clear",
+          "role": "user",
+          "text": "\u7528\u6237\u6D88\u606F B\uFF1A\u586B\u5199\u8865\u5145\u8981\u6C42\u3002",
+          "linkLabel": "\u793A\u4F8B\u94FE\u63A5",
+          "linkNote": "\u793A\u4F8B\u5165\u53E3"
+        },
+        {
+          "id": "reply-clear",
+          "role": "assistant",
+          "heading": "\u56DE\u590D\u6807\u9898",
+          "text": "\u56DE\u590D\u5185\u5BB9 B\uFF1A\u5C55\u793A\u66F4\u65B0\u540E\u7684\u7ED3\u679C\u3002",
+          "linkLabel": "\u793A\u4F8B\u94FE\u63A5",
+          "linkNote": "\u793A\u4F8B\u5165\u53E3",
+          "actions": true
+        }
+      ],
+      "draft": "",
+      "running": false,
+      "focused": false,
+      "placeholder": "\u53D1\u6D88\u606F\u6216\u521B\u5EFA\u4EFB\u52A1... / \u4F7F\u7528\u6280\u80FD @ \u6DFB\u52A0\u8D44\u6599",
+      "environmentLabel": "\u672C\u5730\u7535\u8111",
+      "projectLabel": "\u9879\u76EE",
+      "permissionLabel": "\u5168\u90E8\u5141\u8BB8",
+      "modeLabel": "\u81EA\u52A8",
+      "effortLabel": "\u9AD8",
+      "workingLabel": "\u6B63\u5728\u5904\u7406\u4EFB\u52A1",
+      "homeTitle": "\u4ECA\u5929\u6709\u4EC0\u4E48\u5DE5\u4F5C\u8981\u5904\u7406\uFF1F",
+      "showHome": false
     },
     render(props, h) {
       const p = { ...this.defaults, ...props };
       const running = Boolean(p.composer?.running ?? p.running);
       const draft = str2(p.composer?.draft ?? p.draft);
       const requestedHeight = Number(p.composer?.height ?? p.composerHeight);
-      const composerHeight = Number.isFinite(requestedHeight) && requestedHeight > 0 ? Math.max(103, Math.min(188, requestedHeight)) : draft.length > 45 || p.composer?.expanded ? 148 : 103;
+      const lines3 = draft.split(/\r?\n/).reduce((sum, line3) => sum + Math.max(1, Math.ceil(line3.length / 36)), 0);
+      const composerHeight = Number.isFinite(requestedHeight) && requestedHeight > 0 ? Math.max(124, Math.min(244, requestedHeight)) : Math.min(244, Math.max(p.composer?.expanded ? 160 : 124, lines3 * 28 + 76));
       const messages = list2(p.messages);
       return `<section class="dbw-app${p.showSidebar === false ? " dbw-no-sidebar" : ""}${p.showSummary === false ? " dbw-no-summary" : ""}" data-state="${running ? "running" : "idle"}" data-simulation="true" style="--dbw-composer-height:${composerHeight}px">
       <div class="dbw-titlebar"><div class="dbw-simulation-label">${h.esc(p.simulationLabel || "\u754C\u9762\u590D\u523B \xB7 \u6848\u4F8B\u6F14\u793A")}</div>${windowControls(h)}</div>
       <div class="dbw-workbench">${p.showSidebar === false ? "" : sidebar4(p, h)}<main class="dbw-main"><header class="dbw-main-header"><span class="dbw-header-start">${h.icon("panel", 18)}${h.icon("edit", 17)}</span><div class="dbw-thread-title"><strong>${h.esc(p.title)}</strong><small>${h.esc(p.notice)}</small></div><span class="dbw-header-end">${h.icon("more", 18)}</span></header>
-      <div class="dbw-conversation" data-part="viewport" data-motion="scroll"><div class="dbw-messages" data-part="message-list" data-motion="scroll">${p.showHome && !messages.length ? `<div class="dbw-home"><h2>${h.esc(p.homeTitle)}</h2></div>` : messages.map((item, index) => message3(item, index, h)).join("")}${running ? `<div class="dbw-working" data-part="status" data-state="running" data-motion="reveal">${h.esc(p.workingLabel)}<span class="dbw-static-dots">\xB7\xB7\xB7</span></div>` : ""}</div></div><div class="dbw-composer-anchor">${composer4(p, h)}</div></main>${p.showSummary === false ? "" : summaryPanel(p, h)}</div>
+      <div class="dbw-conversation" data-part="viewport"><div class="dbw-messages" data-part="message-list" data-motion="scroll">${p.showHome && !messages.length ? `<div class="dbw-home"><h2>${h.esc(p.homeTitle)}</h2></div>` : messages.map((item, index) => message3(item, index, h)).join("")}${running ? `<div class="dbw-working" data-part="status" data-state="running" data-motion="reveal">${h.esc(p.workingLabel)}<span class="dbw-static-dots">\xB7\xB7\xB7</span></div>` : ""}</div></div><div class="dbw-composer-anchor">${composer4(p, h)}</div></main>${p.showSummary === false ? "" : summaryPanel(p, h)}</div>
     </section>`;
     }
   }];
@@ -2102,7 +4440,33 @@ var ComponentLibraryRuntime = (() => {
     } };
   }
   var components21 = [
-    make5("donut-chart", "\u73AF\u5F62\u5360\u6BD4\u56FE", "\u628A\u6574\u4F53\u62C6\u6210\u51E0\u90E8\u5206\uFF0C\u540C\u65F6\u4FDD\u7559\u6570\u91CF\u4E0E\u767E\u5206\u6BD4\u3002", { title: "\u5236\u4F5C\u65F6\u95F4\u82B1\u5728\u4E86\u54EA\u91CC", items: [{ label: "\u5185\u5BB9\u7F16\u5BFC", value: 42 }, { label: "\u7D20\u6750\u51C6\u5907", value: 28 }, { label: "\u526A\u8F91\u4E0E\u52A8\u753B", value: 20 }, { label: "\u590D\u6838", value: 10 }], unit: "\u5C0F\u65F6" }, (p, h) => {
+    make5("donut-chart", "\u73AF\u5F62\u5360\u6BD4\u56FE", "\u628A\u6574\u4F53\u62C6\u6210\u51E0\u90E8\u5206\uFF0C\u540C\u65F6\u4FDD\u7559\u6570\u91CF\u4E0E\u767E\u5206\u6BD4\u3002", {
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57",
+      "code": "EXAMPLE",
+      "items": [
+        {
+          "label": "\u7C7B\u522B A",
+          "value": 42
+        },
+        {
+          "label": "\u7C7B\u522B B",
+          "value": 28
+        },
+        {
+          "label": "\u7C7B\u522B C",
+          "value": 20
+        },
+        {
+          "label": "\u7C7B\u522B D",
+          "value": 10
+        }
+      ],
+      "unit": "\u5355\u4F4D"
+    }, (p, h) => {
       const a = list3(p.items, 2, 6), sum = a.reduce((s, x) => s + number4(x.value), 0);
       if (!sum) throw Error("\u5360\u6BD4\u603B\u6570\u4E0D\u80FD\u4E3A\u96F6");
       let offset = 0;
@@ -2113,14 +4477,109 @@ var ComponentLibraryRuntime = (() => {
       }).join("");
       return shell3(p, h, svg(ring + txt3(h, 290, 224, sum, 52) + txt3(h, 290, 262, p.unit, 18, "middle", "#60748c") + a.map((x, i) => `<g data-motion="item"><rect x="605" y="${88 + i * 83}" width="14" height="14" rx="4" fill="${colors2[i]}"/>${txt3(h, 640, 103 + i * 83, x.label, 23, "start")}${txt3(h, 1010, 103 + i * 83, `${x.value} \xB7 ${(x.value / sum * 100).toFixed(0)}%`, 22, "end")}</g>`).join("")));
     }),
-    make5("scatter-plot", "\u6563\u70B9\u5173\u7CFB\u56FE", "\u7528\u4E8C\u7EF4\u5750\u6807\u540C\u65F6\u6BD4\u8F83\u4E24\u4E2A\u53D8\u91CF\uFF0C\u4FDD\u7559\u6BCF\u4E2A\u5BF9\u8C61\u7684\u4F4D\u7F6E\u3002", { title: "\u6295\u5165\u4E0E\u7ED3\u679C\u600E\u6837\u4E00\u8D77\u53D8\u5316", xLabel: "\u51C6\u5907\u65F6\u95F4 / \u5C0F\u65F6", yLabel: "\u5B8C\u6210\u5EA6 / %", xMax: 10, yMax: 100, points: [{ label: "A", x: 2, y: 34 }, { label: "B", x: 3.5, y: 48 }, { label: "C", x: 5, y: 63 }, { label: "D", x: 6.7, y: 79 }, { label: "E", x: 8.6, y: 87 }], note: "\u793A\u4F8B\u5173\u7CFB\u4E0D\u4EE3\u8868\u56E0\u679C\u7ED3\u8BBA\u3002" }, (p, h) => {
+    make5("scatter-plot", "\u6563\u70B9\u5173\u7CFB\u56FE", "\u7528\u4E8C\u7EF4\u5750\u6807\u540C\u65F6\u6BD4\u8F83\u4E24\u4E2A\u53D8\u91CF\uFF0C\u4FDD\u7559\u6BCF\u4E2A\u5BF9\u8C61\u7684\u4F4D\u7F6E\u3002", {
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57",
+      "code": "EXAMPLE",
+      "xLabel": "\u6A2A\u8F74\u540D\u79F0",
+      "yLabel": "\u7EB5\u8F74\u540D\u79F0",
+      "xMax": 10,
+      "yMax": 100,
+      "points": [
+        {
+          "label": "A",
+          "x": 2,
+          "y": 34
+        },
+        {
+          "label": "B",
+          "x": 3.5,
+          "y": 48
+        },
+        {
+          "label": "C",
+          "x": 5,
+          "y": 63
+        },
+        {
+          "label": "D",
+          "x": 6.7,
+          "y": 79
+        },
+        {
+          "label": "E",
+          "x": 8.6,
+          "y": 87
+        }
+      ]
+    }, (p, h) => {
       const a = list3(p.points, 2, 12), xm = number4(p.xMax), ym = number4(p.yMax);
       if (!xm || !ym || a.some((x) => number4(x.x) > xm || number4(x.y) > ym)) throw Error("\u70B9\u5750\u6807\u5FC5\u987B\u5728\u6B63\u6570\u5750\u6807\u4E0A\u9650\u5185");
       let grid = "";
       for (let i = 0; i <= 5; i++) grid += line2(100, 370 - i * 62, 1020, 370 - i * 62) + txt3(h, 78, 377 - i * 62, ym * i / 5, 15, "end") + txt3(h, 100 + i * 184, 404, xm * i / 5, 15);
       return shell3(p, h, svg(grid + txt3(h, 560, 448, p.xLabel, 18) + txt3(h, 102, 34, p.yLabel, 18, "start") + a.map((x, i) => `<g data-motion="point"><circle cx="${100 + x.x / xm * 920}" cy="${370 - x.y / ym * 310}" r="12" fill="${colors2[i % 6]}" opacity=".85"/>${txt3(h, 100 + x.x / xm * 920, 349 - x.y / ym * 310, x.label, 17)}</g>`).join("")));
     }),
-    make5("heatmap", "\u5F3A\u5EA6\u70ED\u529B\u56FE", "\u7528\u7EDF\u4E00\u8272\u9636\u5B9A\u4F4D\u9AD8\u4F4E\u503C\uFF0C\u9002\u5408\u6BD4\u8F83\u65F6\u95F4\u6BB5\u548C\u7C7B\u522B\u3002", { title: "\u4E0D\u540C\u73AF\u8282\u7684\u5DE5\u4F5C\u91CF\u5206\u5E03", columns: ["\u5468\u4E00", "\u5468\u4E8C", "\u5468\u4E09", "\u5468\u56DB", "\u5468\u4E94"], rows: [{ label: "\u7F16\u5BFC", values: [8, 6, 3, 2, 1] }, { label: "\u7D20\u6750", values: [2, 7, 8, 4, 2] }, { label: "\u5236\u4F5C", values: [1, 3, 6, 9, 7] }, { label: "\u590D\u6838", values: [0, 1, 2, 4, 8] }], max: 10 }, (p, h) => {
+    make5("heatmap", "\u5F3A\u5EA6\u70ED\u529B\u56FE", "\u7528\u7EDF\u4E00\u8272\u9636\u5B9A\u4F4D\u9AD8\u4F4E\u503C\uFF0C\u9002\u5408\u6BD4\u8F83\u65F6\u95F4\u6BB5\u548C\u7C7B\u522B\u3002", {
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57",
+      "code": "EXAMPLE",
+      "columns": [
+        "\u5217 A",
+        "\u5217 B",
+        "\u5217 C",
+        "\u5217 D",
+        "\u5217 E"
+      ],
+      "rows": [
+        {
+          "label": "\u884C A",
+          "values": [
+            8,
+            6,
+            3,
+            2,
+            1
+          ]
+        },
+        {
+          "label": "\u884C B",
+          "values": [
+            2,
+            7,
+            8,
+            4,
+            2
+          ]
+        },
+        {
+          "label": "\u884C C",
+          "values": [
+            1,
+            3,
+            6,
+            9,
+            7
+          ]
+        },
+        {
+          "label": "\u884C D",
+          "values": [
+            0,
+            1,
+            2,
+            4,
+            8
+          ]
+        }
+      ],
+      "max": 10
+    }, (p, h) => {
       const cols = list3(p.columns, 2, 7), rows2 = list3(p.rows, 2, 5), max = number4(p.max);
       if (!max) throw Error("max \u5FC5\u987B\u5927\u4E8E\u96F6");
       const w = 880 / cols.length, ht = 300 / rows2.length;
@@ -2133,7 +4592,33 @@ var ComponentLibraryRuntime = (() => {
         }).join("");
       }).join("") + Array.from({ length: 10 }, (_, i) => `<rect x="${400 + i * 30}" y="404" width="30" height="13" fill="rgb(${239 - i * 20},${245 - i * 14},${255 - i * 2})"/>`).join("") + txt3(h, 360, 417, "\u4F4E", 16) + txt3(h, 738, 417, "\u9AD8", 16)));
     }),
-    make5("funnel-chart", "\u8F6C\u5316\u6F0F\u6597\u56FE", "\u6309\u9636\u6BB5\u5BBD\u5EA6\u5C55\u793A\u6570\u91CF\u9012\u51CF\uFF0C\u8BFB\u51FA\u6BCF\u4E00\u6B65\u7684\u8F6C\u5316\u3002", { title: "\u4ECE\u5019\u9009\u5230\u6700\u7EC8\u6210\u7247", stages: [{ label: "\u6536\u96C6\u7D20\u6750", value: 120 }, { label: "\u7B5B\u9009\u53EF\u7528", value: 84 }, { label: "\u8FDB\u5165\u5206\u955C", value: 48 }, { label: "\u6700\u7EC8\u91C7\u7528", value: 30 }], unit: "\u4EFD" }, (p, h) => {
+    make5("funnel-chart", "\u8F6C\u5316\u6F0F\u6597\u56FE", "\u6309\u9636\u6BB5\u5BBD\u5EA6\u5C55\u793A\u6570\u91CF\u9012\u51CF\uFF0C\u8BFB\u51FA\u6BCF\u4E00\u6B65\u7684\u8F6C\u5316\u3002", {
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57",
+      "code": "EXAMPLE",
+      "stages": [
+        {
+          "label": "\u9636\u6BB5 A",
+          "value": 120
+        },
+        {
+          "label": "\u9636\u6BB5 B",
+          "value": 84
+        },
+        {
+          "label": "\u9636\u6BB5 C",
+          "value": 48
+        },
+        {
+          "label": "\u9636\u6BB5 D",
+          "value": 30
+        }
+      ],
+      "unit": "\u5355\u4F4D"
+    }, (p, h) => {
       const a = list3(p.stages, 2, 5), max = number4(a[0].value);
       if (!max || a.some((x, i) => number4(x.value) > (i ? a[i - 1].value : max))) throw Error("\u6F0F\u6597\u6570\u503C\u987B\u6309\u975E\u589E\u987A\u5E8F\u6392\u5217");
       return shell3(p, h, svg(a.map((x, i) => {
@@ -2141,7 +4626,30 @@ var ComponentLibraryRuntime = (() => {
         return `<g data-motion="item"><rect data-motion="bar" x="${x0}" y="${y}" width="${width}" height="72" rx="12" fill="${colors2[i]}"/>${txt3(h, 425, y + 45, `${x.label}  ${x.value}`, 23, "middle", "#fff")}${txt3(h, 880, y + 45, `${(x.value / max * 100).toFixed(0)}%`, 28)}${i ? txt3(h, 1030, y + 44, `\u4E0A\u6B65 ${(x.value / a[i - 1].value * 100).toFixed(0)}%`, 16) : ""}</g>`;
       }).join("")));
     }),
-    make5("radar-chart", "\u591A\u7EF4\u96F7\u8FBE\u56FE", "\u5728\u76F8\u540C\u91CF\u5C3A\u4E0A\u6BD4\u8F83\u591A\u4E2A\u80FD\u529B\u7EF4\u5EA6\uFF0C\u8F6E\u5ED3\u4E0E\u5206\u503C\u5BF9\u5E94\u3002", { title: "\u4E0D\u540C\u65B9\u6848\u7684\u80FD\u529B\u8F6E\u5ED3", max: 100, axes: ["\u51C6\u786E\u6027", "\u901F\u5EA6", "\u53EF\u7F16\u8F91", "\u4E00\u81F4\u6027", "\u6210\u672C\u63A7\u5236"], values: [90, 70, 94, 82, 68], caption: "\u65B9\u6848 A \xB7 \u793A\u4F8B\u8BC4\u5206" }, (p, h) => {
+    make5("radar-chart", "\u591A\u7EF4\u96F7\u8FBE\u56FE", "\u5728\u76F8\u540C\u91CF\u5C3A\u4E0A\u6BD4\u8F83\u591A\u4E2A\u80FD\u529B\u7EF4\u5EA6\uFF0C\u8F6E\u5ED3\u4E0E\u5206\u503C\u5BF9\u5E94\u3002", {
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57",
+      "code": "EXAMPLE",
+      "max": 100,
+      "axes": [
+        "\u7EF4\u5EA6 A",
+        "\u7EF4\u5EA6 B",
+        "\u7EF4\u5EA6 C",
+        "\u7EF4\u5EA6 D",
+        "\u7EF4\u5EA6 E"
+      ],
+      "values": [
+        90,
+        70,
+        94,
+        82,
+        68
+      ],
+      "caption": "\u7CFB\u5217 A"
+    }, (p, h) => {
       const a = list3(p.axes, 3, 7);
       if (list3(p.values).length !== a.length) throw Error("axes \u4E0E values \u957F\u5EA6\u4E0D\u4E00\u81F4");
       const max = number4(p.max);
@@ -2155,31 +4663,221 @@ var ComponentLibraryRuntime = (() => {
         return `<circle data-motion="point" cx="${x}" cy="${y}" r="5" fill="#2563eb"/>`;
       }).join("") + txt3(h, 955, 130, p.caption, 22) + a.map((x, i) => txt3(h, 955, 178 + i * 41, `${x}  ${p.values[i]}`, 19)).join("")));
     }),
-    make5("pyramid-diagram", "\u5C42\u7EA7\u91D1\u5B57\u5854", "\u7528\u5C42\u7EA7\u5173\u7CFB\u89E3\u91CA\u4ECE\u57FA\u7840\u5230\u5E94\u7528\u7684\u7EC4\u7EC7\u65B9\u5F0F\u3002", { title: "\u80FD\u529B\u662F\u600E\u6837\u5C42\u5C42\u5EFA\u7ACB\u7684", layers: [{ label: "\u5E94\u7528\u5B9E\u8DF5", detail: "\u9762\u5BF9\u771F\u5B9E\u95EE\u9898" }, { label: "\u65B9\u6CD5\u4E0E\u6D41\u7A0B", detail: "\u628A\u7ECF\u9A8C\u53D8\u6210\u6B65\u9AA4" }, { label: "\u6982\u5FF5\u7406\u89E3", detail: "\u77E5\u9053\u4E3A\u4EC0\u4E48" }, { label: "\u57FA\u7840\u77E5\u8BC6", detail: "\u5EFA\u7ACB\u5171\u540C\u8BED\u8A00" }], note: "\u56FE\u5F62\u8868\u8FBE\u5C42\u7EA7\u5173\u7CFB\uFF0C\u4E0D\u4EE5\u9762\u79EF\u8868\u793A\u6570\u91CF\u3002" }, (p, h) => {
+    make5("pyramid-diagram", "\u5C42\u7EA7\u91D1\u5B57\u5854", "\u7528\u5C42\u7EA7\u5173\u7CFB\u89E3\u91CA\u4ECE\u57FA\u7840\u5230\u5E94\u7528\u7684\u7EC4\u7EC7\u65B9\u5F0F\u3002", {
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57",
+      "code": "EXAMPLE",
+      "layers": [
+        {
+          "label": "\u5C42\u7EA7 A",
+          "detail": "\u5C42\u7EA7\u8BF4\u660E A"
+        },
+        {
+          "label": "\u5C42\u7EA7 B",
+          "detail": "\u5C42\u7EA7\u8BF4\u660E B"
+        },
+        {
+          "label": "\u5C42\u7EA7 C",
+          "detail": "\u5C42\u7EA7\u8BF4\u660E C"
+        },
+        {
+          "label": "\u5C42\u7EA7 D",
+          "detail": "\u5C42\u7EA7\u8BF4\u660E D"
+        }
+      ]
+    }, (p, h) => {
       const a = list3(p.layers, 3, 5), top = 25, step = 390 / a.length;
       return shell3(p, h, svg(a.map((x, i) => {
         const wt = 30 + i * 140, wb = 30 + (i + 1) * 140, y = top + i * step;
         return `<g data-motion="item"><path d="M${400 - wt / 2} ${y}H${400 + wt / 2}L${400 + wb / 2} ${y + step - 6}H${400 - wb / 2}Z" fill="${colors2[i]}"/>${line2(400 + wb / 2 + 15, y + step / 2, 820, y + step / 2)}${txt3(h, 850, y + step / 2 - 5, x.label, 23, "start")}${txt3(h, 850, y + step / 2 + 23, x.detail, 16, "start", "#667b94")}</g>`;
       }).join("")));
     }),
-    make5("venn-diagram", "\u4EA4\u96C6\u5173\u7CFB\u56FE", "\u7528\u4E24\u4E2A\u96C6\u5408\u53CA\u5171\u540C\u533A\u57DF\u89E3\u91CA\u6982\u5FF5\u4E4B\u95F4\u7684\u5173\u7CFB\u3002", { title: "\u597D\u5185\u5BB9\u6765\u81EA\u4E24\u4E2A\u6761\u4EF6\u7684\u4EA4\u96C6", left: "\u503C\u5F97\u8BB2", right: "\u8BB2\u5F97\u6E05", overlap: "\u89C2\u4F17\u80FD\u7528", leftDetail: "\u95EE\u9898\u771F\u5B9E \xB7 \u6709\u65B0\u4FE1\u606F", rightDetail: "\u7ED3\u6784\u6E05\u695A \xB7 \u8BC1\u636E\u53EF\u89C1", note: "\u793A\u610F\u96C6\u5408\u5173\u7CFB\uFF0C\u5706\u5F62\u9762\u79EF\u4E0D\u4EE3\u8868\u6837\u672C\u91CF\u3002" }, (p, h) => shell3(p, h, svg(`<g data-motion="item"><circle cx="425" cy="218" r="166" fill="#2563eb17" stroke="#6a98e9" stroke-width="2"/>${txt3(h, 339, 205, p.left, 30)}${txt3(h, 339, 246, p.leftDetail, 16)}</g><g data-motion="item"><circle cx="683" cy="218" r="166" fill="#81c9b030" stroke="#63b99c" stroke-width="2"/>${txt3(h, 769, 205, p.right, 30)}${txt3(h, 769, 246, p.rightDetail, 16)}</g><g data-motion="focus"><rect x="477" y="193" width="154" height="54" rx="27" fill="#fff" stroke="#b8cce5"/>${txt3(h, 554, 227, p.overlap, 23)}</g>`))),
-    make5("mind-map", "\u653E\u5C04\u601D\u7EF4\u5BFC\u56FE", "\u56F4\u7ED5\u4E00\u4E2A\u4E3B\u9898\u5C55\u5F00\u5206\u652F\uFF0C\u9002\u5408\u9009\u9898\u62C6\u89E3\u548C\u77E5\u8BC6\u7EC4\u7EC7\u3002", { title: "\u5148\u628A\u4E00\u4E2A\u4E3B\u9898\u5C55\u5F00", center: "\u79D1\u666E\u89C6\u9891", branches: [{ title: "\u95EE\u9898", detail: "\u89C2\u4F17\u4E3A\u4EC0\u4E48\u5173\u5FC3" }, { title: "\u8BC1\u636E", detail: "\u80FD\u770B\u89C1\u7684\u4F8B\u5B50" }, { title: "\u7ED3\u6784", detail: "\u94A9\u5B50\u3001\u6B63\u6587\u3001\u7ED3\u5C3E" }, { title: "\u7D20\u6750", detail: "\u5F55\u5C4F\u3001\u56FE\u89E3\u3001\u5B9E\u62CD" }, { title: "\u8BB2\u7A3F", detail: "\u4E00\u53E5\u8BDD\u4E00\u4E2A\u610F\u601D" }, { title: "\u590D\u6838", detail: "\u4E8B\u5B9E\u3001\u53EF\u8BFB\u6027\u3001\u58F0\u97F3" }] }, (p, h) => {
+    make5("venn-diagram", "\u4EA4\u96C6\u5173\u7CFB\u56FE", "\u7528\u4E24\u4E2A\u96C6\u5408\u53CA\u5171\u540C\u533A\u57DF\u89E3\u91CA\u6982\u5FF5\u4E4B\u95F4\u7684\u5173\u7CFB\u3002", {
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57",
+      "code": "EXAMPLE",
+      "left": "\u96C6\u5408 A",
+      "right": "\u96C6\u5408 B",
+      "overlap": "\u4EA4\u96C6",
+      "leftDetail": "\u96C6\u5408\u8BF4\u660E A",
+      "rightDetail": "\u96C6\u5408\u8BF4\u660E B"
+    }, (p, h) => shell3(p, h, svg(`<g data-motion="item"><circle cx="425" cy="218" r="166" fill="#2563eb17" stroke="#6a98e9" stroke-width="2"/>${txt3(h, 339, 205, p.left, 30)}${txt3(h, 339, 246, p.leftDetail, 16)}</g><g data-motion="item"><circle cx="683" cy="218" r="166" fill="#81c9b030" stroke="#63b99c" stroke-width="2"/>${txt3(h, 769, 205, p.right, 30)}${txt3(h, 769, 246, p.rightDetail, 16)}</g><g data-motion="focus"><rect x="477" y="193" width="154" height="54" rx="27" fill="#fff" stroke="#b8cce5"/>${txt3(h, 554, 227, p.overlap, 23)}</g>`))),
+    make5("mind-map", "\u653E\u5C04\u601D\u7EF4\u5BFC\u56FE", "\u56F4\u7ED5\u4E00\u4E2A\u4E3B\u9898\u5C55\u5F00\u5206\u652F\uFF0C\u9002\u5408\u9009\u9898\u62C6\u89E3\u548C\u77E5\u8BC6\u7EC4\u7EC7\u3002", {
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57",
+      "code": "EXAMPLE",
+      "center": "\u4E2D\u5FC3\u4E3B\u9898",
+      "branches": [
+        {
+          "title": "\u7AE0\u8282\u6807\u9898 A",
+          "detail": "\u7AE0\u8282\u8BF4\u660E A"
+        },
+        {
+          "title": "\u7AE0\u8282\u6807\u9898 B",
+          "detail": "\u7AE0\u8282\u8BF4\u660E B"
+        },
+        {
+          "title": "\u7AE0\u8282\u6807\u9898 C",
+          "detail": "\u7AE0\u8282\u8BF4\u660E C"
+        },
+        {
+          "title": "\u7AE0\u8282\u6807\u9898 D",
+          "detail": "\u7AE0\u8282\u8BF4\u660E D"
+        },
+        {
+          "title": "\u7AE0\u8282\u6807\u9898 E",
+          "detail": "\u7AE0\u8282\u8BF4\u660E E"
+        },
+        {
+          "title": "\u7AE0\u8282\u6807\u9898 F",
+          "detail": "\u7AE0\u8282\u8BF4\u660E F"
+        }
+      ],
+      "centerCaption": "\u4E2D\u5FC3\u8BF4\u660E"
+    }, (p, h) => {
       const a = list3(p.branches, 3, 6), coords = [[240, 66], [860, 66], [103, 230], [997, 230], [240, 397], [860, 397]];
       return shell3(p, h, svg(a.map((x, i) => {
         const [x1, y] = coords[i];
         return `<path data-motion="line" d="M560 230Q${x1} 230 ${x1} ${y}" fill="none" stroke="#9dbbec" stroke-width="3"/>`;
-      }).join("") + node2(h, 560, 230, 230, p.center, "\u4E3B\u9898", "#dceaff") + a.map((x, i) => node2(h, ...coords[i], 218, x.title, x.detail, i % 2 ? "#eff8f4" : "#f1f5fc")).join("")));
+      }).join("") + node2(h, 560, 230, 230, p.center, p.centerCaption, "#dceaff") + a.map((x, i) => node2(h, ...coords[i], 218, x.title, x.detail, i % 2 ? "#eff8f4" : "#f1f5fc")).join("")));
     }),
-    make5("cycle-diagram", "\u5FAA\u73AF\u53CD\u9988\u56FE", "\u628A\u6267\u884C\u3001\u89C2\u5BDF\u4E0E\u4FEE\u6B63\u8FDE\u63A5\u6210\u53EF\u91CD\u590D\u7684\u5FAA\u73AF\u3002", { title: "\u4E00\u6B21\u6539\u8FDB\uFF0C\u6765\u81EA\u4E00\u8F6E\u53CD\u9988", center: "\u6301\u7EED\u8FED\u4EE3", steps: [{ title: "\u63D0\u51FA\u5047\u8BBE", detail: "\u5199\u6E05\u9884\u671F" }, { title: "\u6267\u884C\u5B9E\u9A8C", detail: "\u4FDD\u6301\u6761\u4EF6" }, { title: "\u89C2\u5BDF\u7ED3\u679C", detail: "\u8BB0\u5F55\u8BC1\u636E" }, { title: "\u4FEE\u6B63\u65B9\u6CD5", detail: "\u8FDB\u5165\u4E0B\u4E00\u8F6E" }] }, (p, h) => {
+    make5("cycle-diagram", "\u5FAA\u73AF\u53CD\u9988\u56FE", "\u628A\u6267\u884C\u3001\u89C2\u5BDF\u4E0E\u4FEE\u6B63\u8FDE\u63A5\u6210\u53EF\u91CD\u590D\u7684\u5FAA\u73AF\u3002", {
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57",
+      "code": "EXAMPLE",
+      "center": "\u4E2D\u5FC3\u4E3B\u9898",
+      "steps": [
+        {
+          "title": "\u7AE0\u8282\u6807\u9898 A",
+          "detail": "\u7AE0\u8282\u8BF4\u660E A"
+        },
+        {
+          "title": "\u7AE0\u8282\u6807\u9898 B",
+          "detail": "\u7AE0\u8282\u8BF4\u660E B"
+        },
+        {
+          "title": "\u7AE0\u8282\u6807\u9898 C",
+          "detail": "\u7AE0\u8282\u8BF4\u660E C"
+        },
+        {
+          "title": "\u7AE0\u8282\u6807\u9898 D",
+          "detail": "\u7AE0\u8282\u8BF4\u660E D"
+        }
+      ]
+    }, (p, h) => {
       const a = list3(p.steps, 4, 4), pos = [[560, 58], [900, 228], [560, 403], [220, 228]], mark = h.uid("cycle-arrow");
       return shell3(p, h, svg(`<defs><marker id="${mark}" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0 7 4 0 8" fill="#719ddd"/></marker></defs>` + ["M650 75Q810 70 880 174", "M884 279Q805 395 665 396", "M459 396Q300 389 235 284", "M230 176Q300 66 455 70"].map((d) => `<path data-motion="line" d="${d}" fill="none" stroke="#719ddd" stroke-width="3" marker-end="url(#${mark})"/>`).join("") + txt3(h, 560, 238, p.center, 32) + a.map((x, i) => node2(h, ...pos[i], 230, x.title, x.detail)).join("")));
     }),
-    make5("decision-tree", "\u51B3\u7B56\u6811", "\u628A\u6761\u4EF6\u3001\u5206\u652F\u4E0E\u7ED3\u679C\u5206\u5F00\uFF0C\u9002\u5408\u89E3\u91CA\u9009\u62E9\u903B\u8F91\u3002", { title: "\u8FD9\u6BB5\u5185\u5BB9\uFF0C\u9002\u5408\u4EC0\u4E48\u753B\u9762", question: "\u9700\u8981\u8BC1\u660E\u771F\u5B9E\u64CD\u4F5C\u5417\uFF1F", yes: "\u771F\u5B9E\u5F55\u5C4F", no: "\u9700\u8981\u89E3\u91CA\u62BD\u8C61\u5173\u7CFB\u5417\uFF1F", yes2: "\u539F\u751F\u56FE\u89E3", no2: "\u5B9E\u62CD / \u56FE\u7247", yesLabel: "\u662F", noLabel: "\u5426" }, (p, h) => shell3(p, h, svg(`<path data-motion="line" d="M560 94V151H277V220M560 151H837V220M837 286V342H652V388M837 342H1010V388" fill="none" stroke="#88aadd" stroke-width="3"/>` + node2(h, 560, 62, 324, p.question) + node2(h, 277, 252, 232, p.yes, "\u4FDD\u7559\u53EF\u9A8C\u8BC1\u7684\u8FC7\u7A0B", "#eaf7f0") + node2(h, 837, 252, 310, p.no) + node2(h, 652, 416, 225, p.yes2) + node2(h, 1010, 416, 211, p.no2) + txt3(h, 300, 142, p.yesLabel, 18) + txt3(h, 810, 142, p.noLabel, 18) + txt3(h, 675, 334, p.yesLabel, 18) + txt3(h, 998, 334, p.noLabel, 18)))),
-    make5("architecture-map", "\u7CFB\u7EDF\u67B6\u6784\u56FE", "\u5C06\u5165\u53E3\u3001\u670D\u52A1\u4E0E\u5B58\u50A8\u5206\u5C42\uFF0C\u8FDE\u7EBF\u8868\u8FBE\u6570\u636E\u6D41\u5411\u3002", { title: "\u4E00\u6B21\u8BF7\u6C42\uFF0C\u7ECF\u8FC7\u54EA\u4E9B\u5C42", layers: [{ name: "\u63A5\u5165\u5C42", items: ["\u6D4F\u89C8\u5668", "\u79FB\u52A8\u5BA2\u6237\u7AEF", "\u81EA\u52A8\u5316\u4EFB\u52A1"] }, { name: "\u670D\u52A1\u5C42", items: ["\u8BF7\u6C42\u9A8C\u8BC1", "\u4EFB\u52A1\u5904\u7406", "\u7ED3\u679C\u6574\u7406"] }, { name: "\u6570\u636E\u5C42", items: ["\u9879\u76EE\u6587\u4EF6", "\u8D44\u6599\u7D22\u5F15", "\u6267\u884C\u8BB0\u5F55"] }] }, (p, h) => {
+    make5("decision-tree", "\u51B3\u7B56\u6811", "\u628A\u6761\u4EF6\u3001\u5206\u652F\u4E0E\u7ED3\u679C\u5206\u5F00\uFF0C\u9002\u5408\u89E3\u91CA\u9009\u62E9\u903B\u8F91\u3002", {
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57",
+      "code": "EXAMPLE",
+      "question": "\u5224\u65AD\u6761\u4EF6 A\uFF1F",
+      "yes": "\u7ED3\u679C A",
+      "no": "\u5224\u65AD\u6761\u4EF6 B\uFF1F",
+      "yes2": "\u7ED3\u679C B",
+      "no2": "\u7ED3\u679C C",
+      "yesLabel": "\u662F",
+      "noLabel": "\u5426",
+      "yesDetail": "\u7ED3\u679C\u8BF4\u660E A"
+    }, (p, h) => shell3(p, h, svg(`<path data-motion="line" d="M560 94V151H277V220M560 151H837V220M837 286V342H652V388M837 342H1010V388" fill="none" stroke="#88aadd" stroke-width="3"/>` + node2(h, 560, 62, 324, p.question) + node2(h, 277, 252, 232, p.yes, p.yesDetail, "#eaf7f0") + node2(h, 837, 252, 310, p.no) + node2(h, 652, 416, 225, p.yes2) + node2(h, 1010, 416, 211, p.no2) + txt3(h, 300, 142, p.yesLabel, 18) + txt3(h, 810, 142, p.noLabel, 18) + txt3(h, 675, 334, p.yesLabel, 18) + txt3(h, 998, 334, p.noLabel, 18)))),
+    make5("architecture-map", "\u7CFB\u7EDF\u67B6\u6784\u56FE", "\u5C06\u5165\u53E3\u3001\u670D\u52A1\u4E0E\u5B58\u50A8\u5206\u5C42\uFF0C\u8FDE\u7EBF\u8868\u8FBE\u6570\u636E\u6D41\u5411\u3002", {
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57",
+      "code": "EXAMPLE",
+      "layers": [
+        {
+          "name": "\u5C42\u7EA7 A",
+          "items": [
+            "\u8282\u70B9 A",
+            "\u8282\u70B9 B",
+            "\u8282\u70B9 C"
+          ]
+        },
+        {
+          "name": "\u5C42\u7EA7 B",
+          "items": [
+            "\u8282\u70B9 A",
+            "\u8282\u70B9 B",
+            "\u8282\u70B9 C"
+          ]
+        },
+        {
+          "name": "\u5C42\u7EA7 C",
+          "items": [
+            "\u8282\u70B9 A",
+            "\u8282\u70B9 B",
+            "\u8282\u70B9 C"
+          ]
+        }
+      ]
+    }, (p, h) => {
       const a = list3(p.layers, 3, 3);
       return shell3(p, h, svg(a.map((r, j) => `<rect x="95" y="${24 + j * 142}" width="1010" height="111" rx="14" fill="${j === 1 ? "#f1f6ff" : "#f6f8fb"}"/>${txt3(h, 64, 88 + j * 142, r.name, 19)}${list3(r.items, 3, 3).map((x, i) => node2(h, 290 + i * 330, 78 + j * 142, 253, x, "", j === 1 ? "#e2edff" : "#fff")).join("")}`).join("") + [0, 1].map((j) => [290, 620, 950].map((x) => `<path data-motion="line" d="M${x} ${111 + j * 142}v76" stroke="#94afda" stroke-width="2" stroke-dasharray="5 5"/>`).join("")).join("")));
     }),
-    make5("swimlane-flow", "\u804C\u8D23\u6CF3\u9053\u56FE", "\u6309\u89D2\u8272\u6392\u5217\u52A8\u4F5C\uFF0C\u7A81\u51FA\u4EA4\u63A5\u70B9\u4E0E\u8D23\u4EFB\u8FB9\u754C\u3002", { title: "\u4ECE\u9009\u9898\u5230\u4EA4\u4ED8\uFF0C\u8C01\u8D1F\u8D23\u54EA\u4E00\u6B65", lanes: [{ name: "\u7F16\u5BFC", tasks: [{ title: "\u786E\u8BA4\u95EE\u9898", column: 0 }, { title: "\u6574\u7406\u8BB2\u7A3F", column: 1 }] }, { name: "\u5236\u4F5C", tasks: [{ title: "\u51C6\u5907\u7D20\u6750", column: 2 }, { title: "\u7EC4\u5408\u753B\u9762", column: 3 }] }, { name: "\u590D\u6838", tasks: [{ title: "\u6821\u5BF9\u4E0E\u53CD\u9988", column: 4 }] }] }, (p, h) => {
+    make5("swimlane-flow", "\u804C\u8D23\u6CF3\u9053\u56FE", "\u6309\u89D2\u8272\u6392\u5217\u52A8\u4F5C\uFF0C\u7A81\u51FA\u4EA4\u63A5\u70B9\u4E0E\u8D23\u4EFB\u8FB9\u754C\u3002", {
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57",
+      "code": "EXAMPLE",
+      "lanes": [
+        {
+          "name": "\u89D2\u8272 A",
+          "tasks": [
+            {
+              "title": "\u4EFB\u52A1 A",
+              "column": 0
+            },
+            {
+              "title": "\u4EFB\u52A1 B",
+              "column": 1
+            }
+          ]
+        },
+        {
+          "name": "\u89D2\u8272 B",
+          "tasks": [
+            {
+              "title": "\u4EFB\u52A1 C",
+              "column": 2
+            },
+            {
+              "title": "\u4EFB\u52A1 D",
+              "column": 3
+            }
+          ]
+        },
+        {
+          "name": "\u89D2\u8272 C",
+          "tasks": [
+            {
+              "title": "\u4EFB\u52A1 E",
+              "column": 4
+            }
+          ]
+        }
+      ]
+    }, (p, h) => {
       const a = list3(p.lanes, 3, 3), xs = [231, 425, 619, 813, 1007], route = a.flatMap((r, j) => r.tasks.map((t) => ({ x: xs[t.column], y: 94 + j * 135, column: t.column }))).sort((a2, b) => a2.column - b.column);
       if (new Set(route.map((t) => t.column)).size !== route.length) throw Error("\u6BCF\u4E2A\u6B65\u9AA4\u8BF7\u4F7F\u7528\u4E00\u4E2A\u4E0D\u540C\u7684 column");
       const links = route.slice(1).map((b, i) => {
@@ -2191,19 +4889,169 @@ var ComponentLibraryRuntime = (() => {
         return node2(h, xs[t.column], 94 + j * 135, 164, t.title);
       }).join("")}`).join("") + `<path data-motion="line" d="${links}" fill="none" stroke="#79a1dc" stroke-width="3"/>`));
     }),
-    make5("kanban-board", "\u4EFB\u52A1\u770B\u677F", "\u8BA9\u4EFB\u52A1\u6309\u72B6\u6001\u5206\u7EC4\uFF0C\u7528\u5361\u7247\u4F4D\u7F6E\u89E3\u91CA\u5DE5\u4F5C\u6D41\u3002", { title: "\u628A\u4E0B\u4E00\u6B65\u653E\u5230\u770B\u5F97\u89C1\u7684\u4F4D\u7F6E", columns: [{ name: "\u5F85\u5F00\u59CB", tasks: [{ title: "\u6574\u7406\u8D44\u6599", tag: "\u5185\u5BB9" }, { title: "\u786E\u8BA4\u5F15\u7528", tag: "\u6838\u5BF9" }] }, { name: "\u8FDB\u884C\u4E2D", tasks: [{ title: "\u5236\u4F5C\u7B2C\u4E00\u6BB5", tag: "\u5236\u4F5C" }, { title: "\u5F55\u5236\u64CD\u4F5C", tag: "\u5F55\u5C4F" }] }, { name: "\u5DF2\u5B8C\u6210", tasks: [{ title: "\u786E\u5B9A\u4E3B\u9898", tag: "\u5185\u5BB9" }] }] }, (p, h) => shell3(p, h, `<div class="edx-board">${list3(p.columns, 3, 3).map((c, i) => `<section><h2><i style="background:${colors2[i]}"></i>${h.esc(c.name)}<small>${c.tasks.length}</small></h2>${list3(c.tasks, 1, 4).map((t, j) => `<article data-motion="item"><span class="edx-task-tag">${h.esc(t.tag)}</span><h3>${h.esc(t.title)}</h3><p>\u89C6\u9891\u5236\u4F5C / ${String(j + 1).padStart(2, "0")}</p><div class="edx-task-bottom"><span>\u25F7 \u672C\u5468</span><b>\u6797</b></div></article>`).join("")}</section>`).join("")}</div>`)),
-    make5("roadmap", "\u9879\u76EE\u8DEF\u7EBF\u56FE", "\u901A\u8FC7\u65F6\u95F4\u533A\u95F4\u5C55\u793A\u5E76\u884C\u4EFB\u52A1\uFF0C\u9002\u5408\u5236\u4F5C\u8BA1\u5212\u548C\u91CC\u7A0B\u7891\u3002", { title: "\u56DB\u5468\u5B8C\u6210\u4E00\u8F6E\u5185\u5BB9\u5236\u4F5C", weeks: ["\u7B2C 1 \u5468", "\u7B2C 2 \u5468", "\u7B2C 3 \u5468", "\u7B2C 4 \u5468"], tasks: [{ label: "\u7F16\u5BFC\u4E0E\u8D44\u6599", start: 0, end: 1.5 }, { label: "\u5F55\u5C4F\u4E0E\u7D20\u6750", start: 1, end: 2.7 }, { label: "\u526A\u8F91\u4E0E\u52A8\u753B", start: 1.8, end: 3.5 }, { label: "\u590D\u6838\u4E0E\u4EA4\u4ED8", start: 3, end: 4 }] }, (p, h) => {
+    make5("kanban-board", "\u4EFB\u52A1\u770B\u677F", "\u8BA9\u4EFB\u52A1\u6309\u72B6\u6001\u5206\u7EC4\uFF0C\u7528\u5361\u7247\u4F4D\u7F6E\u89E3\u91CA\u5DE5\u4F5C\u6D41\u3002", {
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57",
+      "code": "EXAMPLE",
+      "columns": [
+        {
+          "name": "\u5F85\u5F00\u59CB",
+          "tasks": [
+            {
+              "title": "\u4EFB\u52A1 A",
+              "tag": "\u6807\u7B7E A",
+              "reference": "\u9879\u76EE A / 01",
+              "period": "\u65F6\u95F4\u6807\u7B7E",
+              "assignee": "\u7528"
+            },
+            {
+              "title": "\u4EFB\u52A1 B",
+              "tag": "\u6807\u7B7E A",
+              "reference": "\u9879\u76EE A / 02",
+              "period": "\u65F6\u95F4\u6807\u7B7E",
+              "assignee": "\u7528"
+            }
+          ]
+        },
+        {
+          "name": "\u8FDB\u884C\u4E2D",
+          "tasks": [
+            {
+              "title": "\u4EFB\u52A1 C",
+              "tag": "\u6807\u7B7E B",
+              "reference": "\u9879\u76EE B / 01",
+              "period": "\u65F6\u95F4\u6807\u7B7E",
+              "assignee": "\u7528"
+            },
+            {
+              "title": "\u4EFB\u52A1 D",
+              "tag": "\u6807\u7B7E B",
+              "reference": "\u9879\u76EE B / 02",
+              "period": "\u65F6\u95F4\u6807\u7B7E",
+              "assignee": "\u7528"
+            }
+          ]
+        },
+        {
+          "name": "\u5DF2\u5B8C\u6210",
+          "tasks": [
+            {
+              "title": "\u4EFB\u52A1 E",
+              "tag": "\u6807\u7B7E C",
+              "reference": "\u9879\u76EE C / 01",
+              "period": "\u65F6\u95F4\u6807\u7B7E",
+              "assignee": "\u7528"
+            }
+          ]
+        }
+      ]
+    }, (p, h) => shell3(p, h, `<div class="edx-board">${list3(p.columns, 3, 3).map((c, i) => `<section><h2><i style="background:${colors2[i]}"></i>${h.esc(c.name)}<small>${c.tasks.length}</small></h2>${list3(c.tasks, 1, 4).map((t, j) => `<article data-motion="item"><span class="edx-task-tag">${h.esc(t.tag)}</span><h3>${h.esc(t.title)}</h3><p>${h.esc(t.reference)}</p><div class="edx-task-bottom"><span>\u25F7 ${h.esc(t.period)}</span><b>${h.esc(t.assignee)}</b></div></article>`).join("")}</section>`).join("")}</div>`)),
+    make5("roadmap", "\u9879\u76EE\u8DEF\u7EBF\u56FE", "\u901A\u8FC7\u65F6\u95F4\u533A\u95F4\u5C55\u793A\u5E76\u884C\u4EFB\u52A1\uFF0C\u9002\u5408\u5236\u4F5C\u8BA1\u5212\u548C\u91CC\u7A0B\u7891\u3002", {
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57",
+      "code": "EXAMPLE",
+      "weeks": [
+        "\u9636\u6BB5 A",
+        "\u9636\u6BB5 B",
+        "\u9636\u6BB5 C",
+        "\u9636\u6BB5 D"
+      ],
+      "tasks": [
+        {
+          "label": "\u4EFB\u52A1 A",
+          "start": 0,
+          "end": 1.5
+        },
+        {
+          "label": "\u4EFB\u52A1 B",
+          "start": 1,
+          "end": 2.7
+        },
+        {
+          "label": "\u4EFB\u52A1 C",
+          "start": 1.8,
+          "end": 3.5
+        },
+        {
+          "label": "\u4EFB\u52A1 D",
+          "start": 3,
+          "end": 4
+        }
+      ],
+      "unit": "\u5355\u4F4D"
+    }, (p, h) => {
       const a = list3(p.tasks, 2, 5), weeks = list3(p.weeks, 4, 4);
       return shell3(p, h, svg(weeks.map((w, i) => txt3(h, 275 + i * 230, 38, w, 19) + line2(160 + i * 230, 59, 160 + i * 230, 426)).join("") + line2(1080, 59, 1080, 426) + a.map((x, i) => {
         if (number4(x.start) >= number4(x.end) || x.end > 4) throw Error("\u4EFB\u52A1\u533A\u95F4\u987B\u5728 0\u20134 \u5185");
-        return txt3(h, 135, 115 + i * 84, x.label, 18, "end") + `<g data-motion="item"><rect data-motion="bar" x="${160 + x.start * 230}" y="${82 + i * 84}" width="${(x.end - x.start) * 230}" height="50" rx="9" fill="${colors2[i]}"/>${txt3(h, 170 + x.start * 230, 114 + i * 84, `${Number((x.end - x.start).toFixed(2))} \u5468`, 18, "start", "#fff")}</g>`;
+        return txt3(h, 135, 115 + i * 84, x.label, 18, "end") + `<g data-motion="item"><rect data-motion="bar" x="${160 + x.start * 230}" y="${82 + i * 84}" width="${(x.end - x.start) * 230}" height="50" rx="9" fill="${colors2[i]}"/>${txt3(h, 170 + x.start * 230, 114 + i * 84, `${Number((x.end - x.start).toFixed(2))} ${p.unit}`, 18, "start", "#fff")}</g>`;
       }).join("")));
     }),
-    make5("formula-breakdown", "\u516C\u5F0F\u62C6\u89E3", "\u9010\u9879\u89E3\u91CA\u516C\u5F0F\u7684\u8F93\u5165\u4E0E\u542B\u4E49\uFF0C\u518D\u7ED9\u51FA\u4E00\u6B21\u6F14\u7B97\u3002", { title: "\u628A\u516C\u5F0F\u53D8\u6210\u53EF\u4EE5\u7406\u89E3\u7684\u6B65\u9AA4", terms: [{ symbol: "\u901F\u5EA6", meaning: "\u5355\u4F4D\u65F6\u95F4\u5B8C\u6210\u91CF", value: "24 \u4E2A / \u5C0F\u65F6" }, { symbol: "\u65F6\u95F4", meaning: "\u5B9E\u9645\u6295\u5165\u65F6\u957F", value: "3 \u5C0F\u65F6" }, { symbol: "\u4EA7\u51FA", meaning: "\u5B8C\u6210\u7684\u603B\u6570\u91CF", value: "72 \u4E2A" }], operators: ["\xD7", "="], note: "\u6F14\u7B97\u7528\u4E8E\u8BF4\u660E\u5173\u7CFB\uFF0C\u4E0D\u662F\u5B9E\u9645\u751F\u4EA7\u6548\u7387\u627F\u8BFA\u3002" }, (p, h) => {
+    make5("formula-breakdown", "\u516C\u5F0F\u62C6\u89E3", "\u9010\u9879\u89E3\u91CA\u516C\u5F0F\u7684\u8F93\u5165\u4E0E\u542B\u4E49\uFF0C\u518D\u7ED9\u51FA\u4E00\u6B21\u6F14\u7B97\u3002", {
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57",
+      "code": "EXAMPLE",
+      "terms": [
+        {
+          "symbol": "\u53D8\u91CF A",
+          "meaning": "\u53D8\u91CF\u8BF4\u660E A",
+          "value": "3"
+        },
+        {
+          "symbol": "\u53D8\u91CF B",
+          "meaning": "\u53D8\u91CF\u8BF4\u660E B",
+          "value": "4"
+        },
+        {
+          "symbol": "\u7ED3\u679C",
+          "meaning": "\u7ED3\u679C\u8BF4\u660E",
+          "value": "12"
+        }
+      ],
+      "operators": [
+        "\xD7",
+        "="
+      ]
+    }, (p, h) => {
       const a = list3(p.terms, 3, 3);
       return shell3(p, h, `<div class="edx-formula">${a.map((x, i) => `<article data-motion="item"><b data-motion="emphasis">${h.esc(x.symbol)}</b><div class="edx-formula-rule"></div><p>${h.esc(x.meaning)}</p><strong data-motion="focus">${h.esc(x.value)}</strong></article>${i < 2 ? `<span>${h.esc(p.operators[i])}</span>` : ""}`).join("")}</div>`);
     }),
-    make5("spectrum-scale", "\u8FDE\u7EED\u5C3A\u5EA6\u56FE", "\u5728\u8FDE\u7EED\u8303\u56F4\u4E0A\u5B9A\u4F4D\u591A\u4E2A\u5BF9\u8C61\uFF0C\u907F\u514D\u975E\u9ED1\u5373\u767D\u7684\u5206\u7C7B\u3002", { title: "\u81EA\u52A8\u5316\u662F\u4E00\u6761\u8FDE\u7EED\u7684\u5C3A\u5EA6", left: "\u66F4\u591A\u4EBA\u5DE5\u5224\u65AD", right: "\u66F4\u591A\u81EA\u52A8\u6267\u884C", markers: [{ label: "\u4EBA\u5DE5\u6574\u7406", value: 15 }, { label: "\u8F85\u52A9\u751F\u6210", value: 42 }, { label: "\u89C4\u5219\u6D41\u7A0B", value: 70 }, { label: "\u81EA\u52A8\u6279\u5904\u7406", value: 91 }] }, (p, h) => {
+    make5("spectrum-scale", "\u8FDE\u7EED\u5C3A\u5EA6\u56FE", "\u5728\u8FDE\u7EED\u8303\u56F4\u4E0A\u5B9A\u4F4D\u591A\u4E2A\u5BF9\u8C61\uFF0C\u907F\u514D\u975E\u9ED1\u5373\u767D\u7684\u5206\u7C7B\u3002", {
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57",
+      "code": "EXAMPLE",
+      "left": "\u8303\u56F4\u8D77\u70B9",
+      "right": "\u8303\u56F4\u7EC8\u70B9",
+      "markers": [
+        {
+          "label": "\u9879\u76EE A",
+          "value": 15
+        },
+        {
+          "label": "\u9879\u76EE B",
+          "value": 42
+        },
+        {
+          "label": "\u9879\u76EE C",
+          "value": 70
+        },
+        {
+          "label": "\u9879\u76EE D",
+          "value": 91
+        }
+      ]
+    }, (p, h) => {
       const a = list3(p.markers, 2, 6);
       return shell3(p, h, svg(`<defs><linearGradient id="${h.uid("spectrum")}"><stop stop-color="#dce8fb"/><stop offset=".5" stop-color="#709bea"/><stop offset="1" stop-color="#81c9b0"/></linearGradient></defs><rect x="75" y="219" width="970" height="38" rx="19" fill="url(#${h.uid("spectrum")})"/>` + a.map((x, i) => {
         const v = number4(x.value);
@@ -2212,8 +5060,65 @@ var ComponentLibraryRuntime = (() => {
         return `<g data-motion="point">${line2(xx, top ? 152 : 257, xx, top ? 219 : 326)}<circle cx="${xx}" cy="238" r="10" fill="#fff" stroke="#386dbc" stroke-width="3"/>${txt3(h, xx, top ? 133 : 356, x.label, 20)}${txt3(h, xx, top ? 104 : 388, v, 18, "middle", "#6c80a0")}</g>`;
       }).join("") + txt3(h, 75, 437, p.left, 19, "start") + txt3(h, 1045, 437, p.right, 19, "end")));
     }),
-    make5("process-steps", "\u6A2A\u5411\u6B65\u9AA4\u8BF4\u660E", "\u7ED9\u6BCF\u4E00\u6B65\u5206\u914D\u7F16\u53F7\u3001\u52A8\u4F5C\u4E0E\u7ED3\u679C\uFF0C\u9002\u5408\u64CD\u4F5C\u6559\u5B66\u3002", { title: "\u5148\u7ED9\u5185\u5BB9\uFF0C\u518D\u5F97\u5230\u53EF\u5236\u4F5C\u7684\u5206\u955C", steps: [{ title: "\u8F93\u5165\u4E3B\u9898", detail: "\u95EE\u9898\u4E0E\u53D7\u4F17", result: "\u660E\u786E\u76EE\u6807" }, { title: "\u7F16\u6392\u7ED3\u6784", detail: "\u94A9\u5B50\u4E0E\u6B63\u6587", result: "\u5F62\u6210\u8BB2\u7A3F" }, { title: "\u5B89\u6392\u753B\u9762", detail: "\u5F55\u5C4F\u4E0E\u56FE\u89E3", result: "\u5F97\u5230\u5206\u955C" }, { title: "\u68C0\u67E5\u4EA4\u4ED8", detail: "\u4E8B\u5B9E\u4E0E\u8282\u594F", result: "\u53EF\u8FDB\u5165\u5236\u4F5C" }] }, (p, h) => shell3(p, h, `<div class="edx-steps">${list3(p.steps, 3, 5).map((x, i) => `<article data-motion="item"><b class="edx-step-number">${String(i + 1).padStart(2, "0")}</b><h2>${h.esc(x.title)}</h2><p>${h.esc(x.detail)}</p><div class="edx-step-result" data-motion="focus">${h.esc(x.result)}</div>${i < p.steps.length - 1 ? '<span class="edx-step-arrow">\u2192</span>' : ""}</article>`).join("")}</div>`)),
-    make5("lecture-stage", "\u52A8\u6001\u8BFE\u4EF6\u8BB2\u89E3\u821E\u53F0", "\u771F\u5B9E PPT\u3001\u5F55\u5C4F\u6216\u539F\u751F\u56FE\u89E3\u7684\u7EDF\u4E00\u821E\u53F0\uFF0C\u80CC\u666F\u4E0E\u4E3B\u4F53\u5206\u522B\u8FD0\u52A8\u3002", { eyebrow: "COURSE / 01", title: "\u8BA9\u5185\u5BB9\u7A33\u5B9A\uFF0C\u8BA9\u80CC\u666F\u4FDD\u6301\u547C\u5438", subtitle: "\u771F\u5B9E\u7D20\u6750\u53EF\u4EE5\u76F4\u63A5\u653E\u8FDB\u8FD9\u4E2A\u4F4D\u7F6E", badge: "\u8BFE\u4EF6\u821E\u53F0", media: { kind: "image", src: "", fit: "contain" }, chapter: "01 / \u4E3A\u4EC0\u4E48\u8981\u62C6\u5206\u4EFB\u52A1", sections: [{ title: "\u8D44\u6599", detail: "\u7ED9\u51FA\u5DF2\u77E5\u4E8B\u5B9E\u548C\u53C2\u8003\u4F9D\u636E" }, { title: "\u76EE\u6807", detail: "\u5199\u6E05\u8981\u5B8C\u6210\u7684\u7ED3\u679C" }, { title: "\u9A8C\u8BC1", detail: "\u68C0\u67E5\u7ED3\u679C\u662F\u5426\u7B26\u5408\u8981\u6C42" }], caption: "\u80CC\u666F\u8D1F\u8D23\u6C1B\u56F4\uFF0C\u4E3B\u4F53\u8D1F\u8D23\u6E05\u695A\u5730\u4F20\u8FBE\u3002" }, (p, h) => {
+    make5("process-steps", "\u6A2A\u5411\u6B65\u9AA4\u8BF4\u660E", "\u7ED9\u6BCF\u4E00\u6B65\u5206\u914D\u7F16\u53F7\u3001\u52A8\u4F5C\u4E0E\u7ED3\u679C\uFF0C\u9002\u5408\u64CD\u4F5C\u6559\u5B66\u3002", {
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57",
+      "code": "EXAMPLE",
+      "steps": [
+        {
+          "title": "\u6B65\u9AA4 A",
+          "detail": "\u6B65\u9AA4\u8BF4\u660E A",
+          "result": "\u7ED3\u679C A"
+        },
+        {
+          "title": "\u6B65\u9AA4 B",
+          "detail": "\u6B65\u9AA4\u8BF4\u660E B",
+          "result": "\u7ED3\u679C B"
+        },
+        {
+          "title": "\u6B65\u9AA4 C",
+          "detail": "\u6B65\u9AA4\u8BF4\u660E C",
+          "result": "\u7ED3\u679C C"
+        },
+        {
+          "title": "\u6B65\u9AA4 D",
+          "detail": "\u6B65\u9AA4\u8BF4\u660E D",
+          "result": "\u7ED3\u679C D"
+        }
+      ]
+    }, (p, h) => shell3(p, h, `<div class="edx-steps">${list3(p.steps, 3, 5).map((x, i) => `<article data-motion="item"><b class="edx-step-number">${String(i + 1).padStart(2, "0")}</b><h2>${h.esc(x.title)}</h2><p>${h.esc(x.detail)}</p><div class="edx-step-result" data-motion="focus">${h.esc(x.result)}</div>${i < p.steps.length - 1 ? '<span class="edx-step-arrow">\u2192</span>' : ""}</article>`).join("")}</div>`)),
+    make5("lecture-stage", "\u52A8\u6001\u8BFE\u4EF6\u8BB2\u89E3\u821E\u53F0", "\u771F\u5B9E PPT\u3001\u5F55\u5C4F\u6216\u539F\u751F\u56FE\u89E3\u7684\u7EDF\u4E00\u821E\u53F0\uFF0C\u80CC\u666F\u4E0E\u4E3B\u4F53\u5206\u522B\u8FD0\u52A8\u3002", {
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57",
+      "code": "EXAMPLE",
+      "media": {
+        "kind": "image",
+        "src": "",
+        "fit": "contain"
+      },
+      "chapter": "01 / \u7AE0\u8282\u6807\u9898",
+      "sections": [
+        {
+          "title": "\u7AE0\u8282\u6807\u9898 A",
+          "detail": "\u7AE0\u8282\u8BF4\u660E A"
+        },
+        {
+          "title": "\u7AE0\u8282\u6807\u9898 B",
+          "detail": "\u7AE0\u8282\u8BF4\u660E B"
+        },
+        {
+          "title": "\u7AE0\u8282\u6807\u9898 C",
+          "detail": "\u7AE0\u8282\u8BF4\u660E C"
+        }
+      ],
+      "caption": "\u753B\u9762\u8BF4\u660E\u6587\u5B57"
+    }, (p, h) => {
       const m = p.media || {};
       if (m.src && (/^(?:[a-z]+:|\/\/)/i.test(m.src) || m.src.includes(".."))) throw Error("\u7D20\u6750\u987B\u4F7F\u7528\u672C\u5730\u76F8\u5BF9\u8DEF\u5F84");
       const body = m.src ? m.kind === "video" ? `<video id="${h.uid("lecture-media")}" src="${h.esc(m.src)}" muted playsinline style="object-fit:${m.fit === "cover" ? "cover" : "contain"}"></video>` : `<img src="${h.esc(m.src)}" alt="\u8BFE\u4EF6\u7D20\u6750" style="object-fit:${m.fit === "cover" ? "cover" : "contain"}">` : `<div class="edx-lesson-native"><span>${h.esc(p.chapter)}</span><h1>${h.esc(p.title)}</h1><p>${h.esc(p.subtitle)}</p><div>${list3(p.sections, 2, 4).map((x, i) => `<article data-motion="item"><b>${String(i + 1).padStart(2, "0")}</b><h2>${h.esc(x.title)}</h2><p>${h.esc(x.detail)}</p></article>`).join("")}</div></div>`;
@@ -2247,7 +5152,7 @@ var ComponentLibraryRuntime = (() => {
     title: "",
     subtitle: "",
     badge: "\u793A\u4F8B\u5185\u5BB9",
-    footer: "\u793A\u4F8B\u5185\u5BB9\u53EF\u66FF\u6362 \xB7 \u767D\u5E95 / \u84DD\u8272\u5F3A\u8C03 / \u8584\u8377\u7EFF\u5B8C\u6210\u6001",
+    footer: "\u9875\u811A\u8BF4\u660E",
     series: "EXPLAIN / 01"
   };
   function validate(id, p) {
@@ -2287,19 +5192,49 @@ var ComponentLibraryRuntime = (() => {
   });
   var components22 = [
     create3("before-after", "\u524D\u540E\u5BF9\u6BD4", "\u5728\u540C\u4E00\u7EC4\u4EFB\u52A1\u4E2D\u5BF9\u7167\u4E24\u79CD\u7EC4\u7EC7\u65B9\u5F0F\uFF1B\u4E24\u4FA7\u6587\u6848\u3001\u72B6\u6001\u548C\u7ED3\u8BBA\u5747\u53EF\u7F16\u8F91\u3002", {
-      eyebrow: "01 / \u5BF9\u7167\u89C2\u5BDF",
-      title: "\u540C\u6837\u7684\u4EFB\u52A1\uFF0C\u6362\u4E00\u79CD\u7EC4\u7EC7\u65B9\u5F0F",
-      subtitle: "\u4FDD\u6301\u4EFB\u52A1\u4E0D\u53D8\uFF0C\u8BA9\u6574\u7406\u65B9\u5F0F\u7684\u5DEE\u5F02\u6E05\u695A\u53EF\u89C1\u3002",
-      badge: "\u524D\u540E\u5BF9\u6BD4",
-      beforeLabel: "\u6574\u7406\u524D",
-      beforeNote: "\u4FE1\u606F\u6563\u843D\u5728\u540C\u4E00\u5F20\u6E05\u5355\u91CC",
-      afterLabel: "\u6574\u7406\u540E",
-      afterNote: "\u6309\u72B6\u6001\u7EC4\u7EC7\uFF0C\u4E0B\u4E00\u6B65\u66F4\u660E\u786E",
-      tasks: [{ title: "\u6574\u7406\u53C2\u8003\u8D44\u6599", detail: "8 \u7BC7\u6587\u7AE0 \xB7 2 \u4EFD\u62A5\u544A", state: "done" }, { title: "\u5B8C\u6210\u7B2C\u4E00\u7248\u811A\u672C", detail: "\u5F00\u5934 \xB7 \u6B63\u6587 \xB7 \u7ED3\u5C3E", state: "active" }, { title: "\u5F55\u5236\u64CD\u4F5C\u8FC7\u7A0B", detail: "\u9879\u76EE\u521B\u5EFA\u4E0E\u8BBE\u7F6E", state: "todo" }],
-      columns: [{ state: "todo", label: "\u5F85\u5F00\u59CB" }, { state: "active", label: "\u8FDB\u884C\u4E2D" }, { state: "done", label: "\u5DF2\u5B8C\u6210" }],
-      resultLabel: "\u53D8\u5316\u8981\u70B9",
-      result: "\u8D44\u6599\u3001\u6267\u884C\u4E0E\u9A8C\u6536\u5404\u6709\u4F4D\u7F6E\uFF0C\u51CF\u5C11\u53CD\u590D\u5BFB\u627E\u3002",
-      series: "EXPLAIN / COMPARE"
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "footer": "\u9875\u811A\u8BF4\u660E",
+      "series": "\u793A\u4F8B\u7CFB\u5217",
+      "beforeLabel": "\u72B6\u6001 A",
+      "beforeNote": "\u72B6\u6001\u8BF4\u660E A",
+      "afterLabel": "\u72B6\u6001 B",
+      "afterNote": "\u72B6\u6001\u8BF4\u660E B",
+      "tasks": [
+        {
+          "title": "\u4EFB\u52A1 A",
+          "detail": "\u4EFB\u52A1\u8BF4\u660E A",
+          "state": "done"
+        },
+        {
+          "title": "\u4EFB\u52A1 B",
+          "detail": "\u4EFB\u52A1\u8BF4\u660E B",
+          "state": "active"
+        },
+        {
+          "title": "\u4EFB\u52A1 C",
+          "detail": "\u4EFB\u52A1\u8BF4\u660E C",
+          "state": "todo"
+        }
+      ],
+      "columns": [
+        {
+          "state": "todo",
+          "label": "\u5F85\u5F00\u59CB"
+        },
+        {
+          "state": "active",
+          "label": "\u8FDB\u884C\u4E2D"
+        },
+        {
+          "state": "done",
+          "label": "\u5DF2\u5B8C\u6210"
+        }
+      ],
+      "resultLabel": "\u7ED3\u679C\u8BF4\u660E",
+      "result": "\u7ED3\u679C\u5185\u5BB9\uFF0C\u53EF\u66FF\u6362\u4E3A\u9700\u8981\u5C55\u793A\u7684\u7ED3\u8BBA\u3002"
     }, (p, h) => {
       const e = h.esc;
       const tasks = arr3(p.tasks, 6);
@@ -2309,15 +5244,45 @@ var ComponentLibraryRuntime = (() => {
       return shell4(p, h, '<div class="edu-compare-layout"><section class="edu-panel edu-before"><div class="edu-panel-heading"><span class="edu-pill">' + e(p.beforeLabel) + "</span><p>" + e(p.beforeNote) + '</p></div><div class="edu-task-list">' + before + '</div></section><div class="edu-compare-arrow">' + arrow2 + '</div><section class="edu-panel edu-after" data-motion="reveal"><div class="edu-panel-heading"><span class="edu-pill edu-pill-blue">' + e(p.afterLabel) + "</span><p>" + e(p.afterNote) + '</p></div><div class="edu-kanban">' + after + '</div></section></div><div class="edu-takeaway"><span>' + e(p.resultLabel) + "</span><strong>" + e(p.result) + "</strong></div>");
     }),
     create3("flowchart", "\u6D41\u7A0B\u4E0E\u539F\u7406\u56FE", "\u53EF\u7F16\u8F91\u7684\u4E94\u8282\u70B9\u5206\u652F\u6D41\u7A0B\uFF0C\u8282\u70B9\u4E0E SVG \u8FDE\u7EBF\u72EC\u7ACB\uFF0C\u53EF\u6309\u987A\u5E8F\u70B9\u4EAE\u3002", {
-      eyebrow: "02 / \u89E3\u91CA\u8FC7\u7A0B",
-      title: "\u4ECE\u95EE\u9898\uFF0C\u5230\u53EF\u4EE5\u9A8C\u8BC1\u7684\u7ED3\u679C",
-      subtitle: "\u628A\u8F93\u5165\u3001\u6267\u884C\u4E0E\u68C0\u67E5\u62C6\u5F00\uFF0C\u8BB2\u6E05\u6BCF\u4E00\u6B65\u7684\u804C\u8D23\u3002",
-      badge: "\u6D41\u7A0B\u56FE",
-      nodes: [{ label: "\u8F93\u5165\u76EE\u6807", detail: "\u8981\u5B8C\u6210\u4EC0\u4E48", tag: "01" }, { label: "\u8865\u5145\u4E0A\u4E0B\u6587", detail: "\u8D44\u6599\u4E0E\u9650\u5236", tag: "02" }, { label: "\u6267\u884C\u4EFB\u52A1", detail: "\u4EA7\u51FA\u7B2C\u4E00\u7248", tag: "03" }, { label: "\u901A\u8FC7\u68C0\u67E5", detail: "\u8FDB\u5165\u4EA4\u4ED8", tag: "04" }, { label: "\u9700\u8981\u4FEE\u6539", detail: "\u5E26\u53CD\u9988\u7EE7\u7EED", tag: "05" }],
-      branchLabels: ["\u7B26\u5408\u8981\u6C42", "\u53D1\u73B0\u95EE\u9898"],
-      noteTitle: "\u68C0\u67E5\u6807\u51C6\u5148\u5199\u6E05\u695A",
-      note: "\u9A8C\u6536\u4F9D\u636E\u660E\u786E\uFF0C\u53CD\u9988\u624D\u5BB9\u6613\u8F6C\u5316\u6210\u4E0B\u4E00\u6B65\u884C\u52A8\u3002",
-      series: "EXPLAIN / FLOW"
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "footer": "\u9875\u811A\u8BF4\u660E",
+      "series": "\u793A\u4F8B\u7CFB\u5217",
+      "nodes": [
+        {
+          "label": "\u8282\u70B9 A",
+          "detail": "\u8282\u70B9\u8BF4\u660E A",
+          "tag": "01"
+        },
+        {
+          "label": "\u8282\u70B9 B",
+          "detail": "\u8282\u70B9\u8BF4\u660E B",
+          "tag": "02"
+        },
+        {
+          "label": "\u8282\u70B9 C",
+          "detail": "\u8282\u70B9\u8BF4\u660E C",
+          "tag": "03"
+        },
+        {
+          "label": "\u8282\u70B9 D",
+          "detail": "\u8282\u70B9\u8BF4\u660E D",
+          "tag": "04"
+        },
+        {
+          "label": "\u8282\u70B9 E",
+          "detail": "\u8282\u70B9\u8BF4\u660E E",
+          "tag": "05"
+        }
+      ],
+      "branchLabels": [
+        "\u6761\u4EF6 A",
+        "\u6761\u4EF6 B"
+      ],
+      "noteTitle": "\u8865\u5145\u6807\u9898",
+      "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57"
     }, (p, h) => {
       const e = h.esc;
       const nodes = arr3(p.nodes, 5);
@@ -2328,13 +5293,33 @@ var ComponentLibraryRuntime = (() => {
       return shell4(p, h, '<div class="edu-flow-stage">' + lines3 + cards + '<span class="edu-flow-label edu-flow-label-top">' + e(arr3(p.branchLabels, 2)[0] || "") + '</span><span class="edu-flow-label edu-flow-label-bottom">' + e(arr3(p.branchLabels, 2)[1] || "") + '</span></div><div class="edu-note"><strong>' + e(p.noteTitle) + "</strong><span>" + e(p.note) + "</span></div>");
     }),
     create3("layer-stack", "\u5206\u5C42\u7ED3\u6784\u56FE", "\u7528\u7EDF\u4E00\u7B49\u8DDD\u51E0\u4F55\u548C\u72EC\u7ACB\u5F15\u7EBF\u89E3\u91CA\u4E09\u5C42\u7ED3\u6784\uFF1B\u5C42\u540D\u3001\u8BF4\u660E\u548C\u8981\u70B9\u53EF\u66FF\u6362\u3002", {
-      eyebrow: "03 / \u7ED3\u6784\u62C6\u89E3",
-      title: "\u628A\u590D\u6742\u7CFB\u7EDF\uFF0C\u62C6\u6210\u4E09\u4E2A\u5C42\u6B21",
-      subtitle: "\u6BCF\u5C42\u8D1F\u8D23\u4E00\u4EF6\u4E8B\uFF0C\u5173\u7CFB\u6BD4\u7EC6\u8282\u66F4\u5BB9\u6613\u7406\u89E3\u3002",
-      badge: "\u5206\u5C42\u7ED3\u6784",
-      layers: [{ title: "\u9879\u76EE", label: "\u7EC4\u7EC7\u8D44\u6599", detail: "\u4FDD\u5B58\u5171\u540C\u80CC\u666F\uFF0C\u8BA9\u76F8\u5173\u4EFB\u52A1\u6709\u7EDF\u4E00\u7684\u5DE5\u4F5C\u73AF\u5883\u3002", index: "L1" }, { title: "\u4EFB\u52A1", label: "\u805A\u7126\u76EE\u6807", detail: "\u56F4\u7ED5\u4E00\u4E2A\u660E\u786E\u7ED3\u679C\uFF0C\u8BB0\u5F55\u8FC7\u7A0B\u4E0E\u5F53\u524D\u8FDB\u5C55\u3002", index: "L2" }, { title: "\u5DE5\u5177", label: "\u6267\u884C\u64CD\u4F5C", detail: "\u8BFB\u53D6\u3001\u7F16\u8F91\u548C\u9A8C\u8BC1\uFF0C\u628A\u8BA1\u5212\u8F6C\u5316\u6210\u5177\u4F53\u7ED3\u679C\u3002", index: "L3" }],
-      note: "\u793A\u610F\u5173\u7CFB\u4EC5\u7528\u4E8E\u89E3\u91CA\u5206\u5DE5\uFF1B\u5177\u4F53\u4EA7\u54C1\u7ED3\u6784\u4EE5\u5B9E\u9645\u5B9E\u73B0\u4E3A\u51C6\u3002",
-      series: "EXPLAIN / LAYERS"
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "footer": "\u9875\u811A\u8BF4\u660E",
+      "series": "\u793A\u4F8B\u7CFB\u5217",
+      "layers": [
+        {
+          "title": "\u5C42\u7EA7 A",
+          "label": "\u5C42\u7EA7\u6807\u7B7E A",
+          "detail": "\u5C42\u7EA7\u8BF4\u660E\u6587\u5B57\uFF0C\u53EF\u66FF\u6362\u4E3A\u9700\u8981\u89E3\u91CA\u7684\u5185\u5BB9\u3002",
+          "index": "L1"
+        },
+        {
+          "title": "\u5C42\u7EA7 B",
+          "label": "\u5C42\u7EA7\u6807\u7B7E B",
+          "detail": "\u5C42\u7EA7\u8BF4\u660E\u6587\u5B57\uFF0C\u53EF\u66FF\u6362\u4E3A\u9700\u8981\u89E3\u91CA\u7684\u5185\u5BB9\u3002",
+          "index": "L2"
+        },
+        {
+          "title": "\u5C42\u7EA7 C",
+          "label": "\u5C42\u7EA7\u6807\u7B7E C",
+          "detail": "\u5C42\u7EA7\u8BF4\u660E\u6587\u5B57\uFF0C\u53EF\u66FF\u6362\u4E3A\u9700\u8981\u89E3\u91CA\u7684\u5185\u5BB9\u3002",
+          "index": "L3"
+        }
+      ],
+      "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57"
     }, (p, h) => {
       const e = h.esc;
       const layers = arr3(p.layers, 3);
@@ -2347,19 +5332,37 @@ var ComponentLibraryRuntime = (() => {
       return shell4(p, h, '<div class="edu-layers-layout"><svg class="edu-layer-art" viewBox="0 0 640 525" role="img" aria-label="' + e(p.title) + '">' + slabs + leaders + '</svg><div class="edu-layer-descriptions">' + layers.map((x, i) => '<article data-motion="item"><span class="edu-layer-number">' + e(x.index) + "</span><div><h2>" + e(x.label) + "</h2><p>" + e(x.detail) + "</p></div></article>").join("") + '<p class="edu-fine-note">' + e(p.note) + "</p></div></div>");
     }),
     create3("bar-chart", "\u67F1\u5F62\u6570\u636E\u56FE", "\u6309\u771F\u5B9E\u6570\u636E\u6620\u5C04\u9AD8\u5EA6\uFF0C\u652F\u6301\u53EF\u7F16\u8F91\u7C7B\u76EE\u3001\u6570\u503C\u3001\u8303\u56F4\u548C\u5355\u4F4D\uFF1B\u9ED8\u8BA4\u7528\u793A\u4F8B\u65F6\u957F\u6BD4\u8F83\u3002", {
-      eyebrow: "04 / \u6570\u636E\u5BF9\u7167",
-      title: "\u65F6\u95F4\u82B1\u5728\u4E86\u54EA\u91CC\uFF1F",
-      subtitle: "\u628A\u6D41\u7A0B\u5206\u6BB5\uFF0C\u624D\u80FD\u627E\u5230\u503C\u5F97\u4F18\u5316\u7684\u73AF\u8282\u3002",
-      badge: "\u793A\u4F8B\u6570\u636E",
-      chartTitle: "\u5355\u6B21\u5236\u4F5C\u8017\u65F6",
-      unit: "\u5206\u949F",
-      max: 60,
-      values: [{ label: "\u6574\u7406\u8D44\u6599", value: 28 }, { label: "\u5199\u4F5C\u811A\u672C", value: 46 }, { label: "\u5236\u4F5C\u753B\u9762", value: 54 }, { label: "\u526A\u8F91\u68C0\u67E5", value: 34 }],
-      highlight: 2,
-      noteLabel: "\u89C2\u5BDF",
-      note: "\u5148\u770B\u8017\u65F6\u6700\u5927\u7684\u73AF\u8282\uFF0C\u518D\u51B3\u5B9A\u4F18\u5316\u987A\u5E8F\u3002",
-      source: "\u6570\u636E\uFF1A\u793A\u4F8B\u503C\uFF0C\u4EC5\u5C55\u793A\u56FE\u8868\u7528\u6CD5\u3002",
-      series: "EXPLAIN / BARS"
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "footer": "\u9875\u811A\u8BF4\u660E",
+      "series": "\u793A\u4F8B\u7CFB\u5217",
+      "chartTitle": "\u56FE\u8868\u6807\u9898",
+      "unit": "\u5355\u4F4D",
+      "max": 60,
+      "values": [
+        {
+          "label": "\u7C7B\u522B A",
+          "value": 28
+        },
+        {
+          "label": "\u7C7B\u522B B",
+          "value": 46
+        },
+        {
+          "label": "\u7C7B\u522B C",
+          "value": 54
+        },
+        {
+          "label": "\u7C7B\u522B D",
+          "value": 34
+        }
+      ],
+      "highlight": 2,
+      "noteLabel": "\u8865\u5145\u6807\u7B7E",
+      "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57",
+      "source": "\u6570\u636E\u6765\u6E90\u8BF4\u660E"
     }, (p, h) => {
       const e = h.esc;
       const values = arr3(p.values, 6);
@@ -2377,19 +5380,45 @@ var ComponentLibraryRuntime = (() => {
       return shell4(p, h, '<section class="edu-chart-panel"><div class="edu-chart-heading"><h2>' + e(p.chartTitle) + "</h2><span>" + e(p.unit) + '</span></div><svg class="edu-bar-svg" viewBox="0 0 1164 426" role="img" aria-label="' + e(p.chartTitle) + '">' + grid + bars + '</svg><div class="edu-chart-source">' + e(p.source) + '</div></section><div class="edu-takeaway edu-takeaway-compact"><span>' + e(p.noteLabel) + "</span><strong>" + e(p.note) + "</strong></div>");
     }),
     create3("line-chart", "\u8D8B\u52BF\u6298\u7EBF\u56FE", "\u53EF\u7F16\u8F91\u8D8B\u52BF\u3001\u76EE\u6807\u7EBF\u4E0E\u9009\u4E2D\u70B9\uFF1B\u6570\u503C\u51B3\u5B9A\u5750\u6807\uFF0C\u6298\u7EBF\u4E0E\u9762\u79EF\u4F7F\u7528\u539F\u751F SVG\u3002", {
-      eyebrow: "05 / \u89C2\u5BDF\u8D8B\u52BF",
-      title: "\u4E00\u6B21\u6539\u8FDB\uFF0C\u8981\u770B\u8FDE\u7EED\u7684\u53D8\u5316",
-      subtitle: "\u7528\u540C\u4E00\u628A\u5C3A\u5B50\u89C2\u5BDF\u8D8B\u52BF\uFF0C\u907F\u514D\u53EA\u770B\u67D0\u4E00\u4E2A\u9AD8\u70B9\u3002",
-      badge: "\u793A\u4F8B\u6570\u636E",
-      chartTitle: "\u6BCF\u5468\u5B8C\u6210\u4EFB\u52A1\u6570",
-      unit: "\u9879",
-      max: 40,
-      target: 30,
-      targetLabel: "\u53C2\u8003\u76EE\u6807",
-      values: [{ label: "\u7B2C1\u5468", value: 12 }, { label: "\u7B2C2\u5468", value: 17 }, { label: "\u7B2C3\u5468", value: 15 }, { label: "\u7B2C4\u5468", value: 24 }, { label: "\u7B2C5\u5468", value: 29 }, { label: "\u7B2C6\u5468", value: 34 }],
-      selected: 4,
-      note: "\u6298\u7EBF\u53EA\u8FDE\u63A5\u793A\u4F8B\u89C2\u6D4B\u503C\uFF1B\u4E0D\u4EE3\u8868\u5BF9\u672A\u6765\u8868\u73B0\u7684\u9884\u6D4B\u3002",
-      series: "EXPLAIN / TREND"
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "footer": "\u9875\u811A\u8BF4\u660E",
+      "series": "\u793A\u4F8B\u7CFB\u5217",
+      "chartTitle": "\u56FE\u8868\u6807\u9898",
+      "unit": "\u5355\u4F4D",
+      "max": 40,
+      "target": 30,
+      "targetLabel": "\u53C2\u8003\u503C",
+      "values": [
+        {
+          "label": "\u9636\u6BB5 A",
+          "value": 12
+        },
+        {
+          "label": "\u9636\u6BB5 B",
+          "value": 17
+        },
+        {
+          "label": "\u9636\u6BB5 C",
+          "value": 15
+        },
+        {
+          "label": "\u9636\u6BB5 D",
+          "value": 24
+        },
+        {
+          "label": "\u9636\u6BB5 E",
+          "value": 29
+        },
+        {
+          "label": "\u9636\u6BB5 F",
+          "value": 34
+        }
+      ],
+      "selected": 4,
+      "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57"
     }, (p, h) => {
       const e = h.esc;
       const values = arr3(p.values, 10);
@@ -2409,47 +5438,178 @@ var ComponentLibraryRuntime = (() => {
       return shell4(p, h, '<section class="edu-chart-panel"><div class="edu-chart-heading"><h2>' + e(p.chartTitle) + "</h2><span>" + e(p.unit) + '</span></div><svg class="edu-line-svg" viewBox="0 0 1164 442" role="img" aria-label="' + e(p.chartTitle) + '"><defs><linearGradient id="' + e(grad) + '" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#2563eb" stop-opacity=".18"/><stop offset="1" stop-color="#2563eb" stop-opacity=".01"/></linearGradient></defs>' + grid + '<line x1="' + left + '" y1="' + targetY + '" x2="' + right + '" y2="' + targetY + '" stroke="#4c9d83" stroke-width="1.7" stroke-dasharray="6 6"/><text x="' + (left + 16) + '" y="' + (targetY - 12) + '" text-anchor="start" font-size="18" fill="#28735d">' + e(p.targetLabel) + " " + e(fmt(p.target)) + '</text><path d="' + area + '" fill="url(#' + e(grad) + ')"/><path data-motion="line" d="' + line3 + '" fill="none" stroke="#2563eb" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>' + points.map((x) => '<circle cx="' + x.x + '" cy="' + x.y + '" r="5.5" fill="white" stroke="#2563eb" stroke-width="3"/><text x="' + x.x + '" y="415" text-anchor="middle" font-size="20" fill="#455064">' + e(x.label) + "</text>").join("") + chip + '</svg><div class="edu-chart-source">' + e(p.note) + "</div></section>");
     }),
     create3("comparison-matrix", "\u65B9\u6848\u6BD4\u8F83\u77E9\u9635", "\u6309\u7EDF\u4E00\u7EF4\u5EA6\u6BD4\u8F83\u4E09\u79CD\u65B9\u6848\uFF0C\u4F7F\u7528\u6587\u5B57\u800C\u975E\u4E3B\u89C2\u6253\u5206\uFF1B\u5217\u3001\u884C\u4E0E\u63A8\u8350\u8BF4\u660E\u53EF\u7F16\u8F91\u3002", {
-      eyebrow: "06 / \u5E2E\u52A9\u9009\u62E9",
-      title: "\u9009\u5DE5\u5177\uFF0C\u5148\u770B\u4EFB\u52A1\u9700\u8981\u4EC0\u4E48",
-      subtitle: "\u6BD4\u8F83\u540C\u4E00\u7EC4\u6761\u4EF6\uFF0C\u8BA9\u9009\u62E9\u4F9D\u636E\u6709\u8FF9\u53EF\u5FAA\u3002",
-      badge: "\u793A\u4F8B\u6BD4\u8F83",
-      columns: [{ name: "\u9759\u6001\u56FE\u7247", tag: "\u89E3\u91CA\u7ED3\u6784" }, { name: "\u771F\u5B9E\u5F55\u5C4F", tag: "\u6F14\u793A\u64CD\u4F5C" }, { name: "AI \u89C6\u9891", tag: "\u5448\u73B0\u573A\u666F" }],
-      rows: [{ criterion: "\u6700\u9002\u5408", values: ["\u6982\u5FF5\u4E0E\u5173\u7CFB", "\u8F6F\u4EF6\u64CD\u4F5C\u6B65\u9AA4", "\u96BE\u4EE5\u5B9E\u62CD\u7684\u753B\u9762"] }, { criterion: "\u6587\u5B57\u51C6\u786E\u6027", values: ["\u53EF\u9010\u5B57\u63A7\u5236", "\u4FDD\u7559\u771F\u5B9E\u754C\u9762", "\u9700\u53E6\u52A0\u5B57\u5E55\u6807\u6CE8"] }, { criterion: "\u4FEE\u6539\u65B9\u5F0F", values: ["\u7F16\u8F91\u6587\u5B57\u4E0E\u5E03\u5C40", "\u8865\u5F55\u6216\u91CD\u65B0\u526A\u8F91", "\u8C03\u6574\u63D0\u793A\u8BCD\u518D\u751F\u6210"] }, { criterion: "\u5EFA\u8BAE\u7528\u6CD5", values: ["\u6D41\u7A0B\u56FE / \u539F\u7406\u56FE", "\u6309\u94AE / \u9875\u9762 / \u64CD\u4F5C", "\u6BD4\u55BB / \u8F6C\u573A / \u6C1B\u56F4"] }],
-      noteLabel: "\u7EC4\u5408\u4F7F\u7528",
-      note: "\u7531\u8981\u8BB2\u6E05\u7684\u5185\u5BB9\u51B3\u5B9A\u753B\u9762\u5F62\u5F0F\uFF0C\u540C\u4E00\u6761\u89C6\u9891\u53EF\u4EE5\u6DF7\u5408\u4E09\u79CD\u7D20\u6750\u3002",
-      series: "EXPLAIN / MATRIX"
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "footer": "\u9875\u811A\u8BF4\u660E",
+      "series": "\u793A\u4F8B\u7CFB\u5217",
+      "columns": [
+        {
+          "name": "\u9879\u76EE A",
+          "tag": "\u6807\u7B7E A"
+        },
+        {
+          "name": "\u9879\u76EE B",
+          "tag": "\u6807\u7B7E B"
+        },
+        {
+          "name": "\u9879\u76EE C",
+          "tag": "\u6807\u7B7E C"
+        }
+      ],
+      "rows": [
+        {
+          "criterion": "\u6BD4\u8F83\u9879 A",
+          "values": [
+            "\u5185\u5BB9 A",
+            "\u5185\u5BB9 B",
+            "\u5185\u5BB9 C"
+          ]
+        },
+        {
+          "criterion": "\u6BD4\u8F83\u9879 B",
+          "values": [
+            "\u5185\u5BB9 A",
+            "\u5185\u5BB9 B",
+            "\u5185\u5BB9 C"
+          ]
+        },
+        {
+          "criterion": "\u6BD4\u8F83\u9879 C",
+          "values": [
+            "\u5185\u5BB9 A",
+            "\u5185\u5BB9 B",
+            "\u5185\u5BB9 C"
+          ]
+        },
+        {
+          "criterion": "\u6BD4\u8F83\u9879 D",
+          "values": [
+            "\u5185\u5BB9 A",
+            "\u5185\u5BB9 B",
+            "\u5185\u5BB9 C"
+          ]
+        }
+      ],
+      "noteLabel": "\u8865\u5145\u6807\u7B7E",
+      "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57"
     }, (p, h) => {
       const e = h.esc;
       const columns = arr3(p.columns, 3), rows2 = arr3(p.rows, 5);
       return shell4(p, h, '<div class="edu-matrix-panel"><table class="edu-matrix"><thead><tr><th></th>' + columns.map((c) => "<th><strong>" + e(c.name) + "</strong><span>" + e(c.tag) + "</span></th>").join("") + "</tr></thead><tbody>" + rows2.map((r) => '<tr data-motion="item"><th>' + e(r.criterion) + "</th>" + columns.map((_, i) => "<td>" + e(arr3(r.values, 3)[i] || "") + "</td>").join("") + "</tr>").join("") + '</tbody></table></div><div class="edu-takeaway"><span>' + e(p.noteLabel) + "</span><strong>" + e(p.note) + "</strong></div>");
     }),
     create3("event-timeline", "\u4E8B\u4EF6\u65F6\u95F4\u7EBF", "\u4E94\u4E2A\u9636\u6BB5\u6CBF\u6C34\u5E73\u65F6\u95F4\u8F74\u5C55\u793A\uFF0C\u533A\u5206\u5DF2\u5B8C\u6210\u3001\u5F53\u524D\u548C\u5F85\u5F00\u59CB\uFF1B\u652F\u6301\u66FF\u6362\u65F6\u95F4\u3001\u5185\u5BB9\u548C\u72B6\u6001\u3002", {
-      eyebrow: "07 / \u68B3\u7406\u987A\u5E8F",
-      title: "\u4E00\u6761\u89C6\u9891\uFF0C\u5982\u4F55\u4E00\u6B65\u6B65\u5B8C\u6210",
-      subtitle: "\u628A\u5236\u4F5C\u8FC7\u7A0B\u653E\u5728\u65F6\u95F4\u7EBF\u4E0A\uFF0C\u6BCF\u4E2A\u9636\u6BB5\u90FD\u6709\u660E\u786E\u4EA7\u7269\u3002",
-      badge: "\u5236\u4F5C\u793A\u4F8B",
-      events: [{ time: "09:00", title: "\u660E\u786E\u4E3B\u9898", detail: "\u786E\u5B9A\u89C2\u4F17\u4E0E\u6838\u5FC3\u95EE\u9898", status: "done" }, { time: "10:00", title: "\u5B8C\u6210\u811A\u672C", detail: "\u6574\u7406\u94A9\u5B50\u3001\u6B63\u6587\u4E0E\u7ED3\u5C3E", status: "done" }, { time: "13:00", title: "\u51C6\u5907\u7D20\u6750", detail: "\u53C2\u8003\u56FE\u3001\u5F55\u5C4F\u4E0E\u914D\u97F3", status: "active" }, { time: "15:00", title: "\u7EC4\u5408\u753B\u9762", detail: "\u6309\u914D\u97F3\u7EC4\u7EC7\u955C\u5934", status: "todo" }, { time: "17:00", title: "\u68C0\u67E5\u4EA4\u4ED8", detail: "\u6838\u5BF9\u5185\u5BB9\u3001\u5B57\u5E55\u4E0E\u58F0\u97F3", status: "todo" }],
-      activeLabel: "\u5F53\u524D\u9636\u6BB5",
-      note: "\u65F6\u95F4\u4E3A\u793A\u4F8B\u8BA1\u5212\uFF0C\u53EF\u66FF\u6362\u4E3A\u65E5\u671F\u3001\u7AE0\u8282\u6216\u91CC\u7A0B\u7891\u3002",
-      series: "EXPLAIN / TIMELINE"
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "footer": "\u9875\u811A\u8BF4\u660E",
+      "series": "\u793A\u4F8B\u7CFB\u5217",
+      "events": [
+        {
+          "time": "09:00",
+          "title": "\u4E8B\u4EF6 A",
+          "detail": "\u4E8B\u4EF6\u8BF4\u660E A",
+          "status": "done"
+        },
+        {
+          "time": "10:00",
+          "title": "\u4E8B\u4EF6 B",
+          "detail": "\u4E8B\u4EF6\u8BF4\u660E B",
+          "status": "done"
+        },
+        {
+          "time": "13:00",
+          "title": "\u4E8B\u4EF6 C",
+          "detail": "\u4E8B\u4EF6\u8BF4\u660E C",
+          "status": "active"
+        },
+        {
+          "time": "15:00",
+          "title": "\u4E8B\u4EF6 D",
+          "detail": "\u4E8B\u4EF6\u8BF4\u660E D",
+          "status": "todo"
+        },
+        {
+          "time": "17:00",
+          "title": "\u4E8B\u4EF6 E",
+          "detail": "\u4E8B\u4EF6\u8BF4\u660E E",
+          "status": "todo"
+        }
+      ],
+      "activeLabel": "\u5F53\u524D\u9636\u6BB5",
+      "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57"
     }, (p, h) => {
       const e = h.esc;
       const events = arr3(p.events, 5);
       return shell4(p, h, '<div class="edu-event-track"><div class="edu-event-baseline" data-motion="line"></div>' + events.map((x, i) => '<article class="edu-event edu-event-' + e(x.status) + '" style="left:' + i * 100 / Math.max(1, events.length - 1) + '%" data-motion="item"><div class="edu-event-time">' + e(x.time) + '</div><div class="edu-event-node">' + (x.status === "done" ? tick2 : "<i></i>") + '</div><div class="edu-event-card"><span class="edu-event-number">' + String(i + 1).padStart(2, "0") + "</span><h2>" + e(x.title) + "</h2><p>" + e(x.detail) + "</p>" + (x.status === "active" ? '<span class="edu-event-active">' + e(p.activeLabel) + "</span>" : "") + "</div></article>").join("") + '</div><div class="edu-timeline-note">' + e(p.note) + "</div>");
     }),
     create3("metric-dashboard", "\u5173\u952E\u6307\u6807\u9762\u677F", "\u4EE5\u4E09\u4E2A\u6307\u6807\u3001\u8FDB\u5EA6\u548C\u9A8C\u6536\u6E05\u5355\u590D\u76D8\u5236\u4F5C\u72B6\u6001\uFF1B\u793A\u4F8B\u6570\u636E\u3001\u5355\u4F4D\u4E0E\u8BF4\u660E\u53EF\u7F16\u8F91\u3002", {
-      eyebrow: "08 / \u67E5\u770B\u72B6\u6001",
-      title: "\u4EA4\u4ED8\u4E4B\u524D\uFF0C\u628A\u5173\u952E\u72B6\u6001\u770B\u6E05\u695A",
-      subtitle: "\u8FDB\u5EA6\u3001\u7D20\u6750\u4E0E\u9A8C\u6536\u653E\u5728\u540C\u4E00\u9875\uFF0C\u51CF\u5C11\u9057\u6F0F\u3002",
-      badge: "\u793A\u4F8B\u6570\u636E",
-      metrics: [{ label: "\u955C\u5934\u5B8C\u6210", value: "8", unit: "/ 10", detail: "\u8FD8\u6709 2 \u4E2A\u955C\u5934\u9700\u8981\u8C03\u6574", progress: 0.8 }, { label: "\u7D20\u6750\u5C31\u7EEA", value: "24", unit: "/ 24", detail: "\u56FE\u7247\u3001\u5F55\u5C4F\u4E0E\u914D\u97F3\u5DF2\u5F52\u6863", progress: 1 }, { label: "\u9A8C\u6536\u901A\u8FC7", value: "6", unit: "/ 8", detail: "\u5269\u4F59\u5B57\u5E55\u4E0E\u7247\u5C3E\u68C0\u67E5", progress: 0.75 }],
-      progressTitle: "\u6700\u8FD1\u4E94\u6B21\u5236\u4F5C\u8FDB\u5EA6",
-      progress: [32, 46, 59, 68, 80],
-      progressLabels: ["\u7B2C1\u6B21", "\u7B2C2\u6B21", "\u7B2C3\u6B21", "\u7B2C4\u6B21", "\u7B2C5\u6B21"],
-      checklistTitle: "\u672C\u6B21\u68C0\u67E5",
-      checks: [{ label: "\u5185\u5BB9\u4E0E\u5F15\u7528", done: true }, { label: "\u6784\u56FE\u4E0E\u6E05\u6670\u5EA6", done: true }, { label: "\u5B57\u5E55\u65F6\u95F4\u70B9", done: false }, { label: "\u914D\u97F3\u4E0E\u80CC\u666F\u58F0", done: false }],
-      note: "\u8FD9\u91CC\u53EA\u6C47\u603B\u793A\u4F8B\u72B6\u6001\uFF0C\u4E0D\u4EE3\u8868\u5DF2\u7ECF\u6267\u884C\u68C0\u67E5\u3002",
-      series: "EXPLAIN / STATUS"
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "footer": "\u9875\u811A\u8BF4\u660E",
+      "series": "\u793A\u4F8B\u7CFB\u5217",
+      "metrics": [
+        {
+          "label": "\u6307\u6807 A",
+          "value": "8",
+          "unit": "/ 10",
+          "detail": "\u6307\u6807\u8BF4\u660E A",
+          "progress": 0.8
+        },
+        {
+          "label": "\u6307\u6807 B",
+          "value": "24",
+          "unit": "/ 24",
+          "detail": "\u6307\u6807\u8BF4\u660E B",
+          "progress": 1
+        },
+        {
+          "label": "\u6307\u6807 C",
+          "value": "6",
+          "unit": "/ 8",
+          "detail": "\u6307\u6807\u8BF4\u660E C",
+          "progress": 0.75
+        }
+      ],
+      "progressTitle": "\u8D8B\u52BF\u6807\u9898",
+      "progress": [
+        32,
+        46,
+        59,
+        68,
+        80
+      ],
+      "progressLabels": [
+        "\u9636\u6BB5 A",
+        "\u9636\u6BB5 B",
+        "\u9636\u6BB5 C",
+        "\u9636\u6BB5 D",
+        "\u9636\u6BB5 E"
+      ],
+      "checklistTitle": "\u68C0\u67E5\u9879",
+      "checks": [
+        {
+          "label": "\u68C0\u67E5\u9879 A",
+          "done": true
+        },
+        {
+          "label": "\u68C0\u67E5\u9879 B",
+          "done": true
+        },
+        {
+          "label": "\u68C0\u67E5\u9879 C",
+          "done": false
+        },
+        {
+          "label": "\u68C0\u67E5\u9879 D",
+          "done": false
+        }
+      ],
+      "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57"
     }, (p, h) => {
       const e = h.esc;
       const metrics = arr3(p.metrics, 3), progress = arr3(p.progress, 8), labels = arr3(p.progressLabels, 8);
@@ -2460,53 +5620,108 @@ var ComponentLibraryRuntime = (() => {
       }).join("") + '</svg></section><section class="edu-check-panel"><h2>' + e(p.checklistTitle) + "</h2>" + arr3(p.checks, 5).map((x) => '<div class="edu-check-item" data-motion="item"><span class="' + (x.done ? "edu-check-done" : "edu-check-pending") + '">' + (x.done ? tick2 : "") + "</span><strong>" + e(x.label) + "</strong></div>").join("") + '</section></div><div class="edu-dashboard-note">' + e(p.note) + "</div>");
     }),
     create3("definition-card", "\u6982\u5FF5\u89E3\u91CA\u5361", "\u7528\u5B9A\u4E49\u3001\u4E09\u4E2A\u5173\u952E\u8981\u7D20\u548C\u5177\u4F53\u4F8B\u5B50\u8BB2\u6E05\u4E00\u4E2A\u540D\u8BCD\uFF0C\u907F\u514D\u53EA\u5806\u6807\u9898\u548C\u6807\u7B7E\u3002", {
-      eyebrow: "09 / \u89E3\u91CA\u6982\u5FF5",
-      title: "\u4EC0\u4E48\u662F\u4E0A\u4E0B\u6587\uFF1F",
-      subtitle: "\u5148\u7ED9\u4E00\u53E5\u6E05\u695A\u7684\u5B9A\u4E49\uFF0C\u518D\u628A\u5B83\u653E\u8FDB\u5177\u4F53\u4EFB\u52A1\u3002",
-      badge: "\u6982\u5FF5\u89E3\u91CA",
-      term: "\u4E0A\u4E0B\u6587",
-      english: "CONTEXT",
-      definition: "\u5B8C\u6210\u5F53\u524D\u4EFB\u52A1\u6240\u9700\u8981\u7684\u80CC\u666F\u4FE1\u606F\u3002",
-      factors: [{ label: "\u76EE\u6807", detail: "\u6700\u7EC8\u5E0C\u671B\u5F97\u5230\u4EC0\u4E48" }, { label: "\u8D44\u6599", detail: "\u53EF\u4EE5\u53C2\u8003\u54EA\u4E9B\u5185\u5BB9" }, { label: "\u9650\u5236", detail: "\u54EA\u4E9B\u6761\u4EF6\u5FC5\u987B\u9075\u5B88" }],
-      exampleLabel: "\u653E\u8FDB\u4E00\u4E2A\u771F\u5B9E\u4EFB\u52A1",
-      exampleTitle: "\u4FEE\u6539\u4EA7\u54C1\u4ECB\u7ECD\u9875",
-      example: "\u53C2\u8003\u73B0\u6709\u9875\u9762\uFF0C\u628A\u9996\u5C4F\u4ECB\u7ECD\u7F29\u77ED\u5230 80 \u5B57\u4EE5\u5185\uFF0C\u4FDD\u7559\u54C1\u724C\u8272\uFF0C\u5E76\u9002\u914D\u624B\u673A\u3002",
-      note: "\u4EFB\u52A1\u8D8A\u5177\u4F53\uFF0C\u8D8A\u5BB9\u6613\u5224\u65AD\u7ED3\u679C\u662F\u5426\u7B26\u5408\u9884\u671F\u3002",
-      series: "EXPLAIN / CONCEPT"
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "footer": "\u9875\u811A\u8BF4\u660E",
+      "series": "\u793A\u4F8B\u7CFB\u5217",
+      "term": "\u6982\u5FF5\u540D\u79F0",
+      "english": "TERM",
+      "definition": "\u6982\u5FF5\u8BF4\u660E\u6587\u5B57\u3002\u66FF\u6362\u4E3A\u9700\u8981\u89E3\u91CA\u7684\u5B9A\u4E49\u3002",
+      "factors": [
+        {
+          "label": "\u8981\u70B9 A",
+          "detail": "\u8981\u70B9\u8BF4\u660E A"
+        },
+        {
+          "label": "\u8981\u70B9 B",
+          "detail": "\u8981\u70B9\u8BF4\u660E B"
+        },
+        {
+          "label": "\u8981\u70B9 C",
+          "detail": "\u8981\u70B9\u8BF4\u660E C"
+        }
+      ],
+      "exampleLabel": "\u793A\u4F8B\u6807\u7B7E",
+      "exampleTitle": "\u793A\u4F8B\u6807\u9898",
+      "example": "\u793A\u4F8B\u6B63\u6587\u5185\u5BB9\uFF0C\u53EF\u66FF\u6362\u4E3A\u9700\u8981\u5C55\u793A\u7684\u6587\u5B57\u3002",
+      "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57"
     }, (p, h) => {
       const e = h.esc;
       return shell4(p, h, '<div class="edu-definition-layout"><section class="edu-definition-main"><span class="edu-definition-en">' + e(p.english) + '</span><h2 data-motion="emphasis">' + e(p.term) + '</h2><p class="edu-definition-sentence" data-motion="reveal">' + e(p.definition) + '</p><div class="edu-factor-list">' + arr3(p.factors, 3).map((x, i) => '<div data-motion="item"><span>' + String(i + 1).padStart(2, "0") + "</span><strong>" + e(x.label) + "</strong><p>" + e(x.detail) + "</p></div>").join("") + '</div></section><aside class="edu-example-panel"><span class="edu-pill edu-pill-mint">' + e(p.exampleLabel) + "</span><h2>" + e(p.exampleTitle) + '</h2><blockquote data-motion="type">' + e(p.example) + '</blockquote><div class="edu-example-note">' + tick2 + "<p>" + e(p.note) + "</p></div></aside></div>");
     }),
     create3("chapter-summary", "\u7AE0\u8282\u4E0E\u603B\u7ED3\u9875", "\u7AE0\u8282\u7F16\u53F7\u3001\u6838\u5FC3\u7ED3\u8BBA\u3001\u4E09\u9879\u603B\u7ED3\u4E0E\u4E0B\u4E00\u6B65\u7EC4\u6210\u5B8C\u6574\u6536\u675F\u753B\u9762\u3002", {
-      eyebrow: "10 / \u7AE0\u8282\u6536\u675F",
-      title: "\u628A\u7406\u89E3\uFF0C\u53D8\u6210\u4E00\u6B21\u5B8C\u6574\u5B9E\u8DF5",
-      subtitle: "\u51C6\u5907\u597D\u76EE\u6807\u3001\u7D20\u6750\u548C\u9A8C\u6536\u6807\u51C6\uFF0C\u518D\u5F00\u59CB\u52A8\u624B\u3002",
-      badge: "\u7AE0\u8282\u603B\u7ED3",
-      number: "03",
-      chapterLabel: "\u5F00\u59CB\u5B9E\u8DF5",
-      headline: "\u5148\u5B8C\u6210\u4E00\u4E2A\u5C0F\u9879\u76EE",
-      points: [{ title: "\u660E\u786E\u76EE\u6807", detail: "\u7528\u4E00\u53E5\u8BDD\u8BF4\u6E05\u695A\u8981\u5F97\u5230\u7684\u7ED3\u679C\u3002" }, { title: "\u51C6\u5907\u7D20\u6750", detail: "\u628A\u53C2\u8003\u56FE\u3001\u5F55\u5C4F\u548C\u914D\u97F3\u653E\u5728\u4E00\u8D77\u3002" }, { title: "\u9A8C\u8BC1\u7ED3\u679C", detail: "\u5BF9\u7167\u8981\u6C42\u68C0\u67E5\uFF0C\u518D\u51B3\u5B9A\u4E0B\u4E00\u6B65\u3002" }],
-      nextLabel: "\u4E0B\u4E00\u6B65",
-      next: "\u9009\u62E9\u4E00\u4E2A\u4E3B\u9898\uFF0C\u5B8C\u6210\u7B2C\u4E00\u6BB5 30 \u79D2\u8BB2\u89E3\u3002",
-      series: "EXPLAIN / CHAPTER"
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "footer": "\u9875\u811A\u8BF4\u660E",
+      "series": "\u793A\u4F8B\u7CFB\u5217",
+      "number": "01",
+      "chapterLabel": "\u7AE0\u8282\u540D\u79F0",
+      "headline": "\u7AE0\u8282\u4E3B\u6807\u9898",
+      "points": [
+        {
+          "title": "\u7AE0\u8282\u6807\u9898 A",
+          "detail": "\u7AE0\u8282\u8BF4\u660E A"
+        },
+        {
+          "title": "\u7AE0\u8282\u6807\u9898 B",
+          "detail": "\u7AE0\u8282\u8BF4\u660E B"
+        },
+        {
+          "title": "\u7AE0\u8282\u6807\u9898 C",
+          "detail": "\u7AE0\u8282\u8BF4\u660E C"
+        }
+      ],
+      "nextLabel": "\u4E0B\u4E00\u6B65",
+      "next": "\u4E0B\u4E00\u7AE0\u8282\u8BF4\u660E"
     }, (p, h) => {
       const e = h.esc;
       return shell4(p, h, '<div class="edu-chapter-layout"><div class="edu-chapter-index"><span data-motion="counter">' + e(p.number) + "</span><div>" + e(p.chapterLabel) + '</div><i></i></div><div class="edu-chapter-content"><h2>' + e(p.headline) + "</h2>" + arr3(p.points, 3).map((x) => '<article data-motion="item"><span>' + tick2 + "</span><div><h3>" + e(x.title) + "</h3><p>" + e(x.detail) + "</p></div></article>").join("") + '</div></div><div class="edu-next-strip" data-motion="reveal"><span>' + e(p.nextLabel) + "</span><strong>" + e(p.next) + "</strong>" + arrow2 + "</div>");
     }),
     create3("media-stage", "\u56FE\u7247\u4E0E\u89C6\u9891\u5C55\u793A\u53F0", "\u5A92\u4F53\u69FD\u4F4D\u4FDD\u7559\u539F\u59CB\u6BD4\u4F8B\uFF0C\u53F3\u4FA7\u8BF4\u660E\u4E0E\u7AE0\u8282\u6807\u7B7E\u53EF\u66F4\u6362\uFF1B\u9ED8\u8BA4\u793A\u4F8B\u4E3A\u539F\u751F SVG \u4FE1\u606F\u793A\u610F\u3002", {
-      eyebrow: "11 / \u7D20\u6750\u8BB2\u89E3",
-      title: "\u753B\u9762\u8D1F\u8D23\u5C55\u793A\uFF0C\u6807\u6CE8\u8D1F\u8D23\u89E3\u91CA",
-      subtitle: "\u628A\u5173\u952E\u8BF4\u660E\u653E\u5728\u7D20\u6750\u65C1\u8FB9\uFF0C\u8BA9\u89C2\u4F17\u77E5\u9053\u6B64\u523B\u5E94\u8BE5\u770B\u4EC0\u4E48\u3002",
-      badge: "\u53EF\u66FF\u6362\u7D20\u6750",
-      mediaSrc: "",
-      mediaKind: "image",
-      mediaAlt: "\u4ECE\u8F93\u5165\u8D44\u6599\u5230\u53EF\u7528\u7ED3\u679C\u7684\u6982\u5FF5\u793A\u610F",
-      mediaLabel: "\u6982\u5FF5\u793A\u610F / 01",
-      diagramNodes: [{ title: "\u8D44\u6599", detail: "\u7528\u6237\u63D0\u4F9B" }, { title: "\u5904\u7406", detail: "\u56F4\u7ED5\u76EE\u6807" }, { title: "\u7ED3\u679C", detail: "\u53EF\u68C0\u67E5" }],
-      noteTitle: "\u5148\u8BA9\u89C2\u4F17\u770B\u61C2",
-      notes: [{ label: "\u4FDD\u7559\u5B8C\u6574\u753B\u9762", detail: "\u4E0D\u62C9\u4F38\u7D20\u6750\uFF0C\u4E0D\u88C1\u6389\u5173\u952E\u7ED3\u6784\u3002" }, { label: "\u4E00\u6B21\u53EA\u8BB2\u4E00\u70B9", detail: "\u8BF4\u660E\u987A\u5E8F\u8DDF\u968F\u914D\u97F3\u5C55\u5F00\u3002" }, { label: "\u7EC6\u8282\u518D\u505A\u805A\u7126", detail: "\u9700\u8981\u65F6\u52A0\u5165\u653E\u5927\u4E0E\u6807\u6CE8\u3002" }],
-      caption: "\u628A\u7D20\u6750\u4E0E\u8BB2\u89E3\u5206\u5F00\u7EF4\u62A4\uFF0C\u66FF\u6362\u5185\u5BB9\u540E\u6CBF\u7528\u540C\u4E00\u5957\u5E03\u5C40\u3002",
-      series: "EXPLAIN / MEDIA"
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "footer": "\u9875\u811A\u8BF4\u660E",
+      "series": "\u793A\u4F8B\u7CFB\u5217",
+      "mediaSrc": "",
+      "mediaKind": "image",
+      "mediaAlt": "\u53EF\u66FF\u6362\u7684\u793A\u4F8B\u7D20\u6750",
+      "mediaLabel": "\u7D20\u6750\u6807\u7B7E",
+      "diagramNodes": [
+        {
+          "title": "\u7AE0\u8282\u6807\u9898 A",
+          "detail": "\u7AE0\u8282\u8BF4\u660E A"
+        },
+        {
+          "title": "\u7AE0\u8282\u6807\u9898 B",
+          "detail": "\u7AE0\u8282\u8BF4\u660E B"
+        },
+        {
+          "title": "\u7AE0\u8282\u6807\u9898 C",
+          "detail": "\u7AE0\u8282\u8BF4\u660E C"
+        }
+      ],
+      "noteTitle": "\u8BF4\u660E\u6807\u9898",
+      "notes": [
+        {
+          "label": "\u6807\u6CE8 A",
+          "detail": "\u6807\u6CE8\u8BF4\u660E A"
+        },
+        {
+          "label": "\u6807\u6CE8 B",
+          "detail": "\u6807\u6CE8\u8BF4\u660E B"
+        },
+        {
+          "label": "\u6807\u6CE8 C",
+          "detail": "\u6807\u6CE8\u8BF4\u660E C"
+        }
+      ],
+      "caption": "\u7D20\u6750\u8BF4\u660E\u6587\u5B57"
     }, (p, h) => {
       const e = h.esc;
       const src = localMedia(p.mediaSrc);
@@ -2523,16 +5738,43 @@ var ComponentLibraryRuntime = (() => {
       return shell4(p, h, '<div class="edu-media-layout"><div class="edu-media-main"><div class="edu-media-canvas">' + media3 + '</div><div class="edu-media-caption"><span class="edu-pill">' + e(p.mediaLabel) + "</span><p>" + e(p.caption) + '</p></div></div><aside class="edu-media-notes"><h2>' + e(p.noteTitle) + "</h2>" + arr3(p.notes, 3).map((x, i) => '<article data-motion="item"><span>' + String(i + 1).padStart(2, "0") + "</span><div><h3>" + e(x.label) + "</h3><p>" + e(x.detail) + "</p></div></article>").join("") + "</aside></div>");
     }),
     create3("annotation-callout", "\u7BAD\u5934\u4E0E\u8BF4\u660E\u6807\u6CE8", "\u4E09\u4E2A\u7CBE\u786E\u951A\u70B9\u8FDE\u63A5\u793A\u610F\u4E3B\u4F53\u4E0E\u8BF4\u660E\u5361\uFF1B\u8BF4\u660E\u3001\u76EE\u6807\u6807\u7B7E\u548C\u5173\u7CFB\u5747\u53EF\u66FF\u6362\u3002", {
-      eyebrow: "12 / \u6307\u5411\u5173\u952E",
-      title: "\u8BA9\u8BF4\u660E\uFF0C\u51C6\u786E\u843D\u5230\u5173\u952E\u4F4D\u7F6E",
-      subtitle: "\u6807\u6CE8\u7684\u4F5C\u7528\u662F\u5EFA\u7ACB\u5BF9\u5E94\u5173\u7CFB\uFF0C\u6BCF\u4E00\u6839\u7EBF\u90FD\u8981\u6709\u660E\u786E\u76EE\u6807\u3002",
-      badge: "\u901A\u7528\u6807\u6CE8",
-      subjectTitle: "\u4E00\u6761\u6709\u6548\u7684\u5236\u4F5C\u9700\u6C42",
-      subjectSubtitle: "\u793A\u4F8B\u8BF4\u660E\u5361",
-      fields: [{ label: "\u76EE\u6807", value: "\u505A\u4E00\u6BB5 30 \u79D2\u79D1\u666E\u52A8\u753B" }, { label: "\u7D20\u6750", value: "\u53C2\u8003\u56FE + \u5F55\u5C4F + \u914D\u97F3" }, { label: "\u9A8C\u6536", value: "\u5B57\u5E55\u51C6\u786E\uFF0C\u58F0\u97F3\u6E05\u695A" }],
-      callouts: [{ title: "\u8BF4\u6E05\u7ED3\u679C", detail: "\u65F6\u957F\u3001\u5BF9\u8C61\u4E0E\u8868\u8FBE\u76EE\u7684\u3002" }, { title: "\u7ED9\u5230\u80CC\u666F", detail: "\u628A\u5DF2\u6709\u8D44\u6599\u653E\u5728\u4E00\u8D77\u3002" }, { title: "\u5B9A\u4E49\u5B8C\u6210", detail: "\u80FD\u6309\u6761\u4EF6\u68C0\u67E5\u597D\u574F\u3002" }],
-      note: "\u951A\u70B9\u4E0E\u88AB\u6807\u6CE8\u5185\u5BB9\u7ED1\u5B9A\uFF1B\u66FF\u6362\u6587\u6848\u540E\u4ECD\u987B\u6838\u5BF9\u8FDE\u7EBF\u4F4D\u7F6E\u3002",
-      series: "EXPLAIN / ANNOTATE"
+      "eyebrow": "\u680F\u76EE / 01",
+      "title": "\u4E3B\u6807\u9898",
+      "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
+      "badge": "\u793A\u4F8B\u6807\u7B7E",
+      "footer": "\u9875\u811A\u8BF4\u660E",
+      "series": "\u793A\u4F8B\u7CFB\u5217",
+      "subjectTitle": "\u4E3B\u4F53\u6807\u9898",
+      "subjectSubtitle": "\u4E3B\u4F53\u8BF4\u660E",
+      "fields": [
+        {
+          "label": "\u5B57\u6BB5A",
+          "value": "\u5185\u5BB9 A"
+        },
+        {
+          "label": "\u5B57\u6BB5B",
+          "value": "\u5185\u5BB9 B"
+        },
+        {
+          "label": "\u5B57\u6BB5C",
+          "value": "\u5185\u5BB9 C"
+        }
+      ],
+      "callouts": [
+        {
+          "title": "\u7AE0\u8282\u6807\u9898 A",
+          "detail": "\u7AE0\u8282\u8BF4\u660E A"
+        },
+        {
+          "title": "\u7AE0\u8282\u6807\u9898 B",
+          "detail": "\u7AE0\u8282\u8BF4\u660E B"
+        },
+        {
+          "title": "\u7AE0\u8282\u6807\u9898 C",
+          "detail": "\u7AE0\u8282\u8BF4\u660E C"
+        }
+      ],
+      "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57"
     }, (p, h) => {
       const e = h.esc;
       const marker = h.uid("callout-arrow");
@@ -2590,25 +5832,6 @@ var ComponentLibraryRuntime = (() => {
     if (src && kind === "video") return `<video id="${h.uid("media")}" class="os-replace-media ${klass}" src="${h.esc(src)}" muted playsinline preload="auto" style="object-fit:${p.media.fit === "cover" ? "cover" : "contain"}"></video>`;
     return fallback;
   };
-  var locationDefaults = [
-    { label: "\u4E3B\u6587\u4EF6\u5939", icon: "home" },
-    { label: "\u684C\u9762", icon: "monitor" },
-    { label: "\u4E0B\u8F7D", icon: "download" },
-    { label: "\u6587\u6863", icon: "file" },
-    { label: "\u56FE\u7247", icon: "image" },
-    { label: "\u89C6\u9891", icon: "video" },
-    { label: "\u6B64\u7535\u8111", icon: "monitor" },
-    { label: "\u672C\u5730\u78C1\u76D8 (D:)", icon: "monitor" }
-  ];
-  var filesDefaults = [
-    { name: "assets", kind: "folder", date: "2026/9/17  10:24", type: "\u6587\u4EF6\u5939", size: "" },
-    { name: "compositions", kind: "folder", date: "2026/9/17  10:26", type: "\u6587\u4EF6\u5939", size: "" },
-    { name: "renders", kind: "folder", date: "2026/9/17  11:08", type: "\u6587\u4EF6\u5939", size: "" },
-    { name: "content.json", kind: "code", date: "2026/9/17  11:02", type: "JSON \u6587\u4EF6", size: "8 KB" },
-    { name: "index.html", kind: "code", date: "2026/9/17  11:04", type: "HTML \u6587\u6863", size: "24 KB" },
-    { name: "README.md", kind: "file", date: "2026/9/17  10:45", type: "MD \u6587\u4EF6", size: "3 KB" },
-    { name: "scene-01.mp4", kind: "video", date: "2026/9/17  11:08", type: "MP4 \u89C6\u9891", size: "12,840 KB" }
-  ];
   function winNav(p, h) {
     return `<aside class="os-win-nav">${arr4(p.locations).map((x, i) => `<div data-motion="item" class="os-win-nav-item ${x.label === p.activeLocation ? "os-selected" : ""}"><span class="os-nav-chevron">${i > 5 ? cn(h, "chevron-right", 12) : ""}</span>${fileIcon(h, x.icon, 17)}<span>${h.esc(x.label)}</span>${i > 0 && i < 6 ? `<span class="os-pin">${cn(h, "pin", 11)}</span>` : ""}</div>`).join("")}</aside>`;
   }
@@ -2643,7 +5866,69 @@ var ComponentLibraryRuntime = (() => {
       height: 800,
       description: "Windows Chrome \u539F\u751F\u6807\u7B7E\u680F\u3001\u5730\u5740\u680F\u548C\u4E66\u7B7E\u680F\uFF1B\u7F51\u9875\u533A\u53EF\u66FF\u6362\u56FE\u7247\u3001\u89C6\u9891\u6216\u7ED3\u6784\u5316 HTML \u5185\u5BB9\u3002",
       reference: ref2("Google Chrome \u5B98\u65B9\u754C\u9762\u4E0E\u684C\u9762\u6807\u7B7E\u7BA1\u7406\u6587\u6863\uFF1BWindows \u6C34\u5E73\u6807\u7B7E\u680F\uFF0C\u672A\u505A\u540C\u5C3A\u5BF8\u50CF\u7D20\u6BD4\u8F83\u3002", "https://www.google.com/chrome/"),
-      defaults: { tabs: [{ title: "\u9879\u76EE\u6587\u6863", active: true }, { title: "\u7EC4\u4EF6\u76EE\u5F55", active: false }], url: "docs.example.com/getting-started", profile: "L", bookmarks: ["\u5DE5\u4F5C\u53F0", "\u6587\u6863", "\u53C2\u8003\u7D20\u6750"], media: { kind: "demo", src: "", fit: "contain", alt: "" }, brand: "Studio Docs", actionButton: "\u65B0\u5EFA\u9879\u76EE", nav: ["\u6307\u5357", "\u7EC4\u4EF6", "\u793A\u4F8B", "\u66F4\u65B0"], section: "\u5F00\u59CB\u4F7F\u7528", title: "\u521B\u5EFA\u4F60\u7684\u7B2C\u4E00\u4E2A\u9879\u76EE", intro: "\u5C06\u7D20\u6750\u3001\u5185\u5BB9\u548C\u65F6\u95F4\u5B89\u6392\u653E\u5728\u4E00\u8D77\uFF0C\u5F00\u59CB\u5236\u4F5C\u4E00\u6BB5\u6E05\u6670\u7684\u8BB2\u89E3\u89C6\u9891\u3002", sidebar: ["\u5FEB\u901F\u5F00\u59CB", "\u9879\u76EE\u7ED3\u6784", "\u6DFB\u52A0\u7D20\u6750", "\u65F6\u95F4\u8F74", "\u9884\u89C8\u4E0E\u5BFC\u51FA"], activePage: 0, eyebrow: "\u6307\u5357 / \u5FEB\u901F\u5F00\u59CB", steps: [{ title: "\u521B\u5EFA\u9879\u76EE", body: "\u5728\u5DE5\u4F5C\u76EE\u5F55\u4E2D\u51C6\u5907\u9879\u76EE\u6587\u4EF6\uFF0C\u5E76\u4E3A\u6BCF\u4E00\u6BB5\u5185\u5BB9\u5EFA\u7ACB\u6E05\u6670\u7684\u547D\u540D\u3002" }, { title: "\u66FF\u6362\u5185\u5BB9", body: "\u7F16\u8F91\u6807\u9898\u3001\u8BF4\u660E\u548C\u7D20\u6750\u8DEF\u5F84\u3002\u7EC4\u4EF6\u4F1A\u6CBF\u7528\u7EDF\u4E00\u7684\u6392\u7248\u4E0E\u89C6\u89C9\u6837\u5F0F\u3002" }], code: "npm run build\nnpm run dev", tocTitle: "\u672C\u9875\u5185\u5BB9", toc: ["\u521B\u5EFA\u9879\u76EE", "\u66FF\u6362\u5185\u5BB9", "\u4E0B\u4E00\u6B65"], button: "\u4E0B\u4E00\u6B65\uFF1A\u6DFB\u52A0\u7D20\u6750" },
+      defaults: {
+        "tabs": [
+          {
+            "title": "\u6807\u7B7E\u9875 A",
+            "active": true
+          },
+          {
+            "title": "\u6807\u7B7E\u9875 B",
+            "active": false
+          }
+        ],
+        "url": "www.example.com/page",
+        "profile": "U",
+        "bookmarks": [
+          "\u4E66\u7B7E A",
+          "\u4E66\u7B7E B",
+          "\u4E66\u7B7E C"
+        ],
+        "media": {
+          "kind": "demo",
+          "src": "",
+          "fit": "contain",
+          "alt": ""
+        },
+        "brand": "\u793A\u4F8B\u7AD9\u70B9",
+        "actionButton": "\u64CD\u4F5C\u6309\u94AE",
+        "nav": [
+          "\u680F\u76EE A",
+          "\u680F\u76EE B",
+          "\u680F\u76EE C",
+          "\u680F\u76EE D"
+        ],
+        "section": "\u680F\u76EE\u6807\u9898",
+        "title": "\u9875\u9762\u4E3B\u6807\u9898",
+        "intro": "\u9875\u9762\u7B80\u4ECB\u3002\u53EF\u66FF\u6362\u6807\u9898\u3001\u6B63\u6587\u548C\u5217\u8868\u5185\u5BB9\u3002",
+        "sidebar": [
+          "\u5BFC\u822A\u9879 A",
+          "\u5BFC\u822A\u9879 B",
+          "\u5BFC\u822A\u9879 C",
+          "\u5BFC\u822A\u9879 D",
+          "\u5BFC\u822A\u9879 E"
+        ],
+        "activePage": 0,
+        "eyebrow": "\u680F\u76EE / \u5F53\u524D\u9875\u9762",
+        "steps": [
+          {
+            "title": "\u5185\u5BB9\u6807\u9898 A",
+            "body": "\u6B63\u6587\u7B2C\u4E00\u6BB5\uFF0C\u66FF\u6362\u4E3A\u9700\u8981\u5C55\u793A\u7684\u5185\u5BB9\u3002"
+          },
+          {
+            "title": "\u5185\u5BB9\u6807\u9898 B",
+            "body": "\u6B63\u6587\u7B2C\u4E8C\u6BB5\uFF0C\u652F\u6301\u7EE7\u7EED\u8865\u5145\u8BF4\u660E\u3002"
+          }
+        ],
+        "code": "node example.js",
+        "tocTitle": "\u672C\u9875\u5185\u5BB9",
+        "toc": [
+          "\u76EE\u5F55\u9879 A",
+          "\u76EE\u5F55\u9879 B",
+          "\u76EE\u5F55\u9879 C"
+        ],
+        "button": "\u4E0B\u4E00\u6B65"
+      },
       render(p, h) {
         return `<div class="os-stage"><div class="os-window os-chrome" data-motion="reveal"><div class="os-chrome-tabs"><span class="os-tab-search">${cn(h, "chevron-down", 15)}</span>${arr4(p.tabs).map((t) => `<div class="os-chrome-tab ${t.active ? "os-chrome-tab-active" : ""}"><span class="os-favicon">${cn(h, "file", 13)}</span><span>${h.esc(t.title)}</span>${cn(h, "x", 13)}</div>`).join("")}<span class="os-new-tab">${cn(h, "plus", 17)}</span><span class="os-flex"></span>${winButtons(h)}</div><div class="os-chrome-toolbar">${tool(h, "chevron-left")}${tool(h, "chevron-right")}${tool(h, "refresh")}<div class="os-omnibox">${cn(h, "tune", 15)}<span>${h.esc(p.url)}</span><span class="os-flex"></span><span class="os-bookmark-star">\u2606</span></div>${tool(h, "download")}<span class="os-profile">${h.esc(p.profile)}</span>${tool(h, "vertical-more")}</div><div class="os-bookmarks">${arr4(p.bookmarks).map((x) => `<span>${cn(h, "folder", 14)}${h.esc(x)}</span>`).join("")}</div><div class="os-web-viewport">${media2(p, h, `<div class="os-docsite"><header><strong>${h.esc(p.brand)}</strong><nav>${arr4(p.nav).map((x) => `<span>${h.esc(x)}</span>`).join("")}</nav><button type="button" class="os-doc-action" data-motion="focus">${h.esc(p.actionButton)}</button>${cn(h, "search", 18)}</header><div class="os-doc-body"><aside><b>${h.esc(p.section)}</b>${arr4(p.sidebar).map((x, i) => `<span class="${i === num5(p.activePage) ? "os-doc-active" : ""}">${h.esc(x)}</span>`).join("")}</aside><article data-motion="scroll"><div class="os-doc-eyebrow">${h.esc(p.eyebrow)}</div><h1>${h.esc(p.title)}</h1><p>${h.esc(p.intro)}</p>${arr4(p.steps).map((x, i) => `<section data-motion="item"><h2>${h.esc(x.title)}</h2><p>${h.esc(x.body)}</p>${i === 0 ? `<pre data-motion="type">${h.esc(p.code)}</pre>` : ""}</section>`).join("")}<div class="os-doc-next">${h.esc(p.button)}${cn(h, "arrow-right", 16)}</div></article><div class="os-doc-toc"><b>${h.esc(p.tocTitle)}</b>${arr4(p.toc).map((x) => `<span>${h.esc(x)}</span>`).join("")}</div></div></div>`)}</div></div></div>`;
       }
@@ -2656,7 +5941,63 @@ var ComponentLibraryRuntime = (() => {
       height: 800,
       description: "iPhone 15 Pro \u5916\u58F3\u3001\u7075\u52A8\u5C9B\u3001\u72B6\u6001\u680F\u4E0E\u5E95\u90E8\u5B89\u5168\u533A\uFF1B\u9ED8\u8BA4\u662F\u53EF\u7F16\u8F91\u7684 iOS 18 \u6587\u4EF6\u6D4F\u89C8\u793A\u4F8B\u3002",
       reference: ref2("iPhone 15 Pro \u5B98\u65B9\u5C4F\u5E55\u77E9\u5F62 1179\xD72556\uFF08393\xD7852 \u903B\u8F91\u5750\u6807\uFF09\uFF1B\u6587\u4EF6\u6D4F\u89C8\u4E0E\u5E95\u680F\u4F9D\u636E Apple iOS 18 \u7528\u6237\u624B\u518C\u3002\u56FE\u6807\u4E3A\u53EF\u7F16\u8F91 SVG \u8FD1\u4F3C\uFF0CWindows \u5B57\u4F53\u56DE\u9000\uFF0C\u672A\u8FDB\u884C\u50CF\u7D20\u7EA7\u6BD4\u8F83\u3002", "https://support.apple.com/en-ie/guide/iphone/iphe4bff8827/18.0/ios/18.0"),
-      defaults: { time: "9:41", battery: 100, media: { kind: "demo", src: "", fit: "cover", alt: "" }, appTitle: "\u6587\u4EF6", folderTitle: "\u89C6\u9891\u9879\u76EE", backLabel: "\u6D4F\u89C8", search: "\u641C\u7D22", sortLabel: "\u540D\u79F0", itemCount: "6 \u4E2A\u9879\u76EE", folders: [{ name: "\u53C2\u8003\u7D20\u6750", count: "12 \u9879" }, { name: "\u5F55\u5C4F", count: "8 \u9879" }, { name: "\u914D\u97F3", count: "5 \u9879" }, { name: "\u56FE\u7247", count: "16 \u9879" }, { name: "\u52A8\u753B", count: "10 \u9879" }, { name: "\u5BFC\u51FA", count: "3 \u9879" }], tabs: [{ label: "\u6700\u8FD1\u9879\u76EE", icon: "refresh" }, { label: "\u5171\u4EAB", icon: "link" }, { label: "\u6D4F\u89C8", icon: "folder" }], activeTab: 2 },
+      defaults: {
+        "time": "9:41",
+        "battery": 100,
+        "media": {
+          "kind": "demo",
+          "src": "",
+          "fit": "cover",
+          "alt": ""
+        },
+        "appTitle": "\u6587\u4EF6",
+        "folderTitle": "\u793A\u4F8B\u6587\u4EF6\u5939",
+        "backLabel": "\u6D4F\u89C8",
+        "search": "\u641C\u7D22",
+        "sortLabel": "\u540D\u79F0",
+        "itemCount": "6 \u4E2A\u9879\u76EE",
+        "folders": [
+          {
+            "name": "\u6587\u4EF6\u5939 A",
+            "count": "12 \u9879"
+          },
+          {
+            "name": "\u6587\u4EF6\u5939 B",
+            "count": "8 \u9879"
+          },
+          {
+            "name": "\u6587\u4EF6\u5939 C",
+            "count": "5 \u9879"
+          },
+          {
+            "name": "\u6587\u4EF6\u5939 D",
+            "count": "16 \u9879"
+          },
+          {
+            "name": "\u6587\u4EF6\u5939 E",
+            "count": "10 \u9879"
+          },
+          {
+            "name": "\u6587\u4EF6\u5939 F",
+            "count": "3 \u9879"
+          }
+        ],
+        "tabs": [
+          {
+            "label": "\u6700\u8FD1\u9879\u76EE",
+            "icon": "refresh"
+          },
+          {
+            "label": "\u5171\u4EAB",
+            "icon": "link"
+          },
+          {
+            "label": "\u6D4F\u89C8",
+            "icon": "folder"
+          }
+        ],
+        "activeTab": 2
+      },
       render(p, h) {
         return `<div class="os-stage os-device-stage"><div class="os-iphone" data-motion="reveal"><i class="os-phone-side os-phone-left-a"></i><i class="os-phone-side os-phone-left-b"></i><i class="os-phone-side os-phone-left-c"></i><i class="os-phone-side os-phone-right"></i><div class="os-phone-screen"><div class="os-phone-logical">${status2(p, h)}<div class="os-phone-content">${media2(p, h, iosFiles(p, h))}</div><div class="os-home-indicator"></div></div></div></div></div>`;
       }
@@ -2669,7 +6010,94 @@ var ComponentLibraryRuntime = (() => {
       height: 800,
       description: "4:3 \u5E73\u677F\u5C55\u793A\u5BB9\u5668\uFF0C\u652F\u6301\u771F\u5B9E\u5F55\u5C4F\u66FF\u6362\uFF0C\u9ED8\u8BA4\u6587\u4EF6\u5E94\u7528\u542B\u4FA7\u680F\u3001\u6587\u4EF6\u7F51\u683C\u4E0E\u72B6\u6001\u680F\u3002",
       reference: ref2("iPad Pro 12.9 \u82F1\u5BF8\u7B2C\u516D\u4EE3\u5B98\u65B9\u5C4F\u5E55 2732\xD72048\u3002\u8BBE\u5907\u4EE5\u6B63\u9762\u5E73\u89C6\u8868\u73B0\uFF0C\u9ED8\u8BA4\u6587\u4EF6\u754C\u9762\u4EE5 iPadOS 18 \u7ED3\u6784\u4E3A\u53C2\u8003\uFF1BWindows \u9884\u89C8\u4F7F\u7528\u672C\u673A\u5B57\u4F53\u56DE\u9000\u3002", "https://support.apple.com/en-ie/111841"),
-      defaults: { time: "9:41", date: "9\u670817\u65E5 \u661F\u671F\u56DB", battery: 100, media: { kind: "demo", src: "", fit: "contain", alt: "" }, appTitle: "\u6587\u4EF6", folderTitle: "\u89C6\u9891\u5236\u4F5C", search: "\u641C\u7D22", sortLabel: "\u540D\u79F0", itemCount: "8 \u4E2A\u9879\u76EE", sidebar: [{ label: "\u6700\u8FD1\u9879\u76EE", icon: "refresh" }, { label: "\u5171\u4EAB", icon: "link" }, { label: "iCloud \u4E91\u76D8", icon: "folder" }, { label: "\u6211\u7684 iPad", icon: "monitor" }, { label: "\u6700\u8FD1\u5220\u9664", icon: "trash" }], selectedSidebar: 2, tagsTitle: "\u6807\u7B7E", tags: [{ label: "\u91CD\u8981", color: "#ff453a" }, { label: "\u5DE5\u4F5C", color: "#0a84ff" }, { label: "\u5DF2\u5B8C\u6210", color: "#30b15a" }], folders: [{ name: "01 \u539F\u59CB\u7D20\u6750", count: "24 \u9879" }, { name: "02 \u53C2\u8003\u56FE\u7247", count: "18 \u9879" }, { name: "03 \u5F55\u5C4F", count: "8 \u9879" }, { name: "04 \u914D\u97F3", count: "5 \u9879" }, { name: "05 \u7EC4\u4EF6", count: "36 \u9879" }, { name: "06 \u52A8\u753B", count: "12 \u9879" }, { name: "07 \u5DE5\u7A0B", count: "4 \u9879" }, { name: "08 \u6210\u7247", count: "3 \u9879" }] },
+      defaults: {
+        "time": "9:41",
+        "date": "9\u670817\u65E5 \u661F\u671F\u56DB",
+        "battery": 100,
+        "media": {
+          "kind": "demo",
+          "src": "",
+          "fit": "contain",
+          "alt": ""
+        },
+        "appTitle": "\u6587\u4EF6",
+        "folderTitle": "\u793A\u4F8B\u6587\u4EF6\u5939",
+        "search": "\u641C\u7D22",
+        "sortLabel": "\u540D\u79F0",
+        "itemCount": "8 \u4E2A\u9879\u76EE",
+        "sidebar": [
+          {
+            "label": "\u6700\u8FD1\u9879\u76EE",
+            "icon": "refresh"
+          },
+          {
+            "label": "\u5171\u4EAB",
+            "icon": "link"
+          },
+          {
+            "label": "iCloud \u4E91\u76D8",
+            "icon": "folder"
+          },
+          {
+            "label": "\u6211\u7684 iPad",
+            "icon": "monitor"
+          },
+          {
+            "label": "\u6700\u8FD1\u5220\u9664",
+            "icon": "trash"
+          }
+        ],
+        "selectedSidebar": 2,
+        "tagsTitle": "\u6807\u7B7E",
+        "tags": [
+          {
+            "label": "\u91CD\u8981",
+            "color": "#ff453a"
+          },
+          {
+            "label": "\u5DE5\u4F5C",
+            "color": "#0a84ff"
+          },
+          {
+            "label": "\u5DF2\u5B8C\u6210",
+            "color": "#30b15a"
+          }
+        ],
+        "folders": [
+          {
+            "name": "\u6587\u4EF6\u5939 A",
+            "count": "24 \u9879"
+          },
+          {
+            "name": "\u6587\u4EF6\u5939 B",
+            "count": "18 \u9879"
+          },
+          {
+            "name": "\u6587\u4EF6\u5939 C",
+            "count": "8 \u9879"
+          },
+          {
+            "name": "\u6587\u4EF6\u5939 D",
+            "count": "5 \u9879"
+          },
+          {
+            "name": "\u6587\u4EF6\u5939 E",
+            "count": "36 \u9879"
+          },
+          {
+            "name": "\u6587\u4EF6\u5939 F",
+            "count": "12 \u9879"
+          },
+          {
+            "name": "\u6587\u4EF6\u5939 G",
+            "count": "4 \u9879"
+          },
+          {
+            "name": "\u6587\u4EF6\u5939 H",
+            "count": "3 \u9879"
+          }
+        ]
+      },
       render(p, h) {
         return `<div class="os-stage os-device-stage"><div class="os-ipad" data-motion="reveal"><i class="os-ipad-camera"></i><div class="os-ipad-screen"><div class="os-ipad-logical"><div class="os-ipad-status"><span>${h.esc(p.time)}\u3000${h.esc(p.date)}</span><span>${cn(h, "wifi", 15)} ${h.esc(p.battery)}% <span class="os-ios-battery"><i style="width:${Math.max(0, Math.min(100, num5(p.battery, 100)))}%"></i></span></span></div><div class="os-ipad-content">${media2(p, h, iosFiles(p, h, true))}</div><div class="os-home-indicator"></div></div></div></div></div>`;
       }
@@ -2682,7 +6110,116 @@ var ComponentLibraryRuntime = (() => {
       height: 800,
       description: "\u539F\u751F\u6253\u5F00\u6587\u4EF6\u5BF9\u8BDD\u6846\u7ED3\u6784\uFF1A\u8DEF\u5F84\u3001\u641C\u7D22\u3001\u5BFC\u822A\u6811\u3001\u8BE6\u7EC6\u4FE1\u606F\u5217\u8868\u3001\u6587\u4EF6\u540D\u548C\u6587\u4EF6\u7C7B\u578B\u3002",
       reference: ref2("Windows \u6587\u4EF6\u9009\u62E9\u5668\u4E0E Win32 \u5BF9\u8BDD\u6846\u5E03\u5C40\u89C4\u8303\u3002\u7ECF\u5178\u6587\u4EF6\u9009\u62E9\u5668\u4FDD\u7559\u5E95\u90E8\u6587\u4EF6\u540D/\u7C7B\u578B\u548C\u53F3\u4FA7\u6309\u94AE\uFF1B\u672A\u540C\u5C3A\u5BF8\u5B9E\u6D4B\u3002", "https://learn.microsoft.com/en-us/windows/uwp/files/quickstart-using-file-and-folder-pickers"),
-      defaults: { title: "\u6253\u5F00", path: ["\u6B64\u7535\u8111", "\u672C\u5730\u78C1\u76D8 (D:)", "\u89C6\u9891\u9879\u76EE"], search: "\u641C\u7D22 \u89C6\u9891\u9879\u76EE", locations: locationDefaults, activeLocation: "\u89C6\u9891", columns: ["\u540D\u79F0", "\u4FEE\u6539\u65E5\u671F", "\u7C7B\u578B", "\u5927\u5C0F"], files: filesDefaults, selected: 6, organize: "\u7EC4\u7EC7", newFolder: "\u65B0\u5EFA\u6587\u4EF6\u5939", fileNameLabel: "\u6587\u4EF6\u540D(N):", fileName: "scene-01.mp4", typeLabel: "\u6587\u4EF6\u7C7B\u578B(T):", fileType: "\u89C6\u9891\u6587\u4EF6 (*.mp4;*.mov)", open: "\u6253\u5F00(O)", cancel: "\u53D6\u6D88" },
+      defaults: {
+        "title": "\u6253\u5F00",
+        "path": [
+          "\u6B64\u7535\u8111",
+          "\u672C\u5730\u78C1\u76D8 (D:)",
+          "\u793A\u4F8B\u6587\u4EF6\u5939"
+        ],
+        "search": "\u641C\u7D22 \u793A\u4F8B\u6587\u4EF6\u5939",
+        "locations": [
+          {
+            "label": "\u4E3B\u6587\u4EF6\u5939",
+            "icon": "home"
+          },
+          {
+            "label": "\u684C\u9762",
+            "icon": "monitor"
+          },
+          {
+            "label": "\u4E0B\u8F7D",
+            "icon": "download"
+          },
+          {
+            "label": "\u6587\u6863",
+            "icon": "file"
+          },
+          {
+            "label": "\u56FE\u7247",
+            "icon": "image"
+          },
+          {
+            "label": "\u89C6\u9891",
+            "icon": "video"
+          },
+          {
+            "label": "\u6B64\u7535\u8111",
+            "icon": "monitor"
+          },
+          {
+            "label": "\u672C\u5730\u78C1\u76D8 (D:)",
+            "icon": "monitor"
+          }
+        ],
+        "activeLocation": "\u89C6\u9891",
+        "columns": [
+          "\u540D\u79F0",
+          "\u4FEE\u6539\u65E5\u671F",
+          "\u7C7B\u578B",
+          "\u5927\u5C0F"
+        ],
+        "files": [
+          {
+            "name": "folder-a",
+            "kind": "folder",
+            "date": "2026/9/17  10:24",
+            "type": "\u6587\u4EF6\u5939",
+            "size": ""
+          },
+          {
+            "name": "folder-b",
+            "kind": "folder",
+            "date": "2026/9/17  10:26",
+            "type": "\u6587\u4EF6\u5939",
+            "size": ""
+          },
+          {
+            "name": "folder-c",
+            "kind": "folder",
+            "date": "2026/9/17  11:08",
+            "type": "\u6587\u4EF6\u5939",
+            "size": ""
+          },
+          {
+            "name": "example.json",
+            "kind": "code",
+            "date": "2026/9/17  11:02",
+            "type": "JSON \u6587\u4EF6",
+            "size": "8 KB"
+          },
+          {
+            "name": "example.html",
+            "kind": "code",
+            "date": "2026/9/17  11:04",
+            "type": "HTML \u6587\u6863",
+            "size": "24 KB"
+          },
+          {
+            "name": "example.md",
+            "kind": "file",
+            "date": "2026/9/17  10:45",
+            "type": "MD \u6587\u4EF6",
+            "size": "3 KB"
+          },
+          {
+            "name": "example.mp4",
+            "kind": "video",
+            "date": "2026/9/17  11:08",
+            "type": "MP4 \u89C6\u9891",
+            "size": "12,840 KB"
+          }
+        ],
+        "selected": 6,
+        "organize": "\u7EC4\u7EC7",
+        "newFolder": "\u65B0\u5EFA\u6587\u4EF6\u5939",
+        "fileNameLabel": "\u6587\u4EF6\u540D(N):",
+        "fileName": "example.mp4",
+        "typeLabel": "\u6587\u4EF6\u7C7B\u578B(T):",
+        "fileType": "\u89C6\u9891\u6587\u4EF6 (*.mp4;*.mov)",
+        "open": "\u6253\u5F00(O)",
+        "cancel": "\u53D6\u6D88"
+      },
       render(p, h) {
         return `<div class="os-stage"><div class="os-window os-file-dialog" data-motion="reveal"><div class="os-simple-title"><span>${cn(h, "folder", 15)}${h.esc(p.title)}</span><span>${cn(h, "x", 14)}</span></div>${breadcrumbs(p, h)}<div class="os-dialog-command"><span>${h.esc(p.organize)} ${cn(h, "chevron-down", 12)}</span><span>${h.esc(p.newFolder)}</span><span class="os-flex"></span>${cn(h, "list", 17)}${cn(h, "chevron-down", 12)}<span class="os-circle-help">?</span></div><div class="os-file-content">${winNav(p, h)}${winRows(p, h)}</div><div class="os-dialog-bottom"><div class="os-picker-fields"><label>${h.esc(p.fileNameLabel)}</label><div class="os-input os-focused" data-motion="focus">${h.esc(p.fileName)}${cn(h, "chevron-down", 12)}</div><label>${h.esc(p.typeLabel)}</label><div class="os-input">${h.esc(p.fileType)}${cn(h, "chevron-down", 12)}</div></div><div class="os-picker-actions"><div class="os-button os-picker-open">${h.esc(p.open)}<span>${cn(h, "chevron-down", 12)}</span></div><div class="os-button">${h.esc(p.cancel)}</div></div></div></div></div>`;
       }
@@ -2695,7 +6232,135 @@ var ComponentLibraryRuntime = (() => {
       height: 800,
       description: "Windows 11 \u6807\u7B7E\u3001\u5BFC\u822A\u3001\u547D\u4EE4\u680F\u3001\u5DE6\u4FA7\u76EE\u5F55\u4E0E\u6587\u4EF6\u8BE6\u7EC6\u5217\u8868\uFF0C\u72EC\u7ACB\u53C2\u6570\u9A71\u52A8\u3002",
       reference: ref2("Microsoft \u5B98\u65B9 Windows 11 File Explorer \u622A\u56FE\u53CA\u5E03\u5C40\uFF1B\u975E Windows 10 Ribbon \u4E0E macOS \u6DF7\u5408\u3002", "https://support.microsoft.com/en-us/windows/experience/fileexplorer/file-explorer-in-windows"),
-      defaults: { title: "\u89C6\u9891\u9879\u76EE", path: ["\u6B64\u7535\u8111", "\u672C\u5730\u78C1\u76D8 (D:)", "\u89C6\u9891\u9879\u76EE"], search: "\u641C\u7D22 \u89C6\u9891\u9879\u76EE", locations: locationDefaults, activeLocation: "\u89C6\u9891", columns: ["\u540D\u79F0", "\u4FEE\u6539\u65E5\u671F", "\u7C7B\u578B", "\u5927\u5C0F"], files: filesDefaults, selected: 3, commands: [{ icon: "plus", label: "\u65B0\u5EFA" }, { icon: "cut", label: "" }, { icon: "copy", label: "" }, { icon: "paste", label: "" }, { icon: "rename", label: "" }, { icon: "share", label: "" }, { icon: "trash", label: "" }, { icon: "list", label: "\u6392\u5E8F" }, { icon: "grid", label: "\u67E5\u770B" }], status: "7 \u4E2A\u9879\u76EE\u3000|\u3000\u9009\u4E2D 1 \u4E2A\u9879\u76EE\u30008.00 KB" },
+      defaults: {
+        "title": "\u793A\u4F8B\u6587\u4EF6\u5939",
+        "path": [
+          "\u6B64\u7535\u8111",
+          "\u672C\u5730\u78C1\u76D8 (D:)",
+          "\u793A\u4F8B\u6587\u4EF6\u5939"
+        ],
+        "search": "\u641C\u7D22 \u793A\u4F8B\u6587\u4EF6\u5939",
+        "locations": [
+          {
+            "label": "\u4E3B\u6587\u4EF6\u5939",
+            "icon": "home"
+          },
+          {
+            "label": "\u684C\u9762",
+            "icon": "monitor"
+          },
+          {
+            "label": "\u4E0B\u8F7D",
+            "icon": "download"
+          },
+          {
+            "label": "\u6587\u6863",
+            "icon": "file"
+          },
+          {
+            "label": "\u56FE\u7247",
+            "icon": "image"
+          },
+          {
+            "label": "\u89C6\u9891",
+            "icon": "video"
+          },
+          {
+            "label": "\u6B64\u7535\u8111",
+            "icon": "monitor"
+          },
+          {
+            "label": "\u672C\u5730\u78C1\u76D8 (D:)",
+            "icon": "monitor"
+          }
+        ],
+        "activeLocation": "\u89C6\u9891",
+        "columns": [
+          "\u540D\u79F0",
+          "\u4FEE\u6539\u65E5\u671F",
+          "\u7C7B\u578B",
+          "\u5927\u5C0F"
+        ],
+        "files": [
+          {
+            "name": "folder-a",
+            "kind": "folder",
+            "date": "2026/9/17  10:24",
+            "type": "\u6587\u4EF6\u5939",
+            "size": ""
+          },
+          {
+            "name": "folder-b",
+            "kind": "folder",
+            "date": "2026/9/17  10:26",
+            "type": "\u6587\u4EF6\u5939",
+            "size": ""
+          },
+          {
+            "name": "folder-c",
+            "kind": "folder",
+            "date": "2026/9/17  11:08",
+            "type": "\u6587\u4EF6\u5939",
+            "size": ""
+          },
+          {
+            "name": "example.json",
+            "kind": "code",
+            "date": "2026/9/17  11:02",
+            "type": "JSON \u6587\u4EF6",
+            "size": "8 KB"
+          },
+          {
+            "name": "example.html",
+            "kind": "code",
+            "date": "2026/9/17  11:04",
+            "type": "HTML \u6587\u6863",
+            "size": "24 KB"
+          },
+          {
+            "name": "example.md",
+            "kind": "file",
+            "date": "2026/9/17  10:45",
+            "type": "MD \u6587\u4EF6",
+            "size": "3 KB"
+          },
+          {
+            "name": "example.mp4",
+            "kind": "video",
+            "date": "2026/9/17  11:08",
+            "type": "MP4 \u89C6\u9891",
+            "size": "12,840 KB"
+          }
+        ],
+        "selected": 3,
+        "commands": [
+          {
+            "icon": "plus",
+            "label": "\u65B0\u5EFA"
+          },
+          {
+            "icon": "copy",
+            "label": ""
+          },
+          {
+            "icon": "link",
+            "label": ""
+          },
+          {
+            "icon": "trash",
+            "label": ""
+          },
+          {
+            "icon": "list",
+            "label": "\u6392\u5E8F"
+          },
+          {
+            "icon": "grid",
+            "label": "\u67E5\u770B"
+          }
+        ],
+        "status": "7 \u4E2A\u9879\u76EE\u3000|\u3000\u9009\u4E2D 1 \u4E2A\u9879\u76EE\u30008.00 KB"
+      },
       render(p, h) {
         return `<div class="os-stage"><div class="os-window os-explorer" data-motion="reveal"><div class="os-explorer-tabs"><div class="os-explorer-tab">${fileIcon(h, "folder", 17)}<span>${h.esc(p.title)}</span>${cn(h, "x", 12)}</div>${tool(h, "plus")}<span class="os-flex"></span>${winButtons(h)}</div>${breadcrumbs(p, h)}<div class="os-explorer-command">${arr4(p.commands).map((x) => tool(h, x.icon, x.label)).join("")}${tool(h, "more")}</div><div class="os-file-content">${winNav(p, h)}${winRows(p, h)}</div><div class="os-file-status"><span>${h.esc(p.status)}</span><span>${cn(h, "list", 16)}${cn(h, "grid", 16)}</span></div></div></div>`;
       }
@@ -2708,7 +6373,51 @@ var ComponentLibraryRuntime = (() => {
       height: 800,
       description: "Windows 11 \u8BBE\u7F6E\u5E94\u7528\uFF0C\u5B8C\u6574\u8D26\u6237\u680F\u3001\u8BBE\u7F6E\u5BFC\u822A\u3001\u663E\u793A\u8BBE\u7F6E\u4E0E\u539F\u751F\u5F00\u5173/\u4E0B\u62C9\u63A7\u4EF6\u3002",
       reference: ref2("Microsoft \u663E\u793A\u8BBE\u7F6E\u64CD\u4F5C\u8DEF\u5F84\u4E0E Fluent \u63A7\u4EF6\u89C4\u8303\uFF0C\u793A\u4F8B\u9009\u62E9\u5185\u7F6E\u663E\u793A\u5668\u4EE5\u6B63\u786E\u5448\u73B0\u4EAE\u5EA6\u63A7\u5236\u3002", "https://support.microsoft.com/en-us/windows/hardware/display-graphics/change-display-brightness-and-color-in-windows"),
-      defaults: { title: "\u8BBE\u7F6E", user: "Lin", email: "lin@example.com", initial: "L", search: "\u67E5\u627E\u8BBE\u7F6E", nav: ["\u4E3B\u9875", "\u7CFB\u7EDF", "\u84DD\u7259\u548C\u5176\u4ED6\u8BBE\u5907", "\u7F51\u7EDC\u548C Internet", "\u4E2A\u6027\u5316", "\u5E94\u7528", "\u8D26\u6237", "\u65F6\u95F4\u548C\u8BED\u8A00", "\u6E38\u620F", "\u8F85\u52A9\u529F\u80FD", "\u9690\u79C1\u548C\u5B89\u5168\u6027", "Windows \u66F4\u65B0"], selectedNav: 1, breadcrumb: "\u7CFB\u7EDF", pageTitle: "\u5C4F\u5E55", displayNumber: "1", displayNote: "\u5185\u7F6E\u663E\u793A\u5668", sectionTitle: "\u4EAE\u5EA6\u548C\u989C\u8272", brightness: 72, brightnessLabel: "\u4EAE\u5EA6", brightnessHelp: "\u8C03\u6574\u5185\u7F6E\u663E\u793A\u5668\u7684\u4EAE\u5EA6", nightTitle: "\u591C\u95F4\u6A21\u5F0F", nightHelp: "\u4F7F\u7528\u6696\u8272\u8BA9\u773C\u775B\u66F4\u8212\u9002", nightOn: false, onLabel: "\u5F00", offLabel: "\u5173", hdrTitle: "HDR", hdrHelp: "\u89C6\u9891\u3001\u6E38\u620F\u548C\u5E94\u7528\u4E2D\u7684\u9AD8\u52A8\u6001\u8303\u56F4", layoutTitle: "\u7F29\u653E\u548C\u5E03\u5C40", scaleTitle: "\u7F29\u653E", scaleHelp: "\u66F4\u6539\u6587\u672C\u3001\u5E94\u7528\u548C\u5176\u4ED6\u9879\u76EE\u7684\u5927\u5C0F", scaleValue: "150% (\u63A8\u8350)", resolutionTitle: "\u663E\u793A\u5668\u5206\u8FA8\u7387", resolutionValue: "2560 \xD7 1600 (\u63A8\u8350)", orientationTitle: "\u663E\u793A\u65B9\u5411", orientationValue: "\u6A2A\u5411" },
+      defaults: {
+        "title": "\u8BBE\u7F6E",
+        "user": "\u793A\u4F8B\u7528\u6237",
+        "email": "user@example.com",
+        "initial": "U",
+        "search": "\u67E5\u627E\u8BBE\u7F6E",
+        "nav": [
+          "\u4E3B\u9875",
+          "\u7CFB\u7EDF",
+          "\u84DD\u7259\u548C\u5176\u4ED6\u8BBE\u5907",
+          "\u7F51\u7EDC\u548C Internet",
+          "\u4E2A\u6027\u5316",
+          "\u5E94\u7528",
+          "\u8D26\u6237",
+          "\u65F6\u95F4\u548C\u8BED\u8A00",
+          "\u6E38\u620F",
+          "\u8F85\u52A9\u529F\u80FD",
+          "\u9690\u79C1\u548C\u5B89\u5168\u6027",
+          "Windows \u66F4\u65B0"
+        ],
+        "selectedNav": 1,
+        "breadcrumb": "\u7CFB\u7EDF",
+        "pageTitle": "\u5C4F\u5E55",
+        "displayNumber": "1",
+        "displayNote": "\u5185\u7F6E\u663E\u793A\u5668",
+        "sectionTitle": "\u4EAE\u5EA6\u548C\u989C\u8272",
+        "brightness": 72,
+        "brightnessLabel": "\u4EAE\u5EA6",
+        "brightnessHelp": "\u8C03\u6574\u5185\u7F6E\u663E\u793A\u5668\u7684\u4EAE\u5EA6",
+        "nightTitle": "\u591C\u95F4\u6A21\u5F0F",
+        "nightHelp": "\u4F7F\u7528\u6696\u8272\u8BA9\u773C\u775B\u66F4\u8212\u9002",
+        "nightOn": false,
+        "onLabel": "\u5F00",
+        "offLabel": "\u5173",
+        "hdrTitle": "HDR",
+        "hdrHelp": "\u89C6\u9891\u3001\u6E38\u620F\u548C\u5E94\u7528\u4E2D\u7684\u9AD8\u52A8\u6001\u8303\u56F4",
+        "layoutTitle": "\u7F29\u653E\u548C\u5E03\u5C40",
+        "scaleTitle": "\u7F29\u653E",
+        "scaleHelp": "\u66F4\u6539\u6587\u672C\u3001\u5E94\u7528\u548C\u5176\u4ED6\u9879\u76EE\u7684\u5927\u5C0F",
+        "scaleValue": "150% (\u63A8\u8350)",
+        "resolutionTitle": "\u663E\u793A\u5668\u5206\u8FA8\u7387",
+        "resolutionValue": "2560 \xD7 1600 (\u63A8\u8350)",
+        "orientationTitle": "\u663E\u793A\u65B9\u5411",
+        "orientationValue": "\u6A2A\u5411"
+      },
       render(p, h) {
         return `<div class="os-stage"><div class="os-window os-settings" data-motion="reveal"><div class="os-settings-title">${cn(h, "chevron-left", 16)}<span>${h.esc(p.title)}</span><span class="os-flex"></span>${winButtons(h)}</div><div class="os-settings-layout"><aside class="os-settings-nav"><div class="os-account"><span>${h.esc(p.initial)}</span><div><b>${h.esc(p.user)}</b><small>${h.esc(p.email)}</small></div></div><div class="os-settings-search">${h.esc(p.search)}${cn(h, "search", 15)}</div>${arr4(p.nav).map((x, i) => `<div class="${i === num5(p.selectedNav) ? "os-setting-selected" : ""}" data-motion="item">${cn(h, ["home", "monitor", "phone", "globe", "image", "grid", "file", "calendar", "play", "check-circle", "lock", "refresh"][i] || "settings", 19)}${h.esc(x)}</div>`).join("")}</aside><main class="os-settings-main"><h1><span>${h.esc(p.breadcrumb)}</span>${cn(h, "chevron-right", 23)}${h.esc(p.pageTitle)}</h1><div class="os-display-preview"><div>${h.esc(p.displayNumber)}</div><span>${h.esc(p.displayNote)}</span></div><h2>${h.esc(p.sectionTitle)}</h2><div class="os-setting-row" data-motion="item">${cn(h, "monitor", 21)}<div><b>${h.esc(p.brightnessLabel)}</b><small>${h.esc(p.brightnessHelp)}</small></div><div class="os-slider" style="--os-value:${Math.max(0, Math.min(100, num5(p.brightness, 70)))}%"><i data-motion="bar"></i><em></em></div>${cn(h, "chevron-down", 13)}</div><div class="os-setting-row" data-motion="item">${cn(h, "monitor", 21)}<div><b>${h.esc(p.nightTitle)}</b><small>${h.esc(p.nightHelp)}</small></div><span class="os-flex"></span><span>${h.esc(p.nightOn ? p.onLabel : p.offLabel)}</span><span class="os-toggle ${p.nightOn ? "os-toggle-on" : ""}"><i></i></span>${cn(h, "chevron-right", 13)}</div><div class="os-setting-row" data-motion="item">${cn(h, "video", 21)}<div><b>${h.esc(p.hdrTitle)}</b><small>${h.esc(p.hdrHelp)}</small></div><span class="os-flex"></span>${cn(h, "chevron-right", 13)}</div><h2>${h.esc(p.layoutTitle)}</h2>${[[p.scaleTitle, p.scaleHelp, p.scaleValue], [p.resolutionTitle, "", p.resolutionValue], [p.orientationTitle, "", p.orientationValue]].map((x, i) => `<div class="os-setting-row" data-motion="item">${cn(h, i === 0 ? "search" : "monitor", 21)}<div><b>${h.esc(x[0])}</b>${x[1] ? `<small>${h.esc(x[1])}</small>` : ""}</div><span class="os-flex"></span><div class="os-select" ${i === 2 ? 'data-motion="focus"' : ""}>${h.esc(x[2])}${cn(h, "chevron-down", 13)}</div></div>`).join("")}</main></div></div></div>`;
       }
@@ -2721,7 +6430,60 @@ var ComponentLibraryRuntime = (() => {
       height: 800,
       description: "Windows Terminal \u7684\u7F6E\u9876\u547D\u4EE4\u641C\u7D22\u3001\u7B5B\u9009\u5217\u8868\u4E0E\u5FEB\u6377\u952E\u63D0\u793A\uFF0C\u652F\u6301\u7F16\u8F91\u547D\u4EE4\u3001\u9009\u4E2D\u9879\u53CA\u5E95\u5C42\u7EC8\u7AEF\u3002",
       reference: ref2("Windows Terminal \u5B98\u65B9 command palette \u6587\u6863\u548C\u5D4C\u5957\u547D\u4EE4\u622A\u56FE\uFF0C\u91C7\u7528 WinUI \u6DF1\u8272\u9762\u677F\u3002", "https://learn.microsoft.com/en-us/windows/terminal/command-palette"),
-      defaults: { title: "PowerShell", terminalLines: ["PowerShell 7.4.6", "PS D:\\video-project> Get-ChildItem", "", "    Directory: D:\\video-project", "", "Mode                 LastWriteTime         Length Name", "----                 -------------         ------ ----", "d----          2026/9/17     10:24                assets", "d----          2026/9/17     10:26                compositions", "-a---          2026/9/17     11:02           8124 content.json", "", "PS D:\\video-project>"], query: "> \u65B0\u5EFA", heading: "\u547D\u4EE4", commands: [{ icon: "plus", label: "\u65B0\u5EFA\u6807\u7B7E\u9875", detail: "\u4F7F\u7528\u9ED8\u8BA4\u914D\u7F6E\u6587\u4EF6", shortcut: "Ctrl+Shift+T" }, { icon: "terminal", label: "\u65B0\u5EFA\u6807\u7B7E\u9875\u2026", detail: "\u9009\u62E9\u914D\u7F6E\u6587\u4EF6", shortcut: "\u203A" }, { icon: "monitor", label: "\u65B0\u5EFA\u7A97\u53E3", detail: "\u6253\u5F00\u65B0\u7684\u7EC8\u7AEF\u7A97\u53E3", shortcut: "Ctrl+Shift+N" }, { icon: "terminal", label: "\u65B0\u5EFA PowerShell \u6807\u7B7E\u9875", detail: "PowerShell", shortcut: "" }, { icon: "terminal", label: "\u65B0\u5EFA\u547D\u4EE4\u63D0\u793A\u7B26\u6807\u7B7E\u9875", detail: "Command Prompt", shortcut: "" }], selected: 0, hint: "\u6309 Enter \u8FD0\u884C\u547D\u4EE4", dismiss: "Esc \u5173\u95ED" },
+      defaults: {
+        "title": "PowerShell",
+        "terminalLines": [
+          "PowerShell",
+          "PS D:\\example-project> Get-ChildItem",
+          "",
+          "    Directory: D:\\example-project",
+          "",
+          "Mode                 LastWriteTime         Length Name",
+          "----                 -------------         ------ ----",
+          "d----          2026/1/1      09:00                folder-a",
+          "d----          2026/1/1      09:00                folder-b",
+          "-a---          2026/1/1      09:00           1024 example.json",
+          "",
+          "PS D:\\example-project>"
+        ],
+        "query": "> \u65B0\u5EFA",
+        "heading": "\u547D\u4EE4",
+        "commands": [
+          {
+            "icon": "plus",
+            "label": "\u65B0\u5EFA\u6807\u7B7E\u9875",
+            "detail": "\u4F7F\u7528\u9ED8\u8BA4\u914D\u7F6E\u6587\u4EF6",
+            "shortcut": "Ctrl+Shift+T"
+          },
+          {
+            "icon": "terminal",
+            "label": "\u65B0\u5EFA\u6807\u7B7E\u9875\u2026",
+            "detail": "\u9009\u62E9\u914D\u7F6E\u6587\u4EF6",
+            "shortcut": "\u203A"
+          },
+          {
+            "icon": "monitor",
+            "label": "\u65B0\u5EFA\u7A97\u53E3",
+            "detail": "\u6253\u5F00\u65B0\u7684\u7EC8\u7AEF\u7A97\u53E3",
+            "shortcut": "Ctrl+Shift+N"
+          },
+          {
+            "icon": "terminal",
+            "label": "\u65B0\u5EFA PowerShell \u6807\u7B7E\u9875",
+            "detail": "PowerShell",
+            "shortcut": ""
+          },
+          {
+            "icon": "terminal",
+            "label": "\u65B0\u5EFA\u547D\u4EE4\u63D0\u793A\u7B26\u6807\u7B7E\u9875",
+            "detail": "Command Prompt",
+            "shortcut": ""
+          }
+        ],
+        "selected": 0,
+        "hint": "\u6309 Enter \u8FD0\u884C\u547D\u4EE4",
+        "dismiss": "Esc \u5173\u95ED"
+      },
       render(p, h) {
         return `<div class="os-stage"><div class="os-window os-terminal-window"><div class="os-terminal-tabs"><div>${cn(h, "terminal", 16)}${h.esc(p.title)}${cn(h, "x", 12)}</div>${tool(h, "plus")}${tool(h, "chevron-down")}<span class="os-flex"></span>${winButtons(h)}</div><pre class="os-terminal-content">${h.esc(arr4(p.terminalLines).join("\n"))}</pre><div class="os-palette" data-motion="reveal"><div class="os-palette-input"><span data-motion="type">${h.esc(p.query)}</span><i class="os-text-caret" data-motion="cursor"></i></div><div class="os-palette-heading">${h.esc(p.heading)}</div>${arr4(p.commands).map((x, i) => `<div class="os-palette-command ${i === num5(p.selected) ? "os-palette-active" : ""}" data-motion="item">${cn(h, x.icon, 20)}<div><b>${h.esc(x.label)}</b><small>${h.esc(x.detail)}</small></div><kbd>${h.esc(x.shortcut)}</kbd></div>`).join("")}<div class="os-palette-footer"><span>${h.esc(p.hint)}</span><span>${h.esc(p.dismiss)}</span></div></div></div></div>`;
       }
@@ -2734,7 +6496,57 @@ var ComponentLibraryRuntime = (() => {
       height: 800,
       description: "\u53F3\u4FA7\u539F\u751F\u901A\u77E5\u4E2D\u5FC3\uFF0C\u5305\u62EC\u6309\u5E94\u7528\u5206\u7EC4\u7684\u901A\u77E5\u3001\u65F6\u95F4\u3001\u64CD\u4F5C\u6309\u94AE\u3001\u65E5\u671F\u548C\u65E5\u5386\u3002",
       reference: ref2("Microsoft Windows 11 \u901A\u77E5\u4E2D\u5FC3\u5B98\u65B9\u622A\u56FE\u4E0E\u901A\u77E5\u7BA1\u7406\u6587\u6863\uFF1B\u5185\u5BB9\u4E3A\u53EF\u7F16\u8F91\u6F14\u793A\u3002", "https://support.microsoft.com/en-us/windows/experience/notifications-and-do-not-disturb-in-windows"),
-      defaults: { title: "\u901A\u77E5", clear: "\u5168\u90E8\u6E05\u9664", date: "9\u670817\u65E5\uFF0C\u661F\u671F\u56DB", month: "2026\u5E749\u6708", weekdayLabels: ["\u4E00", "\u4E8C", "\u4E09", "\u56DB", "\u4E94", "\u516D", "\u65E5"], monthStartOffset: 1, monthDays: 30, selectedDay: 17, notifications: [{ app: "\u89C6\u9891\u5DE5\u4F5C\u53F0", icon: "video", time: "\u73B0\u5728", title: "\u9884\u89C8\u5DF2\u51C6\u5907\u5C31\u7EEA", body: "\u6240\u6709\u7EC4\u4EF6\u5DF2\u52A0\u8F7D\uFF0C\u53EF\u4EE5\u68C0\u67E5\u753B\u9762\u548C\u52A8\u753B\u65F6\u95F4\u70B9\u3002", actions: ["\u6253\u5F00\u9884\u89C8"] }, { app: "\u6587\u4EF6\u8D44\u6E90\u7BA1\u7406\u5668", icon: "folder", time: "5 \u5206\u949F\u524D", title: "\u7D20\u6750\u5DF2\u590D\u5236", body: "8 \u4E2A\u9879\u76EE\u5DF2\u590D\u5236\u5230\u201C\u89C6\u9891\u9879\u76EE / assets\u201D\u3002", actions: [] }, { app: "\u65E5\u5386", icon: "calendar", time: "12 \u5206\u949F\u524D", title: "\u5F55\u5236\u7B2C\u4E8C\u6BB5\u8BB2\u89E3", body: "\u4ECA\u5929 14:00 \u2014 14:30", actions: ["\u7A0D\u540E\u63D0\u9192", "\u5173\u95ED"] }], focus: "\u4E13\u6CE8", focusTime: "30 \u5206\u949F" },
+      defaults: {
+        "title": "\u901A\u77E5",
+        "clear": "\u5168\u90E8\u6E05\u9664",
+        "date": "9\u670817\u65E5\uFF0C\u661F\u671F\u56DB",
+        "month": "2026\u5E749\u6708",
+        "weekdayLabels": [
+          "\u4E00",
+          "\u4E8C",
+          "\u4E09",
+          "\u56DB",
+          "\u4E94",
+          "\u516D",
+          "\u65E5"
+        ],
+        "monthStartOffset": 1,
+        "monthDays": 30,
+        "selectedDay": 17,
+        "notifications": [
+          {
+            "app": "\u793A\u4F8B\u5E94\u7528",
+            "icon": "info",
+            "time": "\u73B0\u5728",
+            "title": "\u901A\u77E5\u6807\u9898 A",
+            "body": "\u901A\u77E5\u6B63\u6587\u5185\u5BB9\uFF0C\u53EF\u66FF\u6362\u4E3A\u9700\u8981\u5C55\u793A\u7684\u4FE1\u606F\u3002",
+            "actions": [
+              "\u67E5\u770B"
+            ]
+          },
+          {
+            "app": "\u6587\u4EF6\u8D44\u6E90\u7BA1\u7406\u5668",
+            "icon": "folder",
+            "time": "5 \u5206\u949F\u524D",
+            "title": "\u901A\u77E5\u6807\u9898 B",
+            "body": "\u8865\u5145\u901A\u77E5\u8BF4\u660E\u3002",
+            "actions": []
+          },
+          {
+            "app": "\u65E5\u5386",
+            "icon": "calendar",
+            "time": "12 \u5206\u949F\u524D",
+            "title": "\u65E5\u7A0B\u6807\u9898",
+            "body": "\u4ECA\u5929 14:00 \u2014 14:30",
+            "actions": [
+              "\u7A0D\u540E\u63D0\u9192",
+              "\u5173\u95ED"
+            ]
+          }
+        ],
+        "focus": "\u4E13\u6CE8",
+        "focusTime": "30 \u5206\u949F"
+      },
       render(p, h) {
         const count = Math.max(28, Math.min(31, num5(p.monthDays, 30)));
         const offset = Math.max(0, Math.min(6, num5(p.monthStartOffset, 0)));
@@ -2749,7 +6561,95 @@ var ComponentLibraryRuntime = (() => {
       height: 800,
       description: "\u6587\u4EF6\u53F3\u952E\u83DC\u5355\u542B\u5E38\u7528\u64CD\u4F5C\u3001\u5206\u7EC4\u5206\u9694\u7EBF\u3001\u5FEB\u6377\u952E\u3001\u60AC\u505C\u884C\u4E0E\u4E8C\u7EA7\u6253\u5F00\u65B9\u5F0F\u83DC\u5355\u3002",
       reference: ref2("Microsoft File Explorer \u5B98\u65B9\u53F3\u952E\u83DC\u5355\u622A\u56FE\uFF1B\u9876\u90E8\u5E38\u7528\u56FE\u6807\u4E0E\u5E95\u90E8\u201C\u663E\u793A\u66F4\u591A\u9009\u9879\u201D\u7ED3\u6784\u3002", "https://support.microsoft.com/en-us/windows/media/file-explorer-context-menu-png.png"),
-      defaults: { filename: "\u5206\u955C\u811A\u672C.md", filetype: "Markdown \u6587\u6863", topActions: [{ icon: "cut", label: "\u526A\u5207" }, { icon: "copy", label: "\u590D\u5236" }, { icon: "rename", label: "\u91CD\u547D\u540D" }, { icon: "share", label: "\u5171\u4EAB" }, { icon: "trash", label: "\u5220\u9664" }], items: [{ icon: "file", label: "\u6253\u5F00", shortcut: "Enter" }, { icon: "code", label: "\u6253\u5F00\u65B9\u5F0F", submenu: true }, { separator: true }, { icon: "link", label: "\u590D\u5236\u6587\u4EF6\u5730\u5740", shortcut: "Ctrl+Shift+C" }, { icon: "folder", label: "\u538B\u7F29\u4E3A ZIP \u6587\u4EF6" }, { icon: "check-circle", label: "\u6DFB\u52A0\u5230\u6536\u85CF\u5939" }, { separator: true }, { icon: "info", label: "\u5C5E\u6027", shortcut: "Alt+Enter" }, { separator: true }, { icon: "more", label: "\u663E\u793A\u66F4\u591A\u9009\u9879", shortcut: "Shift+F10" }], selected: 1, submenu: [{ icon: "code", label: "Visual Studio Code" }, { icon: "file", label: "\u8BB0\u4E8B\u672C" }, { icon: "globe", label: "Google Chrome" }, { separator: true }, { icon: "search", label: "\u9009\u62E9\u5176\u4ED6\u5E94\u7528" }], selectedSub: 0 },
+      defaults: {
+        "filename": "\u793A\u4F8B\u6587\u6863.md",
+        "filetype": "Markdown \u6587\u6863",
+        "topActions": [
+          {
+            "icon": "copy",
+            "label": "\u590D\u5236"
+          },
+          {
+            "icon": "link",
+            "label": "\u91CD\u547D\u540D"
+          },
+          {
+            "icon": "upload",
+            "label": "\u5171\u4EAB"
+          },
+          {
+            "icon": "trash",
+            "label": "\u5220\u9664"
+          }
+        ],
+        "items": [
+          {
+            "icon": "file",
+            "label": "\u6253\u5F00",
+            "shortcut": "Enter"
+          },
+          {
+            "icon": "code",
+            "label": "\u6253\u5F00\u65B9\u5F0F",
+            "submenu": true
+          },
+          {
+            "separator": true
+          },
+          {
+            "icon": "link",
+            "label": "\u590D\u5236\u6587\u4EF6\u5730\u5740",
+            "shortcut": "Ctrl+Shift+C"
+          },
+          {
+            "icon": "folder",
+            "label": "\u538B\u7F29\u4E3A ZIP \u6587\u4EF6"
+          },
+          {
+            "icon": "check-circle",
+            "label": "\u6DFB\u52A0\u5230\u6536\u85CF\u5939"
+          },
+          {
+            "separator": true
+          },
+          {
+            "icon": "info",
+            "label": "\u5C5E\u6027",
+            "shortcut": "Alt+Enter"
+          },
+          {
+            "separator": true
+          },
+          {
+            "icon": "more",
+            "label": "\u663E\u793A\u66F4\u591A\u9009\u9879",
+            "shortcut": "Shift+F10"
+          }
+        ],
+        "selected": 1,
+        "submenu": [
+          {
+            "icon": "code",
+            "label": "Visual Studio Code"
+          },
+          {
+            "icon": "file",
+            "label": "\u8BB0\u4E8B\u672C"
+          },
+          {
+            "icon": "globe",
+            "label": "Google Chrome"
+          },
+          {
+            "separator": true
+          },
+          {
+            "icon": "search",
+            "label": "\u9009\u62E9\u5176\u4ED6\u5E94\u7528"
+          }
+        ],
+        "selectedSub": 0
+      },
       render(p, h) {
         return `<div class="os-stage"><div class="os-context-scene"><div class="os-context-file">${fileIcon(h, "file", 48)}<div><b>${h.esc(p.filename)}</b><small>${h.esc(p.filetype)}</small></div></div><div class="os-context-menu" data-motion="reveal"><div class="os-context-actions">${arr4(p.topActions).map((x) => `<span>${cn(h, x.icon, 18)}<small>${h.esc(x.label)}</small></span>`).join("")}</div>${arr4(p.items).map((x, i) => x.separator ? '<div class="os-menu-separator"></div>' : `<div class="os-menu-row ${i === num5(p.selected) ? "os-menu-hover" : ""}" data-motion="item">${cn(h, x.icon, 17)}<span>${h.esc(x.label)}</span><kbd>${h.esc(x.shortcut || "")}</kbd>${x.submenu ? cn(h, "chevron-right", 12) : ""}</div>`).join("")}</div><div class="os-context-submenu" data-motion="reveal">${arr4(p.submenu).map((x, i) => x.separator ? '<div class="os-menu-separator"></div>' : `<div class="os-menu-row ${i === num5(p.selectedSub) ? "os-menu-hover" : ""}" data-motion="item">${cn(h, x.icon, 18)}<span>${h.esc(x.label)}</span></div>`).join("")}</div></div></div>`;
       }
@@ -2762,7 +6662,71 @@ var ComponentLibraryRuntime = (() => {
       height: 800,
       description: "\u53EF\u590D\u7528 WinUI \u8868\u5355\u9875\u9762\uFF0C\u5305\u542B\u6587\u672C\u3001\u76EE\u5F55\u3001\u4E0B\u62C9\u6846\u3001\u9009\u62E9\u63A7\u4EF6\u3001\u6821\u9A8C\u63D0\u793A\u548C\u63D0\u4EA4\u533A\u3002",
       reference: ref2("\u6309 Microsoft WinUI Forms \u6807\u7B7E\u4F4D\u7F6E\u3001type ramp \u4E0E\u539F\u751F\u8F93\u5165\u63A7\u4EF6\u8BBE\u8BA1\u7684\u539F\u521B\u793A\u4F8B\u5E94\u7528\u9875\u9762\u3002", "https://learn.microsoft.com/en-us/windows/apps/design/controls/forms"),
-      defaults: { appTitle: "\u89C6\u9891\u5DE5\u4F5C\u53F0", title: "\u521B\u5EFA\u9879\u76EE", description: "\u4E3A\u65B0\u7684\u89C6\u9891\u8BBE\u7F6E\u540D\u79F0\u3001\u4FDD\u5B58\u4F4D\u7F6E\u548C\u753B\u9762\u89C4\u683C\u3002", nav: [{ icon: "home", label: "\u4E3B\u9875" }, { icon: "folder", label: "\u9879\u76EE" }, { icon: "settings", label: "\u8BBE\u7F6E" }], activeNav: 1, fields: [{ label: "\u9879\u76EE\u540D\u79F0", value: "Codex \u5165\u95E8\u8BB2\u89E3", kind: "text", help: "\u4F7F\u7528\u7B80\u77ED\u3001\u5BB9\u6613\u8BC6\u522B\u7684\u540D\u79F0\u3002", focused: true }, { label: "\u4FDD\u5B58\u4F4D\u7F6E", value: "D:\\\u89C6\u9891\u9879\u76EE\\codex-intro", kind: "folder", help: "" }, { label: "\u753B\u9762\u6BD4\u4F8B", value: "16:9 \xB7 \u6A2A\u5C4F", kind: "select", help: "" }, { label: "\u9879\u76EE\u5E27\u7387", value: "30 fps", kind: "select", help: "" }], optionsTitle: "\u9879\u76EE\u9009\u9879", options: [{ label: "\u521B\u5EFA\u7D20\u6750\u6587\u4EF6\u5939", checked: true }, { label: "\u542F\u7528\u81EA\u52A8\u4FDD\u5B58", checked: true }, { label: "\u521B\u5EFA\u540E\u6253\u5F00\u9879\u76EE", checked: false }], note: "\u8BBE\u7F6E\u53EF\u4EE5\u968F\u65F6\u5728\u9879\u76EE\u5C5E\u6027\u4E2D\u4FEE\u6539\u3002", cancel: "\u53D6\u6D88", submit: "\u521B\u5EFA\u9879\u76EE" },
+      defaults: {
+        "appTitle": "\u793A\u4F8B\u5E94\u7528",
+        "title": "\u8868\u5355\u6807\u9898",
+        "description": "\u8868\u5355\u8BF4\u660E\u6587\u5B57\u3002\u586B\u5199\u4E0B\u65B9\u5B57\u6BB5\u540E\u63D0\u4EA4\u3002",
+        "nav": [
+          {
+            "icon": "home",
+            "label": "\u4E3B\u9875"
+          },
+          {
+            "icon": "folder",
+            "label": "\u9879\u76EE"
+          },
+          {
+            "icon": "settings",
+            "label": "\u8BBE\u7F6E"
+          }
+        ],
+        "activeNav": 1,
+        "fields": [
+          {
+            "label": "\u5B57\u6BB5\u540D\u79F0 A",
+            "value": "\u793A\u4F8B\u5185\u5BB9",
+            "kind": "text",
+            "help": "\u5B57\u6BB5\u8BF4\u660E",
+            "focused": true
+          },
+          {
+            "label": "\u4FDD\u5B58\u4F4D\u7F6E",
+            "value": "D:\\example-project",
+            "kind": "folder",
+            "help": ""
+          },
+          {
+            "label": "\u9009\u9879\u540D\u79F0 A",
+            "value": "\u9009\u9879 A",
+            "kind": "select",
+            "help": ""
+          },
+          {
+            "label": "\u9009\u9879\u540D\u79F0 B",
+            "value": "\u9009\u9879 B",
+            "kind": "select",
+            "help": ""
+          }
+        ],
+        "optionsTitle": "\u9009\u9879\u8BBE\u7F6E",
+        "options": [
+          {
+            "label": "\u53EF\u9009\u9879 A",
+            "checked": true
+          },
+          {
+            "label": "\u53EF\u9009\u9879 B",
+            "checked": true
+          },
+          {
+            "label": "\u53EF\u9009\u9879 C",
+            "checked": false
+          }
+        ],
+        "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57\u3002",
+        "cancel": "\u53D6\u6D88",
+        "submit": "\u63D0\u4EA4"
+      },
       render(p, h) {
         return `<div class="os-stage"><div class="os-window os-form-window" data-motion="reveal"><div class="os-settings-title">${cn(h, "video", 17)}<span>${h.esc(p.appTitle)}</span><span class="os-flex"></span>${winButtons(h)}</div><div class="os-form-layout"><aside>${arr4(p.nav).map((x, i) => `<div class="${i === num5(p.activeNav) ? "os-setting-selected" : ""}">${cn(h, x.icon, 19)}${h.esc(x.label)}</div>`).join("")}</aside><main><h1>${h.esc(p.title)}</h1><p>${h.esc(p.description)}</p><div class="os-form-fields">${arr4(p.fields).map((x) => `<div class="os-form-field" data-motion="item"><label>${h.esc(x.label)}</label><div class="os-input ${x.focused ? "os-focused" : ""}"><span data-motion="${x.focused ? "type" : "reveal"}">${h.esc(x.value)}</span>${x.kind === "select" ? cn(h, "chevron-down", 13) : x.kind === "folder" ? cn(h, "folder", 17) : ""}</div>${x.help ? `<small>${h.esc(x.help)}</small>` : ""}</div>`).join("")}</div><h2>${h.esc(p.optionsTitle)}</h2><div class="os-form-options">${arr4(p.options).map((x) => `<div data-motion="item"><span class="os-checkbox ${x.checked ? "os-checkbox-checked" : ""}">${x.checked ? cn(h, "check", 14) : ""}</span>${h.esc(x.label)}</div>`).join("")}</div><div class="os-form-note">${cn(h, "info", 17)}${h.esc(p.note)}</div><footer><div class="os-button">${h.esc(p.cancel)}</div><div class="os-button os-primary">${h.esc(p.submit)}</div></footer></main></div></div></div>`;
       }
@@ -3611,9 +7575,9 @@ var ComponentLibraryRuntime = (() => {
   var animationStyleEffects = [
     {
       id: "ani-notice-verify",
-      name: "\u901A\u77E5\u9010\u9879\u6838\u5BF9",
+      name: "\u6587\u6863\u9010\u9879\u6838\u5BF9",
       component: "ani-notice-check",
-      description: "\u4ECE\u5B8C\u6574\u901A\u77E5\u5F00\u59CB\uFF0C\u9010\u884C\u805A\u7126\u5E76\u7559\u4E0B\u68C0\u67E5\u52FE\uFF0C\u6700\u540E\u663E\u793A\u6838\u5BF9\u7ED3\u679C\u3002",
+      description: "\u4ECE\u5B8C\u6574\u6587\u6863\u5F00\u59CB\uFF0C\u9010\u884C\u805A\u7126\u5E76\u7559\u4E0B\u68C0\u67E5\u52FE\uFF0C\u6700\u540E\u663E\u793A\u6838\u5BF9\u7ED3\u679C\u3002",
       category: "\u52A8\u753B\u98CE",
       selector: "[data-ani-row]",
       duration: 8,
@@ -3637,9 +7601,9 @@ var ComponentLibraryRuntime = (() => {
     },
     {
       id: "ani-order-select",
-      name: "\u8BA2\u5355\u6761\u4EF6\u7B5B\u9009",
+      name: "\u8868\u683C\u6761\u4EF6\u7B5B\u9009",
       component: "ani-order-filter",
-      description: "\u5148\u4FDD\u7559\u5B8C\u6574\u8BA2\u5355\u8868\uFF0C\u964D\u4F4E\u4E0D\u7B26\u5408\u6761\u4EF6\u7684\u884C\uFF0C\u518D\u663E\u793A\u7B5B\u9009\u7ED3\u679C\u3002",
+      description: "\u5148\u4FDD\u7559\u5B8C\u6574\u793A\u4F8B\u8868\u683C\uFF0C\u964D\u4F4E\u4E0D\u7B26\u5408\u6761\u4EF6\u7684\u884C\uFF0C\u518D\u663E\u793A\u7B5B\u9009\u7ED3\u679C\u3002",
       category: "\u52A8\u753B\u98CE",
       selector: "[data-ani-excluded]",
       duration: 8,
@@ -4491,7 +8455,7 @@ var ComponentLibraryRuntime = (() => {
   function mountNext(root, id, props, instance, effect, options = {}) {
     root.querySelector(".motion-next")?.remove();
     if (!effects.some((e) => e.id === effect && e.category === "\u8F6C\u573A")) return;
-    const next = options.nextScene || props.transitionNext || (effect === "shared-slide" ? { component: "lecture-stage", props: { title: "\u628A\u601D\u8DEF\uFF0C\u53D8\u6210\u4E00\u6B21\u64CD\u4F5C", subtitle: "\u8BA9\u771F\u5B9E\u8FC7\u7A0B\u652F\u6491\u4F60\u7684\u8BB2\u89E3", chapter: "02 / \u5F00\u59CB\u5B9E\u8DF5", sections: [{ title: "\u6F14\u793A", detail: "\u5148\u5C55\u793A\u4E00\u6B21\u5B8C\u6574\u8FC7\u7A0B" }, { title: "\u89C2\u5BDF", detail: "\u805A\u7126\u64CD\u4F5C\u524D\u540E\u7684\u53D8\u5316" }, { title: "\u590D\u6838", detail: "\u56DE\u5230\u7ED3\u679C\u786E\u8BA4\u662F\u5426\u5B8C\u6210" }] } } : { component: "chapter-summary", props: { title: "\u4ECE\u7406\u89E3\u5230\u5B9E\u8DF5", subtitle: "\u628A\u521A\u624D\u7684\u601D\u8DEF\uFF0C\u53D8\u6210\u4E0B\u4E00\u6B65\u884C\u52A8\u3002" } });
+    const next = options.nextScene || props.transitionNext || (effect === "shared-slide" ? { component: "lecture-stage", props: { title: "\u4E0B\u4E00\u573A\u666F\u6807\u9898", subtitle: "\u4E0B\u4E00\u573A\u666F\u8BF4\u660E", chapter: "\u7AE0\u8282 / 02" } } : { component: "chapter-summary", props: { title: "\u4E0B\u4E00\u573A\u666F\u6807\u9898", subtitle: "\u4E0B\u4E00\u573A\u666F\u8BF4\u660E" } });
     const target = components24.find((c) => c.id === next.component);
     if (!target) throw Error("\u4E0B\u4E00\u5E45\u753B\u9762\u7684\u7EC4\u4EF6\u4E0D\u5B58\u5728\uFF1A" + next.component);
     const node3 = document.createElement("div");

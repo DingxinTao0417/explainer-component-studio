@@ -1,5 +1,5 @@
 {
-  "title": "进度提交通知",
+  "title": "任务标题",
   "notice": "AI 生成可能有误，请核实",
   "simulationLabel": "界面复刻 · 案例演示",
   "brand": "豆包",
@@ -28,7 +28,7 @@
     }
   ],
   "pinnedLabel": "置顶",
-  "pinnedTitle": "主对话",
+  "pinnedTitle": "示例对话",
   "projectsLabel": "项目",
   "newProjectLabel": "新建项目",
   "recentLabel": "最近",
@@ -49,27 +49,27 @@
     {
       "id": "request-vague",
       "role": "user",
-      "text": "提醒大家交进度，正式一点。"
+      "text": "用户消息 A：填写初始要求。"
     },
     {
       "id": "reply-vague",
       "role": "assistant",
-      "text": "请各位积极配合，及时提交相关材料。"
+      "text": "回复内容 A：展示初步结果。"
     },
     {
       "id": "request-clear",
       "role": "user",
-      "text": "发给各组负责人。周五下午五点前，把这周做完了什么、还有什么没做完，填进这个共享表格。",
-      "linkLabel": "本周进度共享表格",
-      "linkNote": "演示占位"
+      "text": "用户消息 B：填写补充要求。",
+      "linkLabel": "示例链接",
+      "linkNote": "示例入口"
     },
     {
       "id": "reply-clear",
       "role": "assistant",
-      "heading": "本周进度提交通知",
-      "text": "请各组负责人于周五 17:00 前，在共享表格中填写本周已完成事项和未完成事项。",
-      "linkLabel": "本周进度共享表格",
-      "linkNote": "演示占位",
+      "heading": "回复标题",
+      "text": "回复内容 B：展示更新后的结果。",
+      "linkLabel": "示例链接",
+      "linkNote": "示例入口",
       "actions": true
     }
   ],
@@ -82,7 +82,7 @@
   "permissionLabel": "全部允许",
   "modeLabel": "自动",
   "effortLabel": "高",
-  "workingLabel": "拟写正式进度提醒通知",
+  "workingLabel": "正在处理任务",
   "homeTitle": "今天有什么工作要处理？",
   "showHome": false
 }

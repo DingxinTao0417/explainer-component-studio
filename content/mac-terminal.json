@@ -1,16 +1,15 @@
 {
-  "title": "video-studio — zsh — 100×28",
-  "user": "lin@MacBook-Pro",
-  "folder": "video-studio",
-  "command": "npm run build",
+  "title": "example-project — zsh — 100×28",
+  "user": "user@MacBook-Pro",
+  "folder": "example-project",
+  "command": "node example.js",
   "lines": [
-    "> science-video-studio@1.0.0 build",
-    "> node scripts/build.mjs",
+    "示例输出 A",
+    "示例输出 B",
     "",
-    "✓ 内容校验完成",
-    "✓ 已生成可编辑组件",
-    "✓ 本地预览准备就绪",
+    "✓ 步骤 A 已完成",
+    "✓ 步骤 B 已完成",
     "",
-    "完成。未渲染视频。"
+    "处理完成。"
   ]
 }

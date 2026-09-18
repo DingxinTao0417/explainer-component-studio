@@ -1,43 +1,43 @@
 {
-  "title": "统计本月已完成订单",
-  "project": "演示项目",
+  "title": "任务标题",
+  "project": "示例项目",
   "disclosure": "界面复刻 · 案例演示",
   "showSidebar": true,
   "sidebar": {
     "sectionLabel": "任务",
     "items": [
       {
-        "id": "orders",
-        "label": "统计本月已完成订单",
+        "id": "example-task",
+        "label": "任务标题",
         "active": true
       }
     ],
-    "footer": "演示工作区"
+    "footer": "示例工作区"
   },
   "messages": [
     {
       "id": "request",
       "role": "user",
-      "text": "按完成日期算这个月，只统计状态是已完成的。把算进去的订单也列出来。",
+      "text": "用户消息内容。可替换输入要求和附件。",
       "attachments": [
         {
-          "name": "orders-sample.csv",
-          "detail": "教学样本 · 5 条记录"
+          "name": "example.csv",
+          "detail": "示例附件 · 5 条记录"
         }
       ]
     },
     {
       "id": "response",
       "role": "assistant",
-      "elapsed": "用时 2分03秒",
-      "text": "这 5 条样本中，A01、A02、A03 符合条件。已取消和待付款的两条不计入。",
+      "elapsed": "用时 10秒",
+      "text": "回复内容。这里展示消息正文与工具执行状态。",
       "toolEvents": [
         {
           "id": "read-file",
           "kind": "file",
           "state": "complete",
-          "label": "已读取 orders-sample.csv",
-          "detail": "教学样本；整张表的月度总数尚未提供。"
+          "label": "已读取 example.csv",
+          "detail": "工具执行说明"
         }
       ]
     }

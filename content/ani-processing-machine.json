@@ -1,36 +1,36 @@
 {
-  "title": "让过程看得见",
-  "subtitle": "输入材料，经过处理，留下可核对的结果。",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
   "inputTitle": "输入",
-  "processTitle": "处理过程",
-  "outputTitle": "结果",
+  "processTitle": "处理",
+  "outputTitle": "输出",
   "inputs": [
     {
-      "label": "文本",
+      "label": "输入 A",
       "icon": "document"
     },
     {
-      "label": "图片",
+      "label": "输入 B",
       "icon": "documents"
     },
     {
-      "label": "数据",
+      "label": "输入 C",
       "icon": "table"
     }
   ],
   "outputs": [
     {
-      "label": "内容已整理",
+      "label": "输出 A",
       "icon": "document"
     },
     {
-      "label": "画面已生成",
+      "label": "输出 B",
       "icon": "documents"
     },
     {
-      "label": "数据已汇总",
+      "label": "输出 C",
       "icon": "table"
     }
   ],
-  "footer": "讲到哪一步，画面就变化到哪一步。"
+  "footer": "页脚说明文字"
 }

@@ -1,52 +1,52 @@
 {
   "appName": "API 工作台",
-  "workspace": "科普视频项目",
+  "workspace": "示例工作区",
   "appIcon": "globe",
-  "requestName": "读取组件列表",
+  "requestName": "示例请求 A",
   "method": "GET",
-  "url": "https://api.example.com/v1/components",
+  "url": "https://api.example.com/v1/items",
   "status": "200 OK",
   "latency": "128 ms",
   "responseSize": "1.24 KB",
   "requests": [
     {
       "method": "GET",
-      "name": "读取组件列表"
+      "name": "示例请求 A"
     },
     {
       "method": "GET",
-      "name": "获取分镜配置"
+      "name": "示例请求 B"
     },
     {
       "method": "POST",
-      "name": "创建预览任务"
+      "name": "示例请求 C"
     },
     {
       "method": "GET",
-      "name": "查询任务状态"
+      "name": "示例请求 D"
     }
   ],
   "params": [
     {
       "key": "category",
-      "value": "software",
-      "description": "按组件类别筛选"
+      "value": "example",
+      "description": "参数说明 A"
     },
     {
       "key": "limit",
-      "value": "30",
-      "description": "返回结果数量"
+      "value": "2",
+      "description": "参数说明 B"
     }
   ],
   "response": [
     "{",
     "  \"success\": true,",
     "  \"data\": [",
-    "    { \"id\": \"browser-window\", \"name\": \"浏览器窗口\" },",
-    "    { \"id\": \"terminal-session\", \"name\": \"终端会话\" },",
-    "    { \"id\": \"code-editor\", \"name\": \"代码编辑器\" }",
+    "    { \"id\": 1, \"label\": \"项目 A\" },",
+    "    { \"id\": 2, \"label\": \"项目 B\" }",
     "  ],",
-    "  \"total\": 30",
+    "  \"total\": 2",
     "}"
-  ]
+  ],
+  "collectionTitle": "请求分组"
 }

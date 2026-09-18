@@ -40,26 +40,200 @@ export const components=[{
   width:1280,height:800,
   reference:{basis:'2026-09-18 通过浏览器观察 www.doubao.com/chat/ 普通对话模式，1920×910；本组件按 1280×800 适配。桌面 app 截图因自动化身份校验异常未成功，不宣称桌面逐像素对齐。',source:'https://www.doubao.com/chat/；reports/doubao-chat-notes.md',level:'documented'},
   defaults:{
-    brand:'豆包',logoSrc:'assets/brands/doubao.png',showHomeLogo:false,
-    title:'进度提交通知',notice:'AI 生成可能有误，请核实',simulationLabel:'界面复刻 · 案例演示',
-    showSidebar:true,showHome:false,homeTitle:'有什么我能帮你的吗？',conversationModeLabel:'对话',workModeLabel:'工作',
-    navigation:[{label:'新工作任务',icon:'edit'},{label:'新对话',icon:'chat'},{label:'定时任务',icon:'clock'},{label:'插件·技能·伙伴',icon:'grid'},{label:'云盘',icon:'folder'},{label:'API 服务',icon:'code'},{label:'更多',icon:'more'}],
-    pinnedLabel:'置顶',pinnedTitle:'主对话',projectsLabel:'项目',newProjectLabel:'创建项目',recentLabel:'最近',recentTasks:[],accountLabel:'用户',planLabel:'标准套餐',
-    messages:[{id:'request-vague',role:'user',text:'提醒大家交进度，正式一点。'},{id:'reply-vague',role:'assistant',heading:'通知',text:'请各位积极配合，及时提交相关材料。',actions:true}],
-    suggestions:['帮我改得更简洁','检查通知是否交代清楚'],
-    draft:'',running:false,focused:false,placeholder:'发消息或按住空格说话...',modeLabel:'对话',modelLabel:'豆包',speedLabel:'快速',maxTools:3,
-    tools:[{label:'录音转写',icon:'mic'},{label:'图像生成',icon:'image'},{label:'PPT 生成',icon:'file'},{label:'帮我写作',icon:'edit'},{label:'视频生成',icon:'video'},{label:'AI 播客',icon:'volume'}],
-    workingLabel:'正在生成',composer:{}
-  },
+  "brand": "豆包",
+  "logoSrc": "assets/brands/doubao.png",
+  "showHomeLogo": false,
+  "title": "对话标题",
+  "notice": "AI 生成可能有误，请核实",
+  "simulationLabel": "界面复刻 · 案例演示",
+  "showSidebar": true,
+  "showHome": false,
+  "homeTitle": "有什么我能帮你的吗？",
+  "conversationModeLabel": "对话",
+  "workModeLabel": "工作",
+  "navigation": [
+    {
+      "label": "新工作任务",
+      "icon": "edit"
+    },
+    {
+      "label": "新对话",
+      "icon": "chat"
+    },
+    {
+      "label": "定时任务",
+      "icon": "clock"
+    },
+    {
+      "label": "插件·技能·伙伴",
+      "icon": "grid"
+    },
+    {
+      "label": "云盘",
+      "icon": "folder"
+    },
+    {
+      "label": "API 服务",
+      "icon": "code"
+    },
+    {
+      "label": "更多",
+      "icon": "more"
+    }
+  ],
+  "pinnedLabel": "置顶",
+  "pinnedTitle": "示例对话",
+  "projectsLabel": "项目",
+  "newProjectLabel": "创建项目",
+  "recentLabel": "最近",
+  "recentTasks": [],
+  "accountLabel": "用户",
+  "planLabel": "标准套餐",
+  "messages": [
+    {
+      "id": "request-vague",
+      "role": "user",
+      "text": "用户消息内容。可替换为你的输入。"
+    },
+    {
+      "id": "reply-vague",
+      "role": "assistant",
+      "heading": "回复标题",
+      "text": "回复正文内容。支持段落、要点与后续补充。",
+      "actions": true
+    }
+  ],
+  "suggestions": [
+    "后续问题 A",
+    "后续问题 B"
+  ],
+  "draft": "",
+  "running": false,
+  "focused": false,
+  "placeholder": "发消息或按住空格说话...",
+  "modeLabel": "对话",
+  "modelLabel": "豆包",
+  "speedLabel": "快速",
+  "maxTools": 3,
+  "tools": [
+    {
+      "label": "录音转写",
+      "icon": "mic"
+    },
+    {
+      "label": "图像生成",
+      "icon": "image"
+    },
+    {
+      "label": "PPT 生成",
+      "icon": "file"
+    },
+    {
+      "label": "帮我写作",
+      "icon": "edit"
+    },
+    {
+      "label": "视频生成",
+      "icon": "video"
+    },
+    {
+      "label": "AI 播客",
+      "icon": "volume"
+    }
+  ],
+  "workingLabel": "正在生成",
+  "composer": {}
+},
   render(props,h){
     const p={...this.defaults,...props},c={...p,...p.composer},running=Boolean(c.running);
     const requestedHeight=Number(c.height??p.composerHeight),draft=str(c.draft);
-    const height=Number.isFinite(requestedHeight)&&requestedHeight>0?Math.max(99,Math.min(188,requestedHeight)):draft.length>60?148:99;
+    // Reserve complete text lines above the toolbar, including explicit newlines.
+    const lines=draft.split(/\r?\n/).reduce((sum,line)=>sum+Math.max(1,Math.ceil(line.length/40)),0);
+    const height=Number.isFinite(requestedHeight)&&requestedHeight>0?Math.max(120,Math.min(240,requestedHeight)):Math.min(240,Math.max(120,lines*28+72));
     const messages=arr(p.messages),isHome=p.showHome&&!messages.length;
-    return `<section class="dbchat-app${p.showSidebar===false?' dbchat-no-sidebar':''}" data-simulation="true" data-state="${running?'running':draft?'draft':'idle'}" style="--dbchat-composer-height:${height}px">${p.showSidebar===false?'':sidebar(p,h)}<main class="dbchat-main"><header class="dbchat-header"><div class="dbchat-header-left">${h.icon('panel',18)}${isHome?'':h.icon('edit',17)}</div>${isHome?'':`<div class="dbchat-thread-title"><strong>${h.esc(p.title)}</strong><small>${h.esc(p.notice)}</small></div>`}<div class="dbchat-header-right">${h.icon('volume',17)}${h.icon('more',18)}</div></header><div class="dbchat-simulation" data-part="disclosure">${h.esc(p.disclosure||p.simulationLabel||'界面复刻 · 案例演示')}</div><div class="dbchat-conversation" data-part="conversation"><div class="dbchat-viewport" data-part="viewport" data-motion="scroll"><div class="dbchat-messages" data-part="message-list" data-motion="scroll">${isHome?home(p,h):messages.map((m,i)=>message(m,i,h)).join('')}${running?`<div class="dbchat-working" data-part="status" data-state="running" data-motion="reveal"><span>${h.esc(p.workingLabel)}</span><i>···</i></div>`:''}${!isHome&&!running&&arr(p.suggestions).length?`<div class="dbchat-suggestions" data-part="suggestions">${p.suggestions.map((text,index)=>`<span data-suggestion-index="${index}" data-motion="item">${h.esc(text)}${h.icon('arrow-right',13)}</span>`).join('')}</div>`:''}</div></div></div><div class="dbchat-composer-anchor">${composer(p,h)}</div></main></section>`;
+    return `<section class="dbchat-app${p.showSidebar===false?' dbchat-no-sidebar':''}" data-simulation="true" data-state="${running?'running':draft?'draft':'idle'}" style="--dbchat-composer-height:${height}px">${p.showSidebar===false?'':sidebar(p,h)}<main class="dbchat-main"><header class="dbchat-header"><div class="dbchat-header-left">${h.icon('panel',18)}${isHome?'':h.icon('edit',17)}</div>${isHome?'':`<div class="dbchat-thread-title"><strong>${h.esc(p.title)}</strong><small>${h.esc(p.notice)}</small></div>`}<div class="dbchat-header-right">${h.icon('volume',17)}${h.icon('more',18)}</div></header><div class="dbchat-simulation" data-part="disclosure">${h.esc(p.disclosure||p.simulationLabel||'界面复刻 · 案例演示')}</div><div class="dbchat-conversation" data-part="conversation"><div class="dbchat-viewport" data-part="viewport"><div class="dbchat-messages" data-part="message-list" data-motion="scroll">${isHome?home(p,h):messages.map((m,i)=>message(m,i,h)).join('')}${running?`<div class="dbchat-working" data-part="status" data-state="running" data-motion="reveal"><span>${h.esc(p.workingLabel)}</span><i>···</i></div>`:''}${!isHome&&!running&&arr(p.suggestions).length?`<div class="dbchat-suggestions" data-part="suggestions">${p.suggestions.map((text,index)=>`<span data-suggestion-index="${index}" data-motion="item">${h.esc(text)}${h.icon('arrow-right',13)}</span>`).join('')}</div>`:''}</div></div></div><div class="dbchat-composer-anchor">${composer(p,h)}</div></main></section>`;
   }
 }];
 
 export const css=`
-.dbchat-app{display:flex;position:relative;width:100%;height:100%;overflow:hidden;background:#fff;color:#252525;font:15px/1.5 ComponentUI,ComponentHan,sans-serif}.dbchat-app *{box-sizing:border-box}.dbchat-app [hidden]{display:none!important}.dbchat-sidebar{width:280px;flex:0 0 280px;position:relative;padding:0 10px 80px;background:#f7f7f7;border-right:1px solid #ececec;overflow:hidden}.dbchat-brand{height:53px;display:flex;align-items:center;justify-content:space-between;padding:0 13px;font-size:19px}.dbchat-brand strong{font-weight:500}.dbchat-brand>span{display:flex;color:#555}.dbchat-nav{display:flex;flex-direction:column}.dbchat-nav-row{display:flex;align-items:center;gap:11px;min-height:34px;padding:5px 11px;border-radius:8px;font-size:14px;line-height:24px}.dbchat-nav-icon{display:flex}.dbchat-nav-active{background:#eaeaea}.dbchat-sidebar-section{margin-top:18px}.dbchat-section-label{font-size:12px;color:#999;padding:0 11px 6px}.dbchat-muted{color:#a1a1a1}.dbchat-recent-task{font-size:13px;line-height:22px;padding:5px 11px;border-radius:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dbchat-account{height:69px;position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:10px;padding:12px 21px;border-top:1px solid #ebebeb;background:#f7f7f7}.dbchat-avatar{width:29px;height:29px;position:relative;overflow:hidden;flex:none;border-radius:50%;background:#e4e4e4}.dbchat-avatar:before{content:'';position:absolute;width:10px;height:10px;left:10px;top:5px;border-radius:50%;background:#ababab}.dbchat-avatar i{position:absolute;width:24px;height:18px;left:3px;top:17px;background:#ababab;border-radius:50%}.dbchat-account-text{display:flex;flex-direction:column;font-size:13px;line-height:21px}.dbchat-account-text small{font-size:10px;line-height:16px;color:#999}.dbchat-settings{margin-left:auto;display:flex;color:#777}.dbchat-main{position:relative;flex:1;min-width:0;background:#fff}.dbchat-header{height:56px;display:flex;justify-content:space-between;align-items:center;padding:0 24px;color:#626262;border-bottom:1px solid #f0f0f0}.dbchat-header-left,.dbchat-header-right{display:flex;align-items:center;gap:20px}.dbchat-thread-title{position:absolute;left:100px;right:100px;top:7px;text-align:center;pointer-events:none}.dbchat-thread-title strong{display:block;font-size:14px;font-weight:500;line-height:23px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#353535}.dbchat-thread-title small{display:block;font-size:10px;line-height:16px;color:#a0a0a0}.dbchat-simulation{position:absolute;right:25px;top:60px;z-index:2;padding:1px 7px;color:#87909a;background:#fff;border:1px solid #e9ebee;border-radius:5px;font-size:10px;line-height:18px;pointer-events:none}.dbchat-conversation{position:absolute;left:0;right:0;top:56px;bottom:calc(var(--dbchat-composer-height) + 40px);overflow:hidden}.dbchat-viewport{position:relative;width:100%;height:100%;overflow:hidden;padding:29px 32px 14px}.dbchat-messages{position:relative;width:100%;max-width:1000px;min-height:100%;margin:0 auto;will-change:transform}.dbchat-message{margin-bottom:21px;font-size:16px;line-height:28px;overflow-wrap:anywhere}.dbchat-message-user{display:flex;justify-content:flex-end;margin-bottom:50px}.dbchat-message-user .dbchat-message-body{max-width:75%;padding:10px 16px;background:#f5f5f5;border-radius:12px;color:#333}.dbchat-message-assistant{padding:0 7px}.dbchat-message-assistant .dbchat-message-body{background:none}.dbchat-message h3{font-size:24px;line-height:34px;font-weight:650;margin:0 0 9px}.dbchat-message p{white-space:pre-wrap;margin:0 0 10px}.dbchat-message p:last-child{margin:0}.dbchat-message ul{padding-left:22px;margin:8px 0}.dbchat-message li{white-space:pre-wrap;margin:3px 0}.dbchat-message dl{margin:7px 0}.dbchat-message dl>div{display:flex;gap:9px;line-height:26px}.dbchat-message dt{font-weight:600;flex:none}.dbchat-message dd{margin:0;white-space:pre-wrap}.dbchat-demo-link{display:flex;align-items:center;gap:5px;font-size:13px;line-height:23px;color:#3274b9;margin-top:6px}.dbchat-demo-link small{font-size:10px;color:#999;margin-left:4px}.dbchat-answer-actions{display:flex;align-items:center;gap:18px;margin-top:17px;color:#929292;height:22px}.dbchat-suggestions{display:flex;align-items:flex-start;flex-direction:column;gap:7px;margin:0 7px}.dbchat-suggestions>span{display:flex;align-items:center;gap:15px;background:#f7f7f7;border-radius:18px;padding:6px 13px;font-size:13px;line-height:22px;color:#595959}.dbchat-working{display:flex;align-items:center;gap:8px;margin:14px 7px;color:#8a8a8a;font-size:13px;line-height:25px}.dbchat-working i{font-style:normal;letter-spacing:3px}.dbchat-home{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;padding-bottom:40px}.dbchat-home h2{font-size:30px;line-height:45px;font-weight:650;letter-spacing:.1px;color:#1a1a1a}.dbchat-home-logo{width:66px;height:66px;object-fit:contain;margin-bottom:20px}.dbchat-home-switch{display:flex;gap:2px;margin-top:21px;border-radius:22px;background:#f3f3f3;padding:4px;font-size:14px;color:#6b6b6b}.dbchat-home-switch>span{display:flex;align-items:center;gap:7px;padding:7px 17px;line-height:20px;border-radius:19px}.dbchat-home-switch .dbchat-switch-active{background:#fff;color:#202020;box-shadow:0 1px 3px #0000000c}.dbchat-composer-anchor{position:absolute;left:28px;right:28px;bottom:17px;max-width:1000px;margin:0 auto;height:var(--dbchat-composer-height)}.dbchat-composer{height:100%;background:#fff;border:1px solid #e9e9e9;border-radius:25px;padding:13px 16px 10px;box-shadow:0 2px 13px #00000006;display:flex;flex-direction:column}.dbchat-focused{border-color:#c9e4fa;box-shadow:0 0 0 1px #e6f4fd}.dbchat-editor{flex:1;min-height:31px;padding:0 1px 7px;font-size:15px;line-height:25px;white-space:pre-wrap;overflow:hidden;overflow-wrap:anywhere;color:#a0a0a0}.dbchat-has-draft .dbchat-editor{color:#292929}.dbchat-composer-footer{height:32px;flex:none;display:flex;align-items:center;justify-content:space-between;gap:13px;font-size:13px;color:#5f5f5f}.dbchat-composer-tools{display:flex;align-items:center;gap:16px;min-width:0;overflow:hidden;white-space:nowrap}.dbchat-plus{display:flex;flex:none;color:#646464}.dbchat-mode,.dbchat-tool{display:flex;align-items:center;gap:5px;flex:none}.dbchat-mode{color:#555}.dbchat-tool{font-size:12px;color:#7a7a7a}.dbchat-more-tools{display:flex;align-items:center;flex:none;color:#747474}.dbchat-composer-right{display:flex;align-items:center;gap:14px;flex:none}.dbchat-model{display:flex;align-items:center;gap:6px;color:#626262;font-size:13px;white-space:nowrap}.dbchat-model>span{font-size:12px;color:#8b8b8b}.dbchat-send{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;flex:none}.dbchat-send-mic{background:#f3f3f3;color:#333}.dbchat-send-ready{background:#287ef3;color:#fff}.dbchat-stop{background:#444;color:#fff}.dbchat-stop i{width:11px;height:11px;border-radius:2px;background:#fff}
+.dbchat-app{display:flex;position:relative;width:100%;height:100%;overflow:hidden;background:#fff;color:#252525;font:15px/1.5 ComponentUI,ComponentHan,sans-serif;--dbchat-content-width:840px}
+.dbchat-app *{box-sizing:border-box}
+.dbchat-app [hidden]{display:none!important}
+.dbchat-sidebar{width:240px;flex:0 0 240px;position:relative;padding:0 10px 80px;background:#f7f7f7;border-right:1px solid #ececec;overflow:hidden}
+.dbchat-brand{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 13px;font-size:21px}
+.dbchat-brand strong{font-weight:500}
+.dbchat-brand>span{display:flex;color:#555}
+.dbchat-nav{display:flex;flex-direction:column}
+.dbchat-nav-row{display:flex;align-items:center;gap:11px;min-height:38px;padding:5px 11px;border-radius:8px;font-size:15px;line-height:24px}
+.dbchat-nav-icon{display:flex}
+.dbchat-nav-active{background:#eaeaea}
+.dbchat-sidebar-section{margin-top:18px}
+.dbchat-section-label{font-size:13px;color:#777;padding:0 11px 6px}
+.dbchat-muted{color:#818181}
+.dbchat-recent-task{font-size:14px;line-height:24px;padding:5px 11px;border-radius:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dbchat-account{height:69px;position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:10px;padding:12px 21px;border-top:1px solid #ebebeb;background:#f7f7f7}
+.dbchat-avatar{width:29px;height:29px;position:relative;overflow:hidden;flex:none;border-radius:50%;background:#e4e4e4}
+.dbchat-avatar:before{content:'';position:absolute;width:10px;height:10px;left:10px;top:5px;border-radius:50%;background:#ababab}
+.dbchat-avatar i{position:absolute;width:24px;height:18px;left:3px;top:17px;background:#ababab;border-radius:50%}
+.dbchat-account-text{display:flex;flex-direction:column;font-size:14px;line-height:21px}
+.dbchat-account-text small{font-size:12px;line-height:18px;color:#777}
+.dbchat-settings{margin-left:auto;display:flex;color:#777}
+.dbchat-main{position:relative;flex:1;min-width:0;background:#fff}
+.dbchat-header{height:64px;display:flex;justify-content:space-between;align-items:center;padding:0 24px;color:#626262;border-bottom:1px solid #f0f0f0}
+.dbchat-header-left,.dbchat-header-right{display:flex;align-items:center;gap:20px}
+.dbchat-thread-title{position:absolute;left:100px;right:100px;top:8px;text-align:center;pointer-events:none}
+.dbchat-thread-title strong{display:block;font-size:17px;font-weight:600;line-height:26px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#353535}
+.dbchat-thread-title small{display:block;font-size:12px;line-height:19px;color:#777}
+.dbchat-simulation{position:absolute;right:25px;top:74px;z-index:2;padding:1px 7px;color:#707984;background:#fff;border:1px solid #e9ebee;border-radius:5px;font-size:12px;line-height:18px;pointer-events:none}
+.dbchat-conversation{position:absolute;left:0;right:0;top:108px;bottom:calc(var(--dbchat-composer-height) + 58px);overflow:hidden}
+.dbchat-viewport{position:relative;width:100%;height:100%;overflow:hidden;padding:0 32px}
+.dbchat-messages{position:relative;width:100%;max-width:var(--dbchat-content-width);min-height:100%;margin:0 auto;will-change:transform}
+.dbchat-message{margin-bottom:26px;font-size:18px;line-height:31px;overflow-wrap:anywhere}
+.dbchat-message-user{display:flex;justify-content:flex-end;margin-bottom:30px}
+.dbchat-message-user .dbchat-message-body{max-width:82%;padding:12px 18px;background:#f5f5f5;border-radius:15px;color:#333}
+.dbchat-message-assistant{padding:0 4px}
+.dbchat-message-assistant .dbchat-message-body{background:none}
+.dbchat-message h3{font-size:24px;line-height:34px;font-weight:600;margin:0 0 9px;margin-bottom:12px}
+.dbchat-message p{white-space:pre-wrap;margin:0 0 12px}
+.dbchat-message p:last-child{margin:0}
+.dbchat-message ul{padding-left:22px;margin:8px 0}
+.dbchat-message li{white-space:pre-wrap;margin:3px 0}
+.dbchat-message dl{margin:7px 0}
+.dbchat-message dl>div{display:flex;gap:9px;line-height:30px}
+.dbchat-message dt{font-weight:600;flex:none}
+.dbchat-message dd{margin:0;white-space:pre-wrap;min-width:0}
+.dbchat-demo-link{display:flex;align-items:center;gap:5px;font-size:15px;line-height:26px;color:#3274b9;margin-top:6px;flex-wrap:wrap}
+.dbchat-demo-link small{font-size:12px;color:#777;margin-left:4px}
+.dbchat-answer-actions{display:flex;align-items:center;gap:18px;margin-top:17px;color:#929292;height:22px}
+.dbchat-suggestions{display:flex;align-items:flex-start;flex-direction:column;gap:10px;margin:0 4px}
+.dbchat-suggestions>span{display:flex;align-items:center;gap:15px;background:#f7f7f7;border-radius:18px;padding:7px 14px;font-size:15px;line-height:24px;color:#595959}
+.dbchat-working{display:flex;align-items:center;gap:8px;margin:14px 7px;color:#737373;font-size:14px;line-height:25px}
+.dbchat-working i{font-style:normal;letter-spacing:3px}
+.dbchat-home{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;padding-bottom:40px}
+.dbchat-home h2{font-size:30px;line-height:45px;font-weight:650;letter-spacing:.1px;color:#1a1a1a}
+.dbchat-home-logo{width:66px;height:66px;object-fit:contain;margin-bottom:20px}
+.dbchat-home-switch{display:flex;gap:2px;margin-top:21px;border-radius:22px;background:#f3f3f3;padding:4px;font-size:14px;color:#6b6b6b}
+.dbchat-home-switch>span{display:flex;align-items:center;gap:7px;padding:7px 17px;line-height:20px;border-radius:19px}
+.dbchat-home-switch .dbchat-switch-active{background:#fff;color:#202020;box-shadow:0 1px 3px #0000000c}
+.dbchat-composer-anchor{position:absolute;left:32px;right:32px;bottom:22px;max-width:var(--dbchat-content-width);margin:0 auto;height:var(--dbchat-composer-height)}
+.dbchat-composer{height:100%;background:#fff;border:1px solid #e9e9e9;border-radius:22px;padding:16px 18px 13px;box-shadow:0 2px 13px #00000006;display:flex;flex-direction:column}
+.dbchat-focused{border-color:#c9e4fa;box-shadow:0 0 0 1px #e6f4fd}
+.dbchat-editor{flex:1;min-height:0;padding:0 0 10px;font-size:18px;line-height:28px;white-space:pre-wrap;overflow:hidden;overflow-wrap:anywhere;color:#808080}
+.dbchat-has-draft .dbchat-editor{color:#292929}
+.dbchat-composer-footer{height:32px;flex:none;display:flex;align-items:center;justify-content:space-between;gap:13px;font-size:14px;color:#5f5f5f}
+.dbchat-composer-tools{display:flex;align-items:center;gap:14px;min-width:0;overflow:hidden;white-space:nowrap}
+.dbchat-plus{display:flex;flex:none;color:#646464}
+.dbchat-mode,.dbchat-tool{display:flex;align-items:center;gap:5px;flex:none;font-size:14px;color:#666}
+.dbchat-mode{color:#555}
+.dbchat-tool{font-size:12px;color:#7a7a7a}
+.dbchat-more-tools{display:flex;align-items:center;flex:none;color:#747474}
+.dbchat-composer-right{display:flex;align-items:center;gap:14px;flex:none}
+.dbchat-model{display:flex;align-items:center;gap:6px;color:#626262;font-size:14px;white-space:nowrap}
+.dbchat-model>span{font-size:13px;color:#777}
+.dbchat-send{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;flex:none}
+.dbchat-send-mic{background:#f3f3f3;color:#333}
+.dbchat-send-ready{background:#287ef3;color:#fff}
+.dbchat-stop{background:#444;color:#fff}
+.dbchat-stop i{width:11px;height:11px;border-radius:2px;background:#fff}
+
 `;

@@ -1,13 +1,31 @@
 import {tokens,css as primitiveCss,icon,paper,banner,svgScene} from '../animation-style-primitives.mjs';
 
 const defaults={
-  title:'本周进度通知',subtitle:'从收件人角度核对',
-  rows:[
-    {label:'对象',text:'各组负责人',icon:'people'},
-    {label:'内容',text:'本周已完成、未完成事项',icon:'documents'},
-    {label:'截止',text:'周五 17:00 前',icon:'calendar'},
-    {label:'填写',text:'共享表格',icon:'link'}
-  ],footnote:'轮到谁做、要做什么、几点前完成、在哪儿填，都找得到。'
+  "title": "文档标题",
+  "subtitle": "文档说明",
+  "rows": [
+    {
+      "label": "字段A",
+      "text": "字段内容 A",
+      "icon": "people"
+    },
+    {
+      "label": "字段B",
+      "text": "字段内容 B",
+      "icon": "documents"
+    },
+    {
+      "label": "字段C",
+      "text": "字段内容 C",
+      "icon": "calendar"
+    },
+    {
+      "label": "字段D",
+      "text": "字段内容 D",
+      "icon": "link"
+    }
+  ],
+  "footnote": "补充说明文字"
 };
 const charUnits=s=>Array.from(String(s??'')).reduce((sum,c)=>sum+(/[\u0000-\u00ff]/.test(c)?.54:1),0);
 function renderNotice(p,h){
@@ -30,7 +48,7 @@ function renderNotice(p,h){
 }
 
 export const components=[{
-  id:'ani-notice-check',name:'动画风 · 通知逐项核对',category:'动画风',
+  id:'ani-notice-check',name:'动画风 · 文档逐项核对',category:'动画风',
   description:'根据 V8 通知母版复刻折角纸张、深蓝描边、钴蓝标题牌与四行彩色图标，逐项核对后保留检查结果。全部图形与文字可编辑。',
   width:1280,height:720,defaultEffect:'ani-notice-verify',defaults,
   reference:{basis:'用户提供的 V8 分镜与动画素材包：通知-独立母版.png、S05.png、M03.png 上行。SVG 几何重建；动态顺序参考静态动作板，未宣称逐帧复刻。',source:'reports/animation-style/reference-review-v8/REVIEW.md',level:'reference-reconstruction'},

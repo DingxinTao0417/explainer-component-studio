@@ -1,13 +1,13 @@
 {
-  "eyebrow": "EXPLAIN / 结构与数据",
-  "title": "好内容来自两个条件的交集",
-  "subtitle": "用两个集合及共同区域解释概念之间的关系。",
-  "badge": "示例数据",
-  "note": "示意集合关系，圆形面积不代表样本量。",
-  "code": "VENN-DIAGRAM",
-  "left": "值得讲",
-  "right": "讲得清",
-  "overlap": "观众能用",
-  "leftDetail": "问题真实 · 有新信息",
-  "rightDetail": "结构清楚 · 证据可见"
+  "eyebrow": "栏目 / 01",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "badge": "示例标签",
+  "note": "补充说明文字",
+  "code": "EXAMPLE",
+  "left": "集合 A",
+  "right": "集合 B",
+  "overlap": "交集",
+  "leftDetail": "集合说明 A",
+  "rightDetail": "集合说明 B"
 }

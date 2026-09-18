@@ -1,26 +1,26 @@
 {
   "home": {
-    "title": "进度提交提醒",
+    "title": "对话标题",
     "showHome": true,
     "messages": [],
     "suggestions": []
   },
   "draft": {
-    "title": "进度提交提醒",
+    "title": "对话标题",
     "messages": [],
     "composer": {
-      "draft": "提醒大家交进度，正式一点。",
+      "draft": "用户消息 A：在这里填写输入内容。",
       "focused": true
     },
     "suggestions": []
   },
   "running": {
-    "title": "进度提交提醒",
+    "title": "对话标题",
     "messages": [
       {
         "id": "u1",
         "role": "user",
-        "text": "提醒大家交进度，正式一点。"
+        "text": "用户消息 A：在这里填写输入内容。"
       }
     ],
     "composer": {
@@ -29,67 +29,67 @@
     "suggestions": []
   },
   "reply": {
-    "title": "进度提交提醒",
+    "title": "对话标题",
     "messages": [
       {
         "id": "u1",
         "role": "user",
-        "text": "提醒大家交进度，正式一点。"
+        "text": "用户消息 A：在这里填写输入内容。"
       },
       {
         "id": "a1",
         "role": "assistant",
-        "heading": "通知",
-        "text": "请各位积极配合，及时提交相关材料。",
+        "heading": "回复标题 A",
+        "text": "回复正文 A：在这里填写回复内容。",
         "actions": true
       }
     ],
     "suggestions": [
-      "补充通知对象",
-      "明确提交时间和入口"
+      "后续问题 A",
+      "后续问题 B"
     ]
   },
   "refine": {
-    "title": "进度提交提醒",
+    "title": "对话标题",
     "messages": [
       {
         "id": "u1",
         "role": "user",
-        "text": "提醒大家交进度，正式一点。"
+        "text": "用户消息 A：在这里填写输入内容。"
       },
       {
         "id": "a1",
         "role": "assistant",
-        "heading": "通知",
-        "text": "请各位积极配合，及时提交相关材料。",
+        "heading": "回复标题 A",
+        "text": "回复正文 A：在这里填写回复内容。",
         "actions": true
       }
     ],
     "composer": {
-      "draft": "发给各组负责人。周五下午五点前，把本周已完成和未完成事项，填进共享表格。\n共享表格（演示入口）",
+      "draft": "用户消息 B：在这里填写补充内容。",
       "focused": true
     },
     "suggestions": []
   },
   "updating": {
-    "title": "进度提交提醒",
+    "title": "对话标题",
     "messages": [
       {
         "id": "u1",
         "role": "user",
-        "text": "提醒大家交进度，正式一点。"
+        "text": "用户消息 A：在这里填写输入内容。"
       },
       {
         "id": "a1",
         "role": "assistant",
-        "heading": "通知",
-        "text": "请各位积极配合，及时提交相关材料。",
+        "heading": "回复标题 A",
+        "text": "回复正文 A：在这里填写回复内容。",
         "actions": true
       },
       {
         "id": "u2",
         "role": "user",
-        "text": "发给各组负责人。周五下午五点前，把本周已完成和未完成事项，填进共享表格。\n共享表格（演示入口）"
+        "text": "用户消息 B：在这里填写补充内容。"
       }
     ],
     "composer": {
@@ -98,32 +98,32 @@
     "suggestions": []
   },
   "final": {
-    "title": "进度提交提醒",
+    "title": "对话标题",
     "messages": [
       {
         "id": "u1",
         "role": "user",
-        "text": "提醒大家交进度，正式一点。"
+        "text": "用户消息 A：在这里填写输入内容。"
       },
       {
         "id": "a1",
         "role": "assistant",
-        "heading": "通知",
-        "text": "请各位积极配合，及时提交相关材料。",
+        "heading": "回复标题 A",
+        "text": "回复正文 A：在这里填写回复内容。",
         "actions": true
       },
       {
         "id": "u2",
         "role": "user",
-        "text": "发给各组负责人。周五下午五点前，把本周已完成和未完成事项，填进共享表格。\n共享表格（演示入口）"
+        "text": "用户消息 B：在这里填写补充内容。"
       },
       {
         "id": "a2",
         "role": "assistant",
-        "heading": "本周进度提交通知",
+        "heading": "回复标题 B",
         "paragraphs": [
-          "请各组负责人于周五下午五点前，将本周已完成和未完成事项填入共享表格。",
-          "填写入口：共享表格（演示入口）"
+          "回复正文 B：可替换为需要展示的内容。",
+          "补充说明：在这里填写说明文字。"
         ],
         "actions": true
       }

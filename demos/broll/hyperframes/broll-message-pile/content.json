@@ -1,45 +1,45 @@
 {
-  "trayLabel": "待理清的消息",
-  "clearLabel": "补充后的通知",
-  "clearTitle": "本周进度，按这份交",
+  "trayLabel": "消息列表",
+  "clearLabel": "整理结果",
+  "clearTitle": "结果标题",
   "messages": [
     {
-      "author": "第一句",
-      "text": "提醒大家交进度，正式一点。",
-      "question": "谁来交？",
+      "author": "发送人 A",
+      "text": "消息内容 A",
+      "question": "批注 A",
       "tone": "blue"
     },
     {
-      "author": "再补一句",
-      "text": "写具体一点，尽快交。",
-      "question": "几点前？",
+      "author": "发送人 B",
+      "text": "消息内容 B",
+      "question": "批注 B",
       "tone": "cream"
     },
     {
-      "author": "收到后",
-      "text": "收到。具体填在哪里？",
-      "question": "入口呢？",
+      "author": "发送人 C",
+      "text": "消息内容 C",
+      "question": "批注 C",
       "tone": "coral"
     }
   ],
   "fields": [
     {
-      "label": "对象",
-      "value": "各组负责人"
+      "label": "字段 A",
+      "value": "内容 A"
     },
     {
-      "label": "内容",
-      "value": "本周完成 / 未完成事项"
+      "label": "字段 B",
+      "value": "内容 B"
     },
     {
-      "label": "截止",
-      "value": "周五 17:00 前"
+      "label": "字段 C",
+      "value": "内容 C"
     },
     {
-      "label": "提交",
-      "value": "共享表格（附链接）"
+      "label": "字段 D",
+      "value": "内容 D"
     }
   ],
-  "resultNote": "一张纸，就能找到下一步。",
-  "indexLabel": "整理 / 02"
+  "resultNote": "结果说明文字",
+  "indexLabel": "栏目 / 02"
 }

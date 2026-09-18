@@ -5,17 +5,17 @@
   "objectHeight": 128,
   "cells": [
     {
-      "text": "A01"
+      "text": "项目 A"
     },
     {
-      "text": "09-03"
+      "text": "内容 A"
     },
     {
-      "text": "已完成",
+      "text": "状态 A",
       "tone": "green"
     },
     {
-      "text": "计入",
+      "text": "结果 A",
       "tone": "blue"
     }
   ],

@@ -1,14 +1,14 @@
 {
-  "title": "收藏，不等于会",
-  "subtitle": "材料存起来之后，还需要自己做一次。",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
   "files": [
-    "开始",
-    "检查",
-    "调整"
+    "文件 A",
+    "文件 B",
+    "文件 C"
   ],
-  "folderLabel": "收藏的教程",
-  "windowLabel": "实际操作",
-  "previewLabel": "AI 学习",
+  "folderLabel": "文件夹名称",
+  "windowLabel": "窗口标题",
+  "previewLabel": "预览标题",
   "result": "≠",
-  "footer": "从“我看过”走到“我能做”。"
+  "footer": "页脚说明文字"
 }

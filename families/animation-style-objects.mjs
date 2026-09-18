@@ -27,7 +27,64 @@ function question(p,h){
 }
 const common={category:'动画风',width:1280,height:720,reference:{level:'designed',basis:'按用户提供的 V8 原生图解母版重建 SVG 几何。保持对象结构与状态语义，具体补间为本次设计；不是实际软件截图。',source:'references/animation-style/sources.json'}};
 export const components=[
- {...common,id:'ani-processing-machine',name:'动画风 · 输入处理装置',description:'文件送入三通道装置，内部处理后生成对应结果；输入、处理标签和输出内容可替换。',defaultEffect:'ani-machine-process',defaults:{title:'让过程看得见',subtitle:'输入材料，经过处理，留下可核对的结果。',inputTitle:'输入',processTitle:'处理过程',outputTitle:'结果',inputs:[{label:'文本',icon:'document'},{label:'图片',icon:'documents'},{label:'数据',icon:'table'}],outputs:[{label:'内容已整理',icon:'document'},{label:'画面已生成',icon:'documents'},{label:'数据已汇总',icon:'table'}],footer:'讲到哪一步，画面就变化到哪一步。'},render:processing},
- {...common,id:'ani-question-outro',name:'动画风 · 问题与预告',description:'保留两个案例对象，将当前问题引向下一期；大字问题牌、橙色问号和预告标签依次出现。',defaultEffect:'ani-diagram-build',defaults:{title:'明明学过，',subtitle:'为什么想不起来用？',footer:'下期：远迁移',examples:[{title:'本周进度通知',lines:['谁来做、做什么','什么时候完成','到哪里填写']},{title:'订单明细',lines:['按哪个日期','统计哪些状态','对照原始记录']}]},render:question}
+ {...common,id:'ani-processing-machine',name:'动画风 · 输入处理装置',description:'文件送入三通道装置，内部处理后生成对应结果；输入、处理标签和输出内容可替换。',defaultEffect:'ani-machine-process',defaults:{
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "inputTitle": "输入",
+  "processTitle": "处理",
+  "outputTitle": "输出",
+  "inputs": [
+    {
+      "label": "输入 A",
+      "icon": "document"
+    },
+    {
+      "label": "输入 B",
+      "icon": "documents"
+    },
+    {
+      "label": "输入 C",
+      "icon": "table"
+    }
+  ],
+  "outputs": [
+    {
+      "label": "输出 A",
+      "icon": "document"
+    },
+    {
+      "label": "输出 B",
+      "icon": "documents"
+    },
+    {
+      "label": "输出 C",
+      "icon": "table"
+    }
+  ],
+  "footer": "页脚说明文字"
+},render:processing},
+ {...common,id:'ani-question-outro',name:'动画风 · 问题与预告',description:'保留两个案例对象，将当前问题引向下一期；大字问题牌、橙色问号和预告标签依次出现。',defaultEffect:'ani-diagram-build',defaults:{
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "footer": "页脚说明文字",
+  "examples": [
+    {
+      "title": "面板 A",
+      "lines": [
+        "说明内容 A",
+        "说明内容 B",
+        "说明内容 C"
+      ]
+    },
+    {
+      "title": "面板 B",
+      "lines": [
+        "说明内容 A",
+        "说明内容 B",
+        "说明内容 C"
+      ]
+    }
+  ]
+},render:question}
 ];
 export const css='';

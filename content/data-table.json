@@ -1,88 +1,88 @@
 {
   "appName": "数据工作台",
-  "workspace": "science_video.db",
+  "workspace": "example.db",
   "appIcon": "grid",
-  "table": "scenes",
+  "table": "items",
   "tables": [
-    "scenes",
-    "assets",
-    "captions",
-    "render_jobs"
+    "items",
+    "groups",
+    "events",
+    "settings"
   ],
   "columns": [
     {
       "key": "id",
-      "label": "id",
+      "label": "编号",
       "type": "integer"
     },
     {
       "key": "title",
-      "label": "title",
+      "label": "字段 A",
       "type": "text"
     },
     {
       "key": "component",
-      "label": "component",
+      "label": "字段 B",
       "type": "text"
     },
     {
       "key": "duration",
-      "label": "duration",
+      "label": "数值",
       "type": "real"
     },
     {
       "key": "status",
-      "label": "status",
+      "label": "状态",
       "type": "text"
     }
   ],
   "rows": [
     {
       "id": 1,
-      "title": "开头钩子",
-      "component": "codex-chat",
+      "title": "项目 A",
+      "component": "内容 A",
       "duration": 5,
       "status": "完成"
     },
     {
       "id": 2,
-      "title": "操作演示",
-      "component": "browser-window",
+      "title": "项目 B",
+      "component": "内容 B",
       "duration": 12.5,
       "status": "完成"
     },
     {
       "id": 3,
-      "title": "命令执行",
-      "component": "terminal-session",
+      "title": "项目 C",
+      "component": "内容 C",
       "duration": 8,
       "status": "完成"
     },
     {
       "id": 4,
-      "title": "配置说明",
-      "component": "code-editor",
+      "title": "项目 D",
+      "component": "内容 D",
       "duration": 10,
       "status": "编辑中"
     },
     {
       "id": 5,
-      "title": "原理拆解",
-      "component": "flow-diagram",
+      "title": "项目 E",
+      "component": "内容 E",
       "duration": 14,
       "status": "待处理"
     },
     {
       "id": 6,
-      "title": "前后对比",
-      "component": "before-after",
+      "title": "项目 F",
+      "component": "内容 F",
       "duration": 8.5,
       "status": "待处理"
     },
     {
       "id": 7,
-      "title": "重点回顾",
-      "component": "summary-card",
+      "title": "项目 G",
+      "component": "内容 G",
       "duration": 6,
       "status": "待处理"
     }

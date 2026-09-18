@@ -1,34 +1,34 @@
 {
-  "eyebrow": "08 / 查看状态",
-  "title": "交付之前，把关键状态看清楚",
-  "subtitle": "进度、素材与验收放在同一页，减少遗漏。",
-  "badge": "示例数据",
-  "footer": "示例内容可替换 · 白底 / 蓝色强调 / 薄荷绿完成态",
-  "series": "EXPLAIN / STATUS",
+  "eyebrow": "栏目 / 01",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "badge": "示例标签",
+  "footer": "页脚说明",
+  "series": "示例系列",
   "metrics": [
     {
-      "label": "镜头完成",
+      "label": "指标 A",
       "value": "8",
       "unit": "/ 10",
-      "detail": "还有 2 个镜头需要调整",
+      "detail": "指标说明 A",
       "progress": 0.8
     },
     {
-      "label": "素材就绪",
+      "label": "指标 B",
       "value": "24",
       "unit": "/ 24",
-      "detail": "图片、录屏与配音已归档",
+      "detail": "指标说明 B",
       "progress": 1
     },
     {
-      "label": "验收通过",
+      "label": "指标 C",
       "value": "6",
       "unit": "/ 8",
-      "detail": "剩余字幕与片尾检查",
+      "detail": "指标说明 C",
       "progress": 0.75
     }
   ],
-  "progressTitle": "最近五次制作进度",
+  "progressTitle": "趋势标题",
   "progress": [
     32,
     46,
@@ -37,30 +37,30 @@
     80
   ],
   "progressLabels": [
-    "第1次",
-    "第2次",
-    "第3次",
-    "第4次",
-    "第5次"
+    "阶段 A",
+    "阶段 B",
+    "阶段 C",
+    "阶段 D",
+    "阶段 E"
   ],
-  "checklistTitle": "本次检查",
+  "checklistTitle": "检查项",
   "checks": [
     {
-      "label": "内容与引用",
+      "label": "检查项 A",
       "done": true
     },
     {
-      "label": "构图与清晰度",
+      "label": "检查项 B",
       "done": true
     },
     {
-      "label": "字幕时间点",
+      "label": "检查项 C",
       "done": false
     },
     {
-      "label": "配音与背景声",
+      "label": "检查项 D",
       "done": false
     }
   ],
-  "note": "这里只汇总示例状态，不代表已经执行检查。"
+  "note": "补充说明文字"
 }

@@ -3,28 +3,28 @@
   "y": 58,
   "objectWidth": 590,
   "objectHeight": 600,
-  "title": "项目说明",
-  "subtitle": "把需要做的事写清楚",
+  "title": "文档标题",
+  "subtitle": "文档说明文字",
   "accent": "blue",
   "rows": [
     {
-      "label": "对象",
-      "text": "各组负责人",
+      "label": "字段 A",
+      "text": "内容 A",
       "checked": true
     },
     {
-      "label": "任务",
-      "text": "填写本周完成与待办事项",
+      "label": "字段 B",
+      "text": "内容 B",
       "checked": false
     },
     {
-      "label": "时间",
-      "text": "周五 17:00 前",
+      "label": "字段 C",
+      "text": "内容 C",
       "checked": false
     },
     {
-      "label": "入口",
-      "text": "共享表格",
+      "label": "字段 D",
+      "text": "内容 D",
       "checked": false
     }
   ]

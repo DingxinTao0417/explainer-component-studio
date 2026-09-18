@@ -1,9 +1,9 @@
 [
   {
     "id": "ani-order-filter",
-    "name": "动画风 · 订单条件筛选",
+    "name": "动画风 · 条件筛选表格",
     "category": "动画风",
-    "description": "从五条局部记录展示筛选口径：先计入五条，按完成日期与状态改为三条。取消及未付记录留在原位，样本与月度总数明确区分。",
+    "description": "用五条示例记录展示条件筛选；显示标签与筛选状态分别配置，原始记录保留。",
     "width": 1280,
     "height": 720,
     "reference": {
@@ -20,67 +20,67 @@
         "id": "title",
         "type": "string",
         "label": "title",
-        "default": "截取 5 条示意"
+        "default": "表格标题"
       },
       {
         "id": "subtitle",
         "type": "string",
         "label": "subtitle",
-        "default": "完成日期在本月，且状态为已完成"
+        "default": "筛选条件说明"
       },
       {
         "id": "footer",
         "type": "string",
         "label": "footer",
-        "default": "只改变计入范围，原始五条记录仍然保留。"
+        "default": "补充说明文字"
       },
       {
         "id": "month",
         "type": "string",
         "label": "month",
-        "default": "2026-09"
+        "default": "2026-01"
       },
       {
         "id": "sourceLabel",
         "type": "string",
         "label": "sourceLabel",
-        "default": "原始表格"
+        "default": "来源表格"
       },
       {
         "id": "rawHeader",
         "type": "string",
         "label": "rawHeader",
-        "default": "初次计入"
+        "default": "初始结果"
       },
       {
         "id": "finalHeader",
         "type": "string",
         "label": "finalHeader",
-        "default": "修正后计入"
+        "default": "筛选结果"
       },
       {
         "id": "includedLabel",
         "type": "string",
         "label": "includedLabel",
-        "default": "计入"
+        "default": "保留"
       },
       {
         "id": "excludedLabel",
         "type": "string",
         "label": "excludedLabel",
-        "default": "不计入"
+        "default": "排除"
       },
       {
         "id": "rawCountLabel",
         "type": "string",
         "label": "rawCountLabel",
-        "default": "本局部初次计入"
+        "default": "初始记录"
       },
       {
         "id": "finalCountLabel",
         "type": "string",
         "label": "finalCountLabel",
-        "default": "本局部符合"
+        "default": "符合条件"
       },
       {
         "id": "unit",
@@ -92,7 +92,25 @@
         "id": "sampleNote",
         "type": "string",
         "label": "sampleNote",
-        "default": "不是月度总数"
+        "default": "结果说明"
+      },
+      {
+        "id": "sourceNote",
+        "type": "string",
+        "label": "sourceNote",
+        "default": "来源说明"
+      },
+      {
+        "id": "periodLabel",
+        "type": "string",
+        "label": "periodLabel",
+        "default": "时间范围"
+      },
+      {
+        "id": "matchState",
+        "type": "string",
+        "label": "matchState",
+        "default": "complete"
       },
       {
         "id": "propsJson",
@@ -512,7 +530,7 @@
           },
           {
             "value": "ani-notice-verify",
-            "label": "通知逐项核对"
+            "label": "文档逐项核对"
           },
           {
             "value": "ani-diagram-build",
@@ -520,7 +538,7 @@
           },
           {
             "value": "ani-order-select",
-            "label": "订单条件筛选"
+            "label": "表格条件筛选"
           },
           {
             "value": "ani-machine-process",
@@ -532,6 +550,12 @@
         "id": "effectOptionsJson",
         "type": "string",
         "label": "动画参数 JSON",
+        "default": "{}"
+      },
+      {
+        "id": "appearanceJson",
+        "type": "string",
+        "label": "舞台边框与背景 JSON",
         "default": "{}"
       },
       {
@@ -557,7 +581,7 @@
     "id": "ani-compare-extract",
     "name": "动画风 · 两例对照与归纳",
     "category": "动画风",
-    "description": "保留通知与订单的不同结构，对齐两边相同的步骤，再汇聚到图式归纳与本例办法。",
+    "description": "并排呈现文档与表格，先显示步骤，再绘制汇聚连线，最后显示结果与总结。",
     "width": 1280,
     "height": 720,
     "reference": {
@@ -574,49 +598,67 @@
         "id": "title",
         "type": "string",
         "label": "title",
-        "default": "图式归纳"
+        "default": "结果标题"
       },
       {
         "id": "subtitle",
         "type": "string",
         "label": "subtitle",
-        "default": "从不同例子，找共同思路"
+        "default": "结果说明文字"
       },
       {
         "id": "footer",
         "type": "string",
         "label": "footer",
-        "default": "本例办法：补清要求，再检查"
+        "default": "总结说明文字"
       },
       {
         "id": "leftTitle",
         "type": "string",
         "label": "leftTitle",
-        "default": "本周进度通知"
+        "default": "文档标题"
       },
       {
         "id": "rightTitle",
         "type": "string",
         "label": "rightTitle",
-        "default": "截取 5 条示意"
+        "default": "表格标题"
       },
       {
         "id": "relationLabel",
         "type": "string",
         "label": "relationLabel",
-        "default": "比较与提炼"
+        "default": "关系说明"
       },
       {
         "id": "sampleNote",
         "type": "string",
         "label": "sampleNote",
-        "default": "样本不是月度总数"
+        "default": "补充说明"
       },
       {
         "id": "month",
         "type": "string",
         "label": "month",
-        "default": "2026-09"
+        "default": "2026-01"
+      },
+      {
+        "id": "includedLabel",
+        "type": "string",
+        "label": "includedLabel",
+        "default": "保留"
+      },
+      {
+        "id": "excludedLabel",
+        "type": "string",
+        "label": "excludedLabel",
+        "default": "排除"
+      },
+      {
+        "id": "matchState",
+        "type": "string",
+        "label": "matchState",
+        "default": "complete"
       },
       {
         "id": "propsJson",
@@ -1036,7 +1078,7 @@
           },
           {
             "value": "ani-notice-verify",
-            "label": "通知逐项核对"
+            "label": "文档逐项核对"
           },
           {
             "value": "ani-diagram-build",
@@ -1044,7 +1086,7 @@
           },
           {
             "value": "ani-order-select",
-            "label": "订单条件筛选"
+            "label": "表格条件筛选"
           },
           {
             "value": "ani-machine-process",
@@ -1056,6 +1098,12 @@
         "id": "effectOptionsJson",
         "type": "string",
         "label": "动画参数 JSON",
+        "default": "{}"
+      },
+      {
+        "id": "appearanceJson",
+        "type": "string",
+        "label": "舞台边框与背景 JSON",
         "default": "{}"
       },
       {
@@ -1098,31 +1146,31 @@
         "id": "title",
         "type": "string",
         "label": "title",
-        "default": "输入、检查，再修改"
+        "default": "主标题"
       },
       {
         "id": "subtitle",
         "type": "string",
         "label": "subtitle",
-        "default": "把要求写进去，把结果拿出来看。"
+        "default": "副标题与说明文字"
       },
       {
         "id": "toolLabel",
         "type": "string",
         "label": "toolLabel",
-        "default": "工具 A"
+        "default": "窗口标题"
       },
       {
         "id": "requestLabel",
         "type": "string",
         "label": "requestLabel",
-        "default": "要求"
+        "default": "输入"
       },
       {
         "id": "request",
         "type": "string",
         "label": "request",
-        "default": "AI 学习海报"
+        "default": "输入内容"
       },
       {
         "id": "revisionLabel",
@@ -1134,7 +1182,7 @@
         "id": "revision",
         "type": "string",
         "label": "revision",
-        "default": "标题缩小"
+        "default": "修改内容"
       },
       {
         "id": "action",
@@ -1146,13 +1194,13 @@
         "id": "previewLabel",
         "type": "string",
         "label": "previewLabel",
-        "default": "AI 学习"
+        "default": "预览标题"
       },
       {
         "id": "footer",
         "type": "string",
         "label": "footer",
-        "default": "检查结果，才能知道下一步该改哪里。"
+        "default": "页脚说明文字"
       },
       {
         "id": "propsJson",
@@ -1572,7 +1620,7 @@
           },
           {
             "value": "ani-notice-verify",
-            "label": "通知逐项核对"
+            "label": "文档逐项核对"
           },
           {
             "value": "ani-diagram-build",
@@ -1580,7 +1628,7 @@
           },
           {
             "value": "ani-order-select",
-            "label": "订单条件筛选"
+            "label": "表格条件筛选"
           },
           {
             "value": "ani-machine-process",
@@ -1592,6 +1640,12 @@
         "id": "effectOptionsJson",
         "type": "string",
         "label": "动画参数 JSON",
+        "default": "{}"
+      },
+      {
+        "id": "appearanceJson",
+        "type": "string",
+        "label": "舞台边框与背景 JSON",
         "default": "{}"
       },
       {
@@ -1615,9 +1669,9 @@
   },
   {
     "id": "ani-file-collection",
-    "name": "动画风 · 收藏不等于会",
+    "name": "动画风 · 文件夹与窗口对照",
     "category": "动画风",
-    "description": "折角教程纸收进文件夹，与右侧实际操作窗口形成对照；收藏列表和窗口标签可编辑。",
+    "description": "文件卡片、文件夹与浏览器窗口并排展示；文件名称、标签与说明均可替换。",
     "width": 1280,
     "height": 720,
     "reference": {
@@ -1634,31 +1688,31 @@
         "id": "title",
         "type": "string",
         "label": "title",
-        "default": "收藏，不等于会"
+        "default": "主标题"
       },
       {
         "id": "subtitle",
         "type": "string",
         "label": "subtitle",
-        "default": "材料存起来之后，还需要自己做一次。"
+        "default": "副标题与说明文字"
       },
       {
         "id": "folderLabel",
         "type": "string",
         "label": "folderLabel",
-        "default": "收藏的教程"
+        "default": "文件夹名称"
       },
       {
         "id": "windowLabel",
         "type": "string",
         "label": "windowLabel",
-        "default": "实际操作"
+        "default": "窗口标题"
       },
       {
         "id": "previewLabel",
         "type": "string",
         "label": "previewLabel",
-        "default": "AI 学习"
+        "default": "预览标题"
       },
       {
         "id": "result",
@@ -1670,7 +1724,7 @@
         "id": "footer",
         "type": "string",
         "label": "footer",
-        "default": "从“我看过”走到“我能做”。"
+        "default": "页脚说明文字"
       },
       {
         "id": "propsJson",
@@ -2090,7 +2144,7 @@
           },
           {
             "value": "ani-notice-verify",
-            "label": "通知逐项核对"
+            "label": "文档逐项核对"
           },
           {
             "value": "ani-diagram-build",
@@ -2098,7 +2152,7 @@
           },
           {
             "value": "ani-order-select",
-            "label": "订单条件筛选"
+            "label": "表格条件筛选"
           },
           {
             "value": "ani-machine-process",
@@ -2110,6 +2164,12 @@
         "id": "effectOptionsJson",
         "type": "string",
         "label": "动画参数 JSON",
+        "default": "{}"
+      },
+      {
+        "id": "appearanceJson",
+        "type": "string",
+        "label": "舞台边框与背景 JSON",
         "default": "{}"
       },
       {
@@ -2133,9 +2193,9 @@
   },
   {
     "id": "ani-method-transfer",
-    "name": "动画风 · 熟悉部分可复用",
+    "name": "动画风 · 窗口与部件组合",
     "category": "动画风",
-    "description": "从熟悉工具提取要求、检查、修改，送进带厚度的复用托盘，给新差异留出独立槽位。",
+    "description": "浏览器、文件卡片与容器通过连线组合；步骤、容器标题和新增项分别可编辑。",
     "width": 1280,
     "height": 720,
     "reference": {
@@ -2152,43 +2212,43 @@
         "id": "title",
         "type": "string",
         "label": "title",
-        "default": "熟悉部分可复用"
+        "default": "主标题"
       },
       {
         "id": "subtitle",
         "type": "string",
         "label": "subtitle",
-        "default": "原来的办法，可以带到新问题里。"
+        "default": "副标题与说明文字"
       },
       {
         "id": "windowLabel",
         "type": "string",
         "label": "windowLabel",
-        "default": "熟悉的工具"
+        "default": "窗口标题"
       },
       {
         "id": "previewLabel",
         "type": "string",
         "label": "previewLabel",
-        "default": "AI 学习"
+        "default": "预览标题"
       },
       {
         "id": "trayTitle",
         "type": "string",
         "label": "trayTitle",
-        "default": "图像要求"
+        "default": "容器标题"
       },
       {
         "id": "newLabel",
         "type": "string",
         "label": "newLabel",
-        "default": "新差异"
+        "default": "新增项"
       },
       {
         "id": "footer",
         "type": "string",
         "label": "footer",
-        "default": "先认出能复用的部分，再处理真正不同的地方。"
+        "default": "页脚说明文字"
       },
       {
         "id": "propsJson",
@@ -2608,7 +2668,7 @@
           },
           {
             "value": "ani-notice-verify",
-            "label": "通知逐项核对"
+            "label": "文档逐项核对"
           },
           {
             "value": "ani-diagram-build",
@@ -2616,7 +2676,7 @@
           },
           {
             "value": "ani-order-select",
-            "label": "订单条件筛选"
+            "label": "表格条件筛选"
           },
           {
             "value": "ani-machine-process",
@@ -2628,6 +2688,12 @@
         "id": "effectOptionsJson",
         "type": "string",
         "label": "动画参数 JSON",
+        "default": "{}"
+      },
+      {
+        "id": "appearanceJson",
+        "type": "string",
+        "label": "舞台边框与背景 JSON",
         "default": "{}"
       },
       {
@@ -2651,9 +2717,9 @@
   },
   {
     "id": "ani-knowledge-network",
-    "name": "动画风 · 把新旧连起来",
+    "name": "动画风 · 文档与窗口连线",
     "category": "动画风",
-    "description": "已有资料与成品进入要求结构，经检查和修改连到新的竖版任务；对象、字段和结果可编辑。",
+    "description": "文件、预览窗口与文档通过连线组成图解；字段、步骤、输出和注释可编辑。",
     "width": 1280,
     "height": 720,
     "reference": {
@@ -2670,55 +2736,55 @@
         "id": "title",
         "type": "string",
         "label": "title",
-        "default": "把新旧连起来"
+        "default": "主标题"
       },
       {
         "id": "subtitle",
         "type": "string",
         "label": "subtitle",
-        "default": "让新问题挂到已有经验上。"
+        "default": "副标题与说明文字"
       },
       {
         "id": "previewLabel",
         "type": "string",
         "label": "previewLabel",
-        "default": "AI 学习"
+        "default": "预览标题"
       },
       {
         "id": "requirementsTitle",
         "type": "string",
         "label": "requirementsTitle",
-        "default": "海报要求"
+        "default": "文档标题"
       },
       {
         "id": "outputTitle",
         "type": "string",
         "label": "outputTitle",
-        "default": "改为竖版"
+        "default": "输出标题"
       },
       {
         "id": "resultLabel",
         "type": "string",
         "label": "resultLabel",
-        "default": "图像要求"
+        "default": "结果标签"
       },
       {
         "id": "questionTitle",
         "type": "string",
         "label": "questionTitle",
-        "default": "缺少相关经验时"
+        "default": "问题标题"
       },
       {
         "id": "question",
         "type": "string",
         "label": "question",
-        "default": "从哪里问起？"
+        "default": "问题内容？"
       },
       {
         "id": "footer",
         "type": "string",
         "label": "footer",
-        "default": "联系越具体，越容易知道下一步怎么做。"
+        "default": "页脚说明文字"
       },
       {
         "id": "propsJson",
@@ -3138,7 +3204,7 @@
           },
           {
             "value": "ani-notice-verify",
-            "label": "通知逐项核对"
+            "label": "文档逐项核对"
           },
           {
             "value": "ani-diagram-build",
@@ -3146,7 +3212,7 @@
           },
           {
             "value": "ani-order-select",
-            "label": "订单条件筛选"
+            "label": "表格条件筛选"
           },
           {
             "value": "ani-machine-process",
@@ -3158,6 +3224,12 @@
         "id": "effectOptionsJson",
         "type": "string",
         "label": "动画参数 JSON",
+        "default": "{}"
+      },
+      {
+        "id": "appearanceJson",
+        "type": "string",
+        "label": "舞台边框与背景 JSON",
         "default": "{}"
       },
       {
@@ -3181,9 +3253,9 @@
   },
   {
     "id": "ani-capability-tiles",
-    "name": "动画风 · 散落知识砖",
+    "name": "动画风 · 图标卡片组",
     "category": "动画风",
-    "description": "六块具有厚度的工具砖分别承载要求、配色、尺寸、版式、检查和修改，与工具结果窗口并置。",
+    "description": "六块带图标的卡片与预览窗口并置；卡片标签、窗口标题和结果文字可编辑。",
     "width": 1280,
     "height": 720,
     "reference": {
@@ -3200,37 +3272,37 @@
         "id": "title",
         "type": "string",
         "label": "title",
-        "default": "学一个，扔一个"
+        "default": "主标题"
       },
       {
         "id": "subtitle",
         "type": "string",
         "label": "subtitle",
-        "default": "零散技巧，需要连成自己的方法。"
+        "default": "副标题与说明文字"
       },
       {
         "id": "windowLabel",
         "type": "string",
         "label": "windowLabel",
-        "default": "AI 工具 B"
+        "default": "窗口标题"
       },
       {
         "id": "previewLabel",
         "type": "string",
         "label": "previewLabel",
-        "default": "AI 学习"
+        "default": "预览标题"
       },
       {
         "id": "result",
         "type": "string",
         "label": "result",
-        "default": "把本事连起来"
+        "default": "结果说明"
       },
       {
         "id": "footer",
         "type": "string",
         "label": "footer",
-        "default": "让一次学会的内容，成为下一次能用的经验。"
+        "default": "页脚说明文字"
       },
       {
         "id": "propsJson",
@@ -3650,7 +3722,7 @@
           },
           {
             "value": "ani-notice-verify",
-            "label": "通知逐项核对"
+            "label": "文档逐项核对"
           },
           {
             "value": "ani-diagram-build",
@@ -3658,7 +3730,7 @@
           },
           {
             "value": "ani-order-select",
-            "label": "订单条件筛选"
+            "label": "表格条件筛选"
           },
           {
             "value": "ani-machine-process",
@@ -3670,6 +3742,12 @@
         "id": "effectOptionsJson",
         "type": "string",
         "label": "动画参数 JSON",
+        "default": "{}"
+      },
+      {
+        "id": "appearanceJson",
+        "type": "string",
+        "label": "舞台边框与背景 JSON",
         "default": "{}"
       },
       {
@@ -3712,13 +3790,13 @@
         "id": "title",
         "type": "string",
         "label": "title",
-        "default": "让过程看得见"
+        "default": "主标题"
       },
       {
         "id": "subtitle",
         "type": "string",
         "label": "subtitle",
-        "default": "输入材料，经过处理，留下可核对的结果。"
+        "default": "副标题与说明文字"
       },
       {
         "id": "inputTitle",
@@ -3730,19 +3808,19 @@
         "id": "processTitle",
         "type": "string",
         "label": "processTitle",
-        "default": "处理过程"
+        "default": "处理"
       },
       {
         "id": "outputTitle",
         "type": "string",
         "label": "outputTitle",
-        "default": "结果"
+        "default": "输出"
       },
       {
         "id": "footer",
         "type": "string",
         "label": "footer",
-        "default": "讲到哪一步，画面就变化到哪一步。"
+        "default": "页脚说明文字"
       },
       {
         "id": "propsJson",
@@ -4162,7 +4240,7 @@
           },
           {
             "value": "ani-notice-verify",
-            "label": "通知逐项核对"
+            "label": "文档逐项核对"
           },
           {
             "value": "ani-diagram-build",
@@ -4170,7 +4248,7 @@
           },
           {
             "value": "ani-order-select",
-            "label": "订单条件筛选"
+            "label": "表格条件筛选"
           },
           {
             "value": "ani-machine-process",
@@ -4182,6 +4260,12 @@
         "id": "effectOptionsJson",
         "type": "string",
         "label": "动画参数 JSON",
+        "default": "{}"
+      },
+      {
+        "id": "appearanceJson",
+        "type": "string",
+        "label": "舞台边框与背景 JSON",
         "default": "{}"
       },
       {
@@ -4224,19 +4308,19 @@
         "id": "title",
         "type": "string",
         "label": "title",
-        "default": "明明学过，"
+        "default": "主标题"
       },
       {
         "id": "subtitle",
         "type": "string",
         "label": "subtitle",
-        "default": "为什么想不起来用？"
+        "default": "副标题与说明文字"
       },
       {
         "id": "footer",
         "type": "string",
         "label": "footer",
-        "default": "下期：远迁移"
+        "default": "页脚说明文字"
       },
       {
         "id": "propsJson",
@@ -4656,7 +4740,7 @@
           },
           {
             "value": "ani-notice-verify",
-            "label": "通知逐项核对"
+            "label": "文档逐项核对"
           },
           {
             "value": "ani-diagram-build",
@@ -4664,7 +4748,7 @@
           },
           {
             "value": "ani-order-select",
-            "label": "订单条件筛选"
+            "label": "表格条件筛选"
           },
           {
             "value": "ani-machine-process",
@@ -4676,6 +4760,12 @@
         "id": "effectOptionsJson",
         "type": "string",
         "label": "动画参数 JSON",
+        "default": "{}"
+      },
+      {
+        "id": "appearanceJson",
+        "type": "string",
+        "label": "舞台边框与背景 JSON",
         "default": "{}"
       },
       {
@@ -4699,7 +4789,7 @@
   },
   {
     "id": "ani-notice-check",
-    "name": "动画风 · 通知逐项核对",
+    "name": "动画风 · 文档逐项核对",
     "category": "动画风",
     "description": "根据 V8 通知母版复刻折角纸张、深蓝描边、钴蓝标题牌与四行彩色图标，逐项核对后保留检查结果。全部图形与文字可编辑。",
     "width": 1280,
@@ -4718,19 +4808,19 @@
         "id": "title",
         "type": "string",
         "label": "title",
-        "default": "本周进度通知"
+        "default": "文档标题"
       },
       {
         "id": "subtitle",
         "type": "string",
         "label": "subtitle",
-        "default": "从收件人角度核对"
+        "default": "文档说明"
       },
       {
         "id": "footnote",
         "type": "string",
         "label": "footnote",
-        "default": "轮到谁做、要做什么、几点前完成、在哪儿填，都找得到。"
+        "default": "补充说明文字"
       },
       {
         "id": "propsJson",
@@ -5150,7 +5240,7 @@
           },
           {
             "value": "ani-notice-verify",
-            "label": "通知逐项核对"
+            "label": "文档逐项核对"
           },
           {
             "value": "ani-diagram-build",
@@ -5158,7 +5248,7 @@
           },
           {
             "value": "ani-order-select",
-            "label": "订单条件筛选"
+            "label": "表格条件筛选"
           },
           {
             "value": "ani-machine-process",
@@ -5170,6 +5260,12 @@
         "id": "effectOptionsJson",
         "type": "string",
         "label": "动画参数 JSON",
+        "default": "{}"
+      },
+      {
+        "id": "appearanceJson",
+        "type": "string",
+        "label": "舞台边框与背景 JSON",
         "default": "{}"
       },
       {

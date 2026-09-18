@@ -1,20 +1,20 @@
 {
   "tabs": [
     {
-      "title": "项目文档",
+      "title": "标签页 A",
       "active": true
     },
     {
-      "title": "组件目录",
+      "title": "标签页 B",
       "active": false
     }
   ],
-  "url": "docs.example.com/getting-started",
-  "profile": "L",
+  "url": "www.example.com/page",
+  "profile": "U",
   "bookmarks": [
-    "工作台",
-    "文档",
-    "参考素材"
+    "书签 A",
+    "书签 B",
+    "书签 C"
   ],
   "media": {
     "kind": "demo",
@@ -22,41 +22,42 @@
     "fit": "contain",
     "alt": ""
   },
-  "brand": "Studio Docs",
+  "brand": "示例站点",
+  "actionButton": "操作按钮",
   "nav": [
-    "指南",
-    "组件",
-    "示例",
-    "更新"
+    "栏目 A",
+    "栏目 B",
+    "栏目 C",
+    "栏目 D"
   ],
-  "section": "开始使用",
-  "title": "创建你的第一个项目",
-  "intro": "将素材、内容和时间安排放在一起，开始制作一段清晰的讲解视频。",
+  "section": "栏目标题",
+  "title": "页面主标题",
+  "intro": "页面简介。可替换标题、正文和列表内容。",
   "sidebar": [
-    "快速开始",
-    "项目结构",
-    "添加素材",
-    "时间轴",
-    "预览与导出"
+    "导航项 A",
+    "导航项 B",
+    "导航项 C",
+    "导航项 D",
+    "导航项 E"
   ],
   "activePage": 0,
-  "eyebrow": "指南 / 快速开始",
+  "eyebrow": "栏目 / 当前页面",
   "steps": [
     {
-      "title": "创建项目",
-      "body": "在工作目录中准备项目文件，并为每一段内容建立清晰的命名。"
+      "title": "内容标题 A",
+      "body": "正文第一段，替换为需要展示的内容。"
     },
     {
-      "title": "替换内容",
-      "body": "编辑标题、说明和素材路径。组件会沿用统一的排版与视觉样式。"
+      "title": "内容标题 B",
+      "body": "正文第二段，支持继续补充说明。"
     }
   ],
-  "code": "npm run build\nnpm run dev",
+  "code": "node example.js",
   "tocTitle": "本页内容",
   "toc": [
-    "创建项目",
-    "替换内容",
-    "下一步"
+    "目录项 A",
+    "目录项 B",
+    "目录项 C"
   ],
-  "button": "下一步：添加素材"
+  "button": "下一步"
 }

@@ -23,7 +23,17 @@ function wrap(value,width,size,maxLines){
 function pathFace(d,fill,stroke=t.ink){return `<path d="${d}" transform="translate(8 10)" fill="${t.shadow}"/><path d="${d}" fill="${fill}" stroke="${stroke}" stroke-width="3.5" stroke-linejoin="round"/>`;}
 function preview(group,label,h){return `<section class="ani-atom-scene"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" role="img" aria-label="${h.esc(label)}" style="${font};fill:${t.ink};background:transparent">${group}</svg></section>`;}
 
-const nodeDefaults={x:420,y:237,objectWidth:430,objectHeight:232,shape:'decision',label:'符合要求？',caption:'按标准逐项判断',tone:'blue',state:'active'};
+const nodeDefaults={
+  "x": 420,
+  "y": 237,
+  "objectWidth": 430,
+  "objectHeight": 232,
+  "shape": "decision",
+  "label": "判断条件？",
+  "caption": "节点说明",
+  "tone": "blue",
+  "state": "active"
+};
 export function renderNodeAtom(props,h){
  const p={...nodeDefaults,...props},{x,y,w,height}=geometry(p,190,108),colors=palette(p);choice(p.shape,'shape',['step','decision','terminal']);
  const label=copy(p.label,'label',32),caption=copy(p.caption,'caption',48),diamond=p.shape==='decision',contentWidth=w*(diamond?.57:.82),labelSize=fit(label,Math.min(38,height*.23),contentWidth,19),captionSize=caption?fit(caption,Math.min(22,height*.13),contentWidth,17):0;
@@ -36,7 +46,18 @@ export function renderNodeAtom(props,h){
  return `<g data-atom="node" data-node-shape="${p.shape}" data-state="${p.state}" transform="translate(${x} ${y})" style="${font}" data-text-panel="node" data-panel-bounds="${(w-contentWidth)/2} ${height*.25} ${contentWidth} ${height*.52}">${pathFace(d,colors.wash,p.state==='normal'?t.ink:colors.color)}<path d="${gleam}" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" opacity=".9"/>${txt(w/2,mainY,label,labelSize,h,'text-anchor="middle"')}${caption?txt(w/2,subY,caption,captionSize,h,'text-anchor="middle" fill="#4e6d91"'):''}</g>`;
 }
 
-const calloutDefaults={x:375,y:225,objectWidth:520,objectHeight:244,title:'核对这一点',body:'要求写清楚后，再用结果逐项核对。',direction:'bottom',pointerOffset:.25,tone:'blue',state:'normal'};
+const calloutDefaults={
+  "x": 375,
+  "y": 225,
+  "objectWidth": 520,
+  "objectHeight": 244,
+  "title": "标注标题",
+  "body": "标注正文内容，可替换为补充说明。",
+  "direction": "bottom",
+  "pointerOffset": 0.25,
+  "tone": "blue",
+  "state": "normal"
+};
 export function renderCalloutAtom(props,h){
  const p={...calloutDefaults,...props},{x,y,w,height}=geometry(p,240,132),colors=palette(p);choice(p.direction,'direction',['none','top','right','bottom','left']);
  const pointer=number(p.pointerOffset,'pointerOffset',0,1),tail=p.direction==='none'?0:27,bx=p.direction==='left'?tail:0,by=p.direction==='top'?tail:0,bw=w-(['left','right'].includes(p.direction)?tail:0),bh=height-(['top','bottom'].includes(p.direction)?tail:0),r=19;
@@ -57,7 +78,19 @@ export function renderCalloutAtom(props,h){
  return `<g data-atom="callout" data-pointer="${p.direction}" data-state="${p.state}" transform="translate(${x} ${y})" style="${font}">${pathFace(d,'#fbfeff')}<path d="M${bx+22} ${by+14}H${bx+Math.min(bw-23,129)}" stroke="${colors.color}" stroke-width="5" stroke-linecap="round"/><g data-text-panel="callout-body" data-panel-bounds="${bx+23} ${by+23} ${bw-46} ${bh-40}">${title?txt(bx+27,by+titleSize+26,title,titleSize,h):''}${lines.map((line,i)=>txt(bx+27,bodyTop+bodySize+i*lineHeight,line,bodySize,h,'fill="#42648b"')).join('')}</g></g>`;
 }
 
-const highlightDefaults={x:325,y:249,objectWidth:624,objectHeight:206,shape:'rectangle',label:'重点检查',tone:'orange',state:'active',lineWidth:6,dashed:false,fillOpacity:.055};
+const highlightDefaults={
+  "x": 325,
+  "y": 249,
+  "objectWidth": 624,
+  "objectHeight": 206,
+  "shape": "rectangle",
+  "label": "标注文字",
+  "tone": "orange",
+  "state": "active",
+  "lineWidth": 6,
+  "dashed": false,
+  "fillOpacity": 0.055
+};
 export function renderHighlightAtom(props,h){
  const p={...highlightDefaults,...props},{x,y,w,height}=geometry(p,90,54),colors=palette(p);choice(p.shape,'shape',['rectangle','circle','underline']);
  const stroke=number(p.lineWidth,'lineWidth',2,12),fillOpacity=number(p.fillOpacity,'fillOpacity',0,.25),label=copy(p.label,'label',36),dash=p.dashed?'stroke-dasharray="15 10"':'',inset=stroke/2+2;
@@ -71,7 +104,23 @@ export function renderHighlightAtom(props,h){
  return `<g data-atom="highlight" data-highlight-shape="${p.shape}" data-state="${p.state}" transform="translate(${x} ${y})" style="${font}">${art}${label?txt(labelX,labelY,label,size,h,'text-anchor="middle"'):''}</g>`;
 }
 
-const progressDefaults={x:235,y:245,objectWidth:800,objectHeight:192,title:'完成进度',value:60,steps:['准备','执行','检查','完成'],tone:'blue',state:'active',showValue:true};
+const progressDefaults={
+  "x": 235,
+  "y": 245,
+  "objectWidth": 800,
+  "objectHeight": 192,
+  "title": "进度标题",
+  "value": 60,
+  "steps": [
+    "步骤 A",
+    "步骤 B",
+    "步骤 C",
+    "步骤 D"
+  ],
+  "tone": "blue",
+  "state": "active",
+  "showValue": true
+};
 export function renderProgressAtom(props,h){
  const p={...progressDefaults,...props},{x,y,w,height}=geometry(p,360,166),colors=palette(p),value=number(p.value,'value',0,100),title=copy(p.title,'title',42);
  if(!Array.isArray(p.steps)||p.steps.length<2||p.steps.length>6)throw new Error('Progress steps require 2–6 labels');
@@ -83,7 +132,17 @@ export function renderProgressAtom(props,h){
  return `<g data-atom="progress" data-state="${p.state}" data-value="${value}" transform="translate(${x} ${y})" style="${font}" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${value}" aria-label="${h.esc(title||'进度')}">${title?txt(0,31,title,titleSize,h):''}${p.showValue?txt(w,32,value+'%',32,h,'text-anchor="end"'):''}<rect x="4" y="${trackY+6}" width="${trackWidth}" height="${trackHeight}" rx="13.5" fill="${t.shadow}"/><rect x="0" y="${trackY}" width="${trackWidth}" height="${trackHeight}" rx="13.5" fill="#edf5ff" stroke="${t.ink}" stroke-width="2.7"/>${value>0?`<rect data-atom-progress-fill x="1.7" y="${trackY+1.7}" width="${fillWidth}" height="${trackHeight-3.4}" rx="${Math.min(11.8,Math.max(0,fillWidth/2))}" fill="${color}"/>`:''}<path d="M8 ${nodeY}H${w-8}" stroke="#b9d3e9" stroke-width="3"/>${steps}</g>`;
 }
 
-const symbolDefaults={x:487,y:204,objectWidth:294,objectHeight:302,kind:'magnifier',label:'检查',tone:'blue',state:'normal',rotation:0};
+const symbolDefaults={
+  "x": 487,
+  "y": 204,
+  "objectWidth": 294,
+  "objectHeight": 302,
+  "kind": "magnifier",
+  "label": "图标标签",
+  "tone": "blue",
+  "state": "normal",
+  "rotation": 0
+};
 const symbolKinds=['magnifier','pencil','gear','link','check','document','documents','table','calendar','people'];
 export function renderSymbolAtom(props,h){
  const p={...symbolDefaults,...props},{x,y,w,height}=geometry(p,100,110),colors=palette(p);choice(p.kind,'kind',symbolKinds);

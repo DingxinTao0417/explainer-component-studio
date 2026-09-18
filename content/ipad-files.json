@@ -1,34 +1,34 @@
 {
-  "folder": "视频制作",
+  "folder": "示例文件夹",
   "location": "iCloud 云盘",
   "files": [
     {
-      "name": "讲稿",
+      "name": "文件夹 A",
       "type": "folder",
       "detail": "4 个项目"
     },
     {
-      "name": "录屏素材",
+      "name": "文件夹 B",
       "type": "folder",
       "detail": "8 个项目"
     },
     {
-      "name": "课程计划.pdf",
+      "name": "示例文档.pdf",
       "type": "file",
       "detail": "1.2 MB"
     },
     {
-      "name": "分镜清单.csv",
+      "name": "示例数据.csv",
       "type": "file",
       "detail": "8 KB"
     },
     {
-      "name": "参考资料",
+      "name": "文件夹 C",
       "type": "folder",
       "detail": "6 个项目"
     },
     {
-      "name": "旁白.wav",
+      "name": "示例音频.wav",
       "type": "music",
       "detail": "24 MB"
     },
@@ -38,9 +38,10 @@
       "detail": "4 KB"
     },
     {
-      "name": "操作演示.mov",
+      "name": "示例视频.mov",
       "type": "video",
       "detail": "86 MB"
     }
-  ]
+  ],
+  "favoriteLabel": "示例文件夹"
 }

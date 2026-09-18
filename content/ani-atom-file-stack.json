@@ -5,21 +5,21 @@
   "objectHeight": 520,
   "files": [
     {
-      "name": "需求说明",
+      "name": "文件 A",
       "fileType": "text",
       "accent": "blue"
     },
     {
-      "name": "参考素材",
+      "name": "文件 B",
       "fileType": "image",
       "accent": "purple"
     },
     {
-      "name": "结果记录",
+      "name": "文件 C",
       "fileType": "table",
       "accent": "green"
     }
   ],
-  "meta": "整理后的资料",
+  "meta": "文件说明",
   "layout": "stack"
 }

@@ -1,33 +1,33 @@
 {
-  "eyebrow": "04 / 数据对照",
-  "title": "时间花在了哪里？",
-  "subtitle": "把流程分段，才能找到值得优化的环节。",
-  "badge": "示例数据",
-  "footer": "示例内容可替换 · 白底 / 蓝色强调 / 薄荷绿完成态",
-  "series": "EXPLAIN / BARS",
-  "chartTitle": "单次制作耗时",
-  "unit": "分钟",
+  "eyebrow": "栏目 / 01",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "badge": "示例标签",
+  "footer": "页脚说明",
+  "series": "示例系列",
+  "chartTitle": "图表标题",
+  "unit": "单位",
   "max": 60,
   "values": [
     {
-      "label": "整理资料",
+      "label": "类别 A",
       "value": 28
     },
     {
-      "label": "写作脚本",
+      "label": "类别 B",
       "value": 46
     },
     {
-      "label": "制作画面",
+      "label": "类别 C",
       "value": 54
     },
     {
-      "label": "剪辑检查",
+      "label": "类别 D",
       "value": 34
     }
   ],
   "highlight": 2,
-  "noteLabel": "观察",
-  "note": "先看耗时最大的环节，再决定优化顺序。",
-  "source": "数据：示例值，仅展示图表用法。"
+  "noteLabel": "补充标签",
+  "note": "补充说明文字",
+  "source": "数据来源说明"
 }

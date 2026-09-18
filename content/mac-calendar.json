@@ -6,22 +6,22 @@
   "events": [
     {
       "day": 8,
-      "title": "内容选题",
+      "title": "日程 A",
       "color": "#3484e8"
     },
     {
       "day": 17,
-      "title": "制作评审 10:00",
+      "title": "日程 B",
       "color": "#ed6556"
     },
     {
       "day": 21,
-      "title": "录屏与配音",
+      "title": "日程 C",
       "color": "#6caf9e"
     },
     {
       "day": 25,
-      "title": "成片检查",
+      "title": "日程 D",
       "color": "#956dcc"
     }
   ]

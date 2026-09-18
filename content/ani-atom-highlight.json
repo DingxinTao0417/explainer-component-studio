@@ -4,7 +4,7 @@
   "objectWidth": 624,
   "objectHeight": 206,
   "shape": "rectangle",
-  "label": "重点检查",
+  "label": "标注文字",
   "tone": "orange",
   "state": "active",
   "lineWidth": 6,

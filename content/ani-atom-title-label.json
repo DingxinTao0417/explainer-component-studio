@@ -3,8 +3,8 @@
   "y": 276,
   "objectWidth": 620,
   "objectHeight": 158,
-  "label": "先补清要求",
-  "caption": "完成后，再按要求检查",
+  "label": "标题文字",
+  "caption": "说明文字",
   "accent": "blue",
   "variant": "filled"
 }

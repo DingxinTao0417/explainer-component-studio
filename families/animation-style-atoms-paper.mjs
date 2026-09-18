@@ -18,7 +18,16 @@ function position(p,w,h){
 const group=(type,p,w,h,content)=>`<g data-atom="${type}" data-fit="contain" data-motion="item" transform="${position(p,w,h)}" font-family="Microsoft YaHei,Segoe UI,sans-serif" font-weight="750">${content}</g>`;
 const canvas=content=>`<section class="ani-atom-stage" style="width:100%;height:100%;background:transparent"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" style="font-family:'Microsoft YaHei','Segoe UI',sans-serif;font-weight:750" fill="${T.ink}">${content}</svg></section>`;
 
-export const fileDefaults={x:465,y:115,objectWidth:350,objectHeight:470,name:'项目资料',meta:'可编辑文件',fileType:'image',accent:'blue'};
+export const fileDefaults={
+  "x": 465,
+  "y": 115,
+  "objectWidth": 350,
+  "objectHeight": 470,
+  "name": "示例文件",
+  "meta": "文件说明",
+  "fileType": "image",
+  "accent": "blue"
+};
 function fileSymbol(type,c){
  if(type==='image')return `<rect x="82" y="91" width="150" height="111" rx="13" fill="${c}" stroke="${T.ink}" stroke-width="3"/><circle cx="120" cy="124" r="12" fill="#e9f8ff"/><path d="M93 188L132 146L156 168L180 135L219 188Z" fill="#e9f8ff"/>`;
  if(type==='table')return `<rect x="79" y="86" width="156" height="122" rx="10" fill="#f0fbf7" stroke="${T.ink}" stroke-width="3"/><path d="M81 118H233M81 149H233M81 178H233M128 87V207M184 87V207" fill="none" stroke="${c}" stroke-width="3"/><path d="M89 87H225Q234 87 234 97V117H80V97Q80 87 89 87Z" fill="${c}"/>`;
@@ -40,7 +49,37 @@ export function renderFileAtom(props,h){
  return group('file',p,320,430,paper(0,0,310,416,{fold:50,depth:9,content},scope(h,'file')));
 }
 
-export const documentDefaults={x:345,y:58,objectWidth:590,objectHeight:600,title:'项目说明',subtitle:'把需要做的事写清楚',accent:'blue',rows:[{label:'对象',text:'各组负责人',checked:true},{label:'任务',text:'填写本周完成与待办事项',checked:false},{label:'时间',text:'周五 17:00 前',checked:false},{label:'入口',text:'共享表格',checked:false}]};
+export const documentDefaults={
+  "x": 345,
+  "y": 58,
+  "objectWidth": 590,
+  "objectHeight": 600,
+  "title": "文档标题",
+  "subtitle": "文档说明文字",
+  "accent": "blue",
+  "rows": [
+    {
+      "label": "字段 A",
+      "text": "内容 A",
+      "checked": true
+    },
+    {
+      "label": "字段 B",
+      "text": "内容 B",
+      "checked": false
+    },
+    {
+      "label": "字段 C",
+      "text": "内容 C",
+      "checked": false
+    },
+    {
+      "label": "字段 D",
+      "text": "内容 D",
+      "checked": false
+    }
+  ]
+};
 export function renderDocumentAtom(props,h){
  const p={...documentDefaults,...props};
  if(!Array.isArray(p.rows)||p.rows.length<1||p.rows.length>6)throw Error('文档 rows 支持 1–6 行。');
@@ -51,7 +90,21 @@ export function renderDocumentAtom(props,h){
  return group('document',p,580,590,paper(0,0,561,571,{fold:43,depth:10,content},scope(h,'document')));
 }
 
-export const folderDefaults={x:290,y:105,objectWidth:700,objectHeight:500,name:'项目资料',subtitle:'文件集中在一起',open:true,fileLabels:['需求','素材','结果'],accent:'blue'};
+export const folderDefaults={
+  "x": 290,
+  "y": 105,
+  "objectWidth": 700,
+  "objectHeight": 500,
+  "name": "文件夹名称",
+  "subtitle": "文件夹说明",
+  "open": true,
+  "fileLabels": [
+    "文件 A",
+    "文件 B",
+    "文件 C"
+  ],
+  "accent": "blue"
+};
 export function renderFolderAtom(props,h){
  const p={...folderDefaults,...props};
  if(!Array.isArray(p.fileLabels)||p.fileLabels.length>4)throw Error('文件夹 fileLabels 支持 0–4 项。');

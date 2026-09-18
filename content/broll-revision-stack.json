@@ -2,48 +2,48 @@
   "earlier": [
     {
       "version": "v1",
-      "label": "先写出来",
-      "title": "请交进度",
+      "label": "版本说明 A",
+      "title": "文档标题 A",
       "lines": [
-        "请各位积极配合。",
-        "及时提交相关材料。"
+        "正文内容 A",
+        "正文内容 B"
       ],
-      "gap": "缺少对象",
-      "note": "谁来交？"
+      "gap": "修改标记",
+      "note": "批注内容"
     },
     {
       "version": "v2",
-      "label": "把信息补上",
-      "title": "各组负责人",
+      "label": "版本说明 B",
+      "title": "文档标题 B",
       "lines": [
-        "周五 17:00 前。",
-        "填报本周完成情况。"
+        "正文内容 A",
+        "正文内容 B"
       ],
-      "gap": "还缺入口",
-      "note": "往哪儿填？"
+      "gap": "修改标记",
+      "note": "批注内容"
     }
   ],
   "latestVersion": "v3",
-  "latestLabel": "对照要求再看一遍",
-  "latestTitle": "交代清楚，再发出",
+  "latestLabel": "版本说明 C",
+  "latestTitle": "文档标题 C",
   "checks": [
     {
-      "label": "对象",
-      "value": "各组负责人"
+      "label": "字段 A",
+      "value": "内容 A"
     },
     {
-      "label": "内容",
-      "value": "已完成 / 未完成"
+      "label": "字段 B",
+      "value": "内容 B"
     },
     {
-      "label": "截止",
-      "value": "周五 17:00 前"
+      "label": "字段 C",
+      "value": "内容 C"
     },
     {
-      "label": "入口",
-      "value": "共享表格链接"
+      "label": "字段 D",
+      "value": "内容 D"
     }
   ],
   "stamp": "已核对",
-  "bottomNote": "修改有依据，检查也有依据。"
+  "bottomNote": "补充说明文字"
 }

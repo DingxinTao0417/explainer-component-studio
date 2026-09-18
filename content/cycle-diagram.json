@@ -1,27 +1,27 @@
 {
-  "eyebrow": "EXPLAIN / 结构与数据",
-  "title": "一次改进，来自一轮反馈",
-  "subtitle": "把执行、观察与修正连接成可重复的循环。",
-  "badge": "示例数据",
-  "note": "替换内容后，图形与数值一起更新。",
-  "code": "CYCLE-DIAGRAM",
-  "center": "持续迭代",
+  "eyebrow": "栏目 / 01",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "badge": "示例标签",
+  "note": "补充说明文字",
+  "code": "EXAMPLE",
+  "center": "中心主题",
   "steps": [
     {
-      "title": "提出假设",
-      "detail": "写清预期"
+      "title": "章节标题 A",
+      "detail": "章节说明 A"
     },
     {
-      "title": "执行实验",
-      "detail": "保持条件"
+      "title": "章节标题 B",
+      "detail": "章节说明 B"
     },
     {
-      "title": "观察结果",
-      "detail": "记录证据"
+      "title": "章节标题 C",
+      "detail": "章节说明 C"
     },
     {
-      "title": "修正方法",
-      "detail": "进入下一轮"
+      "title": "章节标题 D",
+      "detail": "章节说明 D"
     }
   ]
 }

@@ -1,29 +1,29 @@
 {
-  "eyebrow": "09 / 解释概念",
-  "title": "什么是上下文？",
-  "subtitle": "先给一句清楚的定义，再把它放进具体任务。",
-  "badge": "概念解释",
-  "footer": "示例内容可替换 · 白底 / 蓝色强调 / 薄荷绿完成态",
-  "series": "EXPLAIN / CONCEPT",
-  "term": "上下文",
-  "english": "CONTEXT",
-  "definition": "完成当前任务所需要的背景信息。",
+  "eyebrow": "栏目 / 01",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "badge": "示例标签",
+  "footer": "页脚说明",
+  "series": "示例系列",
+  "term": "概念名称",
+  "english": "TERM",
+  "definition": "概念说明文字。替换为需要解释的定义。",
   "factors": [
     {
-      "label": "目标",
-      "detail": "最终希望得到什么"
+      "label": "要点 A",
+      "detail": "要点说明 A"
     },
     {
-      "label": "资料",
-      "detail": "可以参考哪些内容"
+      "label": "要点 B",
+      "detail": "要点说明 B"
     },
     {
-      "label": "限制",
-      "detail": "哪些条件必须遵守"
+      "label": "要点 C",
+      "detail": "要点说明 C"
     }
   ],
-  "exampleLabel": "放进一个真实任务",
-  "exampleTitle": "修改产品介绍页",
-  "example": "参考现有页面，把首屏介绍缩短到 80 字以内，保留品牌色，并适配手机。",
-  "note": "任务越具体，越容易判断结果是否符合预期。"
+  "exampleLabel": "示例标签",
+  "exampleTitle": "示例标题",
+  "example": "示例正文内容，可替换为需要展示的文字。",
+  "note": "补充说明文字"
 }

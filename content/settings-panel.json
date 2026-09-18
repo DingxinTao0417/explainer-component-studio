@@ -1,8 +1,8 @@
 {
   "title": "设置",
-  "user": "Lin",
-  "email": "lin@example.com",
-  "initial": "L",
+  "user": "示例用户",
+  "email": "user@example.com",
+  "initial": "U",
   "search": "查找设置",
   "nav": [
     "主页",

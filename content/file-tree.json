@@ -1,12 +1,12 @@
 {
-  "project": "science-video",
-  "filename": "content.json",
+  "project": "example-project",
+  "filename": "example.json",
   "language": "JSON",
-  "position": "行 8，列 18",
+  "position": "行 3，列 3",
   "branch": "main",
   "files": [
     {
-      "name": "SCIENCE-VIDEO",
+      "name": "EXAMPLE-PROJECT",
       "kind": "folder",
       "depth": 0
     },
@@ -16,54 +16,20 @@
       "depth": 1
     },
     {
-      "name": "audio",
-      "kind": "folder",
+      "name": "example.png",
       "depth": 2
     },
     {
-      "name": "intro.wav",
-      "depth": 3
-    },
-    {
-      "name": "explain.wav",
-      "depth": 3
-    },
-    {
-      "name": "images",
-      "kind": "folder",
-      "depth": 2,
-      "open": false
-    },
-    {
-      "name": "recordings",
-      "kind": "folder",
-      "depth": 2
-    },
-    {
-      "name": "browser-demo.mp4",
-      "depth": 3
-    },
-    {
-      "name": "components",
+      "name": "src",
       "kind": "folder",
       "depth": 1
     },
     {
-      "name": "browser.html",
+      "name": "example.ts",
       "depth": 2
     },
     {
-      "name": "terminal.html",
-      "depth": 2
-    },
-    {
-      "name": "scripts",
-      "kind": "folder",
-      "depth": 1,
-      "open": false
-    },
-    {
-      "name": "content.json",
+      "name": "example.json",
       "depth": 1,
       "badge": "M"
     },
@@ -78,20 +44,11 @@
   ],
   "code": [
     "{",
-    "  \"title\": \"AI 科普入门\",",
-    "  \"aspectRatio\": \"16:9\",",
-    "  \"theme\": \"white-blue\",",
-    "  \"scenes\": [",
-    "    {",
-    "      \"component\": \"browser-window\",",
-    "      \"source\": \"assets/recordings/browser-demo.mp4\",",
-    "      \"duration\": 12,",
-    "      \"caption\": \"从一个清楚的问题开始\"",
-    "    },",
-    "    {",
-    "      \"component\": \"terminal-session\",",
-    "      \"duration\": 8",
-    "    }",
+    "  \"title\": \"示例标题\",",
+    "  \"enabled\": true,",
+    "  \"items\": [",
+    "    { \"id\": 1, \"label\": \"项目 A\", \"value\": 10 },",
+    "    { \"id\": 2, \"label\": \"项目 B\", \"value\": 20 }",
     "  ]",
     "}"
   ]

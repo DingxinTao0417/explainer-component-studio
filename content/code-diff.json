@@ -1,61 +1,35 @@
 {
-  "project": "science-video",
-  "filename": "config.ts",
-  "branch": "feature/preview*",
+  "project": "example-project",
+  "filename": "example.ts",
+  "branch": "feature/example*",
   "language": "TypeScript",
   "position": "2 项更改",
-  "beforeLabel": "config.ts · HEAD",
-  "afterLabel": "config.ts · 工作区",
+  "beforeLabel": "example.ts · HEAD",
+  "afterLabel": "example.ts · 工作区",
   "before": [
-    "export const output = {",
+    "export const example = {",
     {
-      "text": "  width: 960,",
+      "text": "  title: '原始标题',",
       "state": "remove"
     },
     {
-      "text": "  height: 540,",
+      "text": "  count: 10,",
       "state": "remove"
     },
-    "  fps: 30,",
-    "  format: 'mp4',",
-    "};",
-    "",
-    "export const theme = {",
-    {
-      "text": "  background: '#17201e',",
-      "state": "remove"
-    },
-    {
-      "text": "  accent: '#d8ae65',",
-      "state": "remove"
-    },
-    "  complete: '#81c9b0',",
+    "  enabled: true,",
     "};"
   ],
   "after": [
-    "export const output = {",
+    "export const example = {",
     {
-      "text": "  width: 1920,",
+      "text": "  title: '更新标题',",
       "state": "add"
     },
     {
-      "text": "  height: 1080,",
+      "text": "  count: 20,",
       "state": "add"
     },
-    "  fps: 30,",
-    "  format: 'mp4',",
-    "};",
-    "",
-    "export const theme = {",
-    {
-      "text": "  background: '#ffffff',",
-      "state": "add"
-    },
-    {
-      "text": "  accent: '#2563eb',",
-      "state": "add"
-    },
-    "  complete: '#81c9b0',",
+    "  enabled: true,",
     "};"
   ]
 }

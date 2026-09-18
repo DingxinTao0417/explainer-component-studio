@@ -20,7 +20,7 @@ function shell(p,h,body,extra='') {
 }
 const base = {
   eyebrow:'可复用讲解组件',title:'',subtitle:'',badge:'示例内容',
-  footer:'示例内容可替换 · 白底 / 蓝色强调 / 薄荷绿完成态',series:'EXPLAIN / 01'
+  footer:'页脚说明',series:'EXPLAIN / 01'
 };
 function validate(id,p){
   const nonNegative = value => Number.isFinite(Number(value)) && Number(value)>=0;
@@ -46,12 +46,50 @@ const create = (id,name,description,defaults,render) => ({
 
 export const components = [
   create('before-after','前后对比','在同一组任务中对照两种组织方式；两侧文案、状态和结论均可编辑。',{
-    eyebrow:'01 / 对照观察',title:'同样的任务，换一种组织方式',subtitle:'保持任务不变，让整理方式的差异清楚可见。',badge:'前后对比',
-    beforeLabel:'整理前',beforeNote:'信息散落在同一张清单里',afterLabel:'整理后',afterNote:'按状态组织，下一步更明确',
-    tasks:[{title:'整理参考资料',detail:'8 篇文章 · 2 份报告',state:'done'},{title:'完成第一版脚本',detail:'开头 · 正文 · 结尾',state:'active'},{title:'录制操作过程',detail:'项目创建与设置',state:'todo'}],
-    columns:[{state:'todo',label:'待开始'},{state:'active',label:'进行中'},{state:'done',label:'已完成'}],
-    resultLabel:'变化要点',result:'资料、执行与验收各有位置，减少反复寻找。',series:'EXPLAIN / COMPARE'
-  },(p,h)=>{
+  "eyebrow": "栏目 / 01",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "badge": "示例标签",
+  "footer": "页脚说明",
+  "series": "示例系列",
+  "beforeLabel": "状态 A",
+  "beforeNote": "状态说明 A",
+  "afterLabel": "状态 B",
+  "afterNote": "状态说明 B",
+  "tasks": [
+    {
+      "title": "任务 A",
+      "detail": "任务说明 A",
+      "state": "done"
+    },
+    {
+      "title": "任务 B",
+      "detail": "任务说明 B",
+      "state": "active"
+    },
+    {
+      "title": "任务 C",
+      "detail": "任务说明 C",
+      "state": "todo"
+    }
+  ],
+  "columns": [
+    {
+      "state": "todo",
+      "label": "待开始"
+    },
+    {
+      "state": "active",
+      "label": "进行中"
+    },
+    {
+      "state": "done",
+      "label": "已完成"
+    }
+  ],
+  "resultLabel": "结果说明",
+  "result": "结果内容，可替换为需要展示的结论。"
+},(p,h)=>{
     const e=h.esc;const tasks=arr(p.tasks,6);const columns=arr(p.columns,3);
     const before=tasks.map((x,i)=>'<div class="edu-task-row" data-motion="item"><span class="edu-task-index">'+String(i+1).padStart(2,'0')+'</span><div><strong>'+e(x.title)+'</strong><p>'+e(x.detail)+'</p></div><span class="edu-task-dot"></span></div>').join('');
     const after=columns.map(c=>'<div class="edu-kanban-column"><div class="edu-kanban-label"><i class="edu-state-'+e(c.state)+'"></i>'+e(c.label)+'<span>'+tasks.filter(t=>t.state===c.state).length+'</span></div>'+tasks.filter(t=>t.state===c.state).map(t=>'<div class="edu-kanban-task" data-motion="item"><strong>'+e(t.title)+'</strong><p>'+e(t.detail)+'</p><div class="edu-mini-progress"><i class="edu-state-'+e(c.state)+'"></i></div></div>').join('')+'</div>').join('');
@@ -59,10 +97,46 @@ export const components = [
   }),
 
   create('flowchart','流程与原理图','可编辑的五节点分支流程，节点与 SVG 连线独立，可按顺序点亮。',{
-    eyebrow:'02 / 解释过程',title:'从问题，到可以验证的结果',subtitle:'把输入、执行与检查拆开，讲清每一步的职责。',badge:'流程图',
-    nodes:[{label:'输入目标',detail:'要完成什么',tag:'01'},{label:'补充上下文',detail:'资料与限制',tag:'02'},{label:'执行任务',detail:'产出第一版',tag:'03'},{label:'通过检查',detail:'进入交付',tag:'04'},{label:'需要修改',detail:'带反馈继续',tag:'05'}],
-    branchLabels:['符合要求','发现问题'],noteTitle:'检查标准先写清楚',note:'验收依据明确，反馈才容易转化成下一步行动。',series:'EXPLAIN / FLOW'
-  },(p,h)=>{
+  "eyebrow": "栏目 / 01",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "badge": "示例标签",
+  "footer": "页脚说明",
+  "series": "示例系列",
+  "nodes": [
+    {
+      "label": "节点 A",
+      "detail": "节点说明 A",
+      "tag": "01"
+    },
+    {
+      "label": "节点 B",
+      "detail": "节点说明 B",
+      "tag": "02"
+    },
+    {
+      "label": "节点 C",
+      "detail": "节点说明 C",
+      "tag": "03"
+    },
+    {
+      "label": "节点 D",
+      "detail": "节点说明 D",
+      "tag": "04"
+    },
+    {
+      "label": "节点 E",
+      "detail": "节点说明 E",
+      "tag": "05"
+    }
+  ],
+  "branchLabels": [
+    "条件 A",
+    "条件 B"
+  ],
+  "noteTitle": "补充标题",
+  "note": "补充说明文字"
+},(p,h)=>{
     const e=h.esc;const nodes=arr(p.nodes,5);const marker=h.uid('flow-arrow');
     const positions=[{x:0,y:158},{x:286,y:158},{x:572,y:158},{x:906,y:42},{x:906,y:278}];
     const lines='<svg class="edu-flow-lines" viewBox="0 0 1164 460" preserveAspectRatio="none" aria-hidden="true"><defs><marker id="'+e(marker)+'" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M1 1 6 4 1 7" fill="none" stroke="#2563eb" stroke-width="1.5"/></marker></defs><path data-motion="line" d="M238 225H282" fill="none" stroke="#2563eb" stroke-width="2.5" marker-end="url(#'+e(marker)+')"/><path data-motion="line" d="M524 225H568" fill="none" stroke="#2563eb" stroke-width="2.5" marker-end="url(#'+e(marker)+')"/><path data-motion="line" d="M810 225H850V109H902" fill="none" stroke="#2563eb" stroke-width="2.5" marker-end="url(#'+e(marker)+')"/><path data-motion="line" d="M850 225V345H902" fill="none" stroke="#2563eb" stroke-width="2.5" marker-end="url(#'+e(marker)+')"/><circle cx="850" cy="225" r="5" fill="#2563eb"/></svg>';
@@ -71,10 +145,34 @@ export const components = [
   }),
 
   create('layer-stack','分层结构图','用统一等距几何和独立引线解释三层结构；层名、说明和要点可替换。',{
-    eyebrow:'03 / 结构拆解',title:'把复杂系统，拆成三个层次',subtitle:'每层负责一件事，关系比细节更容易理解。',badge:'分层结构',
-    layers:[{title:'项目',label:'组织资料',detail:'保存共同背景，让相关任务有统一的工作环境。',index:'L1'},{title:'任务',label:'聚焦目标',detail:'围绕一个明确结果，记录过程与当前进展。',index:'L2'},{title:'工具',label:'执行操作',detail:'读取、编辑和验证，把计划转化成具体结果。',index:'L3'}],
-    note:'示意关系仅用于解释分工；具体产品结构以实际实现为准。',series:'EXPLAIN / LAYERS'
-  },(p,h)=>{
+  "eyebrow": "栏目 / 01",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "badge": "示例标签",
+  "footer": "页脚说明",
+  "series": "示例系列",
+  "layers": [
+    {
+      "title": "层级 A",
+      "label": "层级标签 A",
+      "detail": "层级说明文字，可替换为需要解释的内容。",
+      "index": "L1"
+    },
+    {
+      "title": "层级 B",
+      "label": "层级标签 B",
+      "detail": "层级说明文字，可替换为需要解释的内容。",
+      "index": "L2"
+    },
+    {
+      "title": "层级 C",
+      "label": "层级标签 C",
+      "detail": "层级说明文字，可替换为需要解释的内容。",
+      "index": "L3"
+    }
+  ],
+  "note": "补充说明文字"
+},(p,h)=>{
     const e=h.esc;const layers=arr(p.layers,3);
     const slabs=layers.map((x,i)=>{const y=25+i*146;const fill=['#f5f8fe','#e2edff','#d9f0e8'][i],side=['#e6ebf3','#bad1f9','#acd8c8'][i];
       return '<g data-motion="item"><path d="M75 '+(y+88)+' 325 '+y+' 560 '+(y+91)+' 309 '+(y+182)+'Z" fill="'+fill+'" stroke="#bdd0e4" stroke-width="1.4"/><path d="M75 '+(y+88)+'V'+(y+111)+'L309 '+(y+205)+'V'+(y+182)+'Z" fill="'+side+'" stroke="#bdd0e4" stroke-width="1.4"/><path d="M309 '+(y+182)+' 560 '+(y+91)+'V'+(y+114)+'L309 '+(y+205)+'Z" fill="'+side+'" stroke="#bdd0e4" stroke-width="1.4"/><text x="318" y="'+(y+103)+'" text-anchor="middle" fill="#1f2329" font-size="30" font-weight="650">'+e(x.title)+'</text></g>';}).reverse().join('');
@@ -83,11 +181,38 @@ export const components = [
   }),
 
   create('bar-chart','柱形数据图','按真实数据映射高度，支持可编辑类目、数值、范围和单位；默认用示例时长比较。',{
-    eyebrow:'04 / 数据对照',title:'时间花在了哪里？',subtitle:'把流程分段，才能找到值得优化的环节。',badge:'示例数据',
-    chartTitle:'单次制作耗时',unit:'分钟',max:60,
-    values:[{label:'整理资料',value:28},{label:'写作脚本',value:46},{label:'制作画面',value:54},{label:'剪辑检查',value:34}],
-    highlight:2,noteLabel:'观察',note:'先看耗时最大的环节，再决定优化顺序。',source:'数据：示例值，仅展示图表用法。',series:'EXPLAIN / BARS'
-  },(p,h)=>{
+  "eyebrow": "栏目 / 01",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "badge": "示例标签",
+  "footer": "页脚说明",
+  "series": "示例系列",
+  "chartTitle": "图表标题",
+  "unit": "单位",
+  "max": 60,
+  "values": [
+    {
+      "label": "类别 A",
+      "value": 28
+    },
+    {
+      "label": "类别 B",
+      "value": 46
+    },
+    {
+      "label": "类别 C",
+      "value": 54
+    },
+    {
+      "label": "类别 D",
+      "value": 34
+    }
+  ],
+  "highlight": 2,
+  "noteLabel": "补充标签",
+  "note": "补充说明文字",
+  "source": "数据来源说明"
+},(p,h)=>{
     const e=h.esc;const values=arr(p.values,6);const max=Math.max(1,n(p.max,100),...values.map(x=>n(x.value)));
     const left=64,top=58,bottom=356,width=1030,slot=width/Math.max(1,values.length),barWidth=Math.min(114,slot*.52);
     const grid=Array.from({length:5},(_,i)=>{const y=bottom-(bottom-top)*i/4;return '<line x1="'+left+'" y1="'+y+'" x2="1110" y2="'+y+'" stroke="#e7ecf3"/><text x="44" y="'+(y+6)+'" text-anchor="end" font-size="18" fill="#687387">'+e(fmt(max*i/4))+'</text>';}).join('');
@@ -96,11 +221,46 @@ export const components = [
   }),
 
   create('line-chart','趋势折线图','可编辑趋势、目标线与选中点；数值决定坐标，折线与面积使用原生 SVG。',{
-    eyebrow:'05 / 观察趋势',title:'一次改进，要看连续的变化',subtitle:'用同一把尺子观察趋势，避免只看某一个高点。',badge:'示例数据',
-    chartTitle:'每周完成任务数',unit:'项',max:40,target:30,targetLabel:'参考目标',
-    values:[{label:'第1周',value:12},{label:'第2周',value:17},{label:'第3周',value:15},{label:'第4周',value:24},{label:'第5周',value:29},{label:'第6周',value:34}],
-    selected:4,note:'折线只连接示例观测值；不代表对未来表现的预测。',series:'EXPLAIN / TREND'
-  },(p,h)=>{
+  "eyebrow": "栏目 / 01",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "badge": "示例标签",
+  "footer": "页脚说明",
+  "series": "示例系列",
+  "chartTitle": "图表标题",
+  "unit": "单位",
+  "max": 40,
+  "target": 30,
+  "targetLabel": "参考值",
+  "values": [
+    {
+      "label": "阶段 A",
+      "value": 12
+    },
+    {
+      "label": "阶段 B",
+      "value": 17
+    },
+    {
+      "label": "阶段 C",
+      "value": 15
+    },
+    {
+      "label": "阶段 D",
+      "value": 24
+    },
+    {
+      "label": "阶段 E",
+      "value": 29
+    },
+    {
+      "label": "阶段 F",
+      "value": 34
+    }
+  ],
+  "selected": 4,
+  "note": "补充说明文字"
+},(p,h)=>{
     const e=h.esc;const values=arr(p.values,10);const max=Math.max(1,n(p.max,40),n(p.target),...values.map(x=>n(x.value)));
     const left=64,right=1095,top=60,bottom=370;const points=values.map((x,i)=>({x:left+(right-left)*i/Math.max(1,values.length-1),y:bottom-(bottom-top)*clamp(x.value,0,max)/max,...x}));
     const line=points.map((x,i)=>(i?'L':'M')+x.x+' '+x.y).join(' ');const area=points.length?line+'L'+points.at(-1).x+' '+bottom+'L'+points[0].x+' '+bottom+'Z':'';
@@ -112,65 +272,290 @@ export const components = [
   }),
 
   create('comparison-matrix','方案比较矩阵','按统一维度比较三种方案，使用文字而非主观打分；列、行与推荐说明可编辑。',{
-    eyebrow:'06 / 帮助选择',title:'选工具，先看任务需要什么',subtitle:'比较同一组条件，让选择依据有迹可循。',badge:'示例比较',
-    columns:[{name:'静态图片',tag:'解释结构'},{name:'真实录屏',tag:'演示操作'},{name:'AI 视频',tag:'呈现场景'}],
-    rows:[{criterion:'最适合',values:['概念与关系','软件操作步骤','难以实拍的画面']},{criterion:'文字准确性',values:['可逐字控制','保留真实界面','需另加字幕标注']},{criterion:'修改方式',values:['编辑文字与布局','补录或重新剪辑','调整提示词再生成']},{criterion:'建议用法',values:['流程图 / 原理图','按钮 / 页面 / 操作','比喻 / 转场 / 氛围']}],
-    noteLabel:'组合使用',note:'由要讲清的内容决定画面形式，同一条视频可以混合三种素材。',series:'EXPLAIN / MATRIX'
-  },(p,h)=>{
+  "eyebrow": "栏目 / 01",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "badge": "示例标签",
+  "footer": "页脚说明",
+  "series": "示例系列",
+  "columns": [
+    {
+      "name": "项目 A",
+      "tag": "标签 A"
+    },
+    {
+      "name": "项目 B",
+      "tag": "标签 B"
+    },
+    {
+      "name": "项目 C",
+      "tag": "标签 C"
+    }
+  ],
+  "rows": [
+    {
+      "criterion": "比较项 A",
+      "values": [
+        "内容 A",
+        "内容 B",
+        "内容 C"
+      ]
+    },
+    {
+      "criterion": "比较项 B",
+      "values": [
+        "内容 A",
+        "内容 B",
+        "内容 C"
+      ]
+    },
+    {
+      "criterion": "比较项 C",
+      "values": [
+        "内容 A",
+        "内容 B",
+        "内容 C"
+      ]
+    },
+    {
+      "criterion": "比较项 D",
+      "values": [
+        "内容 A",
+        "内容 B",
+        "内容 C"
+      ]
+    }
+  ],
+  "noteLabel": "补充标签",
+  "note": "补充说明文字"
+},(p,h)=>{
     const e=h.esc;const columns=arr(p.columns,3),rows=arr(p.rows,5);
     return shell(p,h,'<div class="edu-matrix-panel"><table class="edu-matrix"><thead><tr><th></th>'+columns.map(c=>'<th><strong>'+e(c.name)+'</strong><span>'+e(c.tag)+'</span></th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr data-motion="item"><th>'+e(r.criterion)+'</th>'+columns.map((_,i)=>'<td>'+e(arr(r.values,3)[i]||'')+'</td>').join('')+'</tr>').join('')+'</tbody></table></div><div class="edu-takeaway"><span>'+e(p.noteLabel)+'</span><strong>'+e(p.note)+'</strong></div>');
   }),
 
   create('event-timeline','事件时间线','五个阶段沿水平时间轴展示，区分已完成、当前和待开始；支持替换时间、内容和状态。',{
-    eyebrow:'07 / 梳理顺序',title:'一条视频，如何一步步完成',subtitle:'把制作过程放在时间线上，每个阶段都有明确产物。',badge:'制作示例',
-    events:[{time:'09:00',title:'明确主题',detail:'确定观众与核心问题',status:'done'},{time:'10:00',title:'完成脚本',detail:'整理钩子、正文与结尾',status:'done'},{time:'13:00',title:'准备素材',detail:'参考图、录屏与配音',status:'active'},{time:'15:00',title:'组合画面',detail:'按配音组织镜头',status:'todo'},{time:'17:00',title:'检查交付',detail:'核对内容、字幕与声音',status:'todo'}],
-    activeLabel:'当前阶段',note:'时间为示例计划，可替换为日期、章节或里程碑。',series:'EXPLAIN / TIMELINE'
-  },(p,h)=>{
+  "eyebrow": "栏目 / 01",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "badge": "示例标签",
+  "footer": "页脚说明",
+  "series": "示例系列",
+  "events": [
+    {
+      "time": "09:00",
+      "title": "事件 A",
+      "detail": "事件说明 A",
+      "status": "done"
+    },
+    {
+      "time": "10:00",
+      "title": "事件 B",
+      "detail": "事件说明 B",
+      "status": "done"
+    },
+    {
+      "time": "13:00",
+      "title": "事件 C",
+      "detail": "事件说明 C",
+      "status": "active"
+    },
+    {
+      "time": "15:00",
+      "title": "事件 D",
+      "detail": "事件说明 D",
+      "status": "todo"
+    },
+    {
+      "time": "17:00",
+      "title": "事件 E",
+      "detail": "事件说明 E",
+      "status": "todo"
+    }
+  ],
+  "activeLabel": "当前阶段",
+  "note": "补充说明文字"
+},(p,h)=>{
     const e=h.esc;const events=arr(p.events,5);
     return shell(p,h,'<div class="edu-event-track"><div class="edu-event-baseline" data-motion="line"></div>'+events.map((x,i)=>'<article class="edu-event edu-event-'+e(x.status)+'" style="left:'+(i*100/Math.max(1,events.length-1))+'%" data-motion="item"><div class="edu-event-time">'+e(x.time)+'</div><div class="edu-event-node">'+(x.status==='done'?tick:'<i></i>')+'</div><div class="edu-event-card"><span class="edu-event-number">'+String(i+1).padStart(2,'0')+'</span><h2>'+e(x.title)+'</h2><p>'+e(x.detail)+'</p>'+(x.status==='active'?'<span class="edu-event-active">'+e(p.activeLabel)+'</span>':'')+'</div></article>').join('')+'</div><div class="edu-timeline-note">'+e(p.note)+'</div>');
   }),
 
   create('metric-dashboard','关键指标面板','以三个指标、进度和验收清单复盘制作状态；示例数据、单位与说明可编辑。',{
-    eyebrow:'08 / 查看状态',title:'交付之前，把关键状态看清楚',subtitle:'进度、素材与验收放在同一页，减少遗漏。',badge:'示例数据',
-    metrics:[{label:'镜头完成',value:'8',unit:'/ 10',detail:'还有 2 个镜头需要调整',progress:.8},{label:'素材就绪',value:'24',unit:'/ 24',detail:'图片、录屏与配音已归档',progress:1},{label:'验收通过',value:'6',unit:'/ 8',detail:'剩余字幕与片尾检查',progress:.75}],
-    progressTitle:'最近五次制作进度',progress:[32,46,59,68,80],progressLabels:['第1次','第2次','第3次','第4次','第5次'],
-    checklistTitle:'本次检查',checks:[{label:'内容与引用',done:true},{label:'构图与清晰度',done:true},{label:'字幕时间点',done:false},{label:'配音与背景声',done:false}],
-    note:'这里只汇总示例状态，不代表已经执行检查。',series:'EXPLAIN / STATUS'
-  },(p,h)=>{
+  "eyebrow": "栏目 / 01",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "badge": "示例标签",
+  "footer": "页脚说明",
+  "series": "示例系列",
+  "metrics": [
+    {
+      "label": "指标 A",
+      "value": "8",
+      "unit": "/ 10",
+      "detail": "指标说明 A",
+      "progress": 0.8
+    },
+    {
+      "label": "指标 B",
+      "value": "24",
+      "unit": "/ 24",
+      "detail": "指标说明 B",
+      "progress": 1
+    },
+    {
+      "label": "指标 C",
+      "value": "6",
+      "unit": "/ 8",
+      "detail": "指标说明 C",
+      "progress": 0.75
+    }
+  ],
+  "progressTitle": "趋势标题",
+  "progress": [
+    32,
+    46,
+    59,
+    68,
+    80
+  ],
+  "progressLabels": [
+    "阶段 A",
+    "阶段 B",
+    "阶段 C",
+    "阶段 D",
+    "阶段 E"
+  ],
+  "checklistTitle": "检查项",
+  "checks": [
+    {
+      "label": "检查项 A",
+      "done": true
+    },
+    {
+      "label": "检查项 B",
+      "done": true
+    },
+    {
+      "label": "检查项 C",
+      "done": false
+    },
+    {
+      "label": "检查项 D",
+      "done": false
+    }
+  ],
+  "note": "补充说明文字"
+},(p,h)=>{
     const e=h.esc;const metrics=arr(p.metrics,3),progress=arr(p.progress,8),labels=arr(p.progressLabels,8);
     const pts=progress.map((v,i)=>(25+i*500/Math.max(1,progress.length-1))+','+(195-clamp(v,0,100)*1.5)).join(' ');
     return shell(p,h,'<div class="edu-metric-grid">'+metrics.map(x=>'<article class="edu-metric-card" data-motion="item"><div class="edu-metric-label">'+e(x.label)+'</div><div class="edu-metric-value"><strong data-motion="counter">'+e(x.value)+'</strong><span>'+e(x.unit)+'</span></div><div class="edu-metric-progress"><i data-motion="bar" style="width:'+(clamp(x.progress,0,1)*100)+'%"></i></div><p>'+e(x.detail)+'</p></article>').join('')+'</div><div class="edu-dashboard-bottom"><section class="edu-progress-panel"><h2>'+e(p.progressTitle)+'</h2><svg viewBox="0 0 550 235" role="img" aria-label="'+e(p.progressTitle)+'"><path d="M25 45H525M25 120H525M25 195H525" fill="none" stroke="#e9edf4"/><polyline points="'+pts+'" fill="none" stroke="#2563eb" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" data-motion="line"/>'+progress.map((v,i)=>{const x=25+i*500/Math.max(1,progress.length-1),y=195-clamp(v,0,100)*1.5;return '<circle cx="'+x+'" cy="'+y+'" r="4" fill="#2563eb"/><text x="'+x+'" y="'+(y-13)+'" text-anchor="middle" font-size="18" fill="#1f2329">'+e(fmt(v))+'%</text><text x="'+x+'" y="227" text-anchor="middle" font-size="16" fill="#687387">'+e(labels[i]||'')+'</text>';}).join('')+'</svg></section><section class="edu-check-panel"><h2>'+e(p.checklistTitle)+'</h2>'+arr(p.checks,5).map(x=>'<div class="edu-check-item" data-motion="item"><span class="'+(x.done?'edu-check-done':'edu-check-pending')+'">'+(x.done?tick:'')+'</span><strong>'+e(x.label)+'</strong></div>').join('')+'</section></div><div class="edu-dashboard-note">'+e(p.note)+'</div>');
   }),
 
   create('definition-card','概念解释卡','用定义、三个关键要素和具体例子讲清一个名词，避免只堆标题和标签。',{
-    eyebrow:'09 / 解释概念',title:'什么是上下文？',subtitle:'先给一句清楚的定义，再把它放进具体任务。',badge:'概念解释',
-    term:'上下文',english:'CONTEXT',definition:'完成当前任务所需要的背景信息。',
-    factors:[{label:'目标',detail:'最终希望得到什么'},{label:'资料',detail:'可以参考哪些内容'},{label:'限制',detail:'哪些条件必须遵守'}],
-    exampleLabel:'放进一个真实任务',exampleTitle:'修改产品介绍页',
-    example:'参考现有页面，把首屏介绍缩短到 80 字以内，保留品牌色，并适配手机。',
-    note:'任务越具体，越容易判断结果是否符合预期。',series:'EXPLAIN / CONCEPT'
-  },(p,h)=>{
+  "eyebrow": "栏目 / 01",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "badge": "示例标签",
+  "footer": "页脚说明",
+  "series": "示例系列",
+  "term": "概念名称",
+  "english": "TERM",
+  "definition": "概念说明文字。替换为需要解释的定义。",
+  "factors": [
+    {
+      "label": "要点 A",
+      "detail": "要点说明 A"
+    },
+    {
+      "label": "要点 B",
+      "detail": "要点说明 B"
+    },
+    {
+      "label": "要点 C",
+      "detail": "要点说明 C"
+    }
+  ],
+  "exampleLabel": "示例标签",
+  "exampleTitle": "示例标题",
+  "example": "示例正文内容，可替换为需要展示的文字。",
+  "note": "补充说明文字"
+},(p,h)=>{
     const e=h.esc;
     return shell(p,h,'<div class="edu-definition-layout"><section class="edu-definition-main"><span class="edu-definition-en">'+e(p.english)+'</span><h2 data-motion="emphasis">'+e(p.term)+'</h2><p class="edu-definition-sentence" data-motion="reveal">'+e(p.definition)+'</p><div class="edu-factor-list">'+arr(p.factors,3).map((x,i)=>'<div data-motion="item"><span>'+String(i+1).padStart(2,'0')+'</span><strong>'+e(x.label)+'</strong><p>'+e(x.detail)+'</p></div>').join('')+'</div></section><aside class="edu-example-panel"><span class="edu-pill edu-pill-mint">'+e(p.exampleLabel)+'</span><h2>'+e(p.exampleTitle)+'</h2><blockquote data-motion="type">'+e(p.example)+'</blockquote><div class="edu-example-note">'+tick+'<p>'+e(p.note)+'</p></div></aside></div>');
   }),
 
   create('chapter-summary','章节与总结页','章节编号、核心结论、三项总结与下一步组成完整收束画面。',{
-    eyebrow:'10 / 章节收束',title:'把理解，变成一次完整实践',subtitle:'准备好目标、素材和验收标准，再开始动手。',badge:'章节总结',
-    number:'03',chapterLabel:'开始实践',headline:'先完成一个小项目',
-    points:[{title:'明确目标',detail:'用一句话说清楚要得到的结果。'},{title:'准备素材',detail:'把参考图、录屏和配音放在一起。'},{title:'验证结果',detail:'对照要求检查，再决定下一步。'}],
-    nextLabel:'下一步',next:'选择一个主题，完成第一段 30 秒讲解。',series:'EXPLAIN / CHAPTER'
-  },(p,h)=>{
+  "eyebrow": "栏目 / 01",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "badge": "示例标签",
+  "footer": "页脚说明",
+  "series": "示例系列",
+  "number": "01",
+  "chapterLabel": "章节名称",
+  "headline": "章节主标题",
+  "points": [
+    {
+      "title": "章节标题 A",
+      "detail": "章节说明 A"
+    },
+    {
+      "title": "章节标题 B",
+      "detail": "章节说明 B"
+    },
+    {
+      "title": "章节标题 C",
+      "detail": "章节说明 C"
+    }
+  ],
+  "nextLabel": "下一步",
+  "next": "下一章节说明"
+},(p,h)=>{
     const e=h.esc;
     return shell(p,h,'<div class="edu-chapter-layout"><div class="edu-chapter-index"><span data-motion="counter">'+e(p.number)+'</span><div>'+e(p.chapterLabel)+'</div><i></i></div><div class="edu-chapter-content"><h2>'+e(p.headline)+'</h2>'+arr(p.points,3).map(x=>'<article data-motion="item"><span>'+tick+'</span><div><h3>'+e(x.title)+'</h3><p>'+e(x.detail)+'</p></div></article>').join('')+'</div></div><div class="edu-next-strip" data-motion="reveal"><span>'+e(p.nextLabel)+'</span><strong>'+e(p.next)+'</strong>'+arrow+'</div>');
   }),
 
   create('media-stage','图片与视频展示台','媒体槽位保留原始比例，右侧说明与章节标签可更换；默认示例为原生 SVG 信息示意。',{
-    eyebrow:'11 / 素材讲解',title:'画面负责展示，标注负责解释',subtitle:'把关键说明放在素材旁边，让观众知道此刻应该看什么。',badge:'可替换素材',
-    mediaSrc:'',mediaKind:'image',mediaAlt:'从输入资料到可用结果的概念示意',mediaLabel:'概念示意 / 01',
-    diagramNodes:[{title:'资料',detail:'用户提供'},{title:'处理',detail:'围绕目标'},{title:'结果',detail:'可检查'}],
-    noteTitle:'先让观众看懂',notes:[{label:'保留完整画面',detail:'不拉伸素材，不裁掉关键结构。'},{label:'一次只讲一点',detail:'说明顺序跟随配音展开。'},{label:'细节再做聚焦',detail:'需要时加入放大与标注。'}],
-    caption:'把素材与讲解分开维护，替换内容后沿用同一套布局。',series:'EXPLAIN / MEDIA'
-  },(p,h)=>{
+  "eyebrow": "栏目 / 01",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "badge": "示例标签",
+  "footer": "页脚说明",
+  "series": "示例系列",
+  "mediaSrc": "",
+  "mediaKind": "image",
+  "mediaAlt": "可替换的示例素材",
+  "mediaLabel": "素材标签",
+  "diagramNodes": [
+    {
+      "title": "章节标题 A",
+      "detail": "章节说明 A"
+    },
+    {
+      "title": "章节标题 B",
+      "detail": "章节说明 B"
+    },
+    {
+      "title": "章节标题 C",
+      "detail": "章节说明 C"
+    }
+  ],
+  "noteTitle": "说明标题",
+  "notes": [
+    {
+      "label": "标注 A",
+      "detail": "标注说明 A"
+    },
+    {
+      "label": "标注 B",
+      "detail": "标注说明 B"
+    },
+    {
+      "label": "标注 C",
+      "detail": "标注说明 C"
+    }
+  ],
+  "caption": "素材说明文字"
+},(p,h)=>{
     const e=h.esc;const src=localMedia(p.mediaSrc);const marker=h.uid('media-arrow');let media='';
     if(src) media=p.mediaKind==='video'?'<video class="edu-media-element" id="'+e(h.uid('video'))+'" src="'+e(src)+'" muted playsinline preload="metadata"></video>':'<img class="edu-media-element" src="'+e(src)+'" alt="'+e(p.mediaAlt)+'"/>';
     else {
@@ -181,12 +566,44 @@ export const components = [
   }),
 
   create('annotation-callout','箭头与说明标注','三个精确锚点连接示意主体与说明卡；说明、目标标签和关系均可替换。',{
-    eyebrow:'12 / 指向关键',title:'让说明，准确落到关键位置',subtitle:'标注的作用是建立对应关系，每一根线都要有明确目标。',badge:'通用标注',
-    subjectTitle:'一条有效的制作需求',subjectSubtitle:'示例说明卡',
-    fields:[{label:'目标',value:'做一段 30 秒科普动画'},{label:'素材',value:'参考图 + 录屏 + 配音'},{label:'验收',value:'字幕准确，声音清楚'}],
-    callouts:[{title:'说清结果',detail:'时长、对象与表达目的。'},{title:'给到背景',detail:'把已有资料放在一起。'},{title:'定义完成',detail:'能按条件检查好坏。'}],
-    note:'锚点与被标注内容绑定；替换文案后仍须核对连线位置。',series:'EXPLAIN / ANNOTATE'
-  },(p,h)=>{
+  "eyebrow": "栏目 / 01",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "badge": "示例标签",
+  "footer": "页脚说明",
+  "series": "示例系列",
+  "subjectTitle": "主体标题",
+  "subjectSubtitle": "主体说明",
+  "fields": [
+    {
+      "label": "字段A",
+      "value": "内容 A"
+    },
+    {
+      "label": "字段B",
+      "value": "内容 B"
+    },
+    {
+      "label": "字段C",
+      "value": "内容 C"
+    }
+  ],
+  "callouts": [
+    {
+      "title": "章节标题 A",
+      "detail": "章节说明 A"
+    },
+    {
+      "title": "章节标题 B",
+      "detail": "章节说明 B"
+    },
+    {
+      "title": "章节标题 C",
+      "detail": "章节说明 C"
+    }
+  ],
+  "note": "补充说明文字"
+},(p,h)=>{
     const e=h.esc;const marker=h.uid('callout-arrow');
     return shell(p,h,'<div class="edu-callout-stage"><section class="edu-callout-subject"><div class="edu-callout-subject-head"><span>'+e(p.subjectSubtitle)+'</span><h2>'+e(p.subjectTitle)+'</h2></div>'+arr(p.fields,3).map((x,i)=>'<div class="edu-callout-field" data-motion="highlight"><span>'+e(x.label)+'</span><strong>'+e(x.value)+'</strong><i></i></div>').join('')+'</section><svg class="edu-callout-lines" viewBox="0 0 1164 470" aria-hidden="true"><defs><marker id="'+e(marker)+'" markerWidth="8" markerHeight="8" refX="5" refY="4" orient="auto"><path d="M1 1 5 4 1 7" fill="none" stroke="#2563eb" stroke-width="1.5"/></marker></defs><path data-motion="line" d="M772 90C668 90 687 203 579 203" fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#'+e(marker)+')"/><path data-motion="line" d="M772 278C690 278 665 289 579 289" fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#'+e(marker)+')"/><path data-motion="line" d="M772 439C681 439 678 375 579 375" fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#'+e(marker)+')"/></svg><div class="edu-callout-notes">'+arr(p.callouts,3).map((x,i)=>'<article style="top:'+([37,225,386][i])+'px" data-motion="item"><span>'+String(i+1).padStart(2,'0')+'</span><div><h3>'+e(x.title)+'</h3><p>'+e(x.detail)+'</p></div></article>').join('')+'</div></div><div class="edu-timeline-note">'+e(p.note)+'</div>');
   })

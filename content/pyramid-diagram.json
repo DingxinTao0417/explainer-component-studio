@@ -1,26 +1,26 @@
 {
-  "eyebrow": "EXPLAIN / 结构与数据",
-  "title": "能力是怎样层层建立的",
-  "subtitle": "用层级关系解释从基础到应用的组织方式。",
-  "badge": "示例数据",
-  "note": "图形表达层级关系，不以面积表示数量。",
-  "code": "PYRAMID-DIAGRAM",
+  "eyebrow": "栏目 / 01",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "badge": "示例标签",
+  "note": "补充说明文字",
+  "code": "EXAMPLE",
   "layers": [
     {
-      "label": "应用实践",
-      "detail": "面对真实问题"
+      "label": "层级 A",
+      "detail": "层级说明 A"
     },
     {
-      "label": "方法与流程",
-      "detail": "把经验变成步骤"
+      "label": "层级 B",
+      "detail": "层级说明 B"
     },
     {
-      "label": "概念理解",
-      "detail": "知道为什么"
+      "label": "层级 C",
+      "detail": "层级说明 C"
     },
     {
-      "label": "基础知识",
-      "detail": "建立共同语言"
+      "label": "层级 D",
+      "detail": "层级说明 D"
     }
   ]
 }

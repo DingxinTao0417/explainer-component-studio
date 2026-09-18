@@ -24,15 +24,81 @@ function frame(w,height,fill='#fff',r=18){
 function preview(group,label,h){return `<section class="ani-atom-scene"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" role="img" aria-label="${h.esc(label)}" style="${font};fill:${t.ink};background:transparent">${group}</svg></section>`;}
 
 const tableDefaults={
-  x:140,y:152,objectWidth:990,objectHeight:416,
-  columns:[{key:'id',label:'订单号',weight:1},{key:'date',label:'完成日期',weight:1.3},{key:'status',label:'状态',weight:1.3},{key:'included',label:'是否计入',weight:1.1}],
-  rows:[
-    {id:'A01',date:'09-03',status:{label:'已完成',tone:'green'},included:'计入'},
-    {id:'A02',date:'09-05',status:{label:'已完成',tone:'green'},included:'计入'},
-    {id:'A03',date:'09-08',status:{label:'已完成',tone:'green'},included:'计入'},
-    {id:'A04',date:'—',status:{label:'已取消',tone:'gray'},included:'不计入'},
-    {id:'A05',date:'—',status:{label:'待付款',tone:'orange'},included:'不计入'}
-  ],headerFill:'#dceeff',striped:true
+  "x": 140,
+  "y": 152,
+  "objectWidth": 990,
+  "objectHeight": 416,
+  "columns": [
+    {
+      "key": "id",
+      "label": "字段 A",
+      "weight": 1
+    },
+    {
+      "key": "date",
+      "label": "字段 B",
+      "weight": 1.3
+    },
+    {
+      "key": "status",
+      "label": "字段 C",
+      "weight": 1.3
+    },
+    {
+      "key": "included",
+      "label": "字段 D",
+      "weight": 1.1
+    }
+  ],
+  "rows": [
+    {
+      "id": "R01",
+      "date": "01-01",
+      "status": {
+        "label": "状态 A",
+        "tone": "green"
+      },
+      "included": "结果 A"
+    },
+    {
+      "id": "R02",
+      "date": "01-02",
+      "status": {
+        "label": "状态 A",
+        "tone": "green"
+      },
+      "included": "结果 A"
+    },
+    {
+      "id": "R03",
+      "date": "01-03",
+      "status": {
+        "label": "状态 A",
+        "tone": "green"
+      },
+      "included": "结果 A"
+    },
+    {
+      "id": "R04",
+      "date": "—",
+      "status": {
+        "label": "状态 B",
+        "tone": "gray"
+      },
+      "included": "结果 B"
+    },
+    {
+      "id": "R05",
+      "date": "—",
+      "status": {
+        "label": "状态 C",
+        "tone": "orange"
+      },
+      "included": "结果 B"
+    }
+  ],
+  "headerFill": "#dceeff",
+  "striped": true
 };
 export function renderTableAtom(props,helpers){
   const p={...tableDefaults,...props},h=scope(helpers,'atom-table'),{x,y,w,height}=geometry(p,400,210);
@@ -58,9 +124,29 @@ export function renderTableAtom(props,helpers){
 }
 
 const browserDefaults={
-  x:140,y:96,objectWidth:990,objectHeight:518,tabs:['项目资料','工作记录'],activeTab:0,address:'workspace.example / project',
-  heading:'项目资料',body:['需求说明与参考材料放在同一个工作区。','先确认目标，再逐项查看已有的信息。'],items:['需求说明','参考材料','验收标准'],
-  imageSrc:'',imageAlt:'可替换的页面图片',imageFit:'contain'
+  "x": 140,
+  "y": 96,
+  "objectWidth": 990,
+  "objectHeight": 518,
+  "tabs": [
+    "标签页 A",
+    "标签页 B"
+  ],
+  "activeTab": 0,
+  "address": "www.example.com/page",
+  "heading": "页面标题",
+  "body": [
+    "正文第一段，替换为需要展示的内容。",
+    "正文第二段，支持继续补充说明。"
+  ],
+  "items": [
+    "项目 A",
+    "项目 B",
+    "项目 C"
+  ],
+  "imageSrc": "",
+  "imageAlt": "可替换的页面图片",
+  "imageFit": "contain"
 };
 function mediaPath(v){return normalizeMediaProps({imageSrc:String(v||'')}).imageSrc;}
 export function renderBrowserAtom(props,helpers){
@@ -83,7 +169,37 @@ export function renderBrowserAtom(props,helpers){
   return `<g data-atom="browser" transform="translate(${x} ${y})" style="${font}" fill="${t.ink}">${frame(w,height)}${chrome}${body}<rect width="${w}" height="${height}" rx="18" fill="none" stroke="${t.ink}" stroke-width="3.5"/></g>`;
 }
 
-const connectorDefaults={kind:'curve',start:{x:270,y:448},end:{x:1000,y:278},controlPoints:[{x:500,y:448},{x:770,y:278}],waypoints:[],arrowStart:false,arrowEnd:true,tone:'blue',lineWidth:8,cornerRadius:28,dashed:false,label:'资料传递',labelX:635,labelY:307};
+const connectorDefaults={
+  "kind": "curve",
+  "start": {
+    "x": 270,
+    "y": 448
+  },
+  "end": {
+    "x": 1000,
+    "y": 278
+  },
+  "controlPoints": [
+    {
+      "x": 500,
+      "y": 448
+    },
+    {
+      "x": 770,
+      "y": 278
+    }
+  ],
+  "waypoints": [],
+  "arrowStart": false,
+  "arrowEnd": true,
+  "tone": "blue",
+  "lineWidth": 8,
+  "cornerRadius": 28,
+  "dashed": false,
+  "label": "连接说明",
+  "labelX": 635,
+  "labelY": 307
+};
 const point=(p,name)=>({x:number(p?.x,name+'.x',16,1264),y:number(p?.y,name+'.y',16,704)});
 const direction=(a,b)=>{const d=Math.hypot(b.x-a.x,b.y-a.y);if(d<.1)throw new Error('Connector segments must have distinct points');return {x:(b.x-a.x)/d,y:(b.y-a.y)/d,length:d};};
 const shifted=(p,v,length)=>({x:p.x+v.x*length,y:p.y+v.y*length});

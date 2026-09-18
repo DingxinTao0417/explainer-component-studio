@@ -2,9 +2,9 @@
   "appName": "数据检查器",
   "workspace": "response.json",
   "appIcon": "code",
-  "title": "响应数据",
-  "path": "$.data[0].duration",
-  "selected": "duration",
+  "title": "示例数据",
+  "path": "$.data[0].value",
+  "selected": "value",
   "fields": [
     {
       "key": "response",
@@ -32,19 +32,19 @@
     },
     {
       "key": "id",
-      "value": "\"scene-01\"",
+      "value": "1",
+      "type": "number",
+      "depth": 3
+    },
+    {
+      "key": "label",
+      "value": "\"项目 A\"",
       "type": "string",
       "depth": 3
     },
     {
-      "key": "component",
-      "value": "\"browser-window\"",
-      "type": "string",
-      "depth": 3
-    },
-    {
-      "key": "duration",
-      "value": "12.5",
+      "key": "value",
+      "value": "10",
       "type": "number",
       "depth": 3
     },
@@ -52,12 +52,6 @@
       "key": "enabled",
       "value": "true",
       "type": "boolean",
-      "depth": 3
-    },
-    {
-      "key": "captions",
-      "value": "Array(3)",
-      "type": "array",
       "depth": 3
     },
     {
@@ -71,20 +65,14 @@
       "value": "2",
       "type": "number",
       "depth": 1
-    },
-    {
-      "key": "version",
-      "value": "\"1.0\"",
-      "type": "string",
-      "depth": 1
     }
   ],
   "detail": {
-    "key": "duration",
+    "key": "value",
     "type": "number",
-    "value": "12.5",
-    "description": "当前分镜的持续时长，单位为秒。",
+    "value": "10",
+    "description": "字段说明文字",
     "constraint": "大于 0 的有限数值",
-    "location": "data → 0 → duration"
+    "location": "data → 0 → value"
   }
 }

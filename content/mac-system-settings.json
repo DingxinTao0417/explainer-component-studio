@@ -1,6 +1,6 @@
 {
   "title": "通用",
-  "account": "林同学",
+  "account": "示例用户",
   "subtitle": "Apple 账户",
   "rows": [
     [
@@ -35,5 +35,6 @@
       "共享",
       "关闭"
     ]
-  ]
+  ],
+  "accountInitial": "用"
 }

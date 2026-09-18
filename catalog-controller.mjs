@@ -3,13 +3,20 @@ import {baseCSS,helpers,esc} from './shared.mjs';
 import {effects,buildEffect} from './animations.mjs';
 import {normalizeMediaProps,rewriteRenderedSvgImageMarkup} from './content-runtime.mjs';
 import {createPreviewController} from './sound-runtime.mjs';
-import {frameStyles,backgroundStyles,appearancePresets,normalizeAppearance} from './stage-appearance.mjs';
+import {frameStyles,backgroundStyles,appearancePresets,normalizeAppearance,applyStageAppearance} from './stage-appearance.mjs';
 const data=window.LIBRARY_DATA,$=id=>document.getElementById(id);
+const backgrounds=backgroundStyles.filter(c=>c.id!=='original').map(c=>({...c,category:['grid','dots','perspective-grid','blueprint'].includes(c.id)?'网格与点阵':['mint-corners','blue-waves'].includes(c.id)?'边角装饰':'纹理与渐变'}));
+const collections={...data,backgrounds};
 let tab='components',category='全部',current=null,playing=false,previewPose=true,sampleId=null;
+let backgroundPreviewId=null;
 let appearance=normalizeAppearance(),nativeBackgroundSupported=false;
 const appearanceQuery=new URLSearchParams(location.search).get('appearance');
 const requestedAppearance=appearancePresets.find(p=>p.id===appearanceQuery);
 if(requestedAppearance)appearance=normalizeAppearance(requestedAppearance);
+const requestedFrame=new URLSearchParams(location.search).get('frame-style');
+if(frameStyles.some(c=>c.id===requestedFrame))appearance=normalizeAppearance({...appearance,frame:requestedFrame});
+const requestedBackground=new URLSearchParams(location.search).get('background-style');
+if(backgroundStyles.some(c=>c.id===requestedBackground))appearance=normalizeAppearance({...appearance,background:requestedBackground});
 const appearanceOption=(value,label)=>`<option value="${esc(value)}">${esc(label)}</option>`;
 $('appearance-preset').innerHTML=appearanceOption('original','组件原样')+appearancePresets.filter(p=>p.id!=='original').map(p=>appearanceOption(p.id,p.name)).join('')+appearanceOption('custom','自定义搭配');
 $('appearance-frame').innerHTML=frameStyles.map(s=>appearanceOption(s.id,s.name)).join('');
@@ -20,6 +27,8 @@ function syncAppearance(){
  $('appearance-preset').value=appearance.frame==='none'&&appearance.background==='original'?'original':(matched?.id||'custom');
  $('background-control').hidden=!nativeBackgroundSupported||appearance.background!=='original';
  $('appearance-status').textContent=appearance.frame==='none'&&appearance.background==='original'?'保留组件原样。':'已套用舞台样式，切换组件时沿用当前选择。';
+ $('background-selection').hidden=appearance.background==='original';
+ $('background-selection-text').textContent=`已选背景：${backgroundStyles.find(c=>c.id===appearance.background).name}。打开组件查看搭配效果。`;
  if(current?.id==='lecture-stage'&&new URLSearchParams(location.search).get('scene')==='reference-stage'){
   $('inspect-description').textContent=appearance.background==='original'?'透视网格持续滚动；全屏弧带覆盖画布，在遮满时切换内容。':'全屏弧带覆盖边框与背景，在遮满时切换内容；边框和背景可分别更换。';
  }
@@ -27,15 +36,15 @@ function syncAppearance(){
 syncAppearance();
 $('appearance-preset').onchange=()=>{
  const id=$('appearance-preset').value;if(id==='custom')return;
- appearance=normalizeAppearance(id==='original'?{}:appearancePresets.find(p=>p.id===id));syncAppearance();if(current)update({preserveTime:true});
+ appearance=normalizeAppearance(id==='original'?{}:appearancePresets.find(p=>p.id===id));syncAppearance();syncNavigation();if(current)update({preserveTime:true});
 };
-const changeAppearance=()=>{appearance=normalizeAppearance({frame:$('appearance-frame').value,background:$('appearance-background').value});syncAppearance();if(current)update({preserveTime:true});};
+const changeAppearance=()=>{appearance=normalizeAppearance({frame:$('appearance-frame').value,background:$('appearance-background').value});syncAppearance();syncNavigation();if(current)update({preserveTime:true});};
 $('appearance-frame').onchange=changeAppearance;$('appearance-background').onchange=changeAppearance;
-$('appearance-reset').onclick=()=>{appearance=normalizeAppearance();syncAppearance();if(current)update({preserveTime:true});};
+$('appearance-reset').onclick=()=>{appearance=normalizeAppearance();syncAppearance();syncNavigation();if(current)update({preserveTime:true});};
 const samplePlayer=new Audio();samplePlayer.preload='auto';
 const levels={measured:'本机原型',documented:'官方参照',designed:'原创讲解'};
 const soundCategory=s=>/click|key|typing/.test(s.id)?'点击与输入':/whoosh|riser/.test(s.id)?'移动与转场':'反馈提示';
-$('totals').textContent=`${data.components.length} 个组件 / ${data.effects.length} 种动画 / ${data.sounds.length} 种音效`;
+$('totals').textContent=`${data.components.length} 个组件 / ${data.effects.length} 种动画 / ${data.sounds.length} 种音效 / ${backgrounds.length} 种背景`;
 function stopSample(){samplePlayer.pause();samplePlayer.currentTime=0;sampleId=null;document.querySelectorAll('.sound-card').forEach(c=>c.classList.remove('is-playing'));$('bank-status').textContent='';}
 samplePlayer.onended=stopSample;samplePlayer.onerror=()=>{$('bank-status').textContent='音效加载失败，请刷新后重试。';};
 function syncNavigation({clearSelection=false}={}){
@@ -43,6 +52,10 @@ function syncNavigation({clearSelection=false}={}){
  search?url.searchParams.set('q',search):url.searchParams.delete('q');
  tab==='components'?url.searchParams.delete('tab'):url.searchParams.set('tab',tab);
  category==='全部'?url.searchParams.delete('category'):url.searchParams.set('category',category);
+ const preset=appearancePresets.find(p=>p.frame===appearance.frame&&p.background===appearance.background);
+ preset&&preset.id!=='original'?url.searchParams.set('appearance',preset.id):url.searchParams.delete('appearance');
+ appearance.frame==='none'?url.searchParams.delete('frame-style'):url.searchParams.set('frame-style',appearance.frame);
+ appearance.background==='original'?url.searchParams.delete('background-style'):url.searchParams.set('background-style',appearance.background);
  if(clearSelection){url.searchParams.delete('component');url.searchParams.delete('scene');}
  history.replaceState(null,'',url.pathname+url.search+url.hash);
 }
@@ -51,21 +64,49 @@ function navigate(nextTab,nextCategory='全部'){
  document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
  syncNavigation({clearSelection:true});categories();draw();
 }
-function categories(){const groups=['全部',...new Set(data[tab].map(c=>tab==='sounds'?soundCategory(c):c.category))];$('categories').innerHTML='';for(const label of groups){const b=document.createElement('button');b.textContent=label;b.className=label===category?'active':'';b.setAttribute('aria-pressed',String(label===category));b.onclick=()=>navigate(tab,label);$('categories').append(b);}}
+function categories(){const groups=['全部',...new Set(collections[tab].map(c=>tab==='sounds'?soundCategory(c):c.category))];$('categories').innerHTML='';for(const label of groups){const b=document.createElement('button');b.textContent=label;b.className=label===category?'active':'';b.setAttribute('aria-pressed',String(label===category));b.onclick=()=>navigate(tab,label);$('categories').append(b);} $('search').placeholder=tab==='backgrounds'?'搜索网格、波纹、光晕…':'搜索当前分类…';}
+// Thumbnails and the full preview share the exact appearance renderer used by components.
+function fitBackground(host){
+ const art=host.firstElementChild;if(!art||!host.clientWidth||!host.clientHeight)return;
+ if(host.closest('.background-thumb')){
+  // Render at the card's own resolution so one-pixel grid lines remain visible.
+  art.style.width=host.clientWidth+'px';art.style.height=host.clientHeight+'px';
+  applyStageAppearance(art,{frame:'none',background:art.dataset.appearanceBackground},{width:host.clientWidth,height:host.clientHeight});return;
+ }
+ const scale=Math.min(host.clientWidth/1280,host.clientHeight/800);art.style.transform=`scale(${scale})`;art.style.left=(host.clientWidth-1280*scale)/2+'px';art.style.top=(host.clientHeight-800*scale)/2+'px';
+}
+const backgroundThumbObserver=new ResizeObserver(entries=>entries.forEach(entry=>fitBackground(entry.target)));
+function mountBackground(host,id,showSample=false){
+ host.innerHTML='<div class="background-art"><div class="component-stage">'+(showSample?'<div class="background-sample-panel"><span>示例内容</span><h3>主标题</h3><p>副标题与说明文字</p><div class="background-sample-grid"><div>内容区块 A</div><div>内容区块 B</div></div></div>':'')+'</div></div>';
+ applyStageAppearance(host.firstElementChild,{frame:'none',background:id},{width:1280,height:800});fitBackground(host);
+}
+function refreshBackgroundPreview(){const item=backgrounds.find(c=>c.id===backgroundPreviewId);if(!item)return;$('background-title').textContent=item.name;$('background-description').textContent=item.description;$('background-picker').value=item.id;$('background-preview').setAttribute('aria-label',item.name+'背景预览');mountBackground($('background-preview'),item.id,$('background-show-sample').checked);}
+function openBackground(c){stopSample();backgroundPreviewId=c.id;$('background-show-sample').checked=false;$('background-inspector').showModal();refreshBackgroundPreview();}
+$('background-picker').innerHTML=backgrounds.map(c=>appearanceOption(c.id,c.name)).join('');
+$('background-picker').onchange=()=>{backgroundPreviewId=$('background-picker').value;refreshBackgroundPreview();};
+$('background-show-sample').onchange=refreshBackgroundPreview;
+$('background-close').onclick=()=>$('background-inspector').close();
+$('background-use').onclick=()=>{appearance=normalizeAppearance({...appearance,background:backgroundPreviewId});syncAppearance();$('background-inspector').close();navigate('components');};
+$('background-selection-preview').onclick=()=>{const item=backgrounds.find(c=>c.id===appearance.background);if(item)openBackground(item);};
+$('background-selection-reset').onclick=()=>{appearance=normalizeAppearance({...appearance,background:'original'});syncAppearance();syncNavigation();};
+window.addEventListener('resize',()=>{if($('background-inspector').open)fitBackground($('background-preview'));});
 function draw(){
- const search=$('search').value.trim().toLowerCase(),items=data[tab].filter(c=>(category==='全部'||(tab==='sounds'?soundCategory(c):c.category)===category)&&`${c.name} ${c.id} ${c.description}`.toLowerCase().includes(search));$('grid').innerHTML='';
- const labels={components:'组件',effects:'动画效果',sounds:'音效'};
- $('filter-status').textContent=`${labels[tab]} · ${category}${search?' · 搜索“'+$('search').value.trim()+'”':''} · ${items.length} / ${data[tab].length} 项`;
+ backgroundThumbObserver.disconnect();
+ const search=$('search').value.trim().toLowerCase(),items=collections[tab].filter(c=>(category==='全部'||(tab==='sounds'?soundCategory(c):c.category)===category)&&`${c.name} ${c.id} ${c.description}`.toLowerCase().includes(search));$('grid').innerHTML='';
+ const labels={components:'组件',effects:'动画效果',sounds:'音效',backgrounds:'背景样式'};
+ $('filter-status').textContent=`${labels[tab]} · ${category}${search?' · 搜索“'+$('search').value.trim()+'”':''} · ${items.length} / ${collections[tab].length} 项`;
  $('search-clear').hidden=!$('search').value;$('reset-filters').hidden=category==='全部'&&!search;
  if(!items.length){const empty=document.createElement('div');empty.className='catalog-empty';empty.innerHTML='<p>没有匹配的内容</p><span>可以缩短搜索词，或清除筛选后浏览。</span>';const clear=document.createElement('button');clear.type='button';clear.textContent='清除筛选，显示全部';clear.onclick=()=>navigate(tab);empty.append(clear);$('grid').append(empty);}
  items.forEach((c,i)=>{
   const card=document.createElement('article');card.className='catalog-card'+(tab==='sounds'?' sound-card':'');card.tabIndex=0;card.setAttribute('role','button');card.dataset.itemId=c.id;
   let thumb;
   if(tab==='sounds'){const values=c.waveform||Array(48).fill(.15),peak=Math.max(...values,.01);thumb=`<div class="thumb waveform-thumb"><svg viewBox="0 0 440 120" role="img" aria-label="${esc(c.name)}波形"><line x1="5" y1="60" x2="435" y2="60" stroke="#dce7f9"/>${values.map((v,j)=>`<rect x="${j*9+5}" y="${60-Math.max(2,v/peak*45)}" width="4" height="${Math.max(4,v/peak*90)}" rx="2" fill="#3973e8"/>`).join('')}</svg><span class="sound-play-icon">▶</span></div>`;}
+  else if(tab==='backgrounds')thumb='<div class="thumb background-thumb"><div class="background-surface" aria-hidden="true"></div></div>';
   else thumb=`<div class="thumb"><img loading="lazy" src="snapshots/${tab==='effects'?'effects/':''}${esc(c.id)}.png" alt="${esc(c.name)}">${tab==='effects'?'<span class="effect-play">▶</span>':''}</div>`;
-  const tag=tab==='sounds'?'点击试听':tab==='effects'?c.category+(c.silent?' · 静音':' · 已配音效'):(c.category.startsWith('动画风')?'参考复刻':(levels[c.reference?.level]||'组件'));
+  const tag=tab==='sounds'?'点击试听':tab==='backgrounds'?c.category:tab==='effects'?c.category+(c.silent?' · 静音':' · 已配音效'):(c.category.startsWith('动画风')?'参考复刻':(levels[c.reference?.level]||'组件'));
   card.innerHTML=thumb+`<div class="card-meta"><div class="card-heading"><h3>${esc(c.name)}</h3><span>${tab==='sounds'?c.duration.toFixed(2)+' s':String(i+1).padStart(2,'0')}</span></div><p>${esc(c.description)}</p><span class="tag">${esc(tag)}</span></div>`;
-  const activate=()=>tab==='sounds'?playSample(c,card):open(c);card.onclick=activate;card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();activate();}};$('grid').append(card);
+  const activate=()=>tab==='sounds'?playSample(c,card):tab==='backgrounds'?openBackground(c):open(c);card.onclick=activate;card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();activate();}};$('grid').append(card);
+  if(tab==='backgrounds'){const surface=card.querySelector('.background-surface');mountBackground(surface,c.id);backgroundThumbObserver.observe(surface);}
  });
 }
 async function playSample(c,card){if(sampleId===c.id){stopSample();return;}stopSample();sampleId=c.id;samplePlayer.src=c.src;samplePlayer.volume=c.defaultGain??.35;card.classList.add('is-playing');$('bank-status').textContent=`正在试听：${c.name}`;try{await samplePlayer.play();}catch(e){stopSample();$('bank-status').textContent='播放声音失败：'+e.message;}}
@@ -75,7 +116,7 @@ $('search-clear').onclick=()=>{$('search').value='';syncNavigation({clearSelecti
 $('reset-filters').onclick=()=>navigate(tab);
 function fit(){if(!current)return;const v=$('viewport'),f=$('frame'),scale=Math.min((v.clientWidth-24)/current.width,(v.clientHeight-24)/current.height,1.25);f.style.width=current.width+'px';f.style.height=current.height+'px';f.style.transform=`scale(${scale})`;f.style.left=(v.clientWidth-current.width*scale)/2+'px';f.style.top=(v.clientHeight-current.height*scale)/2+'px';}
 function open(c){
- stopSample();current=components.find(x=>x.id===(tab==='effects'?c.component:c.id));$('inspect-title').textContent=c.name;$('inspect-category').textContent=tab==='effects'?'动画与音效':c.category;$('inspect-description').textContent=c.description;const initial={...data.props[current.id]};if(c.category==='转场')initial.transitionNext=c.id==='shared-slide'?{component:'lecture-stage',props:{title:'把思路，变成一次操作',subtitle:'让真实过程支撑你的讲解',chapter:'02 / 开始实践',sections:[{title:'演示',detail:'先展示一次完整过程'},{title:'观察',detail:'聚焦操作前后的变化'},{title:'复核',detail:'回到结果确认是否完成'}]}}:{component:'chapter-summary',props:{title:'从理解到实践',subtitle:'把刚才的思路，变成下一步行动。'}};$('props').value=JSON.stringify(initial,null,2);
+ stopSample();current=components.find(x=>x.id===(tab==='effects'?c.component:c.id));$('inspect-title').textContent=c.name;$('inspect-category').textContent=tab==='effects'?'动画与音效':c.category;$('inspect-description').textContent=c.description;const initial={...data.props[current.id]};if(c.category==='转场')initial.transitionNext=(c.id==='shared-slide'?{component:'lecture-stage',props:{title:'下一场景标题',subtitle:'下一场景说明',chapter:'章节 / 02'}}:{component:'chapter-summary',props:{title:'下一场景标题',subtitle:'下一场景说明'}});$('props').value=JSON.stringify(initial,null,2);
  const probe=document.createElement('div');probe.innerHTML=current.render(data.props[current.id],helpers(current.id));const supported=effects.filter(e=>e.selector==='.motion-wrap'||probe.querySelector(e.selector));$('effect').innerHTML='<option value="none">静态 · 原始状态</option>'+supported.map(e=>`<option value="${e.id}">${e.name}</option>`).join('');$('effect').value=tab==='effects'?c.id:(current.defaultEffect||'none');$('background-control').hidden=!probe.querySelector('[data-motion="background"]');$('background').innerHTML='<option value="">静态背景</option>'+effects.filter(e=>e.category==='背景').map(e=>`<option value="${e.id}">${e.name}</option>`).join('');$('background').value='';$('reference').textContent=current.reference.basis;$('source-file').href=`content/${current.id}.json`;$('inspector').showModal();update();
 }
 function soundInfo(fx){const cues=data.effects.find(e=>e.id===fx)?.soundCues||[];$('sound-state').textContent=cues.length?'已配好 '+cues.length+' 个声音落点；首次播放会从头开始。':'当前效果没有动作音效；常驻背景保持安静。';$('cue-list').innerHTML=cues.map(c=>`<span>${c.at.toFixed(2)}s ${esc(c.name)}</span>`).join('');}
@@ -106,9 +147,9 @@ $('download-scene').onclick=()=>{try{download({version:4,component:current.id,pr
 window.addEventListener('resize',fit);window.addEventListener('pagehide',()=>{stopSample();pause();});
 function tick(){if(playing&&$('inspector').open){const api=$('frame').contentWindow.previewAPI,t=api?.time()||0;$('seek').value=t;$('time').textContent=t.toFixed(2)+' / 8.00 s';if(api?.audioState().lastError){$('error').textContent='声音播放失败：'+api.audioState().lastError;pause();}else if(t>=7.99)pause();}requestAnimationFrame(tick);}tick();
 const query=new URLSearchParams(location.search);
-if(['components','effects','sounds'].includes(query.get('tab')))tab=query.get('tab');
+if(['components','effects','sounds','backgrounds'].includes(query.get('tab')))tab=query.get('tab');
 if(query.has('component')||query.get('scene')==='reference-stage')tab='components';
-if(data[tab].some(c=>(tab==='sounds'?soundCategory(c):c.category)===query.get('category')))category=query.get('category');
+if(collections[tab].some(c=>(tab==='sounds'?soundCategory(c):c.category)===query.get('category')))category=query.get('category');
 if(query.has('q'))$('search').value=query.get('q');
 document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
 categories();draw();

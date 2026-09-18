@@ -3,8 +3,8 @@
   "y": 276,
   "objectWidth": 900,
   "objectHeight": 144,
-  "label": "任务",
-  "text": "填写本周完成与待办事项",
+  "label": "字段",
+  "text": "字段内容",
   "status": "complete",
   "accent": "blue",
   "fontSize": 30

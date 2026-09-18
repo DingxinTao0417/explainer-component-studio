@@ -1,7 +1,7 @@
 {
-  "eyebrow": "工作中的一个瞬间",
-  "title": "先把要求说清楚",
-  "caption": "动手之前，把对象、内容和时间写下来。",
+  "eyebrow": "栏目 / 01",
+  "title": "主标题",
+  "caption": "字幕说明文字",
   "mediaSrc": "assets/broll/office.mp4",
   "mediaType": "video",
   "mediaAlt": "办公桌前使用键盘的实拍素材",
@@ -9,5 +9,5 @@
   "mediaY": 50,
   "mediaStart": 0,
   "showCaption": true,
-  "tag": "日常工作"
+  "tag": "示例标签"
 }

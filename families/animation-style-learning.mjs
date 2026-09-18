@@ -39,24 +39,59 @@ const create=(id,name,description,defaults,ref,render)=>({id,name:'动画风 · 
 
 export const components=[
  create('ani-tool-workbench','输入、检查与修改','完整工具窗口搭配要求纸、雪山预览与检查放大镜，表达先输入、再检查、再修改的工作过程。',{
-  title:'输入、检查，再修改',subtitle:'把要求写进去，把结果拿出来看。',toolLabel:'工具 A',requestLabel:'要求',request:'AI 学习海报',tags:['主题','尺寸'],revisionLabel:'修改',revision:'标题缩小',action:'生成',previewLabel:'AI 学习',footer:'检查结果，才能知道下一步该改哪里。'
- },'07_输入检查再修改.png',(p,h)=>{
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "toolLabel": "窗口标题",
+  "requestLabel": "输入",
+  "request": "输入内容",
+  "tags": [
+    "标签 A",
+    "标签 B"
+  ],
+  "revisionLabel": "修改",
+  "revision": "修改内容",
+  "action": "生成",
+  "previewLabel": "预览标题",
+  "footer": "页脚说明文字"
+},'07_输入检查再修改.png',(p,h)=>{
   if(!Array.isArray(p.tags)||p.tags.length!==2)throw new Error('工作台 tags 需要两个标签');
   const win=`${shell(222,156,866,468,p.toolLabel,scope(h,'window'))}<rect x="240" y="213" width="269" height="388" rx="13" fill="white" stroke="#c1d9f2" stroke-width="2"/><rect x="528" y="213" width="541" height="388" rx="13" fill="white" stroke="#c1d9f2" stroke-width="2"/>${text(260,253,p.requestLabel,25,220,h)}<rect x="259" y="269" width="230" height="57" rx="11" fill="#fff" stroke="${t.ink}" stroke-width="2"/>${text(275,306,p.request,25,200,h)}${p.tags.map((v,i)=>`<rect x="${258+i*121}" y="346" width="110" height="49" rx="22" fill="#e7f5ff" stroke="#9bc9ee" stroke-width="1.6"/>${text(313+i*121,377,v,21,94,h,'text-anchor="middle"')}`).join('')}${text(261,441,p.revisionLabel,25,220,h)}<rect x="259" y="456" width="230" height="56" rx="11" fill="white" stroke="${t.ink}" stroke-width="2"/>${text(275,491,p.revision,25,200,h)}<rect x="259" y="533" width="230" height="51" rx="11" fill="${t.blue}" stroke="${t.ink}" stroke-width="2.5"/>${text(374,568,p.action,29,198,h,'text-anchor="middle" fill="white"')}${mountains(545,232,507,350,scope(h,'hero'))}`;
   const paperArt=paper(48,266,156,243,{fold:31,content:`${symbol('image',39,31,79,h)}<path d="M24 145H126M24 165H119M24 185H105" stroke="#bbcee1" stroke-width="9" stroke-linecap="round"/>`},scope(h,'request-paper'));
   return svgScene(`${heading(p,h)}${line('M116 546V587Q116 606 136 606H220')}${line('M1088 493H1168Q1195 493 1195 518V558',t.green,3.5)}${enter(`<g transform="rotate(-8 128 387)">${paperArt}</g>`)}${enter(gear(1096,206,128,h))}${enter(win)}${enter(`<rect x="569" y="263" width="169" height="49" rx="7" fill="white" stroke="${t.orange}" stroke-width="3"/>${text(653,296,p.previewLabel,26,147,h,'text-anchor="middle"')}`)}${pop(`${magnifier(729,256,137,h)}<path d="M731 255l-6-17M745 256l12-12M754 271l18-1" stroke="${t.orange}" stroke-width="5" stroke-linecap="round"/>`)}${node(116,546)}${node(1195,558)}${footer(p,h)}`,h);
  }),
- create('ani-file-collection','收藏不等于会','折角教程纸收进文件夹，与右侧实际操作窗口形成对照；收藏列表和窗口标签可编辑。',{
-  title:'收藏，不等于会',subtitle:'材料存起来之后，还需要自己做一次。',files:['开始','检查','调整'],folderLabel:'收藏的教程',windowLabel:'实际操作',previewLabel:'AI 学习',result:'≠',footer:'从“我看过”走到“我能做”。'
- },'02_收藏不等于会.png',(p,h)=>{
+ create('ani-file-collection','文件夹与窗口对照','文件卡片、文件夹与浏览器窗口并排展示；文件名称、标签与说明均可替换。',{
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "files": [
+    "文件 A",
+    "文件 B",
+    "文件 C"
+  ],
+  "folderLabel": "文件夹名称",
+  "windowLabel": "窗口标题",
+  "previewLabel": "预览标题",
+  "result": "≠",
+  "footer": "页脚说明文字"
+},'02_收藏不等于会.png',(p,h)=>{
   if(!Array.isArray(p.files)||p.files.length!==3)throw new Error('收藏组件 files 需要三项');
   const files=p.files.map((v,i)=>enter(`<g transform="rotate(${[-9,0,8][i]} ${160+i*125} 343)">${paper(84+i*131,245-i*7,162,233,{fold:32,content:`<rect x="25" y="38" width="47" height="42" rx="7" fill="${t.blue}"/><path d="M43 49L58 59L43 69Z" fill="white"/>${text(83,68,v,24,66,h)}<path d="M26 112H134M26 137H132M26 162H120" stroke="#b7cee3" stroke-width="8" stroke-linecap="round"/>`},scope(h,'file-'+i))}</g>`)).join('');
   const folder=`<ellipse cx="323" cy="622" rx="255" ry="24" fill="#e2f1ff"/><path d="M82 423Q76 404 96 399H266L289 421H541Q563 421 556 447L519 610H119Z" fill="#8ac7f5" stroke="${t.ink}" stroke-width="3"/><path d="M80 456Q74 433 98 433H242L260 451H527Q547 451 542 474L518 612Q516 624 501 624H118Q101 624 98 608Z" fill="#d6edff" stroke="${t.ink}" stroke-width="3.3"/><path d="M114 479H499" stroke="white" stroke-width="4" opacity=".85"/><rect x="132" y="496" width="295" height="74" rx="12" fill="#f7fcff" stroke="#adceea" stroke-width="1.7"/>${text(154,541,p.folderLabel,29,256,h)}`;
   return svgScene(`${heading(p,h)}${files}${enter(folder)}${enter(miniWindow(726,259,478,350,p,scope(h,'demo')))}${enter(gear(1123,547,107,h))}${pop(text(627,479,p.result,112,135,h,'text-anchor="middle" fill="#b56a00"'))}${footer(p,h)}`,h);
  }),
- create('ani-method-transfer','熟悉部分可复用','从熟悉工具提取要求、检查、修改，送进带厚度的复用托盘，给新差异留出独立槽位。',{
-  title:'熟悉部分可复用',subtitle:'原来的办法，可以带到新问题里。',windowLabel:'熟悉的工具',previewLabel:'AI 学习',steps:['要求','检查','修改'],trayTitle:'图像要求',newLabel:'新差异',footer:'先认出能复用的部分，再处理真正不同的地方。'
- },'12_熟悉部分与新差异.png',(p,h)=>{
+ create('ani-method-transfer','窗口与部件组合','浏览器、文件卡片与容器通过连线组合；步骤、容器标题和新增项分别可编辑。',{
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "windowLabel": "窗口标题",
+  "previewLabel": "预览标题",
+  "steps": [
+    "步骤 A",
+    "步骤 B",
+    "步骤 C"
+  ],
+  "trayTitle": "容器标题",
+  "newLabel": "新增项",
+  "footer": "页脚说明文字"
+},'12_熟悉部分与新差异.png',(p,h)=>{
   if(!Array.isArray(p.steps)||p.steps.length!==3)throw new Error('复用托盘 steps 需要三项');
   const methods=p.steps.map((v,i)=>enter(`<g data-method-card="${i}">${document(64+i*165,474,126,154,v,['image','check','pencil'][i],scope(h,'source-'+i))}</g>`)).join('');
   const lid=paper(652,158,539,217,{fold:43,depth:11,content:`${symbol('image',34,43,91,h)}${text(151,95,p.trayTitle,37,338,h)}<path d="M153 122H461M153 145H421M153 166H365" stroke="#becfe0" stroke-width="9" stroke-linecap="round"/>`},scope(h,'lid'));
@@ -68,9 +103,26 @@ export const components=[
   const connections=connection('requirements-check','M190 551H229',210,551)+connection('check-revision','M355 551H394',375,551)+connection('revision-tray','M520 551H555Q584 551 584 519V478Q584 449 614 449H646',615,449);
   return svgScene(`${heading(p,h)}${connections}${enter(miniWindow(61,163,486,270,p,scope(h,'known-window')))}${methods}${enter(lid)}${enter(`<g data-method-tray>${tray}</g>`)}${slots}${pop(`<rect x="1056" y="443" width="98" height="88" rx="8" fill="#fffaf0" stroke="#f4a126" stroke-width="2.5" stroke-dasharray="7 5"/>${text(1111,575,p.newLabel,27,107,h,'text-anchor="middle"')}`)}${footer(p,h)}`,h);
  }),
- create('ani-knowledge-network','把新旧连起来','已有资料与成品进入要求结构，经检查和修改连到新的竖版任务；对象、字段和结果可编辑。',{
-  title:'把新旧连起来',subtitle:'让新问题挂到已有经验上。',previewLabel:'AI 学习',requirementsTitle:'海报要求',fields:['主题','风格','尺寸'],steps:['检查','修改'],outputTitle:'改为竖版',resultLabel:'图像要求',questionTitle:'缺少相关经验时',question:'从哪里问起？',footer:'联系越具体，越容易知道下一步怎么做。'
- },'16_把新旧连起来.png',(p,h)=>{
+ create('ani-knowledge-network','文档与窗口连线','文件、预览窗口与文档通过连线组成图解；字段、步骤、输出和注释可编辑。',{
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "previewLabel": "预览标题",
+  "requirementsTitle": "文档标题",
+  "fields": [
+    "字段 A",
+    "字段 B",
+    "字段 C"
+  ],
+  "steps": [
+    "步骤 A",
+    "步骤 B"
+  ],
+  "outputTitle": "输出标题",
+  "resultLabel": "结果标签",
+  "questionTitle": "问题标题",
+  "question": "问题内容？",
+  "footer": "页脚说明文字"
+},'16_把新旧连起来.png',(p,h)=>{
   if(!Array.isArray(p.fields)||p.fields.length!==3||!Array.isArray(p.steps)||p.steps.length!==2)throw new Error('知识网络需要三个 fields 和两个 steps');
   const docs=[0,1,2].reverse().map(i=>enter(paper(75+i*63,204-i*24,115,150,{fold:25,depth:7,content:`${icon(['document','table','document'][i],24,16,54,h)}<path d="M21 95H87M21 115H73" stroke="#b3ccdf" stroke-width="6" stroke-linecap="round"/>`},scope(h,'knowledge-'+i)))).join('');
   const center=`<rect x="458" y="181" width="358" height="272" rx="12" fill="${t.shadow}"/><rect x="449" y="171" width="358" height="272" rx="12" fill="#fcfeff" stroke="${t.ink}" stroke-width="3"/><path d="M461 171H795Q807 171 807 183V228H449V183Q449 171 461 171Z" fill="#dfedff" stroke="${t.ink}" stroke-width="3"/>${text(474,211,p.requirementsTitle,29,305,h)}${p.fields.map((v,i)=>`<rect x="469" y="${243+i*60}" width="315" height="50" rx="8" fill="${i===2?'#dcf7f4':'white'}" stroke="${i===2?'#37adbc':'#afcfea'}" stroke-width="1.7"/>${symbol(['document','palette','ruler'][i],479,248+i*60,39,h)}<path d="M530 ${245+i*60}V${291+i*60}" stroke="#a3d1e4"/>${text(548,278+i*60,v,27,205,h)}`).join('')}`;
@@ -78,9 +130,22 @@ export const components=[
   const result=paper(962,156,243,328,{fold:39,depth:11,content:`${text(25,56,p.outputTitle,30,195,h)}<rect x="53" y="81" width="141" height="218" rx="4" fill="none" stroke="#7ca2c5" stroke-width="2" stroke-dasharray="6 5"/>${mountains(64,91,119,197,scope(h,'portrait'))}`},scope(h,'result-paper'));
   return svgScene(`${heading(p,h)}${line('M313 277H368V365H449','#6590b7',2.4)}${line('M355 542H390V365H449','#6590b7',2.4)}${line('M628 442V469H529V490M628 469H714V490M529 560V588H630V606M714 560V588H630','#6590b7',2.4)}${line('M784 388H962',t.green,4)}${docs}${enter(`${mountains(70,430,288,207,scope(h,'old-image'))}${text(86,466,p.previewLabel,26,245,h)}`)}${enter(center)}${steps}${enter(`<rect x="513" y="608" width="236" height="51" rx="12" fill="#edf7ff" stroke="${t.ink}" stroke-width="2.3"/>${symbol('image',527,617,34,h)}${text(579,643,p.resultLabel,26,155,h)}`)}${pop(result)}${pop(`<rect x="930" y="527" width="285" height="123" rx="13" fill="#fff6e7" stroke="${t.orange}" stroke-width="1.6"/>${text(952,564,p.questionTitle,25,244,h)}<circle cx="963" cy="605" r="20" fill="white" stroke="${t.orange}" stroke-width="2.5" stroke-dasharray="6 4"/>${text(993,615,p.question,25,197,h)}`)}${node(784,388)}${node(962,388)}${footer(p,h)}`,h);
  }),
- create('ani-capability-tiles','散落知识砖','六块具有厚度的工具砖分别承载要求、配色、尺寸、版式、检查和修改，与工具结果窗口并置。',{
-  title:'学一个，扔一个',subtitle:'零散技巧，需要连成自己的方法。',tiles:['要求','配色','尺寸','版式','检查','修改'],windowLabel:'AI 工具 B',previewLabel:'AI 学习',result:'把本事连起来',footer:'让一次学会的内容，成为下一次能用的经验。'
- },'10_散落的知识砖.png',(p,h)=>{
+ create('ani-capability-tiles','图标卡片组','六块带图标的卡片与预览窗口并置；卡片标签、窗口标题和结果文字可编辑。',{
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "tiles": [
+    "标签 A",
+    "标签 B",
+    "标签 C",
+    "标签 D",
+    "标签 E",
+    "标签 F"
+  ],
+  "windowLabel": "窗口标题",
+  "previewLabel": "预览标题",
+  "result": "结果说明",
+  "footer": "页脚说明文字"
+},'10_散落的知识砖.png',(p,h)=>{
   if(!Array.isArray(p.tiles)||p.tiles.length!==6)throw new Error('知识砖 tiles 需要六项');
   const pos=[[81,235,-8],[321,251,7],[557,223,-9],[169,458,7],[445,471,-8],[747,456,-10]],kinds=['document','palette','ruler','layout','check','pencil'];
   const tiles=p.tiles.map((label,i)=>{const [x,y,r]=pos[i];return enter(`<g transform="rotate(${r} ${x+96} ${y+91})"><rect x="${x+9}" y="${y+13}" width="190" height="172" rx="15" fill="${t.shadow}"/><rect x="${x}" y="${y+6}" width="190" height="172" rx="15" fill="#aed3f4" stroke="${t.ink}" stroke-width="2.7"/><rect x="${x}" y="${y}" width="190" height="167" rx="15" fill="#f2faff" stroke="${t.ink}" stroke-width="2.7"/><path d="M${x+8} ${y+26}V${y+16}Q${x+8} ${y+8} ${x+19} ${y+8}H${x+169}" fill="none" stroke="white" stroke-width="3"/>${symbol(kinds[i],x+53,y+19,86,h)}${text(x+95,y+143,label,28,165,h,'text-anchor="middle"')}</g>`);}).join('');

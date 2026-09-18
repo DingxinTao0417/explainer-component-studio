@@ -1,6 +1,6 @@
 # V3 完整组件与动画目录
 
-当前构建：103 个组件、104 种动画、13 个声音预设。
+当前构建：123 个组件、104 种动画、13 个声音预设。
 
 [打开画廊](http://localhost:3031/catalog.html) · [使用说明](V3_GUIDE.md)
 
@@ -8,21 +8,41 @@
 
 | 组件 | 内容 | 预览 | 截图 |
 |---|---|---|---|
-| 动画风 · 订单条件筛选 | [ani-order-filter](content/ani-order-filter.json) | [打开](http://localhost:3031/previews/ani-order-filter.html) | [PNG](snapshots/ani-order-filter.png) |
+| 动画风 · 条件筛选表格 | [ani-order-filter](content/ani-order-filter.json) | [打开](http://localhost:3031/previews/ani-order-filter.html) | [PNG](snapshots/ani-order-filter.png) |
 | 动画风 · 两例对照与归纳 | [ani-compare-extract](content/ani-compare-extract.json) | [打开](http://localhost:3031/previews/ani-compare-extract.html) | [PNG](snapshots/ani-compare-extract.png) |
 | 动画风 · 输入、检查与修改 | [ani-tool-workbench](content/ani-tool-workbench.json) | [打开](http://localhost:3031/previews/ani-tool-workbench.html) | [PNG](snapshots/ani-tool-workbench.png) |
-| 动画风 · 收藏不等于会 | [ani-file-collection](content/ani-file-collection.json) | [打开](http://localhost:3031/previews/ani-file-collection.html) | [PNG](snapshots/ani-file-collection.png) |
-| 动画风 · 熟悉部分可复用 | [ani-method-transfer](content/ani-method-transfer.json) | [打开](http://localhost:3031/previews/ani-method-transfer.html) | [PNG](snapshots/ani-method-transfer.png) |
-| 动画风 · 把新旧连起来 | [ani-knowledge-network](content/ani-knowledge-network.json) | [打开](http://localhost:3031/previews/ani-knowledge-network.html) | [PNG](snapshots/ani-knowledge-network.png) |
-| 动画风 · 散落知识砖 | [ani-capability-tiles](content/ani-capability-tiles.json) | [打开](http://localhost:3031/previews/ani-capability-tiles.html) | [PNG](snapshots/ani-capability-tiles.png) |
+| 动画风 · 文件夹与窗口对照 | [ani-file-collection](content/ani-file-collection.json) | [打开](http://localhost:3031/previews/ani-file-collection.html) | [PNG](snapshots/ani-file-collection.png) |
+| 动画风 · 窗口与部件组合 | [ani-method-transfer](content/ani-method-transfer.json) | [打开](http://localhost:3031/previews/ani-method-transfer.html) | [PNG](snapshots/ani-method-transfer.png) |
+| 动画风 · 文档与窗口连线 | [ani-knowledge-network](content/ani-knowledge-network.json) | [打开](http://localhost:3031/previews/ani-knowledge-network.html) | [PNG](snapshots/ani-knowledge-network.png) |
+| 动画风 · 图标卡片组 | [ani-capability-tiles](content/ani-capability-tiles.json) | [打开](http://localhost:3031/previews/ani-capability-tiles.html) | [PNG](snapshots/ani-capability-tiles.png) |
 | 动画风 · 输入处理装置 | [ani-processing-machine](content/ani-processing-machine.json) | [打开](http://localhost:3031/previews/ani-processing-machine.html) | [PNG](snapshots/ani-processing-machine.png) |
 | 动画风 · 问题与预告 | [ani-question-outro](content/ani-question-outro.json) | [打开](http://localhost:3031/previews/ani-question-outro.html) | [PNG](snapshots/ani-question-outro.png) |
-| 动画风 · 通知逐项核对 | [ani-notice-check](content/ani-notice-check.json) | [打开](http://localhost:3031/previews/ani-notice-check.html) | [PNG](snapshots/ani-notice-check.png) |
+| 动画风 · 文档逐项核对 | [ani-notice-check](content/ani-notice-check.json) | [打开](http://localhost:3031/previews/ani-notice-check.html) | [PNG](snapshots/ani-notice-check.png) |
 
-## 动画风 · 基础组件 · 6 个
+## 动画风 · 基础组件 · 26 个
 
 | 组件 | 内容 | 预览 | 截图 |
 |---|---|---|---|
+| 空窗口外壳 | [ani-atom-window](content/ani-atom-window.json) | [打开](http://localhost:3031/previews/ani-atom-window.html) | [PNG](snapshots/ani-atom-window.png) |
+| 标签栏 | [ani-atom-tabs](content/ani-atom-tabs.json) | [打开](http://localhost:3031/previews/ani-atom-tabs.html) | [PNG](snapshots/ani-atom-tabs.png) |
+| 地址栏 | [ani-atom-address](content/ani-atom-address.json) | [打开](http://localhost:3031/previews/ani-atom-address.html) | [PNG](snapshots/ani-atom-address.png) |
+| 按钮 | [ani-atom-button](content/ani-atom-button.json) | [打开](http://localhost:3031/previews/ani-atom-button.html) | [PNG](snapshots/ani-atom-button.png) |
+| 输入框 | [ani-atom-input](content/ani-atom-input.json) | [打开](http://localhost:3031/previews/ani-atom-input.html) | [PNG](snapshots/ani-atom-input.png) |
+| 状态徽章 | [ani-atom-status](content/ani-atom-status.json) | [打开](http://localhost:3031/previews/ani-atom-status.html) | [PNG](snapshots/ani-atom-status.png) |
+| 勾选框 | [ani-atom-checkbox](content/ani-atom-checkbox.json) | [打开](http://localhost:3031/previews/ani-atom-checkbox.html) | [PNG](snapshots/ani-atom-checkbox.png) |
+| 光标 | [ani-atom-cursor](content/ani-atom-cursor.json) | [打开](http://localhost:3031/previews/ani-atom-cursor.html) | [PNG](snapshots/ani-atom-cursor.png) |
+| 动画部件 · 单元格 | [ani-atom-cell](content/ani-atom-cell.json) | [打开](http://localhost:3031/previews/ani-atom-cell.html) | [PNG](snapshots/ani-atom-cell.png) |
+| 动画部件 · 表格行 | [ani-atom-table-row](content/ani-atom-table-row.json) | [打开](http://localhost:3031/previews/ani-atom-table-row.html) | [PNG](snapshots/ani-atom-table-row.png) |
+| 流程节点 | [ani-atom-node](content/ani-atom-node.json) | [打开](http://localhost:3031/previews/ani-atom-node.html) | [PNG](snapshots/ani-atom-node.png) |
+| 注释气泡 | [ani-atom-callout](content/ani-atom-callout.json) | [打开](http://localhost:3031/previews/ani-atom-callout.html) | [PNG](snapshots/ani-atom-callout.png) |
+| 高亮框 | [ani-atom-highlight](content/ani-atom-highlight.json) | [打开](http://localhost:3031/previews/ani-atom-highlight.html) | [PNG](snapshots/ani-atom-highlight.png) |
+| 进度条 | [ani-atom-progress](content/ani-atom-progress.json) | [打开](http://localhost:3031/previews/ani-atom-progress.html) | [PNG](snapshots/ani-atom-progress.png) |
+| 工具符号 | [ani-atom-symbol](content/ani-atom-symbol.json) | [打开](http://localhost:3031/previews/ani-atom-symbol.html) | [PNG](snapshots/ani-atom-symbol.png) |
+| 动画部件 · 空白折角纸 | [ani-atom-paper](content/ani-atom-paper.json) | [打开](http://localhost:3031/previews/ani-atom-paper.html) | [PNG](snapshots/ani-atom-paper.png) |
+| 动画部件 · 文本段落 | [ani-atom-text](content/ani-atom-text.json) | [打开](http://localhost:3031/previews/ani-atom-text.html) | [PNG](snapshots/ani-atom-text.png) |
+| 动画部件 · 文档条目 | [ani-atom-document-row](content/ani-atom-document-row.json) | [打开](http://localhost:3031/previews/ani-atom-document-row.html) | [PNG](snapshots/ani-atom-document-row.png) |
+| 动画部件 · 文件堆叠 | [ani-atom-file-stack](content/ani-atom-file-stack.json) | [打开](http://localhost:3031/previews/ani-atom-file-stack.html) | [PNG](snapshots/ani-atom-file-stack.png) |
+| 动画部件 · 标题牌 | [ani-atom-title-label](content/ani-atom-title-label.json) | [打开](http://localhost:3031/previews/ani-atom-title-label.html) | [PNG](snapshots/ani-atom-title-label.png) |
 | 动画部件 · 文件 | [ani-atom-file](content/ani-atom-file.json) | [打开](http://localhost:3031/previews/ani-atom-file.html) | [PNG](snapshots/ani-atom-file.png) |
 | 动画部件 · 文档 | [ani-atom-document](content/ani-atom-document.json) | [打开](http://localhost:3031/previews/ani-atom-document.html) | [PNG](snapshots/ani-atom-document.png) |
 | 动画部件 · 文件夹 | [ani-atom-folder](content/ani-atom-folder.json) | [打开](http://localhost:3031/previews/ani-atom-folder.html) | [PNG](snapshots/ani-atom-folder.png) |
@@ -68,9 +88,9 @@
 
 | 组件 | 内容 | 预览 | 截图 |
 |---|---|---|---|
-| 桌面便签 · 补齐要求 | [broll-brief-desk](content/broll-brief-desk.json) | [打开](http://localhost:3031/previews/broll-brief-desk.html) | [PNG](snapshots/broll-brief-desk.png) |
-| 消息纸条 · 从模糊到明确 | [broll-message-pile](content/broll-message-pile.json) | [打开](http://localhost:3031/previews/broll-message-pile.html) | [PNG](snapshots/broll-message-pile.png) |
-| 稿纸叠层 · 修改与核对 | [broll-revision-stack](content/broll-revision-stack.json) | [打开](http://localhost:3031/previews/broll-revision-stack.html) | [PNG](snapshots/broll-revision-stack.png) |
+| 桌面文档与便签 | [broll-brief-desk](content/broll-brief-desk.json) | [打开](http://localhost:3031/previews/broll-brief-desk.html) | [PNG](snapshots/broll-brief-desk.png) |
+| 消息与结果卡片 | [broll-message-pile](content/broll-message-pile.json) | [打开](http://localhost:3031/previews/broll-message-pile.html) | [PNG](snapshots/broll-message-pile.png) |
+| 文档版本叠层 | [broll-revision-stack](content/broll-revision-stack.json) | [打开](http://localhost:3031/previews/broll-revision-stack.html) | [PNG](snapshots/broll-revision-stack.png) |
 
 ## B-roll · 真实素材 · 3 个
 
@@ -115,7 +135,7 @@
 
 | 组件 | 内容 | 预览 | 截图 |
 |---|---|---|---|
-| 豆包工作 · 通知对话 | [doubao-workflow](content/doubao-workflow.json) | [打开](http://localhost:3031/previews/doubao-workflow.html) | [PNG](snapshots/doubao-workflow.png) |
+| 豆包工作 · 多轮对话 | [doubao-workflow](content/doubao-workflow.json) | [打开](http://localhost:3031/previews/doubao-workflow.html) | [PNG](snapshots/doubao-workflow.png) |
 
 ## 原创讲解图形 · 30 个
 
@@ -321,9 +341,9 @@
 
 | 动画 | ID | 演示 | 声音 |
 |---|---|---|---|
-| 通知逐项核对 | ani-notice-verify | [打开](http://localhost:3031/effects/ani-notice-verify.html) | 静音背景 |
+| 文档逐项核对 | ani-notice-verify | [打开](http://localhost:3031/effects/ani-notice-verify.html) | 静音背景 |
 | 图解逐步建立 | ani-diagram-build | [打开](http://localhost:3031/effects/ani-diagram-build.html) | 静音背景 |
-| 订单条件筛选 | ani-order-select | [打开](http://localhost:3031/effects/ani-order-select.html) | 静音背景 |
+| 表格条件筛选 | ani-order-select | [打开](http://localhost:3031/effects/ani-order-select.html) | 静音背景 |
 | 材料加工过程 | ani-machine-process | [打开](http://localhost:3031/effects/ani-machine-process.html) | 静音背景 |
 
 ## 动态检查

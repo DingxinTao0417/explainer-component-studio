@@ -1,7 +1,7 @@
 {
-  "appTitle": "视频工作台",
-  "title": "创建项目",
-  "description": "为新的视频设置名称、保存位置和画面规格。",
+  "appTitle": "示例应用",
+  "title": "表单标题",
+  "description": "表单说明文字。填写下方字段后提交。",
   "nav": [
     {
       "icon": "home",
@@ -19,47 +19,47 @@
   "activeNav": 1,
   "fields": [
     {
-      "label": "项目名称",
-      "value": "Codex 入门讲解",
+      "label": "字段名称 A",
+      "value": "示例内容",
       "kind": "text",
-      "help": "使用简短、容易识别的名称。",
+      "help": "字段说明",
       "focused": true
     },
     {
       "label": "保存位置",
-      "value": "D:\\视频项目\\codex-intro",
+      "value": "D:\\example-project",
       "kind": "folder",
       "help": ""
     },
     {
-      "label": "画面比例",
-      "value": "16:9 · 横屏",
+      "label": "选项名称 A",
+      "value": "选项 A",
       "kind": "select",
       "help": ""
     },
     {
-      "label": "项目帧率",
-      "value": "30 fps",
+      "label": "选项名称 B",
+      "value": "选项 B",
       "kind": "select",
       "help": ""
     }
   ],
-  "optionsTitle": "项目选项",
+  "optionsTitle": "选项设置",
   "options": [
     {
-      "label": "创建素材文件夹",
+      "label": "可选项 A",
       "checked": true
     },
     {
-      "label": "启用自动保存",
+      "label": "可选项 B",
       "checked": true
     },
     {
-      "label": "创建后打开项目",
+      "label": "可选项 C",
       "checked": false
     }
   ],
-  "note": "设置可以随时在项目属性中修改。",
+  "note": "补充说明文字。",
   "cancel": "取消",
-  "submit": "创建项目"
+  "submit": "提交"
 }

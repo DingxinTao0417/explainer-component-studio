@@ -1,42 +1,42 @@
 {
-  "eyebrow": "11 / 素材讲解",
-  "title": "画面负责展示，标注负责解释",
-  "subtitle": "把关键说明放在素材旁边，让观众知道此刻应该看什么。",
-  "badge": "可替换素材",
-  "footer": "示例内容可替换 · 白底 / 蓝色强调 / 薄荷绿完成态",
-  "series": "EXPLAIN / MEDIA",
+  "eyebrow": "栏目 / 01",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "badge": "示例标签",
+  "footer": "页脚说明",
+  "series": "示例系列",
   "mediaSrc": "",
   "mediaKind": "image",
-  "mediaAlt": "从输入资料到可用结果的概念示意",
-  "mediaLabel": "概念示意 / 01",
+  "mediaAlt": "可替换的示例素材",
+  "mediaLabel": "素材标签",
   "diagramNodes": [
     {
-      "title": "资料",
-      "detail": "用户提供"
+      "title": "章节标题 A",
+      "detail": "章节说明 A"
     },
     {
-      "title": "处理",
-      "detail": "围绕目标"
+      "title": "章节标题 B",
+      "detail": "章节说明 B"
     },
     {
-      "title": "结果",
-      "detail": "可检查"
+      "title": "章节标题 C",
+      "detail": "章节说明 C"
     }
   ],
-  "noteTitle": "先让观众看懂",
+  "noteTitle": "说明标题",
   "notes": [
     {
-      "label": "保留完整画面",
-      "detail": "不拉伸素材，不裁掉关键结构。"
+      "label": "标注 A",
+      "detail": "标注说明 A"
     },
     {
-      "label": "一次只讲一点",
-      "detail": "说明顺序跟随配音展开。"
+      "label": "标注 B",
+      "detail": "标注说明 B"
     },
     {
-      "label": "细节再做聚焦",
-      "detail": "需要时加入放大与标注。"
+      "label": "标注 C",
+      "detail": "标注说明 C"
     }
   ],
-  "caption": "把素材与讲解分开维护，替换内容后沿用同一套布局。"
+  "caption": "素材说明文字"
 }

@@ -1,21 +1,27 @@
 {
-  "eyebrow": "EXPLAIN / 结构与数据",
-  "title": "把下一步放到看得见的位置",
-  "subtitle": "让任务按状态分组，用卡片位置解释工作流。",
-  "badge": "示例数据",
-  "note": "替换内容后，图形与数值一起更新。",
-  "code": "KANBAN-BOARD",
+  "eyebrow": "栏目 / 01",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "badge": "示例标签",
+  "note": "补充说明文字",
+  "code": "EXAMPLE",
   "columns": [
     {
       "name": "待开始",
       "tasks": [
         {
-          "title": "整理资料",
-          "tag": "内容"
+          "title": "任务 A",
+          "tag": "标签 A",
+          "reference": "项目 A / 01",
+          "period": "时间标签",
+          "assignee": "用"
         },
         {
-          "title": "确认引用",
-          "tag": "核对"
+          "title": "任务 B",
+          "tag": "标签 A",
+          "reference": "项目 A / 02",
+          "period": "时间标签",
+          "assignee": "用"
         }
       ]
     },
@@ -23,12 +29,18 @@
       "name": "进行中",
       "tasks": [
         {
-          "title": "制作第一段",
-          "tag": "制作"
+          "title": "任务 C",
+          "tag": "标签 B",
+          "reference": "项目 B / 01",
+          "period": "时间标签",
+          "assignee": "用"
         },
         {
-          "title": "录制操作",
-          "tag": "录屏"
+          "title": "任务 D",
+          "tag": "标签 B",
+          "reference": "项目 B / 02",
+          "period": "时间标签",
+          "assignee": "用"
         }
       ]
     },
@@ -36,8 +48,11 @@
       "name": "已完成",
       "tasks": [
         {
-          "title": "确定主题",
-          "tag": "内容"
+          "title": "任务 E",
+          "tag": "标签 C",
+          "reference": "项目 C / 01",
+          "period": "时间标签",
+          "assignee": "用"
         }
       ]
     }

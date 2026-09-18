@@ -1,24 +1,43 @@
 {
-  "title": "制作指南",
-  "url": "docs.example.com",
+  "title": "页面标题",
+  "url": "www.example.com",
   "tabs": [
-    "制作指南",
-    "组件目录"
+    "标签页 A",
+    "标签页 B"
   ],
-  "heading": "把知识变成能看懂的画面",
-  "intro": "从一个问题出发，用清晰的结构、真实素材和准确的图解完成讲解。",
+  "heading": "页面主标题",
+  "intro": "页面简介，可替换为需要展示的说明。",
   "sections": [
     {
-      "title": "准备内容",
-      "detail": "整理主题、受众、逐字稿与参考来源。"
+      "title": "章节标题 A",
+      "detail": "章节说明 A"
     },
     {
-      "title": "选择画面",
-      "detail": "根据内容选择录屏、图解、图片或视频。"
+      "title": "章节标题 B",
+      "detail": "章节说明 B"
     },
     {
-      "title": "检查结果",
-      "detail": "确认文字可读、事实准确、声画同步。"
+      "title": "章节标题 C",
+      "detail": "章节说明 C"
     }
+  ],
+  "brand": "示例站点",
+  "navigation": [
+    "栏目 A",
+    "栏目 B",
+    "栏目 C"
+  ],
+  "actionLabel": "操作按钮",
+  "sidebarTitle": "导航标题",
+  "sidebarItems": [
+    "页面 A",
+    "页面 B",
+    "页面 C",
+    "页面 D"
+  ],
+  "eyebrow": "栏目 / 页面",
+  "commands": [
+    "node example.js",
+    "node example.js --preview"
   ]
 }

@@ -1,50 +1,50 @@
 {
-  "project": "science-video",
+  "project": "example-project",
   "branch": "main",
   "language": "Git",
   "position": "工作区干净",
   "commits": [
     {
-      "message": "合并浏览器组件与字幕系统",
+      "message": "提交说明 A",
       "hash": "e7a4c19",
-      "author": "小林",
+      "author": "示例用户",
       "time": "10 分钟前",
       "branch": "main",
       "lane": 0
     },
     {
-      "message": "完善录屏区域聚焦效果",
+      "message": "提交说明 B",
       "hash": "cf821d0",
-      "author": "小林",
+      "author": "示例用户",
       "time": "32 分钟前",
-      "branch": "feature/focus",
+      "branch": "feature/example",
       "lane": 1
     },
     {
-      "message": "修复长标题换行与安全边距",
+      "message": "提交说明 C",
       "hash": "c92e517",
-      "author": "小林",
+      "author": "示例用户",
       "time": "1 小时前",
       "lane": 0
     },
     {
-      "message": "新增终端与代码编辑器组件",
+      "message": "提交说明 D",
       "hash": "85a46bf",
-      "author": "小林",
+      "author": "示例用户",
       "time": "2 小时前",
       "lane": 1
     },
     {
-      "message": "统一白底蓝色视觉规范",
+      "message": "提交说明 E",
       "hash": "7db821a",
-      "author": "小林",
+      "author": "示例用户",
       "time": "昨天",
       "lane": 0
     },
     {
-      "message": "建立可复用视频工程",
+      "message": "提交说明 F",
       "hash": "096bcfe",
-      "author": "小林",
+      "author": "示例用户",
       "time": "昨天",
       "lane": 0
     }
@@ -52,20 +52,20 @@
   "selectedHash": "e7a4c19",
   "changedFiles": [
     {
-      "name": "components/browser.html",
-      "add": 36,
-      "remove": 8
+      "name": "src/example.ts",
+      "add": 8,
+      "remove": 2
     },
     {
-      "name": "components/captions.html",
-      "add": 24,
-      "remove": 6
+      "name": "tests/example.test.ts",
+      "add": 4,
+      "remove": 1
     },
     {
-      "name": "content.json",
-      "add": 12,
-      "remove": 3
+      "name": "example.json",
+      "add": 2,
+      "remove": 0
     }
   ],
-  "detail": "将录屏容器、字幕安全区与区域聚焦动画整合到同一套时间轴。"
+  "detail": "当前提交的变更说明。"
 }

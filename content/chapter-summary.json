@@ -1,27 +1,27 @@
 {
-  "eyebrow": "10 / 章节收束",
-  "title": "把理解，变成一次完整实践",
-  "subtitle": "准备好目标、素材和验收标准，再开始动手。",
-  "badge": "章节总结",
-  "footer": "示例内容可替换 · 白底 / 蓝色强调 / 薄荷绿完成态",
-  "series": "EXPLAIN / CHAPTER",
-  "number": "03",
-  "chapterLabel": "开始实践",
-  "headline": "先完成一个小项目",
+  "eyebrow": "栏目 / 01",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "badge": "示例标签",
+  "footer": "页脚说明",
+  "series": "示例系列",
+  "number": "01",
+  "chapterLabel": "章节名称",
+  "headline": "章节主标题",
   "points": [
     {
-      "title": "明确目标",
-      "detail": "用一句话说清楚要得到的结果。"
+      "title": "章节标题 A",
+      "detail": "章节说明 A"
     },
     {
-      "title": "准备素材",
-      "detail": "把参考图、录屏和配音放在一起。"
+      "title": "章节标题 B",
+      "detail": "章节说明 B"
     },
     {
-      "title": "验证结果",
-      "detail": "对照要求检查，再决定下一步。"
+      "title": "章节标题 C",
+      "detail": "章节说明 C"
     }
   ],
   "nextLabel": "下一步",
-  "next": "选择一个主题，完成第一段 30 秒讲解。"
+  "next": "下一章节说明"
 }

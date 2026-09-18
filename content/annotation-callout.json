@@ -1,39 +1,39 @@
 {
-  "eyebrow": "12 / 指向关键",
-  "title": "让说明，准确落到关键位置",
-  "subtitle": "标注的作用是建立对应关系，每一根线都要有明确目标。",
-  "badge": "通用标注",
-  "footer": "示例内容可替换 · 白底 / 蓝色强调 / 薄荷绿完成态",
-  "series": "EXPLAIN / ANNOTATE",
-  "subjectTitle": "一条有效的制作需求",
-  "subjectSubtitle": "示例说明卡",
+  "eyebrow": "栏目 / 01",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "badge": "示例标签",
+  "footer": "页脚说明",
+  "series": "示例系列",
+  "subjectTitle": "主体标题",
+  "subjectSubtitle": "主体说明",
   "fields": [
     {
-      "label": "目标",
-      "value": "做一段 30 秒科普动画"
+      "label": "字段A",
+      "value": "内容 A"
     },
     {
-      "label": "素材",
-      "value": "参考图 + 录屏 + 配音"
+      "label": "字段B",
+      "value": "内容 B"
     },
     {
-      "label": "验收",
-      "value": "字幕准确，声音清楚"
+      "label": "字段C",
+      "value": "内容 C"
     }
   ],
   "callouts": [
     {
-      "title": "说清结果",
-      "detail": "时长、对象与表达目的。"
+      "title": "章节标题 A",
+      "detail": "章节说明 A"
     },
     {
-      "title": "给到背景",
-      "detail": "把已有资料放在一起。"
+      "title": "章节标题 B",
+      "detail": "章节说明 B"
     },
     {
-      "title": "定义完成",
-      "detail": "能按条件检查好坏。"
+      "title": "章节标题 C",
+      "detail": "章节说明 C"
     }
   ],
-  "note": "锚点与被标注内容绑定；替换文案后仍须核对连线位置。"
+  "note": "补充说明文字"
 }

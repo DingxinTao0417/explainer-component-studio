@@ -1,41 +1,41 @@
 {
-  "eyebrow": "02 / 解释过程",
-  "title": "从问题，到可以验证的结果",
-  "subtitle": "把输入、执行与检查拆开，讲清每一步的职责。",
-  "badge": "流程图",
-  "footer": "示例内容可替换 · 白底 / 蓝色强调 / 薄荷绿完成态",
-  "series": "EXPLAIN / FLOW",
+  "eyebrow": "栏目 / 01",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "badge": "示例标签",
+  "footer": "页脚说明",
+  "series": "示例系列",
   "nodes": [
     {
-      "label": "输入目标",
-      "detail": "要完成什么",
+      "label": "节点 A",
+      "detail": "节点说明 A",
       "tag": "01"
     },
     {
-      "label": "补充上下文",
-      "detail": "资料与限制",
+      "label": "节点 B",
+      "detail": "节点说明 B",
       "tag": "02"
     },
     {
-      "label": "执行任务",
-      "detail": "产出第一版",
+      "label": "节点 C",
+      "detail": "节点说明 C",
       "tag": "03"
     },
     {
-      "label": "通过检查",
-      "detail": "进入交付",
+      "label": "节点 D",
+      "detail": "节点说明 D",
       "tag": "04"
     },
     {
-      "label": "需要修改",
-      "detail": "带反馈继续",
+      "label": "节点 E",
+      "detail": "节点说明 E",
       "tag": "05"
     }
   ],
   "branchLabels": [
-    "符合要求",
-    "发现问题"
+    "条件 A",
+    "条件 B"
   ],
-  "noteTitle": "检查标准先写清楚",
-  "note": "验收依据明确，反馈才容易转化成下一步行动。"
+  "noteTitle": "补充标题",
+  "note": "补充说明文字"
 }

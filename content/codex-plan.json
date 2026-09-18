@@ -1,17 +1,17 @@
 {
   "title": "更新计划",
-  "summary": "先定位问题，再修改和验证。",
+  "summary": "计划说明文字",
   "steps": [
     {
-      "text": "检查相关组件和现有测试",
+      "text": "步骤 A",
       "state": "done"
     },
     {
-      "text": "修复窄屏布局并检查桌面视图",
+      "text": "步骤 B",
       "state": "active"
     },
     {
-      "text": "运行测试并整理修改说明",
+      "text": "步骤 C",
       "state": "pending"
     }
   ],

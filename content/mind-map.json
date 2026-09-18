@@ -1,35 +1,36 @@
 {
-  "eyebrow": "EXPLAIN / 结构与数据",
-  "title": "先把一个主题展开",
-  "subtitle": "围绕一个主题展开分支，适合选题拆解和知识组织。",
-  "badge": "示例数据",
-  "note": "替换内容后，图形与数值一起更新。",
-  "code": "MIND-MAP",
-  "center": "科普视频",
+  "eyebrow": "栏目 / 01",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "badge": "示例标签",
+  "note": "补充说明文字",
+  "code": "EXAMPLE",
+  "center": "中心主题",
   "branches": [
     {
-      "title": "问题",
-      "detail": "观众为什么关心"
+      "title": "章节标题 A",
+      "detail": "章节说明 A"
     },
     {
-      "title": "证据",
-      "detail": "能看见的例子"
+      "title": "章节标题 B",
+      "detail": "章节说明 B"
     },
     {
-      "title": "结构",
-      "detail": "钩子、正文、结尾"
+      "title": "章节标题 C",
+      "detail": "章节说明 C"
     },
     {
-      "title": "素材",
-      "detail": "录屏、图解、实拍"
+      "title": "章节标题 D",
+      "detail": "章节说明 D"
     },
     {
-      "title": "讲稿",
-      "detail": "一句话一个意思"
+      "title": "章节标题 E",
+      "detail": "章节说明 E"
     },
     {
-      "title": "复核",
-      "detail": "事实、可读性、声音"
+      "title": "章节标题 F",
+      "detail": "章节说明 F"
     }
-  ]
+  ],
+  "centerCaption": "中心说明"
 }

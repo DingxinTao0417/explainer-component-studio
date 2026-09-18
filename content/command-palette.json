@@ -1,18 +1,18 @@
 {
-  "title": "Windows PowerShell",
+  "title": "PowerShell",
   "terminalLines": [
-    "PowerShell 7.4.6",
-    "PS D:\\video-project> Get-ChildItem",
+    "PowerShell",
+    "PS D:\\example-project> Get-ChildItem",
     "",
-    "    Directory: D:\\video-project",
+    "    Directory: D:\\example-project",
     "",
     "Mode                 LastWriteTime         Length Name",
     "----                 -------------         ------ ----",
-    "d----          2026/9/17     10:24                assets",
-    "d----          2026/9/17     10:26                compositions",
-    "-a---          2026/9/17     11:02           8124 content.json",
+    "d----          2026/1/1      09:00                folder-a",
+    "d----          2026/1/1      09:00                folder-b",
+    "-a---          2026/1/1      09:00           1024 example.json",
     "",
-    "PS D:\\video-project>"
+    "PS D:\\example-project>"
   ],
   "query": "> 新建",
   "heading": "命令",

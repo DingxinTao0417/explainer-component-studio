@@ -1,20 +1,20 @@
 {
-  "title": "把新旧连起来",
-  "subtitle": "让新问题挂到已有经验上。",
-  "previewLabel": "AI 学习",
-  "requirementsTitle": "海报要求",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "previewLabel": "预览标题",
+  "requirementsTitle": "文档标题",
   "fields": [
-    "主题",
-    "风格",
-    "尺寸"
+    "字段 A",
+    "字段 B",
+    "字段 C"
   ],
   "steps": [
-    "检查",
-    "修改"
+    "步骤 A",
+    "步骤 B"
   ],
-  "outputTitle": "改为竖版",
-  "resultLabel": "图像要求",
-  "questionTitle": "缺少相关经验时",
-  "question": "从哪里问起？",
-  "footer": "联系越具体，越容易知道下一步怎么做。"
+  "outputTitle": "输出标题",
+  "resultLabel": "结果标签",
+  "questionTitle": "问题标题",
+  "question": "问题内容？",
+  "footer": "页脚说明文字"
 }

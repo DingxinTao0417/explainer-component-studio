@@ -3,9 +3,9 @@
 export const animationStyleEffects = [
   {
     id: 'ani-notice-verify',
-    name: '通知逐项核对',
+    name: '文档逐项核对',
     component: 'ani-notice-check',
-    description: '从完整通知开始，逐行聚焦并留下检查勾，最后显示核对结果。',
+    description: '从完整文档开始，逐行聚焦并留下检查勾，最后显示核对结果。',
     category: '动画风',
     selector: '[data-ani-row]',
     duration: 8,
@@ -24,8 +24,8 @@ export const pendingAnimationStyleEffects = [
     previewTime: 6.5, cueHints: [], silent: true
   },
   {
-    id: 'ani-order-select', name: '订单条件筛选', component: 'ani-order-filter',
-    description: '先保留完整订单表，降低不符合条件的行，再显示筛选结果。',
+    id: 'ani-order-select', name: '表格条件筛选', component: 'ani-order-filter',
+    description: '先保留完整示例表格，降低不符合条件的行，再显示筛选结果。',
     category: '动画风', selector: '[data-ani-excluded]', duration: 8,
     previewTime: 6.5, cueHints: [], silent: true
   },

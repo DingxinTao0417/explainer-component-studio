@@ -2,7 +2,7 @@
   "brand": "豆包",
   "logoSrc": "assets/brands/doubao.png",
   "showHomeLogo": false,
-  "title": "进度提交通知",
+  "title": "对话标题",
   "notice": "AI 生成可能有误，请核实",
   "simulationLabel": "界面复刻 · 案例演示",
   "showSidebar": true,
@@ -41,7 +41,7 @@
     }
   ],
   "pinnedLabel": "置顶",
-  "pinnedTitle": "主对话",
+  "pinnedTitle": "示例对话",
   "projectsLabel": "项目",
   "newProjectLabel": "创建项目",
   "recentLabel": "最近",
@@ -52,19 +52,19 @@
     {
       "id": "request-vague",
       "role": "user",
-      "text": "提醒大家交进度，正式一点。"
+      "text": "用户消息内容。可替换为你的输入。"
     },
     {
       "id": "reply-vague",
       "role": "assistant",
-      "heading": "通知",
-      "text": "请各位积极配合，及时提交相关材料。",
+      "heading": "回复标题",
+      "text": "回复正文内容。支持段落、要点与后续补充。",
       "actions": true
     }
   ],
   "suggestions": [
-    "帮我改得更简洁",
-    "检查通知是否交代清楚"
+    "后续问题 A",
+    "后续问题 B"
   ],
   "draft": "",
   "running": false,

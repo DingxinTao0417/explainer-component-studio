@@ -19,44 +19,147 @@ const create = (id, name, description, defaults, render) => ({
 const desk = (id, content) => '<section class="brg-desk brg-'+id+'"><div class="brg-light" aria-hidden="true"></div>'+content+'</section>';
 
 export const components = [
-  create('broll-brief-desk', '桌面便签 · 补齐要求', '俯拍纸张与四张便签，把模糊任务补成对象、任务、时间和入口；所有正文可编辑。', {
-    documentLabel: '工作手记 / 01', title: '本周进度收集',
-    originalLabel: '最初的一句话', original: '提醒大家交进度，正式一点。',
-    marginNote: '还缺哪些信息？', checklistLabel: '发出前，逐项对照',
-    checklist: ['谁来交', '交什么', '几点前', '在哪儿填'],
-    documentNote: '站在收到通知的人那边，再读一遍。',
-    notes: [
-      {label:'对象', value:'各组负责人', detail:'让该行动的人看得见', tone:'blue'},
-      {label:'任务', value:'本周完成情况', detail:'已完成 + 未完成事项', tone:'mint'},
-      {label:'时间', value:'周五 17:00 前', detail:'给出明确截止时间', tone:'cream'},
-      {label:'入口', value:'共享表格', detail:'随通知附上链接', tone:'blue'}
-    ]
-  }, (p,h) => {
+  create('broll-brief-desk', '桌面文档与便签', '俯拍纸张与四张便签，把模糊任务补成对象、任务、时间和入口；所有正文可编辑。', {
+  "documentLabel": "文档 / 01",
+  "title": "文档标题",
+  "originalLabel": "内容标签",
+  "original": "正文内容，可替换为需要展示的文字。",
+  "marginNote": "批注内容",
+  "checklistLabel": "检查项标题",
+  "checklist": [
+    "检查项 A",
+    "检查项 B",
+    "检查项 C",
+    "检查项 D"
+  ],
+  "documentNote": "补充说明文字",
+  "notes": [
+    {
+      "label": "字段 A",
+      "value": "内容 A",
+      "detail": "说明文字 A",
+      "tone": "blue"
+    },
+    {
+      "label": "字段 B",
+      "value": "内容 B",
+      "detail": "说明文字 B",
+      "tone": "mint"
+    },
+    {
+      "label": "字段 C",
+      "value": "内容 C",
+      "detail": "说明文字 C",
+      "tone": "cream"
+    },
+    {
+      "label": "字段 D",
+      "value": "内容 D",
+      "detail": "说明文字 D",
+      "tone": "blue"
+    }
+  ]
+}, (p,h) => {
     const e=h.esc;
     return desk('brief', '<div class="brg-brief-paper-wrap" data-motion="item" data-broll-part="paper"><article class="brg-paper brg-brief-paper">'+clip+'<div class="brg-paper-meta">'+e(p.documentLabel)+'</div><h2>'+e(p.title)+'</h2><div class="brg-original"><small>'+e(p.originalLabel)+'</small><p>'+e(p.original)+'</p><svg class="brg-underline" viewBox="0 0 430 24" aria-hidden="true"><path data-motion="line" d="M6 10Q144 2 422 11M40 18Q241 7 382 17" fill="none" stroke="#d98371" stroke-width="2.2" stroke-linecap="round"/></svg></div><div class="brg-margin-note" data-motion="emphasis" data-broll-part="mark">'+e(p.marginNote)+'</div><div class="brg-checklist-title">'+e(p.checklistLabel)+'</div><div class="brg-paper-checks">'+textList(p.checklist,4).map(x=>'<div><span data-motion="reveal" data-broll-part="tick">'+tick+'</span><p>'+e(x)+'</p></div>').join('')+'</div><p class="brg-document-note">'+e(p.documentNote)+'</p>'+corner+'</article></div><div class="brg-notes-grid">'+list(p.notes,4).map((x,i)=>'<div class="brg-note-wrap brg-note-slot-'+i+'" data-motion="item" data-broll-part="note"><article class="brg-sticky brg-tone-'+tone(x.tone,i)+'"><i class="brg-tape" aria-hidden="true"></i><div class="brg-sticky-top"><span>'+e(x.label)+'</span><small>'+String(i+1).padStart(2,'0')+'</small></div><strong>'+e(x.value)+'</strong><p>'+e(x.detail)+'</p></article></div>').join('')+'</div>'+pencil+'<div class="brg-paperclip" aria-hidden="true"></div>');
   }),
-  create('broll-message-pile', '消息纸条 · 从模糊到明确', '抽象消息纸条堆积在桌上，问题标签与右侧明确通知形成对照；不仿冒任何软件界面。', {
-    trayLabel:'待理清的消息', clearLabel:'补充后的通知', clearTitle:'本周进度，按这份交',
-    messages:[
-      {author:'第一句',text:'提醒大家交进度，正式一点。',question:'谁来交？',tone:'blue'},
-      {author:'再补一句',text:'写具体一点，尽快交。',question:'几点前？',tone:'cream'},
-      {author:'收到后',text:'收到。具体填在哪里？',question:'入口呢？',tone:'coral'}
-    ],
-    fields:[{label:'对象',value:'各组负责人'},{label:'内容',value:'本周完成 / 未完成事项'},{label:'截止',value:'周五 17:00 前'},{label:'提交',value:'共享表格（附链接）'}],
-    resultNote:'一张纸，就能找到下一步。', indexLabel:'整理 / 02'
-  }, (p,h) => {
+  create('broll-message-pile', '消息与结果卡片', '抽象消息纸条堆积在桌上，问题标签与右侧明确通知形成对照；不仿冒任何软件界面。', {
+  "trayLabel": "消息列表",
+  "clearLabel": "整理结果",
+  "clearTitle": "结果标题",
+  "messages": [
+    {
+      "author": "发送人 A",
+      "text": "消息内容 A",
+      "question": "批注 A",
+      "tone": "blue"
+    },
+    {
+      "author": "发送人 B",
+      "text": "消息内容 B",
+      "question": "批注 B",
+      "tone": "cream"
+    },
+    {
+      "author": "发送人 C",
+      "text": "消息内容 C",
+      "question": "批注 C",
+      "tone": "coral"
+    }
+  ],
+  "fields": [
+    {
+      "label": "字段 A",
+      "value": "内容 A"
+    },
+    {
+      "label": "字段 B",
+      "value": "内容 B"
+    },
+    {
+      "label": "字段 C",
+      "value": "内容 C"
+    },
+    {
+      "label": "字段 D",
+      "value": "内容 D"
+    }
+  ],
+  "resultNote": "结果说明文字",
+  "indexLabel": "栏目 / 02"
+}, (p,h) => {
     const e=h.esc;
     return desk('messages','<div class="brg-message-backboard"><div class="brg-tray-label">'+e(p.trayLabel)+'</div><div class="brg-grid-paper" aria-hidden="true"></div></div><div class="brg-message-pile">'+list(p.messages,3).map((x,i)=>'<div class="brg-message-wrap brg-message-slot-'+i+'" data-motion="item" data-broll-part="message"><article class="brg-message-slip brg-tone-'+tone(x.tone,i)+'"><div class="brg-slip-meta"><span>'+e(x.author)+'</span><small>'+String(i+1).padStart(2,'0')+'</small></div><p>'+e(x.text)+'</p><span class="brg-question" data-motion="emphasis" data-broll-part="mark">'+e(x.question)+'</span></article></div>').join('')+'</div><svg class="brg-sort-arrow" viewBox="0 0 146 130" aria-hidden="true"><path data-motion="line" d="M9 94C59 90 48 24 121 31M104 14l20 17-19 18" fill="none" stroke="#8b9f91" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 8"/></svg><div class="brg-clear-paper-wrap" data-motion="reveal" data-broll-part="paper"><article class="brg-paper brg-clear-paper"><div class="brg-green-tab">'+e(p.clearLabel)+'</div><div class="brg-paper-meta">'+e(p.indexLabel)+'</div><h2>'+e(p.clearTitle)+'</h2><div class="brg-clear-fields">'+list(p.fields,4).map(x=>'<div data-motion="item"><span>'+e(x.label)+'</span><strong>'+e(x.value)+'</strong><i data-motion="reveal" data-broll-part="tick">'+tick+'</i></div>').join('')+'</div><p class="brg-clear-note">'+e(p.resultNote)+'</p>'+corner+'</article></div><div class="brg-message-clip brg-paperclip" aria-hidden="true"></div>');
   }),
-  create('broll-revision-stack', '稿纸叠层 · 修改与核对', '三版稿纸和蓝色标注呈现逐次修订，最新一页形成可核对清单；版本、缺口、正文均可替换。', {
-    earlier:[
-      {version:'v1',label:'先写出来',title:'请交进度',lines:['请各位积极配合。','及时提交相关材料。'],gap:'缺少对象',note:'谁来交？'},
-      {version:'v2',label:'把信息补上',title:'各组负责人',lines:['周五 17:00 前。','填报本周完成情况。'],gap:'还缺入口',note:'往哪儿填？'}
-    ],
-    latestVersion:'v3',latestLabel:'对照要求再看一遍',latestTitle:'交代清楚，再发出',
-    checks:[{label:'对象',value:'各组负责人'},{label:'内容',value:'已完成 / 未完成'},{label:'截止',value:'周五 17:00 前'},{label:'入口',value:'共享表格链接'}],
-    stamp:'已核对', bottomNote:'修改有依据，检查也有依据。'
-  }, (p,h) => {
+  create('broll-revision-stack', '文档版本叠层', '三版稿纸和蓝色标注呈现逐次修订，最新一页形成可核对清单；版本、缺口、正文均可替换。', {
+  "earlier": [
+    {
+      "version": "v1",
+      "label": "版本说明 A",
+      "title": "文档标题 A",
+      "lines": [
+        "正文内容 A",
+        "正文内容 B"
+      ],
+      "gap": "修改标记",
+      "note": "批注内容"
+    },
+    {
+      "version": "v2",
+      "label": "版本说明 B",
+      "title": "文档标题 B",
+      "lines": [
+        "正文内容 A",
+        "正文内容 B"
+      ],
+      "gap": "修改标记",
+      "note": "批注内容"
+    }
+  ],
+  "latestVersion": "v3",
+  "latestLabel": "版本说明 C",
+  "latestTitle": "文档标题 C",
+  "checks": [
+    {
+      "label": "字段 A",
+      "value": "内容 A"
+    },
+    {
+      "label": "字段 B",
+      "value": "内容 B"
+    },
+    {
+      "label": "字段 C",
+      "value": "内容 C"
+    },
+    {
+      "label": "字段 D",
+      "value": "内容 D"
+    }
+  ],
+  "stamp": "已核对",
+  "bottomNote": "补充说明文字"
+}, (p,h) => {
     const e=h.esc;
     return desk('revisions','<div class="brg-revision-shadow" aria-hidden="true"></div>'+list(p.earlier,2).map((x,i)=>'<div class="brg-revision-wrap brg-old-revision brg-revision-'+i+'" data-motion="item" data-broll-part="paper"><article class="brg-paper brg-revision-paper"><div class="brg-version">'+e(x.version)+'</div><small>'+e(x.label)+'</small><h2>'+e(x.title)+'</h2><div class="brg-draft-lines">'+textList(x.lines,3).map(line=>'<p>'+e(line)+'</p>').join('')+'</div><div class="brg-red-gap" data-motion="emphasis" data-broll-part="mark"><span>'+e(x.gap)+'</span><svg viewBox="0 0 260 63" aria-hidden="true"><path data-motion="line" d="M243 17C198-1 38-3 15 26S78 60 162 55 259 36 244 20C220 8 190 4 169 7" fill="none" stroke="#cb8271" stroke-width="2.1" stroke-linecap="round"/></svg></div><p class="brg-red-note">'+e(x.note)+'</p><div class="brg-ruled-filler" aria-hidden="true"></div>'+corner+'</article></div>').join('')+'<div class="brg-revision-wrap brg-latest-revision" data-motion="reveal" data-broll-part="paper"><article class="brg-paper brg-revision-paper"><div class="brg-version brg-version-final">'+e(p.latestVersion)+'</div><small>'+e(p.latestLabel)+'</small><h2>'+e(p.latestTitle)+'</h2><div class="brg-revision-checks">'+list(p.checks,4).map(x=>'<div><span data-motion="reveal" data-broll-part="tick">'+tick+'</span><p><small>'+e(x.label)+'</small><strong>'+e(x.value)+'</strong></p></div>').join('')+'</div><span class="brg-stamp" data-motion="emphasis" data-broll-part="mark">'+e(p.stamp)+'</span>'+corner+'</article></div><div class="brg-revision-bottom" data-motion="reveal">'+e(p.bottomNote)+'</div><div class="brg-red-pencil">'+pencil+'</div>');
   })

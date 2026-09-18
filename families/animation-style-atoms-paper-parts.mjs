@@ -19,7 +19,17 @@ function lines(value,width,size,maxLines,name='文字'){
 }
 function fit(value,width,preferred,min,name){const size=Math.min(preferred,width/Math.max(1,units(value)));if(size<min)throw Error(`${name}过长，请使用短语。`);return size;}
 
-export const paperDefaults={x:400,y:80,objectWidth:480,objectHeight:550,foldSize:54,foldSide:'right',depth:10,ruling:'none',lineSpacing:38};
+export const paperDefaults={
+  "x": 400,
+  "y": 80,
+  "objectWidth": 480,
+  "objectHeight": 550,
+  "foldSize": 54,
+  "foldSide": "right",
+  "depth": 10,
+  "ruling": "none",
+  "lineSpacing": 38
+};
 export function renderPaperAtom(props,helpers){
  const p={...paperDefaults,...props},h=scope(helpers,'paper-part'),g=geom(p,160,140),depth=num(p.depth,'depth',0,18),w=g.w-depth-4,height=g.h-depth-4;
  const fold=Math.min(num(p.foldSize,'foldSize',16,100),w*.24,height*.2),spacing=num(p.lineSpacing,'lineSpacing',24,64);
@@ -32,7 +42,20 @@ export function renderPaperAtom(props,helpers){
  return group('paper',g,p.foldSide==='left'?`<g transform="translate(${g.w} 0) scale(-1 1)">${shape}</g>`:shape);
 }
 
-export const textDefaults={x:180,y:200,objectWidth:920,objectHeight:300,title:'先把要求说清楚',text:'谁来做、做什么、什么时候完成。\n完成后，拿结果对照这些要求再检查。',fontSize:32,titleSize:44,lineHeight:1.5,align:'left',variant:'paragraph',accent:'blue'};
+export const textDefaults={
+  "x": 180,
+  "y": 200,
+  "objectWidth": 920,
+  "objectHeight": 300,
+  "title": "主标题",
+  "text": "正文第一行，替换为需要展示的内容。\n正文第二行，可以继续补充说明。",
+  "fontSize": 32,
+  "titleSize": 44,
+  "lineHeight": 1.5,
+  "align": "left",
+  "variant": "paragraph",
+  "accent": "blue"
+};
 export function renderTextAtom(props,helpers){
  const p={...textDefaults,...props},h=scope(helpers,'text-part'),g=geom(p,160,80),fs=num(p.fontSize,'fontSize',20,64),ts=num(p.titleSize,'titleSize',24,76),lh=num(p.lineHeight,'lineHeight',1.2,1.9),accent=tone(p.accent);
  if(!['left','center','right'].includes(p.align)||!['paragraph','bullets'].includes(p.variant))throw Error('align 使用 left/center/right；variant 使用 paragraph/bullets。');
@@ -51,7 +74,17 @@ export function renderTextAtom(props,helpers){
  return group('text',g,content);
 }
 
-export const documentRowDefaults={x:190,y:276,objectWidth:900,objectHeight:144,label:'任务',text:'填写本周完成与待办事项',status:'complete',accent:'blue',fontSize:30};
+export const documentRowDefaults={
+  "x": 190,
+  "y": 276,
+  "objectWidth": 900,
+  "objectHeight": 144,
+  "label": "字段",
+  "text": "字段内容",
+  "status": "complete",
+  "accent": "blue",
+  "fontSize": 30
+};
 export function renderDocumentRowAtom(props,helpers){
  const p={...documentRowDefaults,...props},h=scope(helpers,'row-part'),g=geom(p,340,88),accent=tone(p.accent),fs=num(p.fontSize,'fontSize',22,42);
  if(!['none','pending','complete','warning'].includes(p.status))throw Error('status 使用 none/pending/complete/warning。');
@@ -68,7 +101,31 @@ export function renderDocumentRowAtom(props,helpers){
  return group('document-row',g,`<g data-text-panel="document-row" data-panel-bounds="2 2 ${g.w-8} ${g.h-12}">${content}</g>`);
 }
 
-export const fileStackDefaults={x:300,y:92,objectWidth:680,objectHeight:520,files:[{name:'需求说明',fileType:'text',accent:'blue'},{name:'参考素材',fileType:'image',accent:'purple'},{name:'结果记录',fileType:'table',accent:'green'}],meta:'整理后的资料',layout:'stack'};
+export const fileStackDefaults={
+  "x": 300,
+  "y": 92,
+  "objectWidth": 680,
+  "objectHeight": 520,
+  "files": [
+    {
+      "name": "文件 A",
+      "fileType": "text",
+      "accent": "blue"
+    },
+    {
+      "name": "文件 B",
+      "fileType": "image",
+      "accent": "purple"
+    },
+    {
+      "name": "文件 C",
+      "fileType": "table",
+      "accent": "green"
+    }
+  ],
+  "meta": "文件说明",
+  "layout": "stack"
+};
 export function renderFileStackAtom(props,helpers){
  const p={...fileStackDefaults,...props},g=geom(p,220,200);
  if(!Array.isArray(p.files)||p.files.length<2||p.files.length>5)throw Error('文件堆叠 files 支持 2–5 个文件。');
@@ -82,7 +139,16 @@ export function renderFileStackAtom(props,helpers){
  return group('file-stack',g,`<g data-fit="contain" transform="translate(${dx} ${dy}) scale(${scale})">${layers}</g>`);
 }
 
-export const titleLabelDefaults={x:330,y:276,objectWidth:620,objectHeight:158,label:'先补清要求',caption:'完成后，再按要求检查',accent:'blue',variant:'filled'};
+export const titleLabelDefaults={
+  "x": 330,
+  "y": 276,
+  "objectWidth": 620,
+  "objectHeight": 158,
+  "label": "标题文字",
+  "caption": "说明文字",
+  "accent": "blue",
+  "variant": "filled"
+};
 export function renderTitleLabelAtom(props,helpers){
  const p={...titleLabelDefaults,...props},h=scope(helpers,'title-part'),g=geom(p,180,68),accent=tone(p.accent),hasCaption=Boolean(String(p.caption??''));
  if(!['filled','outline'].includes(p.variant))throw Error('variant 使用 filled/outline。');

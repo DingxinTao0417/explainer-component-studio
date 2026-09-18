@@ -1,14 +1,14 @@
 {
-  "eyebrow": "从想法到行动",
-  "title": "写下来，做一遍，再核对",
-  "caption": "同一个目标，可以从不同角度观察。",
+  "eyebrow": "栏目 / 02",
+  "title": "主标题",
+  "caption": "字幕说明文字",
   "media": [
     {
       "src": "assets/broll/planning.jpg",
       "type": "image",
       "alt": "纸上记录计划",
-      "label": "先理清",
-      "detail": "把要求写下来",
+      "label": "画面 A",
+      "detail": "画面说明 A",
       "x": 50,
       "y": 50
     },
@@ -16,8 +16,8 @@
       "src": "assets/broll/keyboard.jpg",
       "type": "image",
       "alt": "键盘操作",
-      "label": "再动手",
-      "detail": "完成一次操作",
+      "label": "画面 B",
+      "detail": "画面说明 B",
       "x": 50,
       "y": 50
     },
@@ -25,8 +25,8 @@
       "src": "assets/broll/teamwork.jpg",
       "type": "image",
       "alt": "团队协作讨论",
-      "label": "再核对",
-      "detail": "对照结果看一遍",
+      "label": "画面 C",
+      "detail": "画面说明 C",
       "x": 50,
       "y": 50
     }

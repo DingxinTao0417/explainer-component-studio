@@ -3,13 +3,13 @@
   "y": 245,
   "objectWidth": 800,
   "objectHeight": 192,
-  "title": "完成进度",
+  "title": "进度标题",
   "value": 60,
   "steps": [
-    "准备",
-    "执行",
-    "检查",
-    "完成"
+    "步骤 A",
+    "步骤 B",
+    "步骤 C",
+    "步骤 D"
   ],
   "tone": "blue",
   "state": "active",

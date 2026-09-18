@@ -1,42 +1,42 @@
 {
-  "eyebrow": "EXPLAIN / 结构与数据",
-  "title": "从选题到交付，谁负责哪一步",
-  "subtitle": "按角色排列动作，突出交接点与责任边界。",
-  "badge": "示例数据",
-  "note": "替换内容后，图形与数值一起更新。",
-  "code": "SWIMLANE-FLOW",
+  "eyebrow": "栏目 / 01",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "badge": "示例标签",
+  "note": "补充说明文字",
+  "code": "EXAMPLE",
   "lanes": [
     {
-      "name": "编导",
+      "name": "角色 A",
       "tasks": [
         {
-          "title": "确认问题",
+          "title": "任务 A",
           "column": 0
         },
         {
-          "title": "整理讲稿",
+          "title": "任务 B",
           "column": 1
         }
       ]
     },
     {
-      "name": "制作",
+      "name": "角色 B",
       "tasks": [
         {
-          "title": "准备素材",
+          "title": "任务 C",
           "column": 2
         },
         {
-          "title": "组合画面",
+          "title": "任务 D",
           "column": 3
         }
       ]
     },
     {
-      "name": "复核",
+      "name": "角色 C",
       "tasks": [
         {
-          "title": "校对与反馈",
+          "title": "任务 E",
           "column": 4
         }
       ]

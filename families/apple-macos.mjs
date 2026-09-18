@@ -1,15 +1,244 @@
 import {component,desktop,window,sidebar,table,ai,appIcon,lights,array,commonCSS} from '../apple-ui.mjs';
-const fileRows=[['项目素材','今天 09:30','文件夹','—'],['课程讲稿.md','今天 09:12','Markdown 文稿','16 KB'],['分镜清单.csv','昨天 18:20','CSV 文稿','8 KB'],['参考截图.png','昨天 16:40','PNG 图像','2.4 MB'],['操作录屏.mov','昨天 15:06','QuickTime 影片','86 MB'],['配音.wav','9月15日 11:24','WAV 音频','24 MB'],['README.md','9月14日 14:08','Markdown 文稿','4 KB']];
-const noteDefault={title:'科普视频制作计划',folder:'工作',date:'2026年9月17日 09:41',notes:['科普视频制作计划','第一段的开头','资料与引用','录屏操作清单'],paragraphs:['先把观众的问题写成一句话，再决定画面怎样配合。','本周先完成第一段，保持讲稿、参考图和演示内容一致。'],checklist:['确定开头钩子','整理参考依据','准备真实录屏','检查字幕与声音']};
-const notesBody=(p,h)=>`<aside class="ap-note-list">${array(p.notes).map((x,i)=>`<article class="${i===0?'active':''}" data-motion="item"><b>${h.esc(x)}</b><p>09:41 <span>${i===0?'先把观众的问题写清楚':'工作笔记与记录'}</span></p><small>▱ ${h.esc(p.folder)}</small></article>`).join('')}</aside><div class="ap-note-page"><small>${h.esc(p.date)}</small><h1>${h.esc(p.title)}</h1>${array(p.paragraphs).map(x=>`<p>${h.esc(x)}</p>`).join('')}<h2>制作清单</h2>${array(p.checklist).map((x,i)=>`<div class="ap-note-check" data-motion="item"><i class="${i<2?'done':''}">${i<2?'✓':''}</i>${h.esc(x)}</div>`).join('')}</div>`;
+const noteDefault={
+  "title": "笔记标题",
+  "folder": "示例文件夹",
+  "date": "2026年9月17日 09:41",
+  "notes": [
+    "笔记标题 A",
+    "笔记标题 B",
+    "笔记标题 C",
+    "笔记标题 D"
+  ],
+  "paragraphs": [
+    "正文第一段，替换为需要展示的内容。",
+    "正文第二段，支持继续补充说明。"
+  ],
+  "checklist": [
+    "待办事项 A",
+    "待办事项 B",
+    "待办事项 C",
+    "待办事项 D"
+  ],
+  "noteSummaries": [
+    "笔记摘要 A",
+    "笔记摘要 B",
+    "笔记摘要 C",
+    "笔记摘要 D"
+  ],
+  "checklistTitle": "检查项"
+};
+const notesBody=(p,h)=>`<aside class="ap-note-list">${array(p.notes).map((x,i)=>`<article class="${i===0?'active':''}" data-motion="item"><b>${h.esc(x)}</b><p>09:41 <span>${h.esc(p.noteSummaries?.[i]||'笔记摘要')}</span></p><small>▱ ${h.esc(p.folder)}</small></article>`).join('')}</aside><div class="ap-note-page"><small>${h.esc(p.date)}</small><h1>${h.esc(p.title)}</h1>${array(p.paragraphs).map(x=>`<p>${h.esc(x)}</p>`).join('')}<h2>${h.esc(p.checklistTitle)}</h2>${array(p.checklist).map((x,i)=>`<div class="ap-note-check" data-motion="item"><i class="${i<2?'done':''}">${i<2?'✓':''}</i>${h.esc(x)}</div>`).join('')}</div>`;
 export const components=[
- component('mac-finder','macOS · 访达','原生侧栏、工具栏与文件列表，可替换目录、文件和选择状态。',{title:'文稿',path:'iCloud 云盘 › 文稿 › 视频制作',files:fileRows,selected:1},(p,h)=>desktop(h,window(h,p.title,`<div class="ap-split">${sidebar(h,p.title)}<div class="ap-main">${table(h,['名称','修改日期','种类','大小'],array(p.files),p.selected)}<div class="ap-bottom">${h.esc(p.path)}　 ·　${p.files.length} 个项目</div></div></div>`,{toolbar:`${ai(h,'chevron-left')}${ai(h,'chevron-right')}<b>${h.esc(p.title)}</b><span class="ap-spacer"></span>${ai(h,'grid')}${ai(h,'list')}${ai(h,'columns')}${ai(h,'share')}${ai(h,'more')}<span class="ap-search">${ai(h,'search',14)} 搜索</span>`}))),
- component('mac-safari','macOS · Safari 浏览器','macOS 的独立工具栏、地址栏与标签页，网页正文可编辑。',{title:'制作指南',url:'docs.example.com',tabs:['制作指南','组件目录'],heading:'把知识变成能看懂的画面',intro:'从一个问题出发，用清晰的结构、真实素材和准确的图解完成讲解。',sections:[{title:'准备内容',detail:'整理主题、受众、逐字稿与参考来源。'},{title:'选择画面',detail:'根据内容选择录屏、图解、图片或视频。'},{title:'检查结果',detail:'确认文字可读、事实准确、声画同步。'}]},(p,h)=>desktop(h,window(h,p.title,`<div class="ap-safari-tabs">${array(p.tabs,5).map((x,i)=>`<div class="${!i?'active':''}">${h.esc(i===0?p.title:x)}<span>×</span></div>`).join('')}</div><div class="ap-safari-page"><nav><b>Studio Docs</b><span>文档　组件　示例</span><button>开始制作</button></nav><div class="ap-site-body"><aside>开始使用<b>制作指南</b><span>内容与分镜</span><span>素材管理</span><span>预览与导出</span></aside><article><small>文档 / 制作指南</small><h1>${h.esc(p.heading)}</h1><p>${h.esc(p.intro)}</p>${array(p.sections,4).map(x=>`<section data-motion="item"><h2>${h.esc(x.title)}</h2><p>${h.esc(x.detail)}</p></section>`).join('')}<div class="ap-site-code" data-motion="focus">npm run build<br>npm run preview</div></article></div></div>`,{toolbar:`${ai(h,'panel')}${ai(h,'chevron-left')}${ai(h,'chevron-right')}<div class="ap-safari-address">${ai(h,'lock',12)} ${h.esc(p.url)}<span>${ai(h,'refresh',13)}</span></div>${ai(h,'share')}${ai(h,'plus')}${ai(h,'copy')}`}),'Safari')),
- component('mac-terminal','macOS · 终端','保留 macOS 窗口形制与 shell 提示符，可替换命令与输出。',{title:'video-studio — zsh — 100×28',user:'lin@MacBook-Pro',folder:'video-studio',command:'npm run build',lines:['> science-video-studio@1.0.0 build','> node scripts/build.mjs','','✓ 内容校验完成','✓ 已生成可编辑组件','✓ 本地预览准备就绪','','完成。未渲染视频。']},(p,h)=>desktop(h,window(h,p.title,`<div class="ap-terminal"><div>Last login: Thu Sep 17 09:38:24 on ttys001</div><div><span>${h.esc(p.user)}</span> ${h.esc(p.folder)} % <b data-motion="type">${h.esc(p.command)}</b></div>${array(p.lines,18).map(x=>`<div data-output-line>${h.esc(x)||'&nbsp;'}</div>`).join('')}<div>${h.esc(p.user)} ${h.esc(p.folder)} % <i></i></div></div>`,{cls:'ap-terminal-window'}),'终端')),
- component('mac-system-settings','macOS · 系统设置','设置侧栏、分组面板、开关和详情行，可用于教程定位。',{title:'通用',account:'林同学',subtitle:'Apple 账户',rows:[['关于本机','MacBook Pro'],['软件更新','已是最新'],['储存空间','128 GB 可用'],['隔空投送与接力',''],['登录项与扩展',''],['语言与地区','简体中文'],['日期与时间','自动设置'],['共享','关闭']]},(p,h)=>desktop(h,window(h,p.title,`<div class="ap-split"><aside class="ap-settings-sidebar"><div class="ap-search">${ai(h,'search',13)} 搜索</div><div class="ap-account"><b>林</b><div><strong>${h.esc(p.account)}</strong><small>${h.esc(p.subtitle)}</small></div></div>${['Wi-Fi','蓝牙','网络','通知','声音','专注模式','屏幕使用时间','通用','辅助功能','外观','控制中心','桌面与程序坞','显示器','墙纸','隐私与安全性'].map((x,i)=>`<div class="ap-setting-nav ${x===p.title?'active':''}" data-motion="item"><i style="background:${['#248cef','#258cf1','#278ce8','#ef514a','#e7638c','#7767c9','#5856d6','#9095a0'][i%8]}">${ai(h,['wifi','bluetooth','globe','bell','volume','moon','clock','settings'][i%8],14)}</i>${x}</div>`).join('')}</aside><div class="ap-settings-main"><h2>${h.esc(p.title)}</h2><div class="ap-settings-hero">${appIcon(h,'settings',54)}<b>${h.esc(p.title)}</b><p>管理设备的整体设置和偏好。</p></div><div class="ap-setting-group">${array(p.rows,10).map((x,i)=>`<div data-motion="focus" class="ap-native-row">${ai(h,['info','refresh','folder','airdrop','grid','globe','clock','share'][i],18)}<b>${h.esc(x[0])}</b><span>${h.esc(x[1])}　›</span></div>`).join('')}</div></div></div>`,{style:'left:211px;top:56px;width:858px;height:700px',toolbar:`<span class="ap-spacer"></span>${ai(h,'chevron-left')}${ai(h,'chevron-right')}<span class="ap-spacer"></span>`}),'系统设置')),
- component('mac-spotlight','macOS · 聚焦搜索','独立搜索浮层、分类结果和预览，可替换搜索词与匹配项。',{query:'视频制作',results:[{name:'视频制作',detail:'文稿 / 项目文件夹',kind:'folder'},{name:'视频制作计划.md',detail:'今天 09:12 · Markdown 文稿',kind:'file'},{name:'视频制作参考.pdf',detail:'昨天 18:22 · PDF 文稿',kind:'file'},{name:'视频制作教程',detail:'在网页中搜索',kind:'globe'}]},(p,h)=>desktop(h,`<div class="ap-spotlight"><div class="ap-spot-search">${ai(h,'search',28)}<span data-motion="type">${h.esc(p.query)}</span></div><div class="ap-spot-body"><div><label>最佳匹配</label>${array(p.results,7).map((r,i)=>`<article class="${i===0?'active':''}" data-motion="item">${ai(h,r.kind,28)}<div><b>${h.esc(r.name)}</b><small>${h.esc(r.detail)}</small></div>${i===0?'<span>↵</span>':''}</article>`).join('')}</div><aside>${appIcon(h,'files',76)}<h2>${h.esc(p.results[0]?.name)}</h2><p>文件夹</p><hr><small>位置　iCloud 云盘 / 文稿</small><small>修改　今天 09:30</small><small>大小　8 个项目</small></aside></div><footer>按回车键打开　 ·　按住 ⌘ 查看位置</footer></div>`,'访达',true)),
- component('mac-control-center','macOS · 控制中心','按官方分组组织网络、专注、显示和声音控制。',{wifi:'Studio Wi-Fi',bluetooth:'已打开',airdrop:'仅限联系人',focus:'专注模式',brightness:65,volume:42,track:'未在播放'},(p,h)=>desktop(h,`<div class="ap-control"><div class="ap-control-grid"><section class="ap-connect">${[['wifi','Wi-Fi',p.wifi],['bluetooth','蓝牙',p.bluetooth],['airdrop','隔空投送',p.airdrop]].map(x=>`<div data-motion="item"><i>${ai(h,x[0],19)}</i><span><b>${h.esc(x[1])}</b><small>${h.esc(x[2])}</small></span></div>`).join('')}</section><section class="ap-focus" data-motion="focus">${ai(h,'moon',24)}<b>${h.esc(p.focus)}</b></section><section class="ap-control-small">${ai(h,'panel',24)}<span>台前调度</span></section><section class="ap-control-small">${ai(h,'copy',24)}<span>屏幕镜像</span></section></div>${[['显示器','sun',p.brightness],['声音','volume',p.volume]].map(x=>`<section class="ap-control-slider" data-motion="focus"><b>${x[0]}</b><div><i style="width:${Math.max(0,Math.min(100,Number(x[2])))}%"></i><span>${ai(h,x[1],15)}</span></div></section>`).join('')}<section class="ap-control-playing">${appIcon(h,'notes',37)}<b>${h.esc(p.track)}</b>${ai(h,'play',17)}</section></div>`,'访达',true)),
- component('mac-notification-center','macOS · 通知与小组件','右侧通知和日历小组件，按真实桌面面板密度组织。',{date:'9月17日 星期四',events:[{app:'日历',title:'制作评审',body:'今天 10:00–10:30',time:'9分钟前'},{app:'提醒事项',title:'检查第一版',body:'核对字幕、声音和操作步骤。',time:'24分钟前'},{app:'信息',title:'林同学',body:'参考资料已经整理到项目文件夹。',time:'1小时前'}]},(p,h)=>desktop(h,`<div class="ap-notifications"><header>${h.esc(p.date)}</header><div class="ap-widget-pair"><section><small>星期四</small><b>17</b><p>今天有 2 个日程</p></section><section><small>下一项日程</small><h3>制作评审</h3><p>10:00–10:30</p><i>工作日历</i></section></div>${array(p.events,5).map((x,i)=>`<article class="ap-notification" data-motion="item">${appIcon(h,['calendar','notes','messages'][i%3],30)}<div><small>${h.esc(x.app)}<span>${h.esc(x.time)}</span></small><b>${h.esc(x.title)}</b><p>${h.esc(x.body)}</p></div></article>`).join('')}<div class="ap-notification-edit">编辑小组件</div></div>`,'访达',true)),
+ component('mac-finder','macOS · 访达','原生侧栏、工具栏与文件列表，可替换目录、文件和选择状态。',{
+  "title": "文稿",
+  "path": "iCloud 云盘 › 文稿 › 示例文件夹",
+  "files": [
+    [
+      "示例文件夹",
+      "今天 09:30",
+      "文件夹",
+      "—"
+    ],
+    [
+      "示例文档.md",
+      "今天 09:12",
+      "Markdown 文稿",
+      "16 KB"
+    ],
+    [
+      "示例数据.csv",
+      "昨天 18:20",
+      "CSV 文稿",
+      "8 KB"
+    ],
+    [
+      "示例图片.png",
+      "昨天 16:40",
+      "PNG 图像",
+      "2.4 MB"
+    ],
+    [
+      "示例视频.mov",
+      "昨天 15:06",
+      "QuickTime 影片",
+      "86 MB"
+    ],
+    [
+      "示例音频.wav",
+      "9月15日 11:24",
+      "WAV 音频",
+      "24 MB"
+    ],
+    [
+      "README.md",
+      "9月14日 14:08",
+      "Markdown 文稿",
+      "4 KB"
+    ]
+  ],
+  "selected": 1
+},(p,h)=>desktop(h,window(h,p.title,`<div class="ap-split">${sidebar(h,p.title)}<div class="ap-main">${table(h,['名称','修改日期','种类','大小'],array(p.files),p.selected)}<div class="ap-bottom">${h.esc(p.path)}　 ·　${p.files.length} 个项目</div></div></div>`,{toolbar:`${ai(h,'chevron-left')}${ai(h,'chevron-right')}<b>${h.esc(p.title)}</b><span class="ap-spacer"></span>${ai(h,'grid')}${ai(h,'list')}${ai(h,'columns')}${ai(h,'share')}${ai(h,'more')}<span class="ap-search">${ai(h,'search',14)} 搜索</span>`}))),
+ component('mac-safari','macOS · Safari 浏览器','macOS 的独立工具栏、地址栏与标签页，网页正文可编辑。',{
+  "title": "页面标题",
+  "url": "www.example.com",
+  "tabs": [
+    "标签页 A",
+    "标签页 B"
+  ],
+  "heading": "页面主标题",
+  "intro": "页面简介，可替换为需要展示的说明。",
+  "sections": [
+    {
+      "title": "章节标题 A",
+      "detail": "章节说明 A"
+    },
+    {
+      "title": "章节标题 B",
+      "detail": "章节说明 B"
+    },
+    {
+      "title": "章节标题 C",
+      "detail": "章节说明 C"
+    }
+  ],
+  "brand": "示例站点",
+  "navigation": [
+    "栏目 A",
+    "栏目 B",
+    "栏目 C"
+  ],
+  "actionLabel": "操作按钮",
+  "sidebarTitle": "导航标题",
+  "sidebarItems": [
+    "页面 A",
+    "页面 B",
+    "页面 C",
+    "页面 D"
+  ],
+  "eyebrow": "栏目 / 页面",
+  "commands": [
+    "node example.js",
+    "node example.js --preview"
+  ]
+},(p,h)=>desktop(h,window(h,p.title,`<div class="ap-safari-tabs">${array(p.tabs,5).map((x,i)=>`<div class="${!i?'active':''}">${h.esc(i===0?p.title:x)}<span>×</span></div>`).join('')}</div><div class="ap-safari-page"><nav><b>${h.esc(p.brand)}</b><span>${array(p.navigation,3).map(h.esc).join("　")}</span><button>${h.esc(p.actionLabel)}</button></nav><div class="ap-site-body"><aside>${h.esc(p.sidebarTitle)}${array(p.sidebarItems,4).map((x,i)=>i?`<span>${h.esc(x)}</span>`:`<b>${h.esc(x)}</b>`).join("")}</aside><article><small>${h.esc(p.eyebrow)}</small><h1>${h.esc(p.heading)}</h1><p>${h.esc(p.intro)}</p>${array(p.sections,4).map(x=>`<section data-motion="item"><h2>${h.esc(x.title)}</h2><p>${h.esc(x.detail)}</p></section>`).join('')}<div class="ap-site-code" data-motion="focus">${array(p.commands,2).map(h.esc).join("<br>")}</div></article></div></div>`,{toolbar:`${ai(h,'panel')}${ai(h,'chevron-left')}${ai(h,'chevron-right')}<div class="ap-safari-address">${ai(h,'lock',12)} ${h.esc(p.url)}<span>${ai(h,'refresh',13)}</span></div>${ai(h,'share')}${ai(h,'plus')}${ai(h,'copy')}`}),'Safari')),
+ component('mac-terminal','macOS · 终端','保留 macOS 窗口形制与 shell 提示符，可替换命令与输出。',{
+  "title": "example-project — zsh — 100×28",
+  "user": "user@MacBook-Pro",
+  "folder": "example-project",
+  "command": "node example.js",
+  "lines": [
+    "示例输出 A",
+    "示例输出 B",
+    "",
+    "✓ 步骤 A 已完成",
+    "✓ 步骤 B 已完成",
+    "",
+    "处理完成。"
+  ]
+},(p,h)=>desktop(h,window(h,p.title,`<div class="ap-terminal"><div>Last login: Thu Sep 17 09:38:24 on ttys001</div><div><span>${h.esc(p.user)}</span> ${h.esc(p.folder)} % <b data-motion="type">${h.esc(p.command)}</b></div>${array(p.lines,18).map(x=>`<div data-output-line>${h.esc(x)||'&nbsp;'}</div>`).join('')}<div>${h.esc(p.user)} ${h.esc(p.folder)} % <i></i></div></div>`,{cls:'ap-terminal-window'}),'终端')),
+ component('mac-system-settings','macOS · 系统设置','设置侧栏、分组面板、开关和详情行，可用于教程定位。',{
+  "title": "通用",
+  "account": "示例用户",
+  "subtitle": "Apple 账户",
+  "rows": [
+    [
+      "关于本机",
+      "MacBook Pro"
+    ],
+    [
+      "软件更新",
+      "已是最新"
+    ],
+    [
+      "储存空间",
+      "128 GB 可用"
+    ],
+    [
+      "隔空投送与接力",
+      ""
+    ],
+    [
+      "登录项与扩展",
+      ""
+    ],
+    [
+      "语言与地区",
+      "简体中文"
+    ],
+    [
+      "日期与时间",
+      "自动设置"
+    ],
+    [
+      "共享",
+      "关闭"
+    ]
+  ],
+  "accountInitial": "用"
+},(p,h)=>desktop(h,window(h,p.title,`<div class="ap-split"><aside class="ap-settings-sidebar"><div class="ap-search">${ai(h,'search',13)} 搜索</div><div class="ap-account"><b>${h.esc(p.accountInitial)}</b><div><strong>${h.esc(p.account)}</strong><small>${h.esc(p.subtitle)}</small></div></div>${['Wi-Fi','蓝牙','网络','通知','声音','专注模式','屏幕使用时间','通用','辅助功能','外观','控制中心','桌面与程序坞','显示器','墙纸','隐私与安全性'].map((x,i)=>`<div class="ap-setting-nav ${x===p.title?'active':''}" data-motion="item"><i style="background:${['#248cef','#258cf1','#278ce8','#ef514a','#e7638c','#7767c9','#5856d6','#9095a0'][i%8]}">${ai(h,['wifi','bluetooth','globe','bell','volume','moon','clock','settings'][i%8],14)}</i>${x}</div>`).join('')}</aside><div class="ap-settings-main"><h2>${h.esc(p.title)}</h2><div class="ap-settings-hero">${appIcon(h,'settings',54)}<b>${h.esc(p.title)}</b><p>管理设备的整体设置和偏好。</p></div><div class="ap-setting-group">${array(p.rows,10).map((x,i)=>`<div data-motion="focus" class="ap-native-row">${ai(h,['info','refresh','folder','airdrop','grid','globe','clock','share'][i],18)}<b>${h.esc(x[0])}</b><span>${h.esc(x[1])}　›</span></div>`).join('')}</div></div></div>`,{style:'left:211px;top:56px;width:858px;height:700px',toolbar:`<span class="ap-spacer"></span>${ai(h,'chevron-left')}${ai(h,'chevron-right')}<span class="ap-spacer"></span>`}),'系统设置')),
+ component('mac-spotlight','macOS · 聚焦搜索','独立搜索浮层、分类结果和预览，可替换搜索词与匹配项。',{
+  "query": "示例",
+  "results": [
+    {
+      "name": "示例文件夹",
+      "detail": "文稿 / 文件夹",
+      "kind": "folder"
+    },
+    {
+      "name": "示例文档.md",
+      "detail": "今天 09:12 · Markdown 文稿",
+      "kind": "file"
+    },
+    {
+      "name": "示例文档.pdf",
+      "detail": "昨天 18:22 · PDF 文稿",
+      "kind": "file"
+    },
+    {
+      "name": "示例",
+      "detail": "在网页中搜索",
+      "kind": "globe"
+    }
+  ]
+},(p,h)=>desktop(h,`<div class="ap-spotlight"><div class="ap-spot-search">${ai(h,'search',28)}<span data-motion="type">${h.esc(p.query)}</span></div><div class="ap-spot-body"><div><label>最佳匹配</label>${array(p.results,7).map((r,i)=>`<article class="${i===0?'active':''}" data-motion="item">${ai(h,r.kind,28)}<div><b>${h.esc(r.name)}</b><small>${h.esc(r.detail)}</small></div>${i===0?'<span>↵</span>':''}</article>`).join('')}</div><aside>${appIcon(h,'files',76)}<h2>${h.esc(p.results[0]?.name)}</h2><p>文件夹</p><hr><small>位置　iCloud 云盘 / 文稿</small><small>修改　今天 09:30</small><small>大小　8 个项目</small></aside></div><footer>按回车键打开　 ·　按住 ⌘ 查看位置</footer></div>`,'访达',true)),
+ component('mac-control-center','macOS · 控制中心','按官方分组组织网络、专注、显示和声音控制。',{
+  "wifi": "Example Wi-Fi",
+  "bluetooth": "已打开",
+  "airdrop": "仅限联系人",
+  "focus": "专注模式",
+  "brightness": 65,
+  "volume": 42,
+  "track": "未在播放"
+},(p,h)=>desktop(h,`<div class="ap-control"><div class="ap-control-grid"><section class="ap-connect">${[['wifi','Wi-Fi',p.wifi],['bluetooth','蓝牙',p.bluetooth],['airdrop','隔空投送',p.airdrop]].map(x=>`<div data-motion="item"><i>${ai(h,x[0],19)}</i><span><b>${h.esc(x[1])}</b><small>${h.esc(x[2])}</small></span></div>`).join('')}</section><section class="ap-focus" data-motion="focus">${ai(h,'moon',24)}<b>${h.esc(p.focus)}</b></section><section class="ap-control-small">${ai(h,'panel',24)}<span>台前调度</span></section><section class="ap-control-small">${ai(h,'copy',24)}<span>屏幕镜像</span></section></div>${[['显示器','sun',p.brightness],['声音','volume',p.volume]].map(x=>`<section class="ap-control-slider" data-motion="focus"><b>${x[0]}</b><div><i style="width:${Math.max(0,Math.min(100,Number(x[2])))}%"></i><span>${ai(h,x[1],15)}</span></div></section>`).join('')}<section class="ap-control-playing">${appIcon(h,'notes',37)}<b>${h.esc(p.track)}</b>${ai(h,'play',17)}</section></div>`,'访达',true)),
+ component('mac-notification-center','macOS · 通知与小组件','右侧通知和日历小组件，按真实桌面面板密度组织。',{
+  "date": "9月17日 星期四",
+  "events": [
+    {
+      "app": "日历",
+      "title": "日程标题",
+      "body": "今天 10:00–10:30",
+      "time": "9分钟前"
+    },
+    {
+      "app": "提醒事项",
+      "title": "提醒标题",
+      "body": "提醒正文内容。",
+      "time": "24分钟前"
+    },
+    {
+      "app": "信息",
+      "title": "联系人",
+      "body": "消息正文内容。",
+      "time": "1小时前"
+    }
+  ],
+  "weekday": "星期四",
+  "day": 17,
+  "agendaSummary": "日程摘要",
+  "nextEventTitle": "日程标题",
+  "nextEventTime": "10:00–10:30",
+  "calendarLabel": "示例日历"
+},(p,h)=>desktop(h,`<div class="ap-notifications"><header>${h.esc(p.date)}</header><div class="ap-widget-pair"><section><small>${h.esc(p.weekday)}</small><b>${h.esc(p.day)}</b><p>${h.esc(p.agendaSummary)}</p></section><section><small>下一项日程</small><h3>${h.esc(p.nextEventTitle)}</h3><p>${h.esc(p.nextEventTime)}</p><i>${h.esc(p.calendarLabel)}</i></section></div>${array(p.events,5).map((x,i)=>`<article class="ap-notification" data-motion="item">${appIcon(h,['calendar','notes','messages'][i%3],30)}<div><small>${h.esc(x.app)}<span>${h.esc(x.time)}</span></small><b>${h.esc(x.title)}</b><p>${h.esc(x.body)}</p></div></article>`).join('')}<div class="ap-notification-edit">编辑小组件</div></div>`,'访达',true)),
  component('mac-notes','macOS · 备忘录','文件夹、笔记列表与正文三栏，支持清单和段落替换。',noteDefault,(p,h)=>desktop(h,window(h,'备忘录',`<div class="ap-split">${sidebar(h,p.folder,['所有 iCloud','备忘录','工作','个人','最近删除'])}${notesBody(p,h)}</div>`,{toolbar:`${ai(h,'panel')}${ai(h,'trash')}<span class="ap-spacer"></span>${ai(h,'edit')}${ai(h,'check-circle')}<b>Aa</b>${ai(h,'grid')}${ai(h,'share')}${ai(h,'search')}`}),'备忘录')),
 ];
 export const css=commonCSS+`

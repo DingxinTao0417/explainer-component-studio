@@ -22,80 +22,664 @@ function codeLines(lines,h,opts={}) { return `<div class="dev-code-lines ${opts.
 function tree(items,h,active='') { return arr(items).map(item=>`<div class="dev-tree-row ${item.name===active?'dev-tree-selected':''}" style="padding-left:${14+Math.max(0,Math.min(8,n(item.depth)))*16}px" data-motion="item"><span class="dev-tree-chevron">${item.kind==='folder'?h.icon(item.open===false?'chevron-right':'chevron-down',14):''}</span><span class="dev-tree-file ${item.kind==='folder'?'dev-tree-folder':''}">${h.icon(item.kind==='folder'?'folder':'file',16)}</span><span>${h.esc(item.name)}</span>${item.badge?`<span class="dev-tree-badge">${h.esc(item.badge)}</span>`:''}</div>`).join(''); }
 function miniMap(lines,h){return `<div class="dev-minimap" aria-hidden="true"><div class="dev-minimap-view"></div>${arr(lines).map((x,i)=>`<span style="width:${Math.min(92,Math.max(9,String(typeof x==='string'?x:x.text).length)*1.6)}%;margin-left:${/^[ ]{2}/.test(typeof x==='string'?x:x.text)?8:0}px;background:${i%5===0?'#579a52':i%3===0?'#ae6655':'#7395af'}"></span>`).join('')}</div>`;}
 function shell(p,h,body,{sidebar='',active='file'}={}){return `<article class="dev-stage"><div class="dev-window dev-vscode">${titlebar(p,h)}<div class="dev-workbench">${activity(h,active)}${sidebar?`<aside class="dev-sidebar">${sidebar}</aside>`:''}<main class="dev-editor">${body}</main></div>${status(p,h)}</div></article>`;}
-function simpleHead(p,h,label){return `<div class="dev-tool-title"><span>${h.icon(p.appIcon||'code',18)}<b>${h.esc(p.appName||label)}</b><span class="dev-tool-divider"></span>${h.esc(p.workspace||'科普视频项目')}</span><div>${h.icon('search',16)}${h.icon('settings',16)}${controls(h)}</div></div>`;}
+function simpleHead(p,h,label){return `<div class="dev-tool-title"><span>${h.icon(p.appIcon||'code',18)}<b>${h.esc(p.appName||label)}</b><span class="dev-tool-divider"></span>${h.esc(p.workspace||'示例项目')}</span><div>${h.icon('search',16)}${h.icon('settings',16)}${controls(h)}</div></div>`;}
 
-const sampleFiles=[{name:'SCIENCE-VIDEO',kind:'folder',depth:0},{name:'public',kind:'folder',depth:1,open:false},{name:'src',kind:'folder',depth:1},{name:'components',kind:'folder',depth:2,open:false},{name:'config.ts',depth:2,badge:'M'},{name:'timeline.ts',depth:2},{name:'index.ts',depth:2},{name:'tests',kind:'folder',depth:1,open:false},{name:'package.json',depth:1},{name:'README.md',depth:1}];
-const sampleCode=["import { createTimeline } from './timeline';",'', '// 先定义内容，再交给时间轴编排', 'export const video = {', "  title: '把复杂概念讲清楚',", '  width: 1920,', '  height: 1080,', '  fps: 30,', '  scenes: [', "    { id: 'intro', duration: 4.5 },", "    { id: 'explain', duration: 12 },", "    { id: 'summary', duration: 5 },", '  ],', '};', '', 'const timeline = createTimeline(video);', 'timeline.validate();'];
 
 export const components = [
   {
     id:'terminal-session',name:'Windows Terminal 会话',category:'开发与数据',width:1280,height:800,
     description:'Windows 标签栏与窗口按钮、PowerShell 提示符、分级日志及可逐行揭示的输出。命令仅用于动画展示，不会执行。',
     reference:documented('Windows Terminal 的标签、加号、下拉与右侧窗口按钮依微软官方界面形制；终端正文为自定义高对比配色，未做同尺寸截图验收。','https://learn.microsoft.com/en-us/windows/terminal/customize-settings/appearance'),
-    defaults:{title:'PowerShell',path:'D:\\workspace\\science-video',greeting:'PowerShell 7.5.2',command:'npm run build',lines:[{text:'> science-video@1.0.0 build',tone:'muted'},{text:'> node scripts/build.mjs',tone:'muted'},{text:'',tone:'muted'},{text:'✓ 读取内容配置 content.json',tone:'success'},{text:'✓ 校验 7 个分镜与配音时长',tone:'success'},{text:'✓ 编译可复用动画组件',tone:'success'},{text:'✓ 生成 compositions/index.html',tone:'success'},{text:'',tone:'muted'},{text:'构建成功。预览已准备就绪。',tone:'normal'},{text:'  Local:   http://localhost:3027',tone:'link'},{text:'  Duration: 76.6 s     Resolution: 1920 × 1080',tone:'muted'}],nextCommand:'npm run check'},
+    defaults:{
+  "title": "PowerShell",
+  "path": "D:\\example-project",
+  "greeting": "PowerShell",
+  "command": "node example.js",
+  "lines": [
+    {
+      "text": "示例输出 A",
+      "tone": "normal"
+    },
+    {
+      "text": "示例输出 B",
+      "tone": "muted"
+    },
+    {
+      "text": "",
+      "tone": "muted"
+    },
+    {
+      "text": "✓ 步骤 A 已完成",
+      "tone": "success"
+    },
+    {
+      "text": "✓ 步骤 B 已完成",
+      "tone": "success"
+    },
+    {
+      "text": "",
+      "tone": "muted"
+    },
+    {
+      "text": "处理完成。",
+      "tone": "normal"
+    }
+  ],
+  "nextCommand": "node verify.js"
+},
     render(props,h){const p=cfg(this,props);return `<article class="dev-stage"><div class="dev-window dev-terminal"><div class="dev-terminal-title"><div class="dev-terminal-tab">${h.icon('terminal',18)}<span>${h.esc(p.title)}</span>${h.icon('x',14)}</div><span class="dev-terminal-new">${h.icon('plus',17)}${h.icon('chevron-down',13)}</span>${controls(h)}</div><div class="dev-terminal-body"><div class="dev-terminal-greeting">${h.esc(p.greeting)}</div><div class="dev-command-row"><span class="dev-prompt">PS ${h.esc(p.path)}&gt;</span> <span data-motion="type">${h.esc(p.command)}</span></div><div class="dev-terminal-output">${arr(p.lines).map(l=>`<div class="dev-log-${cls(l.tone,['muted','success','error','link','normal'],'normal')}" data-motion="line" data-output-line>${h.esc(l.text)||'&#160;'}</div>`).join('')}</div><div class="dev-command-row dev-terminal-last" data-output-line><span class="dev-prompt">PS ${h.esc(p.path)}&gt;</span> <span>${h.esc(p.nextCommand)}</span><span class="dev-terminal-caret" data-motion="cursor"></span></div></div></div></article>`;}
   },
   {
     id:'code-editor',name:'VS Code Light+ 编辑器',category:'开发与数据',width:1280,height:800,
     description:'完整活动栏、资源管理器、文件页签、面包屑、行号、代码缩略图和蓝色状态栏。代码由可编辑文本生成语法配色。',
     reference:documented('VS Code Windows 布局及 Light+ 配色结构。图标为统一矢量近似，未与特定版本做像素差异验收。',[vscodeRef,themeRef]),
-    defaults:{project:'science-video',filename:'config.ts',branch:'main*',language:'TypeScript',position:'行 10，列 3',files:sampleFiles,code:sampleCode,highlightLine:10,secondaryTab:'timeline.ts'},
-    render(props,h){const p=cfg(this,props);return shell(p,h,`${tabs([{name:p.filename,kind:'TS'},{name:p.secondaryTab,kind:'TS'}],h)}${crumbs(['src',p.filename,'video'],h)}<div class="dev-source-area" data-motion="scroll">${codeLines(p.code,h,{highlight:n(p.highlightLine),motion:'highlight'})}${miniMap(p.code,h)}</div><div class="dev-panel-tabs"><b>问题</b><span>输出</span><span>调试控制台</span><span>终端</span><span>端口</span></div><div class="dev-panel-message">工作区中尚未检测到任何问题。</div>`,{sidebar:`<div class="dev-sidebar-heading">资源管理器 ${h.icon('more',17)}</div><div class="dev-tree-group">${h.icon('chevron-down',13)} 打开的编辑器</div><div class="dev-open-file">${h.icon('x',13)} <span class="dev-filetype">TS</span> ${h.esc(p.filename)}</div>${tree(p.files,h,p.filename)}<div class="dev-sidebar-bottom">${h.icon('chevron-right',13)} 大纲</div>`});}
+    defaults:{
+  "project": "example-project",
+  "filename": "example.ts",
+  "branch": "main*",
+  "language": "TypeScript",
+  "position": "行 10，列 3",
+  "files": [
+    {
+      "name": "EXAMPLE-PROJECT",
+      "kind": "folder",
+      "depth": 0
+    },
+    {
+      "name": "src",
+      "kind": "folder",
+      "depth": 1
+    },
+    {
+      "name": "example.ts",
+      "depth": 2,
+      "badge": "M"
+    },
+    {
+      "name": "helper.ts",
+      "depth": 2
+    },
+    {
+      "name": "tests",
+      "kind": "folder",
+      "depth": 1,
+      "open": false
+    },
+    {
+      "name": "package.json",
+      "depth": 1
+    },
+    {
+      "name": "README.md",
+      "depth": 1
+    }
+  ],
+  "code": [
+    "import { formatValue } from './helper';",
+    "",
+    "// 示例代码：替换为需要展示的逻辑",
+    "export const example = {",
+    "  title: '示例标题',",
+    "  enabled: true,",
+    "  items: [",
+    "    { id: 1, value: 10 },",
+    "    { id: 2, value: 20 },",
+    "  ],",
+    "};",
+    "",
+    "const result = formatValue(example.title);",
+    "console.log(result);"
+  ],
+  "highlightLine": 10,
+  "secondaryTab": "helper.ts",
+  "symbol": "example"
+},
+    render(props,h){const p=cfg(this,props);return shell(p,h,`${tabs([{name:p.filename,kind:'TS'},{name:p.secondaryTab,kind:'TS'}],h)}${crumbs(['src',p.filename,p.symbol],h)}<div class="dev-source-area" data-motion="scroll">${codeLines(p.code,h,{highlight:n(p.highlightLine),motion:'highlight'})}${miniMap(p.code,h)}</div><div class="dev-panel-tabs"><b>问题</b><span>输出</span><span>调试控制台</span><span>终端</span><span>端口</span></div><div class="dev-panel-message">工作区中尚未检测到任何问题。</div>`,{sidebar:`<div class="dev-sidebar-heading">资源管理器 ${h.icon('more',17)}</div><div class="dev-tree-group">${h.icon('chevron-down',13)} 打开的编辑器</div><div class="dev-open-file">${h.icon('x',13)} <span class="dev-filetype">TS</span> ${h.esc(p.filename)}</div>${tree(p.files,h,p.filename)}<div class="dev-sidebar-bottom">${h.icon('chevron-right',13)} 大纲</div>`});}
   },
   {
     id:'code-diff',name:'VS Code 双栏代码差异',category:'开发与数据',width:1280,height:800,
     description:'同一文件的左右版本、删除与新增整行背景、行号和修改列表；适合解释修复前后变化。',
     reference:documented('依据 VS Code 官方 Diff editor 的双栏布局与 Source Control 结构，配色选用 Light+；未完成对应版本截图比对。','https://code.visualstudio.com/docs/sourcecontrol/overview'),
-    defaults:{project:'science-video',filename:'config.ts',branch:'feature/preview*',language:'TypeScript',position:'2 项更改',beforeLabel:'config.ts · HEAD',afterLabel:'config.ts · 工作区',before:["export const output = {",{text:'  width: 960,',state:'remove'},{text:'  height: 540,',state:'remove'},'  fps: 30,',"  format: 'mp4',",'};','','export const theme = {',{text:"  background: '#17201e',",state:'remove'},{text:"  accent: '#d8ae65',",state:'remove'},"  complete: '#81c9b0',",'};'],after:['export const output = {',{text:'  width: 1920,',state:'add'},{text:'  height: 1080,',state:'add'},'  fps: 30,',"  format: 'mp4',",'};','','export const theme = {',{text:"  background: '#ffffff',",state:'add'},{text:"  accent: '#2563eb',",state:'add'},"  complete: '#81c9b0',",'};']},
+    defaults:{
+  "project": "example-project",
+  "filename": "example.ts",
+  "branch": "feature/example*",
+  "language": "TypeScript",
+  "position": "2 项更改",
+  "beforeLabel": "example.ts · HEAD",
+  "afterLabel": "example.ts · 工作区",
+  "before": [
+    "export const example = {",
+    {
+      "text": "  title: '原始标题',",
+      "state": "remove"
+    },
+    {
+      "text": "  count: 10,",
+      "state": "remove"
+    },
+    "  enabled: true,",
+    "};"
+  ],
+  "after": [
+    "export const example = {",
+    {
+      "text": "  title: '更新标题',",
+      "state": "add"
+    },
+    {
+      "text": "  count: 20,",
+      "state": "add"
+    },
+    "  enabled: true,",
+    "};"
+  ]
+},
     render(props,h){const p=cfg(this,props);return shell(p,h,`${tabs([{name:p.filename,kind:'TS'}],h)}<div class="dev-diff-heading"><span>${h.esc(p.beforeLabel)}</span><span>${h.esc(p.afterLabel)}<i>已修改</i></span></div><div class="dev-diff-body"><div>${codeLines(p.before,h,{compact:true})}</div><div>${codeLines(p.after,h,{compact:true})}</div></div><div class="dev-diff-caption">${h.icon('info',15)} 左侧：原始文件<span></span>右侧：当前工作区</div>`,{active:'git-branch',sidebar:`<div class="dev-sidebar-heading">源代码管理 ${h.icon('more',17)}</div><div class="dev-scm-input">消息（Ctrl+Enter 提交）</div><div class="dev-scm-button">${h.icon('check',15)} 提交</div><div class="dev-tree-group">${h.icon('chevron-down',13)} 更改 <span>1</span></div><div class="dev-tree-row dev-tree-selected"><span class="dev-filetype">TS</span>${h.esc(p.filename)}<span class="dev-tree-badge">M</span></div>`});}
   },
   {
     id:'file-tree',name:'项目文件与目录树',category:'开发与数据',width:1280,height:800,
     description:'可展开层级的资源管理器与选中文件预览；每个文件的深度、类型和修改状态独立配置。',
     reference:documented('参考 VS Code Explorer、打开编辑器与 Breadcrumbs 官方界面。文件数据与右侧内容可替换。',vscodeRef),
-    defaults:{project:'science-video',filename:'content.json',language:'JSON',position:'行 8，列 18',branch:'main',files:[{name:'SCIENCE-VIDEO',kind:'folder',depth:0},{name:'assets',kind:'folder',depth:1},{name:'audio',kind:'folder',depth:2},{name:'intro.wav',depth:3},{name:'explain.wav',depth:3},{name:'images',kind:'folder',depth:2,open:false},{name:'recordings',kind:'folder',depth:2},{name:'browser-demo.mp4',depth:3},{name:'components',kind:'folder',depth:1},{name:'browser.html',depth:2},{name:'terminal.html',depth:2},{name:'scripts',kind:'folder',depth:1,open:false},{name:'content.json',depth:1,badge:'M'},{name:'package.json',depth:1},{name:'README.md',depth:1}],code:['{','  "title": "AI 科普入门",','  "aspectRatio": "16:9",','  "theme": "white-blue",','  "scenes": [','    {','      "component": "browser-window",','      "source": "assets/recordings/browser-demo.mp4",','      "duration": 12,','      "caption": "从一个清楚的问题开始"','    },','    {','      "component": "terminal-session",','      "duration": 8','    }','  ]','}']},
+    defaults:{
+  "project": "example-project",
+  "filename": "example.json",
+  "language": "JSON",
+  "position": "行 3，列 3",
+  "branch": "main",
+  "files": [
+    {
+      "name": "EXAMPLE-PROJECT",
+      "kind": "folder",
+      "depth": 0
+    },
+    {
+      "name": "assets",
+      "kind": "folder",
+      "depth": 1
+    },
+    {
+      "name": "example.png",
+      "depth": 2
+    },
+    {
+      "name": "src",
+      "kind": "folder",
+      "depth": 1
+    },
+    {
+      "name": "example.ts",
+      "depth": 2
+    },
+    {
+      "name": "example.json",
+      "depth": 1,
+      "badge": "M"
+    },
+    {
+      "name": "package.json",
+      "depth": 1
+    },
+    {
+      "name": "README.md",
+      "depth": 1
+    }
+  ],
+  "code": [
+    "{",
+    "  \"title\": \"示例标题\",",
+    "  \"enabled\": true,",
+    "  \"items\": [",
+    "    { \"id\": 1, \"label\": \"项目 A\", \"value\": 10 },",
+    "    { \"id\": 2, \"label\": \"项目 B\", \"value\": 20 }",
+    "  ]",
+    "}"
+  ]
+},
     render(props,h){const p=cfg(this,props);return shell(p,h,`${tabs([{name:p.filename,kind:'{}'}],h)}${crumbs([p.project,p.filename],h)}<div class="dev-source-area">${codeLines(p.code,h)}${miniMap(p.code,h)}</div>`,{sidebar:`<div class="dev-sidebar-heading">资源管理器 ${h.icon('more',17)}</div>${tree(p.files,h,p.filename)}<div class="dev-sidebar-bottom">${h.icon('chevron-right',13)} 时间线</div>`});}
   },
   {
     id:'http-request',name:'API 请求与响应调试器',category:'开发与数据',width:1280,height:800,
     description:'原创 API 客户端界面，包含请求列表、地址栏、参数表、响应状态与 JSON 正文。不会发送网络请求。',
     reference:designed('按常见 API 客户端信息结构原创：HTTP 方法、请求参数、响应状态与格式化 JSON。不是 Postman 截图复刻。'),
-    defaults:{appName:'API 工作台',workspace:'科普视频项目',appIcon:'globe',requestName:'读取组件列表',method:'GET',url:'https://api.example.com/v1/components',status:'200 OK',latency:'128 ms',responseSize:'1.24 KB',requests:[{method:'GET',name:'读取组件列表'},{method:'GET',name:'获取分镜配置'},{method:'POST',name:'创建预览任务'},{method:'GET',name:'查询任务状态'}],params:[{key:'category',value:'software',description:'按组件类别筛选'},{key:'limit',value:'30',description:'返回结果数量'}],response:['{','  "success": true,','  "data": [','    { "id": "browser-window", "name": "浏览器窗口" },','    { "id": "terminal-session", "name": "终端会话" },','    { "id": "code-editor", "name": "代码编辑器" }','  ],','  "total": 30','}']},
-    render(props,h){const p=cfg(this,props);return `<article class="dev-stage"><div class="dev-window dev-tool">${simpleHead(p,h,'API 工作台')}<div class="dev-tool-body"><aside class="dev-http-sidebar"><div class="dev-sidebar-heading">集合 ${h.icon('plus',17)}</div><div class="dev-tree-group">${h.icon('chevron-down',14)} 视频组件 API</div>${arr(p.requests).map((r,i)=>`<div class="dev-http-request ${i===0?'dev-http-selected':''}"><b class="${r.method==='POST'?'dev-http-post':''}">${h.esc(r.method)}</b><span>${h.esc(r.name)}</span></div>`).join('')}</aside><main class="dev-http-main"><div class="dev-http-breadcrumb">集合 ${h.icon('chevron-right',14)} 视频组件 API ${h.icon('chevron-right',14)} ${h.esc(p.requestName)}<span>${h.icon('more',18)}</span></div><div class="dev-http-url" data-motion="focus"><b>${h.esc(p.method)} ${h.icon('chevron-down',13)}</b><span>${h.esc(p.url)}</span><div>发送 ${h.icon('chevron-down',14)}</div></div><div class="dev-tool-tabs"><b>参数 <i>${arr(p.params).length}</i></b><span>身份验证</span><span>请求头 <i>2</i></span><span>请求体</span><span>设置</span></div><div class="dev-http-params-title">查询参数</div><div class="dev-params-table"><div class="dev-param-row dev-param-head"><span></span><span>KEY</span><span>VALUE</span><span>DESCRIPTION</span></div>${arr(p.params).map(r=>`<div class="dev-param-row" data-motion="item"><span class="dev-checkbox-checked">${h.icon('check',12)}</span><code>${h.esc(r.key)}</code><code>${h.esc(r.value)}</code><span>${h.esc(r.description)}</span></div>`).join('')}<div class="dev-param-row dev-param-empty"><span class="dev-checkbox"></span><span>键</span><span>值</span><span>描述</span></div></div><div class="dev-response-head"><b>响应</b><span class="dev-http-status" data-motion="highlight">${h.esc(p.status)}</span><span>${h.esc(p.latency)}</span><span>${h.esc(p.responseSize)}</span></div><div class="dev-tool-tabs dev-response-tabs"><b>正文</b><span>Cookies</span><span>响应头</span><span class="dev-flex-fill"></span><span>JSON ${h.icon('chevron-down',12)}</span>${h.icon('copy',15)}</div><div class="dev-response-code">${codeLines(p.response,h,{compact:true})}</div></main></div><div class="dev-tool-status">${h.icon('check-circle',14)} 本地示例数据<span>请求未实际发送</span></div></div></article>`;}
+    defaults:{
+  "appName": "API 工作台",
+  "workspace": "示例工作区",
+  "appIcon": "globe",
+  "requestName": "示例请求 A",
+  "method": "GET",
+  "url": "https://api.example.com/v1/items",
+  "status": "200 OK",
+  "latency": "128 ms",
+  "responseSize": "1.24 KB",
+  "requests": [
+    {
+      "method": "GET",
+      "name": "示例请求 A"
+    },
+    {
+      "method": "GET",
+      "name": "示例请求 B"
+    },
+    {
+      "method": "POST",
+      "name": "示例请求 C"
+    },
+    {
+      "method": "GET",
+      "name": "示例请求 D"
+    }
+  ],
+  "params": [
+    {
+      "key": "category",
+      "value": "example",
+      "description": "参数说明 A"
+    },
+    {
+      "key": "limit",
+      "value": "2",
+      "description": "参数说明 B"
+    }
+  ],
+  "response": [
+    "{",
+    "  \"success\": true,",
+    "  \"data\": [",
+    "    { \"id\": 1, \"label\": \"项目 A\" },",
+    "    { \"id\": 2, \"label\": \"项目 B\" }",
+    "  ],",
+    "  \"total\": 2",
+    "}"
+  ],
+  "collectionTitle": "请求分组"
+},
+    render(props,h){const p=cfg(this,props);return `<article class="dev-stage"><div class="dev-window dev-tool">${simpleHead(p,h,'API 工作台')}<div class="dev-tool-body"><aside class="dev-http-sidebar"><div class="dev-sidebar-heading">集合 ${h.icon('plus',17)}</div><div class="dev-tree-group">${h.icon('chevron-down',14)} ${h.esc(p.collectionTitle)}</div>${arr(p.requests).map((r,i)=>`<div class="dev-http-request ${i===0?'dev-http-selected':''}"><b class="${r.method==='POST'?'dev-http-post':''}">${h.esc(r.method)}</b><span>${h.esc(r.name)}</span></div>`).join('')}</aside><main class="dev-http-main"><div class="dev-http-breadcrumb">集合 ${h.icon('chevron-right',14)} ${h.esc(p.collectionTitle)} ${h.icon('chevron-right',14)} ${h.esc(p.requestName)}<span>${h.icon('more',18)}</span></div><div class="dev-http-url" data-motion="focus"><b>${h.esc(p.method)} ${h.icon('chevron-down',13)}</b><span>${h.esc(p.url)}</span><div>发送 ${h.icon('chevron-down',14)}</div></div><div class="dev-tool-tabs"><b>参数 <i>${arr(p.params).length}</i></b><span>身份验证</span><span>请求头 <i>2</i></span><span>请求体</span><span>设置</span></div><div class="dev-http-params-title">查询参数</div><div class="dev-params-table"><div class="dev-param-row dev-param-head"><span></span><span>KEY</span><span>VALUE</span><span>DESCRIPTION</span></div>${arr(p.params).map(r=>`<div class="dev-param-row" data-motion="item"><span class="dev-checkbox-checked">${h.icon('check',12)}</span><code>${h.esc(r.key)}</code><code>${h.esc(r.value)}</code><span>${h.esc(r.description)}</span></div>`).join('')}<div class="dev-param-row dev-param-empty"><span class="dev-checkbox"></span><span>键</span><span>值</span><span>描述</span></div></div><div class="dev-response-head"><b>响应</b><span class="dev-http-status" data-motion="highlight">${h.esc(p.status)}</span><span>${h.esc(p.latency)}</span><span>${h.esc(p.responseSize)}</span></div><div class="dev-tool-tabs dev-response-tabs"><b>正文</b><span>Cookies</span><span>响应头</span><span class="dev-flex-fill"></span><span>JSON ${h.icon('chevron-down',12)}</span>${h.icon('copy',15)}</div><div class="dev-response-code">${codeLines(p.response,h,{compact:true})}</div></main></div><div class="dev-tool-status">${h.icon('check-circle',14)} 本地示例数据<span>请求未实际发送</span></div></div></article>`;}
   },
   {
     id:'json-inspector',name:'JSON 对象检查器',category:'开发与数据',width:1280,height:800,
     description:'原创数据检查面板，可展示嵌套对象、数据类型、路径与字段详情。适合讲解 API 数据或配置结构。',
     reference:designed('原创 JSON Inspector，使用开发者工具的展开树和类型信息约定；不声称对应 Chrome DevTools 或特定软件截图。'),
-    defaults:{appName:'数据检查器',workspace:'response.json',appIcon:'code',title:'响应数据',path:'$.data[0].duration',selected:'duration',fields:[{key:'response',value:'Object',type:'object',depth:0},{key:'success',value:'true',type:'boolean',depth:1},{key:'data',value:'Array(2)',type:'array',depth:1},{key:'0',value:'Object',type:'object',depth:2},{key:'id',value:'"scene-01"',type:'string',depth:3},{key:'component',value:'"browser-window"',type:'string',depth:3},{key:'duration',value:'12.5',type:'number',depth:3},{key:'enabled',value:'true',type:'boolean',depth:3},{key:'captions',value:'Array(3)',type:'array',depth:3},{key:'1',value:'Object',type:'object',depth:2},{key:'total',value:'2',type:'number',depth:1},{key:'version',value:'"1.0"',type:'string',depth:1}],detail:{key:'duration',type:'number',value:'12.5',description:'当前分镜的持续时长，单位为秒。',constraint:'大于 0 的有限数值',location:'data → 0 → duration'}},
+    defaults:{
+  "appName": "数据检查器",
+  "workspace": "response.json",
+  "appIcon": "code",
+  "title": "示例数据",
+  "path": "$.data[0].value",
+  "selected": "value",
+  "fields": [
+    {
+      "key": "response",
+      "value": "Object",
+      "type": "object",
+      "depth": 0
+    },
+    {
+      "key": "success",
+      "value": "true",
+      "type": "boolean",
+      "depth": 1
+    },
+    {
+      "key": "data",
+      "value": "Array(2)",
+      "type": "array",
+      "depth": 1
+    },
+    {
+      "key": "0",
+      "value": "Object",
+      "type": "object",
+      "depth": 2
+    },
+    {
+      "key": "id",
+      "value": "1",
+      "type": "number",
+      "depth": 3
+    },
+    {
+      "key": "label",
+      "value": "\"项目 A\"",
+      "type": "string",
+      "depth": 3
+    },
+    {
+      "key": "value",
+      "value": "10",
+      "type": "number",
+      "depth": 3
+    },
+    {
+      "key": "enabled",
+      "value": "true",
+      "type": "boolean",
+      "depth": 3
+    },
+    {
+      "key": "1",
+      "value": "Object",
+      "type": "object",
+      "depth": 2
+    },
+    {
+      "key": "total",
+      "value": "2",
+      "type": "number",
+      "depth": 1
+    }
+  ],
+  "detail": {
+    "key": "value",
+    "type": "number",
+    "value": "10",
+    "description": "字段说明文字",
+    "constraint": "大于 0 的有限数值",
+    "location": "data → 0 → value"
+  }
+},
     render(props,h){const p=cfg(this,props);const d=p.detail||{};return `<article class="dev-stage"><div class="dev-window dev-tool">${simpleHead(p,h,'数据检查器')}<div class="dev-json-toolbar"><b>${h.esc(p.title)}</b><div>${h.icon('search',15)} 搜索键或值</div><span>${h.icon('copy',16)} ${h.icon('download',16)}</span></div><div class="dev-tool-tabs"><b>树视图</b><span>原始数据</span><span>结构校验</span></div><div class="dev-json-body"><div class="dev-json-tree"><div class="dev-json-columns"><span>属性</span><span>值</span><span>类型</span></div>${arr(p.fields).map(f=>`<div class="dev-json-row ${f.key===p.selected?'dev-json-selected':''}" data-motion="item"><div style="padding-left:${12+Math.max(0,Math.min(7,n(f.depth)))*20}px"><span>${['object','array'].includes(f.type)?h.icon('chevron-down',13):''}</span><code>${h.esc(f.key)}</code></div><code class="dev-json-${cls(f.type,['number','string','boolean','object','array'],'object')}">${h.esc(f.value)}</code><small>${h.esc(f.type)}</small></div>`).join('')}</div><aside class="dev-json-detail"><div class="dev-sidebar-heading">属性详情 ${h.icon('more',16)}</div><h2>${h.esc(d.key)}</h2><span class="dev-type-badge">${h.esc(d.type)}</span><dl><dt>当前值</dt><dd class="dev-json-value" data-motion="counter">${h.esc(d.value)}</dd><dt>说明</dt><dd>${h.esc(d.description)}</dd><dt>约束</dt><dd>${h.esc(d.constraint)}</dd><dt>位置</dt><dd class="dev-mono">${h.esc(d.location)}</dd></dl></aside></div><div class="dev-tool-status">${h.icon('check-circle',14)} JSON 格式有效<span class="dev-mono">${h.esc(p.path)}</span></div></div></article>`;}
   },
   {
     id:'markdown-document',name:'Markdown 编辑与预览',category:'开发与数据',width:1280,height:800,
     description:'VS Code 风格 Markdown 双栏，左侧可编辑源文本，右侧标题、任务列表、引用和代码块。',
     reference:documented('VS Code Markdown 官方预览布局；渲染采用可编辑结构化数据，不执行嵌入 HTML。','https://code.visualstudio.com/docs/languages/markdown'),
-    defaults:{project:'science-video',filename:'README.md',branch:'main',language:'Markdown',position:'行 8，列 1',title:'科普视频制作流程',intro:'把内容、素材和动画分开管理，让每一集都能快速复用。',sectionTitle:'制作步骤',tasks:[{text:'确定主题与开头钩子',done:true},{text:'准备配音和真实录屏',done:true},{text:'替换模板内容并检查节奏',done:false},{text:'预览确认后导出视频',done:false}],note:'先做一个有代表性的场景，确认风格后再展开整集。',command:'npm run build\nnpm run dev',sections:[{title:'交付与归档',text:'确认字幕与配音一致，检查每个画面的素材来源。把本集的内容配置、录屏和图片保存在同一目录。'},{title:'开始下一集',text:'复制上一集的内容配置，替换主题、镜头和素材。先预览关键场景，再调整整体节奏。'}],source:['# 科普视频制作流程','','把内容、素材和动画分开管理，','让每一集都能快速复用。','','## 制作步骤','','- [x] 确定主题与开头钩子','- [x] 准备配音和真实录屏','- [ ] 替换模板内容并检查节奏','- [ ] 预览确认后导出视频','','> 先做一个有代表性的场景，','> 确认风格后再展开整集。','','```powershell','npm run build','npm run dev','```']},
+    defaults:{
+  "project": "example-project",
+  "filename": "README.md",
+  "branch": "main",
+  "language": "Markdown",
+  "position": "行 8，列 1",
+  "title": "文档标题",
+  "intro": "文档简介。替换为需要展示的说明。",
+  "sectionTitle": "章节标题",
+  "tasks": [
+    {
+      "text": "待办事项 A",
+      "done": true
+    },
+    {
+      "text": "待办事项 B",
+      "done": true
+    },
+    {
+      "text": "待办事项 C",
+      "done": false
+    },
+    {
+      "text": "待办事项 D",
+      "done": false
+    }
+  ],
+  "note": "提示内容，可替换为补充说明。",
+  "command": "node example.js\nnode verify.js",
+  "sections": [
+    {
+      "title": "章节标题 A",
+      "text": "正文第一段，替换为需要展示的内容。"
+    },
+    {
+      "title": "章节标题 B",
+      "text": "正文第二段，支持继续补充说明。"
+    }
+  ],
+  "source": [
+    "# 文档标题",
+    "",
+    "文档简介。替换为需要展示的说明。",
+    "",
+    "## 章节标题",
+    "",
+    "- [x] 待办事项 A",
+    "- [x] 待办事项 B",
+    "- [ ] 待办事项 C",
+    "- [ ] 待办事项 D",
+    "",
+    "> 提示内容，可替换为补充说明。",
+    "",
+    "```shell",
+    "node example.js",
+    "node verify.js",
+    "```"
+  ]
+},
     render(props,h){const p=cfg(this,props);return shell(p,h,`<div class="dev-markdown-split"><section>${tabs([{name:p.filename,kind:'M↓'}],h)}${crumbs([p.project,p.filename],h)}${codeLines(p.source,h,{compact:true})}</section><section>${tabs([{name:`预览 ${p.filename}`,kind:'M↓'}],h)}<div class="dev-markdown-scroll-viewport"><div class="dev-markdown-preview" data-motion="scroll"><h1 data-motion="reveal">${h.esc(p.title)}</h1><p>${h.esc(p.intro)}</p><h2>${h.esc(p.sectionTitle)}</h2><ul>${arr(p.tasks).map(t=>`<li data-motion="item"><span class="${t.done?'dev-checkbox-checked':'dev-checkbox'}">${t.done?h.icon('check',12):''}</span>${h.esc(t.text)}</li>`).join('')}</ul><blockquote>${h.esc(p.note)}</blockquote><pre>${h.esc(p.command)}</pre>${arr(p.sections).map(s=>`<h2>${h.esc(s.title)}</h2><p>${h.esc(s.text)}</p>`).join('')}</div></div></section></div>`);}
   },
   {
     id:'git-history',name:'Git 分支与提交记录',category:'开发与数据',width:1280,height:800,
     description:'提交列表、分支图线、版本标记和选中提交详情，适合解释版本迭代和功能分支。',
     reference:documented('参照 VS Code Source Control Graph 的提交列表与分支结构；详情面板为讲解用途调整，尚未做同尺寸截图对标。','https://code.visualstudio.com/docs/sourcecontrol/history'),
-    defaults:{project:'science-video',branch:'main',language:'Git',position:'工作区干净',commits:[{message:'合并浏览器组件与字幕系统',hash:'e7a4c19',author:'小林',time:'10 分钟前',branch:'main',lane:0},{message:'完善录屏区域聚焦效果',hash:'cf821d0',author:'小林',time:'32 分钟前',branch:'feature/focus',lane:1},{message:'修复长标题换行与安全边距',hash:'c92e517',author:'小林',time:'1 小时前',lane:0},{message:'新增终端与代码编辑器组件',hash:'85a46bf',author:'小林',time:'2 小时前',lane:1},{message:'统一白底蓝色视觉规范',hash:'7db821a',author:'小林',time:'昨天',lane:0},{message:'建立可复用视频工程',hash:'096bcfe',author:'小林',time:'昨天',lane:0}],selectedHash:'e7a4c19',changedFiles:[{name:'components/browser.html',add:36,remove:8},{name:'components/captions.html',add:24,remove:6},{name:'content.json',add:12,remove:3}],detail:'将录屏容器、字幕安全区与区域聚焦动画整合到同一套时间轴。'},
+    defaults:{
+  "project": "example-project",
+  "branch": "main",
+  "language": "Git",
+  "position": "工作区干净",
+  "commits": [
+    {
+      "message": "提交说明 A",
+      "hash": "e7a4c19",
+      "author": "示例用户",
+      "time": "10 分钟前",
+      "branch": "main",
+      "lane": 0
+    },
+    {
+      "message": "提交说明 B",
+      "hash": "cf821d0",
+      "author": "示例用户",
+      "time": "32 分钟前",
+      "branch": "feature/example",
+      "lane": 1
+    },
+    {
+      "message": "提交说明 C",
+      "hash": "c92e517",
+      "author": "示例用户",
+      "time": "1 小时前",
+      "lane": 0
+    },
+    {
+      "message": "提交说明 D",
+      "hash": "85a46bf",
+      "author": "示例用户",
+      "time": "2 小时前",
+      "lane": 1
+    },
+    {
+      "message": "提交说明 E",
+      "hash": "7db821a",
+      "author": "示例用户",
+      "time": "昨天",
+      "lane": 0
+    },
+    {
+      "message": "提交说明 F",
+      "hash": "096bcfe",
+      "author": "示例用户",
+      "time": "昨天",
+      "lane": 0
+    }
+  ],
+  "selectedHash": "e7a4c19",
+  "changedFiles": [
+    {
+      "name": "src/example.ts",
+      "add": 8,
+      "remove": 2
+    },
+    {
+      "name": "tests/example.test.ts",
+      "add": 4,
+      "remove": 1
+    },
+    {
+      "name": "example.json",
+      "add": 2,
+      "remove": 0
+    }
+  ],
+  "detail": "当前提交的变更说明。"
+},
     render(props,h){const p=cfg(this,props);const selected=arr(p.commits).find(c=>c.hash===p.selectedHash)||arr(p.commits)[0]||{};return shell(p,h,`${tabs([{name:'源代码管理图',kind:'⑂'}],h)}<div class="dev-git-toolbar">${h.icon('git-branch',16)} ${h.esc(p.branch)} ${h.icon('chevron-down',13)}<span></span>${h.icon('refresh',16)} ${h.icon('more',18)}</div><div class="dev-git-columns"><span>图</span><span>提交消息</span><span>作者</span><span>时间</span><span>提交</span></div><div class="dev-git-list">${arr(p.commits).map(c=>`<div class="dev-git-row ${c.hash===p.selectedHash?'dev-git-selected':''}" data-motion="item"><span class="dev-git-graph"><i class="dev-git-rail"></i>${n(c.lane)===1?'<i class="dev-git-branchline"></i>':''}<b class="${n(c.lane)===1?'dev-git-node-side':''}"></b></span><span>${c.branch?`<i class="dev-git-label">${h.icon('git-branch',12)} ${h.esc(c.branch)}</i>`:''}${h.esc(c.message)}</span><span>${h.esc(c.author)}</span><span>${h.esc(c.time)}</span><code>${h.esc(c.hash)}</code></div>`).join('')}</div><div class="dev-git-detail"><div><h2>${h.esc(selected.message)}</h2><p>${h.esc(selected.author)} <span>提交于 ${h.esc(selected.time)} · ${h.esc(selected.hash)}</span></p><div class="dev-git-description">${h.esc(p.detail)}</div></div><div class="dev-git-files">${arr(p.changedFiles).map(f=>`<div>${h.icon('file',14)}<code>${h.esc(f.name)}</code><b>+${h.esc(f.add)}</b><i>−${h.esc(f.remove)}</i></div>`).join('')}</div></div>`,{active:'git-branch'});}
   },
   {
     id:'test-results',name:'自动化测试结果',category:'开发与数据',width:1280,height:800,
     description:'原创测试工作台，展示套件、逐条结果、耗时与控制台输出，可配置成功、失败和跳过状态。',
     reference:designed('原创桌面测试工作台；采用测试运行器通用的套件树、结果、耗时与断言信息布局，不冒充某个测试产品。'),
-    defaults:{appName:'测试工作台',workspace:'science-video',appIcon:'check-circle',suite:'components / browser.spec.ts',duration:'2.41 s',tests:[{name:'正确显示浏览器标题与地址',status:'passed',time:'142 ms'},{name:'替换录屏素材后比例保持正确',status:'passed',time:'388 ms'},{name:'长标题在可用区域内省略',status:'passed',time:'96 ms'},{name:'区域聚焦只改变指定目标',status:'passed',time:'421 ms'},{name:'倒序跳转后画面状态一致',status:'passed',time:'532 ms'},{name:'中文与特殊字符安全显示',status:'passed',time:'108 ms'}],output:['RUN  components/browser.spec.ts','','✓ 正确显示浏览器标题与地址','✓ 替换录屏素材后比例保持正确','✓ 倒序跳转后画面状态一致','','Test Files  1 passed (1)','     Tests  6 passed (6)','  Duration  2.41s'],runLabel:'本次运行'},
+    defaults:{
+  "appName": "测试工作台",
+  "workspace": "example-project",
+  "appIcon": "check-circle",
+  "suite": "tests / example.test.ts",
+  "duration": "2.41 s",
+  "tests": [
+    {
+      "name": "测试用例 A",
+      "status": "passed",
+      "time": "142 ms"
+    },
+    {
+      "name": "测试用例 B",
+      "status": "passed",
+      "time": "388 ms"
+    },
+    {
+      "name": "测试用例 C",
+      "status": "passed",
+      "time": "96 ms"
+    },
+    {
+      "name": "测试用例 D",
+      "status": "passed",
+      "time": "421 ms"
+    },
+    {
+      "name": "测试用例 E",
+      "status": "passed",
+      "time": "532 ms"
+    },
+    {
+      "name": "测试用例 F",
+      "status": "passed",
+      "time": "108 ms"
+    }
+  ],
+  "output": [
+    "RUN  tests/example.test.ts",
+    "",
+    "✓ 测试用例 A",
+    "✓ 测试用例 B",
+    "✓ 测试用例 C",
+    "✓ 测试用例 D",
+    "✓ 测试用例 E",
+    "✓ 测试用例 F",
+    "",
+    "Test Files  1 passed (1)",
+    "     Tests  6 passed (6)",
+    "  Duration  2.41s"
+  ],
+  "runLabel": "本次运行"
+},
     render(props,h){const p=cfg(this,props);const tests=arr(p.tests),passed=tests.filter(t=>t.status==='passed').length,failed=tests.filter(t=>t.status==='failed').length;return `<article class="dev-stage"><div class="dev-window dev-tool">${simpleHead(p,h,'测试工作台')}<div class="dev-test-toolbar"><b>${h.esc(p.runLabel)}</b><span>${h.icon('play',14)} 重新运行</span><span>${h.icon('refresh',14)} 自动监测</span><i></i><span>${h.icon('search',14)} 筛选结果</span></div><div class="dev-test-summary"><div class="dev-test-ring ${failed?'dev-test-ring-failed':''}">${h.icon(failed?'x':'check',24)}</div><div><h2>${!tests.length?'暂无测试结果':failed?'存在失败用例':passed===tests.length?'全部测试通过':'测试完成'}</h2><p>${tests.length} 个测试 · ${h.esc(p.duration)}</p></div><div class="dev-test-stat"><b>${passed}</b><span>通过</span></div><div class="dev-test-stat ${failed?'dev-test-error':''}"><b>${failed}</b><span>失败</span></div><div class="dev-test-stat"><b>${tests.filter(t=>t.status==='skipped').length}</b><span>跳过</span></div></div><div class="dev-test-progress"><span style="width:${tests.length?passed/tests.length*100:0}%" data-motion="bar"></span></div><div class="dev-test-body"><section class="dev-test-results"><div class="dev-test-suite">${h.icon('chevron-down',15)}${h.icon('file',16)}<b>${h.esc(p.suite)}</b></div>${tests.map(t=>`<div class="dev-test-case" data-motion="item"><span class="dev-test-icon ${t.status==='failed'?'dev-test-error':''}">${h.icon(t.status==='failed'?'x':t.status==='skipped'?'minus':'check-circle',17)}</span><span>${h.esc(t.name)}</span><code>${h.esc(t.time)}</code></div>`).join('')}</section><section class="dev-test-console"><div>控制台输出 ${h.icon('copy',15)}</div><pre>${arr(p.output).map(l=>`<span data-motion="line">${h.esc(l)||'&#160;'}</span>`).join('')}</pre></section></div><div class="dev-tool-status">${h.icon('info',14)} 可替换的测试结果示例<span>未在组件中执行测试</span></div></div></article>`;}
   },
   {
     id:'data-table',name:'数据库表格与记录详情',category:'开发与数据',width:1280,height:800,
     description:'原创数据管理器，包含数据库导航、字段类型、选中单元格、状态标签、记录详情与分页。',
     reference:designed('原创数据库客户端界面；以真实数据表的字段、主键、类型、状态与分页构成，不对应特定商用产品。'),
-    defaults:{appName:'数据工作台',workspace:'science_video.db',appIcon:'grid',table:'scenes',tables:['scenes','assets','captions','render_jobs'],columns:[{key:'id',label:'id',type:'integer'},{key:'title',label:'title',type:'text'},{key:'component',label:'component',type:'text'},{key:'duration',label:'duration',type:'real'},{key:'status',label:'status',type:'text'}],rows:[{id:1,title:'开头钩子',component:'codex-chat',duration:5.0,status:'完成'},{id:2,title:'操作演示',component:'browser-window',duration:12.5,status:'完成'},{id:3,title:'命令执行',component:'terminal-session',duration:8.0,status:'完成'},{id:4,title:'配置说明',component:'code-editor',duration:10.0,status:'编辑中'},{id:5,title:'原理拆解',component:'flow-diagram',duration:14.0,status:'待处理'},{id:6,title:'前后对比',component:'before-after',duration:8.5,status:'待处理'},{id:7,title:'重点回顾',component:'summary-card',duration:6.0,status:'待处理'}],selectedId:4,filter:'status != "已归档"',recordTitle:'当前记录',footer:'7 条记录 · 5 个字段'},
+    defaults:{
+  "appName": "数据工作台",
+  "workspace": "example.db",
+  "appIcon": "grid",
+  "table": "items",
+  "tables": [
+    "items",
+    "groups",
+    "events",
+    "settings"
+  ],
+  "columns": [
+    {
+      "key": "id",
+      "label": "编号",
+      "type": "integer"
+    },
+    {
+      "key": "title",
+      "label": "字段 A",
+      "type": "text"
+    },
+    {
+      "key": "component",
+      "label": "字段 B",
+      "type": "text"
+    },
+    {
+      "key": "duration",
+      "label": "数值",
+      "type": "real"
+    },
+    {
+      "key": "status",
+      "label": "状态",
+      "type": "text"
+    }
+  ],
+  "rows": [
+    {
+      "id": 1,
+      "title": "项目 A",
+      "component": "内容 A",
+      "duration": 5,
+      "status": "完成"
+    },
+    {
+      "id": 2,
+      "title": "项目 B",
+      "component": "内容 B",
+      "duration": 12.5,
+      "status": "完成"
+    },
+    {
+      "id": 3,
+      "title": "项目 C",
+      "component": "内容 C",
+      "duration": 8,
+      "status": "完成"
+    },
+    {
+      "id": 4,
+      "title": "项目 D",
+      "component": "内容 D",
+      "duration": 10,
+      "status": "编辑中"
+    },
+    {
+      "id": 5,
+      "title": "项目 E",
+      "component": "内容 E",
+      "duration": 14,
+      "status": "待处理"
+    },
+    {
+      "id": 6,
+      "title": "项目 F",
+      "component": "内容 F",
+      "duration": 8.5,
+      "status": "待处理"
+    },
+    {
+      "id": 7,
+      "title": "项目 G",
+      "component": "内容 G",
+      "duration": 6,
+      "status": "待处理"
+    }
+  ],
+  "selectedId": 4,
+  "filter": "status != \"已归档\"",
+  "recordTitle": "当前记录",
+  "footer": "7 条记录 · 5 个字段"
+},
     render(props,h){const p=cfg(this,props);const row=arr(p.rows).find(r=>String(r.id)===String(p.selectedId))||arr(p.rows)[0]||{};return `<article class="dev-stage"><div class="dev-window dev-tool">${simpleHead(p,h,'数据工作台')}<div class="dev-data-body"><aside class="dev-data-sidebar"><div class="dev-sidebar-heading">数据库 ${h.icon('plus',16)}</div><div class="dev-tree-group">${h.icon('chevron-down',13)} main</div>${arr(p.tables).map(t=>`<div class="dev-tree-row ${t===p.table?'dev-tree-selected':''}">${h.icon('grid',16)}${h.esc(t)}</div>`).join('')}</aside><main class="dev-data-main"><div class="dev-data-toolbar"><b>${h.icon('grid',16)} ${h.esc(p.table)}</b><span>数据</span><span>结构</span><i></i>${h.icon('plus',16)} 添加记录 ${h.icon('refresh',16)}</div><div class="dev-data-filter">${h.icon('search',15)}<code>${h.esc(p.filter)}</code><span>筛选 ${h.icon('chevron-down',13)}</span></div><div class="dev-data-content"><div class="dev-data-grid"><table><thead><tr><th class="dev-data-rowno">#</th>${arr(p.columns).map(c=>`<th>${h.esc(c.label)}<small>${h.esc(c.type)}</small></th>`).join('')}</tr></thead><tbody>${arr(p.rows).map((r,i)=>`<tr class="${String(r.id)===String(p.selectedId)?'dev-data-selected':''}" data-motion="item"><td>${i+1}</td>${arr(p.columns).map(c=>`<td>${c.key==='status'?`<span class="dev-record-status ${r[c.key]==='完成'?'dev-record-done':r[c.key]==='编辑中'?'dev-record-active':''}">${h.esc(r[c.key])}</span>`:h.esc(r[c.key])}</td>`).join('')}</tr>`).join('')}</tbody></table><div class="dev-data-filler"></div></div><aside class="dev-record-detail"><div>${h.esc(p.recordTitle)} ${h.icon('more',15)}</div><h3>#${h.esc(row.id)}</h3>${arr(p.columns).map(c=>`<dl><dt>${h.esc(c.label)} <small>${h.esc(c.type)}</small></dt><dd>${h.esc(row[c.key])}</dd></dl>`).join('')}</aside></div><div class="dev-data-pager">${h.esc(p.footer)}<span>1–${arr(p.rows).length} / ${arr(p.rows).length} ${h.icon('chevron-right',14)}</span></div></main></div><div class="dev-tool-status">${h.icon('lock',13)} 只读预览<span>main.${h.esc(p.table)}</span></div></div></article>`;}
   }
 ];

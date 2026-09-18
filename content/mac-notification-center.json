@@ -3,21 +3,27 @@
   "events": [
     {
       "app": "日历",
-      "title": "制作评审",
+      "title": "日程标题",
       "body": "今天 10:00–10:30",
       "time": "9分钟前"
     },
     {
       "app": "提醒事项",
-      "title": "检查第一版",
-      "body": "核对字幕、声音和操作步骤。",
+      "title": "提醒标题",
+      "body": "提醒正文内容。",
       "time": "24分钟前"
     },
     {
       "app": "信息",
-      "title": "林同学",
-      "body": "参考资料已经整理到项目文件夹。",
+      "title": "联系人",
+      "body": "消息正文内容。",
       "time": "1小时前"
     }
-  ]
+  ],
+  "weekday": "星期四",
+  "day": 17,
+  "agendaSummary": "日程摘要",
+  "nextEventTitle": "日程标题",
+  "nextEventTime": "10:00–10:30",
+  "calendarLabel": "示例日历"
 }

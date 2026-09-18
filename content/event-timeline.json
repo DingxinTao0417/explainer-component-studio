@@ -1,42 +1,42 @@
 {
-  "eyebrow": "07 / 梳理顺序",
-  "title": "一条视频，如何一步步完成",
-  "subtitle": "把制作过程放在时间线上，每个阶段都有明确产物。",
-  "badge": "制作示例",
-  "footer": "示例内容可替换 · 白底 / 蓝色强调 / 薄荷绿完成态",
-  "series": "EXPLAIN / TIMELINE",
+  "eyebrow": "栏目 / 01",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "badge": "示例标签",
+  "footer": "页脚说明",
+  "series": "示例系列",
   "events": [
     {
       "time": "09:00",
-      "title": "明确主题",
-      "detail": "确定观众与核心问题",
+      "title": "事件 A",
+      "detail": "事件说明 A",
       "status": "done"
     },
     {
       "time": "10:00",
-      "title": "完成脚本",
-      "detail": "整理钩子、正文与结尾",
+      "title": "事件 B",
+      "detail": "事件说明 B",
       "status": "done"
     },
     {
       "time": "13:00",
-      "title": "准备素材",
-      "detail": "参考图、录屏与配音",
+      "title": "事件 C",
+      "detail": "事件说明 C",
       "status": "active"
     },
     {
       "time": "15:00",
-      "title": "组合画面",
-      "detail": "按配音组织镜头",
+      "title": "事件 D",
+      "detail": "事件说明 D",
       "status": "todo"
     },
     {
       "time": "17:00",
-      "title": "检查交付",
-      "detail": "核对内容、字幕与声音",
+      "title": "事件 E",
+      "detail": "事件说明 E",
       "status": "todo"
     }
   ],
   "activeLabel": "当前阶段",
-  "note": "时间为示例计划，可替换为日期、章节或里程碑。"
+  "note": "补充说明文字"
 }

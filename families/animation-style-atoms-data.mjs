@@ -11,9 +11,45 @@ function content(cell,x,w,height,h){
 }
 const outer=(type,g,body)=>`<g data-atom="${type}" data-motion="item" transform="translate(${g.x} ${g.y})" font-family="Microsoft YaHei,Segoe UI,sans-serif" font-weight="750">${body}</g>`;
 const preview=body=>`<section class="ani-data-atom"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">${body}</svg></section>`;
-export const cellDefaults={x:445,y:275,objectWidth:390,objectHeight:160,text:'本月已完成',tone:'green',selected:true};
+export const cellDefaults={
+  "x": 445,
+  "y": 275,
+  "objectWidth": 390,
+  "objectHeight": 160,
+  "text": "单元格内容",
+  "tone": "green",
+  "selected": true
+};
 export function renderCellAtom(props,h){const p={...cellDefaults,...props},g=geom(p,180);return outer('cell',g,`<rect x="6" y="7" width="${g.w}" height="${g.height}" rx="10" fill="${T.shadow}"/>${content(p,0,g.w,g.height,h)}<rect width="${g.w}" height="${g.height}" rx="2" fill="none" stroke="${p.selected?T.blue:T.ink}" stroke-width="${p.selected?4:2.5}"/>${p.selected?`<rect x="${g.w-5}" y="${g.height-5}" width="10" height="10" rx="2" fill="${T.blue}"/>`:''}`);}
-export const tableRowDefaults={x:180,y:292,objectWidth:920,objectHeight:128,cells:[{text:'A01'},{text:'09-03'},{text:'已完成',tone:'green'},{text:'计入',tone:'blue'}],weights:[1,1.2,1.3,1.2],selected:false};
+export const tableRowDefaults={
+  "x": 180,
+  "y": 292,
+  "objectWidth": 920,
+  "objectHeight": 128,
+  "cells": [
+    {
+      "text": "项目 A"
+    },
+    {
+      "text": "内容 A"
+    },
+    {
+      "text": "状态 A",
+      "tone": "green"
+    },
+    {
+      "text": "结果 A",
+      "tone": "blue"
+    }
+  ],
+  "weights": [
+    1,
+    1.2,
+    1.3,
+    1.2
+  ],
+  "selected": false
+};
 export function renderTableRowAtom(props,h){
  const p={...tableRowDefaults,...props},g=geom(p,360);if(!Array.isArray(p.cells)||p.cells.length<2||p.cells.length>6)throw Error('表格行 cells 支持 2–6 个单元格。');
  const weights=p.cells.map((_,i)=>num(p.weights?.[i]??1,.5,6,'列宽比例')),total=weights.reduce((a,b)=>a+b,0);let x=0;

@@ -9,7 +9,7 @@
     "alt": ""
   },
   "appTitle": "文件",
-  "folderTitle": "视频制作",
+  "folderTitle": "示例文件夹",
   "search": "搜索",
   "sortLabel": "名称",
   "itemCount": "8 个项目",
@@ -53,35 +53,35 @@
   ],
   "folders": [
     {
-      "name": "01 原始素材",
+      "name": "文件夹 A",
       "count": "24 项"
     },
     {
-      "name": "02 参考图片",
+      "name": "文件夹 B",
       "count": "18 项"
     },
     {
-      "name": "03 录屏",
+      "name": "文件夹 C",
       "count": "8 项"
     },
     {
-      "name": "04 配音",
+      "name": "文件夹 D",
       "count": "5 项"
     },
     {
-      "name": "05 组件",
+      "name": "文件夹 E",
       "count": "36 项"
     },
     {
-      "name": "06 动画",
+      "name": "文件夹 F",
       "count": "12 项"
     },
     {
-      "name": "07 工程",
+      "name": "文件夹 G",
       "count": "4 项"
     },
     {
-      "name": "08 成片",
+      "name": "文件夹 H",
       "count": "3 项"
     }
   ]

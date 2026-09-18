@@ -26,7 +26,7 @@ const components=[${familyFiles.map((_,i)=>'...c'+i)}];
 export function mountNext(root,id,props,instance,effect,options={}){
  root.querySelector('.motion-next')?.remove();
  if(!effects.some(e=>e.id===effect&&e.category==='转场'))return;
- const next=options.nextScene||props.transitionNext||(effect==='shared-slide'?{component:'lecture-stage',props:{title:'把思路，变成一次操作',subtitle:'让真实过程支撑你的讲解',chapter:'02 / 开始实践',sections:[{title:'演示',detail:'先展示一次完整过程'},{title:'观察',detail:'聚焦操作前后的变化'},{title:'复核',detail:'回到结果确认是否完成'}]}}:{component:'chapter-summary',props:{title:'从理解到实践',subtitle:'把刚才的思路，变成下一步行动。'}});
+ const next=options.nextScene||props.transitionNext||(effect==='shared-slide'?{component:'lecture-stage',props:{title:'下一场景标题',subtitle:'下一场景说明',chapter:'章节 / 02'}}:{component:'chapter-summary',props:{title:'下一场景标题',subtitle:'下一场景说明'}});
  const target=components.find(c=>c.id===next.component);if(!target)throw Error('下一幅画面的组件不存在：'+next.component);
  const node=document.createElement('div');node.className='motion-next';node.dataset.scene='B';node.style.cssText='position:absolute;inset:0;width:100%;height:100%;opacity:0';
  node.innerHTML=rewriteRenderedMediaMarkup(target.render(normalizeMediaProps({...target.defaults,...next.props}),helpers(instance+'-next')),assetBaseURL);

@@ -1,33 +1,35 @@
 {
-  "title": "导出文稿",
-  "filename": "课程讲稿.pdf",
+  "title": "保存文档",
+  "filename": "示例文档.pdf",
   "folder": "文稿",
   "format": "PDF",
   "files": [
     [
-      "课程讲稿.md",
+      "示例文档.md",
       "今天 09:12",
       "Markdown 文稿",
       "16 KB"
     ],
     [
-      "分镜清单.csv",
+      "示例数据.csv",
       "昨天 18:20",
       "CSV 文稿",
       "8 KB"
     ],
     [
-      "参考截图.png",
+      "示例图片.png",
       "昨天 16:40",
       "PNG 图像",
       "2.4 MB"
     ],
     [
-      "制作指南.pdf",
+      "示例文档.pdf",
       "昨天 14:08",
       "PDF 文稿",
       "1.2 MB"
     ]
   ],
-  "button": "存储"
+  "button": "存储",
+  "documentTitle": "文档标题",
+  "documentBody": "正文内容，可替换为需要展示的文字。"
 }

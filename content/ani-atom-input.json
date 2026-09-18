@@ -3,9 +3,9 @@
   "y": 298,
   "objectWidth": 750,
   "objectHeight": 78,
-  "value": "把标题缩短到 12 个字",
-  "placeholder": "输入你的要求",
+  "value": "示例输入内容",
+  "placeholder": "请输入内容",
   "state": "input",
-  "errorText": "请补充具体要求",
+  "errorText": "输入提示文字",
   "showCaret": true
 }

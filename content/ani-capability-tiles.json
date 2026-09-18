@@ -1,16 +1,16 @@
 {
-  "title": "学一个，扔一个",
-  "subtitle": "零散技巧，需要连成自己的方法。",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
   "tiles": [
-    "要求",
-    "配色",
-    "尺寸",
-    "版式",
-    "检查",
-    "修改"
+    "标签 A",
+    "标签 B",
+    "标签 C",
+    "标签 D",
+    "标签 E",
+    "标签 F"
   ],
-  "windowLabel": "AI 工具 B",
-  "previewLabel": "AI 学习",
-  "result": "把本事连起来",
-  "footer": "让一次学会的内容，成为下一次能用的经验。"
+  "windowLabel": "窗口标题",
+  "previewLabel": "预览标题",
+  "result": "结果说明",
+  "footer": "页脚说明文字"
 }

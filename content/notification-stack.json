@@ -17,28 +17,28 @@
   "selectedDay": 17,
   "notifications": [
     {
-      "app": "视频工作台",
-      "icon": "video",
+      "app": "示例应用",
+      "icon": "info",
       "time": "现在",
-      "title": "预览已准备就绪",
-      "body": "所有组件已加载，可以检查画面和动画时间点。",
+      "title": "通知标题 A",
+      "body": "通知正文内容，可替换为需要展示的信息。",
       "actions": [
-        "打开预览"
+        "查看"
       ]
     },
     {
       "app": "文件资源管理器",
       "icon": "folder",
       "time": "5 分钟前",
-      "title": "素材已复制",
-      "body": "8 个项目已复制到“视频项目 / assets”。",
+      "title": "通知标题 B",
+      "body": "补充通知说明。",
       "actions": []
     },
     {
       "app": "日历",
       "icon": "calendar",
       "time": "12 分钟前",
-      "title": "录制第二段讲解",
+      "title": "日程标题",
       "body": "今天 14:00 — 14:30",
       "actions": [
         "稍后提醒",

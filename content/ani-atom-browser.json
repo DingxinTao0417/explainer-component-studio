@@ -4,20 +4,20 @@
   "objectWidth": 990,
   "objectHeight": 518,
   "tabs": [
-    "项目资料",
-    "工作记录"
+    "标签页 A",
+    "标签页 B"
   ],
   "activeTab": 0,
-  "address": "workspace.example / project",
-  "heading": "项目资料",
+  "address": "www.example.com/page",
+  "heading": "页面标题",
   "body": [
-    "需求说明与参考材料放在同一个工作区。",
-    "先确认目标，再逐项查看已有的信息。"
+    "正文第一段，替换为需要展示的内容。",
+    "正文第二段，支持继续补充说明。"
   ],
   "items": [
-    "需求说明",
-    "参考材料",
-    "验收标准"
+    "项目 A",
+    "项目 B",
+    "项目 C"
   ],
   "imageSrc": "",
   "imageAlt": "可替换的页面图片",

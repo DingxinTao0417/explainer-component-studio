@@ -3,13 +3,13 @@
   "y": 105,
   "objectWidth": 700,
   "objectHeight": 500,
-  "name": "项目资料",
-  "subtitle": "文件集中在一起",
+  "name": "文件夹名称",
+  "subtitle": "文件夹说明",
   "open": true,
   "fileLabels": [
-    "需求",
-    "素材",
-    "结果"
+    "文件 A",
+    "文件 B",
+    "文件 C"
   ],
   "accent": "blue"
 }

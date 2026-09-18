@@ -8,34 +8,34 @@
     "alt": ""
   },
   "appTitle": "文件",
-  "folderTitle": "视频项目",
+  "folderTitle": "示例文件夹",
   "backLabel": "浏览",
   "search": "搜索",
   "sortLabel": "名称",
   "itemCount": "6 个项目",
   "folders": [
     {
-      "name": "参考素材",
+      "name": "文件夹 A",
       "count": "12 项"
     },
     {
-      "name": "录屏",
+      "name": "文件夹 B",
       "count": "8 项"
     },
     {
-      "name": "配音",
+      "name": "文件夹 C",
       "count": "5 项"
     },
     {
-      "name": "图片",
+      "name": "文件夹 D",
       "count": "16 项"
     },
     {
-      "name": "动画",
+      "name": "文件夹 E",
       "count": "10 项"
     },
     {
-      "name": "导出",
+      "name": "文件夹 F",
       "count": "3 项"
     }
   ],

@@ -1,20 +1,14 @@
 {
-  "project": "science-video",
-  "filename": "config.ts",
+  "project": "example-project",
+  "filename": "example.ts",
   "branch": "main*",
   "language": "TypeScript",
   "position": "行 10，列 3",
   "files": [
     {
-      "name": "SCIENCE-VIDEO",
+      "name": "EXAMPLE-PROJECT",
       "kind": "folder",
       "depth": 0
-    },
-    {
-      "name": "public",
-      "kind": "folder",
-      "depth": 1,
-      "open": false
     },
     {
       "name": "src",
@@ -22,22 +16,12 @@
       "depth": 1
     },
     {
-      "name": "components",
-      "kind": "folder",
-      "depth": 2,
-      "open": false
-    },
-    {
-      "name": "config.ts",
+      "name": "example.ts",
       "depth": 2,
       "badge": "M"
     },
     {
-      "name": "timeline.ts",
-      "depth": 2
-    },
-    {
-      "name": "index.ts",
+      "name": "helper.ts",
       "depth": 2
     },
     {
@@ -56,24 +40,22 @@
     }
   ],
   "code": [
-    "import { createTimeline } from './timeline';",
+    "import { formatValue } from './helper';",
     "",
-    "// 先定义内容，再交给时间轴编排",
-    "export const video = {",
-    "  title: '把复杂概念讲清楚',",
-    "  width: 1920,",
-    "  height: 1080,",
-    "  fps: 30,",
-    "  scenes: [",
-    "    { id: 'intro', duration: 4.5 },",
-    "    { id: 'explain', duration: 12 },",
-    "    { id: 'summary', duration: 5 },",
+    "// 示例代码：替换为需要展示的逻辑",
+    "export const example = {",
+    "  title: '示例标题',",
+    "  enabled: true,",
+    "  items: [",
+    "    { id: 1, value: 10 },",
+    "    { id: 2, value: 20 },",
     "  ],",
     "};",
     "",
-    "const timeline = createTimeline(video);",
-    "timeline.validate();"
+    "const result = formatValue(example.title);",
+    "console.log(result);"
   ],
   "highlightLine": 10,
-  "secondaryTab": "timeline.ts"
+  "secondaryTab": "helper.ts",
+  "symbol": "example"
 }

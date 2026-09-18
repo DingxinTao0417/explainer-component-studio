@@ -1,14 +1,14 @@
 {
-  "title": "熟悉部分可复用",
-  "subtitle": "原来的办法，可以带到新问题里。",
-  "windowLabel": "熟悉的工具",
-  "previewLabel": "AI 学习",
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "windowLabel": "窗口标题",
+  "previewLabel": "预览标题",
   "steps": [
-    "要求",
-    "检查",
-    "修改"
+    "步骤 A",
+    "步骤 B",
+    "步骤 C"
   ],
-  "trayTitle": "图像要求",
-  "newLabel": "新差异",
-  "footer": "先认出能复用的部分，再处理真正不同的地方。"
+  "trayTitle": "容器标题",
+  "newLabel": "新增项",
+  "footer": "页脚说明文字"
 }

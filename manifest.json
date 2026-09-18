@@ -3,9 +3,9 @@
   "components": [
     {
       "id": "ani-order-filter",
-      "name": "动画风 · 订单条件筛选",
+      "name": "动画风 · 条件筛选表格",
       "category": "动画风",
-      "description": "从五条局部记录展示筛选口径：先计入五条，按完成日期与状态改为三条。取消及未付记录留在原位，样本与月度总数明确区分。",
+      "description": "用五条示例记录展示条件筛选；显示标签与筛选状态分别配置，原始记录保留。",
       "width": 1280,
       "height": 720,
       "reference": {
@@ -22,67 +22,67 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "截取 5 条示意"
+          "default": "表格标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "完成日期在本月，且状态为已完成"
+          "default": "筛选条件说明"
         },
         {
           "id": "footer",
           "type": "string",
           "label": "footer",
-          "default": "只改变计入范围，原始五条记录仍然保留。"
+          "default": "补充说明文字"
         },
         {
           "id": "month",
           "type": "string",
           "label": "month",
-          "default": "2026-09"
+          "default": "2026-01"
         },
         {
           "id": "sourceLabel",
           "type": "string",
           "label": "sourceLabel",
-          "default": "原始表格"
+          "default": "来源表格"
         },
         {
           "id": "rawHeader",
           "type": "string",
           "label": "rawHeader",
-          "default": "初次计入"
+          "default": "初始结果"
         },
         {
           "id": "finalHeader",
           "type": "string",
           "label": "finalHeader",
-          "default": "修正后计入"
+          "default": "筛选结果"
         },
         {
           "id": "includedLabel",
           "type": "string",
           "label": "includedLabel",
-          "default": "计入"
+          "default": "保留"
         },
         {
           "id": "excludedLabel",
           "type": "string",
           "label": "excludedLabel",
-          "default": "不计入"
+          "default": "排除"
         },
         {
           "id": "rawCountLabel",
           "type": "string",
           "label": "rawCountLabel",
-          "default": "本局部初次计入"
+          "default": "初始记录"
         },
         {
           "id": "finalCountLabel",
           "type": "string",
           "label": "finalCountLabel",
-          "default": "本局部符合"
+          "default": "符合条件"
         },
         {
           "id": "unit",
@@ -94,7 +94,25 @@
           "id": "sampleNote",
           "type": "string",
           "label": "sampleNote",
-          "default": "不是月度总数"
+          "default": "结果说明"
+        },
+        {
+          "id": "sourceNote",
+          "type": "string",
+          "label": "sourceNote",
+          "default": "来源说明"
+        },
+        {
+          "id": "periodLabel",
+          "type": "string",
+          "label": "periodLabel",
+          "default": "时间范围"
+        },
+        {
+          "id": "matchState",
+          "type": "string",
+          "label": "matchState",
+          "default": "complete"
         },
         {
           "id": "propsJson",
@@ -514,7 +532,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -522,7 +540,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -563,7 +581,7 @@
       "id": "ani-compare-extract",
       "name": "动画风 · 两例对照与归纳",
       "category": "动画风",
-      "description": "保留通知与订单的不同结构，对齐两边相同的步骤，再汇聚到图式归纳与本例办法。",
+      "description": "并排呈现文档与表格，先显示步骤，再绘制汇聚连线，最后显示结果与总结。",
       "width": 1280,
       "height": 720,
       "reference": {
@@ -580,49 +598,67 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "图式归纳"
+          "default": "结果标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "从不同例子，找共同思路"
+          "default": "结果说明文字"
         },
         {
           "id": "footer",
           "type": "string",
           "label": "footer",
-          "default": "本例办法：补清要求，再检查"
+          "default": "总结说明文字"
         },
         {
           "id": "leftTitle",
           "type": "string",
           "label": "leftTitle",
-          "default": "本周进度通知"
+          "default": "文档标题"
         },
         {
           "id": "rightTitle",
           "type": "string",
           "label": "rightTitle",
-          "default": "截取 5 条示意"
+          "default": "表格标题"
         },
         {
           "id": "relationLabel",
           "type": "string",
           "label": "relationLabel",
-          "default": "比较与提炼"
+          "default": "关系说明"
         },
         {
           "id": "sampleNote",
           "type": "string",
           "label": "sampleNote",
-          "default": "样本不是月度总数"
+          "default": "补充说明"
         },
         {
           "id": "month",
           "type": "string",
           "label": "month",
-          "default": "2026-09"
+          "default": "2026-01"
+        },
+        {
+          "id": "includedLabel",
+          "type": "string",
+          "label": "includedLabel",
+          "default": "保留"
+        },
+        {
+          "id": "excludedLabel",
+          "type": "string",
+          "label": "excludedLabel",
+          "default": "排除"
+        },
+        {
+          "id": "matchState",
+          "type": "string",
+          "label": "matchState",
+          "default": "complete"
         },
         {
           "id": "propsJson",
@@ -1042,7 +1078,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -1050,7 +1086,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -1132,7 +1168,7 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "工作窗口"
+          "default": "窗口标题"
         },
         {
           "id": "showControls",
@@ -1564,7 +1600,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -1572,7 +1608,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -2074,7 +2110,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -2082,7 +2118,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -2164,7 +2200,7 @@
           "id": "address",
           "type": "string",
           "label": "address",
-          "default": "workspace.example / project"
+          "default": "www.example.com/page"
         },
         {
           "id": "showLock",
@@ -2590,7 +2626,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -2598,7 +2634,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -2680,7 +2716,7 @@
           "id": "label",
           "type": "string",
           "label": "label",
-          "default": "开始处理"
+          "default": "操作按钮"
         },
         {
           "id": "state",
@@ -3118,7 +3154,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -3126,7 +3162,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -3208,13 +3244,13 @@
           "id": "value",
           "type": "string",
           "label": "value",
-          "default": "把标题缩短到 12 个字"
+          "default": "示例输入内容"
         },
         {
           "id": "placeholder",
           "type": "string",
           "label": "placeholder",
-          "default": "输入你的要求"
+          "default": "请输入内容"
         },
         {
           "id": "state",
@@ -3226,7 +3262,7 @@
           "id": "errorText",
           "type": "string",
           "label": "errorText",
-          "default": "请补充具体要求"
+          "default": "输入提示文字"
         },
         {
           "id": "showCaret",
@@ -3652,7 +3688,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -3660,7 +3696,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -4174,7 +4210,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -4182,7 +4218,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -4264,7 +4300,7 @@
           "id": "label",
           "type": "string",
           "label": "label",
-          "default": "已对照要求检查"
+          "default": "选项名称"
         },
         {
           "id": "state",
@@ -4690,7 +4726,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -4698,7 +4734,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -5206,7 +5242,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -5214,7 +5250,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -5296,7 +5332,7 @@
           "id": "text",
           "type": "string",
           "label": "text",
-          "default": "本月已完成"
+          "default": "单元格内容"
         },
         {
           "id": "tone",
@@ -5728,7 +5764,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -5736,7 +5772,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -6238,7 +6274,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -6246,7 +6282,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -6334,13 +6370,13 @@
           "id": "label",
           "type": "string",
           "label": "label",
-          "default": "符合要求？"
+          "default": "判断条件？"
         },
         {
           "id": "caption",
           "type": "string",
           "label": "caption",
-          "default": "按标准逐项判断"
+          "default": "节点说明"
         },
         {
           "id": "tone",
@@ -6772,7 +6808,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -6780,7 +6816,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -6862,13 +6898,13 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "核对这一点"
+          "default": "标注标题"
         },
         {
           "id": "body",
           "type": "string",
           "label": "body",
-          "default": "要求写清楚后，再用结果逐项核对。"
+          "default": "标注正文内容，可替换为补充说明。"
         },
         {
           "id": "direction",
@@ -7312,7 +7348,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -7320,7 +7356,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -7408,7 +7444,7 @@
           "id": "label",
           "type": "string",
           "label": "label",
-          "default": "重点检查"
+          "default": "标注文字"
         },
         {
           "id": "tone",
@@ -7858,7 +7894,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -7866,7 +7902,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -7948,7 +7984,7 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "完成进度"
+          "default": "进度标题"
         },
         {
           "id": "value",
@@ -8392,7 +8428,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -8400,7 +8436,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -8488,7 +8524,7 @@
           "id": "label",
           "type": "string",
           "label": "label",
-          "default": "检查"
+          "default": "图标标签"
         },
         {
           "id": "tone",
@@ -8926,7 +8962,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -8934,7 +8970,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -9460,7 +9496,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -9468,7 +9504,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -9550,13 +9586,13 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "先把要求说清楚"
+          "default": "主标题"
         },
         {
           "id": "text",
           "type": "string",
           "label": "text",
-          "default": "谁来做、做什么、什么时候完成。\n完成后，拿结果对照这些要求再检查。"
+          "default": "正文第一行，替换为需要展示的内容。\n正文第二行，可以继续补充说明。"
         },
         {
           "id": "fontSize",
@@ -10012,7 +10048,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -10020,7 +10056,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -10102,13 +10138,13 @@
           "id": "label",
           "type": "string",
           "label": "label",
-          "default": "任务"
+          "default": "字段"
         },
         {
           "id": "text",
           "type": "string",
           "label": "text",
-          "default": "填写本周完成与待办事项"
+          "default": "字段内容"
         },
         {
           "id": "status",
@@ -10546,7 +10582,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -10554,7 +10590,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -10636,7 +10672,7 @@
           "id": "meta",
           "type": "string",
           "label": "meta",
-          "default": "整理后的资料"
+          "default": "文件说明"
         },
         {
           "id": "layout",
@@ -11062,7 +11098,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -11070,7 +11106,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -11152,13 +11188,13 @@
           "id": "label",
           "type": "string",
           "label": "label",
-          "default": "先补清要求"
+          "default": "标题文字"
         },
         {
           "id": "caption",
           "type": "string",
           "label": "caption",
-          "default": "完成后，再按要求检查"
+          "default": "说明文字"
         },
         {
           "id": "accent",
@@ -11590,7 +11626,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -11598,7 +11634,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -11680,13 +11716,13 @@
           "id": "name",
           "type": "string",
           "label": "name",
-          "default": "项目资料"
+          "default": "示例文件"
         },
         {
           "id": "meta",
           "type": "string",
           "label": "meta",
-          "default": "可编辑文件"
+          "default": "文件说明"
         },
         {
           "id": "fileType",
@@ -12118,7 +12154,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -12126,7 +12162,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -12208,13 +12244,13 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "项目说明"
+          "default": "文档标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "把需要做的事写清楚"
+          "default": "文档说明文字"
         },
         {
           "id": "accent",
@@ -12640,7 +12676,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -12648,7 +12684,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -12730,13 +12766,13 @@
           "id": "name",
           "type": "string",
           "label": "name",
-          "default": "项目资料"
+          "default": "文件夹名称"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "文件集中在一起"
+          "default": "文件夹说明"
         },
         {
           "id": "open",
@@ -13168,7 +13204,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -13176,7 +13212,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -13684,7 +13720,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -13692,7 +13728,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -13780,13 +13816,13 @@
           "id": "address",
           "type": "string",
           "label": "address",
-          "default": "workspace.example / project"
+          "default": "www.example.com/page"
         },
         {
           "id": "heading",
           "type": "string",
           "label": "heading",
-          "default": "项目资料"
+          "default": "页面标题"
         },
         {
           "id": "imageSrc",
@@ -14224,7 +14260,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -14232,7 +14268,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -14332,7 +14368,7 @@
           "id": "label",
           "type": "string",
           "label": "label",
-          "default": "资料传递"
+          "default": "连接说明"
         },
         {
           "id": "labelX",
@@ -14764,7 +14800,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -14772,7 +14808,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -14830,31 +14866,31 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "输入、检查，再修改"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "把要求写进去，把结果拿出来看。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "toolLabel",
           "type": "string",
           "label": "toolLabel",
-          "default": "工具 A"
+          "default": "窗口标题"
         },
         {
           "id": "requestLabel",
           "type": "string",
           "label": "requestLabel",
-          "default": "要求"
+          "default": "输入"
         },
         {
           "id": "request",
           "type": "string",
           "label": "request",
-          "default": "AI 学习海报"
+          "default": "输入内容"
         },
         {
           "id": "revisionLabel",
@@ -14866,7 +14902,7 @@
           "id": "revision",
           "type": "string",
           "label": "revision",
-          "default": "标题缩小"
+          "default": "修改内容"
         },
         {
           "id": "action",
@@ -14878,13 +14914,13 @@
           "id": "previewLabel",
           "type": "string",
           "label": "previewLabel",
-          "default": "AI 学习"
+          "default": "预览标题"
         },
         {
           "id": "footer",
           "type": "string",
           "label": "footer",
-          "default": "检查结果，才能知道下一步该改哪里。"
+          "default": "页脚说明文字"
         },
         {
           "id": "propsJson",
@@ -15304,7 +15340,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -15312,7 +15348,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -15351,9 +15387,9 @@
     },
     {
       "id": "ani-file-collection",
-      "name": "动画风 · 收藏不等于会",
+      "name": "动画风 · 文件夹与窗口对照",
       "category": "动画风",
-      "description": "折角教程纸收进文件夹，与右侧实际操作窗口形成对照；收藏列表和窗口标签可编辑。",
+      "description": "文件卡片、文件夹与浏览器窗口并排展示；文件名称、标签与说明均可替换。",
       "width": 1280,
       "height": 720,
       "reference": {
@@ -15370,31 +15406,31 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "收藏，不等于会"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "材料存起来之后，还需要自己做一次。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "folderLabel",
           "type": "string",
           "label": "folderLabel",
-          "default": "收藏的教程"
+          "default": "文件夹名称"
         },
         {
           "id": "windowLabel",
           "type": "string",
           "label": "windowLabel",
-          "default": "实际操作"
+          "default": "窗口标题"
         },
         {
           "id": "previewLabel",
           "type": "string",
           "label": "previewLabel",
-          "default": "AI 学习"
+          "default": "预览标题"
         },
         {
           "id": "result",
@@ -15406,7 +15442,7 @@
           "id": "footer",
           "type": "string",
           "label": "footer",
-          "default": "从“我看过”走到“我能做”。"
+          "default": "页脚说明文字"
         },
         {
           "id": "propsJson",
@@ -15826,7 +15862,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -15834,7 +15870,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -15873,9 +15909,9 @@
     },
     {
       "id": "ani-method-transfer",
-      "name": "动画风 · 熟悉部分可复用",
+      "name": "动画风 · 窗口与部件组合",
       "category": "动画风",
-      "description": "从熟悉工具提取要求、检查、修改，送进带厚度的复用托盘，给新差异留出独立槽位。",
+      "description": "浏览器、文件卡片与容器通过连线组合；步骤、容器标题和新增项分别可编辑。",
       "width": 1280,
       "height": 720,
       "reference": {
@@ -15892,43 +15928,43 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "熟悉部分可复用"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "原来的办法，可以带到新问题里。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "windowLabel",
           "type": "string",
           "label": "windowLabel",
-          "default": "熟悉的工具"
+          "default": "窗口标题"
         },
         {
           "id": "previewLabel",
           "type": "string",
           "label": "previewLabel",
-          "default": "AI 学习"
+          "default": "预览标题"
         },
         {
           "id": "trayTitle",
           "type": "string",
           "label": "trayTitle",
-          "default": "图像要求"
+          "default": "容器标题"
         },
         {
           "id": "newLabel",
           "type": "string",
           "label": "newLabel",
-          "default": "新差异"
+          "default": "新增项"
         },
         {
           "id": "footer",
           "type": "string",
           "label": "footer",
-          "default": "先认出能复用的部分，再处理真正不同的地方。"
+          "default": "页脚说明文字"
         },
         {
           "id": "propsJson",
@@ -16348,7 +16384,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -16356,7 +16392,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -16395,9 +16431,9 @@
     },
     {
       "id": "ani-knowledge-network",
-      "name": "动画风 · 把新旧连起来",
+      "name": "动画风 · 文档与窗口连线",
       "category": "动画风",
-      "description": "已有资料与成品进入要求结构，经检查和修改连到新的竖版任务；对象、字段和结果可编辑。",
+      "description": "文件、预览窗口与文档通过连线组成图解；字段、步骤、输出和注释可编辑。",
       "width": 1280,
       "height": 720,
       "reference": {
@@ -16414,55 +16450,55 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "把新旧连起来"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "让新问题挂到已有经验上。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "previewLabel",
           "type": "string",
           "label": "previewLabel",
-          "default": "AI 学习"
+          "default": "预览标题"
         },
         {
           "id": "requirementsTitle",
           "type": "string",
           "label": "requirementsTitle",
-          "default": "海报要求"
+          "default": "文档标题"
         },
         {
           "id": "outputTitle",
           "type": "string",
           "label": "outputTitle",
-          "default": "改为竖版"
+          "default": "输出标题"
         },
         {
           "id": "resultLabel",
           "type": "string",
           "label": "resultLabel",
-          "default": "图像要求"
+          "default": "结果标签"
         },
         {
           "id": "questionTitle",
           "type": "string",
           "label": "questionTitle",
-          "default": "缺少相关经验时"
+          "default": "问题标题"
         },
         {
           "id": "question",
           "type": "string",
           "label": "question",
-          "default": "从哪里问起？"
+          "default": "问题内容？"
         },
         {
           "id": "footer",
           "type": "string",
           "label": "footer",
-          "default": "联系越具体，越容易知道下一步怎么做。"
+          "default": "页脚说明文字"
         },
         {
           "id": "propsJson",
@@ -16882,7 +16918,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -16890,7 +16926,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -16929,9 +16965,9 @@
     },
     {
       "id": "ani-capability-tiles",
-      "name": "动画风 · 散落知识砖",
+      "name": "动画风 · 图标卡片组",
       "category": "动画风",
-      "description": "六块具有厚度的工具砖分别承载要求、配色、尺寸、版式、检查和修改，与工具结果窗口并置。",
+      "description": "六块带图标的卡片与预览窗口并置；卡片标签、窗口标题和结果文字可编辑。",
       "width": 1280,
       "height": 720,
       "reference": {
@@ -16948,37 +16984,37 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "学一个，扔一个"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "零散技巧，需要连成自己的方法。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "windowLabel",
           "type": "string",
           "label": "windowLabel",
-          "default": "AI 工具 B"
+          "default": "窗口标题"
         },
         {
           "id": "previewLabel",
           "type": "string",
           "label": "previewLabel",
-          "default": "AI 学习"
+          "default": "预览标题"
         },
         {
           "id": "result",
           "type": "string",
           "label": "result",
-          "default": "把本事连起来"
+          "default": "结果说明"
         },
         {
           "id": "footer",
           "type": "string",
           "label": "footer",
-          "default": "让一次学会的内容，成为下一次能用的经验。"
+          "default": "页脚说明文字"
         },
         {
           "id": "propsJson",
@@ -17398,7 +17434,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -17406,7 +17442,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -17464,13 +17500,13 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "让过程看得见"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "输入材料，经过处理，留下可核对的结果。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "inputTitle",
@@ -17482,19 +17518,19 @@
           "id": "processTitle",
           "type": "string",
           "label": "processTitle",
-          "default": "处理过程"
+          "default": "处理"
         },
         {
           "id": "outputTitle",
           "type": "string",
           "label": "outputTitle",
-          "default": "结果"
+          "default": "输出"
         },
         {
           "id": "footer",
           "type": "string",
           "label": "footer",
-          "default": "讲到哪一步，画面就变化到哪一步。"
+          "default": "页脚说明文字"
         },
         {
           "id": "propsJson",
@@ -17914,7 +17950,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -17922,7 +17958,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -17980,19 +18016,19 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "明明学过，"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "为什么想不起来用？"
+          "default": "副标题与说明文字"
         },
         {
           "id": "footer",
           "type": "string",
           "label": "footer",
-          "default": "下期：远迁移"
+          "default": "页脚说明文字"
         },
         {
           "id": "propsJson",
@@ -18412,7 +18448,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -18420,7 +18456,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -18459,7 +18495,7 @@
     },
     {
       "id": "ani-notice-check",
-      "name": "动画风 · 通知逐项核对",
+      "name": "动画风 · 文档逐项核对",
       "category": "动画风",
       "description": "根据 V8 通知母版复刻折角纸张、深蓝描边、钴蓝标题牌与四行彩色图标，逐项核对后保留检查结果。全部图形与文字可编辑。",
       "width": 1280,
@@ -18478,19 +18514,19 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "本周进度通知"
+          "default": "文档标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "从收件人角度核对"
+          "default": "文档说明"
         },
         {
           "id": "footnote",
           "type": "string",
           "label": "footnote",
-          "default": "轮到谁做、要做什么、几点前完成、在哪儿填，都找得到。"
+          "default": "补充说明文字"
         },
         {
           "id": "propsJson",
@@ -18910,7 +18946,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -18918,7 +18954,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -19414,7 +19450,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -19422,7 +19458,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -19480,31 +19516,37 @@
           "id": "subject",
           "type": "string",
           "label": "subject",
-          "default": "本周课程的制作安排"
+          "default": "邮件主题"
         },
         {
           "id": "sender",
           "type": "string",
           "label": "sender",
-          "default": "陈老师"
+          "default": "发件人"
         },
         {
           "id": "email",
           "type": "string",
           "label": "email",
-          "default": "chen@example.com"
+          "default": "sender@example.com"
         },
         {
           "id": "to",
           "type": "string",
           "label": "to",
-          "default": "林同学"
+          "default": "收件人"
         },
         {
           "id": "date",
           "type": "string",
           "label": "date",
           "default": "2026年9月17日 09:20"
+        },
+        {
+          "id": "senderInitial",
+          "type": "string",
+          "label": "senderInitial",
+          "default": "发"
         },
         {
           "id": "propsJson",
@@ -19924,7 +19966,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -19932,7 +19974,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -19990,7 +20032,7 @@
           "id": "filename",
           "type": "string",
           "label": "filename",
-          "default": "制作指南.pdf"
+          "default": "示例文档.pdf"
         },
         {
           "id": "page",
@@ -20008,13 +20050,19 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "如何组织一个清楚的讲解"
+          "default": "文档标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "课程设计 / 02"
+          "default": "章节 / 02"
+        },
+        {
+          "id": "documentFooter",
+          "type": "string",
+          "label": "documentFooter",
+          "default": "页脚说明"
         },
         {
           "id": "propsJson",
@@ -20434,7 +20482,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -20442,7 +20490,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -20938,7 +20986,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -20946,7 +20994,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -21004,13 +21052,13 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "导出文稿"
+          "default": "保存文档"
         },
         {
           "id": "filename",
           "type": "string",
           "label": "filename",
-          "default": "课程讲稿.pdf"
+          "default": "示例文档.pdf"
         },
         {
           "id": "folder",
@@ -21029,6 +21077,18 @@
           "type": "string",
           "label": "button",
           "default": "存储"
+        },
+        {
+          "id": "documentTitle",
+          "type": "string",
+          "label": "documentTitle",
+          "default": "文档标题"
+        },
+        {
+          "id": "documentBody",
+          "type": "string",
+          "label": "documentBody",
+          "default": "正文内容，可替换为需要展示的文字。"
         },
         {
           "id": "propsJson",
@@ -21448,7 +21508,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -21456,7 +21516,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -21514,31 +21574,31 @@
           "id": "app",
           "type": "string",
           "label": "app",
-          "default": "屏幕录制"
+          "default": "示例应用"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "“屏幕录制”想要访问你的麦克风"
+          "default": "确认操作"
         },
         {
           "id": "message",
           "type": "string",
           "label": "message",
-          "default": "允许访问麦克风，以便在录制画面时加入你的讲解。你可以随时在系统设置中更改此权限。"
+          "default": "提示内容。可替换为需要说明的操作与影响。"
         },
         {
           "id": "primary",
           "type": "string",
           "label": "primary",
-          "default": "允许"
+          "default": "确认"
         },
         {
           "id": "secondary",
           "type": "string",
           "label": "secondary",
-          "default": "不允许"
+          "default": "取消"
         },
         {
           "id": "propsJson",
@@ -21958,7 +22018,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -21966,7 +22026,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -22024,7 +22084,7 @@
           "id": "filename",
           "type": "string",
           "label": "filename",
-          "default": "课程讲稿.md"
+          "default": "示例文档.md"
         },
         {
           "id": "selected",
@@ -22450,7 +22510,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -22458,7 +22518,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -22936,7 +22996,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -22944,7 +23004,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -23008,7 +23068,7 @@
           "id": "path",
           "type": "string",
           "label": "path",
-          "default": "iCloud 云盘 › 文稿 › 视频制作"
+          "default": "iCloud 云盘 › 文稿 › 示例文件夹"
         },
         {
           "id": "selected",
@@ -23434,7 +23494,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -23442,7 +23502,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -23500,25 +23560,49 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "制作指南"
+          "default": "页面标题"
         },
         {
           "id": "url",
           "type": "string",
           "label": "url",
-          "default": "docs.example.com"
+          "default": "www.example.com"
         },
         {
           "id": "heading",
           "type": "string",
           "label": "heading",
-          "default": "把知识变成能看懂的画面"
+          "default": "页面主标题"
         },
         {
           "id": "intro",
           "type": "string",
           "label": "intro",
-          "default": "从一个问题出发，用清晰的结构、真实素材和准确的图解完成讲解。"
+          "default": "页面简介，可替换为需要展示的说明。"
+        },
+        {
+          "id": "brand",
+          "type": "string",
+          "label": "brand",
+          "default": "示例站点"
+        },
+        {
+          "id": "actionLabel",
+          "type": "string",
+          "label": "actionLabel",
+          "default": "操作按钮"
+        },
+        {
+          "id": "sidebarTitle",
+          "type": "string",
+          "label": "sidebarTitle",
+          "default": "导航标题"
+        },
+        {
+          "id": "eyebrow",
+          "type": "string",
+          "label": "eyebrow",
+          "default": "栏目 / 页面"
         },
         {
           "id": "propsJson",
@@ -23938,7 +24022,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -23946,7 +24030,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -24004,25 +24088,25 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "video-studio — zsh — 100×28"
+          "default": "example-project — zsh — 100×28"
         },
         {
           "id": "user",
           "type": "string",
           "label": "user",
-          "default": "lin@MacBook-Pro"
+          "default": "user@MacBook-Pro"
         },
         {
           "id": "folder",
           "type": "string",
           "label": "folder",
-          "default": "video-studio"
+          "default": "example-project"
         },
         {
           "id": "command",
           "type": "string",
           "label": "command",
-          "default": "npm run build"
+          "default": "node example.js"
         },
         {
           "id": "propsJson",
@@ -24442,7 +24526,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -24450,7 +24534,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -24514,13 +24598,19 @@
           "id": "account",
           "type": "string",
           "label": "account",
-          "default": "林同学"
+          "default": "示例用户"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
           "default": "Apple 账户"
+        },
+        {
+          "id": "accountInitial",
+          "type": "string",
+          "label": "accountInitial",
+          "default": "用"
         },
         {
           "id": "propsJson",
@@ -24940,7 +25030,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -24948,7 +25038,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -25006,7 +25096,7 @@
           "id": "query",
           "type": "string",
           "label": "query",
-          "default": "视频制作"
+          "default": "示例"
         },
         {
           "id": "propsJson",
@@ -25426,7 +25516,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -25434,7 +25524,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -25492,7 +25582,7 @@
           "id": "wifi",
           "type": "string",
           "label": "wifi",
-          "default": "Studio Wi-Fi"
+          "default": "Example Wi-Fi"
         },
         {
           "id": "bluetooth",
@@ -25948,7 +26038,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -25956,7 +26046,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -26017,6 +26107,42 @@
           "default": "9月17日 星期四"
         },
         {
+          "id": "weekday",
+          "type": "string",
+          "label": "weekday",
+          "default": "星期四"
+        },
+        {
+          "id": "day",
+          "type": "number",
+          "label": "day",
+          "default": 17
+        },
+        {
+          "id": "agendaSummary",
+          "type": "string",
+          "label": "agendaSummary",
+          "default": "日程摘要"
+        },
+        {
+          "id": "nextEventTitle",
+          "type": "string",
+          "label": "nextEventTitle",
+          "default": "日程标题"
+        },
+        {
+          "id": "nextEventTime",
+          "type": "string",
+          "label": "nextEventTime",
+          "default": "10:00–10:30"
+        },
+        {
+          "id": "calendarLabel",
+          "type": "string",
+          "label": "calendarLabel",
+          "default": "示例日历"
+        },
+        {
           "id": "propsJson",
           "type": "string",
           "label": "完整组件内容 JSON（覆盖同名字段）",
@@ -26434,7 +26560,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -26442,7 +26568,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -26500,19 +26626,25 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "科普视频制作计划"
+          "default": "笔记标题"
         },
         {
           "id": "folder",
           "type": "string",
           "label": "folder",
-          "default": "工作"
+          "default": "示例文件夹"
         },
         {
           "id": "date",
           "type": "string",
           "label": "date",
           "default": "2026年9月17日 09:41"
+        },
+        {
+          "id": "checklistTitle",
+          "type": "string",
+          "label": "checklistTitle",
+          "default": "检查项"
         },
         {
           "id": "propsJson",
@@ -26932,7 +27064,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -26940,7 +27072,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -27004,13 +27136,19 @@
           "id": "account",
           "type": "string",
           "label": "account",
-          "default": "林同学"
+          "default": "示例用户"
         },
         {
           "id": "accountSubtitle",
           "type": "string",
           "label": "accountSubtitle",
           "default": "Apple 账户、iCloud 等"
+        },
+        {
+          "id": "accountInitial",
+          "type": "string",
+          "label": "accountInitial",
+          "default": "用"
         },
         {
           "id": "propsJson",
@@ -27430,7 +27568,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -27438,7 +27576,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -27496,13 +27634,13 @@
           "id": "name",
           "type": "string",
           "label": "name",
-          "default": "陈老师"
+          "default": "联系人"
         },
         {
           "id": "initial",
           "type": "string",
           "label": "initial",
-          "default": "陈"
+          "default": "联"
         },
         {
           "id": "date",
@@ -27940,7 +28078,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -27948,7 +28086,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -28006,25 +28144,31 @@
           "id": "url",
           "type": "string",
           "label": "url",
-          "default": "docs.example.com"
+          "default": "www.example.com"
         },
         {
           "id": "brand",
           "type": "string",
           "label": "brand",
-          "default": "Studio Docs"
+          "default": "示例站点"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "把复杂内容讲清楚"
+          "default": "页面主标题"
         },
         {
           "id": "intro",
           "type": "string",
           "label": "intro",
-          "default": "一份可复用的内容制作指南。"
+          "default": "页面简介文字。"
+        },
+        {
+          "id": "eyebrow",
+          "type": "string",
+          "label": "eyebrow",
+          "default": "栏目 / 页面"
         },
         {
           "id": "propsJson",
@@ -28444,7 +28588,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -28452,7 +28596,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -28510,13 +28654,13 @@
           "id": "folder",
           "type": "string",
           "label": "folder",
-          "default": "工作"
+          "default": "示例文件夹"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "第一节课的制作清单"
+          "default": "笔记标题"
         },
         {
           "id": "date",
@@ -28942,7 +29086,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -28950,7 +29094,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -29008,7 +29152,7 @@
           "id": "network",
           "type": "string",
           "label": "network",
-          "default": "Studio Wi-Fi"
+          "default": "Example Wi-Fi"
         },
         {
           "id": "track",
@@ -29452,7 +29596,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -29460,7 +29604,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -29518,13 +29662,25 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "课程制作指南.pdf"
+          "default": "示例文档.pdf"
         },
         {
           "id": "detail",
           "type": "string",
           "label": "detail",
           "default": "PDF 文稿 · 1.2 MB"
+        },
+        {
+          "id": "documentTitle",
+          "type": "string",
+          "label": "documentTitle",
+          "default": "文档标题"
+        },
+        {
+          "id": "documentBody",
+          "type": "string",
+          "label": "documentBody",
+          "default": "正文内容，可替换为需要展示的文字。"
         },
         {
           "id": "propsJson",
@@ -29944,7 +30100,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -29952,7 +30108,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -30010,25 +30166,37 @@
           "id": "url",
           "type": "string",
           "label": "url",
-          "default": "docs.example.com"
+          "default": "www.example.com"
         },
         {
           "id": "webTitle",
           "type": "string",
           "label": "webTitle",
-          "default": "一节课的内容结构"
+          "default": "页面主标题"
         },
         {
           "id": "webIntro",
           "type": "string",
           "label": "webIntro",
-          "default": "从问题开始，以可验证的结果结束。"
+          "default": "页面简介文字。"
         },
         {
           "id": "noteTitle",
           "type": "string",
           "label": "noteTitle",
-          "default": "课程笔记"
+          "default": "笔记标题"
+        },
+        {
+          "id": "webEyebrow",
+          "type": "string",
+          "label": "webEyebrow",
+          "default": "栏目 / 页面"
+        },
+        {
+          "id": "noteDate",
+          "type": "string",
+          "label": "noteDate",
+          "default": "2026年1月5日 09:41"
         },
         {
           "id": "propsJson",
@@ -30448,7 +30616,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -30456,7 +30624,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -30514,13 +30682,19 @@
           "id": "folder",
           "type": "string",
           "label": "folder",
-          "default": "视频制作"
+          "default": "示例文件夹"
         },
         {
           "id": "location",
           "type": "string",
           "label": "location",
           "default": "iCloud 云盘"
+        },
+        {
+          "id": "favoriteLabel",
+          "type": "string",
+          "label": "favoriteLabel",
+          "default": "示例文件夹"
         },
         {
           "id": "propsJson",
@@ -30940,7 +31114,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -30948,7 +31122,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -30987,7 +31161,7 @@
     },
     {
       "id": "broll-brief-desk",
-      "name": "桌面便签 · 补齐要求",
+      "name": "桌面文档与便签",
       "category": "B-roll · 动画插镜",
       "description": "俯拍纸张与四张便签，把模糊任务补成对象、任务、时间和入口；所有正文可编辑。",
       "width": 1280,
@@ -31006,43 +31180,43 @@
           "id": "documentLabel",
           "type": "string",
           "label": "documentLabel",
-          "default": "工作手记 / 01"
+          "default": "文档 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "本周进度收集"
+          "default": "文档标题"
         },
         {
           "id": "originalLabel",
           "type": "string",
           "label": "originalLabel",
-          "default": "最初的一句话"
+          "default": "内容标签"
         },
         {
           "id": "original",
           "type": "string",
           "label": "original",
-          "default": "提醒大家交进度，正式一点。"
+          "default": "正文内容，可替换为需要展示的文字。"
         },
         {
           "id": "marginNote",
           "type": "string",
           "label": "marginNote",
-          "default": "还缺哪些信息？"
+          "default": "批注内容"
         },
         {
           "id": "checklistLabel",
           "type": "string",
           "label": "checklistLabel",
-          "default": "发出前，逐项对照"
+          "default": "检查项标题"
         },
         {
           "id": "documentNote",
           "type": "string",
           "label": "documentNote",
-          "default": "站在收到通知的人那边，再读一遍。"
+          "default": "补充说明文字"
         },
         {
           "id": "propsJson",
@@ -31462,7 +31636,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -31470,7 +31644,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -31509,7 +31683,7 @@
     },
     {
       "id": "broll-message-pile",
-      "name": "消息纸条 · 从模糊到明确",
+      "name": "消息与结果卡片",
       "category": "B-roll · 动画插镜",
       "description": "抽象消息纸条堆积在桌上，问题标签与右侧明确通知形成对照；不仿冒任何软件界面。",
       "width": 1280,
@@ -31528,31 +31702,31 @@
           "id": "trayLabel",
           "type": "string",
           "label": "trayLabel",
-          "default": "待理清的消息"
+          "default": "消息列表"
         },
         {
           "id": "clearLabel",
           "type": "string",
           "label": "clearLabel",
-          "default": "补充后的通知"
+          "default": "整理结果"
         },
         {
           "id": "clearTitle",
           "type": "string",
           "label": "clearTitle",
-          "default": "本周进度，按这份交"
+          "default": "结果标题"
         },
         {
           "id": "resultNote",
           "type": "string",
           "label": "resultNote",
-          "default": "一张纸，就能找到下一步。"
+          "default": "结果说明文字"
         },
         {
           "id": "indexLabel",
           "type": "string",
           "label": "indexLabel",
-          "default": "整理 / 02"
+          "default": "栏目 / 02"
         },
         {
           "id": "propsJson",
@@ -31972,7 +32146,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -31980,7 +32154,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -32019,7 +32193,7 @@
     },
     {
       "id": "broll-revision-stack",
-      "name": "稿纸叠层 · 修改与核对",
+      "name": "文档版本叠层",
       "category": "B-roll · 动画插镜",
       "description": "三版稿纸和蓝色标注呈现逐次修订，最新一页形成可核对清单；版本、缺口、正文均可替换。",
       "width": 1280,
@@ -32044,13 +32218,13 @@
           "id": "latestLabel",
           "type": "string",
           "label": "latestLabel",
-          "default": "对照要求再看一遍"
+          "default": "版本说明 C"
         },
         {
           "id": "latestTitle",
           "type": "string",
           "label": "latestTitle",
-          "default": "交代清楚，再发出"
+          "default": "文档标题 C"
         },
         {
           "id": "stamp",
@@ -32062,7 +32236,7 @@
           "id": "bottomNote",
           "type": "string",
           "label": "bottomNote",
-          "default": "修改有依据，检查也有依据。"
+          "default": "补充说明文字"
         },
         {
           "id": "propsJson",
@@ -32482,7 +32656,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -32490,7 +32664,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -32548,19 +32722,19 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "工作中的一个瞬间"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "先把要求说清楚"
+          "default": "主标题"
         },
         {
           "id": "caption",
           "type": "string",
           "label": "caption",
-          "default": "动手之前，把对象、内容和时间写下来。"
+          "default": "字幕说明文字"
         },
         {
           "id": "mediaSrc",
@@ -32608,7 +32782,7 @@
           "id": "tag",
           "type": "string",
           "label": "tag",
-          "default": "日常工作"
+          "default": "示例标签"
         },
         {
           "id": "propsJson",
@@ -33028,7 +33202,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -33036,7 +33210,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -33094,19 +33268,19 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "从想法到行动"
+          "default": "栏目 / 02"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "写下来，做一遍，再核对"
+          "default": "主标题"
         },
         {
           "id": "caption",
           "type": "string",
           "label": "caption",
-          "default": "同一个目标，可以从不同角度观察。"
+          "default": "字幕说明文字"
         },
         {
           "id": "propsJson",
@@ -33526,7 +33700,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -33534,7 +33708,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -33592,13 +33766,13 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "停下来，看一个细节"
+          "default": "栏目 / 03"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "要求落在纸上，才方便核对"
+          "default": "主标题"
         },
         {
           "id": "mediaSrc",
@@ -33658,13 +33832,13 @@
           "id": "focusLabel",
           "type": "string",
           "label": "focusLabel",
-          "default": "先把要求写下来"
+          "default": "局部标注"
         },
         {
           "id": "footer",
           "type": "string",
           "label": "footer",
-          "default": "旁白提示 · 可替换为自己的观察"
+          "default": "页脚说明文字"
         },
         {
           "id": "propsJson",
@@ -34084,7 +34258,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -34092,7 +34266,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -34137,7 +34311,7 @@
       "width": 1280,
       "height": 800,
       "reference": {
-        "basis": "2026-09-18 本机 Codex 界面观察；输入框沿用现有 measured 组件的字体、间距与控件形状。全工作区及预览内容未逐像素验收。",
+        "basis": "以 2026-09-18 本机 Codex 界面观察为原型；沿用控件形状，正文 18px，内容区与输入区统一宽度，侧栏及文件预览按可读性调整。全工作区未逐像素验收。",
         "source": "../component-reference/high-fidelity/references/codex-current-window.png",
         "level": "documented"
       },
@@ -34150,13 +34324,13 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "统计本月已完成订单"
+          "default": "任务标题"
         },
         {
           "id": "project",
           "type": "string",
           "label": "project",
-          "default": "演示项目"
+          "default": "示例项目"
         },
         {
           "id": "disclosure",
@@ -34594,7 +34768,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -34602,7 +34776,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -34647,9 +34821,9 @@
       "width": 1280,
       "height": 800,
       "reference": {
-        "basis": "Windows Codex 26.915.3509.0；本机真实截图与安装包 UI 字体/间距 token",
+        "basis": "以 Windows Codex 26.915.3509.0 本机截图与安装包 UI token 为原型；组件正文调至 18px，按预览可读性优化内容宽度和输入区，不作为逐像素截图。",
         "source": "../component-reference/high-fidelity/references/codex-current-window.png",
-        "level": "measured"
+        "level": "documented"
       },
       "defaultEffect": "none",
       "content": "content/codex-chat.json",
@@ -34660,55 +34834,55 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "修复移动端页面布局"
+          "default": "任务标题"
         },
         {
           "id": "userMessage",
           "type": "string",
           "label": "userMessage",
-          "default": "检查移动端按钮被遮挡的问题。只修改布局相关代码，保持桌面端效果不变。"
+          "default": "用户消息内容。可填写任务、补充信息与预期结果。"
         },
         {
           "id": "status",
           "type": "string",
           "label": "status",
-          "default": "已处理 38秒"
+          "default": "已处理 10秒"
         },
         {
           "id": "reply",
           "type": "string",
           "label": "reply",
-          "default": "已经修复移动端按钮被遮挡的问题。按钮现在会随容器宽度正常换行，桌面端布局保持原有样式。"
+          "default": "回复内容。可替换为需要展示的回答。"
         },
         {
           "id": "command",
           "type": "string",
           "label": "command",
-          "default": "npm run test -- --run"
+          "default": "node example.js"
         },
         {
           "id": "commandResult",
           "type": "string",
           "label": "commandResult",
-          "default": "12 个测试通过"
+          "default": "示例输出"
         },
         {
           "id": "file",
           "type": "string",
           "label": "file",
-          "default": "src/components/ActionBar.tsx"
+          "default": "src/example.ts"
         },
         {
           "id": "added",
           "type": "number",
           "label": "added",
-          "default": 18
+          "default": 8
         },
         {
           "id": "removed",
           "type": "number",
           "label": "removed",
-          "default": 4
+          "default": 2
         },
         {
           "id": "placeholder",
@@ -35164,7 +35338,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -35172,7 +35346,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -35213,13 +35387,13 @@
       "id": "codex-composer",
       "name": "Codex 输入框",
       "category": "Codex",
-      "description": "独立复用的原尺寸输入区、权限标签、模型选择器、麦克风和发送/停止按钮。",
+      "description": "独立复用的输入区、权限标签、模型选择器、麦克风和发送/停止按钮。",
       "width": 800,
       "height": 160,
       "reference": {
-        "basis": "Windows Codex 26.915.3509.0；本机真实截图与安装包 UI 字体/间距 token",
+        "basis": "以 Windows Codex 26.915.3509.0 本机截图与安装包 UI token 为原型；组件正文调至 18px，按预览可读性优化内容宽度和输入区，不作为逐像素截图。",
         "source": "../component-reference/high-fidelity/references/codex-current-window.png",
-        "level": "measured"
+        "level": "documented"
       },
       "defaultEffect": "none",
       "content": "content/codex-composer.json",
@@ -35680,7 +35854,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -35688,7 +35862,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -35733,9 +35907,9 @@
       "width": 800,
       "height": 200,
       "reference": {
-        "basis": "Windows Codex 26.915.3509.0；本机真实截图与安装包 UI 字体/间距 token",
+        "basis": "以 Windows Codex 26.915.3509.0 本机截图与安装包 UI token 为原型；组件正文调至 18px，按预览可读性优化内容宽度和输入区，不作为逐像素截图。",
         "source": "../component-reference/high-fidelity/references/codex-current-window.png",
-        "level": "measured"
+        "level": "documented"
       },
       "defaultEffect": "none",
       "content": "content/codex-tool-result.json",
@@ -35752,19 +35926,19 @@
           "id": "file",
           "type": "string",
           "label": "file",
-          "default": "提示词.md"
+          "default": "示例文件.md"
         },
         {
           "id": "added",
           "type": "number",
           "label": "added",
-          "default": 37
+          "default": 8
         },
         {
           "id": "removed",
           "type": "number",
           "label": "removed",
-          "default": 0
+          "default": 2
         },
         {
           "id": "undoLabel",
@@ -36196,7 +36370,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -36204,7 +36378,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -36245,7 +36419,7 @@
       "id": "codex-plan",
       "name": "Codex 执行计划",
       "category": "Codex",
-      "description": "按 Codex 原生文字密度与灰色边界组织的可编辑计划清单。",
+      "description": "按 Codex 字体层级与灰色边界组织的可编辑计划清单。",
       "width": 800,
       "height": 420,
       "reference": {
@@ -36268,7 +36442,7 @@
           "id": "summary",
           "type": "string",
           "label": "summary",
-          "default": "先定位问题，再修改和验证。"
+          "default": "计划说明文字"
         },
         {
           "id": "footer",
@@ -36694,7 +36868,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -36702,7 +36876,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -36766,25 +36940,25 @@
           "id": "path",
           "type": "string",
           "label": "path",
-          "default": "D:\\workspace\\science-video"
+          "default": "D:\\example-project"
         },
         {
           "id": "greeting",
           "type": "string",
           "label": "greeting",
-          "default": "PowerShell 7.5.2"
+          "default": "PowerShell"
         },
         {
           "id": "command",
           "type": "string",
           "label": "command",
-          "default": "npm run build"
+          "default": "node example.js"
         },
         {
           "id": "nextCommand",
           "type": "string",
           "label": "nextCommand",
-          "default": "npm run check"
+          "default": "node verify.js"
         },
         {
           "id": "propsJson",
@@ -37204,7 +37378,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -37212,7 +37386,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -37273,13 +37447,13 @@
           "id": "project",
           "type": "string",
           "label": "project",
-          "default": "science-video"
+          "default": "example-project"
         },
         {
           "id": "filename",
           "type": "string",
           "label": "filename",
-          "default": "config.ts"
+          "default": "example.ts"
         },
         {
           "id": "branch",
@@ -37309,7 +37483,13 @@
           "id": "secondaryTab",
           "type": "string",
           "label": "secondaryTab",
-          "default": "timeline.ts"
+          "default": "helper.ts"
+        },
+        {
+          "id": "symbol",
+          "type": "string",
+          "label": "symbol",
+          "default": "example"
         },
         {
           "id": "propsJson",
@@ -37729,7 +37909,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -37737,7 +37917,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -37795,19 +37975,19 @@
           "id": "project",
           "type": "string",
           "label": "project",
-          "default": "science-video"
+          "default": "example-project"
         },
         {
           "id": "filename",
           "type": "string",
           "label": "filename",
-          "default": "config.ts"
+          "default": "example.ts"
         },
         {
           "id": "branch",
           "type": "string",
           "label": "branch",
-          "default": "feature/preview*"
+          "default": "feature/example*"
         },
         {
           "id": "language",
@@ -37825,13 +38005,13 @@
           "id": "beforeLabel",
           "type": "string",
           "label": "beforeLabel",
-          "default": "config.ts · HEAD"
+          "default": "example.ts · HEAD"
         },
         {
           "id": "afterLabel",
           "type": "string",
           "label": "afterLabel",
-          "default": "config.ts · 工作区"
+          "default": "example.ts · 工作区"
         },
         {
           "id": "propsJson",
@@ -38251,7 +38431,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -38259,7 +38439,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -38317,13 +38497,13 @@
           "id": "project",
           "type": "string",
           "label": "project",
-          "default": "science-video"
+          "default": "example-project"
         },
         {
           "id": "filename",
           "type": "string",
           "label": "filename",
-          "default": "content.json"
+          "default": "example.json"
         },
         {
           "id": "language",
@@ -38335,7 +38515,7 @@
           "id": "position",
           "type": "string",
           "label": "position",
-          "default": "行 8，列 18"
+          "default": "行 3，列 3"
         },
         {
           "id": "branch",
@@ -38761,7 +38941,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -38769,7 +38949,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -38833,7 +39013,7 @@
           "id": "workspace",
           "type": "string",
           "label": "workspace",
-          "default": "科普视频项目"
+          "default": "示例工作区"
         },
         {
           "id": "appIcon",
@@ -38845,7 +39025,7 @@
           "id": "requestName",
           "type": "string",
           "label": "requestName",
-          "default": "读取组件列表"
+          "default": "示例请求 A"
         },
         {
           "id": "method",
@@ -38857,7 +39037,7 @@
           "id": "url",
           "type": "string",
           "label": "url",
-          "default": "https://api.example.com/v1/components"
+          "default": "https://api.example.com/v1/items"
         },
         {
           "id": "status",
@@ -38876,6 +39056,12 @@
           "type": "string",
           "label": "responseSize",
           "default": "1.24 KB"
+        },
+        {
+          "id": "collectionTitle",
+          "type": "string",
+          "label": "collectionTitle",
+          "default": "请求分组"
         },
         {
           "id": "propsJson",
@@ -39295,7 +39481,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -39303,7 +39489,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -39379,19 +39565,19 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "响应数据"
+          "default": "示例数据"
         },
         {
           "id": "path",
           "type": "string",
           "label": "path",
-          "default": "$.data[0].duration"
+          "default": "$.data[0].value"
         },
         {
           "id": "selected",
           "type": "string",
           "label": "selected",
-          "default": "duration"
+          "default": "value"
         },
         {
           "id": "propsJson",
@@ -39811,7 +39997,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -39819,7 +40005,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -39877,7 +40063,7 @@
           "id": "project",
           "type": "string",
           "label": "project",
-          "default": "science-video"
+          "default": "example-project"
         },
         {
           "id": "filename",
@@ -39907,31 +40093,31 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "科普视频制作流程"
+          "default": "文档标题"
         },
         {
           "id": "intro",
           "type": "string",
           "label": "intro",
-          "default": "把内容、素材和动画分开管理，让每一集都能快速复用。"
+          "default": "文档简介。替换为需要展示的说明。"
         },
         {
           "id": "sectionTitle",
           "type": "string",
           "label": "sectionTitle",
-          "default": "制作步骤"
+          "default": "章节标题"
         },
         {
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "先做一个有代表性的场景，确认风格后再展开整集。"
+          "default": "提示内容，可替换为补充说明。"
         },
         {
           "id": "command",
           "type": "string",
           "label": "command",
-          "default": "npm run build\nnpm run dev"
+          "default": "node example.js\nnode verify.js"
         },
         {
           "id": "propsJson",
@@ -40351,7 +40537,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -40359,7 +40545,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -40417,7 +40603,7 @@
           "id": "project",
           "type": "string",
           "label": "project",
-          "default": "science-video"
+          "default": "example-project"
         },
         {
           "id": "branch",
@@ -40447,7 +40633,7 @@
           "id": "detail",
           "type": "string",
           "label": "detail",
-          "default": "将录屏容器、字幕安全区与区域聚焦动画整合到同一套时间轴。"
+          "default": "当前提交的变更说明。"
         },
         {
           "id": "propsJson",
@@ -40867,7 +41053,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -40875,7 +41061,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -40939,7 +41125,7 @@
           "id": "workspace",
           "type": "string",
           "label": "workspace",
-          "default": "science-video"
+          "default": "example-project"
         },
         {
           "id": "appIcon",
@@ -40951,7 +41137,7 @@
           "id": "suite",
           "type": "string",
           "label": "suite",
-          "default": "components / browser.spec.ts"
+          "default": "tests / example.test.ts"
         },
         {
           "id": "duration",
@@ -41383,7 +41569,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -41391,7 +41577,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -41455,7 +41641,7 @@
           "id": "workspace",
           "type": "string",
           "label": "workspace",
-          "default": "science_video.db"
+          "default": "example.db"
         },
         {
           "id": "appIcon",
@@ -41467,7 +41653,7 @@
           "id": "table",
           "type": "string",
           "label": "table",
-          "default": "scenes"
+          "default": "items"
         },
         {
           "id": "selectedId",
@@ -41911,7 +42097,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -41919,7 +42105,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -41995,7 +42181,7 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "进度提交通知"
+          "default": "对话标题"
         },
         {
           "id": "notice",
@@ -42049,7 +42235,7 @@
           "id": "pinnedTitle",
           "type": "string",
           "label": "pinnedTitle",
-          "default": "主对话"
+          "default": "示例对话"
         },
         {
           "id": "projectsLabel",
@@ -42553,7 +42739,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -42561,7 +42747,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -42600,13 +42786,13 @@
     },
     {
       "id": "doubao-workflow",
-      "name": "豆包工作 · 通知对话",
+      "name": "豆包工作 · 多轮对话",
       "category": "豆包工作",
       "description": "按桌面豆包工作的侧栏、灰色用户消息、无气泡正文、输入栏及对话摘要结构制作的可编辑教学模拟。",
       "width": 1280,
       "height": 800,
       "reference": {
-        "basis": "2026-09-18 本机 Windows 豆包工作桌面界面观察：1193×794，280px 左侧栏与 280px 对话摘要；本组件扩展为 1280×800，未做全状态逐像素验收。",
+        "basis": "以 2026-09-18 本机 Windows 豆包工作界面观察为原型；组件为 1280×800，侧栏及摘要各 240px、正文 18px，按预览可读性调整排版，未做全状态逐像素验收。",
         "source": "本机 DoubaoWork.ChatApp 实际界面观察；reports/doubao-work-notes.md",
         "level": "documented"
       },
@@ -42619,7 +42805,7 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "进度提交通知"
+          "default": "任务标题"
         },
         {
           "id": "notice",
@@ -42661,7 +42847,7 @@
           "id": "pinnedTitle",
           "type": "string",
           "label": "pinnedTitle",
-          "default": "主对话"
+          "default": "示例对话"
         },
         {
           "id": "projectsLabel",
@@ -42787,7 +42973,7 @@
           "id": "workingLabel",
           "type": "string",
           "label": "workingLabel",
-          "default": "拟写正式进度提醒通知"
+          "default": "正在处理任务"
         },
         {
           "id": "homeTitle",
@@ -43219,7 +43405,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -43227,7 +43413,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -43285,43 +43471,43 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "EXPLAIN / 结构与数据"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "制作时间花在了哪里"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "把整体拆成几部分，同时保留数量与百分比。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "示例数据"
+          "default": "示例标签"
         },
         {
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "替换内容后，图形与数值一起更新。"
+          "default": "补充说明文字"
         },
         {
           "id": "code",
           "type": "string",
           "label": "code",
-          "default": "DONUT-CHART"
+          "default": "EXAMPLE"
         },
         {
           "id": "unit",
           "type": "string",
           "label": "unit",
-          "default": "小时"
+          "default": "单位"
         },
         {
           "id": "propsJson",
@@ -43741,7 +43927,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -43749,7 +43935,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -43807,49 +43993,49 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "EXPLAIN / 结构与数据"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "投入与结果怎样一起变化"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "用二维坐标同时比较两个变量，保留每个对象的位置。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "示例数据"
+          "default": "示例标签"
         },
         {
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "示例关系不代表因果结论。"
+          "default": "补充说明文字"
         },
         {
           "id": "code",
           "type": "string",
           "label": "code",
-          "default": "SCATTER-PLOT"
+          "default": "EXAMPLE"
         },
         {
           "id": "xLabel",
           "type": "string",
           "label": "xLabel",
-          "default": "准备时间 / 小时"
+          "default": "横轴名称"
         },
         {
           "id": "yLabel",
           "type": "string",
           "label": "yLabel",
-          "default": "完成度 / %"
+          "default": "纵轴名称"
         },
         {
           "id": "xMax",
@@ -44281,7 +44467,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -44289,7 +44475,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -44347,37 +44533,37 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "EXPLAIN / 结构与数据"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "不同环节的工作量分布"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "用统一色阶定位高低值，适合比较时间段和类别。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "示例数据"
+          "default": "示例标签"
         },
         {
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "替换内容后，图形与数值一起更新。"
+          "default": "补充说明文字"
         },
         {
           "id": "code",
           "type": "string",
           "label": "code",
-          "default": "HEATMAP"
+          "default": "EXAMPLE"
         },
         {
           "id": "max",
@@ -44803,7 +44989,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -44811,7 +44997,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -44869,43 +45055,43 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "EXPLAIN / 结构与数据"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "从候选到最终成片"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "按阶段宽度展示数量递减，读出每一步的转化。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "示例数据"
+          "default": "示例标签"
         },
         {
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "替换内容后，图形与数值一起更新。"
+          "default": "补充说明文字"
         },
         {
           "id": "code",
           "type": "string",
           "label": "code",
-          "default": "FUNNEL-CHART"
+          "default": "EXAMPLE"
         },
         {
           "id": "unit",
           "type": "string",
           "label": "unit",
-          "default": "份"
+          "default": "单位"
         },
         {
           "id": "propsJson",
@@ -45325,7 +45511,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -45333,7 +45519,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -45391,37 +45577,37 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "EXPLAIN / 结构与数据"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "不同方案的能力轮廓"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "在相同量尺上比较多个能力维度，轮廓与分值对应。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "示例数据"
+          "default": "示例标签"
         },
         {
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "替换内容后，图形与数值一起更新。"
+          "default": "补充说明文字"
         },
         {
           "id": "code",
           "type": "string",
           "label": "code",
-          "default": "RADAR-CHART"
+          "default": "EXAMPLE"
         },
         {
           "id": "max",
@@ -45433,7 +45619,7 @@
           "id": "caption",
           "type": "string",
           "label": "caption",
-          "default": "方案 A · 示例评分"
+          "default": "系列 A"
         },
         {
           "id": "propsJson",
@@ -45853,7 +46039,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -45861,7 +46047,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -45919,37 +46105,37 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "EXPLAIN / 结构与数据"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "能力是怎样层层建立的"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "用层级关系解释从基础到应用的组织方式。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "示例数据"
+          "default": "示例标签"
         },
         {
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "图形表达层级关系，不以面积表示数量。"
+          "default": "补充说明文字"
         },
         {
           "id": "code",
           "type": "string",
           "label": "code",
-          "default": "PYRAMID-DIAGRAM"
+          "default": "EXAMPLE"
         },
         {
           "id": "propsJson",
@@ -46369,7 +46555,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -46377,7 +46563,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -46435,67 +46621,67 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "EXPLAIN / 结构与数据"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "好内容来自两个条件的交集"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "用两个集合及共同区域解释概念之间的关系。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "示例数据"
+          "default": "示例标签"
         },
         {
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "示意集合关系，圆形面积不代表样本量。"
+          "default": "补充说明文字"
         },
         {
           "id": "code",
           "type": "string",
           "label": "code",
-          "default": "VENN-DIAGRAM"
+          "default": "EXAMPLE"
         },
         {
           "id": "left",
           "type": "string",
           "label": "left",
-          "default": "值得讲"
+          "default": "集合 A"
         },
         {
           "id": "right",
           "type": "string",
           "label": "right",
-          "default": "讲得清"
+          "default": "集合 B"
         },
         {
           "id": "overlap",
           "type": "string",
           "label": "overlap",
-          "default": "观众能用"
+          "default": "交集"
         },
         {
           "id": "leftDetail",
           "type": "string",
           "label": "leftDetail",
-          "default": "问题真实 · 有新信息"
+          "default": "集合说明 A"
         },
         {
           "id": "rightDetail",
           "type": "string",
           "label": "rightDetail",
-          "default": "结构清楚 · 证据可见"
+          "default": "集合说明 B"
         },
         {
           "id": "propsJson",
@@ -46915,7 +47101,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -46923,7 +47109,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -46981,43 +47167,49 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "EXPLAIN / 结构与数据"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "先把一个主题展开"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "围绕一个主题展开分支，适合选题拆解和知识组织。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "示例数据"
+          "default": "示例标签"
         },
         {
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "替换内容后，图形与数值一起更新。"
+          "default": "补充说明文字"
         },
         {
           "id": "code",
           "type": "string",
           "label": "code",
-          "default": "MIND-MAP"
+          "default": "EXAMPLE"
         },
         {
           "id": "center",
           "type": "string",
           "label": "center",
-          "default": "科普视频"
+          "default": "中心主题"
+        },
+        {
+          "id": "centerCaption",
+          "type": "string",
+          "label": "centerCaption",
+          "default": "中心说明"
         },
         {
           "id": "propsJson",
@@ -47437,7 +47629,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -47445,7 +47637,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -47503,43 +47695,43 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "EXPLAIN / 结构与数据"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "一次改进，来自一轮反馈"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "把执行、观察与修正连接成可重复的循环。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "示例数据"
+          "default": "示例标签"
         },
         {
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "替换内容后，图形与数值一起更新。"
+          "default": "补充说明文字"
         },
         {
           "id": "code",
           "type": "string",
           "label": "code",
-          "default": "CYCLE-DIAGRAM"
+          "default": "EXAMPLE"
         },
         {
           "id": "center",
           "type": "string",
           "label": "center",
-          "default": "持续迭代"
+          "default": "中心主题"
         },
         {
           "id": "propsJson",
@@ -47959,7 +48151,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -47967,7 +48159,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -48025,67 +48217,67 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "EXPLAIN / 结构与数据"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "这段内容，适合什么画面"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "把条件、分支与结果分开，适合解释选择逻辑。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "示例数据"
+          "default": "示例标签"
         },
         {
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "替换内容后，图形与数值一起更新。"
+          "default": "补充说明文字"
         },
         {
           "id": "code",
           "type": "string",
           "label": "code",
-          "default": "DECISION-TREE"
+          "default": "EXAMPLE"
         },
         {
           "id": "question",
           "type": "string",
           "label": "question",
-          "default": "需要证明真实操作吗？"
+          "default": "判断条件 A？"
         },
         {
           "id": "yes",
           "type": "string",
           "label": "yes",
-          "default": "真实录屏"
+          "default": "结果 A"
         },
         {
           "id": "no",
           "type": "string",
           "label": "no",
-          "default": "需要解释抽象关系吗？"
+          "default": "判断条件 B？"
         },
         {
           "id": "yes2",
           "type": "string",
           "label": "yes2",
-          "default": "原生图解"
+          "default": "结果 B"
         },
         {
           "id": "no2",
           "type": "string",
           "label": "no2",
-          "default": "实拍 / 图片"
+          "default": "结果 C"
         },
         {
           "id": "yesLabel",
@@ -48098,6 +48290,12 @@
           "type": "string",
           "label": "noLabel",
           "default": "否"
+        },
+        {
+          "id": "yesDetail",
+          "type": "string",
+          "label": "yesDetail",
+          "default": "结果说明 A"
         },
         {
           "id": "propsJson",
@@ -48517,7 +48715,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -48525,7 +48723,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -48583,37 +48781,37 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "EXPLAIN / 结构与数据"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "一次请求，经过哪些层"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "将入口、服务与存储分层，连线表达数据流向。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "示例数据"
+          "default": "示例标签"
         },
         {
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "替换内容后，图形与数值一起更新。"
+          "default": "补充说明文字"
         },
         {
           "id": "code",
           "type": "string",
           "label": "code",
-          "default": "ARCHITECTURE-MAP"
+          "default": "EXAMPLE"
         },
         {
           "id": "propsJson",
@@ -49033,7 +49231,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -49041,7 +49239,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -49099,37 +49297,37 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "EXPLAIN / 结构与数据"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "从选题到交付，谁负责哪一步"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "按角色排列动作，突出交接点与责任边界。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "示例数据"
+          "default": "示例标签"
         },
         {
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "替换内容后，图形与数值一起更新。"
+          "default": "补充说明文字"
         },
         {
           "id": "code",
           "type": "string",
           "label": "code",
-          "default": "SWIMLANE-FLOW"
+          "default": "EXAMPLE"
         },
         {
           "id": "propsJson",
@@ -49549,7 +49747,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -49557,7 +49755,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -49615,37 +49813,37 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "EXPLAIN / 结构与数据"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "把下一步放到看得见的位置"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "让任务按状态分组，用卡片位置解释工作流。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "示例数据"
+          "default": "示例标签"
         },
         {
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "替换内容后，图形与数值一起更新。"
+          "default": "补充说明文字"
         },
         {
           "id": "code",
           "type": "string",
           "label": "code",
-          "default": "KANBAN-BOARD"
+          "default": "EXAMPLE"
         },
         {
           "id": "propsJson",
@@ -50065,7 +50263,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -50073,7 +50271,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -50131,37 +50329,43 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "EXPLAIN / 结构与数据"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "四周完成一轮内容制作"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "通过时间区间展示并行任务，适合制作计划和里程碑。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "示例数据"
+          "default": "示例标签"
         },
         {
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "替换内容后，图形与数值一起更新。"
+          "default": "补充说明文字"
         },
         {
           "id": "code",
           "type": "string",
           "label": "code",
-          "default": "ROADMAP"
+          "default": "EXAMPLE"
+        },
+        {
+          "id": "unit",
+          "type": "string",
+          "label": "unit",
+          "default": "单位"
         },
         {
           "id": "propsJson",
@@ -50581,7 +50785,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -50589,7 +50793,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -50647,37 +50851,37 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "EXPLAIN / 结构与数据"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "把公式变成可以理解的步骤"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "逐项解释公式的输入与含义，再给出一次演算。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "示例数据"
+          "default": "示例标签"
         },
         {
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "演算用于说明关系，不是实际生产效率承诺。"
+          "default": "补充说明文字"
         },
         {
           "id": "code",
           "type": "string",
           "label": "code",
-          "default": "FORMULA-BREAKDOWN"
+          "default": "EXAMPLE"
         },
         {
           "id": "propsJson",
@@ -51097,7 +51301,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -51105,7 +51309,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -51163,49 +51367,49 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "EXPLAIN / 结构与数据"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "自动化是一条连续的尺度"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "在连续范围上定位多个对象，避免非黑即白的分类。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "示例数据"
+          "default": "示例标签"
         },
         {
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "替换内容后，图形与数值一起更新。"
+          "default": "补充说明文字"
         },
         {
           "id": "code",
           "type": "string",
           "label": "code",
-          "default": "SPECTRUM-SCALE"
+          "default": "EXAMPLE"
         },
         {
           "id": "left",
           "type": "string",
           "label": "left",
-          "default": "更多人工判断"
+          "default": "范围起点"
         },
         {
           "id": "right",
           "type": "string",
           "label": "right",
-          "default": "更多自动执行"
+          "default": "范围终点"
         },
         {
           "id": "propsJson",
@@ -51625,7 +51829,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -51633,7 +51837,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -51691,37 +51895,37 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "EXPLAIN / 结构与数据"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "先给内容，再得到可制作的分镜"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "给每一步分配编号、动作与结果，适合操作教学。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "示例数据"
+          "default": "示例标签"
         },
         {
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "替换内容后，图形与数值一起更新。"
+          "default": "补充说明文字"
         },
         {
           "id": "code",
           "type": "string",
           "label": "code",
-          "default": "PROCESS-STEPS"
+          "default": "EXAMPLE"
         },
         {
           "id": "propsJson",
@@ -52141,7 +52345,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -52149,7 +52353,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -52207,49 +52411,49 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "COURSE / 01"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "让内容稳定，让背景保持呼吸"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "真实素材可以直接放进这个位置"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "课件舞台"
+          "default": "示例标签"
         },
         {
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "替换内容后，图形与数值一起更新。"
+          "default": "补充说明文字"
         },
         {
           "id": "code",
           "type": "string",
           "label": "code",
-          "default": "LECTURE-STAGE"
+          "default": "EXAMPLE"
         },
         {
           "id": "chapter",
           "type": "string",
           "label": "chapter",
-          "default": "01 / 为什么要拆分任务"
+          "default": "01 / 章节标题"
         },
         {
           "id": "caption",
           "type": "string",
           "label": "caption",
-          "default": "背景负责氛围，主体负责清楚地传达。"
+          "default": "画面说明文字"
         },
         {
           "id": "propsJson",
@@ -52669,7 +52873,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -52677,7 +52881,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -52735,73 +52939,73 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "01 / 对照观察"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "同样的任务，换一种组织方式"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "保持任务不变，让整理方式的差异清楚可见。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "前后对比"
+          "default": "示例标签"
         },
         {
           "id": "footer",
           "type": "string",
           "label": "footer",
-          "default": "示例内容可替换 · 白底 / 蓝色强调 / 薄荷绿完成态"
+          "default": "页脚说明"
         },
         {
           "id": "series",
           "type": "string",
           "label": "series",
-          "default": "EXPLAIN / COMPARE"
+          "default": "示例系列"
         },
         {
           "id": "beforeLabel",
           "type": "string",
           "label": "beforeLabel",
-          "default": "整理前"
+          "default": "状态 A"
         },
         {
           "id": "beforeNote",
           "type": "string",
           "label": "beforeNote",
-          "default": "信息散落在同一张清单里"
+          "default": "状态说明 A"
         },
         {
           "id": "afterLabel",
           "type": "string",
           "label": "afterLabel",
-          "default": "整理后"
+          "default": "状态 B"
         },
         {
           "id": "afterNote",
           "type": "string",
           "label": "afterNote",
-          "default": "按状态组织，下一步更明确"
+          "default": "状态说明 B"
         },
         {
           "id": "resultLabel",
           "type": "string",
           "label": "resultLabel",
-          "default": "变化要点"
+          "default": "结果说明"
         },
         {
           "id": "result",
           "type": "string",
           "label": "result",
-          "default": "资料、执行与验收各有位置，减少反复寻找。"
+          "default": "结果内容，可替换为需要展示的结论。"
         },
         {
           "id": "propsJson",
@@ -53221,7 +53425,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -53229,7 +53433,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -53287,49 +53491,49 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "02 / 解释过程"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "从问题，到可以验证的结果"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "把输入、执行与检查拆开，讲清每一步的职责。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "流程图"
+          "default": "示例标签"
         },
         {
           "id": "footer",
           "type": "string",
           "label": "footer",
-          "default": "示例内容可替换 · 白底 / 蓝色强调 / 薄荷绿完成态"
+          "default": "页脚说明"
         },
         {
           "id": "series",
           "type": "string",
           "label": "series",
-          "default": "EXPLAIN / FLOW"
+          "default": "示例系列"
         },
         {
           "id": "noteTitle",
           "type": "string",
           "label": "noteTitle",
-          "default": "检查标准先写清楚"
+          "default": "补充标题"
         },
         {
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "验收依据明确，反馈才容易转化成下一步行动。"
+          "default": "补充说明文字"
         },
         {
           "id": "propsJson",
@@ -53749,7 +53953,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -53757,7 +53961,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -53815,43 +54019,43 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "03 / 结构拆解"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "把复杂系统，拆成三个层次"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "每层负责一件事，关系比细节更容易理解。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "分层结构"
+          "default": "示例标签"
         },
         {
           "id": "footer",
           "type": "string",
           "label": "footer",
-          "default": "示例内容可替换 · 白底 / 蓝色强调 / 薄荷绿完成态"
+          "default": "页脚说明"
         },
         {
           "id": "series",
           "type": "string",
           "label": "series",
-          "default": "EXPLAIN / LAYERS"
+          "default": "示例系列"
         },
         {
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "示意关系仅用于解释分工；具体产品结构以实际实现为准。"
+          "default": "补充说明文字"
         },
         {
           "id": "propsJson",
@@ -54271,7 +54475,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -54279,7 +54483,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -54337,49 +54541,49 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "04 / 数据对照"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "时间花在了哪里？"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "把流程分段，才能找到值得优化的环节。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "示例数据"
+          "default": "示例标签"
         },
         {
           "id": "footer",
           "type": "string",
           "label": "footer",
-          "default": "示例内容可替换 · 白底 / 蓝色强调 / 薄荷绿完成态"
+          "default": "页脚说明"
         },
         {
           "id": "series",
           "type": "string",
           "label": "series",
-          "default": "EXPLAIN / BARS"
+          "default": "示例系列"
         },
         {
           "id": "chartTitle",
           "type": "string",
           "label": "chartTitle",
-          "default": "单次制作耗时"
+          "default": "图表标题"
         },
         {
           "id": "unit",
           "type": "string",
           "label": "unit",
-          "default": "分钟"
+          "default": "单位"
         },
         {
           "id": "max",
@@ -54397,19 +54601,19 @@
           "id": "noteLabel",
           "type": "string",
           "label": "noteLabel",
-          "default": "观察"
+          "default": "补充标签"
         },
         {
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "先看耗时最大的环节，再决定优化顺序。"
+          "default": "补充说明文字"
         },
         {
           "id": "source",
           "type": "string",
           "label": "source",
-          "default": "数据：示例值，仅展示图表用法。"
+          "default": "数据来源说明"
         },
         {
           "id": "propsJson",
@@ -54829,7 +55033,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -54837,7 +55041,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -54895,49 +55099,49 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "05 / 观察趋势"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "一次改进，要看连续的变化"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "用同一把尺子观察趋势，避免只看某一个高点。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "示例数据"
+          "default": "示例标签"
         },
         {
           "id": "footer",
           "type": "string",
           "label": "footer",
-          "default": "示例内容可替换 · 白底 / 蓝色强调 / 薄荷绿完成态"
+          "default": "页脚说明"
         },
         {
           "id": "series",
           "type": "string",
           "label": "series",
-          "default": "EXPLAIN / TREND"
+          "default": "示例系列"
         },
         {
           "id": "chartTitle",
           "type": "string",
           "label": "chartTitle",
-          "default": "每周完成任务数"
+          "default": "图表标题"
         },
         {
           "id": "unit",
           "type": "string",
           "label": "unit",
-          "default": "项"
+          "default": "单位"
         },
         {
           "id": "max",
@@ -54955,7 +55159,7 @@
           "id": "targetLabel",
           "type": "string",
           "label": "targetLabel",
-          "default": "参考目标"
+          "default": "参考值"
         },
         {
           "id": "selected",
@@ -54967,7 +55171,7 @@
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "折线只连接示例观测值；不代表对未来表现的预测。"
+          "default": "补充说明文字"
         },
         {
           "id": "propsJson",
@@ -55387,7 +55591,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -55395,7 +55599,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -55453,49 +55657,49 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "06 / 帮助选择"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "选工具，先看任务需要什么"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "比较同一组条件，让选择依据有迹可循。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "示例比较"
+          "default": "示例标签"
         },
         {
           "id": "footer",
           "type": "string",
           "label": "footer",
-          "default": "示例内容可替换 · 白底 / 蓝色强调 / 薄荷绿完成态"
+          "default": "页脚说明"
         },
         {
           "id": "series",
           "type": "string",
           "label": "series",
-          "default": "EXPLAIN / MATRIX"
+          "default": "示例系列"
         },
         {
           "id": "noteLabel",
           "type": "string",
           "label": "noteLabel",
-          "default": "组合使用"
+          "default": "补充标签"
         },
         {
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "由要讲清的内容决定画面形式，同一条视频可以混合三种素材。"
+          "default": "补充说明文字"
         },
         {
           "id": "propsJson",
@@ -55915,7 +56119,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -55923,7 +56127,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -55981,37 +56185,37 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "07 / 梳理顺序"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "一条视频，如何一步步完成"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "把制作过程放在时间线上，每个阶段都有明确产物。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "制作示例"
+          "default": "示例标签"
         },
         {
           "id": "footer",
           "type": "string",
           "label": "footer",
-          "default": "示例内容可替换 · 白底 / 蓝色强调 / 薄荷绿完成态"
+          "default": "页脚说明"
         },
         {
           "id": "series",
           "type": "string",
           "label": "series",
-          "default": "EXPLAIN / TIMELINE"
+          "default": "示例系列"
         },
         {
           "id": "activeLabel",
@@ -56023,7 +56227,7 @@
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "时间为示例计划，可替换为日期、章节或里程碑。"
+          "default": "补充说明文字"
         },
         {
           "id": "propsJson",
@@ -56443,7 +56647,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -56451,7 +56655,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -56509,55 +56713,55 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "08 / 查看状态"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "交付之前，把关键状态看清楚"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "进度、素材与验收放在同一页，减少遗漏。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "示例数据"
+          "default": "示例标签"
         },
         {
           "id": "footer",
           "type": "string",
           "label": "footer",
-          "default": "示例内容可替换 · 白底 / 蓝色强调 / 薄荷绿完成态"
+          "default": "页脚说明"
         },
         {
           "id": "series",
           "type": "string",
           "label": "series",
-          "default": "EXPLAIN / STATUS"
+          "default": "示例系列"
         },
         {
           "id": "progressTitle",
           "type": "string",
           "label": "progressTitle",
-          "default": "最近五次制作进度"
+          "default": "趋势标题"
         },
         {
           "id": "checklistTitle",
           "type": "string",
           "label": "checklistTitle",
-          "default": "本次检查"
+          "default": "检查项"
         },
         {
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "这里只汇总示例状态，不代表已经执行检查。"
+          "default": "补充说明文字"
         },
         {
           "id": "propsJson",
@@ -56977,7 +57181,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -56985,7 +57189,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -57043,79 +57247,79 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "09 / 解释概念"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "什么是上下文？"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "先给一句清楚的定义，再把它放进具体任务。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "概念解释"
+          "default": "示例标签"
         },
         {
           "id": "footer",
           "type": "string",
           "label": "footer",
-          "default": "示例内容可替换 · 白底 / 蓝色强调 / 薄荷绿完成态"
+          "default": "页脚说明"
         },
         {
           "id": "series",
           "type": "string",
           "label": "series",
-          "default": "EXPLAIN / CONCEPT"
+          "default": "示例系列"
         },
         {
           "id": "term",
           "type": "string",
           "label": "term",
-          "default": "上下文"
+          "default": "概念名称"
         },
         {
           "id": "english",
           "type": "string",
           "label": "english",
-          "default": "CONTEXT"
+          "default": "TERM"
         },
         {
           "id": "definition",
           "type": "string",
           "label": "definition",
-          "default": "完成当前任务所需要的背景信息。"
+          "default": "概念说明文字。替换为需要解释的定义。"
         },
         {
           "id": "exampleLabel",
           "type": "string",
           "label": "exampleLabel",
-          "default": "放进一个真实任务"
+          "default": "示例标签"
         },
         {
           "id": "exampleTitle",
           "type": "string",
           "label": "exampleTitle",
-          "default": "修改产品介绍页"
+          "default": "示例标题"
         },
         {
           "id": "example",
           "type": "string",
           "label": "example",
-          "default": "参考现有页面，把首屏介绍缩短到 80 字以内，保留品牌色，并适配手机。"
+          "default": "示例正文内容，可替换为需要展示的文字。"
         },
         {
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "任务越具体，越容易判断结果是否符合预期。"
+          "default": "补充说明文字"
         },
         {
           "id": "propsJson",
@@ -57535,7 +57739,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -57543,7 +57747,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -57601,55 +57805,55 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "10 / 章节收束"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "把理解，变成一次完整实践"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "准备好目标、素材和验收标准，再开始动手。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "章节总结"
+          "default": "示例标签"
         },
         {
           "id": "footer",
           "type": "string",
           "label": "footer",
-          "default": "示例内容可替换 · 白底 / 蓝色强调 / 薄荷绿完成态"
+          "default": "页脚说明"
         },
         {
           "id": "series",
           "type": "string",
           "label": "series",
-          "default": "EXPLAIN / CHAPTER"
+          "default": "示例系列"
         },
         {
           "id": "number",
           "type": "string",
           "label": "number",
-          "default": "03"
+          "default": "01"
         },
         {
           "id": "chapterLabel",
           "type": "string",
           "label": "chapterLabel",
-          "default": "开始实践"
+          "default": "章节名称"
         },
         {
           "id": "headline",
           "type": "string",
           "label": "headline",
-          "default": "先完成一个小项目"
+          "default": "章节主标题"
         },
         {
           "id": "nextLabel",
@@ -57661,7 +57865,7 @@
           "id": "next",
           "type": "string",
           "label": "next",
-          "default": "选择一个主题，完成第一段 30 秒讲解。"
+          "default": "下一章节说明"
         },
         {
           "id": "propsJson",
@@ -58081,7 +58285,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -58089,7 +58293,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -58147,37 +58351,37 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "11 / 素材讲解"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "画面负责展示，标注负责解释"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "把关键说明放在素材旁边，让观众知道此刻应该看什么。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "可替换素材"
+          "default": "示例标签"
         },
         {
           "id": "footer",
           "type": "string",
           "label": "footer",
-          "default": "示例内容可替换 · 白底 / 蓝色强调 / 薄荷绿完成态"
+          "default": "页脚说明"
         },
         {
           "id": "series",
           "type": "string",
           "label": "series",
-          "default": "EXPLAIN / MEDIA"
+          "default": "示例系列"
         },
         {
           "id": "mediaSrc",
@@ -58195,25 +58399,25 @@
           "id": "mediaAlt",
           "type": "string",
           "label": "mediaAlt",
-          "default": "从输入资料到可用结果的概念示意"
+          "default": "可替换的示例素材"
         },
         {
           "id": "mediaLabel",
           "type": "string",
           "label": "mediaLabel",
-          "default": "概念示意 / 01"
+          "default": "素材标签"
         },
         {
           "id": "noteTitle",
           "type": "string",
           "label": "noteTitle",
-          "default": "先让观众看懂"
+          "default": "说明标题"
         },
         {
           "id": "caption",
           "type": "string",
           "label": "caption",
-          "default": "把素材与讲解分开维护，替换内容后沿用同一套布局。"
+          "default": "素材说明文字"
         },
         {
           "id": "propsJson",
@@ -58633,7 +58837,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -58641,7 +58845,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -58699,55 +58903,55 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "12 / 指向关键"
+          "default": "栏目 / 01"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "让说明，准确落到关键位置"
+          "default": "主标题"
         },
         {
           "id": "subtitle",
           "type": "string",
           "label": "subtitle",
-          "default": "标注的作用是建立对应关系，每一根线都要有明确目标。"
+          "default": "副标题与说明文字"
         },
         {
           "id": "badge",
           "type": "string",
           "label": "badge",
-          "default": "通用标注"
+          "default": "示例标签"
         },
         {
           "id": "footer",
           "type": "string",
           "label": "footer",
-          "default": "示例内容可替换 · 白底 / 蓝色强调 / 薄荷绿完成态"
+          "default": "页脚说明"
         },
         {
           "id": "series",
           "type": "string",
           "label": "series",
-          "default": "EXPLAIN / ANNOTATE"
+          "default": "示例系列"
         },
         {
           "id": "subjectTitle",
           "type": "string",
           "label": "subjectTitle",
-          "default": "一条有效的制作需求"
+          "default": "主体标题"
         },
         {
           "id": "subjectSubtitle",
           "type": "string",
           "label": "subjectSubtitle",
-          "default": "示例说明卡"
+          "default": "主体说明"
         },
         {
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "锚点与被标注内容绑定；替换文案后仍须核对连线位置。"
+          "default": "补充说明文字"
         },
         {
           "id": "propsJson",
@@ -59167,7 +59371,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -59175,7 +59379,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -59233,43 +59437,43 @@
           "id": "url",
           "type": "string",
           "label": "url",
-          "default": "docs.example.com/getting-started"
+          "default": "www.example.com/page"
         },
         {
           "id": "profile",
           "type": "string",
           "label": "profile",
-          "default": "L"
+          "default": "U"
         },
         {
           "id": "brand",
           "type": "string",
           "label": "brand",
-          "default": "Studio Docs"
+          "default": "示例站点"
         },
         {
           "id": "actionButton",
           "type": "string",
           "label": "actionButton",
-          "default": "新建项目"
+          "default": "操作按钮"
         },
         {
           "id": "section",
           "type": "string",
           "label": "section",
-          "default": "开始使用"
+          "default": "栏目标题"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "创建你的第一个项目"
+          "default": "页面主标题"
         },
         {
           "id": "intro",
           "type": "string",
           "label": "intro",
-          "default": "将素材、内容和时间安排放在一起，开始制作一段清晰的讲解视频。"
+          "default": "页面简介。可替换标题、正文和列表内容。"
         },
         {
           "id": "activePage",
@@ -59281,13 +59485,13 @@
           "id": "eyebrow",
           "type": "string",
           "label": "eyebrow",
-          "default": "指南 / 快速开始"
+          "default": "栏目 / 当前页面"
         },
         {
           "id": "code",
           "type": "string",
           "label": "code",
-          "default": "npm run build\nnpm run dev"
+          "default": "node example.js"
         },
         {
           "id": "tocTitle",
@@ -59299,7 +59503,7 @@
           "id": "button",
           "type": "string",
           "label": "button",
-          "default": "下一步：添加素材"
+          "default": "下一步"
         },
         {
           "id": "propsJson",
@@ -59719,7 +59923,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -59727,7 +59931,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -59803,7 +60007,7 @@
           "id": "folderTitle",
           "type": "string",
           "label": "folderTitle",
-          "default": "视频项目"
+          "default": "示例文件夹"
         },
         {
           "id": "backLabel",
@@ -60253,7 +60457,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -60261,7 +60465,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -60343,7 +60547,7 @@
           "id": "folderTitle",
           "type": "string",
           "label": "folderTitle",
-          "default": "视频制作"
+          "default": "示例文件夹"
         },
         {
           "id": "search",
@@ -60793,7 +60997,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -60801,7 +61005,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -60865,7 +61069,7 @@
           "id": "search",
           "type": "string",
           "label": "search",
-          "default": "搜索 视频项目"
+          "default": "搜索 示例文件夹"
         },
         {
           "id": "activeLocation",
@@ -60901,7 +61105,7 @@
           "id": "fileName",
           "type": "string",
           "label": "fileName",
-          "default": "scene-01.mp4"
+          "default": "example.mp4"
         },
         {
           "id": "typeLabel",
@@ -61345,7 +61549,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -61353,7 +61557,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -61411,13 +61615,13 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "视频项目"
+          "default": "示例文件夹"
         },
         {
           "id": "search",
           "type": "string",
           "label": "search",
-          "default": "搜索 视频项目"
+          "default": "搜索 示例文件夹"
         },
         {
           "id": "activeLocation",
@@ -61855,7 +62059,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -61863,7 +62067,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -61927,19 +62131,19 @@
           "id": "user",
           "type": "string",
           "label": "user",
-          "default": "Lin"
+          "default": "示例用户"
         },
         {
           "id": "email",
           "type": "string",
           "label": "email",
-          "default": "lin@example.com"
+          "default": "user@example.com"
         },
         {
           "id": "initial",
           "type": "string",
           "label": "initial",
-          "default": "L"
+          "default": "U"
         },
         {
           "id": "search",
@@ -62509,7 +62713,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -62517,7 +62721,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -62575,7 +62779,7 @@
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "Windows PowerShell"
+          "default": "PowerShell"
         },
         {
           "id": "query",
@@ -63025,7 +63229,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -63033,7 +63237,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -63559,7 +63763,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -63567,7 +63771,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -63625,7 +63829,7 @@
           "id": "filename",
           "type": "string",
           "label": "filename",
-          "default": "分镜脚本.md"
+          "default": "示例文档.md"
         },
         {
           "id": "filetype",
@@ -64063,7 +64267,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -64071,7 +64275,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -64129,19 +64333,19 @@
           "id": "appTitle",
           "type": "string",
           "label": "appTitle",
-          "default": "视频工作台"
+          "default": "示例应用"
         },
         {
           "id": "title",
           "type": "string",
           "label": "title",
-          "default": "创建项目"
+          "default": "表单标题"
         },
         {
           "id": "description",
           "type": "string",
           "label": "description",
-          "default": "为新的视频设置名称、保存位置和画面规格。"
+          "default": "表单说明文字。填写下方字段后提交。"
         },
         {
           "id": "activeNav",
@@ -64153,13 +64357,13 @@
           "id": "optionsTitle",
           "type": "string",
           "label": "optionsTitle",
-          "default": "项目选项"
+          "default": "选项设置"
         },
         {
           "id": "note",
           "type": "string",
           "label": "note",
-          "default": "设置可以随时在项目属性中修改。"
+          "default": "补充说明文字。"
         },
         {
           "id": "cancel",
@@ -64171,7 +64375,7 @@
           "id": "submit",
           "type": "string",
           "label": "submit",
-          "default": "创建项目"
+          "default": "提交"
         },
         {
           "id": "propsJson",
@@ -64591,7 +64795,7 @@
             },
             {
               "value": "ani-notice-verify",
-              "label": "通知逐项核对"
+              "label": "文档逐项核对"
             },
             {
               "value": "ani-diagram-build",
@@ -64599,7 +64803,7 @@
             },
             {
               "value": "ani-order-select",
-              "label": "订单条件筛选"
+              "label": "表格条件筛选"
             },
             {
               "value": "ani-machine-process",
@@ -68055,9 +68259,9 @@
     },
     {
       "id": "ani-notice-verify",
-      "name": "通知逐项核对",
+      "name": "文档逐项核对",
       "component": "ani-notice-check",
-      "description": "从完整通知开始，逐行聚焦并留下检查勾，最后显示核对结果。",
+      "description": "从完整文档开始，逐行聚焦并留下检查勾，最后显示核对结果。",
       "category": "动画风",
       "selector": "[data-ani-row]",
       "duration": 8,
@@ -68089,9 +68293,9 @@
     },
     {
       "id": "ani-order-select",
-      "name": "订单条件筛选",
+      "name": "表格条件筛选",
       "component": "ani-order-filter",
-      "description": "先保留完整订单表，降低不符合条件的行，再显示筛选结果。",
+      "description": "先保留完整示例表格，降低不符合条件的行，再显示筛选结果。",
       "category": "动画风",
       "selector": "[data-ani-excluded]",
       "duration": 8,

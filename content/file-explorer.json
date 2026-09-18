@@ -1,11 +1,11 @@
 {
-  "title": "视频项目",
+  "title": "示例文件夹",
   "path": [
     "此电脑",
     "本地磁盘 (D:)",
-    "视频项目"
+    "示例文件夹"
   ],
-  "search": "搜索 视频项目",
+  "search": "搜索 示例文件夹",
   "locations": [
     {
       "label": "主文件夹",
@@ -49,49 +49,49 @@
   ],
   "files": [
     {
-      "name": "assets",
+      "name": "folder-a",
       "kind": "folder",
       "date": "2026/9/17  10:24",
       "type": "文件夹",
       "size": ""
     },
     {
-      "name": "compositions",
+      "name": "folder-b",
       "kind": "folder",
       "date": "2026/9/17  10:26",
       "type": "文件夹",
       "size": ""
     },
     {
-      "name": "renders",
+      "name": "folder-c",
       "kind": "folder",
       "date": "2026/9/17  11:08",
       "type": "文件夹",
       "size": ""
     },
     {
-      "name": "content.json",
+      "name": "example.json",
       "kind": "code",
       "date": "2026/9/17  11:02",
       "type": "JSON 文件",
       "size": "8 KB"
     },
     {
-      "name": "index.html",
+      "name": "example.html",
       "kind": "code",
       "date": "2026/9/17  11:04",
       "type": "HTML 文档",
       "size": "24 KB"
     },
     {
-      "name": "README.md",
+      "name": "example.md",
       "kind": "file",
       "date": "2026/9/17  10:45",
       "type": "MD 文件",
       "size": "3 KB"
     },
     {
-      "name": "scene-01.mp4",
+      "name": "example.mp4",
       "kind": "video",
       "date": "2026/9/17  11:08",
       "type": "MP4 视频",
