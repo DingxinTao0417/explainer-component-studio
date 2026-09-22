@@ -1,0 +1,24 @@
+{
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "footer": "结论与补充说明",
+  "questionTitle": "问题标题",
+  "questionLines": [
+    "当前问题描述",
+    "已有条件说明",
+    "需要澄清的部分"
+  ],
+  "methodLabel": "已有方法",
+  "adaptation": "需要调整的部分",
+  "actionTitle": "行动清单",
+  "actions": [
+    "行动步骤 A",
+    "行动步骤 B",
+    "行动步骤 C"
+  ],
+  "phaseLabels": [
+    "明确问题",
+    "借用并调整",
+    "形成具体做法"
+  ]
+}

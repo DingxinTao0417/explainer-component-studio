@@ -1,0 +1,15 @@
+{
+  "title": "区域标题",
+  "capacity": 6,
+  "occupied": 3,
+  "kinds": [
+    "cup",
+    "lamp",
+    "bag"
+  ],
+  "state": "normal",
+  "x": 360,
+  "y": 160,
+  "objectWidth": 540,
+  "objectHeight": 380
+}

@@ -1,16 +1,19 @@
 # 动画风组件
 
+新增的 [迁移素材模板](TRANSFER_GUIDE.md) 提供 9 个完整场景和 9 套静音专属动画，分类为“动画风 · 迁移模板”。
+
 独立基础部件入口：`http://127.0.0.1:3031/demos/animation-atoms/index.html`。
 
 ### 基础部件扩充（2026-09-18）
 
-当前共有 **26 个独立基础组件**，总库为 123 个组件、104 种动画。基础部件默认静态、透明 SVG；状态按钮用于选择可组合的画面状态，需要时间动画时进入总目录配置。
+当前共有 **32 个独立基础组件**，总库为 138 个组件、113 种动画。基础部件默认静态、透明 SVG；状态按钮用于选择可组合的画面状态，需要时间动画时进入总目录配置。
 
 | 分组 | 部件（ID 统一以 `ani-atom-` 开头） |
 | --- | --- |
 | 纸张与文件 · 5 | 空白纸 `paper`、文件 `file`、文档 `document`、文件夹 `folder`、文件堆叠 `file-stack` |
 | 表格与文字 · 6 | 表格 `table`、表格行 `table-row`、单元格 `cell`、文档条目 `document-row`、段落 `text`、标题牌 `title-label` |
 | 窗口与控件 · 9 | 浏览器 `browser`、空窗口 `window`、标签栏 `tabs`、地址栏 `address`、按钮 `button`、输入框 `input`、状态徽章 `status`、勾选框 `checkbox`、光标 `cursor` |
+| 运输与容量 · 6 | 货车 `truck`、货箱 `cargo`、仓库 `warehouse`、容量槽 `buffer`、资源 `resource`、关系括线 `relation-bridge` |
 | 连线与标注 · 6 | 连线 `connector`、流程节点 `node`、气泡 `callout`、高亮 `highlight`、进度 `progress`、工具符号 `symbol` |
 
 部件页支持分组、搜索、快速状态按钮、内容 JSON 编辑、下载透明 SVG 和配置。切换分组会清空旧搜索。三个组合示例分别演示资料处理、界面操作和条件分流；组合配置最多支持 20 个实例，每个对象保留独立 props。

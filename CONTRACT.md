@@ -1,6 +1,6 @@
 # 可复用组件库实施约定
 
-当前共 123 个独立功能组件、104 种动画，含 30 个原创讲解图形与 24 个 Apple 界面。用户要求软件组件达到真实截图级精度；Codex 为首个重点核对的样板。此次交付可编辑 HTML/CSS/SVG、JSON 示例内容、静态参考图、可拖动时间轴的动画预览与 HyperFrames 接入文件，不导出视频。
+当前能力与数量以构建生成的 [编导索引](DIRECTOR_INDEX.md) 和 manifest.json 为准。用户要求软件组件达到真实截图级精度；Codex 为首个重点核对的样板。交付可编辑 HTML/CSS/SVG、JSON 示例内容、静态参考图、可拖动时间轴的动画预览与 HyperFrames 接入文件。与 science-video-director 的接口见 [编导接入](DIRECTOR_GUIDE.md)。
 
 ## 模块接口
 
@@ -34,8 +34,10 @@ render 顶层只返回片段，禁止脚本、style 标签、外部网络、随�
 
 ## 动画与音效扩展
 
-当前共有 104 种动画，其中 10 种常驻背景和 4 种动画风配方使用静音轨。动画定义包含 category、previewTime 与 cueHints；构建时将本地音效按 cueHints 混合为默认 8 秒 PCM 音轨。开始偏移默认 0.6 秒，使用预配音效时不能单独修改内部 start/duration；整段排期使用父合成的 data-start。
+动画定义包含 category、previewTime 与 cueHints，是否静音以实际配方为准。画廊构建仍按默认 8 秒混合 PCM，开始偏移默认 0.6 秒；旧导出使用预配音效时不能单独改内部 start/duration。新的 v5 编导导出按 timing 重定时图形并重混声音，具体节点和限制见 DIRECTOR_GUIDE；整段排期仍由父合成 data-start 决定。
 
 HyperFrames 模板中的 audio 由框架负责播放；关闭音效或零音量时选择 none.wav 真静音轨，禁止直接设置受管媒体的 play/pause/currentTime/muted。独立画廊有自己的预览控制器，暂停、拖动与关闭均停止声音。同一组件重复接入时，音轨 ID 必须按实例唯一化。声音来源、处理参数和许可声明保留在 assets/sfx/CREDITS.md 与 reports/sfx-assets.json。
 
 转场通过 `props.transitionNext` 或 `effectOptions.nextScene` 挂载独立 B 画面。背景选项为 `effectOptions.background`，只作用于声明 background 目标的组件。B 视频在首次揭示时开始，A 视频在交接结束后退出；媒体由 HyperFrames 控制。
+
+混剪镜头组 `mixed-media-sequence` 的独立规则见 [MIXED_MEDIA_GUIDE.md](MIXED_MEDIA_GUIDE.md)：按最终镜头时长直接构建，真实媒体原速；不套普通图解的非线性 8 秒重定时。相机、源坐标标注、分屏视口和交接使用分开的图层；字幕固定于屏幕。预览与导出共用声音混合器。`still` 仅停止取景运动，不冻结源视频。新类别 CSS 前缀为 `mm-`。

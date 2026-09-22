@@ -1,0 +1,40 @@
+{
+  "label": "高清 · 不预设结果的检查行",
+  "background": "transparent",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "part",
+      "part": "checklist-row",
+      "x": 264,
+      "y": 300.8,
+      "width": 752,
+      "height": 118.4,
+      "props": {
+        "text": "待检查项目",
+        "state": "unchecked",
+        "highlight": false
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

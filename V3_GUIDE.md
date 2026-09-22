@@ -1,6 +1,6 @@
 # 组件与动画库 V3
 
-当前实现包含 **78 个可编辑组件、100 种动画、13 个音效预设**。原创讲解图形共 30 个；新增 24 个 Apple 界面。保留白底、蓝色强调、薄荷绿，以及原有 Codex、Windows 和开发工具组件。
+本文记录 V3 画廊和旧版 8 秒导出的使用方式，历史数量不作为当前能力依据。当前清单见自动生成的 [编导索引](DIRECTOR_INDEX.md)；按配音调整时长、动作节点、声音及独立打包，使用 [v5 编导接入](DIRECTOR_GUIDE.md)。
 
 [打开画廊](http://localhost:3031/catalog.html) · [直接播放参考舞台](http://localhost:3031/catalog.html?scene=reference-stage) · [完整目录](CATALOG.md) · [参考片拆解](../analysis/reference-03/视频拆解与升级规格.md)
 
@@ -74,7 +74,7 @@ node scripts/export-scene.mjs examples/reference-stage-scene.json --out examples
 ## 文件与检查
 
 - `content/*.json`：长期保存的组件内容；改完运行 `npm run build`。
-- `families/*.mjs`：78 个组件实现。
+- `families/*.mjs`：实际组件实现，以当前索引为准。
 - `animations.mjs`、`motion-expanded.mjs`：动画、作用目标及声音落点。
 - `reports/dynamic-v3/`：每种动画的实时播放帧、12 个关键时点、逆向 seek 结果和目视复核记录。
 - `reports/verification.json`：内容替换、HTML 转义、动画状态和画廊功能。

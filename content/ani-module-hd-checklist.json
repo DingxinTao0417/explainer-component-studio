@@ -1,0 +1,92 @@
+{
+  "label": "高清待核检查单",
+  "background": "#f8fcff",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "checks-paper",
+      "part": "notice-paper",
+      "x": 410,
+      "y": 70,
+      "width": 470,
+      "height": 540,
+      "props": {
+        "title": "待核对"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "checks-check-0",
+      "part": "checklist-row",
+      "x": 444,
+      "y": 246,
+      "width": 399,
+      "height": 63,
+      "props": {
+        "text": "是否仍然报错？",
+        "state": "unchecked"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "checks-check-1",
+      "part": "checklist-row",
+      "x": 444,
+      "y": 348,
+      "width": 399,
+      "height": 63,
+      "props": {
+        "text": "结果是否符合要求？",
+        "state": "unchecked"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "checks-check-2",
+      "part": "checklist-row",
+      "x": 444,
+      "y": 450,
+      "width": 399,
+      "height": 63,
+      "props": {
+        "text": "是否存在遗漏？",
+        "state": "unchecked"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

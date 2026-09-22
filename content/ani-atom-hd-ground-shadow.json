@@ -1,0 +1,39 @@
+{
+  "label": "高清 · 椭圆地面投影",
+  "background": "transparent",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "part",
+      "part": "ground-shadow",
+      "x": 215,
+      "y": 310.4166666666667,
+      "width": 850,
+      "height": 99.16666666666667,
+      "props": {
+        "opacity": 0.55,
+        "color": "#a9d6fc"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

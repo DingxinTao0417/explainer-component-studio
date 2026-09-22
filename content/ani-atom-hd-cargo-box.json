@@ -1,0 +1,39 @@
+{
+  "label": "高清 · 有体积的封装纸箱",
+  "background": "transparent",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "part",
+      "part": "cargo-box",
+      "x": 512,
+      "y": 256,
+      "width": 256,
+      "height": 208,
+      "props": {
+        "label": "",
+        "stamp": true
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

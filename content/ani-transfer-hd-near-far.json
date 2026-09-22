@@ -1,0 +1,542 @@
+{
+  "label": "近迁移与远迁移都有用",
+  "background": "#f8fcff",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "near-left-paper",
+      "part": "notice-paper",
+      "x": 195,
+      "y": 30,
+      "width": 188,
+      "height": 216,
+      "props": {
+        "title": "发货延误通知"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "near-left-field-0",
+      "part": "notice-field",
+      "x": 210.2,
+      "y": 102,
+      "width": 156.8,
+      "height": 33.6,
+      "props": {
+        "label": "原因",
+        "tone": "blue"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "near-left-field-1",
+      "part": "notice-field",
+      "x": 210.2,
+      "y": 142.8,
+      "width": 156.8,
+      "height": 33.6,
+      "props": {
+        "label": "影响",
+        "tone": "orange"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "near-left-field-2",
+      "part": "notice-field",
+      "x": 210.2,
+      "y": 183.60000000000002,
+      "width": 156.8,
+      "height": 33.6,
+      "props": {
+        "label": "处理办法",
+        "tone": "mint"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "near-right-paper",
+      "part": "notice-paper",
+      "x": 892,
+      "y": 30,
+      "width": 188,
+      "height": 216,
+      "props": {
+        "title": "缺货通知"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "near-right-field-0",
+      "part": "notice-field",
+      "x": 907.2,
+      "y": 102,
+      "width": 156.8,
+      "height": 33.6,
+      "props": {
+        "label": "原因",
+        "tone": "blue"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "near-right-field-1",
+      "part": "notice-field",
+      "x": 907.2,
+      "y": 142.8,
+      "width": 156.8,
+      "height": 33.6,
+      "props": {
+        "label": "影响",
+        "tone": "orange"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "near-right-field-2",
+      "part": "notice-field",
+      "x": 907.2,
+      "y": 183.60000000000002,
+      "width": 156.8,
+      "height": 33.6,
+      "props": {
+        "label": "处理办法",
+        "tone": "mint"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "near",
+      "part": "status-pill",
+      "x": 492,
+      "y": 51,
+      "width": 290,
+      "height": 56.68181818181818,
+      "props": {
+        "text": "近迁移",
+        "tone": "light"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "near-note",
+      "part": "status-pill",
+      "x": 437,
+      "y": 146,
+      "width": 400,
+      "height": 78.18181818181819,
+      "props": {
+        "text": "同类问题，借用思路",
+        "tone": "light"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "brace-a",
+      "part": "brace",
+      "x": 409,
+      "y": 49,
+      "width": 35,
+      "height": 185,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "brace-b",
+      "part": "brace",
+      "x": 842,
+      "y": 49,
+      "width": 35,
+      "height": 185,
+      "props": {
+        "side": "right"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "far-left-vehicle",
+      "part": "truck",
+      "x": 54,
+      "y": 382,
+      "width": 391.5,
+      "height": 218.70000000000002,
+      "props": {
+        "cargoCount": 5
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "far",
+      "part": "status-pill",
+      "x": 495,
+      "y": 346,
+      "width": 284,
+      "height": 55.50909090909091,
+      "props": {
+        "text": "远迁移",
+        "tone": "orange"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "far-note",
+      "part": "status-pill",
+      "x": 437,
+      "y": 456,
+      "width": 400,
+      "height": 78.18181818181819,
+      "props": {
+        "text": "不同场景，借用关系",
+        "tone": "light"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "brace-c",
+      "part": "brace",
+      "x": 437,
+      "y": 358,
+      "width": 42,
+      "height": 197,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "brace-d",
+      "part": "brace",
+      "x": 800,
+      "y": 358,
+      "width": 42,
+      "height": 197,
+      "props": {
+        "side": "right"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "conclusion",
+      "part": "status-pill",
+      "x": 393,
+      "y": 613,
+      "width": 494,
+      "height": 96.55454545454545,
+      "props": {
+        "text": "能解决问题，两种都有用",
+        "tone": "light"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "far-right-shell",
+      "part": "window-shell",
+      "x": 831,
+      "y": 344,
+      "width": 372.4,
+      "height": 274.4,
+      "props": {
+        "title": "程序示意",
+        "caption": "情境示意"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "far-right-nav-0",
+      "part": "status-pill",
+      "x": 842.76,
+      "y": 402.8,
+      "width": 59.29,
+      "height": 11.5885,
+      "props": {
+        "text": "目录",
+        "tone": "blue"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "far-right-nav-1",
+      "part": "status-pill",
+      "x": 842.76,
+      "y": 439.55,
+      "width": 59.29,
+      "height": 11.5885,
+      "props": {
+        "text": "图像",
+        "tone": "light"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "far-right-nav-2",
+      "part": "status-pill",
+      "x": 842.76,
+      "y": 476.3,
+      "width": 59.29,
+      "height": 11.5885,
+      "props": {
+        "text": "设置",
+        "tone": "light"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "far-right-product-0",
+      "part": "photo-card",
+      "x": 918.22,
+      "y": 411.13,
+      "width": 51.94,
+      "height": 57.82,
+      "props": {
+        "kind": "cup"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "far-right-product-1",
+      "part": "photo-card",
+      "x": 977.51,
+      "y": 411.13,
+      "width": 51.94,
+      "height": 57.82,
+      "props": {
+        "kind": "lamp"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "far-right-product-2",
+      "part": "photo-card",
+      "x": 1036.8,
+      "y": 411.13,
+      "width": 51.94,
+      "height": 57.82,
+      "props": {
+        "kind": "bag"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "far-right-product-3",
+      "part": "photo-card",
+      "x": 918.22,
+      "y": 493.45,
+      "width": 51.94,
+      "height": 57.82,
+      "props": {
+        "kind": "shoe"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "far-right-product-4",
+      "part": "photo-card",
+      "x": 977.51,
+      "y": 493.45,
+      "width": 51.94,
+      "height": 57.82,
+      "props": {
+        "kind": "chair"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "far-right-product-5",
+      "part": "photo-card",
+      "x": 1036.8,
+      "y": 493.45,
+      "width": 51.94,
+      "height": 57.82,
+      "props": {
+        "kind": "plant"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "far-right-properties",
+      "part": "reply-lines",
+      "x": 1109.32,
+      "y": 418.48,
+      "width": 76.92999999999999,
+      "height": 34.3,
+      "props": {
+        "count": 4
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "far-right-properties-more",
+      "part": "reply-lines",
+      "x": 1109.32,
+      "y": 478.26,
+      "width": 76.92999999999999,
+      "height": 34.3,
+      "props": {
+        "count": 3
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

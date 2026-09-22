@@ -1,0 +1,40 @@
+{
+  "label": "高清 · 官方小图标与可编辑名称",
+  "background": "transparent",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "part",
+      "part": "brand-badge",
+      "x": 344,
+      "y": 284,
+      "width": 592,
+      "height": 152,
+      "props": {
+        "title": "智能助手",
+        "brandSrc": "",
+        "neutralMark": "chat"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

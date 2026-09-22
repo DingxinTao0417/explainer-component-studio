@@ -1,0 +1,47 @@
+{
+  "label": "高清 · 可逐行揭示的占位回复",
+  "background": "transparent",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "part",
+      "part": "reply-lines",
+      "x": 280,
+      "y": 264,
+      "width": 720,
+      "height": 192,
+      "props": {
+        "count": 4,
+        "color": "#becbd6",
+        "lengths": [
+          1,
+          0.87,
+          0.95,
+          0.7
+        ],
+        "lineHeight": 13,
+        "gap": 17
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

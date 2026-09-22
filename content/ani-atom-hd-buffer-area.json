@@ -1,0 +1,40 @@
+{
+  "label": "高清 · 虚线临时区",
+  "background": "transparent",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "part",
+      "part": "buffer-area",
+      "x": 215,
+      "y": 128.75,
+      "width": 850,
+      "height": 462.5,
+      "props": {
+        "title": "临时区域",
+        "labelWidth": 270,
+        "showLabel": true
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

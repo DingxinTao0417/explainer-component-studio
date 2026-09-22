@@ -1,0 +1,40 @@
+{
+  "label": "高清 · 非执行性代码占位行",
+  "background": "transparent",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "part",
+      "part": "code-lines",
+      "x": 256,
+      "y": 208,
+      "width": 768,
+      "height": 304,
+      "props": {
+        "count": 6,
+        "highlightLine": -1,
+        "tone": "blue"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

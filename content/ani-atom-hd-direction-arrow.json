@@ -1,0 +1,48 @@
+{
+  "label": "高清 · 可调方向箭头",
+  "background": "transparent",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "part",
+      "part": "direction-arrow",
+      "x": 256,
+      "y": 168,
+      "width": 768,
+      "height": 384,
+      "props": {
+        "style": "solid",
+        "direction": "right",
+        "color": "#0879ff",
+        "outlineColor": "#10275f",
+        "secondaryColor": "#b5deff",
+        "strokeWidth": 8,
+        "headSize": 34,
+        "scale": 1,
+        "flipBend": false,
+        "boxWidth": 480,
+        "boxHeight": 240
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

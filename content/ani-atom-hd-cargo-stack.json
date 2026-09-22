@@ -1,0 +1,40 @@
+{
+  "label": "高清 · 可拆分纸箱组",
+  "background": "transparent",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "part",
+      "part": "cargo-stack",
+      "x": 272,
+      "y": 128,
+      "width": 736,
+      "height": 464,
+      "props": {
+        "count": 6,
+        "label": "",
+        "stamp": true
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

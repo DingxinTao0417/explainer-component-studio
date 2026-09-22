@@ -1,0 +1,46 @@
+{
+  "label": "高清 · 保持商品身份的照片组",
+  "background": "transparent",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "part",
+      "part": "photo-stack",
+      "x": 336,
+      "y": 176,
+      "width": 608,
+      "height": 368,
+      "props": {
+        "kinds": [
+          "cup",
+          "lamp",
+          "bag"
+        ],
+        "count": 3,
+        "spread": 95,
+        "labels": [],
+        "tilt": true
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "label": "高清 · 仓库与卸货口",
+  "background": "transparent",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "part",
+      "part": "warehouse",
+      "x": 215,
+      "y": 115,
+      "width": 850,
+      "height": 490,
+      "props": {
+        "title": "目的地",
+        "showSideWing": true,
+        "doorOpen": false
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

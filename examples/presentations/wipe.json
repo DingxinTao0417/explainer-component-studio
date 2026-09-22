@@ -1,0 +1,73 @@
+{
+  "version": 5,
+  "component": "mixed-media-sequence",
+  "effect": "media-sequence-motion",
+  "timing": {
+    "duration": 5
+  },
+  "appearance": {
+    "frame": "none",
+    "background": "original"
+  },
+  "soundEnabled": true,
+  "soundGain": 0.65,
+  "soundCues": [],
+  "props": {
+    "strength": "emphasis",
+    "previewDuration": 5,
+    "media": [
+      {
+        "type": "image",
+        "src": "assets/broll/planning.jpg",
+        "width": 1920,
+        "height": 1280,
+        "panelLabel": "素材 A（示意）",
+        "fit": "cover",
+        "maxZoom": 1.6,
+        "start": 0,
+        "end": 1,
+        "layout": "wipe",
+        "label": "擦除对比",
+        "title": "两素材擦除 · 通用示意",
+        "caption": "仅演示呈现方式，不代表真实前后结果",
+        "camera": [
+          {
+            "at": 0,
+            "x": 0.5,
+            "y": 0.5,
+            "zoom": 1
+          },
+          {
+            "at": 0.2,
+            "x": 0.5,
+            "y": 0.5,
+            "zoom": 1
+          },
+          {
+            "at": 0.62,
+            "x": 0.55,
+            "y": 0.52,
+            "zoom": 1.08
+          },
+          {
+            "at": 1,
+            "x": 0.55,
+            "y": 0.52,
+            "zoom": 1.08
+          }
+        ],
+        "mediaPanels": [
+          {
+            "type": "image",
+            "src": "assets/broll/keyboard.jpg",
+            "width": 1920,
+            "height": 1440,
+            "panelLabel": "素材 B（示意）",
+            "fit": "cover",
+            "maxZoom": 1.6
+          }
+        ]
+      }
+    ]
+  }
+}

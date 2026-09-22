@@ -14,7 +14,7 @@ function media(m,h,suffix='media'){
 }
 function tag(text,h){return text?`<span class="brm-tag">${h.esc(text)}</span>`:'';}
 export const components=[
- {id:'broll-cutaway',name:'B-roll · 实景切镜',category:'B-roll · 真实素材',description:'让真实办公镜头短暂接管画面，字幕板、取景位置与照片/视频均可替换。适合“开始操作、等待、核对”旁白。',width:1280,height:800,reference,
+ {id:'broll-cutaway',name:'B-roll · 实景切镜',category:'B-roll · 真实素材',description:'可换素材的全屏切镜框架。图片、视频、字幕与取景均由本期内容决定；办公画面仅为演示，不限定题材。',width:1280,height:800,reference,
   defaults:{
   "eyebrow": "栏目 / 01",
   "title": "主标题",
@@ -30,7 +30,7 @@ export const components=[
 },
   render(props,h){const p={...this.defaults,...props};return `<section class="brm-scene brm-cutaway"><div class="brm-shot-window"><div class="brm-shot-motion" data-broll-part="camera" data-motion="focus">${media({src:p.mediaSrc,type:p.mediaType,alt:p.mediaAlt,x:p.mediaX,y:p.mediaY,mediaStart:p.mediaStart},h)}</div></div><div class="brm-cutaway-top"><span>${h.esc(p.eyebrow)}</span>${tag(p.tag,h)}</div>${p.showCaption?`<div class="brm-caption" data-broll-part="caption" data-motion="reveal"><div class="brm-rule"></div><h2>${h.esc(p.title)}</h2><p>${h.esc(p.caption)}</p></div>`:''}</section>`;}
  },
- {id:'broll-sequence',name:'B-roll · 三镜头组接',category:'B-roll · 真实素材',description:'同一件事的准备、操作、交流三个观察角度。独立素材槽可用照片或视频，适合承接过程、对比与归纳。',width:1280,height:800,reference,
+ {id:'broll-sequence',name:'B-roll · 三镜头组接',category:'B-roll · 真实素材',description:'三个可独立换图或视频的并排素材槽。只固定布局与动效，不限定素材题材；用于过程、对照与归纳。',width:1280,height:800,reference,
   defaults:{
   "eyebrow": "栏目 / 02",
   "title": "主标题",
@@ -97,7 +97,7 @@ export const components=[
   ],
   "footer": "页脚说明文字"
 },
-  render(props,h){const p={...this.defaults,...props},w=clamp(p.focusWidth,10,75,30),ht=clamp(p.focusHeight,10,65,30),x=clamp(p.focusX,w/2,100-w/2,45),y=clamp(p.focusY,ht/2,100-ht/2,48);return `<section class="brm-scene brm-detail"><header class="brm-editorial-head"><span>${h.esc(p.eyebrow)}</span><span>DETAIL / 01</span></header><div class="brm-detail-layout"><div class="brm-detail-image"><div class="brm-shot-motion" data-broll-part="camera">${media({src:p.mediaSrc,type:p.mediaType,alt:p.mediaAlt,x:p.mediaX,y:p.mediaY},h)}</div><div class="brm-focus-box" data-broll-part="focus" data-motion="focus" style="left:${x-w/2}%;top:${y-ht/2}%;width:${w}%;height:${ht}%"><i></i><i></i><i></i><i></i></div><div class="brm-focus-label" data-broll-part="caption">${h.esc(p.focusLabel)}</div></div><aside class="brm-observation"><h2>${h.esc(p.title)}</h2>${array(p.notes,3).map((n,i)=>`<div class="brm-note" data-broll-part="note" data-motion="item"><span>0${i+1} / ${h.esc(n.label)}</span><p>${h.esc(n.text)}</p></div>`).join('')}<small>${h.esc(p.footer)}</small></aside></div></section>`;}
+  render(props,h){const p={...this.defaults,...props},w=clamp(p.focusWidth,10,75,30),ht=clamp(p.focusHeight,10,65,30),x=clamp(p.focusX,w/2,100-w/2,45),y=clamp(p.focusY,ht/2,100-ht/2,48);return `<section class="brm-scene brm-detail"><header class="brm-editorial-head"><span>${h.esc(p.eyebrow)}</span><span>DETAIL / 01</span></header><div class="brm-detail-layout"><div class="brm-detail-image"><div class="brm-shot-motion" data-broll-part="camera">${media({src:p.mediaSrc,type:p.mediaType,alt:p.mediaAlt,x:p.mediaX,y:p.mediaY,mediaStart:p.mediaStart},h)}</div><div class="brm-focus-box" data-broll-part="focus" data-motion="focus" style="left:${x-w/2}%;top:${y-ht/2}%;width:${w}%;height:${ht}%"><i></i><i></i><i></i><i></i></div><div class="brm-focus-label" data-broll-part="caption">${h.esc(p.focusLabel)}</div></div><aside class="brm-observation"><h2>${h.esc(p.title)}</h2>${array(p.notes,3).map((n,i)=>`<div class="brm-note" data-broll-part="note" data-motion="item"><span>0${i+1} / ${h.esc(n.label)}</span><p>${h.esc(n.text)}</p></div>`).join('')}<small>${h.esc(p.footer)}</small></aside></div></section>`;}
  }
 ];
 // Packaging follows CONTRACT.md; source media retain their original colors.

@@ -1,0 +1,41 @@
+{
+  "label": "高清 · 橙色提问气泡",
+  "background": "transparent",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "part",
+      "part": "question-bubble",
+      "x": 215,
+      "y": 164.91803278688525,
+      "width": 850,
+      "height": 390.1639344262295,
+      "props": {
+        "lines": [
+          "需要思考的问题？"
+        ],
+        "tone": "orange"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

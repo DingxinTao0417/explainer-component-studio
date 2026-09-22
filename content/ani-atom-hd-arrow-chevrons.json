@@ -1,0 +1,48 @@
+{
+  "label": "连续人字箭头",
+  "background": "transparent",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "arrow",
+      "part": "direction-arrow",
+      "x": 310,
+      "y": 200,
+      "width": 660,
+      "height": 300,
+      "props": {
+        "style": "chevrons",
+        "direction": "right",
+        "color": "#0879ff",
+        "outlineColor": "#10275f",
+        "secondaryColor": "#b5deff",
+        "strokeWidth": 8,
+        "headSize": 34,
+        "scale": 1,
+        "flipBend": false,
+        "boxWidth": 480,
+        "boxHeight": 240
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

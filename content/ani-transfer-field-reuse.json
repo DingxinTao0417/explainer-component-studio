@@ -1,0 +1,23 @@
+{
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "footer": "结论与补充说明",
+  "sourceTitle": "文档 A",
+  "targetTitle": "文档 B",
+  "labels": [
+    "字段 A",
+    "字段 B",
+    "字段 C"
+  ],
+  "sourceValues": [
+    "原内容 A",
+    "原内容 B",
+    "原内容 C"
+  ],
+  "targetValues": [
+    "新内容 A",
+    "新内容 B",
+    "新内容 C"
+  ],
+  "relation": "保留共同结构"
+}

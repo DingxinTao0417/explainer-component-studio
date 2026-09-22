@@ -1,0 +1,32 @@
+{
+  "version": 4,
+  "component": "ani-transfer-purpose-fork",
+  "props": {
+    "title": "主标题",
+    "subtitle": "副标题与说明文字",
+    "footer": "结论与补充说明",
+    "entryLabel": "共同入口",
+    "leftTitle": "目标 A",
+    "rightTitle": "目标 B",
+    "leftLines": [
+      "提问方式 A",
+      "处理方式 A",
+      "产物说明 A"
+    ],
+    "rightLines": [
+      "提问方式 B",
+      "处理方式 B",
+      "产物说明 B"
+    ],
+    "leftResult": "结果 A",
+    "rightResult": "结果 B"
+  },
+  "effect": "ani-transfer-purpose-fork",
+  "effectOptions": {},
+  "appearance": {
+    "frame": "dashed-round",
+    "background": "perspective-grid"
+  },
+  "soundEnabled": false,
+  "soundGain": 0
+}

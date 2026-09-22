@@ -1,0 +1,41 @@
+{
+  "label": "高清 · 敞厢整车（含货物与投影）",
+  "background": "transparent",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "part",
+      "part": "truck",
+      "x": 215,
+      "y": 122.58620689655172,
+      "width": 850,
+      "height": 474.82758620689657,
+      "props": {
+        "cargoCount": 5,
+        "shadowOpacity": 0.55,
+        "shadowScale": 1,
+        "shadowOffsetY": 0
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "source_directory": "user-provided/迁移",
+  "files": [
+    {
+      "name": "第二机制-动画呈现-v1.png",
+      "bytes": 2105488,
+      "sha256": "45cdb85d6d84bd9a8e4c2d0403640fec7217a6f67606c37bd6783faa03a5fa67",
+      "role": "static-reference"
+    },
+    {
+      "name": "第二机制-素材总览-v1.png",
+      "bytes": 1980510,
+      "sha256": "94d5e7b10e152d2b06f6cdb9e8bce447127fc63b072794e251f07e6528892905",
+      "role": "static-reference"
+    },
+    {
+      "name": "迁移V4_第1阶段.mp3",
+      "bytes": 1030124,
+      "sha256": "867f791507b1b45e14e433f540b89e77cf5a5bfcf14b98d8550c43c729db199a",
+      "role": "provided-audio-not-used"
+    },
+    {
+      "name": "迁移V4_第1阶段.srt",
+      "bytes": 2196,
+      "sha256": "c52470806f37ca7a586b29088a42e8a29fb27fea5579cea0c2a7ba3276c1fd00",
+      "role": "narration-context"
+    },
+    {
+      "name": "迁移V4_第2阶段.mp3",
+      "bytes": 1033484,
+      "sha256": "ecab272542f3232d55f2b892cbc4029b2a0aa91b4f9e9a814c37b0d1a870320f",
+      "role": "provided-audio-not-used"
+    },
+    {
+      "name": "迁移V4_第2阶段.srt",
+      "bytes": 1874,
+      "sha256": "c2919b3524eef043b65e06fd0ca89cb8e8d35988d3fbc865b5ba64ffdb50f2c5",
+      "role": "narration-context"
+    },
+    {
+      "name": "迁移V4_第3阶段.mp3",
+      "bytes": 1114604,
+      "sha256": "d627680974a818e6c64d3461df5f8e9f7cfa7f10c1a7bb87d3e3cde23acacc0a",
+      "role": "provided-audio-not-used"
+    },
+    {
+      "name": "迁移V4_第3阶段.srt",
+      "bytes": 2118,
+      "sha256": "18042b6845bccab65d1ee163387ac30bf96e205117ee31ca5a50eb5144f970c7",
+      "role": "narration-context"
+    }
+  ],
+  "basis": "Static shape and state boards only. Timing and interpolation authored for the library. Audio is not incorporated into templates.",
+  "rights": "User-provided reference, not declared public domain. Native SVG adaptations, not image crops.",
+  "coverage": {
+    "M01": [
+      "ani-transfer-context-bridge"
+    ],
+    "M02": [
+      "ani-transfer-field-reuse"
+    ],
+    "M03": [
+      "ani-transfer-capacity-limit"
+    ],
+    "M04": [
+      "ani-transfer-batch-delivery"
+    ],
+    "M05": [
+      "ani-transfer-batch-cycle"
+    ],
+    "M06": [
+      "ani-transfer-relationship-map"
+    ],
+    "M07": [
+      "ani-transfer-copy-verify"
+    ],
+    "M08": [
+      "ani-transfer-purpose-fork",
+      "ani-transfer-guided-steps"
+    ],
+    "M09": [
+      "ani-transfer-context-bridge",
+      "ani-question-outro"
+    ]
+  }
+}

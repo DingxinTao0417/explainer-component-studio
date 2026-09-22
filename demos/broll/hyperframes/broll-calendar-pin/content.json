@@ -1,0 +1,23 @@
+{
+  "eyebrow": "工作过程 / 示意",
+  "subtitle": "替换为本期需要说明的动作与内容",
+  "footer": "动画示意 · 内容可编辑",
+  "title": "日历排期与落点",
+  "calendarLabel": "四周排期示意",
+  "weekdays": [
+    "一",
+    "二",
+    "三",
+    "四",
+    "五",
+    "六",
+    "日"
+  ],
+  "selectedDay": 18,
+  "eventLabel": "安排事项",
+  "eventTitle": "任务名称",
+  "dateLabel": "填写实际日期",
+  "timeLabel": "填写起止时间",
+  "note": "补充安排说明",
+  "status": "计划已落位"
+}

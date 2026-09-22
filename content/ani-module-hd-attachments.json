@@ -1,0 +1,75 @@
+{
+  "label": "高清报错代码附件组",
+  "background": "#f8fcff",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "error",
+      "part": "attachment-card",
+      "x": 255,
+      "y": 210,
+      "width": 350,
+      "height": 169,
+      "props": {
+        "title": "报错信息",
+        "kind": "error"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "code",
+      "part": "attachment-card",
+      "x": 650,
+      "y": 210,
+      "width": 350,
+      "height": 169,
+      "props": {
+        "title": "相关代码",
+        "kind": "code"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "response",
+      "part": "chat-message",
+      "x": 310,
+      "y": 420,
+      "width": 660,
+      "height": 198,
+      "props": {
+        "role": "assistant",
+        "text": "先理解原因，再决定如何修改"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

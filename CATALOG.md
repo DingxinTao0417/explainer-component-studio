@@ -1,8 +1,8 @@
 # V3 完整组件与动画目录
 
-当前构建：123 个组件、104 种动画、13 个声音预设。
+当前构建：138 个组件、113 种动画、13 个声音预设。
 
-[打开画廊](http://localhost:3031/catalog.html) · [使用说明](V3_GUIDE.md)
+[打开画廊](http://localhost:3031/catalog.html) · [使用说明](V3_GUIDE.md) · [迁移模板与部件](TRANSFER_GUIDE.md)
 
 ## 动画风 · 10 个
 
@@ -19,7 +19,7 @@
 | 动画风 · 问题与预告 | [ani-question-outro](content/ani-question-outro.json) | [打开](http://localhost:3031/previews/ani-question-outro.html) | [PNG](snapshots/ani-question-outro.png) |
 | 动画风 · 文档逐项核对 | [ani-notice-check](content/ani-notice-check.json) | [打开](http://localhost:3031/previews/ani-notice-check.html) | [PNG](snapshots/ani-notice-check.png) |
 
-## 动画风 · 基础组件 · 26 个
+## 动画风 · 基础组件 · 32 个
 
 | 组件 | 内容 | 预览 | 截图 |
 |---|---|---|---|
@@ -49,6 +49,26 @@
 | 独立表格 | [ani-atom-table](content/ani-atom-table.json) | [打开](http://localhost:3031/previews/ani-atom-table.html) | [PNG](snapshots/ani-atom-table.png) |
 | 独立浏览器框 | [ani-atom-browser](content/ani-atom-browser.json) | [打开](http://localhost:3031/previews/ani-atom-browser.html) | [PNG](snapshots/ani-atom-browser.png) |
 | 独立连线 | [ani-atom-connector](content/ani-atom-connector.json) | [打开](http://localhost:3031/previews/ani-atom-connector.html) | [PNG](snapshots/ani-atom-connector.png) |
+| 动画风 · 运输货车 | [ani-atom-truck](content/ani-atom-truck.json) | [打开](http://localhost:3031/previews/ani-atom-truck.html) | [PNG](snapshots/ani-atom-truck.png) |
+| 动画风 · 货箱 | [ani-atom-cargo](content/ani-atom-cargo.json) | [打开](http://localhost:3031/previews/ani-atom-cargo.html) | [PNG](snapshots/ani-atom-cargo.png) |
+| 动画风 · 仓库与站点 | [ani-atom-warehouse](content/ani-atom-warehouse.json) | [打开](http://localhost:3031/previews/ani-atom-warehouse.html) | [PNG](snapshots/ani-atom-warehouse.png) |
+| 动画风 · 容量与暂存槽 | [ani-atom-buffer](content/ani-atom-buffer.json) | [打开](http://localhost:3031/previews/ani-atom-buffer.html) | [PNG](snapshots/ani-atom-buffer.png) |
+| 动画风 · 资源物件 | [ani-atom-resource](content/ani-atom-resource.json) | [打开](http://localhost:3031/previews/ani-atom-resource.html) | [PNG](snapshots/ani-atom-resource.png) |
+| 动画风 · 关系括线 | [ani-atom-relation-bridge](content/ani-atom-relation-bridge.json) | [打开](http://localhost:3031/previews/ani-atom-relation-bridge.html) | [PNG](snapshots/ani-atom-relation-bridge.png) |
+
+## 动画风 · 迁移模板 · 9 个
+
+| 组件 | 内容 | 预览 | 截图 |
+|---|---|---|---|
+| 动画风 · 不同目标与双路径选择 | [ani-transfer-purpose-fork](content/ani-transfer-purpose-fork.json) | [打开](http://localhost:3031/previews/ani-transfer-purpose-fork.html) | [PNG](snapshots/ani-transfer-purpose-fork.png) |
+| 动画风 · 经验与新场景关联 | [ani-transfer-context-bridge](content/ani-transfer-context-bridge.json) | [打开](http://localhost:3031/previews/ani-transfer-context-bridge.html) | [PNG](snapshots/ani-transfer-context-bridge.png) |
+| 动画风 · 字段保留与内容替换 | [ani-transfer-field-reuse](content/ani-transfer-field-reuse.json) | [打开](http://localhost:3031/previews/ani-transfer-field-reuse.html) | [PNG](snapshots/ani-transfer-field-reuse.png) |
+| 动画风 · 容量填满与溢出提示 | [ani-transfer-capacity-limit](content/ani-transfer-capacity-limit.json) | [打开](http://localhost:3031/previews/ani-transfer-capacity-limit.html) | [PNG](snapshots/ani-transfer-capacity-limit.png) |
+| 动画风 · 装载、运输、卸货与返程 | [ani-transfer-batch-delivery](content/ani-transfer-batch-delivery.json) | [打开](http://localhost:3031/previews/ani-transfer-batch-delivery.html) | [PNG](snapshots/ani-transfer-batch-delivery.png) |
+| 动画风 · 读取、保存、释放与再读取 | [ani-transfer-batch-cycle](content/ani-transfer-batch-cycle.json) | [打开](http://localhost:3031/previews/ani-transfer-batch-cycle.html) | [PNG](snapshots/ani-transfer-batch-cycle.png) |
+| 动画风 · 跨对象提取共同步骤 | [ani-transfer-relationship-map](content/ani-transfer-relationship-map.json) | [打开](http://localhost:3031/previews/ani-transfer-relationship-map.html) | [PNG](snapshots/ani-transfer-relationship-map.png) |
+| 动画风 · 原件保留与副本核验 | [ani-transfer-copy-verify](content/ani-transfer-copy-verify.json) | [打开](http://localhost:3031/previews/ani-transfer-copy-verify.html) | [PNG](snapshots/ani-transfer-copy-verify.png) |
+| 动画风 · 澄清、借用与行动步骤 | [ani-transfer-guided-steps](content/ani-transfer-guided-steps.json) | [打开](http://localhost:3031/previews/ani-transfer-guided-steps.html) | [PNG](snapshots/ani-transfer-guided-steps.png) |
 
 ## Apple · macOS · 16 个
 
@@ -326,26 +346,35 @@
 
 | 动画 | ID | 演示 | 声音 |
 |---|---|---|---|
-| 细网格缓移 | grid-drift | [打开](http://localhost:3031/effects/grid-drift.html) | 静音背景 |
-| 透视网格滚动 | perspective-scroll | [打开](http://localhost:3031/effects/perspective-scroll.html) | 静音背景 |
-| 细点阵漂移 | dot-drift | [打开](http://localhost:3031/effects/dot-drift.html) | 静音背景 |
-| 边角圆形视差 | orb-parallax | [打开](http://localhost:3031/effects/orb-parallax.html) | 静音背景 |
-| 等高曲线流动 | contour-flow | [打开](http://localhost:3031/effects/contour-flow.html) | 静音背景 |
-| 斜纹背景滑动 | diagonal-hatch | [打开](http://localhost:3031/effects/diagonal-hatch.html) | 静音背景 |
-| 环形轨道漂移 | ring-orbit | [打开](http://localhost:3031/effects/ring-orbit.html) | 静音背景 |
-| 蓝图坐标平移 | blueprint-pan | [打开](http://localhost:3031/effects/blueprint-pan.html) | 静音背景 |
-| 柔和波带流动 | wave-bands | [打开](http://localhost:3031/effects/wave-bands.html) | 静音背景 |
-| 淡色光晕呼吸 | ambient-breath | [打开](http://localhost:3031/effects/ambient-breath.html) | 静音背景 |
+| 细网格缓移 | grid-drift | [打开](http://localhost:3031/effects/grid-drift.html) | 静音 |
+| 透视网格滚动 | perspective-scroll | [打开](http://localhost:3031/effects/perspective-scroll.html) | 静音 |
+| 细点阵漂移 | dot-drift | [打开](http://localhost:3031/effects/dot-drift.html) | 静音 |
+| 边角圆形视差 | orb-parallax | [打开](http://localhost:3031/effects/orb-parallax.html) | 静音 |
+| 等高曲线流动 | contour-flow | [打开](http://localhost:3031/effects/contour-flow.html) | 静音 |
+| 斜纹背景滑动 | diagonal-hatch | [打开](http://localhost:3031/effects/diagonal-hatch.html) | 静音 |
+| 环形轨道漂移 | ring-orbit | [打开](http://localhost:3031/effects/ring-orbit.html) | 静音 |
+| 蓝图坐标平移 | blueprint-pan | [打开](http://localhost:3031/effects/blueprint-pan.html) | 静音 |
+| 柔和波带流动 | wave-bands | [打开](http://localhost:3031/effects/wave-bands.html) | 静音 |
+| 淡色光晕呼吸 | ambient-breath | [打开](http://localhost:3031/effects/ambient-breath.html) | 静音 |
 
-## 动画风动画 · 4 种
+## 动画风动画 · 13 种
 
 | 动画 | ID | 演示 | 声音 |
 |---|---|---|---|
-| 文档逐项核对 | ani-notice-verify | [打开](http://localhost:3031/effects/ani-notice-verify.html) | 静音背景 |
-| 图解逐步建立 | ani-diagram-build | [打开](http://localhost:3031/effects/ani-diagram-build.html) | 静音背景 |
-| 表格条件筛选 | ani-order-select | [打开](http://localhost:3031/effects/ani-order-select.html) | 静音背景 |
-| 材料加工过程 | ani-machine-process | [打开](http://localhost:3031/effects/ani-machine-process.html) | 静音背景 |
+| 文档逐项核对 | ani-notice-verify | [打开](http://localhost:3031/effects/ani-notice-verify.html) | 静音 |
+| 图解逐步建立 | ani-diagram-build | [打开](http://localhost:3031/effects/ani-diagram-build.html) | 静音 |
+| 表格条件筛选 | ani-order-select | [打开](http://localhost:3031/effects/ani-order-select.html) | 静音 |
+| 材料加工过程 | ani-machine-process | [打开](http://localhost:3031/effects/ani-machine-process.html) | 静音 |
+| 共同入口与双路径展开 | ani-transfer-purpose-fork | [打开](http://localhost:3031/effects/ani-transfer-purpose-fork.html) | 静音 |
+| 对象出现与关系建立 | ani-transfer-context-bridge | [打开](http://localhost:3031/effects/ani-transfer-context-bridge.html) | 静音 |
+| 共同字段逐项对应 | ani-transfer-field-reuse | [打开](http://localhost:3031/effects/ani-transfer-field-reuse.html) | 静音 |
+| 槽位填满与容量提示 | ani-transfer-capacity-limit | [打开](http://localhost:3031/effects/ani-transfer-capacity-limit.html) | 静音 |
+| 载货到达与空车返程 | ani-transfer-batch-delivery | [打开](http://localhost:3031/effects/ani-transfer-batch-delivery.html) | 静音 |
+| 读取保存释放循环 | ani-transfer-batch-cycle | [打开](http://localhost:3031/effects/ani-transfer-batch-cycle.html) | 静音 |
+| 跨对象关系提取 | ani-transfer-relationship-map | [打开](http://localhost:3031/effects/ani-transfer-relationship-map.html) | 静音 |
+| 副本与逐项核验 | ani-transfer-copy-verify | [打开](http://localhost:3031/effects/ani-transfer-copy-verify.html) | 静音 |
+| 问题到行动展开 | ani-transfer-guided-steps | [打开](http://localhost:3031/effects/ani-transfer-guided-steps.html) | 静音 |
 
 ## 动态检查
 
-每个动画的实时播放和关键帧证据在 `reports/dynamic-v3/<动画 ID>/`。逐项目视观察和修复记录在 [复核台账](reports/dynamic-v3/FINAL_VISUAL_REVIEW.md)。静态截图不代替动态证据。
+新增迁移模板的状态、反向拖动和集成检查见 [迁移复查](reports/transfer/REVIEW.md)。早期动画的实时播放和关键帧证据在 `reports/dynamic-v3/<动画 ID>/`。逐项目视观察和修复记录在 [复核台账](reports/dynamic-v3/FINAL_VISUAL_REVIEW.md)。静态截图不代替动态证据。

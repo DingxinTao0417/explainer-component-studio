@@ -1,0 +1,41 @@
+{
+  "label": "高清 · 蓝标题栏软件窗口",
+  "background": "transparent",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "part",
+      "part": "window-shell",
+      "x": 307.5,
+      "y": 115,
+      "width": 665,
+      "height": 490,
+      "props": {
+        "title": "应用窗口",
+        "controls": true,
+        "caption": "",
+        "brandSrc": ""
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

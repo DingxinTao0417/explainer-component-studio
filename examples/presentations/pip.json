@@ -1,0 +1,73 @@
+{
+  "version": 5,
+  "component": "mixed-media-sequence",
+  "effect": "media-sequence-motion",
+  "timing": {
+    "duration": 5
+  },
+  "appearance": {
+    "frame": "none",
+    "background": "original"
+  },
+  "soundEnabled": true,
+  "soundGain": 0.65,
+  "soundCues": [],
+  "props": {
+    "strength": "emphasis",
+    "previewDuration": 5,
+    "media": [
+      {
+        "type": "image",
+        "src": "assets/broll/planning.jpg",
+        "width": 1920,
+        "height": 1280,
+        "panelLabel": "主画面",
+        "fit": "cover",
+        "maxZoom": 1.6,
+        "start": 0,
+        "end": 1,
+        "layout": "pip",
+        "label": "画中画",
+        "title": "真实素材 · 多视角呈现",
+        "caption": "图片、录屏和视频均可替换",
+        "camera": [
+          {
+            "at": 0,
+            "x": 0.5,
+            "y": 0.5,
+            "zoom": 1
+          },
+          {
+            "at": 0.2,
+            "x": 0.5,
+            "y": 0.5,
+            "zoom": 1
+          },
+          {
+            "at": 0.62,
+            "x": 0.55,
+            "y": 0.52,
+            "zoom": 1.08
+          },
+          {
+            "at": 1,
+            "x": 0.55,
+            "y": 0.52,
+            "zoom": 1.08
+          }
+        ],
+        "mediaPanels": [
+          {
+            "type": "image",
+            "src": "assets/broll/keyboard.jpg",
+            "width": 1920,
+            "height": 1440,
+            "panelLabel": "补充视角",
+            "fit": "cover",
+            "maxZoom": 1.6
+          }
+        ]
+      }
+    ]
+  }
+}

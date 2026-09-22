@@ -1,0 +1,281 @@
+{
+  "label": "下期主题预告",
+  "background": "#f8fcff",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "next",
+      "part": "status-pill",
+      "x": 506,
+      "y": 99,
+      "width": 260,
+      "height": 50.81818181818182,
+      "props": {
+        "text": "下期",
+        "tone": "blue"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "topic",
+      "part": "title",
+      "x": 196,
+      "y": 208,
+      "width": 888,
+      "height": 160.33333333333334,
+      "props": {
+        "text": "认知灵活性"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "truck-vehicle",
+      "part": "truck",
+      "x": 315,
+      "y": 430,
+      "width": 287.1,
+      "height": 160.38,
+      "props": {
+        "cargoCount": 5
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-shell",
+      "part": "window-shell",
+      "x": 718,
+      "y": 426,
+      "width": 281.2,
+      "height": 207.2,
+      "props": {
+        "title": "程序示意",
+        "caption": "情境示意"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-nav-0",
+      "part": "status-pill",
+      "x": 726.88,
+      "y": 470.4,
+      "width": 44.769999999999996,
+      "height": 8.750499999999999,
+      "props": {
+        "text": "目录",
+        "tone": "blue"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-nav-1",
+      "part": "status-pill",
+      "x": 726.88,
+      "y": 498.15,
+      "width": 44.769999999999996,
+      "height": 8.750499999999999,
+      "props": {
+        "text": "图像",
+        "tone": "light"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-nav-2",
+      "part": "status-pill",
+      "x": 726.88,
+      "y": 525.9,
+      "width": 44.769999999999996,
+      "height": 8.750499999999999,
+      "props": {
+        "text": "设置",
+        "tone": "light"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-product-0",
+      "part": "photo-card",
+      "x": 783.86,
+      "y": 476.69,
+      "width": 39.22,
+      "height": 43.66,
+      "props": {
+        "kind": "cup"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-product-1",
+      "part": "photo-card",
+      "x": 828.63,
+      "y": 476.69,
+      "width": 39.22,
+      "height": 43.66,
+      "props": {
+        "kind": "lamp"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-product-2",
+      "part": "photo-card",
+      "x": 873.4,
+      "y": 476.69,
+      "width": 39.22,
+      "height": 43.66,
+      "props": {
+        "kind": "bag"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-product-3",
+      "part": "photo-card",
+      "x": 783.86,
+      "y": 538.85,
+      "width": 39.22,
+      "height": 43.66,
+      "props": {
+        "kind": "shoe"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-product-4",
+      "part": "photo-card",
+      "x": 828.63,
+      "y": 538.85,
+      "width": 39.22,
+      "height": 43.66,
+      "props": {
+        "kind": "chair"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-product-5",
+      "part": "photo-card",
+      "x": 873.4,
+      "y": 538.85,
+      "width": 39.22,
+      "height": 43.66,
+      "props": {
+        "kind": "plant"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-properties",
+      "part": "reply-lines",
+      "x": 928.16,
+      "y": 482.24,
+      "width": 58.089999999999996,
+      "height": 25.9,
+      "props": {
+        "count": 4
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-properties-more",
+      "part": "reply-lines",
+      "x": 928.16,
+      "y": 527.38,
+      "width": 58.089999999999996,
+      "height": 25.9,
+      "props": {
+        "count": 3
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

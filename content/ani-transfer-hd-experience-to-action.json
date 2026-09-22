@@ -1,0 +1,238 @@
+{
+  "label": "把经验转为具体做法",
+  "background": "#f8fcff",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "truck-vehicle",
+      "part": "truck",
+      "x": 37,
+      "y": 70,
+      "width": 426.3,
+      "height": 238.14,
+      "props": {
+        "cargoCount": 5
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "brace",
+      "part": "brace",
+      "x": 578,
+      "y": 311,
+      "width": 51,
+      "height": 273,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "reuse-paper",
+      "part": "notice-paper",
+      "x": 53,
+      "y": 435,
+      "width": 202.1,
+      "height": 232.2,
+      "props": {
+        "title": "可借用"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "reuse-draft",
+      "part": "reply-lines",
+      "x": 73.64,
+      "y": 513.69,
+      "width": 158.67,
+      "height": 42.14,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "reuse-draft-tail",
+      "part": "reply-lines",
+      "x": 73.64,
+      "y": 576.04,
+      "width": 145.34,
+      "height": 38.7,
+      "props": {
+        "count": 3
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "adjust-paper",
+      "part": "notice-paper",
+      "x": 310,
+      "y": 435,
+      "width": 202.1,
+      "height": 232.2,
+      "props": {
+        "title": "需调整"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "adjust-draft",
+      "part": "reply-lines",
+      "x": 330.64,
+      "y": 513.69,
+      "width": 158.67,
+      "height": 42.14,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "adjust-draft-tail",
+      "part": "reply-lines",
+      "x": 330.64,
+      "y": 576.04,
+      "width": 145.34,
+      "height": 38.7,
+      "props": {
+        "count": 3
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "chat-shell",
+      "part": "chat-shell",
+      "x": 711,
+      "y": 64,
+      "width": 561,
+      "height": 544,
+      "props": {
+        "title": "豆包",
+        "brandSrc": "references/transfer-hd/03-官方图标/豆包-官方原件.png"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "chat-message-0",
+      "part": "chat-message",
+      "x": 818.1,
+      "y": 206.79999999999998,
+      "width": 416.5,
+      "height": 124.95,
+      "props": {
+        "role": "user",
+        "text": "卡在哪一步？"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "chat-message-1",
+      "part": "chat-message",
+      "x": 818.1,
+      "y": 304.54999999999995,
+      "width": 416.5,
+      "height": 124.95,
+      "props": {
+        "role": "user",
+        "text": "哪一步能借用？哪里得改？"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "chat-message-2",
+      "part": "chat-message",
+      "x": 739.9,
+      "y": 402.3,
+      "width": 416.5,
+      "height": 124.95,
+      "props": {
+        "role": "assistant",
+        "text": "这次具体怎么做："
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "chat-send",
+      "part": "send-icon",
+      "x": 1206.55,
+      "y": 537.45,
+      "width": 38.25,
+      "height": 38.25,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

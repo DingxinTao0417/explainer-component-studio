@@ -1,0 +1,41 @@
+{
+  "label": "高清 · 可填字段的折角通知",
+  "background": "transparent",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "part",
+      "part": "notice-paper",
+      "x": 426.75925925925924,
+      "y": 115,
+      "width": 426.4814814814815,
+      "height": 490,
+      "props": {
+        "title": "通知标题",
+        "subtitle": "",
+        "foldTone": "gold",
+        "showShadow": true
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

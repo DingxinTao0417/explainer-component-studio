@@ -1,0 +1,69 @@
+{
+  "version": 5,
+  "component": "mixed-media-sequence",
+  "effect": "media-sequence-motion",
+  "timing": {
+    "duration": 5
+  },
+  "appearance": {
+    "frame": "none",
+    "background": "original"
+  },
+  "soundEnabled": true,
+  "soundGain": 0.65,
+  "soundCues": [],
+  "props": {
+    "strength": "emphasis",
+    "previewDuration": 5,
+    "media": [
+      {
+        "type": "image",
+        "src": "assets/broll/planning.jpg",
+        "width": 1920,
+        "height": 1280,
+        "panelLabel": "主画面",
+        "fit": "cover",
+        "maxZoom": 2.2,
+        "start": 0,
+        "end": 1,
+        "layout": "focus",
+        "label": "局部放大窗",
+        "title": "全貌与细节同时保留",
+        "caption": "图片、录屏和视频均可替换",
+        "camera": [
+          {
+            "at": 0,
+            "x": 0.5,
+            "y": 0.5,
+            "zoom": 1
+          },
+          {
+            "at": 0.2,
+            "x": 0.5,
+            "y": 0.5,
+            "zoom": 1
+          },
+          {
+            "at": 0.62,
+            "x": 0.55,
+            "y": 0.52,
+            "zoom": 1.08
+          },
+          {
+            "at": 1,
+            "x": 0.55,
+            "y": 0.52,
+            "zoom": 1.08
+          }
+        ],
+        "mediaPanels": [],
+        "focus": {
+          "x": 0.66,
+          "y": 0.55,
+          "zoom": 2,
+          "label": "同源局部"
+        }
+      }
+    ]
+  }
+}

@@ -10,7 +10,11 @@
     "verify": "node scripts/verify.mjs",
     "verify:audio": "node scripts/verify-audio.mjs",
     "export:scene": "node scripts/export-scene.mjs",
-    "snapshot": "node scripts/snapshot.mjs"
+    "snapshot": "node scripts/snapshot.mjs",
+    "verify:icons": "node scripts/verify-icons.mjs",
+    "director": "node scripts/director.mjs",
+    "verify:director": "node scripts/verify-director.mjs",
+    "verify:media": "node scripts/verify-media-geometry.mjs && node scripts/verify-mixed-media.mjs"
   },
   "devDependencies": {
     "esbuild": "0.25.12",

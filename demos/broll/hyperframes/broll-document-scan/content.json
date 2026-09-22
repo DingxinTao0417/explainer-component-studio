@@ -1,0 +1,30 @@
+{
+  "eyebrow": "工作过程 / 示意",
+  "subtitle": "替换为本期需要说明的动作与内容",
+  "footer": "动画示意 · 内容可编辑",
+  "title": "文档扫描与字段提取",
+  "documentLabel": "输入文档",
+  "documentTitle": "原始内容标题",
+  "lines": [
+    "原始内容第一行",
+    "原始内容第二行",
+    "原始内容第三行",
+    "原始内容第四行"
+  ],
+  "resultLabel": "提取结果",
+  "fields": [
+    {
+      "label": "字段 A",
+      "value": "提取内容 A"
+    },
+    {
+      "label": "字段 B",
+      "value": "提取内容 B"
+    },
+    {
+      "label": "字段 C",
+      "value": "提取内容 C"
+    }
+  ],
+  "status": "等待核对"
+}

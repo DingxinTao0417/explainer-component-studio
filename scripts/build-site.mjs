@@ -21,13 +21,15 @@ if (previous?.isSymbolicLink() || (previous && !previous.isDirectory())) {
 await rm(output, {recursive: true, force: true});
 await mkdir(output, {recursive: true});
 
-// Browser modules are loaded directly by the catalog and the standalone demos.
+// The catalog and demos import the root module graph directly. Discover these
+// files so new component families cannot be omitted from the static deployment.
+// Skills, installers, credentials and authoring reports remain outside public/.
+const modules = (await readdir(root, {withFileTypes: true}))
+  .filter(entry => entry.isFile() && /\.(?:mjs|js|css)$/.test(entry.name))
+  .map(entry => entry.name);
 const files = [
-  'catalog.html', 'catalog.css', 'catalog.mjs', 'catalog-controller.mjs',
-  'library-data.js', 'manifest.json', 'meta.json', 'registry.mjs', 'shared.mjs',
-  'animations.mjs', 'animation-style-motion.mjs', 'animation-style-primitives.mjs',
-  'apple-ui.mjs', 'broll-motion.mjs', 'content-runtime.mjs', 'motion-expanded.mjs',
-  'sound-assets.mjs', 'sound-runtime.mjs', 'stage-appearance.mjs',
+  ...modules, 'catalog.html', 'transfer-kit.html', 'manifest.json', 'meta.json',
+  'transfer-kit-index.json', 'TRANSFER_KIT_GUIDE.md', 'SEMANTIC_ANNOTATIONS_GUIDE.md',
 ];
 const directories = [
   'assets', 'compositions', 'content', 'demos', 'effects', 'examples',

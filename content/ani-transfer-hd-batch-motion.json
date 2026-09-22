@@ -1,0 +1,489 @@
+{
+  "label": "动态：读取、保存、释放、下一批",
+  "background": "#f8fcff",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "source-back",
+      "part": "folder-shell",
+      "x": 30,
+      "y": 318,
+      "width": 234,
+      "height": 201.5,
+      "props": {
+        "tone": "blue",
+        "layer": "back"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "source-photo-0",
+      "part": "photo-card",
+      "x": 52.1,
+      "y": 327.75,
+      "width": 96.2,
+      "height": 106.60000000000001,
+      "props": {
+        "kind": "cup"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "source-photo-1",
+      "part": "photo-card",
+      "x": 106.05,
+      "y": 336.2,
+      "width": 96.2,
+      "height": 106.60000000000001,
+      "props": {
+        "kind": "lamp"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "source-photo-2",
+      "part": "photo-card",
+      "x": 160,
+      "y": 344.65,
+      "width": 96.2,
+      "height": 106.60000000000001,
+      "props": {
+        "kind": "bag"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "source-front",
+      "part": "folder-shell",
+      "x": 30,
+      "y": 318,
+      "width": 234,
+      "height": 201.5,
+      "props": {
+        "tone": "blue",
+        "layer": "front",
+        "label": ""
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-shell",
+      "part": "window-shell",
+      "x": 302,
+      "y": 113,
+      "width": 668.8,
+      "height": 492.8,
+      "props": {
+        "title": "图片处理",
+        "caption": "情境示意"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-buffer",
+      "part": "buffer-area",
+      "x": 343.36,
+      "y": 209.8,
+      "width": 586.08,
+      "height": 318.56,
+      "props": {
+        "title": "内存 · 临时区"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "output-back",
+      "part": "folder-shell",
+      "x": 1030,
+      "y": 318,
+      "width": 223.2,
+      "height": 192.2,
+      "props": {
+        "tone": "gold",
+        "layer": "back"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "batch-0",
+      "part": "photo-card",
+      "x": 381,
+      "y": 257,
+      "width": 120,
+      "height": 133,
+      "props": {
+        "kind": "cup"
+      },
+      "enter": 0.5,
+      "exit": 4.95,
+      "fade": 0.18,
+      "fromX": -210,
+      "fromY": 95,
+      "steps": []
+    },
+    {
+      "id": "saved-0",
+      "part": "photo-card",
+      "x": 1054,
+      "y": 328,
+      "width": 89,
+      "height": 99,
+      "props": {
+        "kind": "cup"
+      },
+      "enter": 2.9,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": -190,
+      "fromY": -25,
+      "steps": []
+    },
+    {
+      "id": "next-0",
+      "part": "photo-card",
+      "x": 381,
+      "y": 257,
+      "width": 120,
+      "height": 133,
+      "props": {
+        "kind": "bag"
+      },
+      "enter": 5.5,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": -210,
+      "fromY": 95,
+      "steps": []
+    },
+    {
+      "id": "batch-1",
+      "part": "photo-card",
+      "x": 504,
+      "y": 257,
+      "width": 120,
+      "height": 133,
+      "props": {
+        "kind": "lamp"
+      },
+      "enter": 0.64,
+      "exit": 4.95,
+      "fade": 0.18,
+      "fromX": -210,
+      "fromY": 95,
+      "steps": []
+    },
+    {
+      "id": "saved-1",
+      "part": "photo-card",
+      "x": 1106,
+      "y": 337,
+      "width": 89,
+      "height": 99,
+      "props": {
+        "kind": "lamp"
+      },
+      "enter": 3.05,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": -190,
+      "fromY": -25,
+      "steps": []
+    },
+    {
+      "id": "next-1",
+      "part": "photo-card",
+      "x": 504,
+      "y": 257,
+      "width": 120,
+      "height": 133,
+      "props": {
+        "kind": "cup"
+      },
+      "enter": 5.64,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": -210,
+      "fromY": 95,
+      "steps": []
+    },
+    {
+      "id": "batch-2",
+      "part": "photo-card",
+      "x": 627,
+      "y": 257,
+      "width": 120,
+      "height": 133,
+      "props": {
+        "kind": "bag"
+      },
+      "enter": 0.78,
+      "exit": 4.95,
+      "fade": 0.18,
+      "fromX": -210,
+      "fromY": 95,
+      "steps": []
+    },
+    {
+      "id": "saved-2",
+      "part": "photo-card",
+      "x": 1158,
+      "y": 346,
+      "width": 89,
+      "height": 99,
+      "props": {
+        "kind": "bag"
+      },
+      "enter": 3.1999999999999997,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": -190,
+      "fromY": -25,
+      "steps": []
+    },
+    {
+      "id": "next-2",
+      "part": "photo-card",
+      "x": 627,
+      "y": 257,
+      "width": 120,
+      "height": 133,
+      "props": {
+        "kind": "lamp"
+      },
+      "enter": 5.78,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": -210,
+      "fromY": 95,
+      "steps": []
+    },
+    {
+      "id": "output-front",
+      "part": "folder-shell",
+      "x": 1030,
+      "y": 318,
+      "width": 223.2,
+      "height": 192.2,
+      "props": {
+        "tone": "gold",
+        "layer": "front",
+        "label": ""
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "read-arrow",
+      "part": "flow-arrow",
+      "x": 219,
+      "y": 365,
+      "width": 102,
+      "height": 31,
+      "props": {},
+      "enter": 0.4,
+      "exit": 1.55,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "save-arrow",
+      "part": "flow-arrow",
+      "x": 962,
+      "y": 361,
+      "width": 87,
+      "height": 27,
+      "props": {
+        "tone": "mint"
+      },
+      "enter": 2.75,
+      "exit": 3.6,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "next-arrow",
+      "part": "flow-arrow",
+      "x": 219,
+      "y": 365,
+      "width": 102,
+      "height": 31,
+      "props": {},
+      "enter": 5.4,
+      "exit": 6.5,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "read-label",
+      "part": "status-pill",
+      "x": 460,
+      "y": 623,
+      "width": 345,
+      "height": 67.43181818181819,
+      "props": {
+        "text": "读取小批",
+        "tone": "light"
+      },
+      "enter": 0.3,
+      "exit": 2.4,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "save-label",
+      "part": "status-pill",
+      "x": 460,
+      "y": 623,
+      "width": 345,
+      "height": 67.43181818181819,
+      "props": {
+        "text": "处理后保存",
+        "tone": "mint"
+      },
+      "enter": 2.45,
+      "exit": 4.3,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "clear-label",
+      "part": "status-pill",
+      "x": 460,
+      "y": 623,
+      "width": 345,
+      "height": 67.43181818181819,
+      "props": {
+        "text": "释放临时副本",
+        "tone": "light"
+      },
+      "enter": 4.4,
+      "exit": 5.35,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "next-label",
+      "part": "status-pill",
+      "x": 460,
+      "y": 623,
+      "width": 345,
+      "height": 67.43181818181819,
+      "props": {
+        "text": "读取下一批",
+        "tone": "light"
+      },
+      "enter": 5.4,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "source-title",
+      "part": "status-pill",
+      "x": 42,
+      "y": 267,
+      "width": 205,
+      "height": 40.06818181818182,
+      "props": {
+        "text": "原图",
+        "tone": "light"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "output-title",
+      "part": "status-pill",
+      "x": 1044,
+      "y": 267,
+      "width": 205,
+      "height": 40.06818181818182,
+      "props": {
+        "text": "结果",
+        "tone": "light"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

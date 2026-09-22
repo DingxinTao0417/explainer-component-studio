@@ -1,0 +1,4 @@
+interface:
+  display_name: "视频编导与制作"
+  short_description: "先用点击选项定风格，展示组件与声音方案，确认后再编导和制作视频"
+  default_prompt: "使用 $science-video-director，根据我的 SRT、对应音频和 design.md 制作视频。新项目先用可用的原生选项框让我选择风格、背景、边框和声音偏好，展示具体组件与素材的截图、链接或试听及完整策划案，等我确认开始后再写编导稿、分镜稿并进入 HyperFrames 制作；接续项目先读取状态。"

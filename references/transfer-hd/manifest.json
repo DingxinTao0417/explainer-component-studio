@@ -1,0 +1,191 @@
+{
+  "purpose": "User-provided visual reference only; production components are editable SVG",
+  "files": [
+    {
+      "source": "user-provided/00-先看这里.md",
+      "sha256": "2616557a10fa247791499fdf74629451dfae119c4a0fc81025887ea5f9f90836",
+      "bytes": 3812,
+      "file": "00-先看这里.md"
+    },
+    {
+      "source": "user-provided/逐镜动作说明.md",
+      "sha256": "3402b74563037bc48514de0de4b61029201ee27f7ea5a9a6f439e030b2aec032",
+      "bytes": 19226,
+      "file": "逐镜动作说明.md"
+    },
+    {
+      "source": "user-provided/镜头清单.md",
+      "sha256": "39a81d79e88c442dc0cd3f9797ae00a5ee6579bf5267eb3150a8736e66c69ec5",
+      "bytes": 3922,
+      "file": "镜头清单.md"
+    },
+    {
+      "source": "user-provided/S01A-开场-搬货经验.png",
+      "sha256": "04b9ab45d2656cce8d2c4b98488d8af2024ed2ee1a726f6b854ae1245f97b51f",
+      "bytes": 1045829,
+      "file": "01-独立镜头图/S01A-开场-搬货经验.png"
+    },
+    {
+      "source": "user-provided/S01B-开场-旧经验与新问题.png",
+      "sha256": "95d8640f05330c65497f47ad44808fdc7cbe3dabfdd0695505ea1a3caf819bb0",
+      "bytes": 1070979,
+      "file": "01-独立镜头图/S01B-开场-旧经验与新问题.png"
+    },
+    {
+      "source": "user-provided/S02A-豆包-通知要求待补.png",
+      "sha256": "a3f95bc8676fb14d200422967053164a0facfb2a797c017855077c41f1e3efc7",
+      "bytes": 1037877,
+      "file": "01-独立镜头图/S02A-豆包-通知要求待补.png"
+    },
+    {
+      "source": "user-provided/S02B-通知-补齐三项思路.png",
+      "sha256": "ca09955cf57242bc97dfb66f56ce0fc0a6208055764d53f24034445ddf6c4e46",
+      "bytes": 1082853,
+      "file": "01-独立镜头图/S02B-通知-补齐三项思路.png"
+    },
+    {
+      "source": "user-provided/S03-近迁移-换事实借思路.png",
+      "sha256": "58ac4390c06b6511cd6ff5f4bf0d5a141c9fe0d3ad019003914032eae7ff9567",
+      "bytes": 1274644,
+      "file": "01-独立镜头图/S03-近迁移-换事实借思路.png"
+    },
+    {
+      "source": "user-provided/S04A-程序-读入前.png",
+      "sha256": "cc059fc50e9b378c6ca1d02629dae416973d3c60f73fa4b1f3b62619b3172c1b",
+      "bytes": 1118969,
+      "file": "01-独立镜头图/S04A-程序-读入前.png"
+    },
+    {
+      "source": "user-provided/S04B-程序-内存不足.png",
+      "sha256": "b6c0cf8223e72e1efe72088d5b1951731fca7f207dd2b0d2eacf5bf925a2dd0f",
+      "bytes": 1191322,
+      "file": "01-独立镜头图/S04B-程序-内存不足.png"
+    },
+    {
+      "source": "user-provided/S05-豆包-解释内存报错.png",
+      "sha256": "3a1466dfb576a7ce106dd21356d0eaff192228448ad5fb0cf0840f49d3604af9",
+      "bytes": 1368682,
+      "file": "01-独立镜头图/S05-豆包-解释内存报错.png"
+    },
+    {
+      "source": "user-provided/S06A-货车-本趟待卸.png",
+      "sha256": "ecc2f20f141432c700bfbf32215d1d22f851031efe0a39ed8481c9b2e5658b1b",
+      "bytes": 1141950,
+      "file": "01-独立镜头图/S06A-货车-本趟待卸.png"
+    },
+    {
+      "source": "user-provided/S06B-货车-卸货后空厢.png",
+      "sha256": "a3bccacf9c2b80537b51c7f8dba04ec24f51fbcdfbf43b9af7b84e9d4dc194b5",
+      "bytes": 1287702,
+      "file": "01-独立镜头图/S06B-货车-卸货后空厢.png"
+    },
+    {
+      "source": "user-provided/S07A-分批-小批已读入.png",
+      "sha256": "f3dbcaa33d590253ca837dba72301b9acbcb9dfb6b63596a2c4e1be1d529dd29",
+      "bytes": 1116758,
+      "file": "01-独立镜头图/S07A-分批-小批已读入.png"
+    },
+    {
+      "source": "user-provided/S07B-分批-处理结果已保存.png",
+      "sha256": "0392ea4d68fb4dc686facdfab768b764bc05283ad9551dc999252848efb047b5",
+      "bytes": 1307930,
+      "file": "01-独立镜头图/S07B-分批-处理结果已保存.png"
+    },
+    {
+      "source": "user-provided/S07C-分批-已释放临时占用.png",
+      "sha256": "a70af44c69f91d2d810a518bd82aa20f43d336df762b4a277aeb3efdefd454bf",
+      "bytes": 1207146,
+      "file": "01-独立镜头图/S07C-分批-已释放临时占用.png"
+    },
+    {
+      "source": "user-provided/S07D-分批-下一小批读入.png",
+      "sha256": "6599d53d680704064b847a545e218496bf9c2034349f08d5ba9a8560b85bf18c",
+      "bytes": 1332219,
+      "file": "01-独立镜头图/S07D-分批-下一小批读入.png"
+    },
+    {
+      "source": "user-provided/S08-近迁移与远迁移-两种都有用.png",
+      "sha256": "aeae52473598ebabbd89e1458a212fc15c63a290f8d96241574b173531e24cf3",
+      "bytes": 1382251,
+      "file": "01-独立镜头图/S08-近迁移与远迁移-两种都有用.png"
+    },
+    {
+      "source": "user-provided/S09-豆包-提出分批方向.png",
+      "sha256": "348a701c2f38d593bb6a8c9aebcfcca2315f4354b5e1a6f9f4a4122e9407944a",
+      "bytes": 1269555,
+      "file": "01-独立镜头图/S09-豆包-提出分批方向.png"
+    },
+    {
+      "source": "user-provided/S09A-提问态-隐藏能提出方向.png",
+      "sha256": "42c3910c5580dcd599d28ec0a3ea184806d055a998b9c7668fa533fd704002cb",
+      "bytes": 1350340,
+      "file": "01-独立镜头图/S09A-提问态-隐藏能提出方向.png"
+    },
+    {
+      "source": "user-provided/S10A-Codex-先核原因再修改.png",
+      "sha256": "e90fd697a0acd431f5316dd765820f1adfa6ca42b128896269117fd68cc37c74",
+      "bytes": 1139068,
+      "file": "01-独立镜头图/S10A-Codex-先核原因再修改.png"
+    },
+    {
+      "source": "user-provided/S10B-副本试验-三项待核.png",
+      "sha256": "8e7b9fe9aa477cbedb3e239e095d0f23b2dee97aafa3f8fd76b93b9d52c29e0f",
+      "bytes": 1318642,
+      "file": "01-独立镜头图/S10B-副本试验-三项待核.png"
+    },
+    {
+      "source": "user-provided/S11-两种目的-交活与学习.png",
+      "sha256": "0e55d82a75ac1429aaff510efa0592b215f03f4222d31f835e11d84af6923852",
+      "bytes": 1072367,
+      "file": "01-独立镜头图/S11-两种目的-交活与学习.png"
+    },
+    {
+      "source": "user-provided/S12-把经验变成具体做法.png",
+      "sha256": "23d19f7077bafa0588e1761d185f2cce88c71c70b14b76e79092b9f735f3d7ce",
+      "bytes": 1323824,
+      "file": "01-独立镜头图/S12-把经验变成具体做法.png"
+    },
+    {
+      "source": "user-provided/S13-结尾-该换的只有答案吗.png",
+      "sha256": "f8fe7c7a2b2171b2b6c1d2b08d38997aa9c18690e7928f230a08dd45e6226be8",
+      "bytes": 1171908,
+      "file": "01-独立镜头图/S13-结尾-该换的只有答案吗.png"
+    },
+    {
+      "source": "user-provided/S14-下期预告-认知灵活性.png",
+      "sha256": "bc60e85fa7b679a78f252135254bb709b01b6356941460c7c06e0cb0d7d6c644",
+      "bytes": 1027295,
+      "file": "01-独立镜头图/S14-下期预告-认知灵活性.png"
+    },
+    {
+      "source": "user-provided/动作总览-不是首帧.png",
+      "sha256": "45cdb85d6d84bd9a8e4c2d0403640fec7217a6f67606c37bd6783faa03a5fa67",
+      "bytes": 2105488,
+      "file": "02-动作与风格总览/动作总览-不是首帧.png"
+    },
+    {
+      "source": "user-provided/素材总览-仅作参考.png",
+      "sha256": "94d5e7b10e152d2b06f6cdb9e8bce447127fc63b072794e251f07e6528892905",
+      "bytes": 1980510,
+      "file": "02-动作与风格总览/素材总览-仅作参考.png"
+    },
+    {
+      "source": "user-provided/Codex-官方原件.png",
+      "sha256": "8e82b26c98a10e45798ce48124515720657f7735fb8d0853b3f087eaa8a6b74e",
+      "bytes": 9974,
+      "file": "03-官方图标/Codex-官方原件.png"
+    },
+    {
+      "source": "user-provided/来源与使用.md",
+      "sha256": "f803054ad4ca8caf9b5a287a4dffedb4b28b32f8e9a34de9134b836bb10af703",
+      "bytes": 987,
+      "file": "03-官方图标/来源与使用.md"
+    },
+    {
+      "source": "user-provided/豆包-官方原件.png",
+      "sha256": "dabb2abd94e3a6c11e7f1a42c9343839b6ef643c086751b71afbc68f615aec38",
+      "bytes": 34367,
+      "file": "03-官方图标/豆包-官方原件.png"
+    }
+  ]
+}

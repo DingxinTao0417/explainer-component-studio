@@ -7,6 +7,9 @@
 *.jsonl text eol=lf
 *.md text eol=lf
 *.sh text eol=lf
+*.py text eol=lf
+*.ps1 text eol=lf
+*.yaml text eol=lf
 *.png binary
 *.jpg binary
 *.jpeg binary

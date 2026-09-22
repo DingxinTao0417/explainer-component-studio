@@ -1,0 +1,26 @@
+{
+  "eyebrow": "工作过程 / 示意",
+  "subtitle": "替换为本期需要说明的动作与内容",
+  "footer": "波形与时码为示意 · 本组件不生成或播放人声",
+  "title": "语音波形与文字落稿",
+  "sourceSide": "left",
+  "resultLayout": "rows",
+  "audioLabel": "音频内容示意",
+  "audioTitle": "录音片段标题",
+  "transcriptLabel": "文字稿",
+  "segments": [
+    {
+      "time": "00:00",
+      "text": "第一段转写内容"
+    },
+    {
+      "time": "00:02",
+      "text": "第二段转写内容"
+    },
+    {
+      "time": "00:04",
+      "text": "第三段转写内容"
+    }
+  ],
+  "status": "文字待校对"
+}

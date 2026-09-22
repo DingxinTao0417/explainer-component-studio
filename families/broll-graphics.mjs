@@ -13,7 +13,7 @@ const pencil = '<div class="brg-pencil" aria-hidden="true"><i></i><b></b></div>'
 const clip = '<span class="brg-clip" aria-hidden="true"></span>';
 const create = (id, name, description, defaults, render) => ({
   id, name, category: 'B-roll · 动画插镜', description, width: 1280, height: 800,
-  defaults, reference: {...reference},
+  defaults, defaultEffect: id+'-motion', reference: {...reference},
   render(props, helpers) { return render({...defaults, ...props}, helpers); }
 });
 const desk = (id, content) => '<section class="brg-desk brg-'+id+'"><div class="brg-light" aria-hidden="true"></div>'+content+'</section>';

@@ -1,0 +1,20 @@
+{
+  "style": {
+    "palette": {"accent": "#187CB8"},
+    "strokeScale": 0.85,
+    "shadowOpacity": 0.7,
+    "shadowBlur": 3
+  },
+  "layers": [
+    {
+      "id": "truck-vehicle",
+      "set": {
+        "x": 210,
+        "y": 180,
+        "width": 783,
+        "height": 437.4,
+        "steps": [{"at": 1, "duration": 1, "x": 80, "y": 0, "ease": "power2.inOut"}]
+      }
+    }
+  ]
+}

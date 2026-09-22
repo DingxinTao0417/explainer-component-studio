@@ -1,5 +1,9 @@
 import {expandedEffects,extendMotion} from './motion-expanded.mjs';
 import {animationStyleEffects,pendingAnimationStyleEffects,extendAnimationStyleMotion} from './animation-style-motion.mjs';
+import {transferEffects,extendTransferMotion} from './transfer-motion.mjs';
+import {buildMediaSequence,mixedMediaEffect} from './mixed-media-motion.mjs';
+import {workflowEffects,buildWorkflowMotion} from './broll-workflow-motion.mjs';
+import {brollGraphicEffects,buildBrollMotion} from './broll-motion.mjs';
 const legacyEffects=[
  {id:'fade-in',name:'淡入呈现',component:'codex-chat',description:'整块界面由透明到清晰，保留真实版式。',selector:'.motion-wrap',duration:8},
  {id:'slide-in',name:'窗口滑入',component:'chrome-browser',description:'窗口从下方进入并轻微缩放落位。',selector:'.motion-wrap',duration:8},
@@ -64,10 +68,14 @@ const legacyEffects=[
  'error-shake':{category:'反馈',previewTime:.95,cueHints:[{sound:'error',at:.6,gain:.29}]}
 }[effect.id]}));
 
-export const effects=[...legacyEffects.map(e=>e.category==='转场'?{...e,component:'lecture-stage',previewTime:2.28,cueHints:[{sound:'whoosh',at:2.1,gain:.24,duration:.7}],name:e.id==='wipe-transition'?'三层短遮幅转场':'圆形画面交接',description:e.id==='wipe-transition'?'浅蓝、薄荷与蓝色短遮幅接力；完全遮挡时切换到独立的新画面。':'圆形遮罩从上一幅内容中揭开下一幅内容。'}:e),...expandedEffects,...animationStyleEffects,...pendingAnimationStyleEffects];
+export const effects=[...legacyEffects.map(e=>e.category==='转场'?{...e,component:'lecture-stage',previewTime:2.28,cueHints:[{sound:'whoosh',at:2.1,gain:.24,duration:.7}],name:e.id==='wipe-transition'?'三层短遮幅转场':'圆形画面交接',description:e.id==='wipe-transition'?'浅蓝、薄荷与蓝色短遮幅接力；完全遮挡时切换到独立的新画面。':'圆形遮罩从上一幅内容中揭开下一幅内容。'}:e),...expandedEffects,...animationStyleEffects,...pendingAnimationStyleEffects,...transferEffects,...kitEffects,mixedMediaEffect,...workflowEffects,...brollGraphicEffects];
 
 // Bundled in ComponentLibraryRuntime so every preview and template shares one implementation.
 export function buildEffect(gsap,root,id,options={}){
+ if(id==='ani-hd-parts')return buildKitMotion(gsap,root,options);
+ if(workflowEffects.some(e=>e.id===id))return buildWorkflowMotion(gsap,root,id,options);
+ const broll=brollGraphicEffects.find(e=>e.id===id);if(broll)return buildBrollMotion(gsap,root,broll.component,{duration:options.duration??8});
+ if(id==='media-sequence-motion')return buildMediaSequence(gsap,root,options);
  gsap.config({force3D:false});
  const tl=gsap.timeline({paused:true});
  const wrap=root.querySelector('.motion-wrap')||root;
@@ -210,7 +218,9 @@ export function buildEffect(gsap,root,id,options={}){
  }
  const extended=extendMotion(gsap,root,id,options,tl);if(extended.length)targets=extended;
  const animationStyleTargets=extendAnimationStyleMotion(gsap,root,id,options,tl);if(animationStyleTargets.length)targets=animationStyleTargets;
+ const transferTargets=extendTransferMotion(gsap,root,id,options,tl);if(transferTargets.length)targets=transferTargets;
  root.dataset.effectTargets=String(targets.length);root.dataset.effectId=id;
  const clock={t:0};tl.to(clock,{t:total,duration:total,ease:'none'},0);
  return tl;
 }
+import {kitEffects,buildKitMotion} from './transfer-kit-motion.mjs';

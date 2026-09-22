@@ -1,0 +1,371 @@
+{
+  "label": "图片拥挤与内存不足",
+  "background": "#f8fcff",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "source-back",
+      "part": "folder-shell",
+      "x": 30,
+      "y": 318,
+      "width": 234,
+      "height": 201.5,
+      "props": {
+        "tone": "blue",
+        "layer": "back"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "source-photo-0",
+      "part": "photo-card",
+      "x": 52.1,
+      "y": 327.75,
+      "width": 96.2,
+      "height": 106.60000000000001,
+      "props": {
+        "kind": "cup"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "source-photo-1",
+      "part": "photo-card",
+      "x": 106.05,
+      "y": 336.2,
+      "width": 96.2,
+      "height": 106.60000000000001,
+      "props": {
+        "kind": "lamp"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "source-photo-2",
+      "part": "photo-card",
+      "x": 160,
+      "y": 344.65,
+      "width": 96.2,
+      "height": 106.60000000000001,
+      "props": {
+        "kind": "bag"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "source-front",
+      "part": "folder-shell",
+      "x": 30,
+      "y": 318,
+      "width": 234,
+      "height": 201.5,
+      "props": {
+        "tone": "blue",
+        "layer": "front",
+        "label": ""
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-shell",
+      "part": "window-shell",
+      "x": 302,
+      "y": 113,
+      "width": 668.8,
+      "height": 492.8,
+      "props": {
+        "title": "图片处理",
+        "caption": "情境示意"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-buffer",
+      "part": "buffer-area",
+      "x": 343.36,
+      "y": 209.8,
+      "width": 586.08,
+      "height": 318.56,
+      "props": {
+        "title": "内存 · 临时区"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-working-0",
+      "part": "photo-card",
+      "x": 381.2,
+      "y": 258.2,
+      "width": 120.56,
+      "height": 134.64000000000001,
+      "props": {
+        "kind": "cup"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-working-1",
+      "part": "photo-card",
+      "x": 503.52,
+      "y": 258.2,
+      "width": 120.56,
+      "height": 134.64000000000001,
+      "props": {
+        "kind": "lamp"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-working-2",
+      "part": "photo-card",
+      "x": 625.8399999999999,
+      "y": 258.2,
+      "width": 120.56,
+      "height": 134.64000000000001,
+      "props": {
+        "kind": "bag"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-working-3",
+      "part": "photo-card",
+      "x": 748.1600000000001,
+      "y": 258.2,
+      "width": 120.56,
+      "height": 134.64000000000001,
+      "props": {
+        "kind": "cup"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-working-4",
+      "part": "photo-card",
+      "x": 400.56,
+      "y": 347.96000000000004,
+      "width": 120.56,
+      "height": 134.64000000000001,
+      "props": {
+        "kind": "lamp"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-working-5",
+      "part": "photo-card",
+      "x": 522.88,
+      "y": 347.96000000000004,
+      "width": 120.56,
+      "height": 134.64000000000001,
+      "props": {
+        "kind": "bag"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-working-6",
+      "part": "photo-card",
+      "x": 645.2,
+      "y": 347.96000000000004,
+      "width": 120.56,
+      "height": 134.64000000000001,
+      "props": {
+        "kind": "cup"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-working-7",
+      "part": "photo-card",
+      "x": 767.52,
+      "y": 347.96000000000004,
+      "width": 120.56,
+      "height": 134.64000000000001,
+      "props": {
+        "kind": "lamp"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-status",
+      "part": "status-pill",
+      "x": 479.76,
+      "y": 523.0799999999999,
+      "width": 316.8,
+      "height": 61.919999999999995,
+      "props": {
+        "text": "内存不足",
+        "tone": "orange"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "output-back",
+      "part": "folder-shell",
+      "x": 1030,
+      "y": 318,
+      "width": 223.2,
+      "height": 192.2,
+      "props": {
+        "tone": "gold",
+        "layer": "back"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "output-front",
+      "part": "folder-shell",
+      "x": 1030,
+      "y": 318,
+      "width": 223.2,
+      "height": 192.2,
+      "props": {
+        "tone": "gold",
+        "layer": "front",
+        "label": ""
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "source-title",
+      "part": "status-pill",
+      "x": 42,
+      "y": 267,
+      "width": 205,
+      "height": 40.06818181818182,
+      "props": {
+        "text": "原图",
+        "tone": "light"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "output-title",
+      "part": "status-pill",
+      "x": 1044,
+      "y": 267,
+      "width": 205,
+      "height": 40.06818181818182,
+      "props": {
+        "text": "结果",
+        "tone": "light"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "footer": "结论与补充说明",
+  "sourceTitle": "起点名称",
+  "targetTitle": "终点名称",
+  "vehicleLabel": "运输对象",
+  "phaseLabels": [
+    "装载一批",
+    "到达卸载",
+    "空载返回",
+    "准备下一批"
+  ]
+}

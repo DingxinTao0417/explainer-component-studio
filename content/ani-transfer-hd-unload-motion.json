@@ -1,0 +1,289 @@
+{
+  "label": "动态：绕车卸货，货物保留",
+  "background": "#f8fcff",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "warehouse",
+      "part": "warehouse",
+      "x": 500,
+      "y": 110,
+      "width": 770,
+      "height": 444,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "pad",
+      "part": "destination-pad",
+      "x": 718,
+      "y": 496,
+      "width": 520,
+      "height": 113,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "truck-vehicle",
+      "part": "truck",
+      "x": 28,
+      "y": 217,
+      "width": 669.9,
+      "height": 374.22,
+      "props": {
+        "cargoCount": 0
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "truck-box-0",
+      "part": "cargo-box",
+      "x": 185.08,
+      "y": 379.47,
+      "width": 91.63,
+      "height": 76.23,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": [
+        {
+          "at": 1.1,
+          "duration": 0.65,
+          "x": 0,
+          "y": 185.52999999999997,
+          "ease": "power2.inOut"
+        },
+        {
+          "at": 1.9,
+          "duration": 1.1,
+          "x": 664.92,
+          "y": 185.52999999999997,
+          "ease": "power2.inOut"
+        },
+        {
+          "at": 3.2,
+          "duration": 0.65,
+          "x": 664.92,
+          "y": 72.52999999999997,
+          "ease": "power2.inOut"
+        }
+      ]
+    },
+    {
+      "id": "truck-box-1",
+      "part": "cargo-box",
+      "x": 282.1,
+      "y": 379.47,
+      "width": 91.63,
+      "height": 76.23,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": [
+        {
+          "at": 1.25,
+          "duration": 0.65,
+          "x": 0,
+          "y": 185.52999999999997,
+          "ease": "power2.inOut"
+        },
+        {
+          "at": 2.05,
+          "duration": 1.1,
+          "x": 642.9,
+          "y": 185.52999999999997,
+          "ease": "power2.inOut"
+        },
+        {
+          "at": 3.35,
+          "duration": 0.65,
+          "x": 642.9,
+          "y": 72.52999999999997,
+          "ease": "power2.inOut"
+        }
+      ]
+    },
+    {
+      "id": "truck-box-2",
+      "part": "cargo-box",
+      "x": 376.81,
+      "y": 379.47,
+      "width": 91.63,
+      "height": 76.23,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": [
+        {
+          "at": 1.4000000000000001,
+          "duration": 0.65,
+          "x": 0,
+          "y": 185.52999999999997,
+          "ease": "power2.inOut"
+        },
+        {
+          "at": 2.1999999999999997,
+          "duration": 1.1,
+          "x": 623.19,
+          "y": 185.52999999999997,
+          "ease": "power2.inOut"
+        },
+        {
+          "at": 3.5,
+          "duration": 0.65,
+          "x": 623.19,
+          "y": 72.52999999999997,
+          "ease": "power2.inOut"
+        }
+      ]
+    },
+    {
+      "id": "truck-box-3",
+      "part": "cargo-box",
+      "x": 229.74,
+      "y": 309.4,
+      "width": 91.63,
+      "height": 76.23,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": [
+        {
+          "at": 1.55,
+          "duration": 0.65,
+          "x": 0,
+          "y": 255.60000000000002,
+          "ease": "power2.inOut"
+        },
+        {
+          "at": 2.3499999999999996,
+          "duration": 1.1,
+          "x": 620.26,
+          "y": 255.60000000000002,
+          "ease": "power2.inOut"
+        },
+        {
+          "at": 3.6500000000000004,
+          "duration": 0.65,
+          "x": 620.26,
+          "y": 69.60000000000002,
+          "ease": "power2.inOut"
+        }
+      ]
+    },
+    {
+      "id": "truck-box-4",
+      "part": "cargo-box",
+      "x": 325.99,
+      "y": 309.4,
+      "width": 91.63,
+      "height": 76.23,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": [
+        {
+          "at": 1.7000000000000002,
+          "duration": 0.65,
+          "x": 0,
+          "y": 255.60000000000002,
+          "ease": "power2.inOut"
+        },
+        {
+          "at": 2.5,
+          "duration": 1.1,
+          "x": 599.01,
+          "y": 255.60000000000002,
+          "ease": "power2.inOut"
+        },
+        {
+          "at": 3.8000000000000003,
+          "duration": 0.65,
+          "x": 599.01,
+          "y": 69.60000000000002,
+          "ease": "power2.inOut"
+        }
+      ]
+    },
+    {
+      "id": "unload-arrow",
+      "part": "flow-arrow",
+      "x": 688,
+      "y": 655,
+      "width": 170,
+      "height": 51,
+      "props": {
+        "tone": "orange",
+        "curved": true
+      },
+      "enter": 1.15,
+      "exit": 4.55,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "empty-note",
+      "part": "status-pill",
+      "x": 394,
+      "y": 613,
+      "width": 489,
+      "height": 95.57727272727273,
+      "props": {
+        "text": "卸下本批，腾出位置",
+        "tone": "light"
+      },
+      "enter": 4.8,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "label": "高清 · 信息或警告圆角状态条",
+  "background": "transparent",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "part",
+      "part": "status-pill",
+      "x": 288,
+      "y": 291.2,
+      "width": 704,
+      "height": 137.6,
+      "props": {
+        "text": "状态说明",
+        "tone": "blue",
+        "icon": "none"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

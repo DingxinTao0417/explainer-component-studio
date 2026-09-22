@@ -6,3 +6,9 @@ QUALITY.md
 *.log
 public/
 .vercel/
+__pycache__/
+*.pyc
+runtime-paths.local.json
+projects/
+.env
+.env.*

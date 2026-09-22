@@ -1,0 +1,229 @@
+{
+  "label": "高清商品图库窗口",
+  "background": "#f8fcff",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "gallery-shell",
+      "part": "window-shell",
+      "x": 260,
+      "y": 75,
+      "width": 760,
+      "height": 560,
+      "props": {
+        "title": "程序示意",
+        "caption": "情境示意"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "gallery-nav-0",
+      "part": "status-pill",
+      "x": 284,
+      "y": 195,
+      "width": 121,
+      "height": 23.65,
+      "props": {
+        "text": "目录",
+        "tone": "blue"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "gallery-nav-1",
+      "part": "status-pill",
+      "x": 284,
+      "y": 270,
+      "width": 121,
+      "height": 23.65,
+      "props": {
+        "text": "图像",
+        "tone": "light"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "gallery-nav-2",
+      "part": "status-pill",
+      "x": 284,
+      "y": 345,
+      "width": 121,
+      "height": 23.65,
+      "props": {
+        "text": "设置",
+        "tone": "light"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "gallery-product-0",
+      "part": "photo-card",
+      "x": 438,
+      "y": 212,
+      "width": 106,
+      "height": 118,
+      "props": {
+        "kind": "cup"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "gallery-product-1",
+      "part": "photo-card",
+      "x": 559,
+      "y": 212,
+      "width": 106,
+      "height": 118,
+      "props": {
+        "kind": "lamp"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "gallery-product-2",
+      "part": "photo-card",
+      "x": 680,
+      "y": 212,
+      "width": 106,
+      "height": 118,
+      "props": {
+        "kind": "bag"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "gallery-product-3",
+      "part": "photo-card",
+      "x": 438,
+      "y": 380,
+      "width": 106,
+      "height": 118,
+      "props": {
+        "kind": "shoe"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "gallery-product-4",
+      "part": "photo-card",
+      "x": 559,
+      "y": 380,
+      "width": 106,
+      "height": 118,
+      "props": {
+        "kind": "chair"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "gallery-product-5",
+      "part": "photo-card",
+      "x": 680,
+      "y": 380,
+      "width": 106,
+      "height": 118,
+      "props": {
+        "kind": "plant"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "gallery-properties",
+      "part": "reply-lines",
+      "x": 828,
+      "y": 227,
+      "width": 157,
+      "height": 70,
+      "props": {
+        "count": 4
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "gallery-properties-more",
+      "part": "reply-lines",
+      "x": 828,
+      "y": 349,
+      "width": 157,
+      "height": 70,
+      "props": {
+        "count": 3
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

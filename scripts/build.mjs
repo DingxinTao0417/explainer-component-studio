@@ -6,7 +6,10 @@ import {effects,buildEffect} from '../animations.mjs';
 import {normalizeMediaProps,rewriteRenderedMediaMarkup} from '../content-runtime.mjs';
 import {build as bundle} from 'esbuild';
 import {mixSoundtracks} from './mix-soundtracks.mjs';
+import {mediaPresentations,presentationPreset} from '../mixed-media-presets.mjs';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
+await mkdir(resolve(root,'examples/presentations'),{recursive:true});
+for(const p of mediaPresentations)await writeFile(resolve(root,'examples/presentations',p.id+'.json'),JSON.stringify(presentationPreset(p.id),null,2)+'\n');
 for(const name of ['previews','compositions','effects','content','vendor','reports','snapshots'])await mkdir(resolve(root,name),{recursive:true});
 const familyFiles=(await readdir(resolve(root,'families'))).filter(s=>s.endsWith('.mjs')).sort();
 const modules=await Promise.all(familyFiles.map(f=>import(pathToFileURL(resolve(root,'families',f)))));
@@ -22,14 +25,19 @@ import {buildEffect,effects} from './animations.mjs';
 export {buildEffect};
 export {normalizeAppearance,applyStageAppearance,frameStyles,backgroundStyles,appearancePresets} from './stage-appearance.mjs';
 import {normalizeMediaProps,resolveContentVariables,rewriteRenderedMediaMarkup} from './content-runtime.mjs';
+import {assertComponentProps} from './component-props.mjs';
+import {effectCompatibility} from './effect-contracts.mjs';
 const components=[${familyFiles.map((_,i)=>'...c'+i)}];
-export function mountNext(root,id,props,instance,effect,options={}){
+export function mountNext(root,id,props,instance,effect,options={},mediaBase=assetBaseURL){
+ const current=components.find(c=>c.id===id),definition=effects.find(e=>e.id===effect)||{id:effect};
+ const compatible=effectCompatibility(current,definition,props,{selector:options.selector});if(!compatible.compatible)throw Error(compatible.reason);
  root.querySelector('.motion-next')?.remove();
  if(!effects.some(e=>e.id===effect&&e.category==='转场'))return;
  const next=options.nextScene||props.transitionNext||(effect==='shared-slide'?{component:'lecture-stage',props:{title:'下一场景标题',subtitle:'下一场景说明',chapter:'章节 / 02'}}:{component:'chapter-summary',props:{title:'下一场景标题',subtitle:'下一场景说明'}});
  const target=components.find(c=>c.id===next.component);if(!target)throw Error('下一幅画面的组件不存在：'+next.component);
+ assertComponentProps(target,{...target.defaults,...next.props},{render:true});
  const node=document.createElement('div');node.className='motion-next';node.dataset.scene='B';node.style.cssText='position:absolute;inset:0;width:100%;height:100%;opacity:0';
- node.innerHTML=rewriteRenderedMediaMarkup(target.render(normalizeMediaProps({...target.defaults,...next.props}),helpers(instance+'-next')),assetBaseURL);
+ node.innerHTML=rewriteRenderedMediaMarkup(target.render(normalizeMediaProps({...target.defaults,...next.props}),helpers(instance+'-next')),mediaBase);
  root.querySelector('.component-stage').append(node);root.querySelector('.motion-wrap').dataset.scene='A';
  const at=Number(options.transitionAt??2.1),duration=Number(options.transitionDuration??.66),covered=['wipe-transition','curve-ribbon','diagonal-ribbon','liquid-sweep'].includes(effect),nextStart=at+(covered?duration*.5:0);
  node.querySelectorAll('video,audio').forEach((media,index)=>{media.id=instance+'-next-media-'+index;media.classList.add('clip');media.dataset.start=String(nextStart);media.dataset.duration=String(Number(root.dataset.duration||8)-nextStart);media.dataset.trackIndex='1';});
@@ -37,15 +45,17 @@ export function mountNext(root,id,props,instance,effect,options={}){
 }
 export {normalizeMediaProps,resolveContentVariables};
 export const assetBaseURL=new URL('../',document.currentScript?.src||new URL('vendor/component-renderers.js',document.baseURI).href).href;
-export function mount(root,id,props,instance){
+export function mount(root,id,props,instance,mediaBase=assetBaseURL){
  const component=components.find(c=>c.id===id);if(!component)throw Error('Unknown component '+id);
- const html=component.render(normalizeMediaProps({...component.defaults,...props}),helpers(instance));
- root.querySelector('.motion-wrap').innerHTML=rewriteRenderedMediaMarkup(html,assetBaseURL);
+ assertComponentProps(component,{...component.defaults,...props},{render:true});
+ const html=component.render(normalizeMediaProps({...component.defaults,...props,...(id==='mixed-media-sequence'?{previewDuration:Number(root.dataset.duration||8)}:{})}),helpers(instance));
+ root.querySelector('.motion-wrap').innerHTML=rewriteRenderedMediaMarkup(html,mediaBase);
  root.querySelectorAll('video,audio:not([data-component-sfx])').forEach((media,index)=>{
   if(!media.id)media.id=instance+'-media-'+index;
-  media.classList.add('clip');media.setAttribute('data-start','0');
-  media.setAttribute('data-duration',root.getAttribute('data-duration')||'8');
-  media.setAttribute('data-track-index','0');
+  media.classList.add('clip');
+  if(id!=='mixed-media-sequence'){
+   media.setAttribute('data-start','0');media.setAttribute('data-duration',root.getAttribute('data-duration')||'8');media.setAttribute('data-track-index','0');
+  }
  });
  return root;
 }`;
@@ -95,7 +105,7 @@ for(const c of components){
  const path=resolve(root,'content',c.id+'.json');let props;try{const stored=JSON.parse(await readFile(path,'utf8'));if(!stored||Array.isArray(stored)||typeof stored!=='object')throw Error('内容配置必须是对象: '+c.id);props={...c.defaults,...stored};}catch(e){if(e.code!=='ENOENT')throw e;props={...c.defaults};await writeFile(path,JSON.stringify(props,null,2)+'\n');}propsMap[c.id]=props;
  await writeFile(resolve(root,'previews',c.id+'.html'),page(c,props));
  await writeFile(resolve(root,'compositions',c.id+'.html'),page(c,props,defaultEffect,{},true));
- manifest.push({id:c.id,name:c.name,category:c.category,description:c.description,width:c.width,height:c.height,reference:c.reference,defaultEffect,content:`content/${c.id}.json`,preview:`previews/${c.id}.html`,composition:`compositions/${c.id}.html`,variables:variablesFor(props,defaultEffect)});
+ manifest.push({hidden:!!c.hidden,compatibilityOnly:!!c.compatibilityOnly,id:c.id,name:c.name,category:c.category,description:c.description,width:c.width,height:c.height,reference:c.reference,defaultEffect,content:`content/${c.id}.json`,preview:`previews/${c.id}.html`,composition:`compositions/${c.id}.html`,variables:variablesFor(props,defaultEffect)});
 }
 const availableEffects=[];
 for(const e of effects){const c=components.find(c=>c.id===e.component);if(!c)continue;await writeFile(resolve(root,'effects',e.id+'.html'),page(c,propsMap[c.id],e.id,{duration:e.duration},false,'effect'));availableEffects.push({...e,soundTrack:`assets/sfx/tracks/${e.id}.wav`,soundCues:soundLibrary.tracks.find(t=>t.id===e.id)?.cues||[],preview:`effects/${e.id}.html`,width:c.width,height:c.height});}
@@ -106,3 +116,10 @@ await writeFile(resolve(root,'library-data.js'),'window.LIBRARY_DATA='+inline({c
 await writeFile(resolve(root,'registry.mjs'),familyFiles.map((f,i)=>`import {components as c${i},css as s${i}} from './families/${f}';`).join('\n')+`\nexport const components=[${familyFiles.map((_,i)=>'...c'+i)}];\nexport const css=[${familyFiles.map((_,i)=>'s'+i)}].join('\\n');\n`);
 await writeFile(resolve(root,'meta.json'),JSON.stringify({id:'component-library',name:'真实界面 · 组件与动画库'},null,2));
 console.log(`Built ${components.length} components and ${availableEffects.length} effects with sound. No video rendered.`);
+const {buildDirectorIndex}=await import('./director-index.mjs');
+const directorIndex=await buildDirectorIndex();
+const {hash}=await import('./director-index.mjs');
+await writeFile(resolve(root,'vendor/build-lock.json'),JSON.stringify({revision:directorIndex.library.revision,runtimeSha256:hash(await readFile(resolve(root,'vendor/component-renderers.js')))},null,2)+'\n');
+console.log(`Director protocol ${directorIndex.protocol}; revision ${directorIndex.library.revision.slice(0,12)}.`);
+const {buildTransferKit}=await import('./build-transfer-kit.mjs');
+console.log('Transfer HD kit:',await buildTransferKit());

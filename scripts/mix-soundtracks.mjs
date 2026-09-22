@@ -3,6 +3,7 @@ import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {effects} from '../animations.mjs';
 import {sounds} from '../sound-assets.mjs';
+import {mixPCM,decodePCM} from '../scene-sound-mix.mjs';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..'),RATE=48000;
 function decodeWav(buffer){
  if(buffer.toString('ascii',0,4)!=='RIFF'||buffer.toString('ascii',8,12)!=='WAVE')throw Error('仅接受PCM WAV');
@@ -13,6 +14,13 @@ function decodeWav(buffer){
  return {samples,rate};
 }
 function encodeWav(samples){const out=Buffer.alloc(44+samples.length*2);out.write('RIFF');out.writeUInt32LE(out.length-8,4);out.write('WAVEfmt ',8);out.writeUInt32LE(16,16);out.writeUInt16LE(1,20);out.writeUInt16LE(1,22);out.writeUInt32LE(RATE,24);out.writeUInt32LE(RATE*2,28);out.writeUInt16LE(2,32);out.writeUInt16LE(16,34);out.write('data',36);out.writeUInt32LE(samples.length*2,40);for(let i=0;i<samples.length;i++)out.writeInt16LE(Math.round(Math.max(-1,Math.min(.999969,samples[i]))*32768),44+i*2);return out;}
+// New episode exports remap cue onsets, retaining each sound's pitch and speed.
+export async function mixSceneSoundtrack(duration,cues){
+ const sources=new Map();
+ for(const id of new Set(cues.map(c=>c.sound))){const sound=sounds.find(s=>s.id===id);if(!sound)throw Error('Unknown sound: '+id);sources.set(id,{...sound,...decodePCM(await readFile(resolve(root,sound.src)))});}
+ const result=mixPCM(duration,cues,sources);
+ return {buffer:Buffer.from(result.bytes),cues:result.cues,sampleRate:result.sampleRate,peak:result.peak};
+}
 export async function mixSoundtracks(){
  await mkdir(resolve(root,'assets/sfx/tracks'),{recursive:true});const decoded=new Map();
  const catalog=[];

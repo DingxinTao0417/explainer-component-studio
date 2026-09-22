@@ -1,0 +1,28 @@
+{
+  "version": 5,
+  "component": "ani-module-hd-truck",
+  "props": {
+    "label": "整车与投影调参示例",
+    "layers": [
+      {
+        "id": "truck-vehicle",
+        "part": "truck",
+        "x": 130,
+        "y": 130,
+        "width": 852.6,
+        "height": 476.28,
+        "props": {"cargoCount": 5},
+        "enter": 0,
+        "exit": 8,
+        "fade": 0.18,
+        "fromX": 0,
+        "fromY": 0,
+        "steps": []
+      }
+    ]
+  },
+  "effect": "ani-hd-parts",
+  "timing": {"duration": 8},
+  "soundEnabled": false,
+  "appearance": {"frame": "none", "background": "original"}
+}

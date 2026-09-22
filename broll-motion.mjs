@@ -1,4 +1,8 @@
 // Six short, deterministic B-roll recipes. Media playback belongs to the host.
+export const brollGraphicEffects = [
+ ['broll-brief-desk','便签落位'],['broll-message-pile','消息整理'],['broll-revision-stack','版本叠放'],
+].map(([component,name])=>({id:component+'-motion',component,exclusive:component,name:'插镜 · '+name,
+ category:'插镜动作',description:'现有 B-roll 专属动作，按内容顺序展示。',selector:'[data-broll-part]',duration:8,previewTime:5.8,silent:true,cueHints:[]}));
 export function buildBrollMotion(gsap,root,id,{duration=6}={}){
  gsap.config({force3D:false});
  const tl=gsap.timeline({paused:true}),q=s=>[...root.querySelectorAll(s)],part=n=>q(`[data-broll-part="${n}"]`);
@@ -25,5 +29,6 @@ export function buildBrollMotion(gsap,root,id,{duration=6}={}){
   enter(part('paper'),.2,.66);enter(part('note'),2.25,.24);enter(part('tick'),3.3,.2);
  }
  const marks=part('mark');if(marks.length)tl.fromTo(marks,{opacity:0},{opacity:1,duration:.45,stagger:.18,ease:'sine.out'},2.5);
+ root.dataset.effectId=id+'-motion';root.dataset.effectTargets=String(q('[data-broll-part]').length);
  tl.to({hold:0},{hold:1,duration,ease:'none'},0);return tl;
 }

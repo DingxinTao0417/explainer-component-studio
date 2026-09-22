@@ -1,0 +1,92 @@
+{
+  "label": "高清通知字段组",
+  "background": "#f8fcff",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "notice-paper",
+      "part": "notice-paper",
+      "x": 405,
+      "y": 80,
+      "width": 470,
+      "height": 540,
+      "props": {
+        "title": "事项通知"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "notice-field-0",
+      "part": "notice-field",
+      "x": 443,
+      "y": 260,
+      "width": 392,
+      "height": 84,
+      "props": {
+        "label": "原因",
+        "tone": "blue"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "notice-field-1",
+      "part": "notice-field",
+      "x": 443,
+      "y": 362,
+      "width": 392,
+      "height": 84,
+      "props": {
+        "label": "影响",
+        "tone": "orange"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "notice-field-2",
+      "part": "notice-field",
+      "x": 443,
+      "y": 464,
+      "width": 392,
+      "height": 84,
+      "props": {
+        "label": "处理办法",
+        "tone": "mint"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

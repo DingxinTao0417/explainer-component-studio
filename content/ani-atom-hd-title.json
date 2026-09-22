@@ -1,0 +1,41 @@
+{
+  "label": "高清 · 可编辑知识标题",
+  "background": "transparent",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "part",
+      "part": "title",
+      "x": 215,
+      "y": 283.2638888888889,
+      "width": 850,
+      "height": 153.47222222222223,
+      "props": {
+        "text": "知识标题",
+        "subtitle": "",
+        "tone": "blue",
+        "align": "center"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

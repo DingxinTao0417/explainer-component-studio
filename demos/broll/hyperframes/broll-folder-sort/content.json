@@ -1,0 +1,26 @@
+{
+  "eyebrow": "工作过程 / 示意",
+  "subtitle": "替换为本期需要说明的动作与内容",
+  "footer": "动画示意 · 内容可编辑",
+  "title": "文件分类与归档",
+  "groups": [
+    {
+      "file": "文件 A",
+      "detail": "文件内容摘要 A",
+      "folder": "分类目录 A",
+      "status": "归档标签 A"
+    },
+    {
+      "file": "文件 B",
+      "detail": "文件内容摘要 B",
+      "folder": "分类目录 B",
+      "status": "归档标签 B"
+    },
+    {
+      "file": "文件 C",
+      "detail": "文件内容摘要 C",
+      "folder": "分类目录 C",
+      "status": "归档标签 C"
+    }
+  ]
+}

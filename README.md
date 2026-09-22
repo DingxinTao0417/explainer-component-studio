@@ -2,14 +2,27 @@
 
 面向科普、AI 与软件讲解视频的可编辑组件库，使用 HTML、CSS 和 SVG 绘制界面与图解，支持动画预览、内容替换及 HyperFrames 场景导出。
 
-- 123 个可编辑组件：动画风场景与基础部件、豆包与 Codex 界面、系统与设备、讲解图形、B-roll。
-- 104 种动画、13 种音效。
+- 236 个注册组件（含 4 个旧版兼容部件）：动画风场景与基础部件、完整车辆模块、语义箭头与文字框、软件界面和混剪框架。
+- 125 种动画、13 种音效、423 个图标条目。
 - 7 种边框、8 种背景、7 套外观组合，可分别替换并随场景配置保存。
 - 全屏遮幅转场覆盖整个画布，包括边框与背景。
 
 目录中的缩略图是组件截图，打开后的预览运行实际组件代码。软件界面为教学模拟，示例操作与数据不代表真实执行记录；复刻造型不等于逐像素还原。
 
 所有组件、动画演示和组合示例使用可替换的模板占位内容。每期视频的具体案例保存在独立场景配置中；共享组件保留结构、样式、功能标识和有效的数据类型。字段与状态的使用方式见 [模板内容约定](TEMPLATE_GUIDE.md)。
+
+## 视频编排 Skill
+
+仓库包含作者使用的三套技能：[编导与整期制作](skills/science-video-director/SKILL.md)、[前期写稿与分镜](skills/science-video-preproduction/SKILL.md)、[H3 单镜头制作](skills/h3-science-video/SKILL.md)。配套脚本通过当前组件索引检索、校验、调参，并把冻结的组件包绑定到本期时间轴；调色、文字、位置、尺寸、投影和动作均在实例配置中修改。
+
+```bash
+npm ci
+python scripts/install-skills.py --dry-run
+python scripts/install-skills.py
+python scripts/verify-skills.py
+```
+
+安装默认写入 Codex 技能目录，并拒绝覆盖已有同名技能。也可直接读取仓库内的技能，不安装。详见 [安装、依赖与调用示例](skills/README.md) 和 [编导组件接口](DIRECTOR_GUIDE.md)。模型、HyperFrames 官方技能和本期素材按需另行配置；不自动安装模型或写入凭据。
 
 ## 快速预览
 
@@ -78,7 +91,9 @@ npm run build:site
 | `compositions/` | 可复用 HyperFrames 组件 |
 | `snapshots/` | 目录展示所需缩略图 |
 | `vendor/` | 页面必须加载的浏览器运行文件 |
-| `scripts/` | 构建、预览、导出和验证工具 |
+| `scripts/` | 构建、预览、导出、技能安装和验证工具 |
+| `skills/` | 三套编排技能、配套脚本、模板与审片协议 |
+| `director-index.json` | 从当前源码生成的能力、参数、动效和版本索引 |
 
 - [完整组件目录](CATALOG.md)
 - [动画风组件](ANIMATION_STYLE_GUIDE.md)
@@ -86,6 +101,10 @@ npm run build:site
 - [B-roll](BROLL_GUIDE.md)
 - [音效](SOUND_GUIDE.md)
 - [场景使用说明](V3_GUIDE.md)
+- [编导 API 与组件绑定](DIRECTOR_GUIDE.md)
+- [整车、细分部件与高清素材组件](TRANSFER_KIT_GUIDE.md)
+- [语义箭头与文字框](SEMANTIC_ANNOTATIONS_GUIDE.md)
+- [混剪配置](MIXED_MEDIA_GUIDE.md)
 
 本仓库排除 `node_modules/`、审查报告、测试截图留档和运行日志；保留验证脚本，便于后续自行检查。部分历史指南中的审查报告链接因此不可用。
 

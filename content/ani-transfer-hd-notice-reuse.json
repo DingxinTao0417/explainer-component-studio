@@ -1,0 +1,268 @@
+{
+  "label": "换事实，借思路",
+  "background": "#f8fcff",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "left-paper",
+      "part": "notice-paper",
+      "x": 105,
+      "y": 114,
+      "width": 423,
+      "height": 486,
+      "props": {
+        "title": "发货延误通知"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "left-field-0",
+      "part": "notice-field",
+      "x": 139.2,
+      "y": 276,
+      "width": 352.8,
+      "height": 75.60000000000001,
+      "props": {
+        "label": "原因",
+        "tone": "blue"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "left-field-1",
+      "part": "notice-field",
+      "x": 139.2,
+      "y": 367.8,
+      "width": 352.8,
+      "height": 75.60000000000001,
+      "props": {
+        "label": "影响",
+        "tone": "orange"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "left-field-2",
+      "part": "notice-field",
+      "x": 139.2,
+      "y": 459.6,
+      "width": 352.8,
+      "height": 75.60000000000001,
+      "props": {
+        "label": "处理办法",
+        "tone": "mint"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "right-paper",
+      "part": "notice-paper",
+      "x": 773,
+      "y": 114,
+      "width": 423,
+      "height": 486,
+      "props": {
+        "title": "缺货通知"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "right-field-0",
+      "part": "notice-field",
+      "x": 807.2,
+      "y": 276,
+      "width": 352.8,
+      "height": 75.60000000000001,
+      "props": {
+        "label": "原因",
+        "tone": "blue"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "right-field-1",
+      "part": "notice-field",
+      "x": 807.2,
+      "y": 367.8,
+      "width": 352.8,
+      "height": 75.60000000000001,
+      "props": {
+        "label": "影响",
+        "tone": "orange"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "right-field-2",
+      "part": "notice-field",
+      "x": 807.2,
+      "y": 459.6,
+      "width": 352.8,
+      "height": 75.60000000000001,
+      "props": {
+        "label": "处理办法",
+        "tone": "mint"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "near",
+      "part": "status-pill",
+      "x": 530,
+      "y": 135,
+      "width": 210,
+      "height": 41.04545454545455,
+      "props": {
+        "text": "近迁移",
+        "tone": "light"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "field-0",
+      "part": "status-pill",
+      "x": 532,
+      "y": 242,
+      "width": 210,
+      "height": 42,
+      "props": {
+        "text": "原因",
+        "tone": "blue"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "field-1",
+      "part": "status-pill",
+      "x": 532,
+      "y": 334,
+      "width": 210,
+      "height": 42,
+      "props": {
+        "text": "影响",
+        "tone": "orange"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "field-2",
+      "part": "status-pill",
+      "x": 532,
+      "y": 426,
+      "width": 210,
+      "height": 42,
+      "props": {
+        "text": "处理办法",
+        "tone": "mint"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "brace",
+      "part": "brace",
+      "x": 724,
+      "y": 225,
+      "width": 69,
+      "height": 275,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "conclusion",
+      "part": "status-pill",
+      "x": 410,
+      "y": 611,
+      "width": 460,
+      "height": 89.9090909090909,
+      "props": {
+        "text": "换事实，借思路",
+        "tone": "light"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

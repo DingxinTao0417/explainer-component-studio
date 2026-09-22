@@ -1,0 +1,51 @@
+{
+  "label": "结论角括框",
+  "background": "transparent",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "label",
+      "part": "semantic-label",
+      "x": 240,
+      "y": 260,
+      "width": 800,
+      "height": 180,
+      "props": {
+        "variant": "conclusion-bracket",
+        "text": "结论角括框",
+        "lines": [],
+        "color": "#10275f",
+        "background": "#e8f5ff",
+        "borderColor": "#0879ff",
+        "fontSize": 40,
+        "fontWeight": 700,
+        "strokeWidth": 3,
+        "align": "center",
+        "direction": "right",
+        "scale": 1,
+        "boxWidth": 600,
+        "boxHeight": 180
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

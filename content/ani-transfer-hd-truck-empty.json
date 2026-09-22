@@ -1,0 +1,143 @@
+{
+  "label": "卸貨后：空厢与保留货物",
+  "background": "#f8fcff",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "warehouse",
+      "part": "warehouse",
+      "x": 500,
+      "y": 110,
+      "width": 770,
+      "height": 444,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "pad",
+      "part": "destination-pad",
+      "x": 718,
+      "y": 496,
+      "width": 520,
+      "height": 113,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "truck-vehicle",
+      "part": "truck",
+      "x": 28,
+      "y": 217,
+      "width": 669.9,
+      "height": 374.22,
+      "props": {
+        "cargoCount": 0
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "unloaded-0",
+      "part": "cargo-box",
+      "x": 850,
+      "y": 452,
+      "width": 91.63,
+      "height": 76.23,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "unloaded-1",
+      "part": "cargo-box",
+      "x": 925,
+      "y": 452,
+      "width": 91.63,
+      "height": 76.23,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "unloaded-2",
+      "part": "cargo-box",
+      "x": 1000,
+      "y": 452,
+      "width": 91.63,
+      "height": 76.23,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "unloaded-3",
+      "part": "cargo-box",
+      "x": 850,
+      "y": 379,
+      "width": 91.63,
+      "height": 76.23,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "unloaded-4",
+      "part": "cargo-box",
+      "x": 925,
+      "y": 379,
+      "width": 91.63,
+      "height": 76.23,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "label": "高清 · 带遮挡前沿的文件夹",
+  "background": "transparent",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "part",
+      "part": "folder-shell",
+      "x": 355.48387096774195,
+      "y": 115,
+      "width": 569.0322580645161,
+      "height": 490,
+      "props": {
+        "tone": "blue",
+        "layer": "both",
+        "label": ""
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

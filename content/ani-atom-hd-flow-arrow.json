@@ -1,0 +1,40 @@
+{
+  "label": "高清 · 头杆一体的短操作箭",
+  "background": "transparent",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "part",
+      "part": "flow-arrow",
+      "x": 464,
+      "y": 307.2,
+      "width": 352,
+      "height": 105.60000000000001,
+      "props": {
+        "direction": "right",
+        "tone": "blue",
+        "curved": false
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

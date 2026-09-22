@@ -1,0 +1,31 @@
+{
+  "version": 4,
+  "component": "ani-transfer-capacity-limit",
+  "props": {
+    "title": "主标题",
+    "subtitle": "副标题与说明文字",
+    "footer": "结论与补充说明",
+    "sourceLabel": "输入集合",
+    "bufferLabel": "暂存区域",
+    "itemLabels": [
+      "资源 A",
+      "资源 B",
+      "资源 C"
+    ],
+    "warning": "容量提示",
+    "explanation": "问题原因说明",
+    "kinds": [
+      "cup",
+      "lamp",
+      "bag"
+    ]
+  },
+  "effect": "ani-transfer-capacity-limit",
+  "effectOptions": {},
+  "appearance": {
+    "frame": "dashed-round",
+    "background": "perspective-grid"
+  },
+  "soundEnabled": false,
+  "soundGain": 0
+}

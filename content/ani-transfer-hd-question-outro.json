@@ -1,0 +1,191 @@
+{
+  "label": "答案之外的思考",
+  "background": "#f8fcff",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "chat-shell",
+      "part": "chat-shell",
+      "x": 203,
+      "y": 91,
+      "width": 528,
+      "height": 512,
+      "props": {
+        "title": "豆包",
+        "brandSrc": "references/transfer-hd/03-官方图标/豆包-官方原件.png"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "chat-message-0",
+      "part": "chat-message",
+      "x": 230.2,
+      "y": 225.4,
+      "width": 392,
+      "height": 117.60000000000001,
+      "props": {
+        "role": "assistant",
+        "text": "",
+        "lines": [
+          "",
+          ""
+        ]
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "chat-message-1",
+      "part": "chat-message",
+      "x": 230.2,
+      "y": 317.4,
+      "width": 392,
+      "height": 117.60000000000001,
+      "props": {
+        "role": "assistant",
+        "text": "",
+        "lines": [
+          "",
+          ""
+        ]
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "chat-message-2",
+      "part": "chat-message",
+      "x": 230.2,
+      "y": 409.40000000000003,
+      "width": 392,
+      "height": 117.60000000000001,
+      "props": {
+        "role": "assistant",
+        "text": "",
+        "lines": [
+          "",
+          ""
+        ]
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "chat-send",
+      "part": "send-icon",
+      "x": 669.4000000000001,
+      "y": 536.6,
+      "width": 36,
+      "height": 36,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "reply-0",
+      "part": "reply-lines",
+      "x": 269,
+      "y": 255,
+      "width": 356,
+      "height": 83,
+      "props": {
+        "count": 3
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "reply-1",
+      "part": "reply-lines",
+      "x": 269,
+      "y": 346,
+      "width": 356,
+      "height": 83,
+      "props": {
+        "count": 3
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "reply-2",
+      "part": "reply-lines",
+      "x": 269,
+      "y": 437,
+      "width": 356,
+      "height": 83,
+      "props": {
+        "count": 3
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "question",
+      "part": "question-bubble",
+      "x": 817,
+      "y": 233,
+      "width": 427,
+      "height": 196,
+      "props": {
+        "lines": [
+          "该换的，",
+          "只有答案吗？"
+        ]
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

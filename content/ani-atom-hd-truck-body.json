@@ -1,0 +1,40 @@
+{
+  "label": "高清 · 敞开货车车厢",
+  "background": "transparent",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "part",
+      "part": "truck-body",
+      "x": 263.0769230769231,
+      "y": 115,
+      "width": 753.8461538461538,
+      "height": 490,
+      "props": {
+        "open": true,
+        "label": "",
+        "showChassis": true
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

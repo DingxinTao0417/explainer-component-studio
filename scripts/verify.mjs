@@ -17,7 +17,7 @@ check(data.effects.length>=100&&new Set(data.effects.map(c=>c.id)).size===data.e
 const browser=await puppeteer.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true,args:[],protocolTimeout:60000});
 const hash=b=>createHash('sha256').update(b).digest('hex');
 async function ready(page){await page.waitForFunction('window.__componentReady===true');await page.evaluate(()=>document.fonts.ready);}
-function strings(value,path=[]){if(typeof value==='string'&&value.trim().length>=3)return [{value,path}];if(value&&typeof value==='object')return Object.entries(value).flatMap(([k,v])=>strings(v,[...path,k]));return [];}
+function strings(value,path=[]){if(typeof value==='string'&&(value.trim().length>=3||path.at(-1)==='label'))return [{value,path}];if(value&&typeof value==='object')return Object.entries(value).flatMap(([k,v])=>strings(v,[...path,k]));return [];}
 try{
  // Pick fields by actually rendering a bounded marker, so native labels that also
  // occur elsewhere (or fields hidden by the active layout) cannot produce false passes.
@@ -52,6 +52,44 @@ try{
   await page.close();
  }));
  for(const e of process.argv.includes('--components-only')?[]:data.effects){const p=await browser.newPage();const errors=[];p.on('pageerror',er=>errors.push(er.message));await p.setViewport({width:e.width,height:e.height});await p.goto(base+'/'+e.preview);await ready(p);const seek=async t=>{await p.evaluate(t=>window.previewAPI.seek(t),t);};await seek(.3);const earlyPixels=await p.screenshot(),early=hash(earlyPixels);await seek(e.previewTime??1.9);const middle=hash(await p.screenshot());await seek(7.95);const late=hash(await p.screenshot());const endText=await p.$$eval('[data-motion="counter"]',a=>a.map(x=>x.textContent));await seek(.3);const backwardsPixels=await p.screenshot(),backwards=hash(backwardsPixels),pixelDifference=await comparePixels(earlyPixels,backwardsPixels);const targets=await p.$eval('#root',r=>Number(r.dataset.effectTargets));check(targets>0,e.id+': 没有实际动画目标');check(early!==late||early!==middle,e.id+': 关键时点画面无变化');check(pixelDifference.equal,e.id+': 倒序拖动无法恢复一致画面 '+JSON.stringify(pixelDifference));if(e.id==='typewriter'){await seek(.3);const before=await p.$$eval('[data-output-line]',a=>a.every(x=>getComputedStyle(x).opacity==='0'));await seek(7.95);const after=await p.$$eval('[data-output-line]',a=>a.every(x=>getComputedStyle(x).opacity==='1'));check(before&&after,'终端输出必须在命令输入后出现');}if(e.id==='scroll-panel'){await seek(0);const before=await p.$eval('.dev-markdown-scroll-viewport',x=>{const r=x.getBoundingClientRect();return [r.x,r.y,r.width,r.height]});await seek(7.95);const after=await p.$eval('.dev-markdown-scroll-viewport',x=>{const r=x.getBoundingClientRect();return [r.x,r.y,r.width,r.height]});check(JSON.stringify(before)===JSON.stringify(after),'滚动时外部窗口必须固定');}if(e.id==='count-up'){check(endText.join('|')==='8|24|6','数字动画最终值应等于配置');const formatted=await p.evaluate(async()=>{const {buildEffect}=await import('/animations.mjs');const root=document.createElement('div');root.innerHTML='<span data-motion="counter">1,234.50 MB</span>';document.body.append(root);const tl=buildEffect(gsap,root,'count-up');tl.seek(7.95,false);const text=root.textContent;tl.kill();root.remove();return text;});check(formatted==='1,234.50 MB','数字动画需保留千位逗号、小数与单位');}check(errors.length===0,e.id+': '+errors.join(';'));report.effects.push({id:e.id,targets,changes:early!==late||early!==middle,seekSafe:pixelDifference.equal,pixelDifference,errors});await p.close();}
- const p=await browser.newPage();await p.setViewport({width:1600,height:1000});await p.goto(base+'/catalog.html');await p.waitForSelector('.catalog-card');check(await p.$$eval('.catalog-card',a=>a.length)===data.components.length,'画廊组件数量不一致');await p.click('.catalog-card[data-item-id="codex-chat"]');await p.waitForFunction("document.getElementById('frame').contentWindow.__componentReady===true");await p.$eval('#props',el=>{const v=JSON.parse(el.value);v.userMessage='画廊编辑验收：替换这一句话';el.value=JSON.stringify(v);});await p.click('#apply');await p.waitForFunction("document.getElementById('frame').contentWindow.__componentReady===true && document.getElementById('frame').contentDocument.body.innerText.includes('画廊编辑验收：替换这一句话')");await p.select('#effect','fade-in');await p.waitForFunction("document.getElementById('frame').contentWindow.__componentReady===true");await p.click('#restart');await p.waitForFunction("document.getElementById('frame').contentWindow.previewAPI.time()>0.15");report.gallery.push('JSON修改即时预览','动画选择和播放');await p.$eval('#props',el=>el.value='{');await p.click('#apply');check((await p.$eval('#error',x=>x.textContent)).includes('内容格式有误'),'画廊需显示JSON格式错误');report.gallery.push('错误JSON提示');await p.close();
+ const p=await browser.newPage();
+ await p.setViewport({width:1600,height:1000});
+ await p.goto(base+'/catalog.html');
+ await p.waitForSelector('.catalog-card');
+ check(await p.$$eval('.catalog-card',a=>a.length)===data.components.length,'画廊组件数量不一致');
+ await p.click('.catalog-card[data-item-id="codex-chat"]');
+ await p.waitForFunction(()=>{
+  const frame=document.getElementById('frame');
+  return frame.contentWindow?.__componentReady===true&&frame.contentDocument?.readyState==='complete';
+ });
+ await p.$eval('#props',el=>{
+  const v=JSON.parse(el.value);v.userMessage='画廊编辑验收：替换这一句话';el.value=JSON.stringify(v);
+ });
+ await p.click('#apply');
+ await p.waitForFunction(()=>{
+  const frame=document.getElementById('frame');
+  return frame.contentWindow?.__componentReady===true&&frame.contentDocument?.readyState==='complete'
+   &&frame.contentDocument.body.innerText.includes('画廊编辑验收：替换这一句话');
+ });
+ // Changing an effect awaits audio assembly before replacing srcdoc. The old
+ // document remains ready during that work, so readiness alone can restart a
+ // controller that the pending update will destroy. Await the new document and
+ // its selected effect, including load completion, before testing playback.
+ await p.evaluate(()=>{window.__previousGalleryDocument=document.getElementById('frame').contentDocument;});
+ await p.select('#effect','fade-in');
+ await p.waitForFunction(()=>{
+  const frame=document.getElementById('frame'),doc=frame.contentDocument;
+  return doc!==window.__previousGalleryDocument&&doc?.readyState==='complete'
+   &&frame.contentWindow?.__componentReady===true&&doc.getElementById('root')?.dataset.effectId==='fade-in';
+ });
+ await p.evaluate(()=>{delete window.__previousGalleryDocument;});
+ await p.click('#restart');
+ await p.waitForFunction(()=>document.getElementById('frame').contentWindow?.previewAPI?.time()>0.15);
+ report.gallery.push('JSON修改即时预览','动画选择和播放');
+ await p.$eval('#props',el=>el.value='{');
+ await p.click('#apply');
+ check((await p.$eval('#error',x=>x.textContent)).includes('内容格式有误'),'画廊需显示JSON格式错误');
+ report.gallery.push('错误JSON提示');
+ await p.close();
 }finally{await browser.close();}
 await mkdir(resolve(root,'reports'),{recursive:true});report.ok=report.failures.length===0;await writeFile(resolve(root,process.argv.includes('--components-only')?'reports/verification-components.json':'reports/verification.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({ok:report.ok,components:report.components.length,effects:report.effects.length,gallery:report.gallery,failures:report.failures},null,2));if(!report.ok)process.exitCode=1;

@@ -1,0 +1,30 @@
+{
+  "version": 4,
+  "component": "ani-transfer-relationship-map",
+  "props": {
+    "title": "主标题",
+    "subtitle": "副标题与说明文字",
+    "footer": "结论与补充说明",
+    "leftLabel": "情境 A",
+    "rightLabel": "情境 B",
+    "windowLines": [
+      "步骤内容 A",
+      "步骤内容 B",
+      "步骤内容 C"
+    ],
+    "steps": [
+      "共同步骤 A",
+      "共同步骤 B",
+      "共同步骤 C"
+    ],
+    "conclusion": "可复用关系说明"
+  },
+  "effect": "ani-transfer-relationship-map",
+  "effectOptions": {},
+  "appearance": {
+    "frame": "dashed-round",
+    "background": "perspective-grid"
+  },
+  "soundEnabled": false,
+  "soundGain": 0
+}

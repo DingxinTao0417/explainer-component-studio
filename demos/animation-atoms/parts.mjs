@@ -2,10 +2,17 @@ export const groups=[
  {name:'纸张与文件',ids:['paper','file','document','folder','file-stack']},
  {name:'表格与文字',ids:['table','table-row','cell','document-row','text','title-label']},
  {name:'窗口与控件',ids:['browser','window','tabs','address','button','input','status','checkbox','cursor']},
- {name:'连线与标注',ids:['connector','node','callout','highlight','progress','symbol']}
+ {name:'连线与标注',ids:['connector','node','callout','highlight','progress','symbol']},
+ {name:'运输与容量',ids:['truck','cargo','warehouse','buffer','resource','relation-bridge']}
 ];
 export const names={paper:'空白纸张',file:'单个文件',document:'完整文档',folder:'文件夹','file-stack':'文件堆叠',table:'完整表格','table-row':'表格行',cell:'单元格','document-row':'文档条目',text:'文本段落','title-label':'标题牌',browser:'完整浏览器',window:'空窗口',tabs:'标签栏',address:'地址栏',button:'按钮',input:'输入框',status:'状态徽章',checkbox:'勾选框',cursor:'光标',connector:'连线与箭头',node:'流程节点',callout:'注释气泡',highlight:'高亮标记',progress:'进度条',symbol:'工具符号'};
 export const variants={
+ truck:[['空车',{load:0}],['一箱',{load:1}],['装满',{load:4}]],
+ cargo:[['橙色',{tone:'orange'}],['蓝色',{tone:'blue'}],['绿色',{tone:'green'}]],
+ warehouse:[['有库存',{open:true,stock:5}],['空仓',{open:true,stock:0}],['关闭',{open:false,stock:0}]],
+ buffer:[['空槽',{occupied:0,state:'released'}],['半满',{occupied:3,state:'normal'}],['满载',{occupied:6,state:'warning'}],['四个槽',{capacity:4,occupied:2,state:'normal'}]],
+ resource:[['图片',{kind:'image'}],['杯子',{kind:'cup'}],['台灯',{kind:'lamp'}],['包袋',{kind:'bag'}]],
+ 'relation-bridge':[['向下',{direction:'down'}],['向上',{direction:'up'}]],
  paper:[['空白',{ruling:'none'}],['横线',{ruling:'lines'}],['方格',{ruling:'grid'}],['左折角',{foldSide:'left'}]],
  text:[['段落',{variant:'paragraph',align:'left'}],['项目符号',{variant:'bullets',align:'left'}],['居中',{variant:'paragraph',align:'center'}]],
  'document-row':[['待检查',{status:'pending'}],['已完成',{status:'complete'}],['需补充',{status:'warning'}]],

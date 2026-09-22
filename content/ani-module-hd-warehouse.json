@@ -1,0 +1,66 @@
+{
+  "label": "高清卸货目的地",
+  "background": "#f8fcff",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "warehouse",
+      "part": "warehouse",
+      "x": 235,
+      "y": 50,
+      "width": 850,
+      "height": 490,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "pad",
+      "part": "destination-pad",
+      "x": 380,
+      "y": 526,
+      "width": 600,
+      "height": 130,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "cargo",
+      "part": "cargo-stack",
+      "x": 460,
+      "y": 325,
+      "width": 460,
+      "height": 290,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

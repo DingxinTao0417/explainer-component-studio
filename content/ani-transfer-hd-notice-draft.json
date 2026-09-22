@@ -1,0 +1,170 @@
+{
+  "label": "通知：仅调整措辞",
+  "background": "#f8fcff",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "notice-paper",
+      "part": "notice-paper",
+      "x": 170,
+      "y": 102,
+      "width": 413.6,
+      "height": 475.2,
+      "props": {
+        "title": "发货延误通知"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "notice-draft",
+      "part": "reply-lines",
+      "x": 212.24,
+      "y": 263.03999999999996,
+      "width": 324.72,
+      "height": 86.24,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "notice-draft-tail",
+      "part": "reply-lines",
+      "x": 212.24,
+      "y": 390.64,
+      "width": 297.44,
+      "height": 79.2,
+      "props": {
+        "count": 3
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "chat-shell",
+      "part": "chat-shell",
+      "x": 645,
+      "y": 58,
+      "width": 594,
+      "height": 576,
+      "props": {
+        "title": "豆包",
+        "brandSrc": "references/transfer-hd/03-官方图标/豆包-官方原件.png"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "chat-message-0",
+      "part": "chat-message",
+      "x": 758.4,
+      "y": 209.20000000000002,
+      "width": 441,
+      "height": 132.3,
+      "props": {
+        "role": "user",
+        "text": "客气点"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "chat-send",
+      "part": "send-icon",
+      "x": 1169.7,
+      "y": 559.3,
+      "width": 40.5,
+      "height": 40.5,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "reply-notice-paper",
+      "part": "notice-paper",
+      "x": 691,
+      "y": 325,
+      "width": 145.7,
+      "height": 167.4,
+      "props": {
+        "title": "发货延误通知"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "reply-notice-draft",
+      "part": "reply-lines",
+      "x": 705.88,
+      "y": 381.73,
+      "width": 114.39,
+      "height": 30.38,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "reply-notice-draft-tail",
+      "part": "reply-lines",
+      "x": 705.88,
+      "y": 426.68,
+      "width": 104.78,
+      "height": 27.9,
+      "props": {
+        "count": 3
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

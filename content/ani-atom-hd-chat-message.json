@@ -1,0 +1,43 @@
+{
+  "label": "高清 · 单条角色消息气泡",
+  "background": "transparent",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "part",
+      "part": "chat-message",
+      "x": 240,
+      "y": 240,
+      "width": 800,
+      "height": 240,
+      "props": {
+        "role": "user",
+        "text": "可编辑消息",
+        "lines": [],
+        "tone": "blue",
+        "showAvatar": false,
+        "brandSrc": ""
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "version": 4,
+  "component": "ani-transfer-context-bridge",
+  "props": {
+    "title": "主标题",
+    "subtitle": "副标题与说明文字",
+    "footer": "结论与补充说明",
+    "leftLabel": "对象 A",
+    "rightLabel": "对象 B",
+    "relation": "关联名称",
+    "summary": "共同点或可借用的关系",
+    "windowLines": [
+      "场景内容 A",
+      "场景内容 B",
+      "场景内容 C"
+    ]
+  },
+  "effect": "ani-transfer-context-bridge",
+  "effectOptions": {},
+  "appearance": {
+    "frame": "dashed-round",
+    "background": "perspective-grid"
+  },
+  "soundEnabled": false,
+  "soundGain": 0
+}

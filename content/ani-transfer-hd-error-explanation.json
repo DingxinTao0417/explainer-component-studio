@@ -1,0 +1,406 @@
+{
+  "label": "解释原因，保留报错",
+  "background": "#f8fcff",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "source-back",
+      "part": "folder-shell",
+      "x": 14,
+      "y": 433,
+      "width": 136.8,
+      "height": 117.8,
+      "props": {
+        "tone": "blue",
+        "layer": "back"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "source-photo-0",
+      "part": "photo-card",
+      "x": 26.92,
+      "y": 438.7,
+      "width": 56.24,
+      "height": 62.32,
+      "props": {
+        "kind": "cup"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "source-photo-1",
+      "part": "photo-card",
+      "x": 58.46,
+      "y": 443.64,
+      "width": 56.24,
+      "height": 62.32,
+      "props": {
+        "kind": "lamp"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "source-photo-2",
+      "part": "photo-card",
+      "x": 90,
+      "y": 448.58,
+      "width": 56.24,
+      "height": 62.32,
+      "props": {
+        "kind": "bag"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "source-front",
+      "part": "folder-shell",
+      "x": 14,
+      "y": 433,
+      "width": 136.8,
+      "height": 117.8,
+      "props": {
+        "tone": "blue",
+        "layer": "front",
+        "label": "原图"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-shell",
+      "part": "window-shell",
+      "x": 137,
+      "y": 200,
+      "width": 562.4,
+      "height": 414.4,
+      "props": {
+        "title": "图片处理",
+        "caption": "情境示意"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-buffer",
+      "part": "buffer-area",
+      "x": 171.78,
+      "y": 281.4,
+      "width": 492.84,
+      "height": 267.88,
+      "props": {
+        "title": "内存 · 临时区"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-working-0",
+      "part": "photo-card",
+      "x": 203.6,
+      "y": 322.1,
+      "width": 101.38,
+      "height": 113.22,
+      "props": {
+        "kind": "cup"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-working-1",
+      "part": "photo-card",
+      "x": 306.46000000000004,
+      "y": 322.1,
+      "width": 101.38,
+      "height": 113.22,
+      "props": {
+        "kind": "lamp"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-working-2",
+      "part": "photo-card",
+      "x": 409.32,
+      "y": 322.1,
+      "width": 101.38,
+      "height": 113.22,
+      "props": {
+        "kind": "bag"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-working-3",
+      "part": "photo-card",
+      "x": 512.1800000000001,
+      "y": 322.1,
+      "width": 101.38,
+      "height": 113.22,
+      "props": {
+        "kind": "cup"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-working-4",
+      "part": "photo-card",
+      "x": 219.88,
+      "y": 397.58,
+      "width": 101.38,
+      "height": 113.22,
+      "props": {
+        "kind": "lamp"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-working-5",
+      "part": "photo-card",
+      "x": 322.74,
+      "y": 397.58,
+      "width": 101.38,
+      "height": 113.22,
+      "props": {
+        "kind": "bag"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-working-6",
+      "part": "photo-card",
+      "x": 425.6,
+      "y": 397.58,
+      "width": 101.38,
+      "height": 113.22,
+      "props": {
+        "kind": "cup"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-working-7",
+      "part": "photo-card",
+      "x": 528.46,
+      "y": 397.58,
+      "width": 101.38,
+      "height": 113.22,
+      "props": {
+        "kind": "lamp"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "program-status",
+      "part": "status-pill",
+      "x": 286.48,
+      "y": 544.8399999999999,
+      "width": 266.4,
+      "height": 52.0690909090909,
+      "props": {
+        "text": "内存不足",
+        "tone": "orange"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "chat-shell",
+      "part": "chat-shell",
+      "x": 750,
+      "y": 73,
+      "width": 508.2,
+      "height": 492.8,
+      "props": {
+        "title": "豆包",
+        "brandSrc": "references/transfer-hd/03-官方图标/豆包-官方原件.png"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "chat-message-0",
+      "part": "chat-message",
+      "x": 847.02,
+      "y": 202.36,
+      "width": 377.3,
+      "height": 113.19,
+      "props": {
+        "role": "user",
+        "text": "这里报错了…"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "chat-message-1",
+      "part": "chat-message",
+      "x": 776.18,
+      "y": 371,
+      "width": 377.3,
+      "height": 113.19,
+      "props": {
+        "role": "assistant",
+        "lines": [
+          "一次读入太多图片",
+          "内存是临时放数据的地方。"
+        ]
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "chat-send",
+      "part": "send-icon",
+      "x": 1198.91,
+      "y": 501.89,
+      "width": 34.65,
+      "height": 34.65,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "error-attachment",
+      "part": "attachment-card",
+      "x": 792,
+      "y": 270,
+      "width": 175,
+      "height": 85,
+      "props": {
+        "title": "报错",
+        "kind": "error"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "code-attachment",
+      "part": "attachment-card",
+      "x": 985,
+      "y": 270,
+      "width": 175,
+      "height": 85,
+      "props": {
+        "title": "相关代码",
+        "kind": "code"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

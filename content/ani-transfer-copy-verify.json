@@ -1,0 +1,32 @@
+{
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "footer": "结论与补充说明",
+  "sourceLabel": "原件集合",
+  "copyLabel": "试验副本",
+  "sourceFiles": [
+    "原件 A",
+    "原件 B"
+  ],
+  "copyFiles": [
+    "副本 A",
+    "副本 B"
+  ],
+  "windowTitle": "处理窗口",
+  "windowLines": [
+    "操作步骤 A",
+    "操作步骤 B",
+    "操作步骤 C"
+  ],
+  "checks": [
+    "检查项目 A",
+    "检查项目 B",
+    "检查项目 C"
+  ],
+  "checkResults": [
+    true,
+    false,
+    true
+  ],
+  "resultLabel": "核验结果说明"
+}

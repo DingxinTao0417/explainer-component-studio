@@ -1,0 +1,41 @@
+{
+  "label": "高清 · 标签与本次事实字段",
+  "background": "transparent",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "part",
+      "part": "notice-field",
+      "x": 320,
+      "y": 291.2,
+      "width": 640,
+      "height": 137.6,
+      "props": {
+        "label": "字段",
+        "value": "",
+        "tone": "blue",
+        "lineCount": 2
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

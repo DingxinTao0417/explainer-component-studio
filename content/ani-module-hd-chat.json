@@ -1,0 +1,89 @@
+{
+  "label": "高清聊天消息组",
+  "background": "#f8fcff",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "chat-shell",
+      "part": "chat-shell",
+      "x": 330,
+      "y": 32,
+      "width": 660,
+      "height": 640,
+      "props": {
+        "title": "智能助手"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "chat-message-0",
+      "part": "chat-message",
+      "x": 456,
+      "y": 200,
+      "width": 490,
+      "height": 147,
+      "props": {
+        "role": "user",
+        "text": "请帮我说明问题"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "chat-message-1",
+      "part": "chat-message",
+      "x": 364,
+      "y": 315,
+      "width": 490,
+      "height": 147,
+      "props": {
+        "role": "assistant",
+        "text": "先明确情况和原因"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "chat-send",
+      "part": "send-icon",
+      "x": 913,
+      "y": 589,
+      "width": 45,
+      "height": 45,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

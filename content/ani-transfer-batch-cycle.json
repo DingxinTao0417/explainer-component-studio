@@ -1,0 +1,20 @@
+{
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "footer": "结论与补充说明",
+  "sourceLabel": "输入集合",
+  "outputLabel": "输出集合",
+  "bufferLabel": "暂存区域",
+  "itemLabels": [
+    "文件 A",
+    "文件 B",
+    "文件 C"
+  ],
+  "phaseLabels": [
+    "读取第一批",
+    "处理并保存",
+    "释放暂存占用",
+    "读取下一批"
+  ],
+  "savedLabel": "已保存的结果"
+}

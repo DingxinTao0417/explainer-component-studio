@@ -4,8 +4,15 @@ import {fileURLToPath} from 'node:url';
 import {esc} from '../shared.mjs';
 import {normalizeAppearance} from '../stage-appearance.mjs';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
+if(process.argv.includes('--bundle')){
+ const target=process.argv[process.argv.indexOf('--bundle')+1];
+ if(!process.argv[2]||!target)throw Error('Use export-scene.mjs <v5-scene.json> --bundle <new-project-folder>');
+ const {exportDirectorScene}=await import('./export-director-scene.mjs');
+ console.log(JSON.stringify(await exportDirectorScene(process.argv[2],target),null,2));process.exit(0);
+}
 const configPath=process.argv[2];if(!configPath)throw Error('用法：node scripts/export-scene.mjs <场景配置.json> [--out examples/scene.html]');
 const config=JSON.parse(await readFile(resolve(configPath),'utf8')),manifest=JSON.parse(await readFile(resolve(root,'manifest.json'),'utf8'));
+if(config.version===5)throw Error('Version 5 scene requires --bundle <new-project-folder> to preserve timing, sound and dependencies');
 const c=manifest.components.find(c=>c.id===config.component);if(!c)throw Error('未知组件 '+config.component);
 const effect=config.effect??c.defaultEffect??'none';if(effect!=='none'&&!manifest.effects.some(e=>e.id===effect))throw Error('未知动画 '+effect);
 const output=resolve(root,process.argv[process.argv.indexOf('--out')+1]&&process.argv.includes('--out')?process.argv[process.argv.indexOf('--out')+1]:'examples/scene-preview.html');

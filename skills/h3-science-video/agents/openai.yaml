@@ -1,0 +1,4 @@
+interface:
+  display_name: "H3 科普动画制作"
+  short_description: "用参考图规划科普动画分镜，优化 H3 提示词并检查科学准确性与成片质量"
+  default_prompt: "使用 $h3-science-video，根据我的参考图和科普讲稿规划分镜、优化 H3 提示词，并先制作一个可验收的金样。"

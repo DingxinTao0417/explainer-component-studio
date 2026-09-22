@@ -1,0 +1,40 @@
+{
+  "label": "高清 · 无箭尖的比较括线",
+  "background": "transparent",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "part",
+      "part": "brace",
+      "x": 574.921875,
+      "y": 115,
+      "width": 130.15625,
+      "height": 490,
+      "props": {
+        "side": "left",
+        "color": "#087cff",
+        "weight": 6
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

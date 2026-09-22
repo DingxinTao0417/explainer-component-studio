@@ -1,0 +1,2518 @@
+{
+  "guide": "TRANSFER_KIT_GUIDE.md",
+  "counts": {
+    "primitives": 29,
+    "modules": 10,
+    "referenceStates": 23,
+    "motionRecipes": 3,
+    "total": 86,
+    "compatibilityOnly": 4
+  },
+  "authoritativeIndex": "director-index.json",
+  "coverage": [
+    {
+      "code": "S01A",
+      "reference": "references/transfer-hd/01-独立镜头图/S01A-开场-搬货经验.png",
+      "sourceSha256": "04b9ab45d2656cce8d2c4b98488d8af2024ed2ee1a726f6b854ae1245f97b51f",
+      "component": "ani-transfer-hd-experience",
+      "preview": "previews/ani-transfer-hd-experience.html",
+      "parts": [
+        "truck"
+      ],
+      "independentLayers": 1
+    },
+    {
+      "code": "S01B",
+      "reference": "references/transfer-hd/01-独立镜头图/S01B-开场-旧经验与新问题.png",
+      "sourceSha256": "95d8640f05330c65497f47ad44808fdc7cbe3dabfdd0695505ea1a3caf819bb0",
+      "component": "ani-transfer-hd-experience-problem",
+      "preview": "previews/ani-transfer-hd-experience-problem.html",
+      "parts": [
+        "title",
+        "status-pill",
+        "truck",
+        "brace",
+        "window-shell",
+        "photo-card",
+        "reply-lines"
+      ],
+      "independentLayers": 16
+    },
+    {
+      "code": "S02A",
+      "reference": "references/transfer-hd/01-独立镜头图/S02A-豆包-通知要求待补.png",
+      "sourceSha256": "a3f95bc8676fb14d200422967053164a0facfb2a797c017855077c41f1e3efc7",
+      "component": "ani-transfer-hd-notice-draft",
+      "preview": "previews/ani-transfer-hd-notice-draft.html",
+      "parts": [
+        "notice-paper",
+        "reply-lines",
+        "chat-shell",
+        "chat-message",
+        "send-icon"
+      ],
+      "independentLayers": 9
+    },
+    {
+      "code": "S02B",
+      "reference": "references/transfer-hd/01-独立镜头图/S02B-通知-补齐三项思路.png",
+      "sourceSha256": "ca09955cf57242bc97dfb66f56ce0fc0a6208055764d53f24034445ddf6c4e46",
+      "component": "ani-transfer-hd-notice-complete",
+      "preview": "previews/ani-transfer-hd-notice-complete.html",
+      "parts": [
+        "notice-paper",
+        "notice-field",
+        "chat-shell",
+        "chat-message",
+        "send-icon"
+      ],
+      "independentLayers": 11
+    },
+    {
+      "code": "S03",
+      "reference": "references/transfer-hd/01-独立镜头图/S03-近迁移-换事实借思路.png",
+      "sourceSha256": "58ac4390c06b6511cd6ff5f4bf0d5a141c9fe0d3ad019003914032eae7ff9567",
+      "component": "ani-transfer-hd-notice-reuse",
+      "preview": "previews/ani-transfer-hd-notice-reuse.html",
+      "parts": [
+        "notice-paper",
+        "notice-field",
+        "status-pill",
+        "brace"
+      ],
+      "independentLayers": 14
+    },
+    {
+      "code": "S04A",
+      "reference": "references/transfer-hd/01-独立镜头图/S04A-程序-读入前.png",
+      "sourceSha256": "cc059fc50e9b378c6ca1d02629dae416973d3c60f73fa4b1f3b62619b3172c1b",
+      "component": "ani-transfer-hd-before-read",
+      "preview": "previews/ani-transfer-hd-before-read.html",
+      "parts": [
+        "folder-shell",
+        "photo-card",
+        "window-shell",
+        "buffer-area",
+        "status-pill"
+      ],
+      "independentLayers": 12
+    },
+    {
+      "code": "S04B",
+      "reference": "references/transfer-hd/01-独立镜头图/S04B-程序-内存不足.png",
+      "sourceSha256": "b6c0cf8223e72e1efe72088d5b1951731fca7f207dd2b0d2eacf5bf925a2dd0f",
+      "component": "ani-transfer-hd-capacity",
+      "preview": "previews/ani-transfer-hd-capacity.html",
+      "parts": [
+        "folder-shell",
+        "photo-card",
+        "window-shell",
+        "buffer-area",
+        "status-pill"
+      ],
+      "independentLayers": 20
+    },
+    {
+      "code": "S05",
+      "reference": "references/transfer-hd/01-独立镜头图/S05-豆包-解释内存报错.png",
+      "sourceSha256": "3a1466dfb576a7ce106dd21356d0eaff192228448ad5fb0cf0840f49d3604af9",
+      "component": "ani-transfer-hd-error-explanation",
+      "preview": "previews/ani-transfer-hd-error-explanation.html",
+      "parts": [
+        "folder-shell",
+        "photo-card",
+        "window-shell",
+        "buffer-area",
+        "status-pill",
+        "chat-shell",
+        "chat-message",
+        "send-icon",
+        "attachment-card"
+      ],
+      "independentLayers": 22
+    },
+    {
+      "code": "S06A",
+      "reference": "references/transfer-hd/01-独立镜头图/S06A-货车-本趟待卸.png",
+      "sourceSha256": "ecc2f20f141432c700bfbf32215d1d22f851031efe0a39ed8481c9b2e5658b1b",
+      "component": "ani-transfer-hd-truck-loaded",
+      "preview": "previews/ani-transfer-hd-truck-loaded.html",
+      "parts": [
+        "warehouse",
+        "destination-pad",
+        "truck"
+      ],
+      "independentLayers": 3
+    },
+    {
+      "code": "S06B",
+      "reference": "references/transfer-hd/01-独立镜头图/S06B-货车-卸货后空厢.png",
+      "sourceSha256": "a3bccacf9c2b80537b51c7f8dba04ec24f51fbcdfbf43b9af7b84e9d4dc194b5",
+      "component": "ani-transfer-hd-truck-empty",
+      "preview": "previews/ani-transfer-hd-truck-empty.html",
+      "parts": [
+        "warehouse",
+        "destination-pad",
+        "truck",
+        "cargo-box"
+      ],
+      "independentLayers": 8
+    },
+    {
+      "code": "S07A",
+      "reference": "references/transfer-hd/01-独立镜头图/S07A-分批-小批已读入.png",
+      "sourceSha256": "f3dbcaa33d590253ca837dba72301b9acbcb9dfb6b63596a2c4e1be1d529dd29",
+      "component": "ani-transfer-hd-batch-read",
+      "preview": "previews/ani-transfer-hd-batch-read.html",
+      "parts": [
+        "folder-shell",
+        "photo-card",
+        "window-shell",
+        "buffer-area",
+        "status-pill"
+      ],
+      "independentLayers": 15
+    },
+    {
+      "code": "S07B",
+      "reference": "references/transfer-hd/01-独立镜头图/S07B-分批-处理结果已保存.png",
+      "sourceSha256": "0392ea4d68fb4dc686facdfab768b764bc05283ad9551dc999252848efb047b5",
+      "component": "ani-transfer-hd-batch-saved",
+      "preview": "previews/ani-transfer-hd-batch-saved.html",
+      "parts": [
+        "folder-shell",
+        "photo-card",
+        "window-shell",
+        "buffer-area",
+        "status-pill"
+      ],
+      "independentLayers": 18
+    },
+    {
+      "code": "S07C",
+      "reference": "references/transfer-hd/01-独立镜头图/S07C-分批-已释放临时占用.png",
+      "sourceSha256": "a70af44c69f91d2d810a518bd82aa20f43d336df762b4a277aeb3efdefd454bf",
+      "component": "ani-transfer-hd-batch-released",
+      "preview": "previews/ani-transfer-hd-batch-released.html",
+      "parts": [
+        "folder-shell",
+        "photo-card",
+        "window-shell",
+        "buffer-area",
+        "status-pill"
+      ],
+      "independentLayers": 15
+    },
+    {
+      "code": "S07D",
+      "reference": "references/transfer-hd/01-独立镜头图/S07D-分批-下一小批读入.png",
+      "sourceSha256": "6599d53d680704064b847a545e218496bf9c2034349f08d5ba9a8560b85bf18c",
+      "component": "ani-transfer-hd-batch-next",
+      "preview": "previews/ani-transfer-hd-batch-next.html",
+      "parts": [
+        "folder-shell",
+        "photo-card",
+        "window-shell",
+        "buffer-area",
+        "status-pill"
+      ],
+      "independentLayers": 18
+    },
+    {
+      "code": "S08",
+      "reference": "references/transfer-hd/01-独立镜头图/S08-近迁移与远迁移-两种都有用.png",
+      "sourceSha256": "aeae52473598ebabbd89e1458a212fc15c63a290f8d96241574b173531e24cf3",
+      "component": "ani-transfer-hd-near-far",
+      "preview": "previews/ani-transfer-hd-near-far.html",
+      "parts": [
+        "notice-paper",
+        "notice-field",
+        "status-pill",
+        "brace",
+        "truck",
+        "window-shell",
+        "photo-card",
+        "reply-lines"
+      ],
+      "independentLayers": 30
+    },
+    {
+      "code": "S09",
+      "reference": "references/transfer-hd/01-独立镜头图/S09-豆包-提出分批方向.png",
+      "sourceSha256": "348a701c2f38d593bb6a8c9aebcfcca2315f4354b5e1a6f9f4a4122e9407944a",
+      "component": "ani-transfer-hd-propose-direction",
+      "preview": "previews/ani-transfer-hd-propose-direction.html",
+      "parts": [
+        "truck",
+        "status-pill",
+        "brace",
+        "chat-shell",
+        "chat-message",
+        "send-icon"
+      ],
+      "independentLayers": 8
+    },
+    {
+      "code": "S09A",
+      "reference": "references/transfer-hd/01-独立镜头图/S09A-提问态-隐藏能提出方向.png",
+      "sourceSha256": "42c3910c5580dcd599d28ec0a3ea184806d055a998b9c7668fa533fd704002cb",
+      "component": "ani-transfer-hd-ask-direction",
+      "preview": "previews/ani-transfer-hd-ask-direction.html",
+      "parts": [
+        "truck",
+        "status-pill",
+        "brace",
+        "chat-shell",
+        "chat-message",
+        "send-icon"
+      ],
+      "independentLayers": 7
+    },
+    {
+      "code": "S10A",
+      "reference": "references/transfer-hd/01-独立镜头图/S10A-Codex-先核原因再修改.png",
+      "sourceSha256": "e90fd697a0acd431f5316dd765820f1adfa6ca42b128896269117fd68cc37c74",
+      "component": "ani-transfer-hd-check-cause",
+      "preview": "previews/ani-transfer-hd-check-cause.html",
+      "parts": [
+        "folder-shell",
+        "photo-card",
+        "notice-paper",
+        "reply-lines",
+        "magnifier",
+        "status-pill",
+        "window-shell",
+        "code-lines",
+        "checklist-row"
+      ],
+      "independentLayers": 16
+    },
+    {
+      "code": "S10B",
+      "reference": "references/transfer-hd/01-独立镜头图/S10B-副本试验-三项待核.png",
+      "sourceSha256": "8e7b9fe9aa477cbedb3e239e095d0f23b2dee97aafa3f8fd76b93b9d52c29e0f",
+      "component": "ani-transfer-hd-copy-verify",
+      "preview": "previews/ani-transfer-hd-copy-verify.html",
+      "parts": [
+        "folder-shell",
+        "photo-card",
+        "window-shell",
+        "code-lines",
+        "notice-paper",
+        "checklist-row"
+      ],
+      "independentLayers": 19
+    },
+    {
+      "code": "S11",
+      "reference": "references/transfer-hd/01-独立镜头图/S11-两种目的-交活与学习.png",
+      "sourceSha256": "0e55d82a75ac1429aaff510efa0592b215f03f4222d31f835e11d84af6923852",
+      "component": "ani-transfer-hd-two-purposes",
+      "preview": "previews/ani-transfer-hd-two-purposes.html",
+      "parts": [
+        "status-pill",
+        "chat-shell",
+        "chat-message",
+        "send-icon",
+        "magnifier"
+      ],
+      "independentLayers": 13
+    },
+    {
+      "code": "S12",
+      "reference": "references/transfer-hd/01-独立镜头图/S12-把经验变成具体做法.png",
+      "sourceSha256": "23d19f7077bafa0588e1761d185f2cce88c71c70b14b76e79092b9f735f3d7ce",
+      "component": "ani-transfer-hd-experience-to-action",
+      "preview": "previews/ani-transfer-hd-experience-to-action.html",
+      "parts": [
+        "truck",
+        "brace",
+        "notice-paper",
+        "reply-lines",
+        "chat-shell",
+        "chat-message",
+        "send-icon"
+      ],
+      "independentLayers": 13
+    },
+    {
+      "code": "S13",
+      "reference": "references/transfer-hd/01-独立镜头图/S13-结尾-该换的只有答案吗.png",
+      "sourceSha256": "f8fe7c7a2b2171b2b6c1d2b08d38997aa9c18690e7928f230a08dd45e6226be8",
+      "component": "ani-transfer-hd-question-outro",
+      "preview": "previews/ani-transfer-hd-question-outro.html",
+      "parts": [
+        "chat-shell",
+        "chat-message",
+        "send-icon",
+        "reply-lines",
+        "question-bubble"
+      ],
+      "independentLayers": 9
+    },
+    {
+      "code": "S14",
+      "reference": "references/transfer-hd/01-独立镜头图/S14-下期预告-认知灵活性.png",
+      "sourceSha256": "bc60e85fa7b679a78f252135254bb709b01b6356941460c7c06e0cb0d7d6c644",
+      "component": "ani-transfer-hd-next-topic",
+      "preview": "previews/ani-transfer-hd-next-topic.html",
+      "parts": [
+        "status-pill",
+        "title",
+        "truck",
+        "window-shell",
+        "photo-card",
+        "reply-lines"
+      ],
+      "independentLayers": 15
+    }
+  ],
+  "parts": [
+    {
+      "id": "ani-atom-hd-cargo-box",
+      "key": "cargo-box",
+      "name": "有体积的封装纸箱",
+      "nativeWidth": 160,
+      "nativeHeight": 130,
+      "defaults": {
+        "label": "",
+        "stamp": true
+      },
+      "propsRules": {
+        "label": {
+          "type": "string",
+          "maxLength": 6
+        },
+        "stamp": {
+          "type": "boolean"
+        }
+      }
+    },
+    {
+      "id": "ani-atom-hd-photo-card",
+      "key": "photo-card",
+      "name": "商品照片卡片",
+      "nativeWidth": 180,
+      "nativeHeight": 200,
+      "defaults": {
+        "kind": "cup",
+        "label": "",
+        "shadow": true
+      },
+      "propsRules": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "cup",
+            "lamp",
+            "bag",
+            "shoe",
+            "chair",
+            "plant"
+          ]
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 8
+        },
+        "shadow": {
+          "type": "boolean"
+        }
+      }
+    },
+    {
+      "id": "ani-atom-hd-window-shell",
+      "key": "window-shell",
+      "name": "蓝标题栏软件窗口",
+      "nativeWidth": 760,
+      "nativeHeight": 560,
+      "defaults": {
+        "title": "应用窗口",
+        "controls": true,
+        "caption": "",
+        "brandSrc": ""
+      },
+      "propsRules": {
+        "title": {
+          "type": "string",
+          "maxLength": 16
+        },
+        "controls": {
+          "type": "boolean"
+        },
+        "caption": {
+          "type": "string",
+          "maxLength": 9
+        },
+        "brandSrc": {
+          "type": "string",
+          "maxLength": 512,
+          "description": "Optional local official logo path; no javascript:, data:, external network URL or SVG markup."
+        }
+      }
+    },
+    {
+      "id": "ani-atom-hd-buffer-area",
+      "key": "buffer-area",
+      "name": "虚线临时区",
+      "nativeWidth": 680,
+      "nativeHeight": 370,
+      "defaults": {
+        "title": "临时区域",
+        "labelWidth": 270,
+        "showLabel": true
+      },
+      "propsRules": {
+        "title": {
+          "type": "string",
+          "maxLength": 14
+        },
+        "labelWidth": {
+          "type": "number",
+          "minimum": 200,
+          "maximum": 600
+        },
+        "showLabel": {
+          "type": "boolean"
+        }
+      }
+    },
+    {
+      "id": "ani-atom-hd-chat-shell",
+      "key": "chat-shell",
+      "name": "可填消息的聊天窗口",
+      "nativeWidth": 660,
+      "nativeHeight": 640,
+      "defaults": {
+        "title": "智能助手",
+        "brandSrc": "",
+        "inputPlaceholder": "输入消息…",
+        "showControls": true,
+        "caption": "情境示意"
+      },
+      "propsRules": {
+        "title": {
+          "type": "string",
+          "maxLength": 10
+        },
+        "brandSrc": {
+          "type": "string",
+          "maxLength": 512,
+          "description": "Optional local official logo path; no javascript:, data:, external network URL or SVG markup."
+        },
+        "inputPlaceholder": {
+          "type": "string",
+          "maxLength": 24
+        },
+        "showControls": {
+          "type": "boolean"
+        },
+        "caption": {
+          "type": "string",
+          "maxLength": 16
+        }
+      }
+    },
+    {
+      "id": "ani-atom-hd-chat-message",
+      "key": "chat-message",
+      "name": "单条角色消息气泡",
+      "nativeWidth": 500,
+      "nativeHeight": 150,
+      "defaults": {
+        "role": "user",
+        "text": "可编辑消息",
+        "lines": [],
+        "tone": "blue",
+        "showAvatar": false,
+        "brandSrc": ""
+      },
+      "propsRules": {
+        "role": {
+          "type": "string",
+          "enum": [
+            "user",
+            "assistant"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "lines": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 20
+          },
+          "minItems": 0,
+          "maxItems": 3
+        },
+        "tone": {
+          "type": "string",
+          "enum": [
+            "blue",
+            "mint",
+            "orange"
+          ]
+        },
+        "showAvatar": {
+          "type": "boolean"
+        },
+        "brandSrc": {
+          "type": "string",
+          "maxLength": 512,
+          "description": "Optional local official logo path; no javascript:, data:, external network URL or SVG markup."
+        }
+      }
+    },
+    {
+      "id": "ani-atom-hd-cargo-stack",
+      "key": "cargo-stack",
+      "name": "可拆分纸箱组",
+      "nativeWidth": 460,
+      "nativeHeight": 290,
+      "defaults": {
+        "count": 6,
+        "label": "",
+        "stamp": true
+      },
+      "propsRules": {
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 6
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 6
+        },
+        "stamp": {
+          "type": "boolean"
+        }
+      }
+    },
+    {
+      "id": "ani-atom-hd-warehouse",
+      "key": "warehouse",
+      "name": "仓库与卸货口",
+      "nativeWidth": 850,
+      "nativeHeight": 490,
+      "defaults": {
+        "title": "目的地",
+        "showSideWing": true,
+        "doorOpen": false
+      },
+      "propsRules": {
+        "title": {
+          "type": "string",
+          "maxLength": 9
+        },
+        "showSideWing": {
+          "type": "boolean"
+        },
+        "doorOpen": {
+          "type": "boolean"
+        }
+      }
+    },
+    {
+      "id": "ani-atom-hd-folder-shell",
+      "key": "folder-shell",
+      "name": "带遮挡前沿的文件夹",
+      "nativeWidth": 360,
+      "nativeHeight": 310,
+      "defaults": {
+        "tone": "blue",
+        "layer": "both",
+        "label": ""
+      },
+      "propsRules": {
+        "tone": {
+          "type": "string",
+          "enum": [
+            "blue",
+            "gold",
+            "mint"
+          ]
+        },
+        "layer": {
+          "type": "string",
+          "enum": [
+            "back",
+            "front",
+            "both"
+          ]
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 10
+        }
+      }
+    },
+    {
+      "id": "ani-atom-hd-photo-stack",
+      "key": "photo-stack",
+      "name": "保持商品身份的照片组",
+      "nativeWidth": 380,
+      "nativeHeight": 230,
+      "defaults": {
+        "kinds": [
+          "cup",
+          "lamp",
+          "bag"
+        ],
+        "count": 3,
+        "spread": 95,
+        "labels": [],
+        "tilt": true
+      },
+      "propsRules": {
+        "kinds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "cup",
+              "lamp",
+              "bag",
+              "shoe",
+              "chair",
+              "plant"
+            ]
+          },
+          "minItems": 1,
+          "maxItems": 3
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "spread": {
+          "type": "number",
+          "minimum": 60,
+          "maximum": 96
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 8
+          },
+          "minItems": 0,
+          "maxItems": 3
+        },
+        "tilt": {
+          "type": "boolean"
+        }
+      }
+    },
+    {
+      "id": "ani-atom-hd-notice-paper",
+      "key": "notice-paper",
+      "name": "可填字段的折角通知",
+      "nativeWidth": 470,
+      "nativeHeight": 540,
+      "defaults": {
+        "title": "通知标题",
+        "subtitle": "",
+        "foldTone": "gold",
+        "showShadow": true
+      },
+      "propsRules": {
+        "title": {
+          "type": "string",
+          "maxLength": 14
+        },
+        "subtitle": {
+          "type": "string",
+          "maxLength": 18
+        },
+        "foldTone": {
+          "type": "string",
+          "enum": [
+            "gold",
+            "blue"
+          ]
+        },
+        "showShadow": {
+          "type": "boolean"
+        }
+      }
+    },
+    {
+      "id": "ani-atom-hd-notice-field",
+      "key": "notice-field",
+      "name": "标签与本次事实字段",
+      "nativeWidth": 400,
+      "nativeHeight": 86,
+      "defaults": {
+        "label": "字段",
+        "value": "",
+        "tone": "blue",
+        "lineCount": 2
+      },
+      "propsRules": {
+        "label": {
+          "type": "string",
+          "maxLength": 6
+        },
+        "value": {
+          "type": "string",
+          "maxLength": 12
+        },
+        "tone": {
+          "type": "string",
+          "enum": [
+            "blue",
+            "orange",
+            "mint"
+          ]
+        },
+        "lineCount": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        }
+      }
+    },
+    {
+      "id": "ani-atom-hd-attachment-card",
+      "key": "attachment-card",
+      "name": "报错或代码附件卡",
+      "nativeWidth": 280,
+      "nativeHeight": 135,
+      "defaults": {
+        "title": "附件",
+        "kind": "document",
+        "lineCount": 3
+      },
+      "propsRules": {
+        "title": {
+          "type": "string",
+          "maxLength": 8
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "document",
+            "code",
+            "error",
+            "image"
+          ]
+        },
+        "lineCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        }
+      }
+    },
+    {
+      "id": "ani-atom-hd-reply-lines",
+      "key": "reply-lines",
+      "name": "可逐行揭示的占位回复",
+      "nativeWidth": 450,
+      "nativeHeight": 120,
+      "defaults": {
+        "count": 4,
+        "color": "#becbd6",
+        "lengths": [
+          1,
+          0.87,
+          0.95,
+          0.7
+        ],
+        "lineHeight": 13,
+        "gap": 17
+      },
+      "propsRules": {
+        "count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "color": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "lengths": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0.08,
+            "maximum": 1
+          },
+          "minItems": 0,
+          "maxItems": 4
+        },
+        "lineHeight": {
+          "type": "number",
+          "minimum": 3,
+          "maximum": 18
+        },
+        "gap": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 17
+        }
+      }
+    },
+    {
+      "id": "ani-atom-hd-send-icon",
+      "key": "send-icon",
+      "name": "一体纸飞机发送图标",
+      "nativeWidth": 64,
+      "nativeHeight": 64,
+      "defaults": {
+        "tone": "blue"
+      },
+      "propsRules": {
+        "tone": {
+          "type": "string",
+          "enum": [
+            "blue",
+            "mint"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ani-atom-hd-checklist-row",
+      "key": "checklist-row",
+      "name": "不预设结果的检查行",
+      "nativeWidth": 470,
+      "nativeHeight": 74,
+      "defaults": {
+        "text": "待检查项目",
+        "state": "unchecked",
+        "highlight": false
+      },
+      "propsRules": {
+        "text": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "unchecked",
+            "checked",
+            "failed"
+          ]
+        },
+        "highlight": {
+          "type": "boolean"
+        }
+      }
+    },
+    {
+      "id": "ani-atom-hd-magnifier",
+      "key": "magnifier",
+      "name": "可移动的放大镜",
+      "nativeWidth": 180,
+      "nativeHeight": 190,
+      "defaults": {
+        "glassOpacity": 0.2
+      },
+      "propsRules": {
+        "glassOpacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    {
+      "id": "ani-atom-hd-brace",
+      "key": "brace",
+      "name": "无箭尖的比较括线",
+      "nativeWidth": 85,
+      "nativeHeight": 320,
+      "defaults": {
+        "side": "left",
+        "color": "#087cff",
+        "weight": 6
+      },
+      "propsRules": {
+        "side": {
+          "type": "string",
+          "enum": [
+            "left",
+            "right"
+          ]
+        },
+        "color": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "weight": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 10
+        }
+      }
+    },
+    {
+      "id": "ani-atom-hd-flow-arrow",
+      "key": "flow-arrow",
+      "name": "头杆一体的短操作箭",
+      "nativeWidth": 220,
+      "nativeHeight": 66,
+      "defaults": {
+        "direction": "right",
+        "tone": "blue",
+        "curved": false
+      },
+      "propsRules": {
+        "direction": {
+          "type": "string",
+          "enum": [
+            "right",
+            "left"
+          ]
+        },
+        "tone": {
+          "type": "string",
+          "enum": [
+            "blue",
+            "mint",
+            "orange"
+          ]
+        },
+        "curved": {
+          "type": "boolean"
+        }
+      }
+    },
+    {
+      "id": "ani-atom-hd-status-pill",
+      "key": "status-pill",
+      "name": "信息或警告圆角状态条",
+      "nativeWidth": 440,
+      "nativeHeight": 86,
+      "defaults": {
+        "text": "状态说明",
+        "tone": "blue",
+        "icon": "none"
+      },
+      "propsRules": {
+        "text": {
+          "type": "string",
+          "maxLength": 18
+        },
+        "tone": {
+          "type": "string",
+          "enum": [
+            "blue",
+            "mint",
+            "orange",
+            "light"
+          ]
+        },
+        "icon": {
+          "type": "string",
+          "enum": [
+            "none",
+            "warning"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ani-atom-hd-title",
+      "key": "title",
+      "name": "可编辑知识标题",
+      "nativeWidth": 720,
+      "nativeHeight": 130,
+      "defaults": {
+        "text": "知识标题",
+        "subtitle": "",
+        "tone": "blue",
+        "align": "center"
+      },
+      "propsRules": {
+        "text": {
+          "type": "string",
+          "maxLength": 16
+        },
+        "subtitle": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "tone": {
+          "type": "string",
+          "enum": [
+            "blue",
+            "orange"
+          ]
+        },
+        "align": {
+          "type": "string",
+          "enum": [
+            "left",
+            "center"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ani-atom-hd-question-bubble",
+      "key": "question-bubble",
+      "name": "橙色提问气泡",
+      "nativeWidth": 610,
+      "nativeHeight": 280,
+      "defaults": {
+        "lines": [
+          "需要思考的问题？"
+        ],
+        "tone": "orange"
+      },
+      "propsRules": {
+        "lines": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 17
+          },
+          "minItems": 1,
+          "maxItems": 3
+        },
+        "tone": {
+          "type": "string",
+          "enum": [
+            "blue",
+            "orange"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ani-atom-hd-brand-badge",
+      "key": "brand-badge",
+      "name": "官方小图标与可编辑名称",
+      "nativeWidth": 370,
+      "nativeHeight": 95,
+      "defaults": {
+        "title": "智能助手",
+        "brandSrc": "",
+        "neutralMark": "chat"
+      },
+      "propsRules": {
+        "title": {
+          "type": "string",
+          "maxLength": 10
+        },
+        "brandSrc": {
+          "type": "string",
+          "maxLength": 512,
+          "description": "Optional local official logo path; no javascript:, data:, external network URL or SVG markup."
+        },
+        "neutralMark": {
+          "type": "string",
+          "enum": [
+            "chat"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ani-atom-hd-code-lines",
+      "key": "code-lines",
+      "name": "非执行性代码占位行",
+      "nativeWidth": 480,
+      "nativeHeight": 190,
+      "defaults": {
+        "count": 6,
+        "highlightLine": -1,
+        "tone": "blue"
+      },
+      "propsRules": {
+        "count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 6
+        },
+        "highlightLine": {
+          "type": "integer",
+          "minimum": -1,
+          "maximum": 5
+        },
+        "tone": {
+          "type": "string",
+          "enum": [
+            "blue",
+            "orange"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ani-atom-hd-destination-pad",
+      "key": "destination-pad",
+      "name": "卸货区域地垫",
+      "nativeWidth": 600,
+      "nativeHeight": 130,
+      "defaults": {
+        "label": ""
+      },
+      "propsRules": {
+        "label": {
+          "type": "string",
+          "maxLength": 16
+        }
+      }
+    },
+    {
+      "id": "ani-atom-hd-focus-ring",
+      "key": "focus-ring",
+      "name": "可退场的局部强调框",
+      "nativeWidth": 400,
+      "nativeHeight": 180,
+      "defaults": {
+        "tone": "orange",
+        "dashed": false
+      },
+      "propsRules": {
+        "tone": {
+          "type": "string",
+          "enum": [
+            "blue",
+            "orange"
+          ]
+        },
+        "dashed": {
+          "type": "boolean"
+        }
+      }
+    },
+    {
+      "id": "ani-atom-hd-truck",
+      "key": "truck",
+      "name": "敞厢整车（含货物与投影）",
+      "nativeWidth": 870,
+      "nativeHeight": 486,
+      "defaults": {
+        "cargoCount": 5,
+        "shadowOpacity": 0.55,
+        "shadowScale": 1,
+        "shadowOffsetY": 0
+      },
+      "propsRules": {
+        "cargoCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "shadowOpacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "shadowScale": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 1.04
+        },
+        "shadowOffsetY": {
+          "type": "number",
+          "minimum": -30,
+          "maximum": 6
+        }
+      }
+    },
+    {
+      "id": "ani-atom-hd-direction-arrow",
+      "key": "direction-arrow",
+      "name": "可调方向箭头",
+      "nativeWidth": 480,
+      "nativeHeight": 240,
+      "defaults": {
+        "style": "solid",
+        "direction": "right",
+        "color": "#0879ff",
+        "outlineColor": "#10275f",
+        "secondaryColor": "#b5deff",
+        "strokeWidth": 8,
+        "headSize": 34,
+        "tailDepth": 20,
+        "scale": 1,
+        "flipBend": false,
+        "boxWidth": 480,
+        "boxHeight": 240
+      },
+      "propsRules": {
+        "style": {
+          "type": "string",
+          "enum": [
+            "solid",
+            "open",
+            "double-line",
+            "curve",
+            "elbow",
+            "dashed",
+            "handdrawn",
+            "ribbon",
+            "block3d",
+            "return",
+            "chevrons",
+            "tapered",
+            "swallowtail"
+          ]
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "right",
+            "left",
+            "up",
+            "down"
+          ]
+        },
+        "color": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "outlineColor": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "secondaryColor": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "strokeWidth": {
+          "type": "number",
+          "minimum": 2,
+          "maximum": 14
+        },
+        "headSize": {
+          "type": "number",
+          "minimum": 8,
+          "maximum": 50
+        },
+        "tailDepth": {
+          "type": "number",
+          "minimum": 6,
+          "maximum": 60
+        },
+        "scale": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 1
+        },
+        "flipBend": {
+          "type": "boolean"
+        },
+        "boxWidth": {
+          "type": "number",
+          "minimum": 48,
+          "maximum": 1280
+        },
+        "boxHeight": {
+          "type": "number",
+          "minimum": 20,
+          "maximum": 720
+        }
+      }
+    },
+    {
+      "id": "ani-atom-hd-semantic-label",
+      "key": "semantic-label",
+      "name": "语义文字标注框",
+      "nativeWidth": 600,
+      "nativeHeight": 180,
+      "defaults": {
+        "variant": "heading-underline",
+        "text": "可编辑标题",
+        "lines": [],
+        "color": "#10275f",
+        "background": "#e8f5ff",
+        "borderColor": "#0879ff",
+        "fontSize": 34,
+        "fontWeight": 700,
+        "strokeWidth": 3,
+        "align": "center",
+        "direction": "right",
+        "scale": 1,
+        "boxWidth": 600,
+        "boxHeight": 180
+      },
+      "propsRules": {
+        "variant": {
+          "type": "string",
+          "enum": [
+            "heading-underline",
+            "object-tab",
+            "action-ribbon",
+            "conclusion-bracket",
+            "conclusion-card",
+            "caution-notched",
+            "question-speech",
+            "note-outline"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "lines": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 2,
+          "items": {
+            "type": "string",
+            "maxLength": 24
+          }
+        },
+        "color": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "background": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "borderColor": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "fontSize": {
+          "type": "number",
+          "minimum": 18,
+          "maximum": 46
+        },
+        "fontWeight": {
+          "type": "integer",
+          "minimum": 400,
+          "maximum": 900
+        },
+        "strokeWidth": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "align": {
+          "type": "string",
+          "enum": [
+            "left",
+            "center"
+          ]
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "right",
+            "left"
+          ]
+        },
+        "scale": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 1
+        },
+        "boxWidth": {
+          "type": "number",
+          "minimum": 64,
+          "maximum": 1280
+        },
+        "boxHeight": {
+          "type": "number",
+          "minimum": 36,
+          "maximum": 720
+        }
+      }
+    }
+  ],
+  "components": [
+    {
+      "id": "ani-atom-hd-cargo-box",
+      "name": "高清 · 有体积的封装纸箱",
+      "layer": "primitive",
+      "intentIds": [
+        "transport",
+        "collection"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-cargo-box.html",
+      "edit": "catalog.html?component=ani-atom-hd-cargo-box"
+    },
+    {
+      "id": "ani-atom-hd-photo-card",
+      "name": "高清 · 商品照片卡片",
+      "layer": "primitive",
+      "intentIds": [
+        "file"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-photo-card.html",
+      "edit": "catalog.html?component=ani-atom-hd-photo-card"
+    },
+    {
+      "id": "ani-atom-hd-window-shell",
+      "name": "高清 · 蓝标题栏软件窗口",
+      "layer": "primitive",
+      "intentIds": [
+        "window"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-window-shell.html",
+      "edit": "catalog.html?component=ani-atom-hd-window-shell"
+    },
+    {
+      "id": "ani-atom-hd-buffer-area",
+      "name": "高清 · 虚线临时区",
+      "layer": "primitive",
+      "intentIds": [
+        "memory"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-buffer-area.html",
+      "edit": "catalog.html?component=ani-atom-hd-buffer-area"
+    },
+    {
+      "id": "ani-atom-hd-chat-shell",
+      "name": "高清 · 可填消息的聊天窗口",
+      "layer": "primitive",
+      "intentIds": [
+        "messages",
+        "window"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-chat-shell.html",
+      "edit": "catalog.html?component=ani-atom-hd-chat-shell"
+    },
+    {
+      "id": "ani-atom-hd-chat-message",
+      "name": "高清 · 单条角色消息气泡",
+      "layer": "primitive",
+      "intentIds": [
+        "messages"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-chat-message.html",
+      "edit": "catalog.html?component=ani-atom-hd-chat-message"
+    },
+    {
+      "id": "ani-atom-hd-cargo-stack",
+      "name": "高清 · 可拆分纸箱组",
+      "layer": "primitive",
+      "intentIds": [
+        "transport",
+        "collection"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-cargo-stack.html",
+      "edit": "catalog.html?component=ani-atom-hd-cargo-stack"
+    },
+    {
+      "id": "ani-atom-hd-warehouse",
+      "name": "高清 · 仓库与卸货口",
+      "layer": "primitive",
+      "intentIds": [
+        "warehouse",
+        "transport"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-warehouse.html",
+      "edit": "catalog.html?component=ani-atom-hd-warehouse"
+    },
+    {
+      "id": "ani-atom-hd-folder-shell",
+      "name": "高清 · 带遮挡前沿的文件夹",
+      "layer": "primitive",
+      "intentIds": [
+        "folder"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-folder-shell.html",
+      "edit": "catalog.html?component=ani-atom-hd-folder-shell"
+    },
+    {
+      "id": "ani-atom-hd-photo-stack",
+      "name": "高清 · 保持商品身份的照片组",
+      "layer": "primitive",
+      "intentIds": [
+        "file",
+        "collection"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-photo-stack.html",
+      "edit": "catalog.html?component=ani-atom-hd-photo-stack"
+    },
+    {
+      "id": "ani-atom-hd-notice-paper",
+      "name": "高清 · 可填字段的折角通知",
+      "layer": "primitive",
+      "intentIds": [
+        "noticeWriting",
+        "paper"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-notice-paper.html",
+      "edit": "catalog.html?component=ani-atom-hd-notice-paper"
+    },
+    {
+      "id": "ani-atom-hd-notice-field",
+      "name": "高清 · 标签与本次事实字段",
+      "layer": "primitive",
+      "intentIds": [
+        "noticeWriting",
+        "reuse",
+        "paper"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-notice-field.html",
+      "edit": "catalog.html?component=ani-atom-hd-notice-field"
+    },
+    {
+      "id": "ani-atom-hd-attachment-card",
+      "name": "高清 · 报错或代码附件卡",
+      "layer": "primitive",
+      "intentIds": [
+        "messages",
+        "file"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-attachment-card.html",
+      "edit": "catalog.html?component=ani-atom-hd-attachment-card"
+    },
+    {
+      "id": "ani-atom-hd-reply-lines",
+      "name": "高清 · 可逐行揭示的占位回复",
+      "layer": "primitive",
+      "intentIds": [
+        "messages",
+        "text"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-reply-lines.html",
+      "edit": "catalog.html?component=ani-atom-hd-reply-lines"
+    },
+    {
+      "id": "ani-atom-hd-send-icon",
+      "name": "高清 · 一体纸飞机发送图标",
+      "layer": "primitive",
+      "intentIds": [
+        "messages",
+        "symbol"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-send-icon.html",
+      "edit": "catalog.html?component=ani-atom-hd-send-icon"
+    },
+    {
+      "id": "ani-atom-hd-checklist-row",
+      "name": "高清 · 不预设结果的检查行",
+      "layer": "primitive",
+      "intentIds": [
+        "verify",
+        "checkbox"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-checklist-row.html",
+      "edit": "catalog.html?component=ani-atom-hd-checklist-row"
+    },
+    {
+      "id": "ani-atom-hd-magnifier",
+      "name": "高清 · 可移动的放大镜",
+      "layer": "primitive",
+      "intentIds": [
+        "detail",
+        "verify"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-magnifier.html",
+      "edit": "catalog.html?component=ani-atom-hd-magnifier"
+    },
+    {
+      "id": "ani-atom-hd-brace",
+      "name": "高清 · 无箭尖的比较括线",
+      "layer": "primitive",
+      "intentIds": [
+        "relation",
+        "connector"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-brace.html",
+      "edit": "catalog.html?component=ani-atom-hd-brace"
+    },
+    {
+      "id": "ani-atom-hd-flow-arrow",
+      "name": "高清 · 头杆一体的短操作箭",
+      "layer": "primitive",
+      "intentIds": [
+        "connector"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-flow-arrow.html",
+      "edit": "catalog.html?component=ani-atom-hd-flow-arrow"
+    },
+    {
+      "id": "ani-atom-hd-status-pill",
+      "name": "高清 · 信息或警告圆角状态条",
+      "layer": "primitive",
+      "intentIds": [
+        "status"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-status-pill.html",
+      "edit": "catalog.html?component=ani-atom-hd-status-pill"
+    },
+    {
+      "id": "ani-atom-hd-title",
+      "name": "高清 · 可编辑知识标题",
+      "layer": "primitive",
+      "intentIds": [
+        "text"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-title.html",
+      "edit": "catalog.html?component=ani-atom-hd-title"
+    },
+    {
+      "id": "ani-atom-hd-question-bubble",
+      "name": "高清 · 橙色提问气泡",
+      "layer": "primitive",
+      "intentIds": [
+        "clarify",
+        "annotation"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-question-bubble.html",
+      "edit": "catalog.html?component=ani-atom-hd-question-bubble"
+    },
+    {
+      "id": "ani-atom-hd-brand-badge",
+      "name": "高清 · 官方小图标与可编辑名称",
+      "layer": "primitive",
+      "intentIds": [
+        "symbol"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-brand-badge.html",
+      "edit": "catalog.html?component=ani-atom-hd-brand-badge"
+    },
+    {
+      "id": "ani-atom-hd-code-lines",
+      "name": "高清 · 非执行性代码占位行",
+      "layer": "primitive",
+      "intentIds": [
+        "code"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-code-lines.html",
+      "edit": "catalog.html?component=ani-atom-hd-code-lines"
+    },
+    {
+      "id": "ani-atom-hd-destination-pad",
+      "name": "高清 · 卸货区域地垫",
+      "layer": "primitive",
+      "intentIds": [
+        "warehouse",
+        "transport"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-destination-pad.html",
+      "edit": "catalog.html?component=ani-atom-hd-destination-pad"
+    },
+    {
+      "id": "ani-atom-hd-focus-ring",
+      "name": "高清 · 可退场的局部强调框",
+      "layer": "primitive",
+      "intentIds": [
+        "highlight"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-focus-ring.html",
+      "edit": "catalog.html?component=ani-atom-hd-focus-ring"
+    },
+    {
+      "id": "ani-atom-hd-truck",
+      "name": "高清 · 敞厢整车（含货物与投影）",
+      "layer": "primitive",
+      "intentIds": [
+        "transport",
+        "batch"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-truck.html",
+      "edit": "catalog.html?component=ani-atom-hd-truck"
+    },
+    {
+      "id": "ani-atom-hd-direction-arrow",
+      "name": "高清 · 可调方向箭头",
+      "layer": "primitive",
+      "intentIds": [
+        "direction",
+        "connector"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-direction-arrow.html",
+      "edit": "catalog.html?component=ani-atom-hd-direction-arrow"
+    },
+    {
+      "id": "ani-atom-hd-semantic-label",
+      "name": "高清 · 语义文字标注框",
+      "layer": "primitive",
+      "intentIds": [
+        "semanticLabel",
+        "text"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-semantic-label.html",
+      "edit": "catalog.html?component=ani-atom-hd-semantic-label"
+    },
+    {
+      "id": "ani-module-hd-truck",
+      "name": "高清敞厢整车（含投影）",
+      "layer": "module",
+      "intentIds": [
+        "transport",
+        "batch"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-module-hd-truck.html",
+      "edit": "catalog.html?component=ani-module-hd-truck"
+    },
+    {
+      "id": "ani-module-hd-photo-folder",
+      "name": "高清照片文件夹",
+      "layer": "module",
+      "intentIds": [
+        "folder",
+        "file"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-module-hd-photo-folder.html",
+      "edit": "catalog.html?component=ani-module-hd-photo-folder"
+    },
+    {
+      "id": "ani-module-hd-notice-fields",
+      "name": "高清通知字段组",
+      "layer": "module",
+      "intentIds": [
+        "noticeWriting",
+        "paper",
+        "reuse"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-module-hd-notice-fields.html",
+      "edit": "catalog.html?component=ani-module-hd-notice-fields"
+    },
+    {
+      "id": "ani-module-hd-processing-window",
+      "name": "高清处理窗口",
+      "layer": "module",
+      "intentIds": [
+        "memory",
+        "batch"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-module-hd-processing-window.html",
+      "edit": "catalog.html?component=ani-module-hd-processing-window"
+    },
+    {
+      "id": "ani-module-hd-chat",
+      "name": "高清聊天消息组",
+      "layer": "module",
+      "intentIds": [
+        "messages",
+        "input"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-module-hd-chat.html",
+      "edit": "catalog.html?component=ani-module-hd-chat"
+    },
+    {
+      "id": "ani-module-hd-checklist",
+      "name": "高清待核检查单",
+      "layer": "module",
+      "intentIds": [
+        "verify",
+        "checkbox"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-module-hd-checklist.html",
+      "edit": "catalog.html?component=ani-module-hd-checklist"
+    },
+    {
+      "id": "ani-module-hd-warehouse",
+      "name": "高清卸货目的地",
+      "layer": "module",
+      "intentIds": [
+        "warehouse",
+        "transport"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-module-hd-warehouse.html",
+      "edit": "catalog.html?component=ani-module-hd-warehouse"
+    },
+    {
+      "id": "ani-module-hd-attachments",
+      "name": "高清报错代码附件组",
+      "layer": "module",
+      "intentIds": [
+        "messages",
+        "code"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-module-hd-attachments.html",
+      "edit": "catalog.html?component=ani-module-hd-attachments"
+    },
+    {
+      "id": "ani-module-hd-comparison",
+      "name": "高清关系括线组",
+      "layer": "module",
+      "intentIds": [
+        "relation",
+        "reuse"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-module-hd-comparison.html",
+      "edit": "catalog.html?component=ani-module-hd-comparison"
+    },
+    {
+      "id": "ani-module-hd-product-gallery",
+      "name": "高清商品图库窗口",
+      "layer": "module",
+      "intentIds": [
+        "window",
+        "file"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-module-hd-product-gallery.html",
+      "edit": "catalog.html?component=ani-module-hd-product-gallery"
+    },
+    {
+      "id": "ani-transfer-hd-experience",
+      "name": "旧经验：装货货车",
+      "layer": "scene-template",
+      "intentIds": [
+        "transport"
+      ],
+      "sourceStates": [
+        "S01A"
+      ],
+      "preview": "previews/ani-transfer-hd-experience.html",
+      "edit": "catalog.html?component=ani-transfer-hd-experience"
+    },
+    {
+      "id": "ani-transfer-hd-experience-problem",
+      "name": "旧经验与新情境",
+      "layer": "scene-template",
+      "intentIds": [
+        "relation",
+        "reuse"
+      ],
+      "sourceStates": [
+        "S01B"
+      ],
+      "preview": "previews/ani-transfer-hd-experience-problem.html",
+      "edit": "catalog.html?component=ani-transfer-hd-experience-problem"
+    },
+    {
+      "id": "ani-transfer-hd-notice-draft",
+      "name": "通知：仅调整措辞",
+      "layer": "scene-template",
+      "intentIds": [
+        "noticeWriting",
+        "messages",
+        "paper"
+      ],
+      "sourceStates": [
+        "S02A"
+      ],
+      "preview": "previews/ani-transfer-hd-notice-draft.html",
+      "edit": "catalog.html?component=ani-transfer-hd-notice-draft"
+    },
+    {
+      "id": "ani-transfer-hd-notice-complete",
+      "name": "通知：补齐三项信息",
+      "layer": "scene-template",
+      "intentIds": [
+        "noticeWriting",
+        "paper",
+        "reuse"
+      ],
+      "sourceStates": [
+        "S02B"
+      ],
+      "preview": "previews/ani-transfer-hd-notice-complete.html",
+      "edit": "catalog.html?component=ani-transfer-hd-notice-complete"
+    },
+    {
+      "id": "ani-transfer-hd-notice-reuse",
+      "name": "换事实，借思路",
+      "layer": "scene-template",
+      "intentIds": [
+        "noticeWriting",
+        "reuse",
+        "paper"
+      ],
+      "sourceStates": [
+        "S03"
+      ],
+      "preview": "previews/ani-transfer-hd-notice-reuse.html",
+      "edit": "catalog.html?component=ani-transfer-hd-notice-reuse"
+    },
+    {
+      "id": "ani-transfer-hd-before-read",
+      "name": "处理前：原图与空暂存区",
+      "layer": "scene-template",
+      "intentIds": [
+        "memory",
+        "file"
+      ],
+      "sourceStates": [
+        "S04A"
+      ],
+      "preview": "previews/ani-transfer-hd-before-read.html",
+      "edit": "catalog.html?component=ani-transfer-hd-before-read"
+    },
+    {
+      "id": "ani-transfer-hd-capacity",
+      "name": "图片拥挤与内存不足",
+      "layer": "scene-template",
+      "intentIds": [
+        "memory"
+      ],
+      "sourceStates": [
+        "S04B"
+      ],
+      "preview": "previews/ani-transfer-hd-capacity.html",
+      "edit": "catalog.html?component=ani-transfer-hd-capacity"
+    },
+    {
+      "id": "ani-transfer-hd-error-explanation",
+      "name": "解释原因，保留报错",
+      "layer": "scene-template",
+      "intentIds": [
+        "messages",
+        "memory"
+      ],
+      "sourceStates": [
+        "S05"
+      ],
+      "preview": "previews/ani-transfer-hd-error-explanation.html",
+      "edit": "catalog.html?component=ani-transfer-hd-error-explanation"
+    },
+    {
+      "id": "ani-transfer-hd-truck-loaded",
+      "name": "卸货前：本趟待卸",
+      "layer": "scene-template",
+      "intentIds": [
+        "transport",
+        "warehouse"
+      ],
+      "sourceStates": [
+        "S06A"
+      ],
+      "preview": "previews/ani-transfer-hd-truck-loaded.html",
+      "edit": "catalog.html?component=ani-transfer-hd-truck-loaded"
+    },
+    {
+      "id": "ani-transfer-hd-truck-empty",
+      "name": "卸貨后：空厢与保留货物",
+      "layer": "scene-template",
+      "intentIds": [
+        "transport",
+        "batch"
+      ],
+      "sourceStates": [
+        "S06B"
+      ],
+      "preview": "previews/ani-transfer-hd-truck-empty.html",
+      "edit": "catalog.html?component=ani-transfer-hd-truck-empty"
+    },
+    {
+      "id": "ani-transfer-hd-batch-read",
+      "name": "小批已读入",
+      "layer": "scene-template",
+      "intentIds": [
+        "batch",
+        "memory"
+      ],
+      "sourceStates": [
+        "S07A"
+      ],
+      "preview": "previews/ani-transfer-hd-batch-read.html",
+      "edit": "catalog.html?component=ani-transfer-hd-batch-read"
+    },
+    {
+      "id": "ani-transfer-hd-batch-saved",
+      "name": "处理结果已保存",
+      "layer": "scene-template",
+      "intentIds": [
+        "batch",
+        "save"
+      ],
+      "sourceStates": [
+        "S07B"
+      ],
+      "preview": "previews/ani-transfer-hd-batch-saved.html",
+      "edit": "catalog.html?component=ani-transfer-hd-batch-saved"
+    },
+    {
+      "id": "ani-transfer-hd-batch-released",
+      "name": "释放临时副本，保留结果",
+      "layer": "scene-template",
+      "intentIds": [
+        "batch",
+        "memory",
+        "save"
+      ],
+      "sourceStates": [
+        "S07C"
+      ],
+      "preview": "previews/ani-transfer-hd-batch-released.html",
+      "edit": "catalog.html?component=ani-transfer-hd-batch-released"
+    },
+    {
+      "id": "ani-transfer-hd-batch-next",
+      "name": "保留结果，读取下一批",
+      "layer": "scene-template",
+      "intentIds": [
+        "batch",
+        "memory"
+      ],
+      "sourceStates": [
+        "S07D"
+      ],
+      "preview": "previews/ani-transfer-hd-batch-next.html",
+      "edit": "catalog.html?component=ani-transfer-hd-batch-next"
+    },
+    {
+      "id": "ani-transfer-hd-near-far",
+      "name": "近迁移与远迁移都有用",
+      "layer": "scene-template",
+      "intentIds": [
+        "compare",
+        "relation",
+        "reuse"
+      ],
+      "sourceStates": [
+        "S08"
+      ],
+      "preview": "previews/ani-transfer-hd-near-far.html",
+      "edit": "catalog.html?component=ani-transfer-hd-near-far"
+    },
+    {
+      "id": "ani-transfer-hd-ask-direction",
+      "name": "先提出问题，暂不宣告答案",
+      "layer": "scene-template",
+      "intentIds": [
+        "relation",
+        "messages"
+      ],
+      "sourceStates": [
+        "S09A"
+      ],
+      "preview": "previews/ani-transfer-hd-ask-direction.html",
+      "edit": "catalog.html?component=ani-transfer-hd-ask-direction"
+    },
+    {
+      "id": "ani-transfer-hd-propose-direction",
+      "name": "从旧经验提出分批方向",
+      "layer": "scene-template",
+      "intentIds": [
+        "relation",
+        "batch"
+      ],
+      "sourceStates": [
+        "S09"
+      ],
+      "preview": "previews/ani-transfer-hd-propose-direction.html",
+      "edit": "catalog.html?component=ani-transfer-hd-propose-direction"
+    },
+    {
+      "id": "ani-transfer-hd-check-cause",
+      "name": "先核原因，再修改",
+      "layer": "scene-template",
+      "intentIds": [
+        "verify",
+        "code"
+      ],
+      "sourceStates": [
+        "S10A"
+      ],
+      "preview": "previews/ani-transfer-hd-check-cause.html",
+      "edit": "catalog.html?component=ani-transfer-hd-check-cause"
+    },
+    {
+      "id": "ani-transfer-hd-copy-verify",
+      "name": "保留原图，副本试验",
+      "layer": "scene-template",
+      "intentIds": [
+        "copy",
+        "verify"
+      ],
+      "sourceStates": [
+        "S10B"
+      ],
+      "preview": "previews/ani-transfer-hd-copy-verify.html",
+      "edit": "catalog.html?component=ani-transfer-hd-copy-verify"
+    },
+    {
+      "id": "ani-transfer-hd-two-purposes",
+      "name": "交付与学习：两个目的",
+      "layer": "scene-template",
+      "intentIds": [
+        "compare",
+        "clarify"
+      ],
+      "sourceStates": [
+        "S11"
+      ],
+      "preview": "previews/ani-transfer-hd-two-purposes.html",
+      "edit": "catalog.html?component=ani-transfer-hd-two-purposes"
+    },
+    {
+      "id": "ani-transfer-hd-experience-to-action",
+      "name": "把经验转为具体做法",
+      "layer": "scene-template",
+      "intentIds": [
+        "reuse",
+        "clarify",
+        "process"
+      ],
+      "sourceStates": [
+        "S12"
+      ],
+      "preview": "previews/ani-transfer-hd-experience-to-action.html",
+      "edit": "catalog.html?component=ani-transfer-hd-experience-to-action"
+    },
+    {
+      "id": "ani-transfer-hd-question-outro",
+      "name": "答案之外的思考",
+      "layer": "scene-template",
+      "intentIds": [
+        "outro",
+        "messages"
+      ],
+      "sourceStates": [
+        "S13"
+      ],
+      "preview": "previews/ani-transfer-hd-question-outro.html",
+      "edit": "catalog.html?component=ani-transfer-hd-question-outro"
+    },
+    {
+      "id": "ani-transfer-hd-next-topic",
+      "name": "下期主题预告",
+      "layer": "scene-template",
+      "intentIds": [
+        "outro"
+      ],
+      "sourceStates": [
+        "S14"
+      ],
+      "preview": "previews/ani-transfer-hd-next-topic.html",
+      "edit": "catalog.html?component=ani-transfer-hd-next-topic"
+    },
+    {
+      "id": "ani-transfer-hd-unload-motion",
+      "name": "动态：绕车卸货，货物保留",
+      "layer": "scene-template",
+      "intentIds": [
+        "transport",
+        "batch"
+      ],
+      "sourceStates": [
+        "S06A→S06B"
+      ],
+      "preview": "previews/ani-transfer-hd-unload-motion.html",
+      "edit": "catalog.html?component=ani-transfer-hd-unload-motion"
+    },
+    {
+      "id": "ani-transfer-hd-batch-motion",
+      "name": "动态：读取、保存、释放、下一批",
+      "layer": "scene-template",
+      "intentIds": [
+        "batch",
+        "memory",
+        "save"
+      ],
+      "sourceStates": [
+        "S07A→S07D"
+      ],
+      "preview": "previews/ani-transfer-hd-batch-motion.html",
+      "edit": "catalog.html?component=ani-transfer-hd-batch-motion"
+    },
+    {
+      "id": "ani-transfer-hd-field-motion",
+      "name": "动态：通知三字段逐项补齐",
+      "layer": "scene-template",
+      "intentIds": [
+        "noticeWriting",
+        "paper",
+        "reuse"
+      ],
+      "sourceStates": [
+        "S02A→S02B"
+      ],
+      "preview": "previews/ani-transfer-hd-field-motion.html",
+      "edit": "catalog.html?component=ani-transfer-hd-field-motion"
+    },
+    {
+      "id": "ani-atom-hd-arrow-solid",
+      "name": "实心直指箭头",
+      "layer": "primitive",
+      "intentIds": [
+        "direction",
+        "connector"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-arrow-solid.html",
+      "edit": "catalog.html?component=ani-atom-hd-arrow-solid"
+    },
+    {
+      "id": "ani-atom-hd-arrow-open",
+      "name": "开放线头箭头",
+      "layer": "primitive",
+      "intentIds": [
+        "direction",
+        "connector"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-arrow-open.html",
+      "edit": "catalog.html?component=ani-atom-hd-arrow-open"
+    },
+    {
+      "id": "ani-atom-hd-arrow-double-line",
+      "name": "双轨线箭头",
+      "layer": "primitive",
+      "intentIds": [
+        "direction",
+        "connector"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-arrow-double-line.html",
+      "edit": "catalog.html?component=ani-atom-hd-arrow-double-line"
+    },
+    {
+      "id": "ani-atom-hd-arrow-curve",
+      "name": "平滑弧线箭头",
+      "layer": "primitive",
+      "intentIds": [
+        "direction",
+        "connector"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-arrow-curve.html",
+      "edit": "catalog.html?component=ani-atom-hd-arrow-curve"
+    },
+    {
+      "id": "ani-atom-hd-arrow-elbow",
+      "name": "直角折线箭头",
+      "layer": "primitive",
+      "intentIds": [
+        "direction",
+        "connector"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-arrow-elbow.html",
+      "edit": "catalog.html?component=ani-atom-hd-arrow-elbow"
+    },
+    {
+      "id": "ani-atom-hd-arrow-dashed",
+      "name": "虚线进程箭头",
+      "layer": "primitive",
+      "intentIds": [
+        "direction",
+        "connector"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-arrow-dashed.html",
+      "edit": "catalog.html?component=ani-atom-hd-arrow-dashed"
+    },
+    {
+      "id": "ani-atom-hd-arrow-handdrawn",
+      "name": "手绘双笔箭头",
+      "layer": "primitive",
+      "intentIds": [
+        "direction",
+        "connector"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-arrow-handdrawn.html",
+      "edit": "catalog.html?component=ani-atom-hd-arrow-handdrawn"
+    },
+    {
+      "id": "ani-atom-hd-arrow-ribbon",
+      "name": "燕尾带状箭头",
+      "layer": "primitive",
+      "intentIds": [
+        "direction",
+        "connector"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-arrow-ribbon.html",
+      "edit": "catalog.html?component=ani-atom-hd-arrow-ribbon"
+    },
+    {
+      "id": "ani-atom-hd-arrow-block3d",
+      "name": "立体块状箭头",
+      "layer": "primitive",
+      "intentIds": [
+        "direction",
+        "connector"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-arrow-block3d.html",
+      "edit": "catalog.html?component=ani-atom-hd-arrow-block3d"
+    },
+    {
+      "id": "ani-atom-hd-arrow-return",
+      "name": "回转绕行箭头",
+      "layer": "primitive",
+      "intentIds": [
+        "direction",
+        "connector"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-arrow-return.html",
+      "edit": "catalog.html?component=ani-atom-hd-arrow-return"
+    },
+    {
+      "id": "ani-atom-hd-arrow-chevrons",
+      "name": "连续人字箭头",
+      "layer": "primitive",
+      "intentIds": [
+        "direction",
+        "connector"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-arrow-chevrons.html",
+      "edit": "catalog.html?component=ani-atom-hd-arrow-chevrons"
+    },
+    {
+      "id": "ani-atom-hd-arrow-tapered",
+      "name": "渐宽楔形箭头",
+      "layer": "primitive",
+      "intentIds": [
+        "direction",
+        "connector"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-arrow-tapered.html",
+      "edit": "catalog.html?component=ani-atom-hd-arrow-tapered"
+    },
+    {
+      "id": "ani-atom-hd-arrow-swallowtail",
+      "name": "空V口燕尾箭头",
+      "layer": "primitive",
+      "intentIds": [
+        "direction",
+        "connector"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-arrow-swallowtail.html",
+      "edit": "catalog.html?component=ani-atom-hd-arrow-swallowtail"
+    },
+    {
+      "id": "ani-atom-hd-label-heading-underline",
+      "name": "标题下划线",
+      "layer": "primitive",
+      "intentIds": [
+        "semanticLabel",
+        "text",
+        "annotation"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-label-heading-underline.html",
+      "edit": "catalog.html?component=ani-atom-hd-label-heading-underline"
+    },
+    {
+      "id": "ani-atom-hd-label-object-tab",
+      "name": "对象页签",
+      "layer": "primitive",
+      "intentIds": [
+        "semanticLabel",
+        "text",
+        "annotation"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-label-object-tab.html",
+      "edit": "catalog.html?component=ani-atom-hd-label-object-tab"
+    },
+    {
+      "id": "ani-atom-hd-label-action-ribbon",
+      "name": "动作飘带",
+      "layer": "primitive",
+      "intentIds": [
+        "semanticLabel",
+        "text",
+        "annotation"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-label-action-ribbon.html",
+      "edit": "catalog.html?component=ani-atom-hd-label-action-ribbon"
+    },
+    {
+      "id": "ani-atom-hd-label-conclusion-bracket",
+      "name": "结论角括框",
+      "layer": "primitive",
+      "intentIds": [
+        "semanticLabel",
+        "text",
+        "annotation"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-label-conclusion-bracket.html",
+      "edit": "catalog.html?component=ani-atom-hd-label-conclusion-bracket"
+    },
+    {
+      "id": "ani-atom-hd-label-conclusion-card",
+      "name": "结论叠层卡",
+      "layer": "primitive",
+      "intentIds": [
+        "semanticLabel",
+        "text",
+        "annotation"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-label-conclusion-card.html",
+      "edit": "catalog.html?component=ani-atom-hd-label-conclusion-card"
+    },
+    {
+      "id": "ani-atom-hd-label-caution-notched",
+      "name": "注意切角框",
+      "layer": "primitive",
+      "intentIds": [
+        "semanticLabel",
+        "text",
+        "annotation"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-label-caution-notched.html",
+      "edit": "catalog.html?component=ani-atom-hd-label-caution-notched"
+    },
+    {
+      "id": "ani-atom-hd-label-question-speech",
+      "name": "疑问对话框",
+      "layer": "primitive",
+      "intentIds": [
+        "semanticLabel",
+        "text",
+        "annotation"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-label-question-speech.html",
+      "edit": "catalog.html?component=ani-atom-hd-label-question-speech"
+    },
+    {
+      "id": "ani-atom-hd-label-note-outline",
+      "name": "注解方线框",
+      "layer": "primitive",
+      "intentIds": [
+        "semanticLabel",
+        "text",
+        "annotation"
+      ],
+      "sourceStates": [],
+      "preview": "previews/ani-atom-hd-label-note-outline.html",
+      "edit": "catalog.html?component=ani-atom-hd-label-note-outline"
+    }
+  ]
+}

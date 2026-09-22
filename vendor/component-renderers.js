@@ -39,11 +39,11 @@ var ComponentLibraryRuntime = (() => {
   var tokens = Object.freeze({ ink: "#102b62", blue: "#167bf2", blueDark: "#0055c8", green: "#14866b", orange: "#f6a31a", ice: "#f7fcff", shadow: "#c7e2fa", purple: "#7255ca" });
   var num = (v, fallback = 0) => Number.isFinite(Number(v)) ? Number(v) : fallback;
   var safeColor = (v) => /^#[0-9a-f]{3,8}$/i.test(String(v)) ? String(v) : tokens.blue;
-  function banner(x, y, w, label2, color2, h) {
-    const c = safeColor(color2), id = h.uid("ani-banner");
+  function banner(x, y, w, label3, color5, h) {
+    const c = safeColor(color5), id = h.uid("ani-banner");
     const textColor = c.toLowerCase() === tokens.orange.toLowerCase() ? tokens.ink : "white";
-    const fs = Math.min(34, Math.max(18, (w - 34) / Math.max(1, Array.from(String(label2 ?? "")).length)));
-    return `<g transform="translate(${num(x)} ${num(y)})" class="ani-banner"><defs><linearGradient id="${h.esc(id)}" x1="0" y1="0" x2="0" y2="1"><stop stop-color="${c}"/><stop offset="1" stop-color="${c}" stop-opacity=".9"/></linearGradient></defs><rect x="4" y="5" width="${num(w)}" height="64" rx="17" fill="${tokens.shadow}"/><rect width="${num(w)}" height="64" rx="17" fill="url(#${h.esc(id)})" stroke="${tokens.ink}" stroke-width="3.5"/><rect x="5" y="5" width="${num(w) - 10}" height="54" rx="13" fill="none" stroke="#93d3ff" stroke-width="2" opacity=".8"/><path d="M17 10H${Math.min(75, w - 22)}M10 20Q10 10 22 10" fill="none" stroke="white" stroke-width="2.8" stroke-linecap="round" opacity=".7"/><text x="${num(w) / 2}" y="43" text-anchor="middle" fill="${textColor}" font-size="${fs}" font-weight="900" letter-spacing="1">${h.esc(label2 ?? "")}</text></g>`;
+    const fs = Math.min(34, Math.max(18, (w - 34) / Math.max(1, Array.from(String(label3 ?? "")).length)));
+    return `<g transform="translate(${num(x)} ${num(y)})" class="ani-banner"><defs><linearGradient id="${h.esc(id)}" x1="0" y1="0" x2="0" y2="1"><stop stop-color="${c}"/><stop offset="1" stop-color="${c}" stop-opacity=".9"/></linearGradient></defs><rect x="4" y="5" width="${num(w)}" height="64" rx="17" fill="${tokens.shadow}"/><rect width="${num(w)}" height="64" rx="17" fill="url(#${h.esc(id)})" stroke="${tokens.ink}" stroke-width="3.5"/><rect x="5" y="5" width="${num(w) - 10}" height="54" rx="13" fill="none" stroke="#93d3ff" stroke-width="2" opacity=".8"/><path d="M17 10H${Math.min(75, w - 22)}M10 20Q10 10 22 10" fill="none" stroke="white" stroke-width="2.8" stroke-linecap="round" opacity=".7"/><text x="${num(w) / 2}" y="43" text-anchor="middle" fill="${textColor}" font-size="${fs}" font-weight="900" letter-spacing="1">${h.esc(label3 ?? "")}</text></g>`;
   }
   function paper(x, y, w, hgt, options = {}, h) {
     const f = Math.min(num(options.fold, 50), w * 0.24, hgt * 0.2), d = num(options.depth, 12);
@@ -52,7 +52,7 @@ var ComponentLibraryRuntime = (() => {
     return `<g transform="translate(${num(x)} ${num(y)})" class="ani-paper"><path d="${shape}" transform="translate(${d} ${d})" fill="${tokens.shadow}"/><path d="${shape}" fill="#fcfeff" stroke="${tokens.ink}" stroke-width="4" stroke-linejoin="round"/><path d="M${w - f - 3} 5H${w - f}L${w - 5} ${f + 3}V${hgt - 18}Q${w - 5} ${hgt - 5} ${w - 18} ${hgt - 5}H18Q5 ${hgt - 5} 5 ${hgt - 18}" fill="none" stroke="#d4ecff" stroke-width="5"/><path d="M${w - f} 0V${f - 11}Q${w - f} ${f} ${w - f + 11} ${f}H${w}Z" fill="#e4f3ff" stroke="${tokens.ink}" stroke-width="2.8" stroke-linejoin="round"/><path d="M${w - f + 6} 7L${w - 7} ${f - 5}H${w - f + 11}Q${w - f + 5} ${f - 5} ${w - f + 5} ${f - 12}Z" fill="#f5fbff"/>${title}${options.content || ""}</g>`;
   }
   function icon(kind, x, y, size, h) {
-    const t = tokens, s = num(size, 80) / 100;
+    const t = tokens, s2 = num(size, 80) / 100;
     let art = "";
     if (kind === "people") art = `<ellipse cx="50" cy="88" rx="47" ry="6" fill="${t.shadow}"/><g stroke="${t.ink}" stroke-width="3" stroke-linejoin="round"><circle cx="20" cy="39" r="12" fill="#12c6a0"/><path d="M4 76V68Q4 53 20 53T37 68V76Z" fill="#13bd96"/><circle cx="80" cy="39" r="12" fill="#ffb71b"/><path d="M63 76V68Q63 53 80 53T97 68V76Z" fill="#ffb71b"/><circle cx="50" cy="32" r="16" fill="#25a6fa"/><path d="M26 84V72Q26 50 50 50T75 72V84Z" fill="#249cf6"/></g><path d="M40 23Q48 18 54 23" fill="none" stroke="#8edbff" stroke-width="3" stroke-linecap="round"/>`;
     else if (kind === "documents") art = `<ellipse cx="50" cy="90" rx="46" ry="6" fill="${t.shadow}"/><g transform="rotate(-10 30 52)"><rect x="8" y="13" width="44" height="73" rx="5" fill="white" stroke="${t.ink}" stroke-width="3"/><g fill="${t.blue}"><circle cx="20" cy="34" r="3"/><circle cx="20" cy="48" r="3"/><circle cx="20" cy="62" r="3"/></g><path d="M29 33H42M29 47H42M29 61H39" stroke="${t.blue}" stroke-width="5" stroke-linecap="round"/></g><g transform="rotate(11 71 52)"><rect x="54" y="12" width="39" height="74" rx="5" fill="white" stroke="${t.ink}" stroke-width="3"/><g fill="${t.orange}"><circle cx="64" cy="32" r="3"/><circle cx="64" cy="47" r="3"/><circle cx="64" cy="62" r="3"/></g><path d="M73 32H84M73 47H84M73 62H83" stroke="${t.orange}" stroke-width="4.5" stroke-linecap="round"/></g>`;
@@ -61,11 +61,11 @@ var ComponentLibraryRuntime = (() => {
     else if (kind === "table") art = `<path d="M15 8H65L88 31V91H15Z" fill="white" stroke="${t.ink}" stroke-width="3"/><path d="M65 8V31H88" fill="#d4ecff" stroke="${t.ink}" stroke-width="2.5"/><rect x="25" y="37" width="53" height="42" rx="2" fill="#f5fcfa" stroke="${t.green}" stroke-width="2.5"/><path d="M25 48H78M25 58H78M25 68H78M42 37V79M61 37V79" stroke="${t.green}" stroke-width="2"/><path d="M25 38H77V47H25Z" fill="${t.green}"/>`;
     else if (kind === "check") art = `<circle cx="50" cy="50" r="35" fill="${t.green}" stroke="${t.ink}" stroke-width="3"/><path d="M31 50L44 63L69 36" fill="none" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>`;
     else art = `<path d="M18 8H65L87 31V91H18Z" fill="white" stroke="${t.ink}" stroke-width="3"/><path d="M65 8V31H87" fill="#d4ecff" stroke="${t.ink}" stroke-width="2.5"/><path d="M30 45H73M30 57H73M30 69H65" fill="none" stroke="${t.blue}" stroke-width="5" stroke-linecap="round"/>`;
-    return `<g transform="translate(${num(x)} ${num(y)}) scale(${s})" class="ani-icon ani-icon-${h.esc(kind)}" aria-hidden="true">${art}</g>`;
+    return `<g transform="translate(${num(x)} ${num(y)}) scale(${s2})" class="ani-icon ani-icon-${h.esc(kind)}" aria-hidden="true">${art}</g>`;
   }
   function mountains(x, y, w, hgt, h) {
     const id = h.uid("ani-mountain-clip"), sky = h.uid("ani-sky"), lake = h.uid("ani-lake");
-    const tree2 = (px, py, scale, color2) => `<g transform="translate(${px} ${py}) scale(${scale})"><path d="M0 0L-21 43H-13L-32 76H-20L-38 111H38L20 76H32L13 43H21Z" fill="${color2}" stroke="#137183" stroke-width="2" stroke-linejoin="round"/><path d="M0 77V121" stroke="#186475" stroke-width="5"/></g>`;
+    const tree2 = (px, py, scale, color5) => `<g transform="translate(${px} ${py}) scale(${scale})"><path d="M0 0L-21 43H-13L-32 76H-20L-38 111H38L20 76H32L13 43H21Z" fill="${color5}" stroke="#137183" stroke-width="2" stroke-linejoin="round"/><path d="M0 77V121" stroke="#186475" stroke-width="5"/></g>`;
     return `<g transform="translate(${num(x)} ${num(y)})" class="ani-landscape"><defs><clipPath id="${h.esc(id)}"><rect width="${num(w)}" height="${num(hgt)}" rx="8"/></clipPath><linearGradient id="${h.esc(sky)}" x2="0" y2="1"><stop stop-color="#b8e5ff"/><stop offset="1" stop-color="#edfaff"/></linearGradient><linearGradient id="${h.esc(lake)}" x2="0" y2="1"><stop stop-color="#8edaff"/><stop offset="1" stop-color="#38b4e3"/></linearGradient></defs><g clip-path="url(#${h.esc(id)})"><g transform="scale(${num(w) / 1e3} ${num(hgt) / 650})"><rect width="1000" height="650" fill="url(#${h.esc(sky)})"/><circle cx="806" cy="113" r="36" fill="#fff1c9"/><path d="M38 164q13-29 42-20q6-48 48-47q38 0 45 40q28-11 45 27ZM637 108q11-26 35-17q7-40 40-40q35 0 42 39q21-8 34 18ZM829 209q15-36 46-25q10-53 53-51q34 2 41 44q22-6 32 32Z" fill="white" opacity=".95"/><path d="M0 387L117 303L173 348L288 207L419 361L543 152L635 260L691 231L812 357L892 272L1000 356V466H0Z" fill="#aed7f6" stroke="#529ad6" stroke-width="3"/><path d="M157 415L336 245L419 306L613 118L719 243L753 225L916 414Z" fill="#73b8e9" stroke="#367db6" stroke-width="3" stroke-linejoin="round"/><path d="M336 245L283 340L337 318L366 336L347 290L419 306L402 299Z" fill="#f6fdff"/><path d="M613 118L526 235L571 224L582 250L606 209L624 260L650 238L687 269L670 213L719 243Z" fill="#f8fdff"/><path d="M613 118L605 213L626 258L611 301L698 390L714 348L674 298L658 237Z" fill="#4299d5" opacity=".7"/><path d="M0 443Q104 358 189 387Q253 335 338 397Q424 340 509 403Q614 345 724 395Q861 326 1000 420V512H0Z" fill="#4eafc1"/><path d="M0 493Q142 425 247 468Q372 425 473 472Q641 410 783 466Q909 405 1000 450V534H0Z" fill="#2f96a8"/><path d="M0 499Q300 475 505 489Q740 480 1000 498V650H0Z" fill="url(#${h.esc(lake)})"/><path d="M78 510H380L330 521H609L539 536H763L719 548H423L453 565H250L211 577H695L743 589H364L402 605H832" fill="none" stroke="#d3f6ff" stroke-width="5" opacity=".85"/><path d="M613 500L556 591L611 572L640 611L710 550L682 500Z" fill="#c1eaff" opacity=".28"/><path d="M0 481Q43 437 96 456Q151 432 188 471L263 507H0Z" fill="#58b6a2" stroke="#1d7886" stroke-width="3"/><path d="M1000 455Q939 417 915 461Q858 451 836 484L732 521H1000Z" fill="#3faaa0" stroke="#1d7886" stroke-width="3"/>${tree2(37, 342, 1.15, "#168ca0")}${tree2(91, 391, 0.85, "#087b8b")}${tree2(137, 411, 0.64, "#168b85")}${tree2(946, 363, 1.1, "#087e8d")}${tree2(886, 417, 0.74, "#139a96")}<path d="M0 610Q25 560 63 581Q64 541 102 551Q132 554 146 589Q173 570 194 594Q231 579 276 620L336 650H0Z" fill="#319c90" stroke="#176f80" stroke-width="3"/><path d="M1000 573Q956 540 937 589Q889 567 873 611Q826 587 796 619L746 650H1000Z" fill="#218e89" stroke="#176f80" stroke-width="3"/><path d="M38 642L20 614M90 640L112 606M971 631L946 609" stroke="#5dc0a1" stroke-width="10" stroke-linecap="round"/></g></g><rect width="${num(w)}" height="${num(hgt)}" rx="8" fill="none" stroke="#70bbe8" stroke-width="2"/></g>`;
   }
   function gear(x, y, size, h) {
@@ -81,27 +81,27 @@ var ComponentLibraryRuntime = (() => {
   var css = `.ani-scene{width:100%;height:100%;position:relative;overflow:hidden;background:#fbfeff;color:${tokens.ink};font-family:ComponentHan,ComponentUI,"Microsoft YaHei",sans-serif}.ani-scene .ani-canvas{display:block;width:100%;height:100%;overflow:hidden}.ani-scene text{font-family:ComponentHan,ComponentUI,"Microsoft YaHei",sans-serif;font-weight:750}.ani-scene [data-ani-focus]{opacity:0}.ani-scene [data-ani-gear]{transform-box:fill-box}.ani-scene .ani-banner text{font-weight:900}`;
 
   // families/animation-style-analysis.mjs
-  var units = (value) => Array.from(String(value ?? "")).reduce((n3, c) => n3 + (/[\u0000-\u00ff]/.test(c) ? 0.54 : 1), 0);
+  var units = (value) => Array.from(String(value ?? "")).reduce((n4, c) => n4 + (/[\u0000-\u00ff]/.test(c) ? 0.54 : 1), 0);
   var fit = (value, max, width, min = 16) => Math.max(min, Math.min(max, width / Math.max(1, units(value))));
   var scoped = (h, prefix) => {
-    let n3 = 0;
-    return { ...h, uid: (name) => h.uid(`${prefix}-${++n3}-${name}`) };
+    let n4 = 0;
+    return { ...h, uid: (name) => h.uid(`${prefix}-${++n4}-${name}`) };
   };
-  var text = (x, y, label2, size, h, extra2 = "") => `<text x="${x}" y="${y}" font-size="${size}" fill="${tokens.ink}" ${extra2}>${h.esc(label2 ?? "")}</text>`;
+  var text = (x, y, label3, size, h, extra2 = "") => `<text x="${x}" y="${y}" font-size="${size}" fill="${tokens.ink}" ${extra2}>${h.esc(label3 ?? "")}</text>`;
   var rowState = (r) => r.state || { "\u5DF2\u5B8C\u6210": "complete", "\u5DF2\u53D6\u6D88": "cancelled", "\u5F85\u4ED8\u6B3E": "pending" }[r.status] || r.status;
   var matches = (r, month, matchState = "complete") => rowState(r) === matchState && String(r.completedDate || "").startsWith(month + "-");
   var dateLabel = (v) => /^\d{4}-\d\d-\d\d$/.test(String(v)) ? String(v).slice(5) : String(v || "\u2014");
-  function validateRows(rows2) {
-    if (!Array.isArray(rows2) || rows2.length !== 5) throw new Error("animation order scenes require exactly five sample rows");
-    if (rows2.some((r) => units(r.id) > 6 || units(r.status) > 5)) throw new Error("animation order row text exceeds readable field width");
+  function validateRows(rows3) {
+    if (!Array.isArray(rows3) || rows3.length !== 5) throw new Error("animation order scenes require exactly five sample rows");
+    if (rows3.some((r) => units(r.id) > 6 || units(r.status) > 5)) throw new Error("animation order row text exceeds readable field width");
   }
-  function badge(x, y, w, label2, color2, h, height = 36) {
-    const fs = Math.min(height * 0.64, fit(label2, 23, w - 14));
-    return `<g><rect x="${x + 2}" y="${y + 3}" width="${w}" height="${height}" rx="11" fill="${tokens.shadow}"/><rect data-ani-status-bg x="${x}" y="${y}" width="${w}" height="${height}" rx="11" fill="${color2}" stroke="${tokens.ink}" stroke-width="1.5"/><path d="M${x + 11} ${y + 5}H${x + w - 14}" stroke="white" stroke-opacity=".27" stroke-width="2" stroke-linecap="round"/>${text(x + w / 2, y + height * 0.71, label2, fs, h, 'text-anchor="middle" style="fill:' + (color2 === tokens.orange || color2 === "#9aa3b1" ? tokens.ink : "white") + '"')}</g>`;
+  function badge(x, y, w, label3, color5, h, height = 36) {
+    const fs = Math.min(height * 0.64, fit(label3, 23, w - 14));
+    return `<g><rect x="${x + 2}" y="${y + 3}" width="${w}" height="${height}" rx="11" fill="${tokens.shadow}"/><rect data-ani-status-bg x="${x}" y="${y}" width="${w}" height="${height}" rx="11" fill="${color5}" stroke="${tokens.ink}" stroke-width="1.5"/><path d="M${x + 11} ${y + 5}H${x + w - 14}" stroke="white" stroke-opacity=".27" stroke-width="2" stroke-linecap="round"/>${text(x + w / 2, y + height * 0.71, label3, fs, h, 'text-anchor="middle" style="fill:' + (color5 === tokens.orange || color5 === "#9aa3b1" ? tokens.ink : "white") + '"')}</g>`;
   }
-  function sourceSheet(h, label2, note) {
-    const rows2 = Array.from({ length: 11 }, (_, i) => Array.from({ length: 3 }, (_2, j) => `<rect x="${66 + j * 61}" y="${252 + i * 20}" width="51" height="12" rx="2" fill="${i >= 3 && i <= 7 ? "#aedcff" : "#dce8f2"}"/>`).join("")).join("");
-    return `<g data-ani-enter>${paper(45, 218, 225, 296, { fold: 28, depth: 9 }, h)}${banner(63, 183, 186, label2, tokens.green, h)}${rows2}<rect x="59" y="307" width="198" height="103" rx="4" fill="none" stroke="${tokens.blue}" stroke-width="3" stroke-dasharray="7 5"/>${text(157, 548, note, 18, h, 'text-anchor="middle" fill="#55749b"')}</g>`;
+  function sourceSheet(h, label3, note) {
+    const rows3 = Array.from({ length: 11 }, (_, i) => Array.from({ length: 3 }, (_2, j) => `<rect x="${66 + j * 61}" y="${252 + i * 20}" width="51" height="12" rx="2" fill="${i >= 3 && i <= 7 ? "#aedcff" : "#dce8f2"}"/>`).join("")).join("");
+    return `<g data-ani-enter>${paper(45, 218, 225, 296, { fold: 28, depth: 9 }, h)}${banner(63, 183, 186, label3, tokens.green, h)}${rows3}<rect x="59" y="307" width="198" height="103" rx="4" fill="none" stroke="${tokens.blue}" stroke-width="3" stroke-dasharray="7 5"/>${text(157, 548, note, 18, h, 'text-anchor="middle" fill="#55749b"')}</g>`;
   }
   var orderDefaults = {
     "title": "\u8868\u683C\u6807\u9898",
@@ -168,23 +168,23 @@ var ComponentLibraryRuntime = (() => {
     validateRows(p.rows);
     if (!/^\d{4}-\d{2}$/.test(p.month)) throw new Error("month must use YYYY-MM");
     if (!Array.isArray(p.headers) || p.headers.length !== 4) throw new Error("order headers require four labels");
-    const h = scoped(helpers2, "order"), e = h.esc;
+    const h = scoped(helpers2, "order"), e2 = h.esc;
     const x = 326, y = 180, width = 888, head = 58, rowH = 64, cols = [126, 157, 169, 180, 256];
     const starts = [x];
     cols.forEach((w, i) => starts.push(starts[i] + w));
-    const count = p.rows.filter((r) => matches(r, p.month, p.matchState)).length;
-    const header = p.headers.map((label2, i) => text(starts[i] + cols[i] / 2, y + 38, label2, fit(label2, 26, cols[i] - 16), h, 'text-anchor="middle"')).join("");
+    const count2 = p.rows.filter((r) => matches(r, p.month, p.matchState)).length;
+    const header = p.headers.map((label3, i) => text(starts[i] + cols[i] / 2, y + 38, label3, fit(label3, 26, cols[i] - 16), h, 'text-anchor="middle"')).join("");
     const headLast = `<g data-ani-raw>${text(starts[4] + cols[4] / 2, y + 38, p.rawHeader, 26, h, 'text-anchor="middle"')}</g><g data-ani-final>${text(starts[4] + cols[4] / 2, y + 38, p.finalHeader, 26, h, 'text-anchor="middle"')}</g>`;
-    const rows2 = p.rows.map((r, i) => {
+    const rows3 = p.rows.map((r, i) => {
       const yy = y + head + i * rowH, ok = matches(r, p.month, p.matchState), statusColor = rowState(r) === "complete" ? tokens.green : rowState(r) === "cancelled" ? "#9aa3b1" : tokens.orange;
       const cells = [r.id, dateLabel(r.orderDate), dateLabel(r.completedDate)].map((v, k) => text(starts[k] + cols[k] / 2, yy + 41, v, 28, h, 'text-anchor="middle"')).join("");
       const raw = `<g data-ani-raw><circle cx="${starts[4] + 57}" cy="${yy + 32}" r="11" fill="${tokens.blue}"/>${text(starts[4] + 86, yy + 41, p.includedLabel, 27, h)}</g>`;
       const final = `<g data-ani-final>${ok ? `<circle cx="${starts[4] + 57}" cy="${yy + 32}" r="11" fill="${tokens.green}"/>` : `<path d="M${starts[4] + 47} ${yy + 32}H${starts[4] + 67}" stroke="#727d8d" stroke-width="4" stroke-linecap="round"/>`}${text(starts[4] + 86, yy + 41, ok ? p.includedLabel : p.excludedLabel, 27, h)}</g>`;
-      return `<g ${ok ? "data-ani-filtered" : "data-ani-excluded"}="${e(r.id)}" data-text-panel="order-${i}" data-panel-bounds="${x} ${yy} ${width} ${rowH}"><rect data-ani-row-bg x="${x + 1}" y="${yy}" width="${width - 2}" height="${rowH}" fill="${i % 2 ? "#f4faff" : "#ffffff"}"/>${cells}${badge(starts[3] + 20, yy + 13, cols[3] - 40, r.status, statusColor, h)}${raw}${final}</g>`;
+      return `<g ${ok ? "data-ani-filtered" : "data-ani-excluded"}="${e2(r.id)}" data-text-panel="order-${i}" data-panel-bounds="${x} ${yy} ${width} ${rowH}"><rect data-ani-row-bg x="${x + 1}" y="${yy}" width="${width - 2}" height="${rowH}" fill="${i % 2 ? "#f4faff" : "#ffffff"}"/>${cells}${badge(starts[3] + 20, yy + 13, cols[3] - 40, r.status, statusColor, h)}${raw}${final}</g>`;
     }).join("");
     const grid = starts.slice(1, -1).map((xx) => `<path d="M${xx} ${y}V${y + head + 5 * rowH}"/>`).join("") + Array.from({ length: 5 }, (_, i) => `<path d="M${x} ${y + head + i * rowH}H${x + width}"/>`).join("");
-    const countGroup = (which, label2, n3) => `<g data-ani-${which}><rect x="380" y="595" width="442" height="62" rx="20" fill="#e6f4ff" stroke="#6eaff6" stroke-width="2.5"/>${text(601, 636, label2 + " " + n3 + " " + p.unit, fit(label2 + " " + n3 + " " + p.unit, 28, 406), h, 'text-anchor="middle"')}</g>`;
-    const content2 = `${sourceSheet(h, p.sourceLabel, p.sourceNote)}<path d="M258 307L310 238V516L258 410Z" fill="#cceaff" fill-opacity=".65" stroke="#89bffc" stroke-width="2"/>${paper(309, 139, 920, 437, { fold: 18, depth: 10 }, h)}${banner(337, 65, 440, p.title, tokens.blue, h)}${text(805, 101, p.month + " \xB7 " + p.periodLabel, 23, h)}${text(807, 130, p.subtitle, fit(p.subtitle, 19, 388), h)}<rect x="${x}" y="${y}" width="${width}" height="${head + 5 * rowH}" rx="13" fill="#fff" stroke="${tokens.ink}" stroke-width="3"/><path d="M${x + 13} ${y}H${x + width - 13}Q${x + width} ${y} ${x + width} ${y + 13}V${y + head}H${x}V${y + 13}Q${x} ${y} ${x + 13} ${y}Z" fill="#dceeff"/>${rows2}${header}${headLast}<g stroke="#7b97bf" stroke-width="1.3" fill="none">${grid}</g><rect x="${x}" y="${y}" width="${width}" height="${head + 5 * rowH}" rx="13" fill="none" stroke="${tokens.ink}" stroke-width="2.5"/>${countGroup("raw", p.rawCountLabel, p.rows.length)}${countGroup("final", p.finalCountLabel, count)}<rect x="855" y="595" width="345" height="62" rx="20" fill="#e9f5ff" stroke="#91bdeb" stroke-width="2.5"/>${text(1027, 636, p.sampleNote, fit(p.sampleNote, 29, 310), h, 'text-anchor="middle"')}<g data-ani-pop>${text(778, 694, p.footer, fit(p.footer, 21, 910), h, 'text-anchor="middle" fill="#55749b"')}</g>`;
+    const countGroup = (which, label3, n4) => `<g data-ani-${which}><rect x="380" y="595" width="442" height="62" rx="20" fill="#e6f4ff" stroke="#6eaff6" stroke-width="2.5"/>${text(601, 636, label3 + " " + n4 + " " + p.unit, fit(label3 + " " + n4 + " " + p.unit, 28, 406), h, 'text-anchor="middle"')}</g>`;
+    const content2 = `${sourceSheet(h, p.sourceLabel, p.sourceNote)}<path d="M258 307L310 238V516L258 410Z" fill="#cceaff" fill-opacity=".65" stroke="#89bffc" stroke-width="2"/>${paper(309, 139, 920, 437, { fold: 18, depth: 10 }, h)}${banner(337, 65, 440, p.title, tokens.blue, h)}${text(805, 101, p.month + " \xB7 " + p.periodLabel, 23, h)}${text(807, 130, p.subtitle, fit(p.subtitle, 19, 388), h)}<rect x="${x}" y="${y}" width="${width}" height="${head + 5 * rowH}" rx="13" fill="#fff" stroke="${tokens.ink}" stroke-width="3"/><path d="M${x + 13} ${y}H${x + width - 13}Q${x + width} ${y} ${x + width} ${y + 13}V${y + head}H${x}V${y + 13}Q${x} ${y} ${x + 13} ${y}Z" fill="#dceeff"/>${rows3}${header}${headLast}<g stroke="#7b97bf" stroke-width="1.3" fill="none">${grid}</g><rect x="${x}" y="${y}" width="${width}" height="${head + 5 * rowH}" rx="13" fill="none" stroke="${tokens.ink}" stroke-width="2.5"/>${countGroup("raw", p.rawCountLabel, p.rows.length)}${countGroup("final", p.finalCountLabel, count2)}<rect x="855" y="595" width="345" height="62" rx="20" fill="#e9f5ff" stroke="#91bdeb" stroke-width="2.5"/>${text(1027, 636, p.sampleNote, fit(p.sampleNote, 29, 310), h, 'text-anchor="middle"')}<g data-ani-pop>${text(778, 694, p.footer, fit(p.footer, 21, 910), h, 'text-anchor="middle" fill="#55749b"')}</g>`;
     return svgScene(content2, h);
   }
   var compareDefaults = {
@@ -293,10 +293,10 @@ var ComponentLibraryRuntime = (() => {
     const right = `<g data-ani-enter>${paper(694, 88, 505, 305, { fold: 18, depth: 10 }, h)}${banner(770, 48, 350, p.rightTitle, tokens.blue, h)}<rect x="${x}" y="${y}" width="${width}" height="${header + 5 * rowH}" rx="7" fill="#dceeff" stroke="${tokens.ink}" stroke-width="2"/>${rightRows}${hdr}<g fill="none" stroke="#7b97bf" stroke-width="1">${grid}</g><rect x="${x}" y="${y}" width="${width}" height="${header + 5 * rowH}" rx="7" fill="none" stroke="${tokens.ink}" stroke-width="2"/>${text(1180, 387, p.sampleNote, 14, h, 'text-anchor="end" fill="#527094"')}</g>`;
     const steps = `<g data-ani-enter data-ani-compare-steps>${banner(84, 419, 209, p.leftSteps[0], tokens.green, h)}${banner(320, 419, 209, p.leftSteps[1], tokens.orange, h)}</g><g data-ani-enter data-ani-compare-steps>${banner(751, 419, 209, p.rightSteps[0], tokens.green, h)}${banner(987, 419, 209, p.rightSteps[1], tokens.orange, h)}</g>`;
     const links = `<g data-ani-compare-links fill="none" stroke="${tokens.blue}" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path data-ani-flow-join d="M188.5 482V488Q188.5 495 195.5 495H306.5"/><path data-ani-flow-join d="M424.5 482V488Q424.5 495 417.5 495H306.5"/><path data-ani-flow-join d="M855.5 482V488Q855.5 495 862.5 495H973.5"/><path data-ani-flow-join d="M1091.5 482V488Q1091.5 495 1084.5 495H973.5"/><path data-ani-flow-trunk d="M306.5 495V500Q306.5 508 314.5 508H507Q515 508 515 516V526"/><path data-ani-flow-trunk d="M973.5 495V500Q973.5 508 965.5 508H773Q765 508 765 516V526"/></g>`;
-    const bridge = `<g data-ani-flow-bridge fill="none"><path d="M638 625V643" stroke="${tokens.ink}" stroke-width="10"/><path d="M638 625V643" stroke="${tokens.blue}" stroke-width="5"/></g>`;
+    const bridge2 = `<g data-ani-flow-bridge fill="none"><path d="M638 625V643" stroke="${tokens.ink}" stroke-width="10"/><path d="M638 625V643" stroke="${tokens.blue}" stroke-width="5"/></g>`;
     const result = `<g data-ani-flow-result><rect x="412" y="530" width="466" height="104" rx="21" fill="${tokens.shadow}"/><rect x="405" y="523" width="466" height="104" rx="21" fill="${tokens.blue}" stroke="${tokens.ink}" stroke-width="4"/><rect x="411" y="529" width="454" height="92" rx="16" fill="none" stroke="#83cbff" stroke-width="2"/><g data-text-panel="process-title" data-panel-bounds="405 523 466 51">${text(638, 567, p.title, fit(p.title, 40, 404), h, 'text-anchor="middle" style="fill:white"')}</g><rect x="420" y="574" width="435" height="38" rx="13" fill="#ecf9ff"/>${text(638, 601, p.subtitle, fit(p.subtitle, 25, 414), h, 'text-anchor="middle"')}${text(640, 514, p.relationLabel, 23, h, 'text-anchor="middle"')}</g>`;
     const footer2 = `<g data-ani-flow-footer>${banner(266, 641, 748, p.footer, tokens.green, h)}</g>`;
-    return svgScene(`${left}${right}<g data-ani-compare-flow>${links}${bridge}${result}${footer2}</g>${steps}`, h);
+    return svgScene(`${left}${right}<g data-ani-compare-flow>${links}${bridge2}${result}${footer2}</g>${steps}`, h);
   }
   var components = [
     { id: "ani-order-filter", name: "\u52A8\u753B\u98CE \xB7 \u6761\u4EF6\u7B5B\u9009\u8868\u683C", category: "\u52A8\u753B\u98CE", description: "\u7528\u4E94\u6761\u793A\u4F8B\u8BB0\u5F55\u5C55\u793A\u6761\u4EF6\u7B5B\u9009\uFF1B\u663E\u793A\u6807\u7B7E\u4E0E\u7B5B\u9009\u72B6\u6001\u5206\u522B\u914D\u7F6E\uFF0C\u539F\u59CB\u8BB0\u5F55\u4FDD\u7559\u3002", width: 1280, height: 720, defaultEffect: "ani-order-select", defaults: orderDefaults, reference: { basis: "\u7528\u6237 V8 \u7684 S07/S08 \u9759\u6001\u5206\u955C\u4E0E M04 \u4E09\u6001\u677F\uFF0C\u539F\u751F SVG \u53EF\u7F16\u8F91\u91CD\u5EFA\u3002", source: "reports/animation-style/reference-review-v8/REVIEW.md", level: "reference-reconstruction" }, render(p, h) {
@@ -309,20 +309,20 @@ var ComponentLibraryRuntime = (() => {
 
   // families/animation-style-atoms-controls.mjs
   var font = "font-family:'Microsoft YaHei','Segoe UI',sans-serif;font-weight:750";
-  var units2 = (v) => [...String(v ?? "")].reduce((n3, c) => n3 + (/[\x00-\x7f]/.test(c) ? 0.55 : 1), 0);
+  var units2 = (v) => [...String(v ?? "")].reduce((n4, c) => n4 + (/[\x00-\x7f]/.test(c) ? 0.55 : 1), 0);
   var num2 = (v, name, min, max) => {
-    const n3 = Number(v);
-    if (!Number.isFinite(n3) || n3 < min || n3 > max) throw Error(`${name} \u5FC5\u987B\u5728 ${min}\u2013${max} \u4E4B\u95F4\u3002`);
-    return n3;
+    const n4 = Number(v);
+    if (!Number.isFinite(n4) || n4 < min || n4 > max) throw Error(`${name} \u5FC5\u987B\u5728 ${min}\u2013${max} \u4E4B\u95F4\u3002`);
+    return n4;
   };
   var choice = (v, allowed, name) => {
     if (!allowed.includes(v)) throw Error(`${name} \u652F\u6301 ${allowed.join(" / ")}\u3002`);
     return v;
   };
   var copy = (v, name, max = 80) => {
-    const s = String(v ?? "");
-    if (units2(s) > max) throw Error(`${name} \u8FC7\u957F\uFF0C\u8BF7\u4F7F\u7528\u7B80\u77ED\u6587\u5B57\u3002`);
-    return s;
+    const s2 = String(v ?? "");
+    if (units2(s2) > max) throw Error(`${name} \u8FC7\u957F\uFF0C\u8BF7\u4F7F\u7528\u7B80\u77ED\u6587\u5B57\u3002`);
+    return s2;
   };
   var colors = { blue: tokens.blue, green: tokens.green, orange: tokens.orange, neutral: "#e1eaf3" };
   function geo(p, minW = 80, minH = 38, extraBottom = 12) {
@@ -331,30 +331,30 @@ var ComponentLibraryRuntime = (() => {
     return { x, y, w, h };
   }
   function text2(h, x, y, value, size, maxWidth, extra2 = "", min = 16) {
-    const s = copy(value, "\u6587\u5B57"), fs = Math.min(size, maxWidth / Math.max(1, units2(s)));
+    const s2 = copy(value, "\u6587\u5B57"), fs = Math.min(size, maxWidth / Math.max(1, units2(s2)));
     if (fs < min) throw Error("\u6587\u5B57\u5BBD\u5EA6\u4E0D\u8DB3\uFF0C\u8BF7\u52A0\u5BBD\u90E8\u4EF6\u6216\u7F29\u77ED\u6587\u5B57\u3002");
-    return `<text x="${x}" y="${y}" font-size="${fs}" fill="${tokens.ink}" ${extra2}>${h.esc(s)}</text>`;
+    return `<text x="${x}" y="${y}" font-size="${fs}" fill="${tokens.ink}" ${extra2}>${h.esc(s2)}</text>`;
   }
-  var group = (type, p, content2) => `<g data-atom="${type}" data-atom-state="${String(p.state || p.mode || "normal")}" data-motion="item" transform="translate(${p.x} ${p.y})" style="${font}" fill="${tokens.ink}">${content2}</g>`;
+  var group = (type2, p, content2) => `<g data-atom="${type2}" data-atom-state="${String(p.state || p.mode || "normal")}" data-motion="item" transform="translate(${p.x} ${p.y})" style="${font}" fill="${tokens.ink}">${content2}</g>`;
   var canvas = (content2, name, h) => `<section class="ani-controls-stage"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" role="img" aria-label="${h.esc(name)}" style="${font};background:transparent" fill="${tokens.ink}">${content2}</svg></section>`;
   function panel(w, h, fill = "#fff", r = 14, depth = 7) {
     return `<rect x="${depth}" y="${depth + 1}" width="${w}" height="${h}" rx="${r}" fill="${tokens.shadow}"/><rect width="${w}" height="${h}" rx="${r}" fill="${fill}" stroke="${tokens.ink}" stroke-width="3"/><path d="M7 ${h - r}Q7 ${h - 7} ${r} ${h - 7}H${w - r}Q${w - 7} ${h - 7} ${w - 7} ${h - r}" fill="none" stroke="#d5edff" stroke-width="3"/>`;
   }
-  function symbol(kind, cx, cy, size, color2) {
-    const s = size / 32;
+  function symbol(kind, cx, cy, size, color5) {
+    const s2 = size / 32;
     let d = "";
     if (kind === "check") d = '<path d="M5 16L13 24L27 7"/>';
     else if (kind === "plus") d = '<path d="M16 5V27M5 16H27"/>';
     else if (kind === "arrow") d = '<path d="M5 16H26M18 7L27 16L18 25"/>';
     else if (kind === "error") d = '<path d="M16 5V19M16 26h.01"/>';
-    else if (kind === "play") return `<g transform="translate(${cx - size / 2} ${cy - size / 2}) scale(${s})"><path d="M9 5L27 16L9 27Z" fill="${color2}"/></g>`;
-    else if (kind === "dot") return `<circle cx="${cx}" cy="${cy}" r="${size * 0.18}" fill="${color2}"/>`;
+    else if (kind === "play") return `<g transform="translate(${cx - size / 2} ${cy - size / 2}) scale(${s2})"><path d="M9 5L27 16L9 27Z" fill="${color5}"/></g>`;
+    else if (kind === "dot") return `<circle cx="${cx}" cy="${cy}" r="${size * 0.18}" fill="${color5}"/>`;
     else return "";
-    return `<g transform="translate(${cx - size / 2} ${cy - size / 2}) scale(${s})" fill="none" stroke="${color2}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">${d}</g>`;
+    return `<g transform="translate(${cx - size / 2} ${cy - size / 2}) scale(${s2})" fill="none" stroke="${color5}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">${d}</g>`;
   }
   function lock(cx, cy, size) {
-    const s = size / 30;
-    return `<g transform="translate(${cx - size / 2} ${cy - size / 2}) scale(${s})" fill="none" stroke="#527094" stroke-width="2.5" stroke-linecap="round"><rect x="6" y="13" width="18" height="14" rx="3"/><path d="M10 13V8a5 5 0 0 1 10 0v5"/><path d="M15 19v3"/></g>`;
+    const s2 = size / 30;
+    return `<g transform="translate(${cx - size / 2} ${cy - size / 2}) scale(${s2})" fill="none" stroke="#527094" stroke-width="2.5" stroke-linecap="round"><rect x="6" y="13" width="18" height="14" rx="3"/><path d="M10 13V8a5 5 0 0 1 10 0v5"/><path d="M15 19v3"/></g>`;
   }
   var windowDefaults = {
     "x": 175,
@@ -366,11 +366,11 @@ var ComponentLibraryRuntime = (() => {
     "chromeHeight": 52
   };
   function renderWindowAtom(props, h) {
-    const p = { ...windowDefaults, ...props }, g = geo(p, 260, 140), ch = num2(p.chromeHeight, "chromeHeight", 36, 84);
-    if (ch > g.h - 50) throw Error("\u7A97\u53E3\u6807\u9898\u680F\u8FC7\u9AD8\u3002");
-    const cr = Math.min(7, ch * 0.14), controls2 = p.showControls ? [0, 1, 2].map((i) => `<circle cx="${25 + i * (cr * 3.2)}" cy="${ch / 2}" r="${cr}" fill="#fff" stroke="${tokens.ink}" stroke-width="1.8"/>`).join("") : "";
-    const chrome = `<path d="M18 0H${g.w - 18}Q${g.w} 0 ${g.w} 18V${ch}H0V18Q0 0 18 0Z" fill="#66a8f1"/><path d="M1 ${ch}H${g.w - 1}" stroke="${tokens.ink}" stroke-width="2.2"/>${controls2}${text2(h, g.w - 22, ch * 0.66, p.title, Math.min(25, ch * 0.46), g.w - (p.showControls ? 140 : 44), 'text-anchor="end"')}`;
-    return group("window", g, `${panel(g.w, g.h)}${chrome}<rect width="${g.w}" height="${g.h}" rx="14" fill="none" stroke="${tokens.ink}" stroke-width="3"/>`);
+    const p = { ...windowDefaults, ...props }, g2 = geo(p, 260, 140), ch = num2(p.chromeHeight, "chromeHeight", 36, 84);
+    if (ch > g2.h - 50) throw Error("\u7A97\u53E3\u6807\u9898\u680F\u8FC7\u9AD8\u3002");
+    const cr = Math.min(7, ch * 0.14), controls3 = p.showControls ? [0, 1, 2].map((i) => `<circle cx="${25 + i * (cr * 3.2)}" cy="${ch / 2}" r="${cr}" fill="#fff" stroke="${tokens.ink}" stroke-width="1.8"/>`).join("") : "";
+    const chrome = `<path d="M18 0H${g2.w - 18}Q${g2.w} 0 ${g2.w} 18V${ch}H0V18Q0 0 18 0Z" fill="#66a8f1"/><path d="M1 ${ch}H${g2.w - 1}" stroke="${tokens.ink}" stroke-width="2.2"/>${controls3}${text2(h, g2.w - 22, ch * 0.66, p.title, Math.min(25, ch * 0.46), g2.w - (p.showControls ? 140 : 44), 'text-anchor="end"')}`;
+    return group("window", g2, `${panel(g2.w, g2.h)}${chrome}<rect width="${g2.w}" height="${g2.h}" rx="14" fill="none" stroke="${tokens.ink}" stroke-width="3"/>`);
   }
   var tabsDefaults = {
     "x": 220,
@@ -385,16 +385,16 @@ var ComponentLibraryRuntime = (() => {
     "activeTab": 0
   };
   function renderTabsAtom(props, h) {
-    const p = { ...tabsDefaults, ...props }, g = geo(p, 240, 56);
+    const p = { ...tabsDefaults, ...props }, g2 = geo(p, 240, 56);
     if (!Array.isArray(p.tabs) || p.tabs.length < 1 || p.tabs.length > 5) throw Error("\u6807\u7B7E\u680F\u652F\u6301 1\u20135 \u4E2A\u6807\u7B7E\u3002");
     const active = num2(p.activeTab, "activeTab", 0, p.tabs.length - 1);
     if (!Number.isInteger(active)) throw Error("activeTab \u5FC5\u987B\u4E3A\u6574\u6570\u3002");
-    const gap = 9, tabW = (g.w - 18 - gap * (p.tabs.length - 1)) / p.tabs.length;
+    const gap = 9, tabW = (g2.w - 18 - gap * (p.tabs.length - 1)) / p.tabs.length;
     const tabs2 = p.tabs.map((value, i) => {
-      const xx = 9 + i * (tabW + gap), yy = i === active ? 6 : 13, hh = g.h - yy - 5, fill = i === active ? "#fff" : "#dceeff";
-      return `<g data-atom-tab="${i}"><path d="M${xx} ${g.h - 5}V${yy + 12}Q${xx} ${yy} ${xx + 12} ${yy}H${xx + tabW - 12}Q${xx + tabW} ${yy} ${xx + tabW} ${yy + 12}V${g.h - 5}Z" fill="${fill}" stroke="${tokens.ink}" stroke-width="2"/>${text2(h, xx + tabW / 2, yy + hh * 0.62, value, Math.min(26, hh * 0.48), tabW - 26, 'text-anchor="middle"')}</g>`;
+      const xx = 9 + i * (tabW + gap), yy = i === active ? 6 : 13, hh = g2.h - yy - 5, fill = i === active ? "#fff" : "#dceeff";
+      return `<g data-atom-tab="${i}"><path d="M${xx} ${g2.h - 5}V${yy + 12}Q${xx} ${yy} ${xx + 12} ${yy}H${xx + tabW - 12}Q${xx + tabW} ${yy} ${xx + tabW} ${yy + 12}V${g2.h - 5}Z" fill="${fill}" stroke="${tokens.ink}" stroke-width="2"/>${text2(h, xx + tabW / 2, yy + hh * 0.62, value, Math.min(26, hh * 0.48), tabW - 26, 'text-anchor="middle"')}</g>`;
     }).join("");
-    return group("tabs", g, `<rect x="5" y="8" width="${g.w}" height="${g.h}" rx="12" fill="${tokens.shadow}"/><rect width="${g.w}" height="${g.h}" rx="12" fill="#94c6f8" stroke="${tokens.ink}" stroke-width="2.5"/>${tabs2}<path d="M1 ${g.h - 5}H${g.w - 1}" stroke="${tokens.ink}" stroke-width="2"/>`);
+    return group("tabs", g2, `<rect x="5" y="8" width="${g2.w}" height="${g2.h}" rx="12" fill="${tokens.shadow}"/><rect width="${g2.w}" height="${g2.h}" rx="12" fill="#94c6f8" stroke="${tokens.ink}" stroke-width="2.5"/>${tabs2}<path d="M1 ${g2.h - 5}H${g2.w - 1}" stroke="${tokens.ink}" stroke-width="2"/>`);
   }
   var addressDefaults = {
     "x": 230,
@@ -405,8 +405,8 @@ var ComponentLibraryRuntime = (() => {
     "showLock": true
   };
   function renderAddressAtom(props, h) {
-    const p = { ...addressDefaults, ...props }, g = geo(p, 220, 42), isLock = Boolean(p.showLock), left = isLock ? 60 : 24, fs = Math.min(26, g.h * 0.39);
-    return group("address", g, `${panel(g.w, g.h, "#edf7ff", Math.min(17, g.h * 0.27), 5)}${isLock ? lock(30, g.h / 2, Math.min(29, g.h * 0.47)) : ""}${text2(h, left, g.h / 2 + fs * 0.34, p.address, fs, g.w - left - 24, 'style="fill:#527094"')}`);
+    const p = { ...addressDefaults, ...props }, g2 = geo(p, 220, 42), isLock = Boolean(p.showLock), left = isLock ? 60 : 24, fs = Math.min(26, g2.h * 0.39);
+    return group("address", g2, `${panel(g2.w, g2.h, "#edf7ff", Math.min(17, g2.h * 0.27), 5)}${isLock ? lock(30, g2.h / 2, Math.min(29, g2.h * 0.47)) : ""}${text2(h, left, g2.h / 2 + fs * 0.34, p.address, fs, g2.w - left - 24, 'style="fill:#527094"')}`);
   }
   var buttonDefaults = {
     "x": 467,
@@ -419,14 +419,14 @@ var ComponentLibraryRuntime = (() => {
     "icon": "play"
   };
   function renderButtonAtom(props, h) {
-    const p = { ...buttonDefaults, ...props }, g = geo(p, 100, 42);
+    const p = { ...buttonDefaults, ...props }, g2 = geo(p, 100, 42);
     choice(p.state, ["normal", "pressed", "disabled"], "state");
     choice(p.accent, Object.keys(colors), "accent");
     choice(p.icon, ["none", "play", "plus", "check", "arrow"], "icon");
-    const disabled = p.state === "disabled", pressed = p.state === "pressed", fill = disabled ? "#dce5ef" : colors[p.accent], fg = disabled || p.accent === "orange" || p.accent === "neutral" ? tokens.ink : "#fff", offset = pressed ? 5 : 0, depth = pressed ? 2 : 8, r = Math.min(16, g.h * 0.2), hasIcon = p.icon !== "none", size = Math.min(34, g.h * 0.42), label2 = copy(p.label, "\u6309\u94AE\u6587\u5B57", 30), fs = Math.min(34, g.h * 0.42, (g.w - (hasIcon ? size + 55 : 34)) / Math.max(1, units2(label2)));
+    const disabled = p.state === "disabled", pressed = p.state === "pressed", fill = disabled ? "#dce5ef" : colors[p.accent], fg = disabled || p.accent === "orange" || p.accent === "neutral" ? tokens.ink : "#fff", offset = pressed ? 5 : 0, depth = pressed ? 2 : 8, r = Math.min(16, g2.h * 0.2), hasIcon = p.icon !== "none", size = Math.min(34, g2.h * 0.42), label3 = copy(p.label, "\u6309\u94AE\u6587\u5B57", 30), fs = Math.min(34, g2.h * 0.42, (g2.w - (hasIcon ? size + 55 : 34)) / Math.max(1, units2(label3)));
     if (fs < 16) throw Error("\u6309\u94AE\u6587\u5B57\u8FC7\u957F\u3002");
-    const textW = units2(label2) * fs, total = textW + (hasIcon ? size + 15 : 0), begin = (g.w - total) / 2;
-    return group("button", { ...g, state: p.state }, `<rect x="${depth}" y="${depth + offset}" width="${g.w}" height="${g.h}" rx="${r}" fill="${disabled ? "#ced9e5" : tokens.shadow}"/><g transform="translate(0 ${offset})"><rect width="${g.w}" height="${g.h}" rx="${r}" fill="${fill}" stroke="${tokens.ink}" stroke-width="3"/><rect x="6" y="6" width="${g.w - 12}" height="${g.h - 12}" rx="${Math.max(6, r - 4)}" fill="none" stroke="${disabled ? "#f4f8fb" : "#a5d9ff"}" stroke-width="2"/><path d="M17 12H${Math.min(g.w - 17, 76)}" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity="${disabled ? 0.45 : 0.65}"/>${hasIcon ? symbol(p.icon, begin + size / 2, g.h / 2, size, fg) : ""}${text2(h, begin + (hasIcon ? size + 15 : 0), g.h / 2 + fs * 0.34, label2, fs, textW + 1, `style="fill:${fg}"`)}</g>`);
+    const textW = units2(label3) * fs, total = textW + (hasIcon ? size + 15 : 0), begin = (g2.w - total) / 2;
+    return group("button", { ...g2, state: p.state }, `<rect x="${depth}" y="${depth + offset}" width="${g2.w}" height="${g2.h}" rx="${r}" fill="${disabled ? "#ced9e5" : tokens.shadow}"/><g transform="translate(0 ${offset})"><rect width="${g2.w}" height="${g2.h}" rx="${r}" fill="${fill}" stroke="${tokens.ink}" stroke-width="3"/><rect x="6" y="6" width="${g2.w - 12}" height="${g2.h - 12}" rx="${Math.max(6, r - 4)}" fill="none" stroke="${disabled ? "#f4f8fb" : "#a5d9ff"}" stroke-width="2"/><path d="M17 12H${Math.min(g2.w - 17, 76)}" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity="${disabled ? 0.45 : 0.65}"/>${hasIcon ? symbol(p.icon, begin + size / 2, g2.h / 2, size, fg) : ""}${text2(h, begin + (hasIcon ? size + 15 : 0), g2.h / 2 + fs * 0.34, label3, fs, textW + 1, `style="fill:${fg}"`)}</g>`);
   }
   var inputDefaults = {
     "x": 260,
@@ -442,11 +442,11 @@ var ComponentLibraryRuntime = (() => {
   function renderInputAtom(props, h) {
     const p = { ...inputDefaults, ...props };
     choice(p.state, ["empty", "input", "error"], "state");
-    const g = geo(p, 220, 50, p.state === "error" ? 53 : 12), error = p.state === "error", empty = p.state === "empty", label2 = empty ? p.placeholder : p.value, fs = Math.min(29, g.h * 0.37), right = error ? 58 : 28, fg = empty ? "#527094" : tokens.ink, stroke = error ? "#a85b08" : p.state === "input" ? tokens.blue : tokens.ink, s = copy(label2, "\u8F93\u5165\u6587\u5B57", 80);
-    const fitted = Math.min(fs, (g.w - 30 - right) / Math.max(1, units2(s)));
+    const g2 = geo(p, 220, 50, p.state === "error" ? 53 : 12), error = p.state === "error", empty2 = p.state === "empty", label3 = empty2 ? p.placeholder : p.value, fs = Math.min(29, g2.h * 0.37), right = error ? 58 : 28, fg = empty2 ? "#527094" : tokens.ink, stroke = error ? "#a85b08" : p.state === "input" ? tokens.blue : tokens.ink, s2 = copy(label3, "\u8F93\u5165\u6587\u5B57", 80);
+    const fitted = Math.min(fs, (g2.w - 30 - right) / Math.max(1, units2(s2)));
     if (fitted < 18) throw Error("\u8F93\u5165\u6587\u5B57\u592A\u957F\uFF0C\u8BF7\u589E\u52A0\u5BBD\u5EA6\u3002");
-    const lineEnd = Math.min(g.w - right, 25 + units2(s) * fitted + 5);
-    return group("input", { ...g, state: p.state }, `${panel(g.w, g.h, error ? "#fff8ed" : "#fff", 13, 6)}<rect width="${g.w}" height="${g.h}" rx="13" fill="none" stroke="${stroke}" stroke-width="${empty ? 2.6 : 3.4}"/>${text2(h, 25, g.h / 2 + fitted * 0.34, s, fitted, g.w - 30 - right, `style="fill:${fg}"`, 18)}${p.showCaret && !empty && !error ? `<path d="M${lineEnd} ${g.h * 0.26}V${g.h * 0.73}" stroke="${tokens.blue}" stroke-width="2.5" stroke-linecap="round"/>` : ""}${error ? `${symbol("error", g.w - 28, g.h / 2, 28, "#8b4709")}${text2(h, 6, g.h + 37, p.errorText, 21, g.w - 12, 'style="fill:#8b4709"')}` : ""}`);
+    const lineEnd = Math.min(g2.w - right, 25 + units2(s2) * fitted + 5);
+    return group("input", { ...g2, state: p.state }, `${panel(g2.w, g2.h, error ? "#fff8ed" : "#fff", 13, 6)}<rect width="${g2.w}" height="${g2.h}" rx="13" fill="none" stroke="${stroke}" stroke-width="${empty2 ? 2.6 : 3.4}"/>${text2(h, 25, g2.h / 2 + fitted * 0.34, s2, fitted, g2.w - 30 - right, `style="fill:${fg}"`, 18)}${p.showCaret && !empty2 && !error ? `<path d="M${lineEnd} ${g2.h * 0.26}V${g2.h * 0.73}" stroke="${tokens.blue}" stroke-width="2.5" stroke-linecap="round"/>` : ""}${error ? `${symbol("error", g2.w - 28, g2.h / 2, 28, "#8b4709")}${text2(h, 6, g2.h + 37, p.errorText, 21, g2.w - 12, 'style="fill:#8b4709"')}` : ""}`);
   }
   var statusDefaults = {
     "x": 495,
@@ -458,12 +458,12 @@ var ComponentLibraryRuntime = (() => {
     "showIcon": true
   };
   function renderStatusAtom(props, h) {
-    const p = { ...statusDefaults, ...props }, g = geo(p, 110, 44);
+    const p = { ...statusDefaults, ...props }, g2 = geo(p, 110, 44);
     choice(p.state, ["success", "pending", "error", "neutral", "info"], "state");
-    const look = { success: { fill: tokens.green, fg: "#fff", icon: "check" }, pending: { fill: tokens.orange, fg: tokens.ink, icon: "dot" }, error: { fill: "#ffe4c9", fg: tokens.ink, icon: "error" }, neutral: { fill: "#e1eaf3", fg: tokens.ink, icon: "dot" }, info: { fill: tokens.blue, fg: "#fff", icon: "dot" } }[p.state], label2 = copy(p.label, "\u72B6\u6001\u6587\u5B57", 22), size = Math.min(31, g.h * 0.42), fs = Math.min(30, g.h * 0.42, (g.w - (p.showIcon ? size + 44 : 26)) / Math.max(1, units2(label2)));
+    const look = { success: { fill: tokens.green, fg: "#fff", icon: "check" }, pending: { fill: tokens.orange, fg: tokens.ink, icon: "dot" }, error: { fill: "#ffe4c9", fg: tokens.ink, icon: "error" }, neutral: { fill: "#e1eaf3", fg: tokens.ink, icon: "dot" }, info: { fill: tokens.blue, fg: "#fff", icon: "dot" } }[p.state], label3 = copy(p.label, "\u72B6\u6001\u6587\u5B57", 22), size = Math.min(31, g2.h * 0.42), fs = Math.min(30, g2.h * 0.42, (g2.w - (p.showIcon ? size + 44 : 26)) / Math.max(1, units2(label3)));
     if (fs < 17) throw Error("\u72B6\u6001\u6807\u7B7E\u6587\u5B57\u8FC7\u957F\u3002");
-    const total = units2(label2) * fs + (p.showIcon ? size + 10 : 0), left = (g.w - total) / 2;
-    return group("status", { ...g, state: p.state }, `<rect x="5" y="7" width="${g.w}" height="${g.h}" rx="${g.h / 2}" fill="${tokens.shadow}"/><rect width="${g.w}" height="${g.h}" rx="${g.h / 2}" fill="${look.fill}" stroke="${tokens.ink}" stroke-width="2.6"/><path d="M${g.h * 0.4} 9H${Math.min(g.w - g.h * 0.4, g.h * 0.4 + 52)}" stroke="#fff" stroke-width="2.4" opacity=".5" stroke-linecap="round"/>${p.showIcon ? symbol(look.icon, left + size / 2, g.h / 2, size, look.fg) : ""}${text2(h, left + (p.showIcon ? size + 10 : 0), g.h / 2 + fs * 0.34, label2, fs, units2(label2) * fs + 1, `style="fill:${look.fg}"`)}`);
+    const total = units2(label3) * fs + (p.showIcon ? size + 10 : 0), left = (g2.w - total) / 2;
+    return group("status", { ...g2, state: p.state }, `<rect x="5" y="7" width="${g2.w}" height="${g2.h}" rx="${g2.h / 2}" fill="${tokens.shadow}"/><rect width="${g2.w}" height="${g2.h}" rx="${g2.h / 2}" fill="${look.fill}" stroke="${tokens.ink}" stroke-width="2.6"/><path d="M${g2.h * 0.4} 9H${Math.min(g2.w - g2.h * 0.4, g2.h * 0.4 + 52)}" stroke="#fff" stroke-width="2.4" opacity=".5" stroke-linecap="round"/>${p.showIcon ? symbol(look.icon, left + size / 2, g2.h / 2, size, look.fg) : ""}${text2(h, left + (p.showIcon ? size + 10 : 0), g2.h / 2 + fs * 0.34, label3, fs, units2(label3) * fs + 1, `style="fill:${look.fg}"`)}`);
   }
   var checkboxDefaults = {
     "x": 377,
@@ -474,15 +474,15 @@ var ComponentLibraryRuntime = (() => {
     "state": "checked"
   };
   function renderCheckboxAtom(props, h) {
-    const p = { ...checkboxDefaults, ...props }, g = geo(p, 60, 38);
+    const p = { ...checkboxDefaults, ...props }, g2 = geo(p, 60, 38);
     choice(p.state, ["unchecked", "checked", "error"], "state");
-    const side = Math.min(61, g.h - 8), yy = (g.h - side) / 2, checked = p.state === "checked", error = p.state === "error", fill = checked ? tokens.green : error ? "#fff1d9" : "#fff", r = Math.min(13, side * 0.19), label2 = copy(p.label, "\u52FE\u9009\u8BF4\u660E", 50), fontSize = Math.min(30, g.h * 0.43), textSpace = g.w - side - 29;
+    const side = Math.min(61, g2.h - 8), yy = (g2.h - side) / 2, checked = p.state === "checked", error = p.state === "error", fill = checked ? tokens.green : error ? "#fff1d9" : "#fff", r = Math.min(13, side * 0.19), label3 = copy(p.label, "\u52FE\u9009\u8BF4\u660E", 50), fontSize = Math.min(30, g2.h * 0.43), textSpace = g2.w - side - 29;
     let labelSvg = "";
-    if (label2) {
+    if (label3) {
       if (textSpace < 50) throw Error("\u52FE\u9009\u8BF4\u660E\u9700\u8981\u66F4\u5BBD\u7684\u90E8\u4EF6\u3002");
-      labelSvg = text2(h, side + 26, g.h / 2 + fontSize * 0.34, label2, fontSize, textSpace);
+      labelSvg = text2(h, side + 26, g2.h / 2 + fontSize * 0.34, label3, fontSize, textSpace);
     }
-    return group("checkbox", { ...g, state: p.state }, `<rect x="5" y="${yy + 6}" width="${side}" height="${side}" rx="${r}" fill="${tokens.shadow}"/><rect y="${yy}" width="${side}" height="${side}" rx="${r}" fill="${fill}" stroke="${error ? "#9c600e" : tokens.ink}" stroke-width="3"/>${checked ? symbol("check", side / 2, g.h / 2, side * 0.7, "#fff") : error ? symbol("error", side / 2, g.h / 2, side * 0.6, "#915109") : ""}${labelSvg}`);
+    return group("checkbox", { ...g2, state: p.state }, `<rect x="5" y="${yy + 6}" width="${side}" height="${side}" rx="${r}" fill="${tokens.shadow}"/><rect y="${yy}" width="${side}" height="${side}" rx="${r}" fill="${fill}" stroke="${error ? "#9c600e" : tokens.ink}" stroke-width="3"/>${checked ? symbol("check", side / 2, g2.h / 2, side * 0.7, "#fff") : error ? symbol("error", side / 2, g2.h / 2, side * 0.6, "#915109") : ""}${labelSvg}`);
   }
   var cursorDefaults = {
     "x": 535,
@@ -493,12 +493,12 @@ var ComponentLibraryRuntime = (() => {
     "accent": "blue"
   };
   function renderCursorAtom(props, h) {
-    const p = { ...cursorDefaults, ...props }, g = geo(p, 50, 70);
+    const p = { ...cursorDefaults, ...props }, g2 = geo(p, 50, 70);
     choice(p.mode, ["pointer", "click"], "mode");
     choice(p.accent, ["blue", "green", "orange"], "accent");
-    const scale = Math.min(g.w / 200, g.h / 240), dx = (g.w - 200 * scale) / 2, dy = (g.h - 240 * scale) / 2, shape = "M64 64L64 188L97 166L119 212L142 201L120 156L162 151Z";
+    const scale = Math.min(g2.w / 200, g2.h / 240), dx = (g2.w - 200 * scale) / 2, dy = (g2.h - 240 * scale) / 2, shape = "M64 64L64 188L97 166L119 212L142 201L120 156L162 151Z";
     const click = p.mode === "click" ? `<circle cx="64" cy="64" r="39" fill="none" stroke="${colors[p.accent]}" stroke-width="4" opacity=".55"/><path d="M64 9V23M9 64H23M24 24L34 34M97 25L107 15" fill="none" stroke="${colors[p.accent]}" stroke-width="6" stroke-linecap="round"/>` : "";
-    return group("cursor", { ...g, mode: p.mode }, `<g transform="translate(${dx} ${dy}) scale(${scale})">${click}<path d="${shape}" transform="translate(7 8)" fill="${tokens.shadow}"/><path d="${shape}" fill="#fff" stroke="${tokens.ink}" stroke-width="4.7" stroke-linejoin="round"/><path d="M71 80V173L96 154L120 199" fill="none" stroke="${colors[p.accent]}" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/></g>`);
+    return group("cursor", { ...g2, mode: p.mode }, `<g transform="translate(${dx} ${dy}) scale(${scale})">${click}<path d="${shape}" transform="translate(7 8)" fill="${tokens.shadow}"/><path d="${shape}" fill="#fff" stroke="${tokens.ink}" stroke-width="4.7" stroke-linejoin="round"/><path d="M71 80V173L96 154L120 199" fill="none" stroke="${colors[p.accent]}" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/></g>`);
   }
   var reference = { basis: "\u4ECE\u5DF2\u786E\u8BA4\u7684\u84DD\u767D\u63D2\u753B\u98CE\u62C6\u5206\u7684\u72EC\u7ACB\u754C\u9762\u63A7\u5236\u90E8\u4EF6\uFF1B\u4F7F\u7528\u539F\u751F SVG\uFF0C\u72B6\u6001\u901A\u8FC7 props \u660E\u786E\u6307\u5B9A\u3002", source: "references/animation-style/sources.json", level: "designed" };
   var make = (id, name, description, defaults3, render) => ({ id, name, category: "\u52A8\u753B\u98CE \xB7 \u57FA\u7840\u7EC4\u4EF6", description, width: 1280, height: 720, defaultEffect: "none", defaults: defaults3, reference: { ...reference }, render(p, h) {
@@ -517,21 +517,21 @@ var ComponentLibraryRuntime = (() => {
 
   // families/animation-style-atoms-data.mjs
   var tones = { blue: "#e9f4ff", green: "#e8f7f0", orange: "#fff3d9", gray: "#edf0f5" };
-  var units3 = (s) => [...String(s)].reduce((n3, c) => n3 + (/[\x00-\x7f]/.test(c) ? 0.56 : 1), 0);
+  var units3 = (s2) => [...String(s2)].reduce((n4, c) => n4 + (/[\x00-\x7f]/.test(c) ? 0.56 : 1), 0);
   var num3 = (v, min, max, name) => {
-    const n3 = Number(v);
-    if (!Number.isFinite(n3) || n3 < min || n3 > max) throw Error(`${name} \u9700\u8981\u5728 ${min}\u2013${max} \u4E4B\u95F4\u3002`);
-    return n3;
+    const n4 = Number(v);
+    if (!Number.isFinite(n4) || n4 < min || n4 > max) throw Error(`${name} \u9700\u8981\u5728 ${min}\u2013${max} \u4E4B\u95F4\u3002`);
+    return n4;
   };
   function geom(p, minW) {
     const x = num3(p.x, 0, 1200, "x"), y = num3(p.y, 0, 650, "y"), w = num3(p.objectWidth, minW, 1220, "objectWidth"), height = num3(p.objectHeight, 80, 480, "objectHeight");
     if (x + w + 10 > 1280 || y + height + 10 > 720) throw Error("\u5BF9\u8C61\u9700\u5728\u753B\u5E03\u8303\u56F4\u5185\u3002");
     return { x, y, w, height };
   }
-  function lines(text6, width, size) {
+  function lines(text7, width, size) {
     const out = [];
     let line3 = "";
-    for (const c of [...String(text6 ?? "")]) {
+    for (const c of [...String(text7 ?? "")]) {
       if (units3(line3 + c) * size > width) {
         out.push(line3);
         line3 = "";
@@ -544,9 +544,9 @@ var ComponentLibraryRuntime = (() => {
   }
   function content(cell, x, w, height, h) {
     const c = typeof cell === "object" && cell !== null ? cell : { text: cell }, value = String(c.text ?? ""), size = Math.min(30, height * 0.3), ls = lines(value, w - 34, size), tone3 = tones[c.tone] || "#fff";
-    return `<g data-atom-cell="true"><rect x="${x}" y="0" width="${w}" height="${height}" fill="${tone3}"/>${ls.map((s, i) => `<text x="${x + w / 2}" y="${height / 2 + (i - (ls.length - 1) / 2) * size * 1.25 + size * 0.34}" text-anchor="middle" font-size="${size}" fill="${tokens.ink}">${h.esc(s)}</text>`).join("")}</g>`;
+    return `<g data-atom-cell="true"><rect x="${x}" y="0" width="${w}" height="${height}" fill="${tone3}"/>${ls.map((s2, i) => `<text x="${x + w / 2}" y="${height / 2 + (i - (ls.length - 1) / 2) * size * 1.25 + size * 0.34}" text-anchor="middle" font-size="${size}" fill="${tokens.ink}">${h.esc(s2)}</text>`).join("")}</g>`;
   }
-  var outer = (type, g, body) => `<g data-atom="${type}" data-motion="item" transform="translate(${g.x} ${g.y})" font-family="Microsoft YaHei,Segoe UI,sans-serif" font-weight="750">${body}</g>`;
+  var outer = (type2, g2, body) => `<g data-atom="${type2}" data-motion="item" transform="translate(${g2.x} ${g2.y})" font-family="Microsoft YaHei,Segoe UI,sans-serif" font-weight="750">${body}</g>`;
   var preview = (body) => `<section class="ani-data-atom"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">${body}</svg></section>`;
   var cellDefaults = {
     "x": 445,
@@ -558,8 +558,8 @@ var ComponentLibraryRuntime = (() => {
     "selected": true
   };
   function renderCellAtom(props, h) {
-    const p = { ...cellDefaults, ...props }, g = geom(p, 180);
-    return outer("cell", g, `<rect x="6" y="7" width="${g.w}" height="${g.height}" rx="10" fill="${tokens.shadow}"/>${content(p, 0, g.w, g.height, h)}<rect width="${g.w}" height="${g.height}" rx="2" fill="none" stroke="${p.selected ? tokens.blue : tokens.ink}" stroke-width="${p.selected ? 4 : 2.5}"/>${p.selected ? `<rect x="${g.w - 5}" y="${g.height - 5}" width="10" height="10" rx="2" fill="${tokens.blue}"/>` : ""}`);
+    const p = { ...cellDefaults, ...props }, g2 = geom(p, 180);
+    return outer("cell", g2, `<rect x="6" y="7" width="${g2.w}" height="${g2.height}" rx="10" fill="${tokens.shadow}"/>${content(p, 0, g2.w, g2.height, h)}<rect width="${g2.w}" height="${g2.height}" rx="2" fill="none" stroke="${p.selected ? tokens.blue : tokens.ink}" stroke-width="${p.selected ? 4 : 2.5}"/>${p.selected ? `<rect x="${g2.w - 5}" y="${g2.height - 5}" width="10" height="10" rx="2" fill="${tokens.blue}"/>` : ""}`);
   }
   var tableRowDefaults = {
     "x": 180,
@@ -591,18 +591,18 @@ var ComponentLibraryRuntime = (() => {
     "selected": false
   };
   function renderTableRowAtom(props, h) {
-    const p = { ...tableRowDefaults, ...props }, g = geom(p, 360);
+    const p = { ...tableRowDefaults, ...props }, g2 = geom(p, 360);
     if (!Array.isArray(p.cells) || p.cells.length < 2 || p.cells.length > 6) throw Error("\u8868\u683C\u884C cells \u652F\u6301 2\u20136 \u4E2A\u5355\u5143\u683C\u3002");
-    const weights = p.cells.map((_, i) => num3(p.weights?.[i] ?? 1, 0.5, 6, "\u5217\u5BBD\u6BD4\u4F8B")), total = weights.reduce((a, b) => a + b, 0);
+    const weights = p.cells.map((_, i) => num3(p.weights?.[i] ?? 1, 0.5, 6, "\u5217\u5BBD\u6BD4\u4F8B")), total = weights.reduce((a2, b2) => a2 + b2, 0);
     let x = 0;
     const cells = p.cells.map((c, i) => {
-      const w = g.w * weights[i] / total;
+      const w = g2.w * weights[i] / total;
       if (w < 82) throw Error("\u5355\u5143\u683C\u8FC7\u7A84\uFF0C\u8BF7\u589E\u52A0\u6574\u884C\u5BBD\u5EA6\u3002");
-      const markup = content(c, x, w, g.height, h) + (i ? `<path d="M${x} 0V${g.height}" stroke="#8ba7ce" stroke-width="1.5"/>` : "");
+      const markup = content(c, x, w, g2.height, h) + (i ? `<path d="M${x} 0V${g2.height}" stroke="#8ba7ce" stroke-width="1.5"/>` : "");
       x += w;
       return markup;
     }).join("");
-    return outer("table-row", g, `<rect x="6" y="7" width="${g.w}" height="${g.height}" rx="9" fill="${tokens.shadow}"/>${cells}<rect width="${g.w}" height="${g.height}" fill="none" stroke="${p.selected ? tokens.blue : tokens.ink}" stroke-width="${p.selected ? 4 : 2.5}"/>`);
+    return outer("table-row", g2, `<rect x="6" y="7" width="${g2.w}" height="${g2.height}" rx="9" fill="${tokens.shadow}"/>${cells}<rect width="${g2.w}" height="${g2.height}" fill="none" stroke="${p.selected ? tokens.blue : tokens.ink}" stroke-width="${p.selected ? 4 : 2.5}"/>`);
   }
   var common = { category: "\u52A8\u753B\u98CE \xB7 \u57FA\u7840\u7EC4\u4EF6", width: 1280, height: 720, defaultEffect: "none", reference: { level: "designed", basis: "\u6CBF\u7528\u7528\u6237\u52A8\u753B\u98CE\u53C2\u8003\u7684\u84DD\u767D\u7EB8\u9762\u3001\u6DF1\u84DD\u8F6E\u5ED3\u4E0E\u7EFF\u6A59\u72B6\u6001\u8272\uFF0C\u8FDB\u4E00\u6B65\u62C6\u51FA\u53EF\u62FC\u63A5\u6570\u636E\u90E8\u4EF6\u3002", source: "references/animation-style/sources.json" } };
   var components3 = [
@@ -614,11 +614,11 @@ var ComponentLibraryRuntime = (() => {
   var font2 = "font-family:'Microsoft YaHei',Arial,sans-serif;font-weight:750";
   var tones2 = { blue: tokens.blue, green: tokens.green, orange: tokens.orange, ink: tokens.ink };
   var states = ["normal", "active", "complete", "warning"];
-  var units4 = (v) => Array.from(String(v ?? "")).reduce((n3, c) => n3 + (/[\u0000-\u00ff]/.test(c) ? 0.55 : 1), 0);
+  var units4 = (v) => Array.from(String(v ?? "")).reduce((n4, c) => n4 + (/[\u0000-\u00ff]/.test(c) ? 0.55 : 1), 0);
   function number(v, name, min, max) {
-    const n3 = Number(v);
-    if (!Number.isFinite(n3) || n3 < min || n3 > max) throw new Error(`${name} must be ${min}\u2013${max}`);
-    return n3;
+    const n4 = Number(v);
+    if (!Number.isFinite(n4) || n4 < min || n4 > max) throw new Error(`${name} must be ${min}\u2013${max}`);
+    return n4;
   }
   function choice2(v, name, values) {
     if (!values.includes(v)) throw new Error(`${name} must be ${values.join(", ")}`);
@@ -674,8 +674,8 @@ var ComponentLibraryRuntime = (() => {
   function pathFace(d, fill, stroke = tokens.ink) {
     return `<path d="${d}" transform="translate(8 10)" fill="${tokens.shadow}"/><path d="${d}" fill="${fill}" stroke="${stroke}" stroke-width="3.5" stroke-linejoin="round"/>`;
   }
-  function preview2(group4, label2, h) {
-    return `<section class="ani-atom-scene"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" role="img" aria-label="${h.esc(label2)}" style="${font2};fill:${tokens.ink};background:transparent">${group4}</svg></section>`;
+  function preview2(group4, label3, h) {
+    return `<section class="ani-atom-scene"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" role="img" aria-label="${h.esc(label3)}" style="${font2};fill:${tokens.ink};background:transparent">${group4}</svg></section>`;
   }
   var nodeDefaults = {
     "x": 420,
@@ -691,7 +691,7 @@ var ComponentLibraryRuntime = (() => {
   function renderNodeAtom(props, h) {
     const p = { ...nodeDefaults, ...props }, { x, y, w, height } = geometry(p, 190, 108), colors3 = palette(p);
     choice2(p.shape, "shape", ["step", "decision", "terminal"]);
-    const label2 = copy2(p.label, "label", 32), caption = copy2(p.caption, "caption", 48), diamond = p.shape === "decision", contentWidth = w * (diamond ? 0.57 : 0.82), labelSize = fit2(label2, Math.min(38, height * 0.23), contentWidth, 19), captionSize = caption ? fit2(caption, Math.min(22, height * 0.13), contentWidth, 17) : 0;
+    const label3 = copy2(p.label, "label", 32), caption = copy2(p.caption, "caption", 48), diamond = p.shape === "decision", contentWidth = w * (diamond ? 0.57 : 0.82), labelSize = fit2(label3, Math.min(38, height * 0.23), contentWidth, 19), captionSize = caption ? fit2(caption, Math.min(22, height * 0.13), contentWidth, 17) : 0;
     if (diamond && height < 150 && caption) throw new Error("A decision with a caption requires objectHeight of at least 150");
     let d;
     if (diamond) d = `M${w / 2} 0L${w} ${height / 2}L${w / 2} ${height}L0 ${height / 2}Z`;
@@ -701,7 +701,7 @@ var ComponentLibraryRuntime = (() => {
     }
     const mainY = height / 2 + (caption ? -4 : labelSize * 0.34), subY = mainY + captionSize * 1.65;
     const gleam = diamond ? `M${w * 0.23} ${height * 0.37}L${w * 0.5} 9L${w * 0.77} ${height * 0.37}` : `M22 9H${Math.min(w - 26, 156)}`;
-    return `<g data-atom="node" data-node-shape="${p.shape}" data-state="${p.state}" transform="translate(${x} ${y})" style="${font2}" data-text-panel="node" data-panel-bounds="${(w - contentWidth) / 2} ${height * 0.25} ${contentWidth} ${height * 0.52}">${pathFace(d, colors3.wash, p.state === "normal" ? tokens.ink : colors3.color)}<path d="${gleam}" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" opacity=".9"/>${txt(w / 2, mainY, label2, labelSize, h, 'text-anchor="middle"')}${caption ? txt(w / 2, subY, caption, captionSize, h, 'text-anchor="middle" fill="#4e6d91"') : ""}</g>`;
+    return `<g data-atom="node" data-node-shape="${p.shape}" data-state="${p.state}" transform="translate(${x} ${y})" style="${font2}" data-text-panel="node" data-panel-bounds="${(w - contentWidth) / 2} ${height * 0.25} ${contentWidth} ${height * 0.52}">${pathFace(d, colors3.wash, p.state === "normal" ? tokens.ink : colors3.color)}<path d="${gleam}" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" opacity=".9"/>${txt(w / 2, mainY, label3, labelSize, h, 'text-anchor="middle"')}${caption ? txt(w / 2, subY, caption, captionSize, h, 'text-anchor="middle" fill="#4e6d91"') : ""}</g>`;
   }
   var calloutDefaults = {
     "x": 375,
@@ -750,7 +750,7 @@ var ComponentLibraryRuntime = (() => {
   function renderHighlightAtom(props, h) {
     const p = { ...highlightDefaults, ...props }, { x, y, w, height } = geometry(p, 90, 54), colors3 = palette(p);
     choice2(p.shape, "shape", ["rectangle", "circle", "underline"]);
-    const stroke = number(p.lineWidth, "lineWidth", 2, 12), fillOpacity = number(p.fillOpacity, "fillOpacity", 0, 0.25), label2 = copy2(p.label, "label", 36), dash = p.dashed ? 'stroke-dasharray="15 10"' : "", inset = stroke / 2 + 2;
+    const stroke = number(p.lineWidth, "lineWidth", 2, 12), fillOpacity = number(p.fillOpacity, "fillOpacity", 0, 0.25), label3 = copy2(p.label, "label", 36), dash = p.dashed ? 'stroke-dasharray="15 10"' : "", inset = stroke / 2 + 2;
     let art, labelX = w / 2, labelY = height / 2 + 9, textWidth = w - 44;
     if (p.shape === "circle") {
       const radius = Math.min(w, height) / 2 - inset;
@@ -761,8 +761,8 @@ var ComponentLibraryRuntime = (() => {
       art = `<path d="M${inset} ${yy + 5}Q${w / 2} ${yy - 6} ${w - inset} ${yy + 2}" fill="none" stroke="${tokens.shadow}" stroke-width="${stroke + 3}" stroke-linecap="round"/><path data-atom-outline d="M${inset} ${yy}Q${w / 2} ${yy - 11} ${w - inset} ${yy - 3}" fill="none" stroke="${colors3.color}" stroke-width="${stroke}" stroke-linecap="round" ${dash}/>`;
       labelY = height - 34;
     } else art = `<rect x="${inset + 4}" y="${inset + 5}" width="${w - 2 * inset}" height="${height - 2 * inset}" rx="16" fill="none" stroke="${tokens.shadow}" stroke-width="${stroke + 2}"/><rect data-atom-outline x="${inset}" y="${inset}" width="${w - 2 * inset}" height="${height - 2 * inset}" rx="16" fill="${colors3.color}" fill-opacity="${fillOpacity}" stroke="${colors3.color}" stroke-width="${stroke}" ${dash}/>`;
-    const size = label2 ? fit2(label2, Math.min(31, height * 0.25), textWidth, 17) : 0;
-    return `<g data-atom="highlight" data-highlight-shape="${p.shape}" data-state="${p.state}" transform="translate(${x} ${y})" style="${font2}">${art}${label2 ? txt(labelX, labelY, label2, size, h, 'text-anchor="middle"') : ""}</g>`;
+    const size = label3 ? fit2(label3, Math.min(31, height * 0.25), textWidth, 17) : 0;
+    return `<g data-atom="highlight" data-highlight-shape="${p.shape}" data-state="${p.state}" transform="translate(${x} ${y})" style="${font2}">${art}${label3 ? txt(labelX, labelY, label3, size, h, 'text-anchor="middle"') : ""}</g>`;
   }
   var progressDefaults = {
     "x": 235,
@@ -785,14 +785,14 @@ var ComponentLibraryRuntime = (() => {
     const p = { ...progressDefaults, ...props }, { x, y, w, height } = geometry(p, 360, 166), colors3 = palette(p), value = number(p.value, "value", 0, 100), title = copy2(p.title, "title", 42);
     if (!Array.isArray(p.steps) || p.steps.length < 2 || p.steps.length > 6) throw new Error("Progress steps require 2\u20136 labels");
     if (p.state === "complete" && value !== 100) throw new Error("Complete progress requires value 100");
-    const labels = p.steps.map((v) => copy2(v, "step label", 14)), titleWidth = w - (p.showValue ? 115 : 20), titleSize = title ? fit2(title, 29, titleWidth, 19) : 0, trackY = 57, trackHeight = 27, trackWidth = w - 6, fillWidth = (trackWidth - 3.4) * value / 100, nodeY = 120, labelY = 155, cellW = (w - 16) / (labels.length - 1), color2 = value === 100 ? tokens.green : colors3.color;
+    const labels = p.steps.map((v) => copy2(v, "step label", 14)), titleWidth = w - (p.showValue ? 115 : 20), titleSize = title ? fit2(title, 29, titleWidth, 19) : 0, trackY = 57, trackHeight = 27, trackWidth = w - 6, fillWidth = (trackWidth - 3.4) * value / 100, nodeY = 120, labelY = 155, cellW = (w - 16) / (labels.length - 1), color5 = value === 100 ? tokens.green : colors3.color;
     const activeIndex = Math.min(labels.length - 1, Math.max(0, Math.ceil(value / 100 * (labels.length - 1))));
-    const steps = labels.map((label2, i) => {
-      const cx = 8 + i * cellW, done = value >= i / (labels.length - 1) * 100, active = i === activeIndex && value < 100, fg = done ? color2 : active ? colors3.color : "#8ca6c5", labelWidth = i === 0 || i === labels.length - 1 ? cellW * 0.78 : cellW * 0.86, labelSize = fit2(label2, 22, labelWidth, 17), anchor = i === 0 ? "start" : i === labels.length - 1 ? "end" : "middle";
-      return `<g data-atom-step="${i}" data-step-state="${done ? "complete" : active ? "active" : "pending"}"><circle cx="${cx}" cy="${nodeY}" r="8" fill="${done ? color2 : "white"}" stroke="${fg}" stroke-width="2.5"/>${active ? `<circle cx="${cx}" cy="${nodeY}" r="3.5" fill="${fg}"/>` : ""}${txt(cx, labelY, label2, labelSize, h, `text-anchor="${anchor}" fill="${done || active ? tokens.ink : "#6e87a5"}"`)}</g>`;
+    const steps = labels.map((label3, i) => {
+      const cx = 8 + i * cellW, done = value >= i / (labels.length - 1) * 100, active = i === activeIndex && value < 100, fg = done ? color5 : active ? colors3.color : "#8ca6c5", labelWidth = i === 0 || i === labels.length - 1 ? cellW * 0.78 : cellW * 0.86, labelSize = fit2(label3, 22, labelWidth, 17), anchor = i === 0 ? "start" : i === labels.length - 1 ? "end" : "middle";
+      return `<g data-atom-step="${i}" data-step-state="${done ? "complete" : active ? "active" : "pending"}"><circle cx="${cx}" cy="${nodeY}" r="8" fill="${done ? color5 : "white"}" stroke="${fg}" stroke-width="2.5"/>${active ? `<circle cx="${cx}" cy="${nodeY}" r="3.5" fill="${fg}"/>` : ""}${txt(cx, labelY, label3, labelSize, h, `text-anchor="${anchor}" fill="${done || active ? tokens.ink : "#6e87a5"}"`)}</g>`;
     }).join("");
     if (labelY + 10 > height) throw new Error("Progress objectHeight must leave room for step labels");
-    return `<g data-atom="progress" data-state="${p.state}" data-value="${value}" transform="translate(${x} ${y})" style="${font2}" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${value}" aria-label="${h.esc(title || "\u8FDB\u5EA6")}">${title ? txt(0, 31, title, titleSize, h) : ""}${p.showValue ? txt(w, 32, value + "%", 32, h, 'text-anchor="end"') : ""}<rect x="4" y="${trackY + 6}" width="${trackWidth}" height="${trackHeight}" rx="13.5" fill="${tokens.shadow}"/><rect x="0" y="${trackY}" width="${trackWidth}" height="${trackHeight}" rx="13.5" fill="#edf5ff" stroke="${tokens.ink}" stroke-width="2.7"/>${value > 0 ? `<rect data-atom-progress-fill x="1.7" y="${trackY + 1.7}" width="${fillWidth}" height="${trackHeight - 3.4}" rx="${Math.min(11.8, Math.max(0, fillWidth / 2))}" fill="${color2}"/>` : ""}<path d="M8 ${nodeY}H${w - 8}" stroke="#b9d3e9" stroke-width="3"/>${steps}</g>`;
+    return `<g data-atom="progress" data-state="${p.state}" data-value="${value}" transform="translate(${x} ${y})" style="${font2}" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${value}" aria-label="${h.esc(title || "\u8FDB\u5EA6")}">${title ? txt(0, 31, title, titleSize, h) : ""}${p.showValue ? txt(w, 32, value + "%", 32, h, 'text-anchor="end"') : ""}<rect x="4" y="${trackY + 6}" width="${trackWidth}" height="${trackHeight}" rx="13.5" fill="${tokens.shadow}"/><rect x="0" y="${trackY}" width="${trackWidth}" height="${trackHeight}" rx="13.5" fill="#edf5ff" stroke="${tokens.ink}" stroke-width="2.7"/>${value > 0 ? `<rect data-atom-progress-fill x="1.7" y="${trackY + 1.7}" width="${fillWidth}" height="${trackHeight - 3.4}" rx="${Math.min(11.8, Math.max(0, fillWidth / 2))}" fill="${color5}"/>` : ""}<path d="M8 ${nodeY}H${w - 8}" stroke="#b9d3e9" stroke-width="3"/>${steps}</g>`;
   }
   var symbolDefaults = {
     "x": 487,
@@ -809,14 +809,14 @@ var ComponentLibraryRuntime = (() => {
   function renderSymbolAtom(props, h) {
     const p = { ...symbolDefaults, ...props }, { x, y, w, height } = geometry(p, 100, 110), colors3 = palette(p);
     choice2(p.kind, "kind", symbolKinds);
-    const label2 = copy2(p.label, "label", 24), rotation = number(p.rotation, "rotation", -180, 180), labelSpace = label2 ? 57 : 14, availableHeight = height - labelSpace - 20, diagonal = Math.abs(Math.cos(rotation * Math.PI / 180)) + Math.abs(Math.sin(rotation * Math.PI / 180)), size = Math.min(w - 35, availableHeight) / Math.max(1, diagonal), cx = w / 2, cy = availableHeight / 2 + 7, sx = cx - size / 2, sy = cy - size / 2;
+    const label3 = copy2(p.label, "label", 24), rotation = number(p.rotation, "rotation", -180, 180), labelSpace = label3 ? 57 : 14, availableHeight = height - labelSpace - 20, diagonal = Math.abs(Math.cos(rotation * Math.PI / 180)) + Math.abs(Math.sin(rotation * Math.PI / 180)), size = Math.min(w - 35, availableHeight) / Math.max(1, diagonal), cx = w / 2, cy = availableHeight / 2 + 7, sx = cx - size / 2, sy = cy - size / 2;
     let art;
     if (p.kind === "magnifier") art = magnifier(sx, sy, size, h);
     else if (p.kind === "gear") art = gear(sx, sy, size, h);
     else if (p.kind === "pencil") art = `<g transform="translate(${sx} ${sy}) scale(${size / 100})"><path d="M14 87L25 59L73 10Q78 5 84 10L92 18Q97 23 92 29L44 77Z" fill="${tokens.blue}" stroke="${tokens.ink}" stroke-width="3"/><path d="M73 10L92 29L83 38L64 19Z" fill="${tokens.orange}" stroke="${tokens.ink}" stroke-width="2.5"/><path d="M14 87L25 59L44 77Z" fill="#fff1d5" stroke="${tokens.ink}" stroke-width="3"/><path d="M14 87L20 72L29 81Z" fill="${tokens.ink}"/><path d="M35 59L70 23" stroke="#86caff" stroke-width="5" stroke-linecap="round"/></g>`;
     else art = icon(p.kind, sx, sy, size, h).replace(/<ellipse\b[^>]*\/>/, "");
     const state3 = p.state === "normal" ? "" : `<circle cx="${w - 25}" cy="24" r="13" fill="${colors3.color}" stroke="${tokens.ink}" stroke-width="2"/>${p.state === "complete" ? `<path d="M${w - 32} 24l5 5 9-10" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>` : p.state === "warning" ? `${txt(w - 25, 30, "!", 19, h, 'text-anchor="middle"')}` : ""}`;
-    return `<g data-atom="symbol" data-symbol-kind="${p.kind}" data-state="${p.state}" transform="translate(${x} ${y})" style="${font2}"><ellipse cx="${cx}" cy="${cy + size * 0.47 + 8}" rx="${size * 0.45}" ry="${Math.max(5, size * 0.055)}" fill="#dbeeff"/><g transform="rotate(${rotation} ${cx} ${cy})">${art}</g>${state3}${label2 ? txt(w / 2, height - 14, label2, fit2(label2, 30, w - 22, 18), h, 'text-anchor="middle"') : ""}</g>`;
+    return `<g data-atom="symbol" data-symbol-kind="${p.kind}" data-state="${p.state}" transform="translate(${x} ${y})" style="${font2}"><ellipse cx="${cx}" cy="${cy + size * 0.47 + 8}" rx="${size * 0.45}" ry="${Math.max(5, size * 0.055)}" fill="#dbeeff"/><g transform="rotate(${rotation} ${cx} ${cy})">${art}</g>${state3}${label3 ? txt(w / 2, height - 14, label3, fit2(label3, 30, w - 22, 18), h, 'text-anchor="middle"') : ""}</g>`;
   }
   var reference2 = { basis: "\u4F9D\u636E\u5DF2\u786E\u8BA4\u7684\u84DD\u8272\u63D2\u753B\u7EC4\u4EF6\u8BED\u6CD5\u6269\u5C55\u7684\u72EC\u7ACB\u56FE\u89E3\u90E8\u4EF6\uFF1B\u590D\u7528\u85CF\u84DD\u8F6E\u5ED3\u3001\u6D45\u84DD\u539A\u5EA6\u4E0E\u7EFF\u6A59\u5F3A\u8C03\uFF0C\u652F\u6301\u81EA\u7531\u7EC4\u5408\u3002", source: "reports/animation-style/reference-review-v8/REVIEW.md", level: "designed" };
   var make2 = (id, name, description, defaults3, render) => ({ id, name, category: "\u52A8\u753B\u98CE \xB7 \u57FA\u7840\u7EC4\u4EF6", description, width: 1280, height: 720, defaultEffect: "none", defaults: defaults3, reference: { ...reference2 }, render(props, h) {
@@ -831,18 +831,18 @@ var ComponentLibraryRuntime = (() => {
   ];
 
   // families/animation-style-atoms-paper.mjs
-  var scope = (h, id) => ({ ...h, uid: (s) => h.uid(id + "-" + s) });
+  var scope = (h, id) => ({ ...h, uid: (s2) => h.uid(id + "-" + s2) });
   var finite = (value, fallback, min, max) => {
-    const n3 = Number(value);
-    return Math.min(max, Math.max(min, Number.isFinite(n3) ? n3 : fallback));
+    const n4 = Number(value);
+    return Math.min(max, Math.max(min, Number.isFinite(n4) ? n4 : fallback));
   };
   var units5 = (v) => [...String(v ?? "")].reduce((sum, c) => sum + (/[\x00-\x7f]/.test(c) ? 0.55 : 1), 0);
   function label(h, x, y, value, size, width, extra2 = "") {
-    const s = String(value ?? "");
-    if (units5(s) > 60) throw Error("\u57FA\u7840\u7EC4\u4EF6\u6807\u7B7E\u8FC7\u957F\uFF0C\u8BF7\u4F7F\u7528\u77ED\u8BED\u3002");
-    const font5 = Math.min(size, width / Math.max(1, units5(s)));
+    const s2 = String(value ?? "");
+    if (units5(s2) > 60) throw Error("\u57FA\u7840\u7EC4\u4EF6\u6807\u7B7E\u8FC7\u957F\uFF0C\u8BF7\u4F7F\u7528\u77ED\u8BED\u3002");
+    const font5 = Math.min(size, width / Math.max(1, units5(s2)));
     if (font5 < Math.min(size, 16)) throw Error("\u6807\u7B7E\u653E\u4E0D\u4E0B\uFF0C\u8BF7\u7F29\u77ED\u5185\u5BB9\uFF1B\u6587\u5B57\u4E0D\u4F1A\u7EE7\u7EED\u7F29\u5C0F\u6216\u8D8A\u8FC7\u90E8\u4EF6\u8FB9\u754C\u3002");
-    return `<text x="${x}" y="${y}" font-size="${font5}" fill="${tokens.ink}" ${extra2}>${h.esc(s)}</text>`;
+    return `<text x="${x}" y="${y}" font-size="${font5}" fill="${tokens.ink}" ${extra2}>${h.esc(s2)}</text>`;
   }
   var color = (v) => ["blue", "green", "orange", "purple"].includes(v) ? tokens[v] : tokens.blue;
   function position(p, w, h) {
@@ -850,7 +850,7 @@ var ComponentLibraryRuntime = (() => {
     const x = finite(p.x, 0, -1280, 1280) + (boxW - w * scale) / 2, y = finite(p.y, 0, -720, 720) + (boxH - h * scale) / 2;
     return `translate(${x} ${y}) scale(${scale})`;
   }
-  var group2 = (type, p, w, h, content2) => `<g data-atom="${type}" data-fit="contain" data-motion="item" transform="${position(p, w, h)}" font-family="Microsoft YaHei,Segoe UI,sans-serif" font-weight="750">${content2}</g>`;
+  var group2 = (type2, p, w, h, content2) => `<g data-atom="${type2}" data-fit="contain" data-motion="item" transform="${position(p, w, h)}" font-family="Microsoft YaHei,Segoe UI,sans-serif" font-weight="750">${content2}</g>`;
   var canvas2 = (content2) => `<section class="ani-atom-stage" style="width:100%;height:100%;background:transparent"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" style="font-family:'Microsoft YaHei','Segoe UI',sans-serif;font-weight:750" fill="${tokens.ink}">${content2}</svg></section>`;
   var fileDefaults = {
     "x": 465,
@@ -862,10 +862,10 @@ var ComponentLibraryRuntime = (() => {
     "fileType": "image",
     "accent": "blue"
   };
-  function fileSymbol(type, c) {
-    if (type === "image") return `<rect x="82" y="91" width="150" height="111" rx="13" fill="${c}" stroke="${tokens.ink}" stroke-width="3"/><circle cx="120" cy="124" r="12" fill="#e9f8ff"/><path d="M93 188L132 146L156 168L180 135L219 188Z" fill="#e9f8ff"/>`;
-    if (type === "table") return `<rect x="79" y="86" width="156" height="122" rx="10" fill="#f0fbf7" stroke="${tokens.ink}" stroke-width="3"/><path d="M81 118H233M81 149H233M81 178H233M128 87V207M184 87V207" fill="none" stroke="${c}" stroke-width="3"/><path d="M89 87H225Q234 87 234 97V117H80V97Q80 87 89 87Z" fill="${c}"/>`;
-    if (type === "video") return `<rect x="80" y="91" width="156" height="111" rx="13" fill="${c}" stroke="${tokens.ink}" stroke-width="3"/><path d="M138 115L186 147L138 179Z" fill="white"/>`;
+  function fileSymbol(type2, c) {
+    if (type2 === "image") return `<rect x="82" y="91" width="150" height="111" rx="13" fill="${c}" stroke="${tokens.ink}" stroke-width="3"/><circle cx="120" cy="124" r="12" fill="#e9f8ff"/><path d="M93 188L132 146L156 168L180 135L219 188Z" fill="#e9f8ff"/>`;
+    if (type2 === "table") return `<rect x="79" y="86" width="156" height="122" rx="10" fill="#f0fbf7" stroke="${tokens.ink}" stroke-width="3"/><path d="M81 118H233M81 149H233M81 178H233M128 87V207M184 87V207" fill="none" stroke="${c}" stroke-width="3"/><path d="M89 87H225Q234 87 234 97V117H80V97Q80 87 89 87Z" fill="${c}"/>`;
+    if (type2 === "video") return `<rect x="80" y="91" width="156" height="111" rx="13" fill="${c}" stroke="${tokens.ink}" stroke-width="3"/><path d="M138 115L186 147L138 179Z" fill="white"/>`;
     return `<rect x="90" y="83" width="138" height="131" rx="9" fill="#edf7ff" stroke="${tokens.ink}" stroke-width="3"/><path d="M111 111H205M111 135H205M111 159H205M111 184H179" fill="none" stroke="${c}" stroke-width="7" stroke-linecap="round"/>`;
   }
   function renderFileAtom(props, h) {
@@ -936,11 +936,11 @@ var ComponentLibraryRuntime = (() => {
     if (!Array.isArray(p.rows) || p.rows.length < 1 || p.rows.length > 6) throw Error("\u6587\u6863 rows \u652F\u6301 1\u20136 \u884C\u3002");
     if (units5(p.title) > 15) throw Error("\u6587\u6863\u6807\u9898\u8FC7\u957F\uFF0C\u8BF7\u4F7F\u7528 15 \u4E2A\u6C49\u5B57\u5BBD\u4EE5\u5185\u7684\u77ED\u6807\u9898\u3002");
     const rowH = Math.min(85, 386 / p.rows.length), top = 143;
-    const rows2 = p.rows.map((r, i) => {
+    const rows3 = p.rows.map((r, i) => {
       const y = top + i * rowH;
       return `<g data-motion="item" data-text-panel="document-row-${i}" data-panel-bounds="29 ${y} 503 ${rowH - 8}"><rect x="29" y="${y}" width="503" height="${rowH - 8}" rx="12" fill="${i % 2 ? "#fff7e8" : "#edf7ff"}" stroke="#bdd3e6" stroke-width="1.4"/>${label(h, 47, y + rowH * 0.54, r.label, 22, 88)}<path d="M143 ${y + 14}V${y + rowH - 22}" stroke="#b7cfe5" stroke-width="1.5"/>${label(h, 158, y + rowH * 0.54, r.text, 24, 323)}${r.checked ? `<circle cx="504" cy="${y + (rowH - 8) / 2}" r="12" fill="${tokens.green}" stroke="${tokens.ink}" stroke-width="1.5"/><path d="M497 ${y + (rowH - 8) / 2}l5 5 9-11" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>` : ""}</g>`;
     }).join("");
-    const content2 = `${banner(100, 25, 352, p.title, color(p.accent), scope(h, "document-title"))}${label(h, 280, 122, p.subtitle, 23, 467, 'text-anchor="middle"')}${rows2}`;
+    const content2 = `${banner(100, 25, 352, p.title, color(p.accent), scope(h, "document-title"))}${label(h, 280, 122, p.subtitle, 23, 467, 'text-anchor="middle"')}${rows3}`;
     return group2("document", p, 580, 590, paper(0, 0, 561, 571, { fold: 43, depth: 10, content: content2 }, scope(h, "document")));
   }
   var folderDefaults = {
@@ -968,8 +968,8 @@ var ComponentLibraryRuntime = (() => {
       return `<g transform="rotate(${(i - (p.fileLabels.length - 1) / 2) * 5} ${x + 86} ${y + 116})">${paper(x, y, 165, 247, { fold: 31, depth: 7, content: `<rect x="27" y="33" width="43" height="42" rx="7" fill="${c}"/><path d="M39 53H59M49 43V63" stroke="white" stroke-width="3"/>${label(h, 27, 112, name, 25, 115)}<path d="M29 146H135M29 170H128M29 194H109" stroke="#bdd4e7" stroke-width="7" stroke-linecap="round"/>` }, scope(h, "folder-file-" + i))}</g>`;
     }).join("") : "";
     const top = p.open ? 253 : 207;
-    const front = `<path d="M77 ${top + 12}Q70 ${top - 9} 94 ${top - 9}H276L305 ${top + 9}H637Q662 ${top + 9} 653 ${top + 34}L608 451Q604 469 585 469H126Q109 469 105 451Z" transform="translate(9 10)" fill="${tokens.shadow}"/><path d="M77 ${top + 12}Q70 ${top - 9} 94 ${top - 9}H276L305 ${top + 9}H637Q662 ${top + 9} 653 ${top + 34}L608 451Q604 469 585 469H126Q109 469 105 451Z" fill="#d6edff" stroke="${tokens.ink}" stroke-width="4"/><path d="M111 ${top + 24}H611" stroke="white" stroke-width="5" stroke-linecap="round"/><rect x="166" y="324" width="396" height="93" rx="15" fill="#f8fdff" stroke="#a8cae8" stroke-width="2"/>${label(h, 364, 367, p.name, 33, 358, 'text-anchor="middle"')}${label(h, 364, 397, p.subtitle, 19, 355, 'text-anchor="middle"')}`;
-    return group2("folder", p, 720, 490, back + files + front);
+    const front2 = `<path d="M77 ${top + 12}Q70 ${top - 9} 94 ${top - 9}H276L305 ${top + 9}H637Q662 ${top + 9} 653 ${top + 34}L608 451Q604 469 585 469H126Q109 469 105 451Z" transform="translate(9 10)" fill="${tokens.shadow}"/><path d="M77 ${top + 12}Q70 ${top - 9} 94 ${top - 9}H276L305 ${top + 9}H637Q662 ${top + 9} 653 ${top + 34}L608 451Q604 469 585 469H126Q109 469 105 451Z" fill="#d6edff" stroke="${tokens.ink}" stroke-width="4"/><path d="M111 ${top + 24}H611" stroke="white" stroke-width="5" stroke-linecap="round"/><rect x="166" y="324" width="396" height="93" rx="15" fill="#f8fdff" stroke="#a8cae8" stroke-width="2"/>${label(h, 364, 367, p.name, 33, 358, 'text-anchor="middle"')}${label(h, 364, 397, p.subtitle, 19, 355, 'text-anchor="middle"')}`;
+    return group2("folder", p, 720, 490, back + files + front2);
   }
   var common2 = { category: "\u52A8\u753B\u98CE \xB7 \u57FA\u7840\u7EC4\u4EF6", width: 1280, height: 720, defaultEffect: "none", reference: { level: "designed", basis: "\u4ECE\u7528\u6237\u63D0\u4F9B\u7684\u84DD\u8272\u63D2\u753B\u53C2\u8003\u548C\u73B0\u6709\u52A8\u753B\u98CE\u573A\u666F\u7EC6\u62C6\uFF1B\u900F\u660E\u753B\u5E03\u3001\u72EC\u7ACB\u5BF9\u8C61\uFF0C\u53EF\u7F16\u8F91\u4E0E\u7EC4\u5408\u3002", source: "references/animation-style/sources.json" } };
   var components5 = [
@@ -980,12 +980,12 @@ var ComponentLibraryRuntime = (() => {
 
   // families/animation-style-atoms-paper-parts.mjs
   var font3 = "font-family:'Microsoft YaHei','Segoe UI',sans-serif;font-weight:750";
-  var units6 = (s) => [...String(s ?? "")].reduce((n3, c) => n3 + (/[\x00-\x7f]/.test(c) ? 0.55 : 1), 0);
-  var scope2 = (h, id) => ({ ...h, uid: (s) => h.uid(id + "-" + s) });
+  var units6 = (s2) => [...String(s2 ?? "")].reduce((n4, c) => n4 + (/[\x00-\x7f]/.test(c) ? 0.55 : 1), 0);
+  var scope2 = (h, id) => ({ ...h, uid: (s2) => h.uid(id + "-" + s2) });
   var num4 = (v, name, min, max) => {
-    const n3 = Number(v);
-    if (!Number.isFinite(n3) || n3 < min || n3 > max) throw Error(`${name} \u9700\u5728 ${min}\u2013${max} \u4E4B\u95F4\u3002`);
-    return n3;
+    const n4 = Number(v);
+    if (!Number.isFinite(n4) || n4 < min || n4 > max) throw Error(`${name} \u9700\u5728 ${min}\u2013${max} \u4E4B\u95F4\u3002`);
+    return n4;
   };
   var tone = (v) => {
     if (!["blue", "green", "orange", "purple"].includes(v)) throw Error("accent \u9700\u4E3A blue\u3001green\u3001orange \u6216 purple\u3002");
@@ -995,7 +995,7 @@ var ComponentLibraryRuntime = (() => {
   function geom2(p, minW, minH) {
     return { x: num4(p.x, "x", -1280, 1280), y: num4(p.y, "y", -720, 720), w: num4(p.objectWidth, "objectWidth", minW, 1240), h: num4(p.objectHeight, "objectHeight", minH, 700) };
   }
-  var group3 = (type, g, content2) => `<g data-atom="${type}" data-motion="item" transform="translate(${g.x} ${g.y})" style="${font3}" fill="${tokens.ink}">${content2}</g>`;
+  var group3 = (type2, g2, content2) => `<g data-atom="${type2}" data-motion="item" transform="translate(${g2.x} ${g2.y})" style="${font3}" fill="${tokens.ink}">${content2}</g>`;
   var canvas3 = (content2) => `<section class="ani-paper-part" style="width:100%;height:100%;background:transparent"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" style="${font3};background:transparent" fill="${tokens.ink}">${content2}</svg></section>`;
   function lines2(value, width, size, maxLines, name = "\u6587\u5B57") {
     const content2 = String(value ?? "");
@@ -1032,7 +1032,7 @@ var ComponentLibraryRuntime = (() => {
     "lineSpacing": 38
   };
   function renderPaperAtom(props, helpers2) {
-    const p = { ...paperDefaults, ...props }, h = scope2(helpers2, "paper-part"), g = geom2(p, 160, 140), depth = num4(p.depth, "depth", 0, 18), w = g.w - depth - 4, height = g.h - depth - 4;
+    const p = { ...paperDefaults, ...props }, h = scope2(helpers2, "paper-part"), g2 = geom2(p, 160, 140), depth = num4(p.depth, "depth", 0, 18), w = g2.w - depth - 4, height = g2.h - depth - 4;
     const fold = Math.min(num4(p.foldSize, "foldSize", 16, 100), w * 0.24, height * 0.2), spacing = num4(p.lineSpacing, "lineSpacing", 24, 64);
     if (!["right", "left"].includes(p.foldSide) || !["none", "lines", "grid"].includes(p.ruling)) throw Error("foldSide \u4F7F\u7528 left/right\uFF1Bruling \u4F7F\u7528 none/lines/grid\u3002");
     let ruled = "";
@@ -1041,7 +1041,7 @@ var ComponentLibraryRuntime = (() => {
       if (p.ruling === "grid") for (let x = 28; x <= w - 28; x += spacing) ruled += `M${x} ${fold + 32}V${height - 24}`;
     }
     const shape = paper(2, 2, w, height, { fold, depth, content: ruled ? `<path d="${ruled}" stroke="#b9d6ed" stroke-width="1.6" fill="none"/>` : "" }, h);
-    return group3("paper", g, p.foldSide === "left" ? `<g transform="translate(${g.w} 0) scale(-1 1)">${shape}</g>` : shape);
+    return group3("paper", g2, p.foldSide === "left" ? `<g transform="translate(${g2.w} 0) scale(-1 1)">${shape}</g>` : shape);
   }
   var textDefaults = {
     "x": 180,
@@ -1058,27 +1058,27 @@ var ComponentLibraryRuntime = (() => {
     "accent": "blue"
   };
   function renderTextAtom(props, helpers2) {
-    const p = { ...textDefaults, ...props }, h = scope2(helpers2, "text-part"), g = geom2(p, 160, 80), fs = num4(p.fontSize, "fontSize", 20, 64), ts = num4(p.titleSize, "titleSize", 24, 76), lh = num4(p.lineHeight, "lineHeight", 1.2, 1.9), accent = tone(p.accent);
+    const p = { ...textDefaults, ...props }, h = scope2(helpers2, "text-part"), g2 = geom2(p, 160, 80), fs = num4(p.fontSize, "fontSize", 20, 64), ts = num4(p.titleSize, "titleSize", 24, 76), lh = num4(p.lineHeight, "lineHeight", 1.2, 1.9), accent = tone(p.accent);
     if (!["left", "center", "right"].includes(p.align) || !["paragraph", "bullets"].includes(p.variant)) throw Error("align \u4F7F\u7528 left/center/right\uFF1Bvariant \u4F7F\u7528 paragraph/bullets\u3002");
     if (p.variant === "bullets" && p.align !== "left") throw Error("\u6761\u76EE\u6A21\u5F0F\u8BF7\u4F7F\u7528\u5DE6\u5BF9\u9F50\u3002");
-    const inset = p.variant === "bullets" ? 30 : 0, x = p.align === "center" ? g.w / 2 : p.align === "right" ? g.w - 4 : 4 + inset, anchor = p.align === "center" ? "middle" : p.align === "right" ? "end" : "start";
+    const inset = p.variant === "bullets" ? 30 : 0, x = p.align === "center" ? g2.w / 2 : p.align === "right" ? g2.w - 4 : 4 + inset, anchor = p.align === "center" ? "middle" : p.align === "right" ? "end" : "start";
     let cursor = 0, content2 = "";
     if (String(p.title ?? "")) {
-      const size = fit3(p.title, g.w - 8, ts, 24, "\u6BB5\u843D\u6807\u9898");
+      const size = fit3(p.title, g2.w - 8, ts, 24, "\u6BB5\u843D\u6807\u9898");
       cursor = size;
       content2 += text3(h, p.align === "left" ? 4 : x, cursor, p.title, size, `text-anchor="${anchor}" font-weight="900"`);
-      const length = Math.min(g.w - 8, units6(p.title) * size), lineX = p.align === "center" ? (g.w - length) / 2 : p.align === "right" ? g.w - length - 4 : 4;
+      const length = Math.min(g2.w - 8, units6(p.title) * size), lineX = p.align === "center" ? (g2.w - length) / 2 : p.align === "right" ? g2.w - length - 4 : 4;
       content2 += `<path d="M${lineX} ${cursor + 13}H${lineX + length}" stroke="${accent}" stroke-width="5" stroke-linecap="round"/>`;
       cursor += 43;
     }
-    const available = g.h - cursor, maxLines = Math.max(0, Math.floor(available / (fs * lh))), body = String(p.text ?? "") ? lines2(p.text, g.w - 8 - inset, fs, maxLines, "\u6BB5\u843D\u6B63\u6587") : [];
-    if (!body.length && cursor > g.h + 20) throw Error("\u6587\u672C\u533A\u57DF\u9AD8\u5EA6\u4E0D\u8DB3\uFF0C\u8BF7\u589E\u52A0 objectHeight\u3002");
+    const available = g2.h - cursor, maxLines = Math.max(0, Math.floor(available / (fs * lh))), body = String(p.text ?? "") ? lines2(p.text, g2.w - 8 - inset, fs, maxLines, "\u6BB5\u843D\u6B63\u6587") : [];
+    if (!body.length && cursor > g2.h + 20) throw Error("\u6587\u672C\u533A\u57DF\u9AD8\u5EA6\u4E0D\u8DB3\uFF0C\u8BF7\u589E\u52A0 objectHeight\u3002");
     body.forEach((line3, i) => {
       const y = cursor + fs + i * fs * lh;
       if (p.variant === "bullets" && line3) content2 += `<circle cx="11" cy="${y - fs * 0.34}" r="4.5" fill="${accent}"/>`;
       content2 += text3(h, x, y, line3, fs, `text-anchor="${anchor}"`);
     });
-    return group3("text", g, content2);
+    return group3("text", g2, content2);
   }
   var documentRowDefaults = {
     "x": 190,
@@ -1092,19 +1092,19 @@ var ComponentLibraryRuntime = (() => {
     "fontSize": 30
   };
   function renderDocumentRowAtom(props, helpers2) {
-    const p = { ...documentRowDefaults, ...props }, h = scope2(helpers2, "row-part"), g = geom2(p, 340, 88), accent = tone(p.accent), fs = num4(p.fontSize, "fontSize", 22, 42);
+    const p = { ...documentRowDefaults, ...props }, h = scope2(helpers2, "row-part"), g2 = geom2(p, 340, 88), accent = tone(p.accent), fs = num4(p.fontSize, "fontSize", 22, 42);
     if (!["none", "pending", "complete", "warning"].includes(p.status)) throw Error("status \u4F7F\u7528 none/pending/complete/warning\u3002");
-    const statusW = p.status === "none" ? 0 : 57, labelW = Math.min(154, Math.max(86, units6(p.label) * 23 + 32)), labelSize = fit3(p.label, labelW - 24, 25, 18, "\u6761\u76EE\u6807\u7B7E"), bodyX = labelW + 48, bodyW = g.w - bodyX - statusW - 30;
+    const statusW = p.status === "none" ? 0 : 57, labelW = Math.min(154, Math.max(86, units6(p.label) * 23 + 32)), labelSize = fit3(p.label, labelW - 24, 25, 18, "\u6761\u76EE\u6807\u7B7E"), bodyX = labelW + 48, bodyW = g2.w - bodyX - statusW - 30;
     if (bodyW < 72) throw Error("\u6761\u76EE\u592A\u7A84\uFF0C\u8BF7\u589E\u52A0 objectWidth\u3002");
-    const maxLines = Math.min(3, Math.floor((g.h - 32) / (fs * 1.3))), body = lines2(p.text, bodyW, fs, maxLines, "\u6761\u76EE\u6B63\u6587"), firstY = (g.h - body.length * fs * 1.3) / 2 + fs;
-    const fill = p.status === "warning" ? "#fff7e8" : p.status === "complete" ? "#effaf5" : "#f3f9ff", pillH = 48, pillY = (g.h - pillH) / 2, labelFg = p.accent === "orange" ? tokens.ink : "white";
-    let content2 = `<rect x="4" y="6" width="${g.w - 8}" height="${g.h - 12}" rx="16" fill="${tokens.shadow}"/><rect x="1.5" y="1.5" width="${g.w - 8}" height="${g.h - 12}" rx="16" fill="${fill}" stroke="${tokens.ink}" stroke-width="2.5"/><rect x="18" y="${pillY}" width="${labelW}" height="${pillH}" rx="11" fill="${accent}" stroke="${tokens.ink}" stroke-width="1.8"/>${text3(h, 18 + labelW / 2, g.h / 2 + labelSize * 0.35, p.label, labelSize, `text-anchor="middle" style="fill:${labelFg}"`)}<path d="M${labelW + 33} 25V${g.h - 29}" stroke="#b7cfe5" stroke-width="1.5"/>`;
+    const maxLines = Math.min(3, Math.floor((g2.h - 32) / (fs * 1.3))), body = lines2(p.text, bodyW, fs, maxLines, "\u6761\u76EE\u6B63\u6587"), firstY = (g2.h - body.length * fs * 1.3) / 2 + fs;
+    const fill = p.status === "warning" ? "#fff7e8" : p.status === "complete" ? "#effaf5" : "#f3f9ff", pillH = 48, pillY = (g2.h - pillH) / 2, labelFg = p.accent === "orange" ? tokens.ink : "white";
+    let content2 = `<rect x="4" y="6" width="${g2.w - 8}" height="${g2.h - 12}" rx="16" fill="${tokens.shadow}"/><rect x="1.5" y="1.5" width="${g2.w - 8}" height="${g2.h - 12}" rx="16" fill="${fill}" stroke="${tokens.ink}" stroke-width="2.5"/><rect x="18" y="${pillY}" width="${labelW}" height="${pillH}" rx="11" fill="${accent}" stroke="${tokens.ink}" stroke-width="1.8"/>${text3(h, 18 + labelW / 2, g2.h / 2 + labelSize * 0.35, p.label, labelSize, `text-anchor="middle" style="fill:${labelFg}"`)}<path d="M${labelW + 33} 25V${g2.h - 29}" stroke="#b7cfe5" stroke-width="1.5"/>`;
     content2 += body.map((line3, i) => text3(h, bodyX, firstY + i * fs * 1.3, line3, fs)).join("");
-    const cx = g.w - 39, cy = g.h / 2;
+    const cx = g2.w - 39, cy = g2.h / 2;
     if (p.status === "complete") content2 += `<circle cx="${cx}" cy="${cy}" r="17" fill="${tokens.green}" stroke="${tokens.ink}" stroke-width="2"/><path d="M${cx - 8} ${cy}l6 7 12-14" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`;
     if (p.status === "pending") content2 += `<circle cx="${cx}" cy="${cy}" r="17" fill="white" stroke="#7899bd" stroke-width="2.3"/>`;
     if (p.status === "warning") content2 += `<path d="M${cx} ${cy - 20}L${cx + 21} ${cy + 17}H${cx - 21}Z" fill="${tokens.orange}" stroke="${tokens.ink}" stroke-width="2" stroke-linejoin="round"/>${text3(h, cx, cy + 11, "!", 26, 'text-anchor="middle" font-weight="900"')}`;
-    return group3("document-row", g, `<g data-text-panel="document-row" data-panel-bounds="2 2 ${g.w - 8} ${g.h - 12}">${content2}</g>`);
+    return group3("document-row", g2, `<g data-text-panel="document-row" data-panel-bounds="2 2 ${g2.w - 8} ${g2.h - 12}">${content2}</g>`);
   }
   var fileStackDefaults = {
     "x": 300,
@@ -1132,16 +1132,16 @@ var ComponentLibraryRuntime = (() => {
     "layout": "stack"
   };
   function renderFileStackAtom(props, helpers2) {
-    const p = { ...fileStackDefaults, ...props }, g = geom2(p, 220, 200);
+    const p = { ...fileStackDefaults, ...props }, g2 = geom2(p, 220, 200);
     if (!Array.isArray(p.files) || p.files.length < 2 || p.files.length > 5) throw Error("\u6587\u4EF6\u5806\u53E0 files \u652F\u6301 2\u20135 \u4E2A\u6587\u4EF6\u3002");
     if (!["stack", "fan"].includes(p.layout)) throw Error("layout \u4F7F\u7528 stack/fan\u3002");
-    const scale = Math.min(g.w / 720, g.h / 520), dx = (g.w - 720 * scale) / 2, dy = (g.h - 520 * scale) / 2, mid = (p.files.length - 1) / 2;
+    const scale = Math.min(g2.w / 720, g2.h / 520), dx = (g2.w - 720 * scale) / 2, dy = (g2.h - 520 * scale) / 2, mid = (p.files.length - 1) / 2;
     const layers = p.files.map((file, i) => {
-      const front = i === p.files.length - 1, delta = i - mid, back = p.files.length - 1 - i, x = p.layout === "fan" ? 210 + delta * 34 : 190 + back * 25, y = p.layout === "fan" ? 64 + Math.abs(delta) * 5 : 72 - back * 17, angle = p.layout === "fan" ? delta * 7 : 0;
-      const art = renderFileAtom({ x, y, objectWidth: 300, objectHeight: 403.125, name: front ? file.name : "", meta: front ? p.meta : "", fileType: file.fileType || "text", accent: file.accent || "blue" }, scope2(helpers2, "stack-" + i));
+      const front2 = i === p.files.length - 1, delta = i - mid, back = p.files.length - 1 - i, x = p.layout === "fan" ? 210 + delta * 34 : 190 + back * 25, y = p.layout === "fan" ? 64 + Math.abs(delta) * 5 : 72 - back * 17, angle = p.layout === "fan" ? delta * 7 : 0;
+      const art = renderFileAtom({ x, y, objectWidth: 300, objectHeight: 403.125, name: front2 ? file.name : "", meta: front2 ? p.meta : "", fileType: file.fileType || "text", accent: file.accent || "blue" }, scope2(helpers2, "stack-" + i));
       return `<g data-stack-layer="${i}" transform="rotate(${angle} ${x + 150} ${y + 201.5625})">${art}</g>`;
     }).join("");
-    return group3("file-stack", g, `<g data-fit="contain" transform="translate(${dx} ${dy}) scale(${scale})">${layers}</g>`);
+    return group3("file-stack", g2, `<g data-fit="contain" transform="translate(${dx} ${dy}) scale(${scale})">${layers}</g>`);
   }
   var titleLabelDefaults = {
     "x": 330,
@@ -1154,13 +1154,13 @@ var ComponentLibraryRuntime = (() => {
     "variant": "filled"
   };
   function renderTitleLabelAtom(props, helpers2) {
-    const p = { ...titleLabelDefaults, ...props }, h = scope2(helpers2, "title-part"), g = geom2(p, 180, 68), accent = tone(p.accent), hasCaption = Boolean(String(p.caption ?? ""));
+    const p = { ...titleLabelDefaults, ...props }, h = scope2(helpers2, "title-part"), g2 = geom2(p, 180, 68), accent = tone(p.accent), hasCaption = Boolean(String(p.caption ?? ""));
     if (!["filled", "outline"].includes(p.variant)) throw Error("variant \u4F7F\u7528 filled/outline\u3002");
-    if (hasCaption && g.h < 120) throw Error("\u5E26\u8BF4\u660E\u7684\u6807\u9898\u724C\u9AD8\u5EA6\u81F3\u5C11\u4E3A 120\u3002");
-    const w = g.w - 10, height = g.h - (hasCaption ? 49 : 10), size = fit3(p.label, w - 48, 40, 24, "\u6807\u9898\u724C\u6587\u5B57"), captionSize = fit3(p.caption, g.w - 24, 22, 18, "\u6807\u9898\u724C\u8BF4\u660E"), id = h.uid("fill"), fill = p.variant === "outline" ? "#fcfeff" : `url(#${id})`, fg = p.variant === "outline" || p.accent === "orange" ? tokens.ink : "white";
+    if (hasCaption && g2.h < 120) throw Error("\u5E26\u8BF4\u660E\u7684\u6807\u9898\u724C\u9AD8\u5EA6\u81F3\u5C11\u4E3A 120\u3002");
+    const w = g2.w - 10, height = g2.h - (hasCaption ? 49 : 10), size = fit3(p.label, w - 48, 40, 24, "\u6807\u9898\u724C\u6587\u5B57"), captionSize = fit3(p.caption, g2.w - 24, 22, 18, "\u6807\u9898\u724C\u8BF4\u660E"), id = h.uid("fill"), fill = p.variant === "outline" ? "#fcfeff" : `url(#${id})`, fg = p.variant === "outline" || p.accent === "orange" ? tokens.ink : "white";
     let content2 = `<defs><linearGradient id="${h.esc(id)}" x1="0" y1="0" x2="0" y2="1"><stop stop-color="${accent}"/><stop offset="1" stop-color="${accent}" stop-opacity=".92"/></linearGradient></defs><rect x="7" y="8" width="${w}" height="${height}" rx="18" fill="${tokens.shadow}"/><rect x="2" y="2" width="${w}" height="${height}" rx="18" fill="${fill}" stroke="${tokens.ink}" stroke-width="3"/><rect x="7" y="7" width="${w - 10}" height="${height - 10}" rx="14" fill="none" stroke="${p.variant === "outline" ? accent : "#a4ddff"}" stroke-width="2"/><path d="M19 12H89M12 23Q12 12 24 12" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" opacity=".75"/>${text3(h, 2 + w / 2, 2 + height / 2 + size * 0.35, p.label, size, `text-anchor="middle" style="fill:${fg}" font-weight="900"`)}`;
-    if (hasCaption) content2 += text3(h, g.w / 2, g.h - 10, p.caption, captionSize, 'text-anchor="middle"');
-    return group3("title-label", g, content2);
+    if (hasCaption) content2 += text3(h, g2.w / 2, g2.h - 10, p.caption, captionSize, 'text-anchor="middle"');
+    return group3("title-label", g2, content2);
   }
   var common3 = { category: "\u52A8\u753B\u98CE \xB7 \u57FA\u7840\u7EC4\u4EF6", width: 1280, height: 720, defaultEffect: "none", reference: { level: "designed", basis: "\u4ECE\u7528\u6237\u786E\u8BA4\u7684\u6DF1\u84DD\u63CF\u8FB9\u3001\u6298\u89D2\u7EB8\u5F20\u548C\u6D45\u84DD\u539A\u5EA6\u4E2D\u62C6\u51FA\u72EC\u7ACB\u77E2\u91CF\u57FA\u7840\u5BF9\u8C61\uFF1B\u6587\u5B57\u548C\u51E0\u4F55\u5747\u53EF\u7F16\u8F91\u3002", source: "reports/animation-style/reference-review-v8/REVIEW.md" } };
   var make3 = (id, name, description, defaults3, render) => ({ ...common3, id, name, description, defaults: defaults3, render: (p, h) => canvas3(render(p, h)) });
@@ -1207,10 +1207,10 @@ var ComponentLibraryRuntime = (() => {
   }
   function rewriteRenderedMediaMarkup(html, mediaBase = "") {
     if (!mediaBase) return html;
-    const mediaMarkup = html.replace(/(<(?:img|video|audio|source)\b[^>]*\bsrc=")([^"]*)(")/gi, (_, a, src, b) => {
-      if (!src || /^(?:[a-z][a-z0-9+.-]*:|\/)/i.test(src)) return a + src + b;
+    const mediaMarkup = html.replace(/(<(?:img|video|audio|source)\b[^>]*\bsrc=")([^"]*)(")/gi, (_, a2, src, b2) => {
+      if (!src || /^(?:[a-z][a-z0-9+.-]*:|\/)/i.test(src)) return a2 + src + b2;
       const url = /^[a-z][a-z0-9+.-]*:/i.test(mediaBase) ? new URL(src, mediaBase).href : mediaBase + src;
-      return a + url.replaceAll("&", "&amp;").replaceAll('"', "&quot;") + b;
+      return a2 + url.replaceAll("&", "&amp;").replaceAll('"', "&quot;") + b2;
     });
     return rewriteRenderedSvgImageMarkup(mediaMarkup, mediaBase);
   }
@@ -1227,22 +1227,22 @@ var ComponentLibraryRuntime = (() => {
   // families/animation-style-atoms-ui.mjs
   var font4 = "font-family:'Microsoft YaHei',Arial,sans-serif;font-weight:750";
   var tones3 = { blue: tokens.blue, green: tokens.green, orange: tokens.orange, gray: "#dce4ee", ink: tokens.ink };
-  var units7 = (v) => Array.from(String(v ?? "")).reduce((n3, c) => n3 + (/[\u0000-\u00ff]/.test(c) ? 0.55 : 1), 0);
+  var units7 = (v) => Array.from(String(v ?? "")).reduce((n4, c) => n4 + (/[\u0000-\u00ff]/.test(c) ? 0.55 : 1), 0);
   var number2 = (v, name, min, max) => {
-    const n3 = Number(v);
-    if (!Number.isFinite(n3) || n3 < min || n3 > max) throw new Error(`${name} must be ${min}\u2013${max}`);
-    return n3;
+    const n4 = Number(v);
+    if (!Number.isFinite(n4) || n4 < min || n4 > max) throw new Error(`${name} must be ${min}\u2013${max}`);
+    return n4;
   };
   var copy3 = (v, name, max = 80) => {
-    const s = String(v ?? "");
-    if (units7(s) > max) throw new Error(`${name} is too long for this object`);
-    return s;
+    const s2 = String(v ?? "");
+    if (units7(s2) > max) throw new Error(`${name} is too long for this object`);
+    return s2;
   };
   var scope3 = (h, prefix) => {
-    let n3 = 0;
-    return { ...h, uid: (s) => h.uid(`${prefix}-${++n3}-${s}`) };
+    let n4 = 0;
+    return { ...h, uid: (s2) => h.uid(`${prefix}-${++n4}-${s2}`) };
   };
-  var txt2 = (x, y, label2, size, h, extra2 = "") => `<text x="${x}" y="${y}" ${extra2.includes('fill="') ? "" : `fill="${tokens.ink}"`} font-size="${size}" ${extra2}>${h.esc(label2)}</text>`;
+  var txt2 = (x, y, label3, size, h, extra2 = "") => `<text x="${x}" y="${y}" ${extra2.includes('fill="') ? "" : `fill="${tokens.ink}"`} font-size="${size}" ${extra2}>${h.esc(label3)}</text>`;
   function geometry2(p, minW, minH) {
     const x = number2(p.x, "x", 0, 1200), y = number2(p.y, "y", 0, 650), w = number2(p.objectWidth, "objectWidth", minW, 1240), height = number2(p.objectHeight, "objectHeight", minH, 680);
     if (x + w + 12 > 1280 || y + height + 12 > 720) throw new Error("Object plus its 12 px depth must fit the preview canvas");
@@ -1265,8 +1265,8 @@ var ComponentLibraryRuntime = (() => {
   function frame(w, height, fill = "#fff", r = 18) {
     return `<rect x="9" y="10" width="${w}" height="${height}" rx="${r}" fill="${tokens.shadow}"/><rect width="${w}" height="${height}" rx="${r}" fill="${fill}" stroke="${tokens.ink}" stroke-width="3.5"/><path d="M5 ${height - r}Q5 ${height - 5} ${r} ${height - 5}H${w - r}Q${w - 5} ${height - 5} ${w - 5} ${height - r}V${r}" fill="none" stroke="#d6edff" stroke-width="4"/>`;
   }
-  function preview3(group4, label2, h) {
-    return `<section class="ani-atom-scene"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" role="img" aria-label="${h.esc(label2)}" style="${font4};fill:${tokens.ink};background:transparent">${group4}</svg></section>`;
+  function preview3(group4, label3, h) {
+    return `<section class="ani-atom-scene"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" role="img" aria-label="${h.esc(label3)}" style="${font4};fill:${tokens.ink};background:transparent">${group4}</svg></section>`;
   }
   var tableDefaults = {
     "x": 140,
@@ -1350,34 +1350,34 @@ var ComponentLibraryRuntime = (() => {
     if (!Array.isArray(p.columns) || p.columns.length < 2 || p.columns.length > 6) throw new Error("table columns require 2\u20136 entries");
     if (!Array.isArray(p.rows) || p.rows.length < 1 || p.rows.length > 8) throw new Error("table rows require 1\u20138 entries");
     if (new Set(p.columns.map((c) => c.key)).size !== p.columns.length) throw new Error("table column keys must be unique");
-    const weights = p.columns.map((c, i) => number2(c.weight ?? 1, `column ${i} weight`, 0.5, 6)), sum = weights.reduce((a, b) => a + b, 0), colW = weights.map((v) => (w - 24) * v / sum), start = [12];
+    const weights = p.columns.map((c, i) => number2(c.weight ?? 1, `column ${i} weight`, 0.5, 6)), sum = weights.reduce((a2, b2) => a2 + b2, 0), colW = weights.map((v) => (w - 24) * v / sum), start = [12];
     colW.forEach((v, i) => start.push(start[i] + v));
     const header = 58, rowH = (height - 26 - header) / p.rows.length;
     if (rowH < 38) throw new Error("table height is too short for these rows");
     const headerFill = /^#[0-9a-f]{6}$/i.test(String(p.headerFill)) ? p.headerFill : "#dceeff";
     const heads = p.columns.map((c, i) => {
-      const label2 = copy3(c.label, "column label", 10), size = Math.min(27, (colW[i] - 20) / Math.max(1, units7(label2)));
+      const label3 = copy3(c.label, "column label", 10), size = Math.min(27, (colW[i] - 20) / Math.max(1, units7(label3)));
       if (size < 18) throw new Error("Column heading is too narrow");
-      return txt2(start[i] + colW[i] / 2, 12 + header * 0.65, label2, size, h, 'text-anchor="middle"');
+      return txt2(start[i] + colW[i] / 2, 12 + header * 0.65, label3, size, h, 'text-anchor="middle"');
     }).join("");
-    const rows2 = p.rows.map((row, ri) => {
+    const rows3 = p.rows.map((row, ri) => {
       const yy = 12 + header + ri * rowH;
       const cells = p.columns.map((column, ci) => {
-        const cell = row[column.key] ?? "", obj = typeof cell === "object" && cell !== null, label2 = copy3(obj ? cell.label : cell, "cell", 50), cx = start[ci] + colW[ci] / 2;
-        if (obj) {
+        const cell = row[column.key] ?? "", obj2 = typeof cell === "object" && cell !== null, label3 = copy3(obj2 ? cell.label : cell, "cell", 50), cx = start[ci] + colW[ci] / 2;
+        if (obj2) {
           if (!Object.hasOwn(tones3, cell.tone)) throw new Error("status tone must be blue, green, orange, gray or ink");
-          const size2 = Math.min(25, rowH * 0.46, (colW[ci] - 42) / Math.max(1, units7(label2)));
+          const size2 = Math.min(25, rowH * 0.46, (colW[ci] - 42) / Math.max(1, units7(label3)));
           if (size2 < 18) throw new Error("Status label is too long");
-          const bh = Math.min(38, rowH - 13), bw = Math.min(colW[ci] - 30, Math.max(100, units7(label2) * size2 + 27)), color2 = tones3[cell.tone], fg = ["orange", "gray"].includes(cell.tone) ? tokens.ink : "white";
-          return `<g data-atom-status="${h.esc(cell.tone)}"><rect x="${cx - bw / 2 + 2}" y="${yy + (rowH - bh) / 2 + 3}" width="${bw}" height="${bh}" rx="11" fill="${tokens.shadow}"/><rect x="${cx - bw / 2}" y="${yy + (rowH - bh) / 2}" width="${bw}" height="${bh}" rx="11" fill="${color2}" stroke="${tokens.ink}" stroke-width="1.5"/>${txt2(cx, yy + rowH / 2 + size2 * 0.35, label2, size2, h, `text-anchor="middle" style="fill:${fg}"`)}</g>`;
+          const bh = Math.min(38, rowH - 13), bw = Math.min(colW[ci] - 30, Math.max(100, units7(label3) * size2 + 27)), color5 = tones3[cell.tone], fg = ["orange", "gray"].includes(cell.tone) ? tokens.ink : "white";
+          return `<g data-atom-status="${h.esc(cell.tone)}"><rect x="${cx - bw / 2 + 2}" y="${yy + (rowH - bh) / 2 + 3}" width="${bw}" height="${bh}" rx="11" fill="${tokens.shadow}"/><rect x="${cx - bw / 2}" y="${yy + (rowH - bh) / 2}" width="${bw}" height="${bh}" rx="11" fill="${color5}" stroke="${tokens.ink}" stroke-width="1.5"/>${txt2(cx, yy + rowH / 2 + size2 * 0.35, label3, size2, h, `text-anchor="middle" style="fill:${fg}"`)}</g>`;
         }
-        const size = Math.min(27, rowH * 0.43), lines4 = wrap2(label2, colW[ci] - 26, size, 2), lineH = size * 1.18, total = lines4.length * lineH;
+        const size = Math.min(27, rowH * 0.43), lines4 = wrap2(label3, colW[ci] - 26, size, 2), lineH = size * 1.18, total = lines4.length * lineH;
         return lines4.map((line3, li) => txt2(cx, yy + (rowH - total) / 2 + size + li * lineH, line3, size, h, 'text-anchor="middle"')).join("");
       }).join("");
       return `<g data-atom-row="${ri}"><rect x="12" y="${yy}" width="${w - 24}" height="${rowH}" fill="${p.striped && ri % 2 ? "#f2f8ff" : "#fff"}"/>${cells}</g>`;
     }).join("");
     const lines3 = start.slice(1, -1).map((xx) => `M${xx} 12V${height - 14}`).join(" ") + Array.from({ length: p.rows.length }, (_, i) => ` M12 ${12 + header + i * rowH}H${w - 12}`).join("");
-    return `<g data-atom="table" transform="translate(${x} ${y})" style="${font4}" fill="${tokens.ink}">${frame(w, height)}<rect x="12" y="12" width="${w - 24}" height="${header}" rx="8" fill="${headerFill}"/>${rows2}${heads}<path d="${lines3}" fill="none" stroke="#8ba7ce" stroke-width="1.2"/><rect x="12" y="12" width="${w - 24}" height="${height - 26}" rx="8" fill="none" stroke="${tokens.ink}" stroke-width="2"/></g>`;
+    return `<g data-atom="table" transform="translate(${x} ${y})" style="${font4}" fill="${tokens.ink}">${frame(w, height)}<rect x="12" y="12" width="${w - 24}" height="${header}" rx="8" fill="${headerFill}"/>${rows3}${heads}<path d="${lines3}" fill="none" stroke="#8ba7ce" stroke-width="1.2"/><rect x="12" y="12" width="${w - 24}" height="${height - 26}" rx="8" fill="none" stroke="${tokens.ink}" stroke-width="2"/></g>`;
   }
   var browserDefaults = {
     "x": 140,
@@ -1412,16 +1412,16 @@ var ComponentLibraryRuntime = (() => {
     if (!Array.isArray(p.tabs) || p.tabs.length < 1 || p.tabs.length > 3) throw new Error("browser tabs require 1\u20133 labels");
     const active = number2(p.activeTab, "activeTab", 0, p.tabs.length - 1);
     if (!Number.isInteger(active)) throw new Error("activeTab must be an integer");
-    const title = copy3(p.heading, "heading", 24), address = copy3(p.address, "address", 74), imageSrc = mediaPath(p.imageSrc), clip2 = h.uid("content-clip");
+    const title = copy3(p.heading, "heading", 24), address = copy3(p.address, "address", 74), imageSrc2 = mediaPath(p.imageSrc), clip2 = h.uid("content-clip");
     const tabWidth = Math.min(218, (w - 166) / p.tabs.length), tabs2 = p.tabs.map((v, i) => {
-      const label2 = copy3(v, "tab", 15), xx = 124 + i * tabWidth, fill = i === active ? "#fff" : "#d8ecff", size = Math.min(21, (tabWidth - 43) / Math.max(1, units7(label2)));
-      return `<path d="M${xx} 50V22Q${xx} 10 ${xx + 12} 10H${xx + tabWidth - 22}Q${xx + tabWidth - 10} 10 ${xx + tabWidth - 10} 22V50Z" fill="${fill}" stroke="${tokens.ink}" stroke-width="1.7"/>${txt2(xx + 15, 36, label2, size, h)}<path d="M${xx + tabWidth - 32} 23l8 8m-8 0 8-8" stroke="#53759b" stroke-width="1.7"/>`;
+      const label3 = copy3(v, "tab", 15), xx = 124 + i * tabWidth, fill = i === active ? "#fff" : "#d8ecff", size = Math.min(21, (tabWidth - 43) / Math.max(1, units7(label3)));
+      return `<path d="M${xx} 50V22Q${xx} 10 ${xx + 12} 10H${xx + tabWidth - 22}Q${xx + tabWidth - 10} 10 ${xx + tabWidth - 10} 22V50Z" fill="${fill}" stroke="${tokens.ink}" stroke-width="1.7"/>${txt2(xx + 15, 36, label3, size, h)}<path d="M${xx + tabWidth - 32} 23l8 8m-8 0 8-8" stroke="#53759b" stroke-width="1.7"/>`;
     }).join("");
     const chrome = `<path d="M18 0H${w - 18}Q${w} 0 ${w} 18V50H0V18Q0 0 18 0Z" fill="#cae5ff"/><circle cx="27" cy="25" r="7" fill="#ff9565" stroke="${tokens.ink}" stroke-width="1.5"/><circle cx="51" cy="25" r="7" fill="${tokens.orange}" stroke="${tokens.ink}" stroke-width="1.5"/><circle cx="75" cy="25" r="7" fill="#39c09a" stroke="${tokens.ink}" stroke-width="1.5"/>${tabs2}<path d="M0 50H${w}" stroke="${tokens.ink}" stroke-width="2"/><path d="M31 75l-8 8 8 8m29-16 8 8-8 8M89 82a10 10 0 1 1 2 8m-1-8v-7h-7" fill="none" stroke="${tokens.ink}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><rect x="119" y="65" width="${w - 142}" height="36" rx="13" fill="#eef7ff" stroke="#a4bedb" stroke-width="1.5"/><rect x="132" y="78" width="10" height="11" rx="2" fill="none" stroke="#527094" stroke-width="1.8"/><path d="M134 78v-3a3 3 0 0 1 6 0v3" fill="none" stroke="#527094" stroke-width="1.8"/>${txt2(157, 90, address, Math.min(20, (w - 203) / Math.max(1, units7(address))), h, 'fill="#527094"')}<path d="M12 116H${w - 12}" stroke="#bdd6ee" stroke-width="1.5"/>`;
     let body = "";
-    if (imageSrc) {
+    if (imageSrc2) {
       if (!["contain", "cover"].includes(p.imageFit)) throw new Error("imageFit must be contain or cover");
-      body = `<defs><clipPath id="${h.esc(clip2)}"><rect x="14" y="119" width="${w - 28}" height="${height - 134}" rx="9"/></clipPath></defs><image href="${h.esc(imageSrc)}" x="14" y="119" width="${w - 28}" height="${height - 134}" preserveAspectRatio="xMidYMid ${p.imageFit === "cover" ? "slice" : "meet"}" clip-path="url(#${h.esc(clip2)})"><title>${h.esc(p.imageAlt)}</title></image>`;
+      body = `<defs><clipPath id="${h.esc(clip2)}"><rect x="14" y="119" width="${w - 28}" height="${height - 134}" rx="9"/></clipPath></defs><image href="${h.esc(imageSrc2)}" x="14" y="119" width="${w - 28}" height="${height - 134}" preserveAspectRatio="xMidYMid ${p.imageFit === "cover" ? "slice" : "meet"}" clip-path="url(#${h.esc(clip2)})"><title>${h.esc(p.imageAlt)}</title></image>`;
     } else {
       if (!Array.isArray(p.body) || p.body.length > 3 || !Array.isArray(p.items) || p.items.length > 4) throw new Error("browser body supports up to 3 paragraphs and 4 list items");
       const fs = height >= 460 ? 24 : 21, headSize = height >= 460 ? 34 : 29;
@@ -1444,9 +1444,9 @@ var ComponentLibraryRuntime = (() => {
         cursor += 30;
       }
       for (const item of p.items) {
-        const label2 = copy3(item, "item", 60);
-        if (units7(label2) * fs > w - 101) throw new Error("Browser list item is too long");
-        body += `<circle cx="45" cy="${cursor - 8}" r="5" fill="${tokens.blue}"/>${txt2(62, cursor, label2, fs, h)}`;
+        const label3 = copy3(item, "item", 60);
+        if (units7(label3) * fs > w - 101) throw new Error("Browser list item is too long");
+        body += `<circle cx="45" cy="${cursor - 8}" r="5" fill="${tokens.blue}"/>${txt2(62, cursor, label3, fs, h)}`;
         cursor += fs * 1.62;
       }
       if (cursor > height - 9) throw new Error("Browser content does not fit; enlarge objectHeight or shorten the copy");
@@ -1485,17 +1485,17 @@ var ComponentLibraryRuntime = (() => {
     "labelY": 307
   };
   var point = (p, name) => ({ x: number2(p?.x, name + ".x", 16, 1264), y: number2(p?.y, name + ".y", 16, 704) });
-  var direction = (a, b) => {
-    const d = Math.hypot(b.x - a.x, b.y - a.y);
+  var direction = (a2, b2) => {
+    const d = Math.hypot(b2.x - a2.x, b2.y - a2.y);
     if (d < 0.1) throw new Error("Connector segments must have distinct points");
-    return { x: (b.x - a.x) / d, y: (b.y - a.y) / d, length: d };
+    return { x: (b2.x - a2.x) / d, y: (b2.y - a2.y) / d, length: d };
   };
   var shifted = (p, v, length) => ({ x: p.x + v.x * length, y: p.y + v.y * length });
   function elbowPath(points, radius) {
     let d = `M${points[0].x} ${points[0].y}`;
     for (let i = 1; i < points.length - 1; i++) {
-      const prev = points[i - 1], curr = points[i], next = points[i + 1], vin = direction(curr, prev), vout = direction(curr, next), r = Math.min(radius, vin.length / 2, vout.length / 2), a = shifted(curr, vin, r), b = shifted(curr, vout, r);
-      d += `L${a.x} ${a.y}Q${curr.x} ${curr.y} ${b.x} ${b.y}`;
+      const prev = points[i - 1], curr = points[i], next = points[i + 1], vin = direction(curr, prev), vout = direction(curr, next), r = Math.min(radius, vin.length / 2, vout.length / 2), a2 = shifted(curr, vin, r), b2 = shifted(curr, vout, r);
+      d += `L${a2.x} ${a2.y}Q${curr.x} ${curr.y} ${b2.x} ${b2.y}`;
     }
     const end = points.at(-1);
     return d + `L${end.x} ${end.y}`;
@@ -1522,30 +1522,30 @@ var ComponentLibraryRuntime = (() => {
     }
     if (p.arrowStart && first.length < headLength + 6 || p.arrowEnd && last.length < headLength + 6) throw new Error("End segment is too short for its arrowhead");
     if ((p.kind === "straight" || points?.length === 2) && Math.hypot(end.x - start.x, end.y - start.y) < (p.arrowStart ? headLength : 0) + (p.arrowEnd ? headLength : 0) + 8) throw new Error("Connector is too short for both arrowheads");
-    const a = p.arrowStart ? shifted(start, first, headLength - 1) : start, b = p.arrowEnd ? shifted(end, last, -headLength + 1) : end;
+    const a2 = p.arrowStart ? shifted(start, first, headLength - 1) : start, b2 = p.arrowEnd ? shifted(end, last, -headLength + 1) : end;
     let d;
     if (p.kind === "curve") {
       if (p.arrowStart) c1 = shifted(c1, first, headLength - 1);
       if (p.arrowEnd) c2 = shifted(c2, last, -headLength + 1);
-      d = `M${a.x} ${a.y}C${c1.x} ${c1.y} ${c2.x} ${c2.y} ${b.x} ${b.y}`;
+      d = `M${a2.x} ${a2.y}C${c1.x} ${c1.y} ${c2.x} ${c2.y} ${b2.x} ${b2.y}`;
     } else if (p.kind === "elbow") {
-      points[0] = a;
-      points[points.length - 1] = b;
+      points[0] = a2;
+      points[points.length - 1] = b2;
       d = elbowPath(points, radius);
-    } else d = `M${a.x} ${a.y}L${b.x} ${b.y}`;
-    const color2 = tones3[p.tone], dash = p.dashed ? 'stroke-dasharray="14 11"' : "";
-    const arrow3 = (tip, dir, back) => {
+    } else d = `M${a2.x} ${a2.y}L${b2.x} ${b2.y}`;
+    const color5 = tones3[p.tone], dash = p.dashed ? 'stroke-dasharray="14 11"' : "";
+    const arrow5 = (tip, dir, back) => {
       const base2 = shifted(tip, dir, back * headLength), nx = -dir.y * half, ny = dir.x * half;
-      return `<path data-atom-arrow d="M${tip.x} ${tip.y}L${base2.x + nx} ${base2.y + ny}L${base2.x - nx} ${base2.y - ny}Z" fill="${color2}" stroke="${tokens.ink}" stroke-width="2.2" stroke-linejoin="round"/>`;
+      return `<path data-atom-arrow d="M${tip.x} ${tip.y}L${base2.x + nx} ${base2.y + ny}L${base2.x - nx} ${base2.y - ny}Z" fill="${color5}" stroke="${tokens.ink}" stroke-width="2.2" stroke-linejoin="round"/>`;
     };
-    let label2 = "";
+    let label3 = "";
     const labelText = copy3(p.label, "connector label", 22);
     if (labelText) {
       const lx = number2(p.labelX, "labelX", 30, 1250), ly = number2(p.labelY, "labelY", 30, 690), lw = units7(labelText) * 25 + 34;
       if (lx - lw / 2 < 4 || lx + lw / 2 > 1276) throw new Error("Connector label leaves preview canvas");
-      label2 = `<g data-atom-label><rect x="${lx - lw / 2 + 3}" y="${ly - 28 + 4}" width="${lw}" height="43" rx="14" fill="${tokens.shadow}"/><rect x="${lx - lw / 2}" y="${ly - 28}" width="${lw}" height="43" rx="14" fill="#f3faff" stroke="${tokens.ink}" stroke-width="2"/>${txt2(lx, ly + 2, labelText, 25, h, 'text-anchor="middle"')}</g>`;
+      label3 = `<g data-atom-label><rect x="${lx - lw / 2 + 3}" y="${ly - 28 + 4}" width="${lw}" height="43" rx="14" fill="${tokens.shadow}"/><rect x="${lx - lw / 2}" y="${ly - 28}" width="${lw}" height="43" rx="14" fill="#f3faff" stroke="${tokens.ink}" stroke-width="2"/>${txt2(lx, ly + 2, labelText, 25, h, 'text-anchor="middle"')}</g>`;
     }
-    return `<g data-atom="connector" style="${font4}" fill="${tokens.ink}"><path d="${d}" fill="none" stroke="${tokens.ink}" stroke-width="${stroke + 3}" stroke-linecap="round" stroke-linejoin="round" ${dash}/><path data-motion="line" data-atom-line d="${d}" fill="none" stroke="${color2}" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round" ${dash}/>${p.arrowStart ? arrow3(start, first, 1) : ""}${p.arrowEnd ? arrow3(end, last, -1) : ""}${label2}</g>`;
+    return `<g data-atom="connector" style="${font4}" fill="${tokens.ink}"><path d="${d}" fill="none" stroke="${tokens.ink}" stroke-width="${stroke + 3}" stroke-linecap="round" stroke-linejoin="round" ${dash}/><path data-motion="line" data-atom-line d="${d}" fill="none" stroke="${color5}" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round" ${dash}/>${p.arrowStart ? arrow5(start, first, 1) : ""}${p.arrowEnd ? arrow5(end, last, -1) : ""}${label3}</g>`;
   }
   var reference3 = { basis: "\u4ECE\u7528\u6237\u5DF2\u786E\u8BA4\u7684\u52A8\u753B\u98CE\u9020\u578B\u4E2D\u62C6\u51FA\u7684\u53EF\u72EC\u7ACB\u7EC4\u5408\u5BF9\u8C61\uFF1B\u539F\u751F SVG\uFF0C\u53EF\u7F16\u8F91\u6B63\u6587\u548C\u51E0\u4F55\u3002", source: "reports/animation-style/reference-review-v8/REVIEW.md", level: "designed" };
   var make4 = (id, name, description, defaults3, render) => ({ id, name, category: "\u52A8\u753B\u98CE \xB7 \u57FA\u7840\u7EC4\u4EF6", description, width: 1280, height: 720, defaultEffect: "none", defaults: defaults3, reference: { ...reference3 }, render(p, h) {
@@ -1557,27 +1557,772 @@ var ComponentLibraryRuntime = (() => {
     make4("ani-atom-connector", "\u72EC\u7ACB\u8FDE\u7EBF", "\u76F4\u7EBF\u3001\u66F2\u7EBF\u6216\u6298\u7EBF\uFF1B\u914D\u7F6E\u7AEF\u70B9\u3001\u63A7\u5236\u70B9\u3001\u7BAD\u5934\u3001\u7EBF\u5BBD\u3001\u989C\u8272\u53CA\u6807\u7B7E\uFF0C\u4E0D\u7ED1\u5B9A\u7279\u5B9A\u6E90/\u76EE\u6807\u5BF9\u8C61\u3002", connectorDefaults, renderConnectorAtom)
   ];
 
+  // semantic-primitives.mjs
+  var esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  var en = (...values) => ({ type: "string", enum: values });
+  var number3 = (minimum, maximum) => ({ type: "number", minimum, maximum });
+  var color2 = { type: "string", pattern: "^#[0-9a-fA-F]{6}$" };
+  var arrowStyles = [
+    { id: "solid", name: "\u5B9E\u5FC3\u76F4\u6307\u7BAD\u5934", geometry: "straight", tail: [46, 120], head: [440, 120] },
+    { id: "open", name: "\u5F00\u653E\u7EBF\u5934\u7BAD\u5934", geometry: "straight", tail: [46, 120], head: [440, 120] },
+    { id: "double-line", name: "\u53CC\u8F68\u7EBF\u7BAD\u5934", geometry: "straight", tail: [46, 120], head: [440, 120] },
+    { id: "curve", name: "\u5E73\u6ED1\u5F27\u7EBF\u7BAD\u5934", geometry: "curve", tail: [46, 178], head: [440, 64] },
+    { id: "elbow", name: "\u76F4\u89D2\u6298\u7EBF\u7BAD\u5934", geometry: "elbow", tail: [46, 182], head: [440, 64] },
+    { id: "dashed", name: "\u865A\u7EBF\u8FDB\u7A0B\u7BAD\u5934", geometry: "straight", tail: [46, 120], head: [440, 120] },
+    { id: "handdrawn", name: "\u624B\u7ED8\u53CC\u7B14\u7BAD\u5934", geometry: "straight", tail: [46, 124], head: [440, 120] },
+    { id: "ribbon", name: "\u71D5\u5C3E\u5E26\u72B6\u7BAD\u5934", geometry: "straight", tail: [46, 120], head: [440, 120] },
+    { id: "block3d", name: "\u7ACB\u4F53\u5757\u72B6\u7BAD\u5934", geometry: "straight", tail: [46, 120], head: [440, 120] },
+    { id: "return", name: "\u56DE\u8F6C\u7ED5\u884C\u7BAD\u5934", geometry: "return", tail: [46, 180], head: [440, 64] },
+    { id: "chevrons", name: "\u8FDE\u7EED\u4EBA\u5B57\u7BAD\u5934", geometry: "straight", tail: [46, 120], head: [440, 120] },
+    { id: "tapered", name: "\u6E10\u5BBD\u6954\u5F62\u7BAD\u5934", geometry: "straight", tail: [46, 120], head: [440, 120] },
+    { id: "swallowtail", name: "\u7A7AV\u53E3\u71D5\u5C3E\u7BAD\u5934", geometry: "straight", tail: [46, 120], head: [440, 120] }
+  ];
+  var labelVariants = [
+    { id: "heading-underline", name: "\u6807\u9898\u4E0B\u5212\u7EBF", roles: ["heading"] },
+    { id: "object-tab", name: "\u5BF9\u8C61\u9875\u7B7E", roles: ["object"] },
+    { id: "action-ribbon", name: "\u52A8\u4F5C\u98D8\u5E26", roles: ["action"] },
+    { id: "conclusion-bracket", name: "\u7ED3\u8BBA\u89D2\u62EC\u6846", roles: ["conclusion"] },
+    { id: "conclusion-card", name: "\u7ED3\u8BBA\u53E0\u5C42\u5361", roles: ["conclusion"] },
+    { id: "caution-notched", name: "\u6CE8\u610F\u5207\u89D2\u6846", roles: ["caution"] },
+    { id: "question-speech", name: "\u7591\u95EE\u5BF9\u8BDD\u6846", roles: ["question"] },
+    { id: "note-outline", name: "\u6CE8\u89E3\u65B9\u7EBF\u6846", roles: ["note"] }
+  ];
+  var semanticRules = {
+    "direction-arrow": { style: en(...arrowStyles.map((x) => x.id)), direction: en("right", "left", "up", "down"), color: color2, outlineColor: color2, secondaryColor: color2, strokeWidth: number3(2, 14), headSize: number3(8, 50), tailDepth: number3(6, 60), scale: number3(0.5, 1), flipBend: { type: "boolean" }, boxWidth: number3(48, 1280), boxHeight: number3(20, 720) },
+    "semantic-label": { variant: en(...labelVariants.map((x) => x.id)), text: { type: "string", maxLength: 32 }, lines: { type: "array", minItems: 0, maxItems: 2, items: { type: "string", maxLength: 24 } }, color: color2, background: color2, borderColor: color2, fontSize: number3(18, 46), fontWeight: { type: "integer", minimum: 400, maximum: 900 }, strokeWidth: number3(1, 8), align: en("left", "center"), direction: en("right", "left"), scale: number3(0.5, 1), boxWidth: number3(64, 1280), boxHeight: number3(36, 720) }
+  };
+  var arrowDefaults = { style: "solid", direction: "right", color: "#0879ff", outlineColor: "#10275f", secondaryColor: "#b5deff", strokeWidth: 8, headSize: 34, tailDepth: 20, scale: 1, flipBend: false, boxWidth: 480, boxHeight: 240 };
+  var labelDefaults = { variant: "heading-underline", text: "\u53EF\u7F16\u8F91\u6807\u9898", lines: [], color: "#10275f", background: "#e8f5ff", borderColor: "#0879ff", fontSize: 34, fontWeight: 700, strokeWidth: 3, align: "center", direction: "right", scale: 1, boxWidth: 600, boxHeight: 180 };
+  var g = (name, body) => `<g data-kit-node="${name}" data-motion="line">${body}</g>`;
+  function arrowGeometry(p) {
+    const vertical = ["up", "down"].includes(p.direction), W = vertical ? p.boxHeight : p.boxWidth, H = vertical ? p.boxWidth : p.boxHeight, w = p.strokeWidth, h = p.headSize, m = Math.max(w + 2, Math.min(W * 0.09, 18)), x0 = m, x1 = W - m;
+    if (x1 - x0 < h * 1.35 + 12 || H < 2 * h + w + 4) throw Error("direction-arrow: viewport too small for headSize/strokeWidth; enlarge the layer or reduce these explicit sizes");
+    if (p.style === "swallowtail" && p.tailDepth > x1 - h * 1.35 - x0 - 8) throw Error("direction-arrow: tailDepth leaves no readable shaft; reduce it or enlarge the viewport");
+    const turn = { right: "", left: `translate(${p.boxWidth} 0) scale(-1 1)`, up: `translate(0 ${p.boxHeight}) rotate(-90)`, down: `translate(${p.boxWidth} 0) rotate(90)` }[p.direction];
+    return { W, H, w, h, x0, x1, cy: H / 2, top: h + w / 2 + 2, bottom: H - h - w / 2 - 2, turn };
+  }
+  function arrow(p) {
+    const { W, H, w, h, x0, x1, cy, top, bottom, turn } = arrowGeometry(p), c = esc(p.color), o = esc(p.outlineColor), s2 = esc(p.secondaryColor), end = x1 - h * 1.35, span = x1 - x0;
+    const line3 = (d, dash = "") => `<path d="${d}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"${dash ? ' stroke-dasharray="' + dash + '"' : ""}/>`;
+    const area = (d, fill = c, stroke = o) => `<path d="${d}" fill="${fill}" stroke="${stroke}" stroke-width="${Math.max(1.5, w / 3)}" stroke-linejoin="round"/>`;
+    const head = (y) => g("arrowhead", area(`M${x1} ${y}L${end} ${y - h}L${end} ${y + h}Z`));
+    let body = "";
+    if (p.style === "solid") body = g("shaft", area(`M${x0} ${cy - w}H${end}V${cy + w}H${x0}Z`)) + head(cy);
+    if (p.style === "open") body = g("shaft", line3(`M${x0} ${cy}H${x1}`)) + g("arrowhead", line3(`M${end} ${cy - h}L${x1} ${cy}L${end} ${cy + h}`));
+    if (p.style === "double-line") body = g("shaft", line3(`M${x0} ${cy - w * 1.25}H${end}M${x0} ${cy + w * 1.25}H${end}`)) + head(cy);
+    if (p.style === "dashed") body = g("shaft", line3(`M${x0} ${cy}H${end}`, `${w * 2.2} ${w * 1.4}`)) + head(cy);
+    if (p.style === "curve") body = g("shaft", line3(`M${x0} ${bottom}C${x0 + span * 0.45} ${bottom} ${x0 + span * 0.35} ${top} ${end} ${top}`)) + head(top);
+    if (p.style === "elbow") body = g("shaft", line3(`M${x0} ${bottom}H${x0 + span * 0.43}V${top}H${end}`)) + head(top);
+    if (p.style === "return") body = g("shaft", line3(`M${x0} ${bottom}H${x0 + span * 0.66}Q${x0 + span * 0.83} ${bottom} ${x0 + span * 0.83} ${cy}Q${x0 + span * 0.83} ${cy - 10} ${x0 + span * 0.6} ${cy - 10}H${x0 + span * 0.23}Q${x0 + span * 0.13} ${cy - 10} ${x0 + span * 0.13} ${top + 8}Q${x0 + span * 0.13} ${top} ${x0 + span * 0.3} ${top}H${end}`)) + head(top);
+    if (p.style === "handdrawn") body = g("shaft", line3(`M${x0} ${cy + 3}Q${x0 + span * 0.2} ${cy - 9} ${x0 + span * 0.4} ${cy + 2}T${end} ${cy}`) + `<path d="M${x0 + 4} ${cy + 11}Q${x0 + span * 0.4} ${cy + 5} ${end - 4} ${cy + 11}" fill="none" stroke="${c}" stroke-width="${Math.max(2, w * 0.28)}" opacity=".6"/>`) + g("arrowhead", line3(`M${end} ${cy - h}Q${x1 - 10} ${cy - 12} ${x1} ${cy}Q${x1 - 10} ${cy + 12} ${end} ${cy + h}`));
+    if (p.style === "ribbon") body = g("ribbon", area(`M${x0} ${cy - h * 0.62}H${end}V${cy - h}L${x1} ${cy}L${end} ${cy + h}V${cy + h * 0.62}H${x0}L${x0 + h * 0.55} ${cy}Z`)) + g("fold", area(`M${x0} ${cy + h * 0.62}L${x0 + h * 0.55} ${cy}L${x0 + h * 1.1} ${cy + h * 0.62}Z`, s2, "none"));
+    if (p.style === "swallowtail") {
+      body = g("arrowhead", area(`M${x0} ${cy - h * 0.62}H${end}V${cy - h}L${x1} ${cy}L${end} ${cy + h}V${cy + h * 0.62}H${x0}L${x0 + p.tailDepth} ${cy}Z`));
+    }
+    if (p.style === "block3d") {
+      const d = `M${x0} ${cy - h * 0.52}H${end}V${cy - h}L${x1} ${cy}L${end} ${cy + h}V${cy + h * 0.52}H${x0}Z`, depth = Math.min(10, (H - 2 * h - w) / 2);
+      body = g("depth", `<g transform="translate(-${depth * 0.5} ${depth})">${area(d, o, o)}</g>`) + g("arrowhead", area(d)) + g("bevel", `<path d="M${x0 + 6} ${cy - h * 0.52 + 6}H${end - 6}V${cy - h + 8}" fill="none" stroke="${s2}" stroke-width="${Math.max(2, w * 0.5)}"/>`);
+    }
+    if (p.style === "chevrons") body = g("shaft", line3(`M${x0} ${cy}H${x0 + span * 0.18}`)) + [0.36, 0.68, 1].map((f, i) => {
+      const x = x0 + span * f, hw = Math.min(h * 1.35, span * 0.27);
+      return g(i === 2 ? "arrowhead" : "chevron-" + i, area(`M${x - hw} ${cy - h}L${x} ${cy}L${x - hw} ${cy + h}L${x - hw * 0.72} ${cy}Z`, i === 2 ? c : s2));
+    }).join("");
+    if (p.style === "tapered") body = g("shaft", area(`M${x0} ${cy}L${end} ${cy - h * 0.64}V${cy - h}L${x1} ${cy}L${end} ${cy + h}V${cy + h * 0.64}Z`)) + g("highlight", `<path d="M${x0 + span * 0.17} ${cy - 2}L${end - 8} ${cy - h * 0.38}" stroke="${s2}" stroke-width="${Math.max(2, w * 0.35)}" fill="none"/>`);
+    return `<g data-kit-node="arrow" data-arrow-style="${p.style}" data-direction="${p.direction}" transform="translate(${p.boxWidth / 2} ${p.boxHeight / 2}) scale(${p.scale}) translate(${-p.boxWidth / 2} ${-p.boxHeight / 2})"><g transform="${turn}"><g transform="${p.flipBend ? `translate(0 ${H}) scale(1 -1)` : ""}">${body}</g></g></g>`;
+  }
+  function fitLines(p, width) {
+    const units10 = (t) => [...t].reduce((n4, c) => n4 + (/[\u0000-\u00ff]/.test(c) ? 0.56 : 1), 0);
+    if (p.lines.length) {
+      if (p.lines.some((l) => units10(l) * p.fontSize > width)) throw Error("semantic-label: explicit line exceeds available width; shorten it or lower fontSize");
+      return p.lines;
+    }
+    const result = [];
+    let current = "";
+    for (const ch of p.text) {
+      if (ch === "\n") {
+        result.push(current);
+        current = "";
+        continue;
+      }
+      if (current && units10(current + ch) * p.fontSize > width) {
+        result.push(current);
+        current = "";
+      }
+      current += ch;
+    }
+    result.push(current);
+    if (result.length > 2) throw Error("semantic-label: text exceeds two lines; shorten it or lower fontSize");
+    return result;
+  }
+  function label2(p, h) {
+    const c = esc(p.color), bg = esc(p.background), bc = esc(p.borderColor), w = p.strokeWidth;
+    const shape = (d, fill = bg, stroke = bc) => `<path d="${d}" fill="${fill}" stroke="${stroke}" stroke-width="${w}" stroke-linejoin="round"/>`;
+    const box2 = (x, y, width, height, fill = bg) => `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="${fill}" stroke="${bc}" stroke-width="${w}"/>`;
+    let decor = "", left = 42, right = 558, centerY = 86;
+    if (p.variant === "heading-underline") decor = g("underline", shape("M34 145H566", "none") + shape("M34 137H153V150H34Z", bc, bc));
+    if (p.variant === "object-tab") {
+      decor = g("tab", shape("M28 41H58L80 20H223L245 41H571V151H28Z") + shape("M28 41H571", "none"));
+      left = 49;
+      right = 551;
+      centerY = 96;
+    }
+    if (p.variant === "action-ribbon") {
+      decor = g("ribbon", shape(p.direction === "right" ? "M27 31H530L574 89L530 147H27L56 89Z" : "M573 31H70L26 89L70 147H573L544 89Z"));
+      left = 76;
+      right = 524;
+      centerY = 89;
+    }
+    if (p.variant === "conclusion-bracket") decor = g("brackets", shape("M83 25H27V150H83M517 25H573V150H517", "none") + shape("M42 39H558V137H42Z", bg, "none"));
+    if (p.variant === "conclusion-card") {
+      decor = g("depth", box2(36, 36, 546, 128, "#c1ddf3")) + g("card", box2(22, 23, 546, 128)) + g("rule", shape("M40 38H550", "none"));
+      left = 47;
+      right = 544;
+      centerY = 88;
+    }
+    if (p.variant === "caution-notched") {
+      decor = g("notched", shape("M48 22H553L576 45V132L553 155H26V45Z")) + g("warning", shape("M74 54L100 105H48Z", bc, bc) + `<path d="M74 69V85M74 94V97" stroke="${bg}" stroke-width="5"/>`);
+      left = 119;
+      right = 548;
+      centerY = 88;
+    }
+    if (p.variant === "question-speech") {
+      decor = g("speech", shape(p.direction === "right" ? "M28 22H573V139H507L533 169L467 139H28Z" : "M28 22H573V139H132L68 169L94 139H28Z"));
+      left = 51;
+      right = 550;
+      centerY = 80;
+    }
+    if (p.variant === "note-outline") {
+      decor = g("frame", box2(29, 24, 544, 129)) + g("accent", shape("M29 24H41V153H29Z", bc, bc));
+      left = 65;
+      right = 548;
+      centerY = 88;
+    }
+    const sx = p.boxWidth / 600, sy = p.boxHeight / 180;
+    left *= sx;
+    right *= sx;
+    centerY *= sy;
+    const lines3 = fitLines(p, right - left), lineHeight = p.fontSize * 1.15, startY = centerY - (lines3.length - 1) * lineHeight / 2 + p.fontSize * 0.34;
+    if (lines3.length * lineHeight > p.boxHeight * 0.76) throw Error("semantic-label: viewport height too small for fontSize and line count");
+    const text7 = lines3.map((line3, i) => `<text data-kit-node="text-line-${i}" x="${p.align === "left" ? left : (left + right) / 2}" y="${startY + i * lineHeight}" text-anchor="${p.align === "left" ? "start" : "middle"}" fill="${c}" font-size="${p.fontSize}" style="font-weight:${p.fontWeight}">${h?.esc ? h.esc(line3) : esc(line3)}</text>`).join("");
+    decor = decor.replaceAll("<path ", '<path vector-effect="non-scaling-stroke" ').replaceAll("<rect ", '<rect vector-effect="non-scaling-stroke" ');
+    return `<g data-kit-node="label" data-label-variant="${p.variant}" transform="translate(${p.boxWidth / 2} ${p.boxHeight / 2}) scale(${p.scale}) translate(${-p.boxWidth / 2} ${-p.boxHeight / 2})"><g transform="scale(${sx} ${sy})">${decor}</g>${text7}</g>`;
+  }
+  var semanticParts = [
+    { key: "direction-arrow", name: "\u53EF\u8C03\u65B9\u5411\u7BAD\u5934", width: 480, height: 240, defaults: arrowDefaults, description: "13\u79CD\u771F\u5B9E\u7BAD\u5934\u5F62\u6001\uFF1B\u660E\u786E\u5934\u90E8\u4E0E\u5C3E\u7AEF\u3002\u65B9\u5411right/left/up/down\u3002strokeWidth2\u201314\uFF0CheadSize8\u201350\uFF0Cscale0.5\u20131\u3002swallowtail\u7684tailDepth6\u201360\u4E3A\u5B9E\u9645\u50CF\u7D20\u7A7AV\u53E3\u6DF1\u5EA6\uFF1B\u539F12\u79CD\u5916\u89C2\u4FDD\u6301\u3002arrowAnchors\u8FD4\u56DE\u7CBE\u786E\u7AEF\u70B9\u3002\u4E0D\u662F\u5173\u8054\u62EC\u7EBF\u3002", draw: arrow },
+    { key: "semantic-label", name: "\u8BED\u4E49\u6587\u5B57\u6807\u6CE8\u6846", width: 600, height: 180, defaults: labelDefaults, description: "8\u79CD\u6807\u9898/\u5BF9\u8C61/\u52A8\u4F5C/\u7ED3\u8BBA/\u6CE8\u610F/\u7591\u95EE/\u6CE8\u89E3\u5F62\u6001\u3002text\u226432\u5B57\uFF0C\u6700\u591A2\u884C\uFF1Blines\u53EF\u660E\u786E\u6700\u591A2\u884C\u6BCF\u884C\u226424\u3002\u5B57\u53F718\u201346\u4E14\u4E0D\u81EA\u52A8\u7F29\u5B57\uFF0C\u8FC7\u957F\u62A5\u9519\u3002\u540C\u8BED\u4E49\u5168\u7247\u51BB\u7ED3variant\u3002", draw: label2 }
+  ];
+
+  // transfer-kit-primitives.mjs
+  var C = { ink: "#10275f", blue: "#0879ff", light: "#dff2ff", edge: "#86c6ff", shadow: "#b4dafe", mint: "#009e7a", orange: "#ff8709", gray: "#bbc9d5" };
+  var kitCSS = '.ani-kit text{font-family:ComponentHan,ComponentUI,"Microsoft YaHei",sans-serif;font-weight:700}.ani-kit [data-kit-node]{transform-box:fill-box;transform-origin:center}.ani-kit path,.ani-kit rect,.ani-kit circle,.ani-kit ellipse{stroke-linecap:round;stroke-linejoin:round}';
+  var safe = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  var esc2 = (h, v) => h?.esc ? h.esc(v) : safe(v);
+  var num5 = (v, d = 0) => Number.isFinite(Number(v)) ? Number(v) : d;
+  var bounded = (v, a2, b2, d = a2) => Math.min(b2, Math.max(a2, num5(v, d)));
+  var node = (name, s2, attrs = "") => `<g data-kit-node="${name}" ${attrs}>${s2}</g>`;
+  var path = (d, fill = C.light, stroke = C.ink, sw = 3) => `<path d="${d}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
+  var rect = (x, y, w, ht, r, fill, stroke = "none", sw = 2) => `<rect x="${x}" y="${y}" width="${w}" height="${ht}" rx="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
+  var txt3 = (h, x, y, text7, size = 28, max = 420, fill = C.ink, anchor = "start") => {
+    const value = String(text7 ?? "");
+    const chars = Array.from(value).reduce((n4, c) => n4 + (/[\u0000-\u00ff]/.test(c) ? 0.57 : 1), 0);
+    const actual = Math.min(size, max / Math.max(chars, 1));
+    if (actual < size * 0.69) throw new Error(`Transfer kit text exceeds readable width: ${value}`);
+    return `<text x="${x}" y="${y}" font-size="${actual}" fill="${fill}" text-anchor="${anchor}" data-kit-node="text">${esc2(h, value)}</text>`;
+  };
+  var defs = (h, key, colors3) => {
+    const id = esc2(h, h?.uid ? h.uid("kit-" + key) : "kit-" + key);
+    return { id, fill: `url(#${id})`, html: `<defs><linearGradient id="${id}" x1="0" y1="0" x2=".7" y2="1">${colors3.map((v, i) => `<stop offset="${i / (colors3.length - 1)}" stop-color="${v}"/>`).join("")}</linearGradient></defs>` };
+  };
+  var grad = (h, key, colors3, fn) => {
+    const g2 = defs(h, key, colors3);
+    return g2.html + fn(g2.fill);
+  };
+  var part = (key, name, width, height, defaults3, description, draw) => ({ key, name, width, height, defaults: defaults3, description, draw });
+  var controls = (x, y, scale = 1) => `<g transform="translate(${x} ${y}) scale(${scale})">${["#ff5953", "#ffd438", "#08c9a3"].map((c, i) => `<circle cx="${i * 31}" cy="0" r="10" fill="${c}" stroke="${C.ink}" stroke-width="1.7"/><circle cx="${i * 31 - 3}" cy="-4" r="3" fill="white" opacity=".6"/>`).join("")}</g>`;
+  var product = (kind, h) => {
+    if (kind === "shoe") return grad(h, "shoe", ["#ecfaff", "#a2d9ff", "#308ce0"], (g2) => node(
+      "product",
+      node("rear-shoe", path("M43 55L65 35Q74 31 79 44L87 58L103 67Q113 72 111 86Q103 99 76 103L42 94Q31 88 33 78Z", g2, C.ink, 2.4) + path("M34 83Q53 94 76 91L109 80L110 89Q85 111 45 101Q31 98 31 90Z", "#fff", C.ink, 2.2) + path("M64 40L75 46L80 61", "none", "#1972ba", 4) + path("M58 53L75 61M53 59L70 67M47 66L64 74", "none", "#fff", 3)) + node("front-shoe", path("M72 57L91 43Q97 42 100 50L109 75Q119 79 124 86L126 106Q103 128 40 125Q24 124 21 117L22 103Q22 96 36 91L59 76Z", g2, C.ink, 2.8) + path("M22 108Q40 117 65 112L103 101L125 95L126 106Q112 128 46 132Q22 131 20 120Z", "#fff", C.ink, 2.6) + path("M73 62L87 70L94 82L61 102L37 106", "none", "#076abe", 5) + path("M66 70L86 79M59 77L79 86M51 83L72 93", "none", "#fff", 3.5) + path("M103 74L111 86L103 91L94 82Z", "#0877cb", C.ink, 1.5) + path("M26 120Q66 127 114 111", "none", "#9dcee9", 2))
+    ));
+    if (kind === "chair") return grad(h, "chair", ["#b4e2ff", "#70b7ec", "#3288cf"], (g2) => node(
+      "product",
+      node("legs", path("M43 96L33 143H39L54 100M90 97L99 143H105L101 93M65 99L65 137H71L74 98M113 88L123 130H128L123 87", "#bd783d", "#714c34", 2.2)) + node("back", path("M60 14Q59 7 70 7L108 9Q119 10 118 22L109 87L66 96L49 71Z", g2, C.ink, 2.4) + path("M70 15L105 17Q110 17 109 27L102 72", "none", "#d9f1ff", 3)) + node("seat", path("M42 66Q46 61 57 63L93 72L113 70L111 91Q100 111 57 110L31 101Q25 97 27 88L32 74Z", g2, C.ink, 2.5) + path("M34 87Q65 99 93 90L109 81", "none", "#c4eaff", 4) + path("M29 96Q61 116 101 101", "none", "#2b7dbb", 3))
+    ));
+    if (kind === "plant") return grad(h, "pot", ["#fff", "#f4f5f5", "#cedae2"], (g2) => node(
+      "product",
+      node("stems", path("M73 104V32M73 88L43 55M74 81L101 42M70 92L106 73", "none", "#3c7a2b", 3.3)) + node("leaves", path("M72 79C46 58 58 21 70 12C89 32 88 62 72 79Z", "#72b644", "#255c30", 2.1) + path("M64 88C34 83 25 55 23 39C48 41 67 60 64 88Z", "#5aa03c", "#255c30", 2.1) + path("M80 84C80 53 101 29 115 26C120 53 105 75 80 84Z", "#83bd4d", "#255c30", 2.1) + path("M72 103C41 102 23 81 20 69C45 65 65 80 72 103Z", "#4f9636", "#255c30", 2.1) + path("M78 100C89 81 108 68 128 72C120 92 99 106 78 100Z", "#5ca83b", "#255c30", 2.1) + path("M70 25L72 70M32 50L57 77M105 40L87 71", "none", "#a7d175", 1.5)) + node("pot", `<ellipse cx="73" cy="104" rx="28" ry="9" fill="#795739" stroke="${C.ink}" stroke-width="2"/>` + path("M43 103L50 143Q72 151 94 143L102 103Q76 115 43 103Z", g2, C.ink, 2.4) + path("M50 109L57 139", "none", "white", 3) + path("M43 103Q72 115 102 103", "none", "#a3b7c9", 2))
+    ));
+    if (kind === "lamp") return grad(h, "lamp", ["#fff27b", "#ffb42b", "#f78a10"], (g2) => node("product", path("M46 23Q48 17 55 17H84Q91 17 93 25L113 78Q115 87 106 88H35Q25 87 29 78Z", g2, "#903600", 3) + path("M64 88H78V125H93Q101 125 101 137H42Q42 125 51 125H64Z", g2, "#903600", 3) + path("M51 26H82", "none", "#fff9c4", 5)));
+    if (kind === "bag") return grad(h, "bag", ["#6ee9bf", "#05b49f", "#008577"], (g2) => node("product", path("M48 56V42C48 8 92 8 92 42V56H84V42C84 21 56 21 56 42V56Z", g2, C.ink, 3) + path("M36 55Q29 55 28 67L20 126Q19 139 33 140H109Q122 139 120 126L112 66Q111 55 103 55Z", g2, C.ink, 3) + path("M38 59L34 125Q34 133 25 136M100 61L111 130", "none", "#007567", 3) + path("M48 66L50 77", "none", C.ink, 4)));
+    return grad(h, "cup", ["#59c7ff", "#1688ff", "#005acb"], (g2) => node("product", path("M93 56C129 48 128 103 96 106L95 94C113 92 114 66 94 70Z", g2, C.ink, 3) + path("M33 40C34 23 99 23 100 40V119C99 151 34 151 33 119Z", g2, C.ink, 3) + `<ellipse cx="66.5" cy="40" rx="33.5" ry="12" fill="#0658b5" stroke="${C.ink}" stroke-width="3"/><path d="M40 39Q65 27 93 38" fill="none" stroke="#8bdcff" stroke-width="3"/>` + path("M43 60V102", "none", "#8bdcff", 6)));
+  };
+  var parts = [
+    part("truck-body", "\u655E\u5F00\u8D27\u8F66\u8F66\u53A2", 600, 390, { open: true, label: "", showChassis: true }, "\u539F\u751F600\xD7390\uFF1B\u655E\u53E3\u3001\u5E95\u677F\u3001\u7ACB\u67F1\u72EC\u7ACB\u3002label\u226412\u5B57\uFF1B\u4E0D\u542B\u7EB8\u7BB1\u548C\u8F6E\u5B50\u3002", (p, h) => {
+      const g2 = defs(h, "body", ["#f8fdff", "#97d6ff", "#2789d9"]);
+      return g2.html + node("chassis", p.showChassis ? path("M28 308H590V355H53Q30 354 28 335Z", "#06457f") + rect(89, 348, 475, 23, 6, "#3478b2", C.ink, 3) + rect(334, 324, 115, 37, 9, "#2c8eda", C.ink, 3) + path("M365 326V359M419 326V359", "none", "#0e568f", 2) : "") + node("rear-panel", path("M24 80L171 20L181 307L25 317Z", "#effaff") + path("M37 89L157 42M42 128L157 99M42 176L157 153M42 225L157 209M42 274L157 265", "none", "#a6dfff", 7)) + node("inside", path("M180 39L579 65L578 309L180 308Z", "#1d6caf") + path("M194 71L446 91L446 281L194 289Z", "#267dc3") + path("M446 91L566 65V287L446 281Z", "#4d9fe3") + path("M194 289L446 281L566 287L570 310L184 311Z", "#83c4f2") + path("M203 121L439 137M203 167L439 177M203 219L439 225M458 118L554 98M458 171L553 156M458 226L552 215", "none", "#4e9cd8", 5)) + node("frame", path("M172 20L582 46Q593 46 593 60V311Q593 326 579 325L171 326Q159 326 159 313V38Q159 23 172 20Z", g2.fill) + path("M189 47L572 66V301H189Z", p.open ? "#246fae" : g2.fill, C.ink, 2) + (p.open ? path("M197 66L444 86V284L197 289Z", "#3485c8") + path("M444 86L565 66V291L444 284Z", "#66a9e4") + path("M197 289L444 284L565 291L566 303H197Z", "#9fd7fa") + path("M203 118L434 130M203 170L434 179M203 221L434 227M456 121L553 102M456 173L553 159M456 226L553 214", "none", "#2c76b4", 5) : "") + path("M175 31L180 310M189 48L574 64", "none", "#bfeaff", 5)) + node("rail", rect(168, 309, 421, 15, 5, "#c9eeff", C.ink, 2) + rect(252, 350, 328, 17, 3, "#347ab7", C.ink, 2)) + txt3(h, 375, 190, p.label, 28, 310);
+    }),
+    part("truck-cab", "\u84DD\u767D\u8D27\u8F66\u9A7E\u9A76\u5BA4", 300, 390, { facing: "right" }, "\u539F\u751F300\xD7390\uFF1B\u8F66\u7A97\u3001\u53CD\u5149\u3001\u540E\u89C6\u955C\u3001\u4FDD\u9669\u6760\u72EC\u7ACB\uFF0C\u4E0D\u542B\u8F66\u8F6E\u3002", (p, h) => grad(h, "cab", ["#ffffff", "#e8f8ff", "#7ac4f4"], (g2) => {
+      const body = node("roof", path("M14 56C89 52 126 71 151 121L28 128Z", g2)) + node("cab-body", path("M21 115L171 120Q198 121 213 154L258 249Q270 267 270 313V353H23Z", g2) + path("M25 130H123Q151 130 163 155L212 257V339H28Z", "#faffff", C.ink, 3) + path("M28 328H107Q147 279 195 317L213 356H28Z", "#0871c0", C.ink, 3)) + node("side-window", path("M48 144H104Q118 144 124 159L148 221Q152 236 138 237L111 218L47 210Q39 207 39 195V154Q39 145 48 144Z", "#087bcc", C.ink, 3) + path("M54 194L100 151M82 209L119 169", "none", "#35b5ff", 10) + path("M106 217L125 193Q139 191 145 221", "none", "#075696", 6)) + node("windscreen", path("M137 143L179 146Q192 148 199 167L240 248L173 231Z", "#50bff0", C.ink, 3) + path("M170 153L160 184M194 170L183 207", "none", "#cdf6ff", 8) + path("M169 229L237 244", "none", "#02538a", 6)) + node("mirror", path("M220 174L232 173L237 206L224 211Z", "#0b4673") + path("M229 208L230 232H205", "none", C.ink, 3)) + node("details", rect(42, 254, 27, 16, 4, "#075894", C.ink, 2) + rect(202, 275, 55, 32, 5, "#003c71", C.ink, 3) + path("M210 290H247", "none", "#77c6f4", 5) + rect(166, 263, 18, 38, 4, "#ffbc24", C.ink, 2) + rect(187, 267, 17, 36, 4, "#f2fcff", C.ink, 2) + rect(8, 350, 273, 26, 5, "#8ccff4", C.ink, 3) + rect(209, 353, 40, 18, 3, "#f3fdff", C.ink, 2) + path("M34 236L95 243", "none", "#d2efff", 5));
+      return p.facing === "left" ? `<g transform="translate(300 0) scale(-1 1)">${body}</g>` : body;
+    })),
+    part("wheel", "\u8D27\u8F66\u8F6E\u80CE", 120, 120, { rotation: 0 }, "\u539F\u751F120\xD7120\uFF1B\u65CB\u8F6C\u4EC5\u63A7\u5236\u8F6E\u6BC2\u7EC4\uFF1B\u65E0\u6587\u5B57\u3002", (p, h) => `<g transform="rotate(${num5(p.rotation)} 60 60)">${node("tire", `<circle cx="60" cy="60" r="56" fill="#092c56" stroke="${C.ink}" stroke-width="4"/><circle cx="60" cy="60" r="44" fill="#164577" stroke="#2163a0" stroke-width="5"/>`)}${node("hub", `<circle cx="60" cy="60" r="31" fill="#acd8f6" stroke="#061d4d" stroke-width="3"/><circle cx="60" cy="60" r="13" fill="#245b8c" stroke="#08234e" stroke-width="3"/>` + Array.from({ length: 6 }, (_, i) => {
+      const a2 = i * Math.PI / 3;
+      return `<circle cx="${60 + 22 * Math.cos(a2)}" cy="${60 + 22 * Math.sin(a2)}" r="4" fill="#245c91"/>`;
+    }).join(""))}</g>`),
+    part("cargo-box", "\u6709\u4F53\u79EF\u7684\u5C01\u88C5\u7EB8\u7BB1", 160, 130, { label: "", stamp: true }, "\u539F\u751F160\xD7130\uFF1B\u6B63\u9762\u3001\u4FA7\u9762\u3001\u80F6\u5E26\u53EF\u72EC\u7ACB\u663E\u9690\uFF1Blabel\u22646\u5B57\u3002", (p, h) => grad(h, "cargo", ["#ffe0a1", "#e7aa5c", "#c58440"], (g2) => node("box", path("M9 24L36 13L151 22V117L125 127L9 114Z", g2) + path("M9 24L125 31V127L9 114Z", g2) + path("M125 31L151 22V117L125 127Z", "#ce924d") + path("M9 24L36 13L151 22L125 31Z", "#ffd699") + path("M65 19L84 21V57L74 51L65 55Z", "#fff0c9", "#edc992", 1) + rect(22, 38, 25, 17, 1, "#fff3d8") + path("M26 43H43M26 48H41", "none", "#d8b687", 1.6)) + node("stamp", p.stamp ? rect(101, 96, 16, 19, 1, "none", "#644721", 1.3) + path("M104 109V100M102 102L104 100L106 102M113 109V100M111 102L113 100L115 102", "none", "#644721", 1.4) : "") + txt3(h, 66, 87, p.label, 17, 89, C.ink, "middle"))),
+    part("ground-shadow", "\u692D\u5706\u5730\u9762\u6295\u5F71", 600, 70, { opacity: 0.55, color: "#a9d6fc" }, "\u539F\u751F600\xD770\uFF1Bopacity 0\u20131\uFF1B\u4E0D\u542B\u5BF9\u8C61\u3002", (p) => `<ellipse cx="300" cy="35" rx="295" ry="30" fill="${safe(p.color)}" opacity="${bounded(p.opacity, 0, 1, 0.55)}"/>`),
+    part("photo-card", "\u5546\u54C1\u7167\u7247\u5361\u7247", 180, 200, { kind: "cup", label: "", shadow: true }, "\u539F\u751F180\xD7200\uFF1Bkind cup/lamp/bag/shoe/chair/plant\uFF1Blabel\u22648\u5B57\u3002\u5546\u54C1\u59CB\u7EC8\u5728\u7167\u7247\u8FB9\u6846\u5185\u3002", (p, h) => grad(h, "photo", ["#fbfeff", "#e5f5ff", "#c6e7fd"], (g2) => node("shadow", p.shadow ? rect(17, 21, 158, 176, 13, "#bbdffa") : "") + node("photo-frame", rect(3, 3, 158, 176, 13, "#fff", C.edge, 2.6) + rect(13, 15, 137, 153, 9, g2)) + `<g data-kit-node="photo-product" transform="translate(18 21) scale(.94)">${product(p.kind, h)}</g>` + txt3(h, 81, 195, p.label, 17, 152, C.ink, "middle"))),
+    part("window-shell", "\u84DD\u6807\u9898\u680F\u8F6F\u4EF6\u7A97\u53E3", 760, 560, { title: "\u5E94\u7528\u7A97\u53E3", controls: true, caption: "", brandSrc: "" }, "\u539F\u751F760\xD7560\uFF1B\u4E0D\u542B\u5185\u5C42\u56FE\u6216\u6B63\u6587\uFF1Btitle\u226416\u5B57\uFF0Ccaption\u22649\u5B57\u3002", (p, h) => grad(h, "window", ["#ffffff", "#effaff", "#d6edff"], (g2) => node("shadow", `<ellipse cx="386" cy="544" rx="367" ry="16" fill="#b9ddfc"/>`) + node("shell", rect(6, 7, 742, 535, 24, g2, C.ink, 3.5) + rect(11, 12, 732, 525, 20, "none", "#83caff", 3)) + grad(h, "bar", ["#39baff", "#007aff", "#0065ef"], (b2) => node("titlebar", path("M31 8H724Q749 8 749 32V74H7V32Q7 8 31 8Z", b2, C.ink, 3) + path("M20 20H726", "none", "#a2e9ff", 3))) + (p.controls ? node("window-controls", controls(43, 41) + path("M600 40H615M649 30H665V47H649ZM704 30L721 47M721 30L704 47", "none", "white", 3)) : "") + txt3(h, p.brandSrc ? 207 : 167, 53, p.title, 32, p.brandSrc ? 370 : 418, "white") + (p.brandSrc ? `<image href="${esc2(h, p.brandSrc)}" x="156" y="15" width="40" height="40"/>` : "") + (p.caption ? node("caption", rect(584, 89, 143, 36, 10, "#f7fdff", C.edge, 1.5) + txt3(h, 655, 114, p.caption, 20, 125, C.ink, "middle")) : ""))),
+    part("buffer-area", "\u865A\u7EBF\u4E34\u65F6\u533A", 680, 370, { title: "\u4E34\u65F6\u533A\u57DF", labelWidth: 270, showLabel: true }, "\u539F\u751F680\xD7370\uFF1B\u53EA\u542B\u865A\u7EBF\u56F4\u5408\u4E0E\u6807\u7B7E\uFF1Btitle\u226414\u5B57\u3002", (p, h) => node("boundary", rect(5, 27, 670, 337, 21, "#f4fbff", "#0787ff", 2.6).replace("/>", ' stroke-dasharray="10 7"/>')) + (p.showLabel ? grad(h, "bufferlabel", ["#38aeff", "#0077fa"], (g2) => node("label", rect(340 - num5(p.labelWidth, 270) / 2, 2, num5(p.labelWidth, 270), 49, 24, g2) + txt3(h, 340, 36, p.title, 28, num5(p.labelWidth, 270) - 26, "white", "middle"))) : "")),
+    part("chat-shell", "\u53EF\u586B\u6D88\u606F\u7684\u804A\u5929\u7A97\u53E3", 660, 640, { title: "\u667A\u80FD\u52A9\u624B", brandSrc: "", inputPlaceholder: "\u8F93\u5165\u6D88\u606F\u2026", showControls: true, caption: "\u60C5\u5883\u793A\u610F" }, "\u539F\u751F660\xD7640\uFF1B\u4E0D\u542B\u6D88\u606F\uFF0C\u6D88\u606F\u533A\u57DFx32 y165 w596 h370\uFF1Btitle\u226410\u5B57\uFF0Cinput\u226424\u5B57\u3002", (p, h) => grad(h, "chat", ["#ffffff", "#f2faff", "#ddf0ff"], (g2) => node("shadow", `<ellipse cx="334" cy="622" rx="319" ry="16" fill="#bfdefa"/>`) + node("shell", rect(5, 5, 646, 614, 23, g2, C.ink, 3.5) + rect(11, 11, 634, 602, 18, "none", "#72bffd", 2.5)) + grad(h, "chatbar", ["#35baff", "#087dff", "#0870ef"], (g3) => node("titlebar", path("M29 6H626Q651 6 651 31V59H5V31Q5 6 29 6Z", g3, C.ink, 3))) + (p.showControls ? node("controls", controls(34, 33, 0.83)) : "") + node("brand", `<circle cx="77" cy="111" r="42" fill="#e6f4ff" stroke="#8ac8fc" stroke-width="1.5"/>` + (p.brandSrc ? `<image href="${esc2(h, p.brandSrc)}" x="36" y="70" width="82" height="82" preserveAspectRatio="xMidYMid meet"/>` : path("M61 95H93V124H81L72 132V124H61Z", "#8fcdf8", C.ink, 2)) + txt3(h, 141, 126, p.title, 37, 435)) + node("input", rect(28, 551, 595, 50, 13, "white", "#a6d2ff", 2) + txt3(h, 48, 585, p.inputPlaceholder, 23, 504, "#9baab9")) + txt3(h, 609, 533, p.caption, 16, 190, "#87a8d1", "end"))),
+    part("chat-message", "\u5355\u6761\u89D2\u8272\u6D88\u606F\u6C14\u6CE1", 500, 150, { role: "user", text: "\u53EF\u7F16\u8F91\u6D88\u606F", lines: [], tone: "blue", showAvatar: false, brandSrc: "" }, "\u539F\u751F500\xD7150\uFF1Brole user/assistant\uFF1Btext\u226420\u5B57\u6216lines\u6700\u591A3\u884C\u6BCF\u884C20\u5B57\u3002", (p, h) => {
+      const user = p.role === "user", x = p.showAvatar ? 74 : 8, w = p.showAvatar ? 414 : 480, bg = p.tone === "orange" ? "#ffe9c1" : p.tone === "mint" ? "#d4f3eb" : user ? "#acd5ff" : "#deefff";
+      const lines3 = Array.isArray(p.lines) && p.lines.length ? p.lines.slice(0, 3) : [p.text];
+      const height = 58 + (lines3.length - 1) * 34;
+      return node("bubble", rect(x, 6, w, height, 18, bg) + path(user ? `M${x + w - 24} ${height - 5}L${x + w + 5} ${height + 16}L${x + w - 3} ${height - 16}Z` : `M${x + 26} ${height - 6}L${x - 8} ${height + 16}L${x + 3} ${height - 20}Z`, bg, "none")) + (p.showAvatar ? node("avatar", `<circle cx="33" cy="45" r="30" fill="#e6f5ff" stroke="#91c9f4"/>` + (p.brandSrc ? `<image href="${esc2(h, p.brandSrc)}" x="5" y="16" width="56" height="58"/>` : "")) : "") + node("message", lines3.map((line3, i) => txt3(h, x + 20, 42 + i * 34, line3, 25, w - 40)).join(""));
+    }),
+    part("cargo-stack", "\u53EF\u62C6\u5206\u7EB8\u7BB1\u7EC4", 460, 290, { count: 6, label: "", stamp: true }, "\u539F\u751F460\xD7290\uFF1Bcount1\u20136\uFF0C\u6BCF\u7BB1\u72EC\u7ACBdata-kit-node\uFF1B\u4E0D\u542B\u5730\u57AB\u3002", (p, h) => {
+      const positions = [[138, 0, 154], [54, 77, 154], [224, 77, 154], [9, 161, 153], [157, 161, 153], [304, 161, 153]];
+      return positions.slice(0, bounded(p.count, 1, 6, 6)).map(([x, y, w], i) => node("cargo-" + i, partAt("cargo-box", { label: p.label, stamp: p.stamp }, h, { x, y, width: w, height: w * 130 / 160 }), 'data-motion="item"')).join("");
+    }),
+    part("warehouse", "\u4ED3\u5E93\u4E0E\u5378\u8D27\u53E3", 850, 490, { title: "\u76EE\u7684\u5730", showSideWing: true, doorOpen: false }, "\u539F\u751F850\xD7490\uFF1Btitle\u22649\u5B57\u3002\u5377\u5E18\u95E8\u3001\u4FA7\u95E8\u3001\u7FFC\u697C\u72EC\u7ACB\u3002", (p, h) => grad(h, "warehouse", ["#fcfdff", "#e9f3fc", "#d3e7f9"], (g2) => node("main", path("M20 115L368 32L729 102V449H20Z", g2, "#4f9beb", 2) + path("M20 115L368 32V451H20Z", g2, "#a2c8ed", 1) + path("M368 32L729 102V449H368Z", g2, "#a2c8ed", 1) + path("M19 111L368 27L741 97V114L368 46L19 132Z", "#65b5f3", "#1466b3", 3) + path("M61 141V447M137 119V447M214 99V447M292 80V447M445 63V447M519 79V447M594 96V447M671 109V447", "none", "#c2dbef", 1.5)) + node("sign", rect(257, 82, 241, 61, 7, "#d2edff", "#2379c6", 2) + rect(263, 88, 229, 49, 4, "white", "#78bcf1", 2) + txt3(h, 378, 125, p.title, 32, 215, C.ink, "middle")) + node("loading-door", rect(210, 181, 286, 267, 3, "#ecf8ff", "#80b4e5", 2) + rect(225, 196, 255, 252, 0, p.doorOpen ? "#4077a4" : "#67aae3", "#2369aa", 3) + (p.doorOpen ? "" : Array.from({ length: 9 }, (_, i) => path(`M228 ${222 + i * 25}H478`, "none", "#5299d4", 2)).join(""))) + node("side-door", rect(545, 261, 90, 187, 2, "#eaf7ff", "#93b9e6", 2) + rect(554, 270, 72, 178, 1, "#147de0", "#275f9a", 2) + rect(571, 292, 40, 52, 0, "#50a9f0", "#2667b7", 2) + path("M612 361V378", "none", C.ink, 3)) + node("light", rect(342, 158, 45, 13, 3, "#fff4c6", C.ink, 3)) + (p.showSideWing ? node("side-wing", path("M730 155H846V448H730Z", "#e8f3fc", "#74abdf", 2) + path("M730 150H846V164H730Z", "#6ab5f0", "#1b74c8", 2) + rect(744, 239, 91, 59, 0, "white", "#7eb8ec", 2) + rect(751, 247, 77, 43, 0, "#70c3f2", "#236cbe", 2) + path("M777 247V290M804 247V290", "none", "#3488cf", 2)) : "") + node("bollard", rect(652, 385, 13, 62, 4, "#ffcb41", "#1a5c98", 2) + path("M653 402H664M653 425H664", "none", "#3176b4", 8)))),
+    part("folder-shell", "\u5E26\u906E\u6321\u524D\u6CBF\u7684\u6587\u4EF6\u5939", 360, 310, { tone: "blue", layer: "both", label: "" }, "\u539F\u751F360\xD7310\uFF1Blayer back/front/both\u53EF\u5939\u5165\u7167\u7247\uFF1Btone blue/gold/mint\uFF1Blabel\u226410\u5B57\u3002", (p, h) => {
+      const tones5 = { blue: ["#88ddff", "#178aff", "#63c4f8"], gold: ["#ffe799", "#ffbc23", "#ffdc6a"], mint: ["#adf3e3", "#38c3ad", "#72decd"] }, colors3 = tones5[p.tone] || tones5.blue;
+      return grad(h, "folder-" + p.tone, colors3, (g2) => (p.layer !== "front" ? node("back", path("M24 51Q22 33 42 29L144 11Q162 9 166 26L176 63L309 49Q330 47 333 68L347 257L52 291Z", g2) + path("M35 52Q34 42 48 40L139 23", "none", "#e4fbff", 5)) : "") + (p.layer !== "back" ? node("front", path("M51 168L324 139Q348 137 342 162L320 270Q317 286 294 288L55 304Q33 305 39 282L62 186Z", g2, C.ink, 4) + path("M53 285L76 185L326 155", "none", "#dcf9ff", 5) + path("M84 183L306 159L144 282L56 289Z", "white", "none", 0).replace('fill="white"', 'fill="white" opacity=".10"')) : "") + txt3(h, 189, 251, p.label, 25, 221, C.ink, "middle"));
+    }),
+    part("photo-stack", "\u4FDD\u6301\u5546\u54C1\u8EAB\u4EFD\u7684\u7167\u7247\u7EC4", 380, 230, { kinds: ["cup", "lamp", "bag"], count: 3, spread: 95, labels: [], tilt: true }, "\u539F\u751F380\xD7230\uFF1Bcount1\u20133\uFF0Ckinds cup/lamp/bag/shoe/chair/plant\uFF1B\u6BCF\u5F20\u53EF\u5355\u72EC\u52A8\u753B\u3002", (p, h) => Array.from({ length: bounded(p.count, 1, 3, 3) }, (_, i) => {
+      const a2 = p.tilt ? [-8, 3, 9][i] : 0;
+      return node("photo-" + i, `<g transform="translate(${i * num5(p.spread, 95) + 13} ${i === 1 ? 3 : 16}) rotate(${a2} 85 98)">${partAt("photo-card", { kind: p.kinds?.[i] || "cup", label: p.labels?.[i] || "", instanceKey: String(i) }, h, { width: 166, height: 185 })}</g>`, 'data-motion="item"');
+    }).join("")),
+    part("notice-paper", "\u53EF\u586B\u5B57\u6BB5\u7684\u6298\u89D2\u901A\u77E5", 470, 540, { title: "\u901A\u77E5\u6807\u9898", subtitle: "", foldTone: "gold", showShadow: true }, "\u539F\u751F470\xD7540\uFF1Btitle\u226414\u5B57\uFF0Csubtitle\u226418\u5B57\uFF1B\u5185\u90E8\u6B63\u6587\u533A\u57DFx38 y170 w389 h320\u3002", (p, h) => grad(h, "paper", ["#fff", "#fcfeff", "#e8f6ff"], (g2) => node("shadow", p.showShadow ? `<ellipse cx="238" cy="524" rx="226" ry="14" fill="#cce8ff"/>` : "") + node("sheet", path("M21 27L388 8L454 77V507Q454 523 437 523H24Q8 523 9 506L13 47Q13 29 21 27Z", g2, C.ink, 3.6) + path("M27 37L379 19", "none", "white", 4)) + node("fold", path("M388 9V65Q388 78 402 77L452 77Z", p.foldTone === "blue" ? "#91d5ff" : "#ffe095", C.ink, 3) + path("M395 23V65L438 68", "none", "#fff8dc", 4)) + node("heading", txt3(h, 236, 136, p.title, 39, 395, "#ff620c", "middle") + txt3(h, 236, 171, p.subtitle, 24, 375, C.ink, "middle")))),
+    part("notice-field", "\u6807\u7B7E\u4E0E\u672C\u6B21\u4E8B\u5B9E\u5B57\u6BB5", 400, 86, { label: "\u5B57\u6BB5", value: "", tone: "blue", lineCount: 2 }, "\u539F\u751F400\xD786\uFF1Blabel\u22646\u5B57\uFF0Cvalue\u226412\u5B57\uFF1B\u7A7A\u503C\u75281\u20133\u7070\u8272\u884C\u3002", (p, h) => {
+      const c = { blue: "#087cff", orange: "#ff850a", mint: "#009976" }[p.tone] || "#087cff";
+      return node("label", rect(3, 6, 140, 70, 15, c) + txt3(h, 73, 51, p.label, 29, 124, "white", "middle")) + node("value", p.value ? txt3(h, 163, 49, p.value, 23, 230) : Array.from({ length: bounded(p.lineCount, 1, 3, 2) }, (_, i) => rect(164, 15 + i * 22, i ? 184 : 226, 13, 6, C.gray)).join(""));
+    }),
+    part("attachment-card", "\u62A5\u9519\u6216\u4EE3\u7801\u9644\u4EF6\u5361", 280, 135, { title: "\u9644\u4EF6", kind: "document", lineCount: 3 }, "\u539F\u751F280\xD7135\uFF1Bkind document/code/error/image\uFF1Btitle\u22648\u5B57\uFF0C\u7070\u884C0\u20133\u3002", (p, h) => node("card", rect(4, 4, 270, 124, 15, "white", "#9dccff", 2)) + node("file", path("M29 27H68L86 46V105H29Z", "#e5f4ff", "#8ac1f2", 2) + path("M68 27V46H86", "none", "#8ac1f2", 2) + (p.kind === "code" ? path("M47 56L35 69L47 81M70 56L82 69L70 81M63 53L54 86", "none", "#185adb", 3.8) : p.kind === "image" ? path("M37 85L48 67L58 77L66 59L78 85Z", "#087cfc", "none") : path("M39 57H60M39 69H73M39 81H62", "none", "#8eacd3", 4)) + (p.kind === "error" ? `<circle cx="77" cy="94" r="15" fill="#ff6923" stroke="white" stroke-width="2"/>` + path("M77 84V96M77 102V103", "none", "white", 3) : "")) + node("details", txt3(h, 104, 46, p.title, 26, 158) + Array.from({ length: bounded(p.lineCount, 0, 3, 3) }, (_, i) => rect(105, 62 + i * 18, i === 2 ? 103 : 146, 10, 5, C.gray)).join(""))),
+    part("reply-lines", "\u53EF\u9010\u884C\u63ED\u793A\u7684\u5360\u4F4D\u56DE\u590D", 450, 120, { count: 4, color: "#becbd6", lengths: [1, 0.87, 0.95, 0.7], lineHeight: 13, gap: 17 }, "\u539F\u751F450\xD7120\uFF1Bcount0\u20134\uFF0Clengths\u4E3A0\u20131\uFF1B\u6BCF\u884C\u72EC\u7ACBdata-kit-node\u3002", (p) => Array.from({ length: bounded(p.count, 0, 4, 4) }, (_, i) => node("line-" + i, rect(5, 7 + i * (num5(p.lineHeight, 13) + num5(p.gap, 17)), 435 * bounded(p.lengths?.[i], 0.08, 1, 1), bounded(p.lineHeight, 3, 18, 13), 7, safe(p.color)), 'data-motion="line"')).join("")),
+    part("send-icon", "\u4E00\u4F53\u7EB8\u98DE\u673A\u53D1\u9001\u56FE\u6807", 64, 64, { tone: "blue" }, "\u539F\u751F64\xD764\uFF1B\u4E0D\u542B\u6309\u94AE\u80CC\u666F\u3002", (p) => node("plane", path("M6 26L57 8L41 58L28 37L6 26Z", p.tone === "mint" ? C.mint : C.blue, "none") + path("M28 37L47 19", "none", "#ceecff", 2.6))),
+    part("checklist-row", "\u4E0D\u9884\u8BBE\u7ED3\u679C\u7684\u68C0\u67E5\u884C", 470, 74, { text: "\u5F85\u68C0\u67E5\u9879\u76EE", state: "unchecked", highlight: false }, "\u539F\u751F470\xD774\uFF1Bstate unchecked/checked/failed\uFF1B\u9ED8\u8BA4\u7A7A\u6846\uFF1Btext\u226420\u5B57\u3002", (p, h) => node("row", rect(1, 1, 466, 71, 12, p.highlight ? "#fff0cf" : "#f7fcff", p.highlight ? "#ffb443" : "#d0e7f9", 1.4)) + node("checkbox", rect(16, 19, 32, 32, 5, "white", "#3669a3", 2.2) + (p.state === "checked" ? path("M23 34L31 42L43 27", "none", "#009e79", 3.5) : p.state === "failed" ? path("M24 27L41 44M41 27L24 44", "none", "#ed6d27", 3.5) : "")) + txt3(h, 65, 46, p.text, 27, 383)),
+    part("magnifier", "\u53EF\u79FB\u52A8\u7684\u653E\u5927\u955C", 180, 190, { glassOpacity: 0.2 }, "\u539F\u751F180\xD7190\uFF1B\u955C\u7247\u4E0E\u624B\u67C4\u5206\u79BB\uFF1B\u53EA\u4F5C\u68C0\u67E5\u6307\u793A\uFF0C\u65E0\u865A\u6784\u653E\u5927\u7ED3\u679C\u3002", (p) => node("handle", path("M113 120L158 161Q170 177 156 184Q148 188 141 179L98 134Z", "#0878cb", C.ink, 3) + path("M122 133L153 163", "none", "#59bfff", 6)) + node("lens", `<circle cx="71" cy="73" r="62" fill="#329bec" stroke="${C.ink}" stroke-width="3"/><circle cx="71" cy="73" r="48" fill="#e2f6ff" fill-opacity="${bounded(p.glassOpacity, 0, 1, 0.2)}" stroke="#a4defc" stroke-width="7"/>` + path("M40 43Q55 27 76 29", "none", "white", 6))),
+    part("brace", "\u65E0\u7BAD\u5C16\u7684\u6BD4\u8F83\u62EC\u7EBF", 85, 320, { side: "left", color: "#087cff", weight: 6 }, "\u539F\u751F85\xD7320\uFF1Bside left/right\uFF1B\u4EC5\u6BD4\u8F83\u5BF9\u5E94\uFF0C\u4E0D\u8868\u793A\u4F20\u8F93\u3002", (p) => `<g transform="${p.side === "right" ? "translate(85 0) scale(-1 1)" : ""}">${node("relation", path("M16 7C64 7 40 125 58 146Q65 159 77 160Q65 162 58 176C40 195 65 313 16 313", "none", safe(p.color), bounded(p.weight, 1, 10, 6)), 'data-motion="line"')}</g>`),
+    part("flow-arrow", "\u5934\u6746\u4E00\u4F53\u7684\u77ED\u64CD\u4F5C\u7BAD", 220, 66, { direction: "right", tone: "blue", curved: false }, "\u539F\u751F220\xD766\uFF1Bdirection right/left\uFF1B\u64CD\u4F5C\u7BAD\u5934\u4E0E\u6746\u540C\u4E00\u8DEF\u5F84\uFF0C\u9000\u51FA\u65E0\u6B8B\u6746\u3002", (p) => {
+      const color5 = p.tone === "mint" ? C.mint : p.tone === "orange" ? C.orange : C.blue;
+      return `<g transform="${p.direction === "left" ? "translate(220 0) scale(-1 1)" : ""}">${node("arrow", p.curved ? path("M5 14C83 9 109 18 161 35L172 12L213 52L160 64L164 47C116 33 72 22 6 31Z", color5, "none") : path("M6 23H166V5L213 33L166 61V43H6Z", color5, "none"), 'data-motion="line"')}</g>`;
+    }),
+    part("status-pill", "\u4FE1\u606F\u6216\u8B66\u544A\u5706\u89D2\u72B6\u6001\u6761", 440, 86, { text: "\u72B6\u6001\u8BF4\u660E", tone: "blue", icon: "none" }, "\u539F\u751F440\xD786\uFF1Btone blue/mint/orange/light\uFF1Btext\u226418\u5B57\uFF1Bicon none/warning\u3002", (p, h) => {
+      const colors3 = { blue: ["#36afff", "#057bfc"], mint: ["#20c3a1", "#008d73"], orange: ["#ffa438", "#ff671a"], light: ["#ebf9ff", "#bfe4ff"] }[p.tone] || ["#36afff", "#057bfc"];
+      return grad(h, "pill-" + p.tone, colors3, (g2) => node("pill", rect(3, 5, 430, 74, 37, g2)) + (p.icon === "warning" ? node("icon", `<circle cx="47" cy="42" r="26" fill="white"/>` + path("M47 27V44M47 54V56", "none", "#fb671c", 5)) : "") + txt3(h, p.icon === "warning" ? 254 : 219, 57, p.text, 34, p.icon === "warning" ? 330 : 397, p.tone === "light" ? C.ink : "white", "middle"));
+    }),
+    part("title", "\u53EF\u7F16\u8F91\u77E5\u8BC6\u6807\u9898", 720, 130, { text: "\u77E5\u8BC6\u6807\u9898", subtitle: "", tone: "blue", align: "center" }, "\u539F\u751F720\xD7130\uFF1Btext\u226416\u5B57\uFF0Csubtitle\u226432\u5B57\uFF1B\u8D85\u8FC7\u5EFA\u8BAE\u5B57\u6570\u81EA\u52A8\u7F29\u5B57\u3002", (p, h) => {
+      const a2 = p.align === "left" ? "start" : "middle", x = a2 === "start" ? 8 : 360;
+      return node("heading", txt3(h, x, 66, p.text, 58, 700, p.tone === "orange" ? "#ff710b" : C.ink, a2)) + node("subtitle", txt3(h, x, 111, p.subtitle, 28, 700, C.ink, a2));
+    }),
+    part("question-bubble", "\u6A59\u8272\u63D0\u95EE\u6C14\u6CE1", 610, 280, { lines: ["\u9700\u8981\u601D\u8003\u7684\u95EE\u9898\uFF1F"], tone: "orange" }, "\u539F\u751F610\xD7280\uFF1Blines1\u20133\u884C\uFF0C\u6BCF\u884C\u226417\u5B57\u3002", (p, h) => grad(h, "question", ["#fff8df", "#ffebbe", "#ffd28a"], (g2) => node("bubble", path("M37 9H571Q601 9 601 41V211Q601 242 569 242H269L208 274L221 242H38Q8 242 8 211V41Q8 9 37 9Z", g2, p.tone === "blue" ? C.blue : "#ffa630", 3)) + node("question", (p.lines || []).slice(0, 3).map((t, i) => txt3(h, 305, 82 + i * 59, t, 46, 552, C.ink, "middle")).join("")))),
+    part("brand-badge", "\u5B98\u65B9\u5C0F\u56FE\u6807\u4E0E\u53EF\u7F16\u8F91\u540D\u79F0", 370, 95, { title: "\u667A\u80FD\u52A9\u624B", brandSrc: "", neutralMark: "chat" }, "\u539F\u751F370\xD795\uFF1BbrandSrc\u53EF\u9009\u51C6\u786E\u5B98\u65B9\u539F\u4EF6\uFF1B\u9ED8\u8BA4\u4E2D\u6027\u56FE\u6807\uFF1Btitle\u226410\u5B57\u3002", (p, h) => node("badge", rect(3, 3, 362, 87, 16, "#f5fbff", "#82bcf1", 2)) + node("brand", p.brandSrc ? `<image href="${esc2(h, p.brandSrc)}" x="14" y="10" width="72" height="72" preserveAspectRatio="xMidYMid meet"/>` : `<circle cx="49" cy="46" r="33" fill="#d5edff"/>` + path("M31 30H68V58H49L39 67V58H31Z", "#8ac7f4", C.ink, 2)) + txt3(h, 103, 59, p.title, 35, 242)),
+    part("code-lines", "\u975E\u6267\u884C\u6027\u4EE3\u7801\u5360\u4F4D\u884C", 480, 190, { count: 6, highlightLine: -1, tone: "blue" }, "\u539F\u751F480\xD7190\uFF1Bcount0\u20136\uFF0ChighlightLine -1\u62160\u20135\uFF1B\u4EC5\u62BD\u8C61\u884C\uFF0C\u4E0D\u5192\u5145\u53EF\u6267\u884C\u4EE3\u7801\u3002", (p) => Array.from({ length: bounded(p.count, 0, 6, 6) }, (_, i) => node("line-" + i, rect(7, 8 + i * 29, 20, 10, 4, "#c5d3df") + rect(42 + [0, 20, 40, 20, 40, 0][i], 8 + i * 29, [320, 266, 303, 242, 279, 194][i], 12, 6, i === num5(p.highlightLine, -1) ? p.tone === "orange" ? "#ffab42" : "#479ffc" : "#b7c9d8"), 'data-motion="line"')).join("")),
+    part("destination-pad", "\u5378\u8D27\u533A\u57DF\u5730\u57AB", 600, 130, { label: "" }, "\u539F\u751F600\xD7130\uFF1B\u4E0D\u542B\u7BB1\u5B50\uFF1Blabel\u226416\u5B57\u3002", (p, h) => node("pad", path("M87 12H493L590 116H9Z", "#f6fbff", "#5ba5ed", 4) + path("M106 25H479L558 98H48Z", "#f6fbff", "#d1e3f2", 3)) + txt3(h, 300, 82, p.label, 29, 410, C.ink, "middle")),
+    part("focus-ring", "\u53EF\u9000\u573A\u7684\u5C40\u90E8\u5F3A\u8C03\u6846", 400, 180, { tone: "orange", dashed: false }, "\u539F\u751F400\xD7180\uFF1B\u53EA\u7A81\u51FA\u5C40\u90E8\uFF0C\u4E0D\u6539\u53D8\u5BF9\u8C61\u72B6\u6001\u3002", (p) => node("focus", rect(5, 5, 390, 170, 21, "none", p.tone === "blue" ? C.blue : "#ffa127", 5).replace("/>", p.dashed ? ' stroke-dasharray="11 8"/>' : "/>"), 'data-motion="highlight"')),
+    part("truck", "\u655E\u53A2\u6574\u8F66\uFF08\u542B\u8D27\u7269\u4E0E\u6295\u5F71\uFF09", 870, 486, { cargoCount: 5, shadowOpacity: 0.55, shadowScale: 1, shadowOffsetY: 0 }, "\u539F\u751F870\xD7486\uFF1B\u6574\u8F66\u3001\u4E09\u8F6E\u3001\u5730\u9762\u6295\u5F71\u53CA\u5E38\u89C4\u8D27\u7269\u662F\u540C\u4E00\u5BF9\u8C61\u3002cargoCount 0\u20135\uFF1B\u79FB\u52A8\u548C\u7F29\u653E\u6574\u8F66\u65F6\u6295\u5F71\u540C\u6B65\uFF1B\u4EC5\u5378\u8D27\u52A8\u4F5C\u53E6\u7528\u72EC\u7ACB\u8D27\u7269\u3002", (p, h) => {
+      const shadowCenterX = 435, shadowCenterY = 386 + 35 * 850 / 600;
+      const shadow = node("shadow", `<g transform="translate(${shadowCenterX} ${shadowCenterY + p.shadowOffsetY}) scale(${p.shadowScale}) translate(${-shadowCenterX} ${-shadowCenterY})">${partAt("ground-shadow", { opacity: p.shadowOpacity }, h, { x: 10, y: 386, width: 850, height: 100 })}</g>`);
+      const vehicle = node("vehicle", partAt("truck-body", {}, h, { x: 0, y: 0, width: 600, height: 390 }) + partAt("truck-cab", {}, h, { x: 570, y: 0, width: 300, height: 390 }) + node("cargo", [[204, 211], [330, 211], [453, 211], [262, 120], [387, 120]].slice(0, p.cargoCount).map(([x, y], i) => node("cargo-" + i, partAt("cargo-box", { instanceKey: "cargo-" + i }, h, { x, y, width: 119, height: 99 }))).join("")) + node("wheels", [[75, 315], [204, 321], [701, 316]].map(([x, y], i) => node("wheel-" + i, partAt("wheel", { instanceKey: "wheel-" + i }, h, { x, y, width: 98, height: 98 }))).join("")));
+      return shadow + vehicle;
+    })
+  ];
+  for (const def of parts) if (["truck-body", "truck-cab", "wheel", "ground-shadow"].includes(def.key)) {
+    def.hidden = true;
+    def.compatibilityOnly = true;
+    def.description = "\u65E7\u7248\u517C\u5BB9\uFF1A" + def.description + " \u65B0\u5236\u4F5C\u8BF7\u4F7F\u7528truck\u6574\u8F66\uFF08\u542B\u6295\u5F71\uFF09\uFF0C\u4E0D\u624B\u5DE5\u62FC\u88C5\u8F66\u8F86\u3002";
+  }
+  var str = (maxLength) => ({ type: "string", maxLength });
+  var enumeration = (...values) => ({ type: "string", enum: values });
+  var integer = (minimum, maximum) => ({ type: "integer", minimum, maximum });
+  var number4 = (minimum, maximum) => ({ type: "number", minimum, maximum });
+  var bool = { type: "boolean" };
+  var color3 = { type: "string", pattern: "^#[0-9a-fA-F]{6}$" };
+  var array = (items, minItems, maxItems) => ({ type: "array", items, minItems, maxItems });
+  var imageSrc = { type: "string", maxLength: 512, description: "Optional local official logo path; no javascript:, data:, external network URL or SVG markup." };
+  var partRules = {
+    ...semanticRules,
+    truck: { cargoCount: integer(0, 5), shadowOpacity: number4(0, 1), shadowScale: number4(0.5, 1.04), shadowOffsetY: number4(-30, 6) },
+    "truck-body": { open: bool, label: str(12), showChassis: bool },
+    "truck-cab": { facing: enumeration("left", "right") },
+    wheel: { rotation: number4(-36e3, 36e3) },
+    "cargo-box": { label: str(6), stamp: bool },
+    "ground-shadow": { opacity: number4(0, 1), color: color3 },
+    "photo-card": { kind: enumeration("cup", "lamp", "bag", "shoe", "chair", "plant"), label: str(8), shadow: bool },
+    "window-shell": { title: str(16), controls: bool, caption: str(9), brandSrc: imageSrc },
+    "buffer-area": { title: str(14), labelWidth: number4(200, 600), showLabel: bool },
+    "chat-shell": { title: str(10), brandSrc: imageSrc, inputPlaceholder: str(24), showControls: bool, caption: str(16) },
+    "chat-message": { role: enumeration("user", "assistant"), text: str(20), lines: array(str(20), 0, 3), tone: enumeration("blue", "mint", "orange"), showAvatar: bool, brandSrc: imageSrc },
+    "cargo-stack": { count: integer(1, 6), label: str(6), stamp: bool },
+    warehouse: { title: str(9), showSideWing: bool, doorOpen: bool },
+    "folder-shell": { tone: enumeration("blue", "gold", "mint"), layer: enumeration("back", "front", "both"), label: str(10) },
+    "photo-stack": { kinds: array(enumeration("cup", "lamp", "bag", "shoe", "chair", "plant"), 1, 3), count: integer(1, 3), spread: number4(60, 96), labels: array(str(8), 0, 3), tilt: bool },
+    "notice-paper": { title: str(14), subtitle: str(18), foldTone: enumeration("gold", "blue"), showShadow: bool },
+    "notice-field": { label: str(6), value: str(12), tone: enumeration("blue", "orange", "mint"), lineCount: integer(1, 3) },
+    "attachment-card": { title: str(8), kind: enumeration("document", "code", "error", "image"), lineCount: integer(0, 3) },
+    "reply-lines": { count: integer(0, 4), color: color3, lengths: array(number4(0.08, 1), 0, 4), lineHeight: number4(3, 18), gap: number4(0, 17) },
+    "send-icon": { tone: enumeration("blue", "mint") },
+    "checklist-row": { text: str(20), state: enumeration("unchecked", "checked", "failed"), highlight: bool },
+    magnifier: { glassOpacity: number4(0, 1) },
+    brace: { side: enumeration("left", "right"), color: color3, weight: number4(1, 10) },
+    "flow-arrow": { direction: enumeration("right", "left"), tone: enumeration("blue", "mint", "orange"), curved: bool },
+    "status-pill": { text: str(18), tone: enumeration("blue", "mint", "orange", "light"), icon: enumeration("none", "warning") },
+    title: { text: str(16), subtitle: str(32), tone: enumeration("blue", "orange"), align: enumeration("left", "center") },
+    "question-bubble": { lines: array(str(17), 1, 3), tone: enumeration("blue", "orange") },
+    "brand-badge": { title: str(10), brandSrc: imageSrc, neutralMark: enumeration("chat") },
+    "code-lines": { count: integer(0, 6), highlightLine: integer(-1, 5), tone: enumeration("blue", "orange") },
+    "destination-pad": { label: str(16) },
+    "focus-ring": { tone: enumeration("blue", "orange"), dashed: bool }
+  };
+  function validateValue(v, r, label3) {
+    if (r.type === "array") {
+      if (!Array.isArray(v)) throw Error(label3 + ": expected array");
+      if (v.length < r.minItems || v.length > r.maxItems) throw Error(label3 + `: requires ${r.minItems}\u2013${r.maxItems} items`);
+      v.forEach((x, i) => validateValue(x, r.items, `${label3}[${i}]`));
+      return;
+    }
+    if (r.type === "integer" || r.type === "number") {
+      if (typeof v !== "number" || !Number.isFinite(v) || r.type === "integer" && !Number.isInteger(v)) throw Error(label3 + ": expected finite " + r.type);
+      if (v < r.minimum || v > r.maximum) throw Error(label3 + `: must be in [${r.minimum}, ${r.maximum}]`);
+      return;
+    }
+    if (typeof v !== r.type) throw Error(label3 + ": expected " + r.type);
+    if (r.enum && !r.enum.includes(v)) throw Error(label3 + ": allowed " + r.enum.join(", "));
+    if (r.maxLength !== void 0 && Array.from(v).length > r.maxLength) throw Error(label3 + `: maximum ${r.maxLength} characters`);
+    if (r.pattern && !new RegExp(r.pattern).test(v)) throw Error(label3 + ": invalid format");
+    if (label3.endsWith(".brandSrc") && v && (/^(?:https?:|data:|javascript:|\/\/)/i.test(v) || /[<>"']/.test(v))) throw Error(label3 + ": use a frozen local official image path");
+  }
+  function validatePart(key, p) {
+    const rules = partRules[key];
+    for (const [name, v] of Object.entries(p)) {
+      if (name === "instanceKey") {
+        validateValue(v, str(80), key + ".instanceKey");
+        continue;
+      }
+      if (!rules[name]) throw Error(key + "." + name + ": unknown property");
+      validateValue(v, rules[name], key + "." + name);
+    }
+    if (key === "photo-stack" && p.kinds.length < p.count) throw Error(key + ".kinds: provide an explicit product identity for each photo");
+    if (key === "reply-lines" && p.lengths.length < p.count) throw Error(key + ".lengths: provide one length per line");
+    if (key === "reply-lines" && p.count > 0 && 7 + (p.count - 1) * (p.lineHeight + p.gap) + p.lineHeight > 120) throw Error(key + ": lines exceed native height");
+  }
+  parts.push(...semanticParts);
+  for (const def of parts) {
+    const rawDraw = def.draw;
+    def.draw = (props = {}, h = {}) => {
+      const p = { ...def.defaults, ...props };
+      validatePart(def.key, p);
+      return rawDraw(p, h);
+    };
+  }
+  function drawPart(key, props = {}, h = {}) {
+    const def = parts.find((p2) => p2.key === key);
+    if (!def) throw new Error("Unknown transfer kit part: " + key);
+    const p = { ...def.defaults, ...props };
+    return `<g class="ani-kit" data-kit-part="${safe(key)}" data-motion="item">${def.draw(p, h)}</g>`;
+  }
+  function partAt(key, props = {}, h = {}, options = {}) {
+    const def = parts.find((p) => p.key === key);
+    if (!def) throw new Error("Unknown transfer kit part: " + key);
+    const { x = 0, y = 0, width = def.width, height = def.height, opacity = 1 } = options;
+    for (const [name, v] of Object.entries({ x, y })) if (typeof v !== "number" || !Number.isFinite(v)) throw Error("partAt." + name + ": expected finite number");
+    for (const [name, v] of Object.entries({ width, height })) if (typeof v !== "number" || !Number.isFinite(v) || v <= 0 || v > 16384) throw Error("partAt." + name + ": expected positive size \u226416384");
+    validateValue(opacity, number4(0, 1), "partAt.opacity");
+    if (key === "direction-arrow" || key === "semantic-label") {
+      const scoped4 = { ...h, uid: (s2) => h.uid ? h.uid(`${key}-${x}-${y}-${s2}`) : `${key}-${x}-${y}-${s2}` };
+      return `<g data-kit-placement="${safe(key)}" transform="translate(${x} ${y})" opacity="${opacity}">${drawPart(key, { ...props, boxWidth: width, boxHeight: height }, scoped4)}</g>`;
+    }
+    const scale = Math.min(width / def.width, height / def.height);
+    const suffix = [key, x, y, width, height, props.instanceKey || ""].join("-");
+    const scoped3 = { ...h, uid: (s2) => h.uid ? h.uid(`${suffix}-${s2}`) : `${suffix}-${s2}` };
+    return `<g data-kit-placement="${safe(key)}" transform="translate(${num5(x)} ${num5(y)}) scale(${scale})" opacity="${bounded(opacity, 0, 1, 1)}">${drawPart(key, props, scoped3)}</g>`;
+  }
+
+  // component-style.mjs
+  var styleDefaults = { palette: { accent: "", ink: "", surface: "", mint: "", orange: "" }, fontScale: 1, fontFamily: "original", strokeScale: 1, shadowOpacity: 1, shadowBlur: 0, opacity: 1 };
+  var color4 = { type: "string", pattern: "^(|#[0-9a-fA-F]{6})$" };
+  var styleSchema = { type: "object", additionalProperties: false, properties: { palette: { type: "object", additionalProperties: false, properties: Object.fromEntries(Object.keys(styleDefaults.palette).map((k) => [k, color4])) }, fontScale: { type: "number", minimum: 0.8, maximum: 1.25 }, fontFamily: { type: "string", enum: ["original", "Microsoft YaHei", "Segoe UI", "SimHei"] }, strokeScale: { type: "number", minimum: 0.5, maximum: 2 }, shadowOpacity: { type: "number", minimum: 0, maximum: 1 }, shadowBlur: { type: "number", minimum: 0, maximum: 12 }, opacity: { type: "number", minimum: 0, maximum: 1 } }, description: "Instance style. Palette keeps source luminance/highlights, font sizes scale without moving anchors, stroke weight scales, shadow only targets declared shadow nodes. Verify text fit after increasing fonts." };
+  function resolveStyle(base2 = {}, local2 = {}) {
+    function check(p, s2, path2) {
+      if (!p || typeof p !== "object" || Array.isArray(p)) throw Error(path2 + " must be an object");
+      for (const [k, v] of Object.entries(p)) {
+        const rule = s2.properties[k];
+        if (!rule) throw Error(path2 + "." + k + " is not supported");
+        if (rule.type === "object") {
+          check(v, rule, path2 + "." + k);
+          continue;
+        }
+        if (typeof v !== rule.type || rule.type === "number" && (!Number.isFinite(v) || v < rule.minimum || v > rule.maximum) || rule.enum && !rule.enum.includes(v) || rule.pattern && !new RegExp(rule.pattern).test(v)) throw Error(path2 + "." + k + " is outside the supported style contract");
+      }
+    }
+    check(base2, styleSchema, "style");
+    check(local2, styleSchema, "layer.style");
+    return { ...styleDefaults, ...base2, ...local2, palette: { ...styleDefaults.palette, ...base2.palette, ...local2.palette } };
+  }
+  function hsl(hex) {
+    const rgb2 = hex.slice(1).match(/../g).map((v) => parseInt(v, 16) / 255), max = Math.max(...rgb2), min = Math.min(...rgb2), d = max - min, l = (max + min) / 2;
+    let h = 0, s2 = 0;
+    if (d) {
+      s2 = d / (1 - Math.abs(2 * l - 1));
+      h = max === rgb2[0] ? ((rgb2[1] - rgb2[2]) / d + 6) % 6 : max === rgb2[1] ? (rgb2[2] - rgb2[0]) / d + 2 : (rgb2[0] - rgb2[1]) / d + 4;
+      h *= 60;
+    }
+    return { h, s: s2, l };
+  }
+  function rgb({ h, s: s2, l }) {
+    const a2 = s2 * Math.min(l, 1 - l), f = (n4) => {
+      const k = (n4 + h / 30) % 12;
+      return Math.round(255 * (l - a2 * Math.max(-1, Math.min(k - 3, 9 - k, 1)))).toString(16).padStart(2, "0");
+    };
+    return "#" + f(0) + f(8) + f(4);
+  }
+  function recolor(hex, p) {
+    const c = hsl(hex);
+    if (c.s < 0.12) return hex;
+    const key = c.h >= 180 && c.h <= 255 ? c.l < 0.26 ? "ink" : c.l > 0.87 ? "surface" : "accent" : c.h >= 15 && c.h <= 65 ? "orange" : c.h > 65 && c.h < 180 ? "mint" : null;
+    if (!key || !p[key]) return hex;
+    const t = hsl(p[key]);
+    return rgb({ h: t.h, s: t.s, l: Math.max(0.05, Math.min(0.98, c.l + (t.l - 0.5) * 0.35)) });
+  }
+  function styleMarkup(markup, input, h) {
+    const s2 = resolveStyle(input);
+    let out = markup.replace(/\b(fill|stroke|stop-color)="(#[0-9a-fA-F]{6})"/g, (_, a2, c) => `${a2}="${recolor(c, s2.palette)}"`);
+    if (s2.fontScale !== 1) out = out.replace(/font-size="([\d.]+)"/g, (_, n4) => `font-size="${(Number(n4) * s2.fontScale).toFixed(3)}"`);
+    if (s2.fontFamily !== "original") out = out.replace(/<text\b/g, `<text style="font-family:'${s2.fontFamily}',sans-serif"`);
+    if (s2.strokeScale !== 1) out = out.replace(/stroke-width="([\d.]+)"/g, (_, n4) => `stroke-width="${(Number(n4) * s2.strokeScale).toFixed(3)}"`);
+    const id = h.uid("style-shadow");
+    out = out.replace(/<g data-kit-node="shadow"/g, `<g opacity="${s2.shadowOpacity}"${s2.shadowBlur ? ` filter="url(#${id})"` : ""} data-kit-node="shadow"`);
+    return `${s2.shadowBlur ? `<defs><filter id="${id}" x="-50%" y="-100%" width="200%" height="300%"><feGaussianBlur stdDeviation="${s2.shadowBlur}"/></filter></defs>` : ""}<g data-kit-style="instance" opacity="${s2.opacity}">${out}</g>`;
+  }
+
+  // transfer-kit-layout.mjs
+  var kitReference = { basis: "\u7528\u6237\u63D0\u4F9B\u768423\u5F20\u72EC\u7ACB\u9AD8\u6E05\u72B6\u6001\u56FE\uFF0C\u6309\u5BF9\u8C61\u62C6\u89E3\u91CD\u5EFA\uFF1B\u975E\u6574\u56FE\u8D34\u7247\uFF0C\u975E\u9010\u50CF\u7D20\u63CF\u6479\u3002", source: "references/transfer-hd/manifest.json", level: "designed" };
+  var layer = (id, part2, x, y, width, height, props = {}, motion = {}) => ({ id, part: part2, x, y, width, height, props, enter: 0, exit: 8, fade: 0.18, fromX: 0, fromY: 0, steps: [], ...motion });
+  var finite2 = (v, name, min, max) => {
+    if (typeof v !== "number" || !Number.isFinite(v) || v < min || v > max) throw Error(`${name} must be in [${min}, ${max}]`);
+  };
+  function validateLayers(layers) {
+    if (!Array.isArray(layers) || !layers.length || layers.length > 160) throw Error("layers requires 1\u2013160 independent parts");
+    const ids = /* @__PURE__ */ new Set();
+    for (const [i, l] of layers.entries()) {
+      const at2 = `layers[${i}]`;
+      if (!/^[a-z][a-z0-9-]*$/.test(l.id) || ids.has(l.id)) throw Error(at2 + ".id must be unique lowercase identifier");
+      ids.add(l.id);
+      const p = parts.find((p2) => p2.key === l.part);
+      if (!p) throw Error(at2 + ".part is unknown: " + l.part);
+      for (const k of ["x", "y"]) finite2(l[k], at2 + "." + k, -1280, 1280);
+      finite2(l.width, at2 + ".width", 1, 1280);
+      finite2(l.height, at2 + ".height", 1, 720);
+      if (l.x < 0 || l.y < 0 || l.x + l.width > 1280.01 || l.y + l.height > 720.01) throw Error(at2 + " final placement must fit 1280\xD7720");
+      finite2(l.enter, at2 + ".enter", 0, 7.8);
+      finite2(l.exit, at2 + ".exit", 0.1, 8);
+      finite2(l.fade, at2 + ".fade", 0, 0.8);
+      if (l.enter + l.fade >= l.exit) throw Error(at2 + " exit must follow complete entry");
+      finite2(l.fromX, at2 + ".fromX", -1280, 1280);
+      finite2(l.fromY, at2 + ".fromY", -720, 720);
+      if (!l.props || typeof l.props !== "object" || Array.isArray(l.props)) throw Error(at2 + ".props must be an object");
+      resolveStyle({}, l.style || {});
+      for (const key of Object.keys(l.props)) if (!(key in p.defaults)) throw Error(at2 + ".props." + key + " is not supported by " + l.part);
+      if (!Array.isArray(l.steps) || l.steps.length > 12) throw Error(at2 + ".steps must contain 0\u201312 motion segments");
+      let previous = l.enter + l.fade;
+      for (const [j, s2] of l.steps.entries()) {
+        finite2(s2.at, at2 + `.steps[${j}].at`, 0, 8);
+        finite2(s2.duration, at2 + ".duration", 0.01, 8);
+        finite2(s2.x, at2 + ".x", -1280, 1280);
+        finite2(s2.y, at2 + ".y", -720, 720);
+        if (!["none", "sine.inOut", "power2.inOut", "power2.out"].includes(s2.ease)) throw Error(at2 + ".steps ease unsupported");
+        if (s2.at < previous - 1e-4 || s2.at + s2.duration > l.exit - 1e-4) throw Error(at2 + ".steps must be ordered, nonoverlapping, and end before exit");
+        previous = s2.at + s2.duration;
+      }
+    }
+  }
+  function renderKit(p, h) {
+    validateLayers(p.layers);
+    const style = resolveStyle(p.style || {});
+    return `<section class="ani-kit" data-hd-kit="layout" style="width:1280px;height:720px"><svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-label="${h.esc(p.label)}">${p.background === "transparent" ? "" : `<rect width="1280" height="720" fill="${h.esc(p.background)}"/>`}${p.layers.map((l) => {
+      const scope5 = { ...h, uid: (k) => h.uid(l.id + "-" + k) };
+      return `<g data-kit-instance="${h.esc(l.id)}" data-kit-motion="${h.esc(JSON.stringify({ enter: l.enter, exit: l.exit, fade: l.fade, fromX: l.fromX, fromY: l.fromY, steps: l.steps }))}">${styleMarkup(partAt(l.part, l.props, scope5, l), resolveStyle(style, l.style || {}), scope5)}</g>`;
+    }).join("")}</svg></section>`;
+  }
+  var layoutCSS = kitCSS + "\n.ani-kit{position:relative;overflow:hidden}.ani-kit>svg{display:block;overflow:hidden}";
+  function makeKit(id, name, description, layers, { layerType = "scene-template", intentIds = ["process"], effect = "ani-hd-parts", sourceStates = [] } = {}) {
+    return { id, name, description, category: layerType === "primitive" ? "\u52A8\u753B\u98CE \xB7 \u9AD8\u6E05\u72EC\u7ACB\u90E8\u4EF6" : layerType === "module" ? "\u52A8\u753B\u98CE \xB7 \u9AD8\u6E05\u7EC4\u5408\u6A21\u5757" : "\u52A8\u753B\u98CE \xB7 \u9AD8\u6E05\u7D20\u6750\u590D\u523B", width: 1280, height: 720, defaultEffect: effect, layerType, intentIds, sourceStates, reference: kitReference, defaults: { label: name, background: layerType === "primitive" ? "transparent" : "#f8fcff", style: structuredClone(styleDefaults), layers }, render: renderKit };
+  }
+
+  // transfer-kit-recipes.mjs
+  var place = (items, prefix, x, y, s2 = 1) => items.map((l) => ({ ...structuredClone(l), id: prefix + "-" + l.id, x: x + l.x * s2, y: y + l.y * s2, width: l.width * s2, height: l.height * s2, fromX: l.fromX * s2, fromY: l.fromY * s2, steps: l.steps.map((a2) => ({ ...a2, x: a2.x * s2, y: a2.y * s2 })) }));
+  function truck(loaded = true) {
+    return [layer("vehicle", "truck", 0, 0, 870, 486, { cargoCount: loaded ? 5 : 0 })];
+  }
+  var modules = [makeKit("ani-module-hd-truck", "\u9AD8\u6E05\u655E\u53A2\u6574\u8F66\uFF08\u542B\u6295\u5F71\uFF09", "\u6574\u8F66\u3001\u4E09\u8F6E\u3001\u6295\u5F71\u548C\u5E38\u89C4\u8D27\u7269\u7ED1\u5B9A\u4E3A\u4E00\u4E2A\u8F66\u8F86\u5BF9\u8C61\uFF1B\u6574\u4F53\u79FB\u52A8\u7F29\u653E\u3002\u53EA\u6709\u5378\u8D27\u52A8\u4F5C\u5C06\u8D27\u7269\u72EC\u7ACB\u3002", place(truck(), "truck", 130, 130, 0.98), { layerType: "module", intentIds: ["transport", "batch"] })];
+  var pill = (id, text7, x, y, w = 280, tone3 = "light", motion = {}) => layer(id, "status-pill", x, y, w, w * 86 / 440, { text: text7, tone: tone3 }, motion);
+  var heading = (id, text7, x = 280, y = 35, w = 720) => layer(id, "title", x, y, w, w * 130 / 720, { text: text7 });
+  function folder(name = "\u6E90\u6587\u4EF6", tone3 = "blue", filled = true) {
+    return [
+      layer("back", "folder-shell", 0, 0, 360, 310, { tone: tone3, layer: "back" }),
+      ...filled ? ["cup", "lamp", "bag"].map((kind, i) => layer("photo-" + i, "photo-card", 34 + i * 83, 15 + i * 13, 148, 164, { kind })) : [],
+      layer("front", "folder-shell", 0, 0, 360, 310, { tone: tone3, layer: "front", label: name })
+    ];
+  }
+  function notice(title = "\u4E8B\u9879\u901A\u77E5", fields2 = true) {
+    return [
+      layer("paper", "notice-paper", 0, 0, 470, 540, { title }),
+      ...fields2 ? ["\u539F\u56E0", "\u5F71\u54CD", "\u5904\u7406\u529E\u6CD5"].map((label3, i) => layer("field-" + i, "notice-field", 38, 180 + i * 102, 392, 84, { label: label3, tone: ["blue", "orange", "mint"][i] })) : [layer("draft", "reply-lines", 48, 183, 369, 98), layer("draft-tail", "reply-lines", 48, 328, 338, 90, { count: 3 })]
+    ];
+  }
+  function program(count2 = 0, warning = false) {
+    return [
+      layer("shell", "window-shell", 0, 0, 760, 560, { title: "\u56FE\u7247\u5904\u7406", caption: "\u60C5\u5883\u793A\u610F" }),
+      layer("buffer", "buffer-area", 47, 110, 666, 362, { title: "\u5185\u5B58 \xB7 \u4E34\u65F6\u533A" }),
+      ...Array.from({ length: count2 }, (_, i) => layer("working-" + i, "photo-card", 90 + i % 4 * 139 + (i > 3 ? 22 : 0), 165 + Math.floor(i / 4) * 102, 137, 153, { kind: ["cup", "lamp", "bag"][i % 3] })),
+      pill("status", warning ? "\u5185\u5B58\u4E0D\u8DB3" : count2 ? "\u5F53\u524D\u6279\u6B21" : "\u51C6\u5907\u8BFB\u5165", warning ? 202 : 246, 466, warning ? 360 : 270, warning ? "orange" : "light")
+    ];
+  }
+  function chat(messages2 = [{ role: "user", text: "\u8BF7\u5E2E\u6211\u8BF4\u660E\u95EE\u9898" }, { role: "assistant", text: "\u5148\u660E\u786E\u60C5\u51B5\u548C\u539F\u56E0" }], title = "\u667A\u80FD\u52A9\u624B") {
+    return [layer("shell", "chat-shell", 0, 0, 660, 640, { title }), ...messages2.map((m, i) => layer("message-" + i, "chat-message", m.role === "user" ? 126 : 34, 168 + i * 115, 490, 147, m)), layer("send", "send-icon", 583, 557, 45, 45)];
+  }
+  function checklist() {
+    return [layer("paper", "notice-paper", 0, 0, 470, 540, { title: "\u5F85\u6838\u5BF9" }), ...["\u662F\u5426\u4ECD\u7136\u62A5\u9519\uFF1F", "\u7ED3\u679C\u662F\u5426\u7B26\u5408\u8981\u6C42\uFF1F", "\u662F\u5426\u5B58\u5728\u9057\u6F0F\uFF1F"].map((text7, i) => layer("check-" + i, "checklist-row", 34, 176 + i * 102, 399, 63, { text: text7, state: "unchecked" }))];
+  }
+  function productGallery() {
+    return [layer("shell", "window-shell", 0, 0, 760, 560, { title: "\u7A0B\u5E8F\u793A\u610F", caption: "\u60C5\u5883\u793A\u610F" }), ...["\u76EE\u5F55", "\u56FE\u50CF", "\u8BBE\u7F6E"].map((text7, i) => pill("nav-" + i, text7, 24, 120 + i * 75, 121, i === 0 ? "blue" : "light")), ...["cup", "lamp", "bag", "shoe", "chair", "plant"].map((kind, i) => layer("product-" + i, "photo-card", 178 + i % 3 * 121, 137 + Math.floor(i / 3) * 168, 106, 118, { kind })), layer("properties", "reply-lines", 568, 152, 157, 70, { count: 4 }), layer("properties-more", "reply-lines", 568, 274, 157, 70, { count: 3 })];
+  }
+  var registerModule = (key, name, description, layers, intentIds) => modules.push(makeKit("ani-module-hd-" + key, name, description, layers, { layerType: "module", intentIds }));
+  registerModule("photo-folder", "\u9AD8\u6E05\u7167\u7247\u6587\u4EF6\u5939", "\u524D\u540E\u4E24\u5C42\u6587\u4EF6\u5939\u5939\u4F4F\u72EC\u7ACB\u7167\u7247\uFF1B\u539F\u56FE\u4E0D\u4F1A\u88AB\u5DE5\u4F5C\u526F\u672C\u66FF\u4EE3\u3002", place(folder(), "folder", 412, 145, 1.28), ["folder", "file"]);
+  registerModule("notice-fields", "\u9AD8\u6E05\u901A\u77E5\u5B57\u6BB5\u7EC4", "\u7EB8\u9875\u3001\u6807\u9898\u3001\u4E09\u6761\u5B57\u6BB5\u5206\u79BB\uFF1B\u6539\u53D8\u4E8B\u5B9E\u65F6\u4E0D\u590D\u5236\u6574\u4E2A\u65E7\u901A\u77E5\u3002", place(notice(), "notice", 405, 80, 1), ["paper", "reuse"]);
+  registerModule("processing-window", "\u9AD8\u6E05\u5904\u7406\u7A97\u53E3", "\u5916\u58F3\u3001\u865A\u7EBF\u6682\u5B58\u533A\u3001\u6BCF\u5F20\u7167\u7247\u548C\u72B6\u6001\u6761\u5206\u522B\u914D\u7F6E\u3002", place(program(3), "program", 245, 70, 1), ["memory", "batch"]);
+  registerModule("chat", "\u9AD8\u6E05\u804A\u5929\u6D88\u606F\u7EC4", "\u6D88\u606F\u5206\u89D2\u8272\u5DE6\u53F3\u5B9A\u4F4D\uFF1B\u5916\u58F3\u3001\u6C14\u6CE1\u3001\u53D1\u9001\u56FE\u6807\u5F7C\u6B64\u72EC\u7ACB\u3002", place(chat(), "chat", 330, 32, 1), ["messages", "input"]);
+  registerModule("checklist", "\u9AD8\u6E05\u5F85\u6838\u68C0\u67E5\u5355", "\u9ED8\u8BA4\u5747\u672A\u52FE\u9009\uFF0C\u9010\u9879\u7ED3\u679C\u9700\u8981\u771F\u5B9E\u9A8C\u8BC1\u540E\u8BBE\u7F6E\u3002", place(checklist(), "checks", 410, 70, 1), ["verify", "checkbox"]);
+  registerModule("warehouse", "\u9AD8\u6E05\u5378\u8D27\u76EE\u7684\u5730", "\u4ED3\u5E93\u3001\u5730\u57AB\u3001\u843D\u5730\u7BB1\u7EC4\u5206\u5C42\uFF0C\u5378\u8D27\u7ED3\u679C\u53EF\u4EE5\u72EC\u7ACB\u4FDD\u7559\u3002", [layer("warehouse", "warehouse", 235, 50, 850, 490), layer("pad", "destination-pad", 380, 526, 600, 130), layer("cargo", "cargo-stack", 460, 325, 460, 290)], ["warehouse", "transport"]);
+  registerModule("attachments", "\u9AD8\u6E05\u62A5\u9519\u4EE3\u7801\u9644\u4EF6\u7EC4", "\u62A5\u9519\u3001\u4EE3\u7801\u4E24\u5361\u4E0E\u89E3\u91CA\u6587\u672C\u5206\u79BB\uFF1B\u4E0D\u4F1A\u663E\u793A\u865A\u6784\u4FEE\u590D\u6210\u529F\u3002", [layer("error", "attachment-card", 255, 210, 350, 169, { title: "\u62A5\u9519\u4FE1\u606F", kind: "error" }), layer("code", "attachment-card", 650, 210, 350, 169, { title: "\u76F8\u5173\u4EE3\u7801", kind: "code" }), layer("response", "chat-message", 310, 420, 660, 198, { role: "assistant", text: "\u5148\u7406\u89E3\u539F\u56E0\uFF0C\u518D\u51B3\u5B9A\u5982\u4F55\u4FEE\u6539" })], ["messages", "code"]);
+  registerModule("comparison", "\u9AD8\u6E05\u5173\u7CFB\u62EC\u7EBF\u7EC4", "\u4E24\u5BF9\u8C61\u901A\u8FC7\u65E0\u7BAD\u5934\u62EC\u7EBF\u5EFA\u7ACB\u5173\u7CFB\uFF0C\u6807\u7B7E\u53EF\u66FF\u6362\uFF0C\u4E0D\u8868\u8FBE\u6570\u636E\u6D41\u3002", [...place(notice("\u5DF2\u6709\u60C5\u5883"), "left", 60, 150, 0.72), layer("left-brace", "brace", 430, 205, 54, 240), pill("relation", "\u501F\u7528\u601D\u8DEF", 486, 285, 305), layer("right-brace", "brace", 800, 205, 54, 240, { side: "right" }), ...place(notice("\u65B0\u60C5\u5883"), "right", 865, 150, 0.72)], ["relation", "reuse"]);
+  registerModule("product-gallery", "\u9AD8\u6E05\u5546\u54C1\u56FE\u5E93\u7A97\u53E3", "\u516D\u5F20\u72EC\u7ACB\u5546\u54C1\u7167\u7247\u3001\u5BFC\u822A\u53CA\u5C5E\u6027\u884C\u5206\u79BB\uFF1B\u4E0D\u662F\u5185\u5B58\u5904\u7406\u754C\u9762\u3002", place(productGallery(), "gallery", 260, 75, 1), ["window", "file"]);
+  var recipes = [];
+  var scene = (code, key, name, layers, intentIds = ["process"]) => recipes.push(makeKit("ani-transfer-hd-" + key, name, "\u9AD8\u6E05\u7D20\u6750 " + code + " \u7684\u53EF\u7F16\u8F91\u5BF9\u8C61\u91CD\u5EFA\uFF1B\u6240\u6709\u6587\u5B57\u3001\u56FE\u5F62\u3001\u5750\u6807\u548C\u5355\u4EF6\u65F6\u5E8F\u5747\u53EF\u66FF\u6362\u3002", layers, { sourceStates: [code], intentIds }));
+  scene("S01A", "experience", "\u65E7\u7ECF\u9A8C\uFF1A\u88C5\u8D27\u8D27\u8F66", place(truck(), "truck", 160, 155, 1), ["transport"]);
+  scene("S01B", "experience-problem", "\u65E7\u7ECF\u9A8C\u4E0E\u65B0\u60C5\u5883", [heading("title", "\u8FC1\u79FB", 460, 52, 350), pill("method", "\u501F\u7528\u65B9\u6CD5", 500, 160, 260), ...place(truck(), "truck", 40, 285, 0.6), layer("brace", "brace", 604, 300, 60, 250), ...place(program(3), "program", 710, 285, 0.68)], ["relation", "reuse"]);
+  var noticeChat = (fields2) => [...place(notice("\u4E8B\u9879\u901A\u77E5", fields2), "notice", 170, 102, 0.88), ...place(chat([{ role: "user", text: fields2 ? "\u8865\u9F50\u539F\u56E0\u3001\u5F71\u54CD\u3001\u5904\u7406\u529E\u6CD5" : "\u8868\u8FBE\u518D\u5BA2\u6C14\u4E00\u70B9" }]), "chat", 645, 58, 0.9), ...place(notice("\u4E8B\u9879\u901A\u77E5", fields2), "reply-notice", 691, 325, 0.31)];
+  scene("S02A", "notice-draft", "\u901A\u77E5\uFF1A\u4EC5\u8C03\u6574\u63AA\u8F9E", noticeChat(false), ["messages", "paper"]);
+  scene("S02B", "notice-complete", "\u901A\u77E5\uFF1A\u8865\u9F50\u4E09\u9879\u4FE1\u606F", noticeChat(true), ["paper", "reuse"]);
+  scene("S03", "notice-reuse", "\u6362\u4E8B\u5B9E\uFF0C\u501F\u601D\u8DEF", [...place(notice("\u5DF2\u6709\u4E8B\u9879\u901A\u77E5"), "left", 105, 114, 0.9), ...place(notice("\u65B0\u7684\u4E8B\u9879\u901A\u77E5"), "right", 773, 114, 0.9), pill("near", "\u8FD1\u8FC1\u79FB", 530, 135, 210), ...["\u539F\u56E0", "\u5F71\u54CD", "\u5904\u7406\u529E\u6CD5"].map((t, i) => pill("field-" + i, t, 553, 242 + i * 92, 163, ["blue", "orange", "mint"][i])), layer("brace", "brace", 728, 225, 40, 285), pill("conclusion", "\u6362\u4E8B\u5B9E\uFF0C\u501F\u601D\u8DEF", 410, 611, 460)], ["reuse", "paper"]);
+  var processing = (count2 = 0, saved = false, warning = false) => [...place(folder("\u539F\u56FE", "blue", true), "source", 30, 318, 0.65), ...place(program(count2, warning), "program", 302, 113, 0.88), ...place(folder("\u7ED3\u679C", "gold", saved), "output", 1030, 318, 0.62)];
+  scene("S04A", "before-read", "\u5904\u7406\u524D\uFF1A\u539F\u56FE\u4E0E\u7A7A\u6682\u5B58\u533A", processing(), ["memory", "file"]);
+  scene("S04B", "capacity", "\u56FE\u7247\u62E5\u6324\u4E0E\u5185\u5B58\u4E0D\u8DB3", processing(8, false, true), ["memory"]);
+  scene("S05", "error-explanation", "\u89E3\u91CA\u539F\u56E0\uFF0C\u4FDD\u7559\u62A5\u9519", [...place(folder("\u539F\u56FE"), "source", 14, 433, 0.38), ...place(program(8, true), "program", 137, 200, 0.74), ...place(chat([{ role: "user", text: "\u8FD9\u91CC\u62A5\u9519\u4E86\u2026" }, { role: "assistant", lines: ["\u4E00\u6B21\u8BFB\u5165\u592A\u591A\u56FE\u7247", "\u5185\u5B58\u662F\u4E34\u65F6\u653E\u6570\u636E\u7684\u5730\u65B9\u3002"] }]), "chat", 750, 73, 0.77), layer("error-attachment", "attachment-card", 792, 270, 175, 85, { title: "\u62A5\u9519", kind: "error" }), layer("code-attachment", "attachment-card", 985, 270, 175, 85, { title: "\u76F8\u5173\u4EE3\u7801", kind: "code" })], ["messages", "memory"]);
+  var delivery = (loaded) => [layer("warehouse", "warehouse", 500, 110, 770, 444), layer("pad", "destination-pad", 718, 496, 520, 113), ...place(truck(loaded), "truck", 28, 217, 0.77), ...!loaded ? [layer("unloaded", "cargo-stack", 844, 331, 345, 218)] : []];
+  scene("S06A", "truck-loaded", "\u5378\u8D27\u524D\uFF1A\u672C\u8D9F\u5F85\u5378", delivery(true), ["transport", "warehouse"]);
+  scene("S06B", "truck-empty", "\u5378\u8CA8\u540E\uFF1A\u7A7A\u53A2\u4E0E\u4FDD\u7559\u8D27\u7269", delivery(false), ["transport", "batch"]);
+  scene("S07A", "batch-read", "\u5C0F\u6279\u5DF2\u8BFB\u5165", processing(3), ["batch", "memory"]);
+  scene("S07B", "batch-saved", "\u5904\u7406\u7ED3\u679C\u5DF2\u4FDD\u5B58", processing(3, true), ["batch", "save"]);
+  scene("S07C", "batch-released", "\u91CA\u653E\u4E34\u65F6\u526F\u672C\uFF0C\u4FDD\u7559\u7ED3\u679C", processing(0, true), ["batch", "memory", "save"]);
+  scene("S07D", "batch-next", "\u4FDD\u7559\u7ED3\u679C\uFF0C\u8BFB\u53D6\u4E0B\u4E00\u6279", processing(3, true).map((l) => l.id.startsWith("program-working-") ? { ...l, props: { kind: ["bag", "cup", "lamp"][Number(l.id.at(-1))] } } : l), ["batch", "memory"]);
+  scene("S08", "near-far", "\u8FD1\u8FC1\u79FB\u4E0E\u8FDC\u8FC1\u79FB\u90FD\u6709\u7528", [
+    ...place(notice("\u5DF2\u6709\u901A\u77E5"), "near-left", 195, 30, 0.4),
+    ...place(notice("\u65B0\u901A\u77E5"), "near-right", 892, 30, 0.4),
+    pill("near", "\u8FD1\u8FC1\u79FB", 492, 51, 290),
+    pill("near-note", "\u540C\u7C7B\u95EE\u9898\uFF0C\u501F\u7528\u601D\u8DEF", 437, 146, 400),
+    layer("brace-a", "brace", 409, 49, 35, 185),
+    layer("brace-b", "brace", 842, 49, 35, 185, { side: "right" }),
+    ...place(truck(), "far-left", 54, 382, 0.45),
+    ...place(program(3), "far-right", 831, 344, 0.49),
+    pill("far", "\u8FDC\u8FC1\u79FB", 495, 346, 284, "orange"),
+    pill("far-note", "\u4E0D\u540C\u573A\u666F\uFF0C\u501F\u7528\u5173\u7CFB", 437, 456, 400),
+    layer("brace-c", "brace", 437, 358, 42, 197),
+    layer("brace-d", "brace", 800, 358, 42, 197, { side: "right" }),
+    pill("conclusion", "\u80FD\u89E3\u51B3\u95EE\u9898\uFF0C\u4E24\u79CD\u90FD\u6709\u7528", 393, 613, 494)
+  ], ["compare", "relation", "reuse"]);
+  var analogy = (answer) => [...place(truck(), "truck", 10, 275, 0.68), pill("truck-note", "\u5206\u6279\u3001\u505A\u5B8C\u3001\u817E\u4F4D\u7F6E", 106, 592, 415), layer("brace", "brace", 621, 266, 55, 264), ...place(chat([{ role: "assistant", text: "\u4E00\u6B21\u8BFB\u5165\u592A\u591A\u56FE\u7247" }, { role: "user", text: "\u80FD\u4E0D\u80FD\u4E5F\u5206\u51E0\u6279\uFF1F" }]), "chat", 720, 80, 0.8), ...answer ? [pill("answer", "\u80FD\u63D0\u51FA\u65B9\u5411", 862, 486, 325)] : []];
+  scene("S09A", "ask-direction", "\u5148\u63D0\u51FA\u95EE\u9898\uFF0C\u6682\u4E0D\u5BA3\u544A\u7B54\u6848", analogy(false), ["relation", "messages"]);
+  scene("S09", "propose-direction", "\u4ECE\u65E7\u7ECF\u9A8C\u63D0\u51FA\u5206\u6279\u65B9\u5411", analogy(true), ["relation", "batch"]);
+  scene("S10A", "check-cause", "\u5148\u6838\u539F\u56E0\uFF0C\u518D\u4FEE\u6539", [
+    ...place(folder("\u539F\u56FE\u4FDD\u7559"), "source", 18, 425, 0.5),
+    ...place(notice("\u5148\u6838\u5BF9\u539F\u56E0", false), "cause", 208, 192, 0.68),
+    layer("magnifier", "magnifier", 390, 384, 180, 190),
+    pill("warning", "\u5148\u786E\u8BA4\u539F\u56E0", 260, 579, 327, "orange"),
+    layer("editor", "window-shell", 637, 95, 580, 427, { title: "\u4EE3\u7801\u52A9\u624B" }),
+    layer("code", "code-lines", 688, 218, 470, 186),
+    layer("proposal", "notice-paper", 991, 377, 259, 298, { title: "\u6309\u601D\u8DEF\u4FEE\u6539" }),
+    ...["\u68C0\u67E5\u539F\u56E0", "\u4FEE\u6539\u526F\u672C", "\u6838\u5BF9\u7ED3\u679C"].map((text7, i) => layer("step-" + i, "checklist-row", 1014, 481 + i * 43, 214, 34, { text: text7 }))
+  ], ["verify", "code"]);
+  scene("S10B", "copy-verify", "\u4FDD\u7559\u539F\u56FE\uFF0C\u526F\u672C\u8BD5\u9A8C", [
+    ...place(folder("\u539F\u56FE\u4FDD\u7559"), "original", 33, 350, 0.65),
+    ...place(folder("\u8BD5\u9A8C\u526F\u672C", "mint"), "copy", 330, 350, 0.65),
+    layer("editor", "window-shell", 628, 141, 363, 389, { title: "\u4EE3\u7801\u52A9\u624B" }),
+    layer("code", "code-lines", 661, 222, 301, 119),
+    ...["cup", "lamp", "bag"].map((kind, i) => layer("preview-" + i, "photo-card", 669 + i * 93, 361, 83, 93, { kind })),
+    ...place(checklist(), "checks", 1004, 168, 0.53)
+  ], ["copy", "verify"]);
+  scene("S11", "two-purposes", "\u4EA4\u4ED8\u4E0E\u5B66\u4E60\uFF1A\u4E24\u4E2A\u76EE\u7684", [
+    pill("delivery-label", "\u5C3D\u5FEB\u4EA4\u4ED8", 209, 29, 310, "blue"),
+    pill("learning-label", "\u5B66\u4F1A\u65B9\u6CD5", 775, 29, 310, "orange"),
+    ...place(chat([{ role: "user", text: "\u8BF7\u76F4\u63A5\u5E2E\u6211\u5904\u7406" }, { role: "assistant", text: "\u4F9D\u636E\u63D0\u4F9B\u7684\u8D44\u6599\u5904\u7406" }]), "deliver", 93, 119, 0.8),
+    ...place(chat([{ role: "user", text: "\u4E3A\u4EC0\u4E48\u8FD9\u6837\u505A\uFF1F" }, { role: "user", text: "\u4E0B\u6B21\u4EC0\u4E48\u65F6\u5019\u7528\uFF1F" }, { role: "assistant", text: "\u7406\u89E3\u65B9\u6CD5\u4E0E\u9002\u7528\u6761\u4EF6" }]), "learn", 688, 119, 0.8),
+    layer("lens", "magnifier", 1050, 461, 100, 106),
+    pill("conclusion", "\u4E24\u79CD\u76EE\u7684\u90FD\u5408\u7406", 434, 617, 420)
+  ], ["compare", "clarify"]);
+  scene("S12", "experience-to-action", "\u628A\u7ECF\u9A8C\u8F6C\u4E3A\u5177\u4F53\u505A\u6CD5", [
+    ...place(truck(), "truck", 37, 70, 0.49),
+    layer("brace", "brace", 578, 311, 51, 273),
+    ...place(notice("\u53EF\u501F\u7528", false), "reuse", 53, 435, 0.43),
+    ...place(notice("\u9700\u8C03\u6574", false), "adjust", 310, 435, 0.43),
+    ...place(chat([{ role: "user", text: "\u5361\u5728\u54EA\u4E00\u6B65\uFF1F" }, { role: "user", text: "\u54EA\u4E00\u6B65\u80FD\u501F\u7528\uFF1F\u54EA\u91CC\u5F97\u6539\uFF1F" }, { role: "assistant", text: "\u628A\u60F3\u6CD5\u6539\u5199\u6210\u5177\u4F53\u505A\u6CD5" }]), "chat", 711, 64, 0.85)
+  ], ["reuse", "clarify", "process"]);
+  scene("S13", "question-outro", "\u7B54\u6848\u4E4B\u5916\u7684\u601D\u8003", [
+    ...place(chat([{ role: "assistant", text: "" }, { role: "assistant", text: "" }, { role: "assistant", text: "" }]), "chat", 203, 91, 0.8),
+    ...[0, 1, 2].map((i) => layer("reply-" + i, "reply-lines", 269, 255 + i * 91, 356, 83, { count: 3 })),
+    layer("question", "question-bubble", 817, 233, 427, 196, { lines: ["\u8BE5\u6362\u7684\uFF0C", "\u53EA\u6709\u7B54\u6848\u5417\uFF1F"] })
+  ], ["outro", "messages"]);
+  scene("S14", "next-topic", "\u4E0B\u671F\u4E3B\u9898\u9884\u544A", [
+    pill("next", "\u4E0B\u671F", 506, 99, 260, "blue"),
+    heading("topic", "\u4E0B\u4E00\u4E3B\u9898", 196, 208, 888),
+    ...place(truck(), "truck", 315, 430, 0.33),
+    ...place(program(3), "program", 718, 426, 0.37)
+  ], ["outro"]);
+  var unload = delivery(false).filter((l) => l.id !== "unloaded");
+  unload.push(...place([[204, 211], [330, 211], [453, 211], [262, 120], [387, 120]].map(([x, y], i) => layer("box-" + i, "cargo-box", x, y, 119, 99)), "truck", 28, 217, 0.77));
+  for (const l of unload.filter((l2) => l2.id.includes("-box-"))) {
+    const i = Number(l.id.at(-1)), dx = 850 + i % 3 * 75 - l.x, dy = 565 - l.y;
+    l.steps = [{ at: 1.1 + i * 0.15, duration: 0.65, x: 0, y: dy, ease: "power2.inOut" }, { at: 1.9 + i * 0.15, duration: 1.1, x: dx, y: dy, ease: "power2.inOut" }, { at: 3.2 + i * 0.15, duration: 0.65, x: dx, y: 452 - Math.floor(i / 3) * 73 - l.y, ease: "power2.inOut" }];
+  }
+  unload.push(layer("unload-arrow", "flow-arrow", 688, 655, 170, 51, { tone: "orange", curved: true }, { enter: 1.15, exit: 4.55 }), pill("empty-note", "\u5378\u4E0B\u672C\u6279\uFF0C\u817E\u51FA\u4F4D\u7F6E", 394, 613, 489, "light", { enter: 4.8 }));
+  scene("S06A\u2192S06B", "unload-motion", "\u52A8\u6001\uFF1A\u7ED5\u8F66\u5378\u8D27\uFF0C\u8D27\u7269\u4FDD\u7559", unload, ["transport", "batch"]);
+  var cycle = processing(0, false, false).filter((l) => l.id !== "program-status");
+  for (let i = 0; i < 3; i++) {
+    cycle.push(layer("batch-" + i, "photo-card", 381 + i * 123, 257, 120, 133, { kind: ["cup", "lamp", "bag"][i] }, { enter: 0.5 + i * 0.14, exit: 4.95, fromX: -210, fromY: 95 }));
+    cycle.push(layer("saved-" + i, "photo-card", 1054 + i * 52, 328 + i * 9, 89, 99, { kind: ["cup", "lamp", "bag"][i] }, { enter: 2.9 + i * 0.15, fromX: -190, fromY: -25 }));
+    cycle.push(layer("next-" + i, "photo-card", 381 + i * 123, 257, 120, 133, { kind: ["bag", "cup", "lamp"][i] }, { enter: 5.5 + i * 0.14, fromX: -210, fromY: 95 }));
+  }
+  var front = cycle.find((l) => l.id === "output-front");
+  cycle.splice(cycle.indexOf(front), 1);
+  cycle.push(front);
+  cycle.push(layer("read-arrow", "flow-arrow", 219, 365, 102, 31, {}, { enter: 0.4, exit: 1.55 }), layer("save-arrow", "flow-arrow", 962, 361, 87, 27, { tone: "mint" }, { enter: 2.75, exit: 3.6 }), layer("next-arrow", "flow-arrow", 219, 365, 102, 31, {}, { enter: 5.4, exit: 6.5 }), pill("read-label", "\u8BFB\u53D6\u5C0F\u6279", 460, 556, 345, "light", { enter: 0.3, exit: 2.4 }), pill("save-label", "\u5904\u7406\u540E\u4FDD\u5B58", 460, 556, 345, "mint", { enter: 2.45, exit: 4.3 }), pill("clear-label", "\u91CA\u653E\u4E34\u65F6\u526F\u672C", 460, 556, 345, "light", { enter: 4.4, exit: 5.35 }), pill("next-label", "\u8BFB\u53D6\u4E0B\u4E00\u6279", 460, 556, 345, "light", { enter: 5.4 }));
+  scene("S07A\u2192S07D", "batch-motion", "\u52A8\u6001\uFF1A\u8BFB\u53D6\u3001\u4FDD\u5B58\u3001\u91CA\u653E\u3001\u4E0B\u4E00\u6279", cycle, ["batch", "memory", "save"]);
+  var fields = noticeChat(true);
+  for (const l of fields) {
+    if (l.id.includes("field-")) l.enter = 1 + Number(l.id.at(-1)) * 1.3;
+  }
+  scene("S02A\u2192S02B", "field-motion", "\u52A8\u6001\uFF1A\u901A\u77E5\u4E09\u5B57\u6BB5\u9010\u9879\u8865\u9F50", fields, ["paper", "reuse"]);
+  var doubao = "references/transfer-hd/03-\u5B98\u65B9\u56FE\u6807/\u8C46\u5305-\u5B98\u65B9\u539F\u4EF6.png";
+  var codex = "references/transfer-hd/03-\u5B98\u65B9\u56FE\u6807/Codex-\u5B98\u65B9\u539F\u4EF6.png";
+  for (const c of recipes) for (const l of c.defaults.layers) {
+    if (l.part === "chat-shell") l.props = { ...l.props, title: "\u8C46\u5305", brandSrc: doubao };
+    if (l.id === "editor") l.props = { ...l.props, title: "Codex", brandSrc: codex };
+  }
+  var errorScene = recipes.find((c) => c.id === "ani-transfer-hd-error-explanation");
+  Object.assign(errorScene.defaults.layers.find((l) => l.id === "chat-message-1"), { y: 371 });
+  var copyScene = recipes.find((c) => c.id === "ani-transfer-hd-copy-verify");
+  for (const l of copyScene.defaults.layers) {
+    if (l.id === "code") {
+      l.y = 211;
+      l.width = 295;
+      l.height = 117;
+    }
+    if (l.id.startsWith("preview-")) {
+      l.y = 316;
+      l.width = 74;
+      l.height = 83;
+    }
+  }
+  recipes.find((c) => c.id === "ani-transfer-hd-next-topic").defaults.layers.find((l) => l.id === "topic").props.text = "\u8BA4\u77E5\u7075\u6D3B\u6027";
+  for (const [key, prefix, x, y, s2] of [["experience-problem", "program", 710, 285, 0.68], ["near-far", "far-right", 831, 344, 0.49], ["next-topic", "program", 718, 426, 0.37]]) {
+    const c = recipes.find((c2) => c2.id === "ani-transfer-hd-" + key);
+    c.defaults.layers = c.defaults.layers.filter((l) => !l.id.startsWith(prefix + "-"));
+    c.defaults.layers.push(...place(productGallery(), prefix, x, y, s2));
+  }
+  for (const c of recipes) for (const l of c.defaults.layers) {
+    if (l.part === "notice-paper" && ["\u4E8B\u9879\u901A\u77E5", "\u5DF2\u6709\u4E8B\u9879\u901A\u77E5", "\u5DF2\u6709\u901A\u77E5"].includes(l.props.title)) l.props.title = "\u53D1\u8D27\u5EF6\u8BEF\u901A\u77E5";
+    if (l.part === "notice-paper" && ["\u65B0\u7684\u4E8B\u9879\u901A\u77E5", "\u65B0\u901A\u77E5"].includes(l.props.title)) l.props.title = "\u7F3A\u8D27\u901A\u77E5";
+    if (["ani-transfer-hd-notice-complete", "ani-transfer-hd-field-motion"].includes(c.id) && l.part === "notice-field") l.props.value = { "\u539F\u56E0": "\u4E3A\u4EC0\u4E48\u665A\u4E86", "\u5F71\u54CD": "\u4F1A\u803D\u8BEF\u4EC0\u4E48", "\u5904\u7406\u529E\u6CD5": "\u63A5\u4E0B\u6765\u600E\u4E48\u529E" }[l.props.label];
+  }
+  var empty = recipes.find((c) => c.id === "ani-transfer-hd-truck-empty");
+  empty.defaults.layers = empty.defaults.layers.filter((l) => l.id !== "unloaded");
+  empty.defaults.layers.push(...unload.filter((l) => l.id.includes("-box-")).map((l) => {
+    const end = l.steps.at(-1);
+    return { ...structuredClone(l), id: "unloaded-" + l.id.at(-1), x: l.x + end.x, y: l.y + end.y, steps: [] };
+  }));
+  for (const c of [...modules, ...recipes]) if (/notice|field-motion/.test(c.id)) c.intentIds = ["noticeWriting", ...c.intentIds];
+  for (const [key, text7, tone3] of [["batch-read", "\u5C0F\u6279\u5DF2\u8BFB\u5165", "light"], ["batch-saved", "\u5904\u7406\u7ED3\u679C\u5DF2\u4FDD\u5B58", "mint"], ["batch-released", "\u5DF2\u91CA\u653E\u4E34\u65F6\u5360\u7528", "light"], ["batch-next", "\u4E0B\u4E00\u5C0F\u6279\u8BFB\u5165", "light"]]) {
+    const state3 = recipes.find((c) => c.id === "ani-transfer-hd-" + key);
+    state3.defaults.layers.find((l) => l.id === "program-status").props = { text: text7, tone: tone3 };
+  }
+  var reuseScene = recipes.find((c) => c.id === "ani-transfer-hd-notice-reuse");
+  for (const l of reuseScene.defaults.layers) {
+    if (/^field-/.test(l.id)) {
+      l.x = 532;
+      l.width = 210;
+      l.height = 42;
+    }
+    if (l.id === "brace") {
+      l.x = 724;
+      l.width = 69;
+      l.height = 275;
+    }
+  }
+  for (const c of recipes) {
+    if (c.defaults.layers.some((l) => l.id === "source-front") && c.defaults.layers.some((l) => l.id === "output-front")) {
+      for (const l of c.defaults.layers) if (["source-front", "output-front"].includes(l.id)) l.props.label = "";
+      c.defaults.layers.push(pill("source-title", "\u539F\u56FE", 42, 267, 205), pill("output-title", "\u7ED3\u679C", 1044, 267, 205));
+    }
+    if (c.id === "ani-transfer-hd-question-outro") {
+      for (const l of c.defaults.layers) if (l.part === "chat-message") l.props.lines = ["", ""];
+    }
+  }
+  var findScene = (key) => recipes.find((c) => c.id === "ani-transfer-hd-" + key).defaults.layers;
+  Object.assign(findScene("experience-problem").find((l) => l.id === "title"), { x: 280, y: 76, width: 720, height: 130 });
+  findScene("notice-draft").find((l) => l.id === "chat-message-0").props.text = "\u5BA2\u6C14\u70B9";
+  findScene("notice-complete").find((l) => l.id === "chat-message-0").props.text = "\u539F\u56E0\u3001\u5F71\u54CD\u3001\u5904\u7406\u529E\u6CD5";
+  findScene("field-motion").find((l) => l.id === "chat-message-0").props.text = "\u539F\u56E0\u3001\u5F71\u54CD\u3001\u5904\u7406\u529E\u6CD5";
+  findScene("check-cause").find((l) => l.id === "cause-paper").props.title = "\u4E00\u6B21\u8BFB\u5165\u592A\u591A\uFF1F";
+  for (const l of findScene("copy-verify")) if (l.part === "checklist-row") l.props.text = ["\u8FD8\u62A5\u9519\u5417\uFF1F", "\u5C3A\u5BF8\u5BF9\u5417\uFF1F", "\u6709\u6CA1\u6709\u6F0F\u56FE\uFF1F"][Number(l.id.at(-1))];
+  findScene("two-purposes").find((l) => l.id === "delivery-label").props.text = "\u6025\u7740\u4EA4\u6D3B";
+  findScene("two-purposes").find((l) => l.id === "learning-label").props.text = "\u60F3\u5B66\u4F1A";
+  findScene("experience-to-action").find((l) => l.id === "chat-message-2").props.text = "\u8FD9\u6B21\u5177\u4F53\u600E\u4E48\u505A\uFF1A";
+  for (const l of findScene("batch-motion")) if (["read-label", "save-label", "clear-label", "next-label"].includes(l.id)) l.y = 623;
+
+  // families/animation-style-hd-kit.mjs
+  var purposes = { "truck-body": ["transport"], "truck-cab": ["transport"], wheel: ["transport"], "cargo-box": ["transport", "collection"], "cargo-stack": ["transport", "collection"], warehouse: ["warehouse", "transport"], "ground-shadow": ["annotation"], "photo-card": ["file"], "photo-stack": ["file", "collection"], "window-shell": ["window"], "buffer-area": ["memory"], "chat-shell": ["messages", "window"], "chat-message": ["messages"], "notice-paper": ["noticeWriting", "paper"], "notice-field": ["noticeWriting", "reuse", "paper"], "folder-shell": ["folder"], "attachment-card": ["messages", "file"], "reply-lines": ["messages", "text"], "send-icon": ["messages", "symbol"], "checklist-row": ["verify", "checkbox"], magnifier: ["detail", "verify"], "flow-arrow": ["connector"], brace: ["relation", "connector"], "status-pill": ["status"], title: ["text"], "question-bubble": ["clarify", "annotation"], "brand-badge": ["symbol"], "code-lines": ["code"], "destination-pad": ["warehouse", "transport"], "focus-ring": ["highlight"] };
+  purposes.truck = ["transport", "batch"];
+  purposes["direction-arrow"] = ["direction", "connector"];
+  purposes["semantic-label"] = ["semanticLabel", "text"];
+  var components8 = [...parts.map((p) => {
+    const s2 = Math.min(850 / p.width, 490 / p.height, 1.6), w = p.width * s2, h = p.height * s2;
+    const component2 = makeKit("ani-atom-hd-" + p.key, "\u9AD8\u6E05 \xB7 " + p.name, p.description, [layer("part", p.key, (1280 - w) / 2, (720 - h) / 2, w, h, p.defaults)], { layerType: "primitive", intentIds: purposes[p.key] || ["annotation"], effect: "none" });
+    if (p.hidden) component2.hidden = true;
+    if (p.compatibilityOnly) component2.compatibilityOnly = true;
+    return component2;
+  }), ...modules, ...recipes];
+  for (const spec of arrowStyles) {
+    const p = semanticParts.find((p2) => p2.key === "direction-arrow");
+    components8.push(makeKit("ani-atom-hd-arrow-" + spec.id, spec.name, `\u6307\u5411\u7EC4\u4EF6\uFF1B${spec.geometry}\u8DEF\u5F84\uFF1B\u5934\u90E8\u6E05\u6670\u3002\u989C\u8272\u3001\u56DB\u5411\u3001\u7EBF\u5BBD\u3001\u5934\u90E8\u50CF\u7D20\u548C\u5B9E\u4F8B\u5C3A\u5BF8\u53EF\u8C03\uFF1B\u4E0E\u5173\u8054\u62EC\u7EBF\u7528\u9014\u4E0D\u540C\u3002`, [layer("arrow", "direction-arrow", 310, 200, 660, 300, { ...p.defaults, style: spec.id })], { layerType: "primitive", intentIds: ["direction", "connector"], effect: "none" }));
+  }
+  for (const spec of labelVariants) {
+    const p = semanticParts.find((p2) => p2.key === "semantic-label");
+    components8.push(makeKit("ani-atom-hd-label-" + spec.id, spec.name, `\u8BED\u4E49\u6807\u6CE8\uFF1B\u9002\u7528${spec.roles.join("/")}\u3002\u540C\u4E00\u8BED\u4E49\u7B49\u7EA7\u5728\u6574\u7247\u51BB\u7ED3\u540C\u6B3E\uFF1B\u5B57\u53F7\u4F7F\u7528\u5B9E\u4F8B\u50CF\u7D20\uFF0C\u4E0D\u968F\u539F\u751F600\xD7180\u6BD4\u4F8B\u7F29\u5C0F\u3002`, [layer("label", "semantic-label", 240, 260, 800, 180, { ...p.defaults, variant: spec.id, text: spec.name, fontSize: 40 })], { layerType: "primitive", intentIds: ["semanticLabel", "text", "annotation"], effect: "none" }));
+  }
+
   // families/animation-style-learning.mjs
-  var scope4 = (h, key) => ({ ...h, uid: (s) => h.uid(key + "-" + s) });
-  var units8 = (s) => Array.from(String(s ?? "")).reduce((n3, c) => n3 + (/[\u0000-\u00ff]/.test(c) ? 0.55 : 1), 0);
+  var scope4 = (h, key) => ({ ...h, uid: (s2) => h.uid(key + "-" + s2) });
+  var units8 = (s2) => Array.from(String(s2 ?? "")).reduce((n4, c) => n4 + (/[\u0000-\u00ff]/.test(c) ? 0.55 : 1), 0);
   function text4(x, y, value, size, width, h, extra2 = "") {
     const u = units8(value), font5 = Math.min(size, width / Math.max(1, u));
     if (font5 < Math.min(17, size * 0.7)) throw new Error("\u52A8\u753B\u98CE\uFF1A\u6587\u5B57\u8D85\u51FA\u53EF\u8BFB\u8303\u56F4\uFF0C\u8BF7\u7F29\u77ED\uFF1A" + String(value).slice(0, 22));
     return `<text x="${x}" y="${y}" font-size="${font5}" ${/\bfill=/.test(extra2) ? "" : `fill="${tokens.ink}"`} ${extra2}>${h.esc(value)}</text>`;
   }
-  var line = (d, color2 = tokens.green, width = 4) => `<path data-ani-link d="${d}" fill="none" stroke="${color2}" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round"/>`;
-  var node = (x, y, color2 = tokens.green) => `<circle cx="${x}" cy="${y}" r="8" fill="white" stroke="${color2}" stroke-width="4"/>`;
+  var line = (d, color5 = tokens.green, width = 4) => `<path data-ani-link d="${d}" fill="none" stroke="${color5}" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  var node2 = (x, y, color5 = tokens.green) => `<circle cx="${x}" cy="${y}" r="8" fill="white" stroke="${color5}" stroke-width="4"/>`;
   var enter = (html) => `<g data-ani-enter>${html}</g>`;
   var pop = (html) => `<g data-ani-pop>${html}</g>`;
-  function heading(p, h) {
+  function heading2(p, h) {
     return `${text4(62, 77, p.title, 47, 1138, h)}<path d="M65 97H176" stroke="#6bbfc9" stroke-width="7" stroke-linecap="round"/>${p.subtitle ? text4(64, 125, p.subtitle, 19, 1120, h, 'fill="#547699"') : ""}`;
   }
   function footer(p, h) {
     return p.footer ? text4(640, 694, p.footer, 20, 1120, h, 'text-anchor="middle" fill="#4b7498"') : "";
   }
-  function shell(x, y, w, ht, label2, h) {
+  function shell(x, y, w, ht, label3, h) {
     const titleH = 42;
-    return `<g transform="translate(${x} ${y})"><rect x="11" y="13" width="${w}" height="${ht}" rx="16" fill="${tokens.shadow}"/><rect width="${w}" height="${ht}" rx="16" fill="#fcfeff" stroke="${tokens.ink}" stroke-width="3"/><path d="M16 0H${w - 16}Q${w} 0 ${w} 16V${titleH}H0V16Q0 0 16 0Z" fill="#57a4f5" stroke="${tokens.ink}" stroke-width="3"/>${[23, 47, 71].map((cx) => `<circle cx="${cx}" cy="21" r="6" fill="white" stroke="${tokens.ink}" stroke-width="1.8"/>`).join("")}<g data-text-panel="window-title" data-panel-bounds="0 0 ${w} ${titleH}">${text4(w - 22, 29, label2, 21, w - 126, h, 'text-anchor="end"')}</g><path d="M6 ${ht - 23}V${ht - 15}Q6 ${ht - 6} 16 ${ht - 6}H${w - 18}" stroke="#e1f1ff" stroke-width="5" fill="none"/></g>`;
+    return `<g transform="translate(${x} ${y})"><rect x="11" y="13" width="${w}" height="${ht}" rx="16" fill="${tokens.shadow}"/><rect width="${w}" height="${ht}" rx="16" fill="#fcfeff" stroke="${tokens.ink}" stroke-width="3"/><path d="M16 0H${w - 16}Q${w} 0 ${w} 16V${titleH}H0V16Q0 0 16 0Z" fill="#57a4f5" stroke="${tokens.ink}" stroke-width="3"/>${[23, 47, 71].map((cx) => `<circle cx="${cx}" cy="21" r="6" fill="white" stroke="${tokens.ink}" stroke-width="1.8"/>`).join("")}<g data-text-panel="window-title" data-panel-bounds="0 0 ${w} ${titleH}">${text4(w - 22, 29, label3, 21, w - 126, h, 'text-anchor="end"')}</g><path d="M6 ${ht - 23}V${ht - 15}Q6 ${ht - 6} 16 ${ht - 6}H${w - 18}" stroke="#e1f1ff" stroke-width="5" fill="none"/></g>`;
   }
   function miniWindow(x, y, w, ht, p, h) {
     const left = w * 0.43, pad2 = 16, bodyY = y + 56, bodyH = ht - 75;
@@ -1587,22 +2332,22 @@ var ComponentLibraryRuntime = (() => {
   function symbol2(kind, x, y, size, h) {
     if (kind === "check") return magnifier(x, y, size, h);
     if (kind === "document") return icon("document", x, y, size, h);
-    const s = size / 100;
+    const s2 = size / 100;
     let art;
     if (kind === "pencil") art = `<path d="M15 81L27 55L73 9Q78 4 84 10L91 17Q96 22 91 28L45 75Z" fill="#4499f5" stroke="${tokens.ink}" stroke-width="3"/><path d="M73 9L91 28L82 37L64 18Z" fill="${tokens.orange}" stroke="${tokens.ink}" stroke-width="2.5"/><path d="M15 81L27 55L45 75Z" fill="#fff0ce" stroke="${tokens.ink}" stroke-width="3"/><path d="M15 81L21 66L31 77Z" fill="${tokens.ink}"/><path d="M35 54L67 22" stroke="#a8dfff" stroke-width="5"/>`;
     else if (kind === "palette") art = `<path d="M49 13C22 11 3 28 6 49C8 70 33 82 49 76C69 69 61 59 72 57C104 53 100 22 75 15C65 11 55 12 49 13Z" fill="white" stroke="${tokens.ink}" stroke-width="3"/><circle cx="30" cy="34" r="9" fill="${tokens.blue}"/><circle cx="55" cy="28" r="9" fill="${tokens.orange}"/><circle cx="23" cy="54" r="9" fill="#239aac"/><circle cx="51" cy="61" r="6" fill="#d6effb" stroke="${tokens.ink}" stroke-width="2"/>`;
     else if (kind === "ruler") art = `<g transform="rotate(-43 50 50)"><rect x="6" y="30" width="88" height="39" rx="6" fill="#bfe5ff" stroke="${tokens.ink}" stroke-width="3"/><path d="M23 31V47M38 31V41M53 31V47M68 31V41M83 31V47" stroke="${tokens.ink}" stroke-width="3"/><circle cx="20" cy="58" r="3" fill="${tokens.ink}"/></g>`;
     else if (kind === "layout") art = `<rect x="5" y="14" width="89" height="69" rx="5" fill="white" stroke="${tokens.ink}" stroke-width="3"/><rect x="14" y="24" width="37" height="25" rx="2" fill="${tokens.blue}"/><path d="M59 28H84M59 39H80M15 59H49M15 69H44" stroke="#adc6e2" stroke-width="5" stroke-linecap="round"/><rect x="58" y="54" width="26" height="20" rx="2" fill="#a4dfff"/>`;
     else art = `<rect x="7" y="9" width="85" height="81" rx="12" fill="${tokens.blue}" stroke="${tokens.ink}" stroke-width="3"/><circle cx="30" cy="31" r="9" fill="white"/><path d="M15 77L43 45L59 63L72 49L87 77Z" fill="white"/>`;
-    return `<g transform="translate(${x} ${y}) scale(${s})">${art}</g>`;
+    return `<g transform="translate(${x} ${y}) scale(${s2})">${art}</g>`;
   }
-  function document2(x, y, w, ht, label2, kind, h) {
-    return paper(x, y, w, ht, { fold: 28, depth: 8, content: `${symbol2(kind, w / 2 - 29, 18, 58, h)}${text4(w / 2, ht - 19, label2, 23, w - 16, h, 'text-anchor="middle"')}` }, h);
+  function document2(x, y, w, ht, label3, kind, h) {
+    return paper(x, y, w, ht, { fold: 28, depth: 8, content: `${symbol2(kind, w / 2 - 29, 18, 58, h)}${text4(w / 2, ht - 19, label3, 23, w - 16, h, 'text-anchor="middle"')}` }, h);
   }
   var create = (id, name, description, defaults3, ref3, render) => ({ id, name: "\u52A8\u753B\u98CE \xB7 " + name, category: "\u52A8\u753B\u98CE", description, width: 1280, height: 720, defaultEffect: "ani-diagram-build", defaults: defaults3, reference: { basis: "\u7528\u6237\u63D0\u4F9B\u7684\u9759\u5E27\u53C2\u8003 " + ref3 + "\uFF1B\u539F\u751F SVG \u51E0\u4F55\u91CD\u5EFA\uFF0C\u8FD0\u52A8\u4E3A\u65B0\u7F16\u6392\uFF0C\u4E0D\u79F0 1:1 \u6216\u9010\u5E27\u590D\u523B\u3002", source: "reports/animation-style/reference-review-wechat/" + ref3, level: "designed" }, render(props, h) {
     return render({ ...defaults3, ...props }, h);
   } });
-  var components8 = [
+  var components9 = [
     create("ani-tool-workbench", "\u8F93\u5165\u3001\u68C0\u67E5\u4E0E\u4FEE\u6539", "\u5B8C\u6574\u5DE5\u5177\u7A97\u53E3\u642D\u914D\u8981\u6C42\u7EB8\u3001\u96EA\u5C71\u9884\u89C8\u4E0E\u68C0\u67E5\u653E\u5927\u955C\uFF0C\u8868\u8FBE\u5148\u8F93\u5165\u3001\u518D\u68C0\u67E5\u3001\u518D\u4FEE\u6539\u7684\u5DE5\u4F5C\u8FC7\u7A0B\u3002", {
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -1622,7 +2367,7 @@ var ComponentLibraryRuntime = (() => {
       if (!Array.isArray(p.tags) || p.tags.length !== 2) throw new Error("\u5DE5\u4F5C\u53F0 tags \u9700\u8981\u4E24\u4E2A\u6807\u7B7E");
       const win = `${shell(222, 156, 866, 468, p.toolLabel, scope4(h, "window"))}<rect x="240" y="213" width="269" height="388" rx="13" fill="white" stroke="#c1d9f2" stroke-width="2"/><rect x="528" y="213" width="541" height="388" rx="13" fill="white" stroke="#c1d9f2" stroke-width="2"/>${text4(260, 253, p.requestLabel, 25, 220, h)}<rect x="259" y="269" width="230" height="57" rx="11" fill="#fff" stroke="${tokens.ink}" stroke-width="2"/>${text4(275, 306, p.request, 25, 200, h)}${p.tags.map((v, i) => `<rect x="${258 + i * 121}" y="346" width="110" height="49" rx="22" fill="#e7f5ff" stroke="#9bc9ee" stroke-width="1.6"/>${text4(313 + i * 121, 377, v, 21, 94, h, 'text-anchor="middle"')}`).join("")}${text4(261, 441, p.revisionLabel, 25, 220, h)}<rect x="259" y="456" width="230" height="56" rx="11" fill="white" stroke="${tokens.ink}" stroke-width="2"/>${text4(275, 491, p.revision, 25, 200, h)}<rect x="259" y="533" width="230" height="51" rx="11" fill="${tokens.blue}" stroke="${tokens.ink}" stroke-width="2.5"/>${text4(374, 568, p.action, 29, 198, h, 'text-anchor="middle" fill="white"')}${mountains(545, 232, 507, 350, scope4(h, "hero"))}`;
       const paperArt = paper(48, 266, 156, 243, { fold: 31, content: `${symbol2("image", 39, 31, 79, h)}<path d="M24 145H126M24 165H119M24 185H105" stroke="#bbcee1" stroke-width="9" stroke-linecap="round"/>` }, scope4(h, "request-paper"));
-      return svgScene(`${heading(p, h)}${line("M116 546V587Q116 606 136 606H220")}${line("M1088 493H1168Q1195 493 1195 518V558", tokens.green, 3.5)}${enter(`<g transform="rotate(-8 128 387)">${paperArt}</g>`)}${enter(gear(1096, 206, 128, h))}${enter(win)}${enter(`<rect x="569" y="263" width="169" height="49" rx="7" fill="white" stroke="${tokens.orange}" stroke-width="3"/>${text4(653, 296, p.previewLabel, 26, 147, h, 'text-anchor="middle"')}`)}${pop(`${magnifier(729, 256, 137, h)}<path d="M731 255l-6-17M745 256l12-12M754 271l18-1" stroke="${tokens.orange}" stroke-width="5" stroke-linecap="round"/>`)}${node(116, 546)}${node(1195, 558)}${footer(p, h)}`, h);
+      return svgScene(`${heading2(p, h)}${line("M116 546V587Q116 606 136 606H220")}${line("M1088 493H1168Q1195 493 1195 518V558", tokens.green, 3.5)}${enter(`<g transform="rotate(-8 128 387)">${paperArt}</g>`)}${enter(gear(1096, 206, 128, h))}${enter(win)}${enter(`<rect x="569" y="263" width="169" height="49" rx="7" fill="white" stroke="${tokens.orange}" stroke-width="3"/>${text4(653, 296, p.previewLabel, 26, 147, h, 'text-anchor="middle"')}`)}${pop(`${magnifier(729, 256, 137, h)}<path d="M731 255l-6-17M745 256l12-12M754 271l18-1" stroke="${tokens.orange}" stroke-width="5" stroke-linecap="round"/>`)}${node2(116, 546)}${node2(1195, 558)}${footer(p, h)}`, h);
     }),
     create("ani-file-collection", "\u6587\u4EF6\u5939\u4E0E\u7A97\u53E3\u5BF9\u7167", "\u6587\u4EF6\u5361\u7247\u3001\u6587\u4EF6\u5939\u4E0E\u6D4F\u89C8\u5668\u7A97\u53E3\u5E76\u6392\u5C55\u793A\uFF1B\u6587\u4EF6\u540D\u79F0\u3001\u6807\u7B7E\u4E0E\u8BF4\u660E\u5747\u53EF\u66FF\u6362\u3002", {
       "title": "\u4E3B\u6807\u9898",
@@ -1640,8 +2385,8 @@ var ComponentLibraryRuntime = (() => {
     }, "02_\u6536\u85CF\u4E0D\u7B49\u4E8E\u4F1A.png", (p, h) => {
       if (!Array.isArray(p.files) || p.files.length !== 3) throw new Error("\u6536\u85CF\u7EC4\u4EF6 files \u9700\u8981\u4E09\u9879");
       const files = p.files.map((v, i) => enter(`<g transform="rotate(${[-9, 0, 8][i]} ${160 + i * 125} 343)">${paper(84 + i * 131, 245 - i * 7, 162, 233, { fold: 32, content: `<rect x="25" y="38" width="47" height="42" rx="7" fill="${tokens.blue}"/><path d="M43 49L58 59L43 69Z" fill="white"/>${text4(83, 68, v, 24, 66, h)}<path d="M26 112H134M26 137H132M26 162H120" stroke="#b7cee3" stroke-width="8" stroke-linecap="round"/>` }, scope4(h, "file-" + i))}</g>`)).join("");
-      const folder = `<ellipse cx="323" cy="622" rx="255" ry="24" fill="#e2f1ff"/><path d="M82 423Q76 404 96 399H266L289 421H541Q563 421 556 447L519 610H119Z" fill="#8ac7f5" stroke="${tokens.ink}" stroke-width="3"/><path d="M80 456Q74 433 98 433H242L260 451H527Q547 451 542 474L518 612Q516 624 501 624H118Q101 624 98 608Z" fill="#d6edff" stroke="${tokens.ink}" stroke-width="3.3"/><path d="M114 479H499" stroke="white" stroke-width="4" opacity=".85"/><rect x="132" y="496" width="295" height="74" rx="12" fill="#f7fcff" stroke="#adceea" stroke-width="1.7"/>${text4(154, 541, p.folderLabel, 29, 256, h)}`;
-      return svgScene(`${heading(p, h)}${files}${enter(folder)}${enter(miniWindow(726, 259, 478, 350, p, scope4(h, "demo")))}${enter(gear(1123, 547, 107, h))}${pop(text4(627, 479, p.result, 112, 135, h, 'text-anchor="middle" fill="#b56a00"'))}${footer(p, h)}`, h);
+      const folder3 = `<ellipse cx="323" cy="622" rx="255" ry="24" fill="#e2f1ff"/><path d="M82 423Q76 404 96 399H266L289 421H541Q563 421 556 447L519 610H119Z" fill="#8ac7f5" stroke="${tokens.ink}" stroke-width="3"/><path d="M80 456Q74 433 98 433H242L260 451H527Q547 451 542 474L518 612Q516 624 501 624H118Q101 624 98 608Z" fill="#d6edff" stroke="${tokens.ink}" stroke-width="3.3"/><path d="M114 479H499" stroke="white" stroke-width="4" opacity=".85"/><rect x="132" y="496" width="295" height="74" rx="12" fill="#f7fcff" stroke="#adceea" stroke-width="1.7"/>${text4(154, 541, p.folderLabel, 29, 256, h)}`;
+      return svgScene(`${heading2(p, h)}${files}${enter(folder3)}${enter(miniWindow(726, 259, 478, 350, p, scope4(h, "demo")))}${enter(gear(1123, 547, 107, h))}${pop(text4(627, 479, p.result, 112, 135, h, 'text-anchor="middle" fill="#b56a00"'))}${footer(p, h)}`, h);
     }),
     create("ani-method-transfer", "\u7A97\u53E3\u4E0E\u90E8\u4EF6\u7EC4\u5408", "\u6D4F\u89C8\u5668\u3001\u6587\u4EF6\u5361\u7247\u4E0E\u5BB9\u5668\u901A\u8FC7\u8FDE\u7EBF\u7EC4\u5408\uFF1B\u6B65\u9AA4\u3001\u5BB9\u5668\u6807\u9898\u548C\u65B0\u589E\u9879\u5206\u522B\u53EF\u7F16\u8F91\u3002", {
       "title": "\u4E3B\u6807\u9898",
@@ -1662,9 +2407,9 @@ var ComponentLibraryRuntime = (() => {
       const lid = paper(652, 158, 539, 217, { fold: 43, depth: 11, content: `${symbol2("image", 34, 43, 91, h)}${text4(151, 95, p.trayTitle, 37, 338, h)}<path d="M153 122H461M153 145H421M153 166H365" stroke="#becfe0" stroke-width="9" stroke-linecap="round"/>` }, scope4(h, "lid"));
       const tray = `<path d="M649 401H1184L1220 611Q1227 634 1202 641H645Q620 639 618 620Z" fill="#bcd9f6" stroke="${tokens.ink}" stroke-width="3"/><path d="M654 393H1181L1210 599Q1214 617 1195 619H645Q628 618 632 600Z" fill="#f8fdff" stroke="${tokens.ink}" stroke-width="3"/><path d="M674 416H997L1020 590H652Z" fill="#e5f8f7" stroke="#149daf" stroke-width="3"/><path d="M1068 416H1156L1186 590H1043Z" fill="#fff2d7" stroke="#df8b10" stroke-width="3"/>`;
       const slots = p.steps.map((v, i) => enter(`<g transform="translate(${669 + i * 112} 437)"><rect x="4" y="5" width="98" height="140" rx="8" fill="#acdae6"/><rect width="98" height="140" rx="8" fill="white" stroke="#61b8c3" stroke-width="2"/>${symbol2(["document", "check", "pencil"][i], 22, 19, 57, h)}${text4(49, 116, v, 24, 86, h, 'text-anchor="middle"')}</g>`)).join("");
-      const connection = (id, d, x, y) => `<g data-ani-link data-ani-connection="${id}"><path d="${d}" fill="none" stroke="${tokens.green}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${node(x, y)}</g>`;
+      const connection = (id, d, x, y) => `<g data-ani-link data-ani-connection="${id}"><path d="${d}" fill="none" stroke="${tokens.green}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${node2(x, y)}</g>`;
       const connections = connection("requirements-check", "M190 551H229", 210, 551) + connection("check-revision", "M355 551H394", 375, 551) + connection("revision-tray", "M520 551H555Q584 551 584 519V478Q584 449 614 449H646", 615, 449);
-      return svgScene(`${heading(p, h)}${connections}${enter(miniWindow(61, 163, 486, 270, p, scope4(h, "known-window")))}${methods}${enter(lid)}${enter(`<g data-method-tray>${tray}</g>`)}${slots}${pop(`<rect x="1056" y="443" width="98" height="88" rx="8" fill="#fffaf0" stroke="#f4a126" stroke-width="2.5" stroke-dasharray="7 5"/>${text4(1111, 575, p.newLabel, 27, 107, h, 'text-anchor="middle"')}`)}${footer(p, h)}`, h);
+      return svgScene(`${heading2(p, h)}${connections}${enter(miniWindow(61, 163, 486, 270, p, scope4(h, "known-window")))}${methods}${enter(lid)}${enter(`<g data-method-tray>${tray}</g>`)}${slots}${pop(`<rect x="1056" y="443" width="98" height="88" rx="8" fill="#fffaf0" stroke="#f4a126" stroke-width="2.5" stroke-dasharray="7 5"/>${text4(1111, 575, p.newLabel, 27, 107, h, 'text-anchor="middle"')}`)}${footer(p, h)}`, h);
     }),
     create("ani-knowledge-network", "\u6587\u6863\u4E0E\u7A97\u53E3\u8FDE\u7EBF", "\u6587\u4EF6\u3001\u9884\u89C8\u7A97\u53E3\u4E0E\u6587\u6863\u901A\u8FC7\u8FDE\u7EBF\u7EC4\u6210\u56FE\u89E3\uFF1B\u5B57\u6BB5\u3001\u6B65\u9AA4\u3001\u8F93\u51FA\u548C\u6CE8\u91CA\u53EF\u7F16\u8F91\u3002", {
       "title": "\u4E3B\u6807\u9898",
@@ -1691,7 +2436,7 @@ var ComponentLibraryRuntime = (() => {
       const center = `<rect x="458" y="181" width="358" height="272" rx="12" fill="${tokens.shadow}"/><rect x="449" y="171" width="358" height="272" rx="12" fill="#fcfeff" stroke="${tokens.ink}" stroke-width="3"/><path d="M461 171H795Q807 171 807 183V228H449V183Q449 171 461 171Z" fill="#dfedff" stroke="${tokens.ink}" stroke-width="3"/>${text4(474, 211, p.requirementsTitle, 29, 305, h)}${p.fields.map((v, i) => `<rect x="469" y="${243 + i * 60}" width="315" height="50" rx="8" fill="${i === 2 ? "#dcf7f4" : "white"}" stroke="${i === 2 ? "#37adbc" : "#afcfea"}" stroke-width="1.7"/>${symbol2(["document", "palette", "ruler"][i], 479, 248 + i * 60, 39, h)}<path d="M530 ${245 + i * 60}V${291 + i * 60}" stroke="#a3d1e4"/>${text4(548, 278 + i * 60, v, 27, 205, h)}`).join("")}`;
       const steps = p.steps.map((v, i) => enter(`<rect x="${455 + i * 185}" y="497" width="165" height="70" rx="11" fill="${tokens.shadow}"/><rect x="${448 + i * 185}" y="490" width="165" height="70" rx="11" fill="white" stroke="${tokens.ink}" stroke-width="2.4"/>${symbol2(i ? "pencil" : "check", 462 + i * 185, 501, 43, h)}${text4(528 + i * 185, 533, v, 25, 78, h)}`)).join("");
       const result = paper(962, 156, 243, 328, { fold: 39, depth: 11, content: `${text4(25, 56, p.outputTitle, 30, 195, h)}<rect x="53" y="81" width="141" height="218" rx="4" fill="none" stroke="#7ca2c5" stroke-width="2" stroke-dasharray="6 5"/>${mountains(64, 91, 119, 197, scope4(h, "portrait"))}` }, scope4(h, "result-paper"));
-      return svgScene(`${heading(p, h)}${line("M313 277H368V365H449", "#6590b7", 2.4)}${line("M355 542H390V365H449", "#6590b7", 2.4)}${line("M628 442V469H529V490M628 469H714V490M529 560V588H630V606M714 560V588H630", "#6590b7", 2.4)}${line("M784 388H962", tokens.green, 4)}${docs}${enter(`${mountains(70, 430, 288, 207, scope4(h, "old-image"))}${text4(86, 466, p.previewLabel, 26, 245, h)}`)}${enter(center)}${steps}${enter(`<rect x="513" y="608" width="236" height="51" rx="12" fill="#edf7ff" stroke="${tokens.ink}" stroke-width="2.3"/>${symbol2("image", 527, 617, 34, h)}${text4(579, 643, p.resultLabel, 26, 155, h)}`)}${pop(result)}${pop(`<rect x="930" y="527" width="285" height="123" rx="13" fill="#fff6e7" stroke="${tokens.orange}" stroke-width="1.6"/>${text4(952, 564, p.questionTitle, 25, 244, h)}<circle cx="963" cy="605" r="20" fill="white" stroke="${tokens.orange}" stroke-width="2.5" stroke-dasharray="6 4"/>${text4(993, 615, p.question, 25, 197, h)}`)}${node(784, 388)}${node(962, 388)}${footer(p, h)}`, h);
+      return svgScene(`${heading2(p, h)}${line("M313 277H368V365H449", "#6590b7", 2.4)}${line("M355 542H390V365H449", "#6590b7", 2.4)}${line("M628 442V469H529V490M628 469H714V490M529 560V588H630V606M714 560V588H630", "#6590b7", 2.4)}${line("M784 388H962", tokens.green, 4)}${docs}${enter(`${mountains(70, 430, 288, 207, scope4(h, "old-image"))}${text4(86, 466, p.previewLabel, 26, 245, h)}`)}${enter(center)}${steps}${enter(`<rect x="513" y="608" width="236" height="51" rx="12" fill="#edf7ff" stroke="${tokens.ink}" stroke-width="2.3"/>${symbol2("image", 527, 617, 34, h)}${text4(579, 643, p.resultLabel, 26, 155, h)}`)}${pop(result)}${pop(`<rect x="930" y="527" width="285" height="123" rx="13" fill="#fff6e7" stroke="${tokens.orange}" stroke-width="1.6"/>${text4(952, 564, p.questionTitle, 25, 244, h)}<circle cx="963" cy="605" r="20" fill="white" stroke="${tokens.orange}" stroke-width="2.5" stroke-dasharray="6 4"/>${text4(993, 615, p.question, 25, 197, h)}`)}${node2(784, 388)}${node2(962, 388)}${footer(p, h)}`, h);
     }),
     create("ani-capability-tiles", "\u56FE\u6807\u5361\u7247\u7EC4", "\u516D\u5757\u5E26\u56FE\u6807\u7684\u5361\u7247\u4E0E\u9884\u89C8\u7A97\u53E3\u5E76\u7F6E\uFF1B\u5361\u7247\u6807\u7B7E\u3001\u7A97\u53E3\u6807\u9898\u548C\u7ED3\u679C\u6587\u5B57\u53EF\u7F16\u8F91\u3002", {
       "title": "\u4E3B\u6807\u9898",
@@ -1711,30 +2456,30 @@ var ComponentLibraryRuntime = (() => {
     }, "10_\u6563\u843D\u7684\u77E5\u8BC6\u7816.png", (p, h) => {
       if (!Array.isArray(p.tiles) || p.tiles.length !== 6) throw new Error("\u77E5\u8BC6\u7816 tiles \u9700\u8981\u516D\u9879");
       const pos = [[81, 235, -8], [321, 251, 7], [557, 223, -9], [169, 458, 7], [445, 471, -8], [747, 456, -10]], kinds = ["document", "palette", "ruler", "layout", "check", "pencil"];
-      const tiles = p.tiles.map((label2, i) => {
+      const tiles = p.tiles.map((label3, i) => {
         const [x, y, r] = pos[i];
-        return enter(`<g transform="rotate(${r} ${x + 96} ${y + 91})"><rect x="${x + 9}" y="${y + 13}" width="190" height="172" rx="15" fill="${tokens.shadow}"/><rect x="${x}" y="${y + 6}" width="190" height="172" rx="15" fill="#aed3f4" stroke="${tokens.ink}" stroke-width="2.7"/><rect x="${x}" y="${y}" width="190" height="167" rx="15" fill="#f2faff" stroke="${tokens.ink}" stroke-width="2.7"/><path d="M${x + 8} ${y + 26}V${y + 16}Q${x + 8} ${y + 8} ${x + 19} ${y + 8}H${x + 169}" fill="none" stroke="white" stroke-width="3"/>${symbol2(kinds[i], x + 53, y + 19, 86, h)}${text4(x + 95, y + 143, label2, 28, 165, h, 'text-anchor="middle"')}</g>`);
+        return enter(`<g transform="rotate(${r} ${x + 96} ${y + 91})"><rect x="${x + 9}" y="${y + 13}" width="190" height="172" rx="15" fill="${tokens.shadow}"/><rect x="${x}" y="${y + 6}" width="190" height="172" rx="15" fill="#aed3f4" stroke="${tokens.ink}" stroke-width="2.7"/><rect x="${x}" y="${y}" width="190" height="167" rx="15" fill="#f2faff" stroke="${tokens.ink}" stroke-width="2.7"/><path d="M${x + 8} ${y + 26}V${y + 16}Q${x + 8} ${y + 8} ${x + 19} ${y + 8}H${x + 169}" fill="none" stroke="white" stroke-width="3"/>${symbol2(kinds[i], x + 53, y + 19, 86, h)}${text4(x + 95, y + 143, label3, 28, 165, h, 'text-anchor="middle"')}</g>`);
       }).join("");
-      return svgScene(`${heading(p, h)}${enter(miniWindow(836, 156, 366, 282, p, scope4(h, "tiles-window")))}${tiles}${pop(`<path d="M976 508L998 490M997 524H1023M960 490L967 466" stroke="${tokens.orange}" stroke-width="5" stroke-linecap="round"/>${text4(1098, 569, p.result, 27, 214, h, 'text-anchor="middle"')}`)}${footer(p, h)}`, h);
+      return svgScene(`${heading2(p, h)}${enter(miniWindow(836, 156, 366, 282, p, scope4(h, "tiles-window")))}${tiles}${pop(`<path d="M976 508L998 490M997 524H1023M960 490L967 466" stroke="${tokens.orange}" stroke-width="5" stroke-linecap="round"/>${text4(1098, 569, p.result, 27, 214, h, 'text-anchor="middle"')}`)}${footer(p, h)}`, h);
     })
   ];
 
   // families/animation-style-objects.mjs
-  var context = (h, id) => ({ ...h, uid: (s) => h.uid(id + "-" + s) });
-  var units9 = (s) => Array.from(String(s ?? "")).reduce((n3, c) => n3 + (c.charCodeAt(0) < 256 ? 0.55 : 1), 0);
+  var context = (h, id) => ({ ...h, uid: (s2) => h.uid(id + "-" + s2) });
+  var units9 = (s2) => Array.from(String(s2 ?? "")).reduce((n4, c) => n4 + (c.charCodeAt(0) < 256 ? 0.55 : 1), 0);
   var text5 = (h, x, y, value, size = 24, width = 600, extra2 = "") => {
     const font5 = Math.min(size, width / Math.max(1, units9(value)));
     if (font5 < 14) throw Error("\u6587\u5B57\u8FC7\u957F\uFF0C\u8BF7\u7F29\u77ED\u5F53\u524D\u6587\u6848\u540E\u518D\u5E94\u7528\u3002");
     return `<text x="${x}" y="${y}" font-size="${font5}" fill="${tokens.ink}" ${extra2}>${h.esc(value)}</text>`;
   };
-  var arrow = (x, y) => `<g transform="translate(${x} ${y})"><path d="M0 13H31V0L57 24L31 48V35H0Z" fill="${tokens.green}" stroke="${tokens.ink}" stroke-width="3.5" stroke-linejoin="round"/><path d="M4 18H34V11" stroke="#70ceb3" stroke-width="3" fill="none"/></g>`;
-  function processing(p, h) {
+  var arrow2 = (x, y) => `<g transform="translate(${x} ${y})"><path d="M0 13H31V0L57 24L31 48V35H0Z" fill="${tokens.green}" stroke="${tokens.ink}" stroke-width="3.5" stroke-linejoin="round"/><path d="M4 18H34V11" stroke="#70ceb3" stroke-width="3" fill="none"/></g>`;
+  function processing2(p, h) {
     if (p.inputs.length !== 3 || p.outputs.length !== 3) throw Error("\u5904\u7406\u88C5\u7F6E\u793A\u4F8B\u9700\u8981\u4E09\u9879\u8F93\u5165\u548C\u4E09\u9879\u7ED3\u679C\u3002");
     const colors3 = [tokens.green, tokens.purple, tokens.orange];
     const input = p.inputs.map((item, i) => `<g data-ani-enter>${paper(50 + i * 94, 268 + i % 2 * 16, 116, 158, { fold: 24, depth: 7 }, context(h, "in" + i))}${icon(item.icon || "document", 72 + i * 94, 315 + i % 2 * 16, 61, context(h, "input-icon" + i))}${text5(h, 108 + i * 94, 305 + i % 2 * 16, item.label, 21, 94, 'text-anchor="middle"')}</g>`).join("");
-    const slots = colors3.map((color2, i) => `<g><path d="M${477 + i * 91} 256L${492 + i * 91} 234H${548 + i * 91}L${533 + i * 91} 256Z" fill="${color2}" stroke="${tokens.ink}" stroke-width="3"/><path d="M${491 + i * 91} 246H${531 + i * 91}" stroke="#ffffff" stroke-width="3" opacity=".5"/><rect x="${477 + i * 91}" y="288" width="81" height="217" rx="8" fill="${color2}" fill-opacity=".15"/><rect x="${492 + i * 91}" y="291" width="10" height="90" rx="5" fill="#c8dcf0" stroke="${tokens.ink}" stroke-width="2"/><rect x="${483 + i * 91}" y="360" width="29" height="18" rx="4" fill="#658ab6" stroke="${tokens.ink}" stroke-width="2"/><rect x="${473 + i * 91}" y="459" width="88" height="41" rx="8" fill="#456486" stroke="${tokens.ink}" stroke-width="3"/><rect x="${481 + i * 91}" y="465" width="71" height="22" rx="10" fill="#abc9e4" stroke="${tokens.ink}" stroke-width="2"/><circle cx="${492 + i * 91}" cy="476" r="6" fill="white" stroke="${tokens.ink}" stroke-width="2"/><circle cx="${541 + i * 91}" cy="476" r="6" fill="white" stroke="${tokens.ink}" stroke-width="2"/><g data-ani-gear>${gear(488 + i * 91, 387, 53, context(h, "gear" + i))}</g></g>`).join("");
+    const slots = colors3.map((color5, i) => `<g><path d="M${477 + i * 91} 256L${492 + i * 91} 234H${548 + i * 91}L${533 + i * 91} 256Z" fill="${color5}" stroke="${tokens.ink}" stroke-width="3"/><path d="M${491 + i * 91} 246H${531 + i * 91}" stroke="#ffffff" stroke-width="3" opacity=".5"/><rect x="${477 + i * 91}" y="288" width="81" height="217" rx="8" fill="${color5}" fill-opacity=".15"/><rect x="${492 + i * 91}" y="291" width="10" height="90" rx="5" fill="#c8dcf0" stroke="${tokens.ink}" stroke-width="2"/><rect x="${483 + i * 91}" y="360" width="29" height="18" rx="4" fill="#658ab6" stroke="${tokens.ink}" stroke-width="2"/><rect x="${473 + i * 91}" y="459" width="88" height="41" rx="8" fill="#456486" stroke="${tokens.ink}" stroke-width="3"/><rect x="${481 + i * 91}" y="465" width="71" height="22" rx="10" fill="#abc9e4" stroke="${tokens.ink}" stroke-width="2"/><circle cx="${492 + i * 91}" cy="476" r="6" fill="white" stroke="${tokens.ink}" stroke-width="2"/><circle cx="${541 + i * 91}" cy="476" r="6" fill="white" stroke="${tokens.ink}" stroke-width="2"/><g data-ani-gear>${gear(488 + i * 91, 387, 53, context(h, "gear" + i))}</g></g>`).join("");
     const outputs = p.outputs.map((item, i) => `<g data-ani-pop><g transform="translate(0 ${i * 89})"><rect x="934" y="302" width="267" height="75" rx="12" fill="white" stroke="#97b5d6" stroke-width="2"/>${icon(item.icon || "document", 947, 311, 55, context(h, "output-icon" + i))}${text5(h, 1012, 347, item.label, 22, 143)}<circle cx="1173" cy="339" r="13" fill="${tokens.green}" stroke="${tokens.ink}" stroke-width="2"/><path d="M1166 339L1171 345L1180 333" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"/></g></g>`).join("");
-    return svgScene(`${banner(357, 39, 566, p.title, tokens.blue, context(h, "title"))}${text5(h, 640, 143, p.subtitle, 24, 1050, 'text-anchor="middle"')}<ellipse cx="642" cy="578" rx="240" ry="22" fill="#dceffd"/>${input}${banner(78, 201, 211, p.inputTitle, tokens.green, context(h, "input-label"))}${arrow(355, 340)}<g data-ani-enter><path d="M436 259L466 217H757L799 254V533L773 562H452L425 530V280Z" fill="#dcf0ff" stroke="${tokens.ink}" stroke-width="4"/><path d="M773 262L799 254V533L773 562Z" fill="#5ca8f6" stroke="${tokens.ink}" stroke-width="3"/><path d="M437 259L466 217H757L773 262Z" fill="white" stroke="${tokens.ink}" stroke-width="3"/><rect x="448" y="275" width="307" height="239" rx="15" fill="#f5fbff" stroke="${tokens.ink}" stroke-width="3"/>${slots}<circle cx="475" cy="538" r="10" fill="${tokens.green}" stroke="${tokens.ink}" stroke-width="2"/><circle cx="503" cy="538" r="10" fill="white" stroke="${tokens.ink}" stroke-width="2"/><circle cx="531" cy="538" r="10" fill="white" stroke="${tokens.ink}" stroke-width="2"/><path d="M613 533H738M613 541H738M613 549H738" stroke="#6a93bb" stroke-width="3" stroke-linecap="round"/><path d="M447 562V571H473V562M728 562V571H754V562" fill="${tokens.blue}" stroke="${tokens.ink}" stroke-width="3"/></g>${banner(521, 175, 202, p.processTitle, tokens.blue, context(h, "process-label"))}<g data-ani-travel>${icon("document", 477, 246, 53, context(h, "travel"))}</g>${arrow(824, 340)}<g><rect x="922" y="282" width="299" height="292" rx="18" fill="#c7e2fa"/><rect x="914" y="274" width="299" height="292" rx="18" fill="white" stroke="#102b62" stroke-width="4"/><path d="M1207 289V549Q1207 560 1196 560H932" fill="none" stroke="#d4ecff" stroke-width="5"/>${outputs}</g>${banner(953, 202, 217, p.outputTitle, tokens.blue, context(h, "result-label"))}<g data-ani-pop>${text5(h, 640, 651, p.footer, 26, 1060, 'text-anchor="middle"')}</g>`, h);
+    return svgScene(`${banner(357, 39, 566, p.title, tokens.blue, context(h, "title"))}${text5(h, 640, 143, p.subtitle, 24, 1050, 'text-anchor="middle"')}<ellipse cx="642" cy="578" rx="240" ry="22" fill="#dceffd"/>${input}${banner(78, 201, 211, p.inputTitle, tokens.green, context(h, "input-label"))}${arrow2(355, 340)}<g data-ani-enter><path d="M436 259L466 217H757L799 254V533L773 562H452L425 530V280Z" fill="#dcf0ff" stroke="${tokens.ink}" stroke-width="4"/><path d="M773 262L799 254V533L773 562Z" fill="#5ca8f6" stroke="${tokens.ink}" stroke-width="3"/><path d="M437 259L466 217H757L773 262Z" fill="white" stroke="${tokens.ink}" stroke-width="3"/><rect x="448" y="275" width="307" height="239" rx="15" fill="#f5fbff" stroke="${tokens.ink}" stroke-width="3"/>${slots}<circle cx="475" cy="538" r="10" fill="${tokens.green}" stroke="${tokens.ink}" stroke-width="2"/><circle cx="503" cy="538" r="10" fill="white" stroke="${tokens.ink}" stroke-width="2"/><circle cx="531" cy="538" r="10" fill="white" stroke="${tokens.ink}" stroke-width="2"/><path d="M613 533H738M613 541H738M613 549H738" stroke="#6a93bb" stroke-width="3" stroke-linecap="round"/><path d="M447 562V571H473V562M728 562V571H754V562" fill="${tokens.blue}" stroke="${tokens.ink}" stroke-width="3"/></g>${banner(521, 175, 202, p.processTitle, tokens.blue, context(h, "process-label"))}<g data-ani-travel>${icon("document", 477, 246, 53, context(h, "travel"))}</g>${arrow2(824, 340)}<g><rect x="922" y="282" width="299" height="292" rx="18" fill="#c7e2fa"/><rect x="914" y="274" width="299" height="292" rx="18" fill="white" stroke="#102b62" stroke-width="4"/><path d="M1207 289V549Q1207 560 1196 560H932" fill="none" stroke="#d4ecff" stroke-width="5"/>${outputs}</g>${banner(953, 202, 217, p.outputTitle, tokens.blue, context(h, "result-label"))}<g data-ani-pop>${text5(h, 640, 651, p.footer, 26, 1060, 'text-anchor="middle"')}</g>`, h);
   }
   function question(p, h) {
     const cards = p.examples;
@@ -1742,12 +2487,12 @@ var ComponentLibraryRuntime = (() => {
     const examples = cards.map((c, i) => {
       const x = i ? 739 : 248, w = i ? 296 : 260;
       const lines3 = (c.lines || []).slice(0, 3);
-      return `<g data-ani-enter>${paper(x, 414, w, 181, { fold: 34, depth: 8 }, context(h, "example" + i))}${banner(x + 25, 426, w - 62, c.title, i ? tokens.green : tokens.blue, context(h, "example-title" + i))}${lines3.map((s, j) => `${icon(i ? "table" : "document", x + 17, 488 + j * 30, 26, context(h, "mini" + i + j))}${text5(h, x + 54, 509 + j * 30, s, 16, w - 71)}`).join("")}</g>`;
+      return `<g data-ani-enter>${paper(x, 414, w, 181, { fold: 34, depth: 8 }, context(h, "example" + i))}${banner(x + 25, 426, w - 62, c.title, i ? tokens.green : tokens.blue, context(h, "example-title" + i))}${lines3.map((s2, j) => `${icon(i ? "table" : "document", x + 17, 488 + j * 30, 26, context(h, "mini" + i + j))}${text5(h, x + 54, 509 + j * 30, s2, 16, w - 71)}`).join("")}</g>`;
     }).join("");
     return svgScene(`<g data-ani-enter><path d="M178 67H1065L1102 96V316L1069 350H178Q153 350 153 324V94Q153 67 178 67Z" fill="${tokens.blue}" stroke="${tokens.ink}" stroke-width="4"/><path d="M1069 82L1102 96V316L1069 350Z" fill="#0560c7" stroke="${tokens.ink}" stroke-width="3"/><rect x="169" y="81" width="895" height="248" rx="34" fill="#fbfeff" stroke="${tokens.ink}" stroke-width="4"/><path d="M185 122Q185 97 211 96H1018" fill="none" stroke="#cae6ff" stroke-width="5" stroke-linecap="round"/>${text5(h, 615, 178, p.title, 56, 775, 'text-anchor="middle" font-weight="900"')}${text5(h, 615, 255, p.subtitle, 56, 775, 'text-anchor="middle" font-weight="900"')}<path d="M123 67L111 43M146 51L142 23M107 91L82 81" stroke="${tokens.ink}" stroke-width="13" stroke-linecap="round"/><path d="M123 67L111 43M146 51L142 23M107 91L82 81" stroke="${tokens.orange}" stroke-width="7" stroke-linecap="round"/></g><g data-ani-pop><text x="1050" y="361" font-size="138" font-weight="900" fill="#b56a00" stroke="${tokens.ink}" stroke-width="3" transform="rotate(13 1050 315)">?</text></g>${examples}<path data-ani-link d="M523 497C570 497 566 464 604 464M678 464C716 464 696 497 722 497" stroke="${tokens.green}" stroke-width="4" fill="none" stroke-linecap="round"/><g data-ani-pop><path d="M620 458L637 484M637 453L621 489" stroke="${tokens.orange}" stroke-width="5" stroke-linecap="round"/>${banner(428, 620, 424, p.footer, tokens.blue, context(h, "footer"))}</g>`, h);
   }
   var common4 = { category: "\u52A8\u753B\u98CE", width: 1280, height: 720, reference: { level: "designed", basis: "\u6309\u7528\u6237\u63D0\u4F9B\u7684 V8 \u539F\u751F\u56FE\u89E3\u6BCD\u7248\u91CD\u5EFA SVG \u51E0\u4F55\u3002\u4FDD\u6301\u5BF9\u8C61\u7ED3\u6784\u4E0E\u72B6\u6001\u8BED\u4E49\uFF0C\u5177\u4F53\u8865\u95F4\u4E3A\u672C\u6B21\u8BBE\u8BA1\uFF1B\u4E0D\u662F\u5B9E\u9645\u8F6F\u4EF6\u622A\u56FE\u3002", source: "references/animation-style/sources.json" } };
-  var components9 = [
+  var components10 = [
     { ...common4, id: "ani-processing-machine", name: "\u52A8\u753B\u98CE \xB7 \u8F93\u5165\u5904\u7406\u88C5\u7F6E", description: "\u6587\u4EF6\u9001\u5165\u4E09\u901A\u9053\u88C5\u7F6E\uFF0C\u5185\u90E8\u5904\u7406\u540E\u751F\u6210\u5BF9\u5E94\u7ED3\u679C\uFF1B\u8F93\u5165\u3001\u5904\u7406\u6807\u7B7E\u548C\u8F93\u51FA\u5185\u5BB9\u53EF\u66FF\u6362\u3002", defaultEffect: "ani-machine-process", defaults: {
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -1783,7 +2528,7 @@ var ComponentLibraryRuntime = (() => {
         }
       ],
       "footer": "\u9875\u811A\u8BF4\u660E\u6587\u5B57"
-    }, render: processing },
+    }, render: processing2 },
     { ...common4, id: "ani-question-outro", name: "\u52A8\u753B\u98CE \xB7 \u95EE\u9898\u4E0E\u9884\u544A", description: "\u4FDD\u7559\u4E24\u4E2A\u6848\u4F8B\u5BF9\u8C61\uFF0C\u5C06\u5F53\u524D\u95EE\u9898\u5F15\u5411\u4E0B\u4E00\u671F\uFF1B\u5927\u5B57\u95EE\u9898\u724C\u3001\u6A59\u8272\u95EE\u53F7\u548C\u9884\u544A\u6807\u7B7E\u4F9D\u6B21\u51FA\u73B0\u3002", defaultEffect: "ani-diagram-build", defaults: {
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -1807,6 +2552,213 @@ var ComponentLibraryRuntime = (() => {
         }
       ]
     }, render: question }
+  ];
+
+  // transfer-primitives.mjs
+  var scoped2 = (h, key) => ({ ...h, uid: (s2) => h.uid(key + "-" + s2) });
+  function number5(value, min, max, name = "value") {
+    const n4 = Number(value);
+    if (!Number.isFinite(n4) || n4 < min || n4 > max) throw Error(`${name}: expected ${min}\u2013${max}`);
+    return n4;
+  }
+  function count(value, min, max, name = "count") {
+    const n4 = number5(value, min, max, name);
+    if (!Number.isInteger(n4)) throw Error(name + ": expected integer");
+    return n4;
+  }
+  function text6(x, y, value, size, width, h, extra2 = "") {
+    const copy4 = String(value ?? ""), units10 = Array.from(copy4).reduce((n4, c) => n4 + (c.charCodeAt(0) < 128 ? 0.55 : 1), 0), font5 = Math.min(size, width / Math.max(units10, 1));
+    if (font5 < Math.min(19, size * 0.8)) throw Error("\u6587\u5B57\u8FC7\u957F\uFF0C\u8BF7\u7F29\u77ED\u5185\u5BB9\u6216\u589E\u5927\u90E8\u4EF6\u5C3A\u5BF8");
+    return `<text x="${x}" y="${y}" font-size="${font5}" fill="${tokens.ink}" ${extra2}>${h.esc(copy4)}</text>`;
+  }
+  var at = (x, y, html, scale = 1) => `<g transform="translate(${x} ${y}) scale(${scale})">${html}</g>`;
+  function panel2(w, h, color5 = "white", rx = 16) {
+    return `<rect x="8" y="10" width="${w}" height="${h}" rx="${rx}" fill="${tokens.shadow}"/><rect width="${w}" height="${h}" rx="${rx}" fill="${color5}" stroke="${tokens.ink}" stroke-width="3"/><path d="M18 9H${Math.min(w - 20, 112)}" stroke="#e5f4ff" stroke-width="3" stroke-linecap="round"/>`;
+  }
+  function badge2(x, y, w, label3, h, tone3 = "blue") {
+    const color5 = tokens[tone3] || tokens.blue;
+    return at(x, y, `<rect x="4" y="5" width="${w}" height="44" rx="16" fill="${tokens.shadow}"/><rect width="${w}" height="44" rx="16" fill="${color5}" stroke="${tokens.ink}" stroke-width="2.5"/>${text6(w / 2, 30, label3, 25, w - 24, h, `text-anchor="middle" style="fill:${tone3 === "orange" ? tokens.ink : "white"}"`)}`);
+  }
+  function cargo({ label: label3 = "", tone: tone3 = "orange" } = {}, h) {
+    const fill = tone3 === "blue" ? "#bbdeff" : tone3 === "green" ? "#bdebdc" : "#ffce85";
+    return `<path d="M6 24L67 8L108 28V95L46 112L6 92Z" fill="${fill}" stroke="${tokens.ink}" stroke-width="3" stroke-linejoin="round"/><path d="M6 24L46 43L108 28M46 43V112M38 15L77 34V57L61 61V38L23 20" fill="none" stroke="${tokens.ink}" stroke-width="2.5"/><path d="M55 78L93 68V83L55 94Z" fill="#fff9ee"/>${label3 ? text6(74, 85, label3, 13, 36, h, 'text-anchor="middle"') : ""}`;
+  }
+  function truck2({ load = 3, label: label3 = "" } = {}, h) {
+    count(load, 0, 4, "load");
+    return `<ellipse cx="175" cy="215" rx="169" ry="14" fill="#d7edfa"/><path d="M18 183V37L174 13L195 28V184Z" fill="white" stroke="${tokens.ink}" stroke-width="4" stroke-linejoin="round"/><path d="M174 13V182L195 184V28Z" fill="#9ad6ff" stroke="${tokens.ink}" stroke-width="3"/><path d="M34 48L157 30V166L34 178Z" fill="#e6f4ff" stroke="#88bde9" stroke-width="2"/>${[0, 1, 2, 3, 4].map((i) => `<path d="M43 ${61 + i * 22}L149 ${45 + i * 22}" stroke="#afd7fa" stroke-width="7"/>`).join("")}<path d="M195 184V68L276 73L314 130V190H194Z" fill="${tokens.blue}" stroke="${tokens.ink}" stroke-width="4" stroke-linejoin="round"/><path d="M210 81H270L294 127H212Z" fill="#e9faff" stroke="${tokens.ink}" stroke-width="3"/><path d="M249 82V126M275 145H290" stroke="${tokens.ink}" stroke-width="3"/><path d="M209 142H241V177H209Z" fill="#bce7ff"/><path d="M305 157H321V178H306" fill="#fff3c5" stroke="${tokens.ink}" stroke-width="3"/><path d="M15 183H325V197H15Z" fill="#69bae9" stroke="${tokens.ink}" stroke-width="3"/>${[68, 164, 271].map((x) => `<circle cx="${x}" cy="197" r="24" fill="#426c97" stroke="${tokens.ink}" stroke-width="4"/><circle cx="${x}" cy="197" r="12" fill="#cbeafe" stroke="${tokens.ink}" stroke-width="2.5"/>`).join("")}<g data-tr-cargo>${Array.from({ length: load }, (_, i) => at(36 + i % 3 * 43, 120 - Math.floor(i / 3) * 43, cargo({}, scoped2(h, "load" + i)), 0.46)).join("")}</g>${label3 ? text6(105, 105, label3, 22, 125, h, 'text-anchor="middle"') : ""}`;
+  }
+  function warehouse({ title = "\u573A\u6240\u540D\u79F0", open = true, stock = 3 } = {}, h) {
+    count(stock, 0, 6, "stock");
+    return `<path d="M11 43L210 43L240 66V246H11Z" fill="#eef6ff" stroke="${tokens.ink}" stroke-width="3"/><path d="M210 43V245H240V66Z" fill="#cfdef3" stroke="${tokens.ink}" stroke-width="2"/><rect x="35" y="100" width="153" height="146" fill="#2d5682" stroke="${tokens.ink}" stroke-width="3"/>${open ? Array.from({ length: stock }, (_, i) => at(40 + i % 3 * 44, 188 - Math.floor(i / 3) * 46, cargo({}, scoped2(h, "stock" + i)), 0.45)).join("") : `<rect x="38" y="104" width="147" height="139" fill="#c6e1f9"/>${[0, 1, 2, 3, 4].map((i) => `<path d="M39 ${119 + i * 26}H184" stroke="#75a8d6" stroke-width="3"/>`).join("")}`}<path d="M3 21H214L241 43H11Z" fill="white" stroke="${tokens.ink}" stroke-width="3" stroke-linejoin="round"/>${text6(110, 79, title, 24, 177, h, 'text-anchor="middle"')}<path d="M0 250H256" stroke="#bddbf0" stroke-width="7" stroke-linecap="round"/>`;
+  }
+  function resource({ kind = "image", label: label3 = "" } = {}, h) {
+    if (!["image", "cup", "lamp", "bag"].includes(kind)) throw Error("Unknown resource kind");
+    let art;
+    if (kind === "image") art = `<rect x="19" y="16" width="63" height="71" rx="7" fill="white" stroke="${tokens.ink}" stroke-width="2.6"/><rect x="27" y="25" width="47" height="52" rx="5" fill="${tokens.blue}"/><circle cx="41" cy="39" r="7" fill="#ffcf6e"/><path d="M29 69L45 49L57 62L65 53L74 69Z" fill="white"/>`;
+    if (kind === "cup") art = `<path d="M25 26H65V65Q65 85 45 85Q25 85 25 65Z" fill="${tokens.blue}" stroke="${tokens.ink}" stroke-width="3"/><path d="M65 33H77C93 34 89 60 66 61" fill="none" stroke="${tokens.ink}" stroke-width="5"/><ellipse cx="45" cy="26" rx="20" ry="7" fill="#73c2ff" stroke="${tokens.ink}" stroke-width="3"/>`;
+    if (kind === "lamp") art = `<path d="M30 19H67L79 57H18Z" fill="#ffc573" stroke="${tokens.ink}" stroke-width="3"/><path d="M49 57V82" stroke="${tokens.ink}" stroke-width="5"/><path d="M31 85Q49 73 67 85V90H31Z" fill="${tokens.orange}" stroke="${tokens.ink}" stroke-width="3"/>`;
+    if (kind === "bag") art = `<path d="M23 35H73L79 86H17Z" fill="#83d6c9" stroke="${tokens.ink}" stroke-width="3"/><path d="M34 41V26Q49 7 63 26V41" fill="none" stroke="${tokens.ink}" stroke-width="4"/><path d="M31 46V79" stroke="#c3f6ed" stroke-width="4"/>`;
+    return `<rect x="1" y="1" width="98" height="${label3 ? 128 : 98}" rx="13" fill="#edf8ff" stroke="#6aaae2" stroke-width="2"/>${art}${label3 ? text6(50, 119, label3, 17, 85, h, 'text-anchor="middle"') : ""}`;
+  }
+  function buffer({ title = "\u533A\u57DF\u6807\u9898", capacity = 6, occupied = 3, kinds = ["image"], state: state3 = "normal" } = {}, h) {
+    count(capacity, 1, 8, "capacity");
+    count(occupied, 0, capacity, "occupied");
+    if (!Array.isArray(kinds) || !kinds.length) throw Error("kinds requires an item");
+    if (!["normal", "warning", "released"].includes(state3)) throw Error("Invalid buffer state");
+    const cols = capacity > 4 ? 3 : 2, rows3 = Math.ceil(capacity / cols), w = cols * 108 + 28, height = rows3 * 108 + 88;
+    return `<g data-buffer-capacity="${capacity}" data-buffer-occupied="${occupied}">${panel2(w, height, "#f5fcff")}${badge2(20, 15, w - 40, title, h)}${Array.from({ length: capacity }, (_, i) => {
+      const x = 18 + i % cols * 108, y = 78 + Math.floor(i / cols) * 108;
+      return at(x, y, `<rect width="94" height="94" rx="12" fill="#e4f2ff" stroke="#8bbceb" stroke-width="2"/>${i < occupied ? `<g data-tr-slot="${i}">${resource({ kind: kinds[i % kinds.length] }, scoped2(h, "item" + i))}</g>` : ""}`, 0.9);
+    }).join("")}${state3 === "warning" ? `<rect x="4" y="4" width="${w - 8}" height="${height - 8}" rx="14" fill="none" stroke="#ee8526" stroke-width="5"/>` : ""}</g>`;
+  }
+  function bridge({ label: label3 = "\u5173\u7CFB\u6807\u7B7E", direction: direction2 = "down", width = 320 } = {}, h) {
+    number5(width, 160, 1e3, "width");
+    if (!["down", "up"].includes(direction2)) throw Error("Invalid bracket direction");
+    const y = direction2 === "down" ? 57 : 6, end = direction2 === "down" ? 79 : 0;
+    return `<path data-motion="line" d="M5 ${end}V${y}Q5 ${y - 12} 17 ${y - 12}H${width - 17}Q${width - 5} ${y - 12} ${width - 5} ${y}V${end}" fill="none" stroke="${tokens.blue}" stroke-width="4" stroke-linecap="round"/>${text6(width / 2, 33, label3, 26, width - 38, h, 'text-anchor="middle"')}`;
+  }
+  function documentCard({ title = "\u6587\u6863\u6807\u9898", labels = ["\u5B57\u6BB5 A", "\u5B57\u6BB5 B", "\u5B57\u6BB5 C"], values = ["\u5185\u5BB9 A", "\u5185\u5BB9 B", "\u5185\u5BB9 C"] } = {}, h) {
+    if (labels.length !== 3 || values.length !== 3) throw Error("Document needs three fields");
+    return `${panel2(270, 300)}${badge2(18, 15, 234, title, h)}${labels.map((v, i) => at(16, 84 + i * 66, `${badge2(0, 0, 83, v, h, i === 0 ? "blue" : i === 1 ? "orange" : "green")}${text6(99, 29, values[i], 21, 145, h)}`)).join("")}`;
+  }
+  function windowCard({ title = "\u7A97\u53E3\u6807\u9898", lines: lines3 = ["\u5185\u5BB9 A", "\u5185\u5BB9 B", "\u5185\u5BB9 C"] } = {}, h) {
+    if (!Array.isArray(lines3) || lines3.length > 4) throw Error("Window allows 0\u20134 lines");
+    return `${panel2(294, 276)}<path d="M16 0H278Q294 0 294 16V43H0V16Q0 0 16 0Z" fill="${tokens.blue}" stroke="${tokens.ink}" stroke-width="3"/>${[20, 37, 54].map((x, i) => `<circle cx="${x}" cy="21" r="4" fill="${["#ffac40", "#75dfc1", "#c2e7ff"][i]}"/>`).join("")}${text6(280, 29, title, 20, 208, h, 'text-anchor="end" style="fill:white"')}${lines3.map((line3, i) => `${text6(22, 90 + i * 44, line3, 22, 250, h)}<path d="M22 ${101 + i * 44}H267" stroke="#d4e7f6" stroke-width="2"/>`).join("")}`;
+  }
+
+  // families/animation-style-transfer-atoms.mjs
+  var definitions = [
+    ["truck", "\u8FD0\u8F93\u8D27\u8F66", { load: 3, label: "\u5BF9\u8C61\u540D\u79F0" }, truck2, 340, 235],
+    ["cargo", "\u8D27\u7BB1", { label: "", tone: "orange" }, cargo, 118, 120],
+    ["warehouse", "\u4ED3\u5E93\u4E0E\u7AD9\u70B9", { title: "\u573A\u6240\u540D\u79F0", open: true, stock: 4 }, warehouse, 265, 260],
+    ["buffer", "\u5BB9\u91CF\u4E0E\u6682\u5B58\u69FD", { title: "\u533A\u57DF\u6807\u9898", capacity: 6, occupied: 3, kinds: ["cup", "lamp", "bag"], state: "normal" }, buffer, 365, 320],
+    ["resource", "\u8D44\u6E90\u7269\u4EF6", { kind: "image", label: "\u7D20\u6750\u540D\u79F0" }, resource, 110, 140],
+    ["relation-bridge", "\u5173\u7CFB\u62EC\u7EBF", { label: "\u5173\u7CFB\u6807\u7B7E", direction: "down", width: 420 }, bridge, 430, 100]
+  ];
+  var components11 = definitions.map(([key, name, base2, draw, w, h]) => ({ id: "ani-atom-" + key, name: "\u52A8\u753B\u98CE \xB7 " + name, category: "\u52A8\u753B\u98CE \xB7 \u57FA\u7840\u7EC4\u4EF6", description: "\u539F\u751F SVG \u72EC\u7ACB\u90E8\u4EF6\uFF0C\u53EF\u66FF\u6362\u5185\u5BB9\u3001\u72B6\u6001\u3001\u4F4D\u7F6E\u4E0E\u7B49\u6BD4\u5C3A\u5BF8\u3002", width: 1280, height: 720, defaults: { ...base2, x: 360, y: 160, objectWidth: 540, objectHeight: 380 }, reference: { level: "designed", source: "references/transfer/sources.json", basis: "\u7528\u6237\u8FC1\u79FB\u9759\u6001\u72B6\u6001\u56FE\uFF1B\u539F\u751F\u51E0\u4F55\u91CD\u5EFA\uFF0C\u975E\u622A\u56FE\u90E8\u4EF6\u3002" }, render(props, helpers2) {
+    const p = { ...this.defaults, ...props }, x = number5(p.x, 0, 1270, "x"), y = number5(p.y, 0, 710, "y"), ow = number5(p.objectWidth, 100, 1240, "objectWidth"), oh = number5(p.objectHeight, 80, 690, "objectHeight");
+    if (x + ow > 1270 || y + oh > 710) throw Error("\u90E8\u4EF6\u8D85\u51FA\u753B\u5E03");
+    const width = key === "buffer" ? p.capacity > 4 ? 352 : 244 : key === "relation-bridge" ? p.width + 10 : w, height = key === "buffer" ? Math.ceil(p.capacity / (p.capacity > 4 ? 3 : 2)) * 108 + 100 : h, scale = Math.min(ow / width, oh / height);
+    return `<section class="ani-atom-scene"><svg xmlns="http://www.w3.org/2000/svg" class="ani-transfer-canvas" viewBox="0 0 1280 720" width="1280" height="720" role="img" aria-label="${helpers2.esc(name)}">${at(x + (ow - width * scale) / 2, y + (oh - height * scale) / 2, draw(p, helpers2), scale)}</svg></section>`;
+  } }));
+
+  // families/animation-style-transfer-scenes.mjs
+  var cue = (start, html, end = null, move = null) => `<g data-tr-cue="${start}"${end === null ? "" : ` data-tr-until="${end}"`}${move ? ` data-tr-dx="${move[0]}" data-tr-dy="${move[1]}" data-tr-travel="${move[2]}"` : ""} style="opacity:${end === null ? 1 : 0}">${html}</g>`;
+  var link = (atTime, d) => `<path data-tr-draw="${atTime}" d="${d}" fill="none" stroke="${tokens.blue}" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>`;
+  var folder2 = (x, y, title, files, h) => renderFolderAtom({ x, y, objectWidth: 240, objectHeight: 242, name: title, subtitle: "", open: true, fileLabels: files }, h);
+  function board(p, h, key, body) {
+    return `<section class="ani-transfer-scene"><svg xmlns="http://www.w3.org/2000/svg" class="ani-transfer-canvas" viewBox="0 0 1280 720" width="1280" height="720" role="img" aria-label="${h.esc(p.title)}" data-transfer-kind="${key}">${text6(64, 76, p.title, 42, 1152, h)}<path d="M66 97H186" stroke="#81c9b0" stroke-width="6" stroke-linecap="round"/>${text6(65, 132, p.subtitle, 22, 1140, h)}${body}${text6(640, 678, p.footer, 23, 1150, h, 'text-anchor="middle"')}</svg></section>`;
+  }
+  var common5 = { title: "\u4E3B\u6807\u9898", subtitle: "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57", footer: "\u7ED3\u8BBA\u4E0E\u8865\u5145\u8BF4\u660E" };
+  function list(p, key, length) {
+    if (!Array.isArray(p[key]) || p[key].length !== length) throw Error(key + ": requires " + length + " items");
+  }
+  var make5 = (key, name, description, defaults3, draw) => ({ id: "ani-transfer-" + key, name: "\u52A8\u753B\u98CE \xB7 " + name, category: "\u52A8\u753B\u98CE \xB7 \u8FC1\u79FB\u6A21\u677F", description, width: 1280, height: 720, defaultEffect: "ani-transfer-" + key, defaults: { ...common5, ...defaults3 }, reference: { level: "designed", source: "references/transfer/sources.json", basis: "\u7528\u6237\u8FC1\u79FB\u7D20\u6750\u603B\u89C8\u4E0E M01\u2013M09 \u72B6\u6001\u56FE\uFF1B\u53EF\u7F16\u8F91 SVG\uFF0C\u52A8\u4F5C\u65F6\u5E8F\u4E3A\u672C\u5E93\u65B0\u7F16\u6392\u3002" }, render(props, h) {
+    const p = { ...this.defaults, ...props };
+    return board(p, h, key, draw(p, h));
+  } });
+  var components12 = [
+    make5("purpose-fork", "\u4E0D\u540C\u76EE\u6807\u4E0E\u53CC\u8DEF\u5F84\u9009\u62E9", "\u540C\u4E00\u5165\u53E3\u5206\u51FA\u4E24\u4E2A\u76EE\u6807\uFF0C\u5404\u81EA\u5C55\u793A\u63D0\u95EE\u3001\u505A\u6CD5\u548C\u4EA7\u7269\uFF1B\u4E0D\u628A\u5176\u4E2D\u4E00\u6761\u9ED8\u8BA4\u5224\u4E3A\u66F4\u4F18\u3002", {
+      entryLabel: "\u5171\u540C\u5165\u53E3",
+      leftTitle: "\u76EE\u6807 A",
+      rightTitle: "\u76EE\u6807 B",
+      leftLines: ["\u63D0\u95EE\u65B9\u5F0F A", "\u5904\u7406\u65B9\u5F0F A", "\u4EA7\u7269\u8BF4\u660E A"],
+      rightLines: ["\u63D0\u95EE\u65B9\u5F0F B", "\u5904\u7406\u65B9\u5F0F B", "\u4EA7\u7269\u8BF4\u660E B"],
+      leftResult: "\u7ED3\u679C A",
+      rightResult: "\u7ED3\u679C B"
+    }, (p, h) => cue(0.2, badge2(440, 178, 400, p.entryLabel, h)) + link(0.9, "M640 230V255H285V277M640 255H995V277") + cue(1.5, at(145, 282, windowCard({ title: p.leftTitle, lines: p.leftLines }, h))) + cue(1.5, at(845, 282, windowCard({ title: p.rightTitle, lines: p.rightLines }, h))) + cue(4.4, badge2(145, 584, 294, p.leftResult, h, "blue")) + cue(4.4, badge2(845, 584, 294, p.rightResult, h, "green"))),
+    make5("context-bridge", "\u7ECF\u9A8C\u4E0E\u65B0\u573A\u666F\u5173\u8054", "\u5148\u51FA\u73B0\u5DF2\u6709\u5BF9\u8C61\uFF0C\u518D\u5F15\u5165\u65B0\u573A\u666F\uFF0C\u5173\u7CFB\u62EC\u7EBF\u6700\u540E\u5EFA\u7ACB\uFF1B\u7528\u4E8E\u5F00\u573A\u4E0E\u7ED3\u5C3E\u56DE\u6536\u3002", {
+      leftLabel: "\u5BF9\u8C61 A",
+      rightLabel: "\u5BF9\u8C61 B",
+      relation: "\u5173\u8054\u540D\u79F0",
+      summary: "\u5171\u540C\u70B9\u6216\u53EF\u501F\u7528\u7684\u5173\u7CFB",
+      windowLines: ["\u573A\u666F\u5185\u5BB9 A", "\u573A\u666F\u5185\u5BB9 B", "\u573A\u666F\u5185\u5BB9 C"]
+    }, (p, h) => cue(0.4, at(145, 245, truck2({ load: 3, label: p.leftLabel }, h))) + cue(1.65, at(815, 220, windowCard({ title: p.rightLabel, lines: p.windowLines }, h))) + link(2.8, "M485 310H550V235H730V310H805") + cue(3.6, text6(640, 210, p.relation, 30, 320, h, 'text-anchor="middle"')) + cue(4.7, badge2(295, 550, 690, p.summary, h, "green"))),
+    make5("field-reuse", "\u5B57\u6BB5\u4FDD\u7559\u4E0E\u5185\u5BB9\u66FF\u6362", "\u4FDD\u7559\u4E24\u4E2A\u6587\u6863\u7684\u5171\u540C\u5B57\u6BB5\uFF0C\u9010\u9879\u66FF\u6362\u503C\uFF0C\u5EFA\u7ACB\u5BF9\u5E94\u5173\u7CFB\u3002", {
+      sourceTitle: "\u6587\u6863 A",
+      targetTitle: "\u6587\u6863 B",
+      labels: ["\u5B57\u6BB5 A", "\u5B57\u6BB5 B", "\u5B57\u6BB5 C"],
+      sourceValues: ["\u539F\u5185\u5BB9 A", "\u539F\u5185\u5BB9 B", "\u539F\u5185\u5BB9 C"],
+      targetValues: ["\u65B0\u5185\u5BB9 A", "\u65B0\u5185\u5BB9 B", "\u65B0\u5185\u5BB9 C"],
+      relation: "\u4FDD\u7559\u5171\u540C\u7ED3\u6784"
+    }, (p, h) => {
+      list(p, "labels", 3);
+      list(p, "sourceValues", 3);
+      list(p, "targetValues", 3);
+      return cue(0.3, at(95, 213, documentCard({ title: p.sourceTitle, labels: p.labels, values: p.sourceValues }, h))) + cue(0.3, at(915, 213, documentCard({ title: p.targetTitle, labels: p.labels, values: ["\u2014", "\u2014", "\u2014"] }, h)), 2.85) + [0, 1, 2].map((i) => cue(2.85 + i * 0.75, at(915, 213, documentCard({ title: p.targetTitle, labels: p.labels, values: p.targetValues.map((value, k) => k <= i ? value : "\u2014") }, h)), i === 2 ? null : 3.6 + i * 0.75)).join("") + p.labels.map((label3, i) => cue(2 + i * 0.75, badge2(490, 250 + i * 78, 300, label3, h, i === 0 ? "blue" : i === 1 ? "orange" : "green")) + link(2.3 + i * 0.75, `M378 ${319 + i * 66}H420V${272 + i * 78}H476M808 ${272 + i * 78}H862V${319 + i * 66}H899`)).join("") + cue(5, badge2(435, 555, 410, p.relation, h, "green"));
+    }),
+    make5("capacity-limit", "\u5BB9\u91CF\u586B\u6EE1\u4E0E\u6EA2\u51FA\u63D0\u793A", "\u8D44\u6E90\u9010\u6279\u5360\u636E\u5BB9\u91CF\u69FD\uFF0C\u989D\u5916\u8D44\u6E90\u7559\u5728\u5916\u90E8\uFF0C\u9519\u8BEF\u63D0\u793A\u968F\u540E\u51FA\u73B0\u3002", {
+      sourceLabel: "\u8F93\u5165\u96C6\u5408",
+      bufferLabel: "\u6682\u5B58\u533A\u57DF",
+      itemLabels: ["\u8D44\u6E90 A", "\u8D44\u6E90 B", "\u8D44\u6E90 C"],
+      warning: "\u5BB9\u91CF\u63D0\u793A",
+      explanation: "\u95EE\u9898\u539F\u56E0\u8BF4\u660E",
+      kinds: ["cup", "lamp", "bag"]
+    }, (p, h) => {
+      list(p, "itemLabels", 3);
+      list(p, "kinds", 3);
+      return folder2(80, 250, p.sourceLabel, p.itemLabels, scoped2(h, "source")) + at(470, 195, buffer({ title: p.bufferLabel, occupied: 0 }, scoped2(h, "empty"))) + cue(1, at(488, 273, resource({ kind: p.kinds[0] }, h), 0.9)) + cue(1.4, at(596, 273, resource({ kind: p.kinds[1] }, h), 0.9)) + cue(1.8, at(704, 273, resource({ kind: p.kinds[2] }, h), 0.9)) + cue(2.3, at(488, 381, resource({ kind: p.kinds[0] }, h), 0.9)) + cue(2.6, at(596, 381, resource({ kind: p.kinds[1] }, h), 0.9)) + cue(2.9, at(704, 381, resource({ kind: p.kinds[2] }, h), 0.9)) + cue(3.2, at(931, 270, resource({ kind: p.kinds[0] }, h), 1.15)) + cue(3.8, badge2(885, 455, 280, p.warning, h, "orange")) + cue(4.5, badge2(395, 555, 490, p.explanation, h, "green")) + link(0.5, "M332 340H443");
+    }),
+    make5("batch-delivery", "\u88C5\u8F7D\u3001\u8FD0\u8F93\u3001\u5378\u8D27\u4E0E\u8FD4\u7A0B", "\u4ED3\u5E93\u4E0E\u76EE\u7684\u5730\u56FA\u5B9A\uFF0C\u8D27\u8F66\u8FD0\u9001\u4E00\u6279\u3001\u5378\u8D27\u3001\u7A7A\u8F66\u8FD4\u56DE\u518D\u88C5\u4E0B\u4E00\u6279\u3002", {
+      sourceTitle: "\u8D77\u70B9\u540D\u79F0",
+      targetTitle: "\u7EC8\u70B9\u540D\u79F0",
+      vehicleLabel: "\u8FD0\u8F93\u5BF9\u8C61",
+      phaseLabels: ["\u88C5\u8F7D\u4E00\u6279", "\u5230\u8FBE\u5378\u8F7D", "\u7A7A\u8F7D\u8FD4\u56DE", "\u51C6\u5907\u4E0B\u4E00\u6279"]
+    }, (p, h) => {
+      list(p, "phaseLabels", 4);
+      return at(54, 178, warehouse({ title: p.sourceTitle, stock: 0 }, h), 0.85) + at(958, 178, warehouse({ title: p.targetTitle, stock: 0 }, h), 0.85) + `<path d="M102 548H1178" stroke="#cae3f7" stroke-width="9" stroke-linecap="round"/>` + cue(0.1, [0, 1, 2, 3].map((i) => at(83 + i % 2 * 59, 278 + Math.floor(i / 2) * 51, cargo({}, h), 0.5)).join(""), 0.65) + cue(0.7, [0, 1].map((i) => at(83 + i * 59, 329, cargo({}, h), 0.5)).join(""), 5.7) + cue(0.7, at(254, 340, truck2({ load: 2, label: p.vehicleLabel }, h), 0.82), 3.1, [410, 0, 1.7]) + cue(3.1, at(664, 340, truck2({ load: 0, label: p.vehicleLabel }, h), 0.82), 5.7, [-410, 0, 2]) + cue(3.25, at(1004, 323, cargo({}, h), 0.56)) + cue(3.45, at(1059, 323, cargo({}, h), 0.56)) + cue(5.8, at(254, 340, truck2({ load: 2, label: p.vehicleLabel }, h), 0.82)) + p.phaseLabels.map((label3, i) => cue([0.2, 2.7, 3.8, 5.8][i], badge2(405, 594, 470, label3, h, i === 2 ? "green" : "blue"), i === 3 ? null : [2.65, 3.75, 5.75][i])).join("");
+    }),
+    make5("batch-cycle", "\u8BFB\u53D6\u3001\u4FDD\u5B58\u3001\u91CA\u653E\u4E0E\u518D\u8BFB\u53D6", "\u8F93\u5165\u548C\u5DF2\u4FDD\u5B58\u7ED3\u679C\u4E00\u76F4\u4FDD\u7559\uFF1B\u6682\u5B58\u533A\u5904\u7406\u3001\u91CA\u653E\u540E\u518D\u8BFB\u4E0B\u4E00\u6279\u3002", {
+      sourceLabel: "\u8F93\u5165\u96C6\u5408",
+      outputLabel: "\u8F93\u51FA\u96C6\u5408",
+      bufferLabel: "\u6682\u5B58\u533A\u57DF",
+      itemLabels: ["\u6587\u4EF6 A", "\u6587\u4EF6 B", "\u6587\u4EF6 C"],
+      phaseLabels: ["\u8BFB\u53D6\u7B2C\u4E00\u6279", "\u5904\u7406\u5E76\u4FDD\u5B58", "\u91CA\u653E\u6682\u5B58\u5360\u7528", "\u8BFB\u53D6\u4E0B\u4E00\u6279"],
+      savedLabel: "\u5DF2\u4FDD\u5B58\u7684\u7ED3\u679C"
+    }, (p, h) => {
+      list(p, "itemLabels", 3);
+      list(p, "phaseLabels", 4);
+      return folder2(62, 250, p.sourceLabel, p.itemLabels, scoped2(h, "input")) + folder2(960, 250, p.outputLabel, [], scoped2(h, "output")) + at(470, 195, buffer({ title: p.bufferLabel, occupied: 0 }, scoped2(h, "buffer"))) + cue(0.8, at(488, 273, resource({ kind: "image" }, h), 0.9), 4.05) + cue(1.1, at(596, 273, resource({ kind: "image" }, h), 0.9), 4.05) + cue(2.45, at(993, 280, resource({ kind: "image" }, h), 0.63)) + cue(2.8, at(1060, 280, resource({ kind: "image" }, h), 0.63)) + link(0.35, "M317 344H441") + link(1.65, "M839 344H931") + cue(3.1, text6(1080, 526, p.savedLabel, 23, 245, h, 'text-anchor="middle"')) + cue(5.05, at(488, 273, resource({ kind: "cup" }, h), 0.9)) + cue(5.4, at(596, 273, resource({ kind: "bag" }, h), 0.9)) + p.phaseLabels.map((label3, i) => cue([0.3, 1.7, 4.1, 5][i], badge2(380, 578, 520, label3, h, i === 2 ? "green" : "blue"), i === 3 ? null : [1.65, 4.05, 4.95][i])).join("");
+    }),
+    make5("relationship-map", "\u8DE8\u5BF9\u8C61\u63D0\u53D6\u5171\u540C\u6B65\u9AA4", "\u4E24\u7C7B\u5BF9\u8C61\u4FDD\u7559\u5404\u81EA\u8EAB\u4EFD\uFF0C\u4E2D\u95F4\u5BF9\u9F50\u5171\u540C\u5173\u7CFB\uFF1B\u8FDE\u7EBF\u4E0D\u628A\u7269\u4EF6\u642C\u8FDB\u53E6\u4E00\u4E2A\u9886\u57DF\u3002", {
+      leftLabel: "\u60C5\u5883 A",
+      rightLabel: "\u60C5\u5883 B",
+      windowLines: ["\u6B65\u9AA4\u5185\u5BB9 A", "\u6B65\u9AA4\u5185\u5BB9 B", "\u6B65\u9AA4\u5185\u5BB9 C"],
+      steps: ["\u5171\u540C\u6B65\u9AA4 A", "\u5171\u540C\u6B65\u9AA4 B", "\u5171\u540C\u6B65\u9AA4 C"],
+      conclusion: "\u53EF\u590D\u7528\u5173\u7CFB\u8BF4\u660E"
+    }, (p, h) => {
+      list(p, "steps", 3);
+      return cue(0.4, at(75, 272, truck2({ load: 3, label: p.leftLabel }, h), 0.83)) + cue(1.1, at(908, 245, windowCard({ title: p.rightLabel, lines: p.windowLines }, h), 0.9)) + p.steps.map((label3, i) => link(2 + i * 0.65, `M378 ${312 + i * 70}H450M830 ${312 + i * 70}H893`) + cue(2.5 + i * 0.65, badge2(465, 290 + i * 70, 350, label3, h, i === 2 ? "green" : "blue"))).join("") + cue(4.85, badge2(315, 567, 650, p.conclusion, h, "green"));
+    }),
+    make5("copy-verify", "\u539F\u4EF6\u4FDD\u7559\u4E0E\u526F\u672C\u6838\u9A8C", "\u4FDD\u7559\u539F\u4EF6\uFF0C\u5C55\u793A\u64CD\u4F5C\u7A97\u53E3\u4E0E\u8BD5\u9A8C\u526F\u672C\uFF0C\u7136\u540E\u6309\u914D\u7F6E\u9010\u9879\u6838\u9A8C\uFF1B\u4E0D\u81EA\u52A8\u628A\u672A\u68C0\u67E5\u9879\u52FE\u4E3A\u901A\u8FC7\u3002", {
+      sourceLabel: "\u539F\u4EF6\u96C6\u5408",
+      copyLabel: "\u8BD5\u9A8C\u526F\u672C",
+      sourceFiles: ["\u539F\u4EF6 A", "\u539F\u4EF6 B"],
+      copyFiles: ["\u526F\u672C A", "\u526F\u672C B"],
+      windowTitle: "\u5904\u7406\u7A97\u53E3",
+      windowLines: ["\u64CD\u4F5C\u6B65\u9AA4 A", "\u64CD\u4F5C\u6B65\u9AA4 B", "\u64CD\u4F5C\u6B65\u9AA4 C"],
+      checks: ["\u68C0\u67E5\u9879\u76EE A", "\u68C0\u67E5\u9879\u76EE B", "\u68C0\u67E5\u9879\u76EE C"],
+      checkResults: [true, false, true],
+      resultLabel: "\u6838\u9A8C\u7ED3\u679C\u8BF4\u660E"
+    }, (p, h) => {
+      list(p, "checks", 3);
+      list(p, "checkResults", 3);
+      if (!p.checkResults.every((v) => typeof v === "boolean")) throw Error("checkResults must be boolean");
+      return folder2(40, 235, p.sourceLabel, p.sourceFiles, scoped2(h, "source")) + cue(0.5, at(335, 210, windowCard({ title: p.windowTitle, lines: p.windowLines }, h), 0.85)) + cue(1.5, folder2(644, 235, p.copyLabel, p.copyFiles, scoped2(h, "copy"))) + link(1, "M292 334H325") + link(2, "M606 334H634") + at(941, 218, `${panel2(280, 292)}${p.checks.map((label3, i) => `<rect x="19" y="${31 + i * 81}" width="29" height="29" rx="5" fill="white" stroke="${tokens.ink}" stroke-width="2.5"/>${text6(62, 54 + i * 81, label3, 22, 198, h)}${cue(2.8 + i * 0.72, p.checkResults[i] ? `<path d="M24 ${45 + i * 81}L32 ${52 + i * 81}L44 ${35 + i * 81}" fill="none" stroke="${tokens.green}" stroke-width="4"/>` : `<path d="M25 ${38 + i * 81}L42 ${54 + i * 81}M42 ${38 + i * 81}L25 ${54 + i * 81}" fill="none" stroke="#cb6816" stroke-width="3.5"/>`)}`).join("")}`) + cue(5.1, badge2(365, 574, 550, p.resultLabel, h, p.checkResults.every(Boolean) ? "green" : "orange"));
+    }),
+    make5("guided-steps", "\u6F84\u6E05\u3001\u501F\u7528\u4E0E\u884C\u52A8\u6B65\u9AA4", "\u4ECE\u95EE\u9898\u7A97\u53E3\u8FDB\u5165\u53EF\u501F\u7528\u7684\u65B9\u6CD5\uFF0C\u518D\u843D\u6210\u5177\u4F53\u884C\u52A8\u6E05\u5355\uFF1B\u7528\u4E8E\u5B66\u4E60\u8DEF\u7EBF\u548C\u7ED3\u5C3E\u63D0\u793A\u3002", {
+      questionTitle: "\u95EE\u9898\u6807\u9898",
+      questionLines: ["\u5F53\u524D\u95EE\u9898\u63CF\u8FF0", "\u5DF2\u6709\u6761\u4EF6\u8BF4\u660E", "\u9700\u8981\u6F84\u6E05\u7684\u90E8\u5206"],
+      methodLabel: "\u5DF2\u6709\u65B9\u6CD5",
+      adaptation: "\u9700\u8981\u8C03\u6574\u7684\u90E8\u5206",
+      actionTitle: "\u884C\u52A8\u6E05\u5355",
+      actions: ["\u884C\u52A8\u6B65\u9AA4 A", "\u884C\u52A8\u6B65\u9AA4 B", "\u884C\u52A8\u6B65\u9AA4 C"],
+      phaseLabels: ["\u660E\u786E\u95EE\u9898", "\u501F\u7528\u5E76\u8C03\u6574", "\u5F62\u6210\u5177\u4F53\u505A\u6CD5"]
+    }, (p, h) => {
+      list(p, "actions", 3);
+      list(p, "phaseLabels", 3);
+      return cue(0.4, at(64, 210, windowCard({ title: p.questionTitle, lines: p.questionLines }, h))) + cue(1.9, at(467, 289, truck2({ label: p.methodLabel, load: 2 }, h), 0.88)) + cue(2.7, badge2(466, 219, 303, p.adaptation, h, "orange")) + cue(3.7, at(920, 210, windowCard({ title: p.actionTitle, lines: p.actions }, h))) + link(1.3, "M377 347H446") + link(3.1, "M803 347H899") + p.phaseLabels.map((label3, i) => cue([1, 2.9, 4.4][i], badge2([70, 470, 920][i], 551, 290, label3, h, i === 2 ? "green" : "blue"))).join("");
+    })
   ];
 
   // families/animation-style.mjs
@@ -1837,26 +2789,26 @@ var ComponentLibraryRuntime = (() => {
     ],
     "footnote": "\u8865\u5145\u8BF4\u660E\u6587\u5B57"
   };
-  var charUnits = (s) => Array.from(String(s ?? "")).reduce((sum, c) => sum + (/[\u0000-\u00ff]/.test(c) ? 0.54 : 1), 0);
+  var charUnits = (s2) => Array.from(String(s2 ?? "")).reduce((sum, c) => sum + (/[\u0000-\u00ff]/.test(c) ? 0.54 : 1), 0);
   function renderNotice(p, h) {
     if (!Array.isArray(p.rows) || p.rows.length !== 4) throw new Error("ani-notice-check requires exactly four rows");
-    const e = h.esc, t = tokens;
+    const e2 = h.esc, t = tokens;
     const paperX = 205, paperY = 30, paperW = 870, paperH = 639;
-    const rows2 = p.rows.map((r, i) => {
+    const rows3 = p.rows.map((r, i) => {
       const y = 142 + i * 112, c = i % 2 ? t.orange : t.green, fill = i % 2 ? "#fffbf2" : "#f0fbf7";
-      const body = String(r.text ?? ""), label2 = String(r.label ?? ""), font5 = Math.max(22, Math.min(29, 475 / Math.max(1, charUnits(body)))), labelColor = i % 2 ? t.ink : "white";
-      if (charUnits(body) > 21.5 || charUnits(label2) > 4) throw new Error("ani-notice-check: row copy exceeds readable field width");
-      return `<g data-ani-row="${i}" data-text-panel="row-${i}" data-panel-bounds="232 ${y} 816 104"><rect x="232" y="${y}" width="816" height="104" rx="16" fill="${fill}" stroke="#829bc3" stroke-width="1.8"/><path d="M252 ${y}H342Q362 ${y} 362 ${y + 18}V${y + 23}Q362 ${y + 37} 343 ${y + 37}H232V${y + 20}Q232 ${y} 252 ${y}Z" fill="${c}" stroke="${t.ink}" stroke-width="2.2"/><path d="M242 ${y + 7}Q245 ${y + 5} 254 ${y + 5}H339" fill="none" stroke="white" stroke-width="2" opacity=".35"/><text x="296" y="${y + 27}" text-anchor="middle" font-size="25" font-weight="900" fill="${labelColor}">${e(label2)}</text>${icon(r.icon || "document", 264, y + 28, 76, h)}<path d="M385 ${y + 30}V${y + 84}" stroke="#aac6db" stroke-width="1.8"/><text x="415" y="${y + 65}" font-size="${font5}" fill="${t.ink}">${e(body)}</text><g transform="translate(1003 ${y + 55})"><circle r="19" fill="white" stroke="#91acc4" stroke-width="2.2"/><g data-ani-check="${i}"><circle r="19" fill="${t.green}" stroke="${t.ink}" stroke-width="2.3"/><path d="M-9 0L-2 8L10-7" fill="none" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M-11-9Q-5-14 2-14" stroke="#7bdbb5" stroke-width="2" fill="none" stroke-linecap="round"/></g></g><rect data-ani-focus="${i}" x="230" y="${y - 2}" width="820" height="108" rx="18" fill="none" stroke="${t.blue}" stroke-width="4"/></g>`;
+      const body = String(r.text ?? ""), label3 = String(r.label ?? ""), font5 = Math.max(22, Math.min(29, 475 / Math.max(1, charUnits(body)))), labelColor = i % 2 ? t.ink : "white";
+      if (charUnits(body) > 21.5 || charUnits(label3) > 4) throw new Error("ani-notice-check: row copy exceeds readable field width");
+      return `<g data-ani-row="${i}" data-text-panel="row-${i}" data-panel-bounds="232 ${y} 816 104"><rect x="232" y="${y}" width="816" height="104" rx="16" fill="${fill}" stroke="#829bc3" stroke-width="1.8"/><path d="M252 ${y}H342Q362 ${y} 362 ${y + 18}V${y + 23}Q362 ${y + 37} 343 ${y + 37}H232V${y + 20}Q232 ${y} 252 ${y}Z" fill="${c}" stroke="${t.ink}" stroke-width="2.2"/><path d="M242 ${y + 7}Q245 ${y + 5} 254 ${y + 5}H339" fill="none" stroke="white" stroke-width="2" opacity=".35"/><text x="296" y="${y + 27}" text-anchor="middle" font-size="25" font-weight="900" fill="${labelColor}">${e2(label3)}</text>${icon(r.icon || "document", 264, y + 28, 76, h)}<path d="M385 ${y + 30}V${y + 84}" stroke="#aac6db" stroke-width="1.8"/><text x="415" y="${y + 65}" font-size="${font5}" fill="${t.ink}">${e2(body)}</text><g transform="translate(1003 ${y + 55})"><circle r="19" fill="white" stroke="#91acc4" stroke-width="2.2"/><g data-ani-check="${i}"><circle r="19" fill="${t.green}" stroke="${t.ink}" stroke-width="2.3"/><path d="M-9 0L-2 8L10-7" fill="none" stroke="white" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M-11-9Q-5-14 2-14" stroke="#7bdbb5" stroke-width="2" fill="none" stroke-linecap="round"/></g></g><rect data-ani-focus="${i}" x="230" y="${y - 2}" width="820" height="108" rx="18" fill="none" stroke="${t.blue}" stroke-width="4"/></g>`;
     }).join("");
     const titleW = Math.min(650, Math.max(450, charUnits(p.title) * 48 + 40));
     const title = banner(640 - titleW / 2, 49, titleW, p.title, t.blue, h);
     const subtitle = String(p.subtitle ?? "");
-    const sub = subtitle ? `<text x="${paperX + paperW - 94}" y="131" text-anchor="end" font-size="16" fill="#527094">${e(subtitle)}</text>` : "";
+    const sub = subtitle ? `<text x="${paperX + paperW - 94}" y="131" text-anchor="end" font-size="16" fill="#527094">${e2(subtitle)}</text>` : "";
     const foot = String(p.footnote ?? "");
     if (charUnits(foot) > 47) throw new Error("ani-notice-check: footnote exceeds readable width");
-    return svgScene(`${paper(paperX, paperY, paperW, paperH, { fold: 58, depth: 12 }, h)}${title}${sub}${rows2}<g data-ani-result data-text-panel="result" data-panel-bounds="220 612 840 44"><path d="M440 643H840" stroke="#dcf0ff" stroke-width="16" stroke-linecap="round"/><text x="640" y="647" text-anchor="middle" font-size="${Math.min(21, 790 / Math.max(1, charUnits(foot)))}" fill="#496d9e">${e(foot)}</text></g>`, h);
+    return svgScene(`${paper(paperX, paperY, paperW, paperH, { fold: 58, depth: 12 }, h)}${title}${sub}${rows3}<g data-ani-result data-text-panel="result" data-panel-bounds="220 612 840 44"><path d="M440 643H840" stroke="#dcf0ff" stroke-width="16" stroke-linecap="round"/><text x="640" y="647" text-anchor="middle" font-size="${Math.min(21, 790 / Math.max(1, charUnits(foot)))}" fill="#496d9e">${e2(foot)}</text></g>`, h);
   }
-  var components10 = [{
+  var components13 = [{
     id: "ani-notice-check",
     name: "\u52A8\u753B\u98CE \xB7 \u6587\u6863\u9010\u9879\u6838\u5BF9",
     category: "\u52A8\u753B\u98CE",
@@ -1872,7 +2824,7 @@ var ComponentLibraryRuntime = (() => {
   }];
 
   // apple-ui.mjs
-  var array = (v, n3 = 20) => Array.isArray(v) ? v.slice(0, n3) : [];
+  var array2 = (v, n4 = 20) => Array.isArray(v) ? v.slice(0, n4) : [];
   var extra = { airdrop: "M12 2a10 10 0 0 1 8 16M4 18A10 10 0 0 1 12 2M12 6a6 6 0 0 1 4.8 9.6M7.2 15.6A6 6 0 0 1 12 6M12 10a2 2 0 1 1 0 4m0 2-5 6h10Z", bluetooth: "M12 2v20l7-6L6 6m0 12L19 8Z", moon: "M19 16A9 9 0 0 1 8 5a9 9 0 1 0 11 11Z", sun: "M12 2v2m0 16v2M2 12h2m16 0h2M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0", airplane: "m2 12 8 2v7l3-3v-4l8 1v-3l-8-4V3l-3-2v7Z", share: "M12 16V2m-4 4 4-4 4 4M7 9H3v12h18V9h-4", columns: "M3 4h18v16H3ZM9 4v16M15 4v16", music: "M10 18V4l10-2v14M10 8l10-2M10 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0m10-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0", camera: "M3 7h4l2-3h6l2 3h4v14H3ZM16 14a4 4 0 1 1-8 0 4 4 0 0 1 8 0", flash: "M9 3h6l-1 4 3 3v4H7v-4l3-3ZM9 14h6v8H9Z", rotate: "M20 7V3m0 4h-4M20 7A8 8 0 1 0 21 13M10 10h5v7h-5ZM11 10V8a1.5 1.5 0 0 1 3 0v2", sliders: "M4 7h16M4 17h16M8 4v6M16 14v6" };
   function ai(h, name, size = 18) {
     if (name === "folder") return `<svg width="${size}" height="${size}" viewBox="0 0 24 24"><path d="M2 6q0-2 2-2h6l2 2h8q2 0 2 2v12H2Z" fill="#75c4ee" stroke="#4daae0" stroke-width=".6"/><path d="M2 8h20v12H2Z" fill="#9bd9f6"/></svg>`;
@@ -1880,13 +2832,13 @@ var ComponentLibraryRuntime = (() => {
   }
   var lights = () => '<span class="ap-lights"><i></i><i></i><i></i></span>';
   function appIcon(h, name, size = 34) {
-    const color2 = { finder: "#53b9f5", safari: "#178ddd", notes: "#e9b924", calendar: "#ee594b", mail: "#2c9bf1", terminal: "#242529", settings: "#8e949c", preview: "#72a3d7", messages: "#49c863", files: "#3b9ded", photos: "#d877ac" }[name] || "#aab4c0";
+    const color5 = { finder: "#53b9f5", safari: "#178ddd", notes: "#e9b924", calendar: "#ee594b", mail: "#2c9bf1", terminal: "#242529", settings: "#8e949c", preview: "#72a3d7", messages: "#49c863", files: "#3b9ded", photos: "#d877ac" }[name] || "#aab4c0";
     let content2;
     if (name === "finder") content2 = '<svg width="100%" height="100%" viewBox="0 0 40 40"><path fill="#aee1ff" d="M20 1h14q5 0 5 5v28q0 5-5 5H20Z"/><path d="M12 13v4m15-4v4M11 25q9 8 18-1M22 2l-3 20h5v16" fill="none" stroke="#244c7c" stroke-width="1.4"/></svg>';
     else if (name === "safari") content2 = '<svg viewBox="0 0 40 40" width="100%" height="100%"><circle cx="20" cy="20" r="16" fill="#ecf8ff"/><circle cx="20" cy="20" r="14" fill="#44acef"/><path d="m27 10-4 13-13 7 6-14Z" fill="#fff"/><path d="m27 10-11 6 7 7Z" fill="#ee6a61"/></svg>';
     else if (name === "calendar") content2 = '<span class="ap-icon-calendar"><small>\u4E5D\u6708</small><b>17</b></span>';
     else content2 = ai(h, { notes: "file", mail: "mail", terminal: "terminal", settings: "settings", preview: "image", messages: "more", files: "folder" }[name] || "grid", Math.round(size * 0.66));
-    return `<span class="ap-appicon" style="width:${size}px;height:${size}px;background:${color2}">${content2}</span>`;
+    return `<span class="ap-appicon" style="width:${size}px;height:${size}px;background:${color5}">${content2}</span>`;
   }
   function menuBar(h, app = "\u8BBF\u8FBE") {
     const menus = app === "Safari" ? ["\u6587\u4EF6", "\u7F16\u8F91", "\u663E\u793A", "\u5386\u53F2\u8BB0\u5F55", "\u4E66\u7B7E", "\u7A97\u53E3", "\u5E2E\u52A9"] : app === "\u8BBF\u8FBE" ? ["\u6587\u4EF6", "\u7F16\u8F91", "\u663E\u793A", "\u524D\u5F80", "\u7A97\u53E3", "\u5E2E\u52A9"] : ["\u6587\u4EF6", "\u7F16\u8F91", "\u663E\u793A", "\u7A97\u53E3", "\u5E2E\u52A9"];
@@ -1901,7 +2853,7 @@ var ComponentLibraryRuntime = (() => {
   function sidebar(h, active = "\u6587\u7A3F", items = ["\u9694\u7A7A\u6295\u9001", "\u6700\u8FD1\u4F7F\u7528", "\u5E94\u7528\u7A0B\u5E8F", "\u4E0B\u8F7D", "\u6587\u7A3F", "\u684C\u9762", "iCloud \u4E91\u76D8"]) {
     return `<aside class="ap-sidebar"><label>\u4E2A\u4EBA\u6536\u85CF</label>${items.map((x, i) => `<div data-motion="item" class="${x === active ? "is-selected" : ""}">${ai(h, ["airdrop", "clock", "grid", "download", "file", "monitor", "folder"][i % 7], 16)}<span>${h.esc(x)}</span></div>`).join("")}<label>\u6807\u7B7E</label>${["\u5DE5\u4F5C", "\u4E2A\u4EBA", "\u5F85\u5904\u7406"].map((x, i) => `<div><i class="ap-tag-dot" style="background:${["#ec655c", "#efb535", "#66bda5"][i]}"></i>${x}</div>`).join("")}</aside>`;
   }
-  var table = (h, headers, rows2, selected = 1) => `<div class="ap-table"><div class="ap-tr ap-th">${headers.map((x) => `<span>${h.esc(x)}</span>`).join("")}</div>${array(rows2, 14).map((r, i) => `<div class="ap-tr ${i === selected ? "is-selected" : ""}" data-motion="item">${r.map((x, j) => `<span>${j === 0 ? ai(h, String(x).includes(".") ? "file" : "folder", 16) : ""}${h.esc(x)}</span>`).join("")}</div>`).join("")}</div>`;
+  var table = (h, headers, rows3, selected = 1) => `<div class="ap-table"><div class="ap-tr ap-th">${headers.map((x) => `<span>${h.esc(x)}</span>`).join("")}</div>${array2(rows3, 14).map((r, i) => `<div class="ap-tr ${i === selected ? "is-selected" : ""}" data-motion="item">${r.map((x, j) => `<span>${j === 0 ? ai(h, String(x).includes(".") ? "file" : "folder", 16) : ""}${h.esc(x)}</span>`).join("")}</div>`).join("")}</div>`;
   function component(id, name, description, defaults3, render, mobile = false) {
     return { id, name, description, category: mobile ? "Apple \xB7 iPhone / iPad" : "Apple \xB7 macOS", width: 1280, height: 800, defaults: defaults3, reference: { level: "documented", basis: mobile ? "iOS 18 / iPadOS 18 \u5B98\u65B9\u624B\u518C\u7684\u7ED3\u6784\u53C2\u7167\uFF1BWindows \u5B57\u4F53\u56DE\u9000\uFF0C\u672A\u5BA3\u79F0\u771F\u673A\u9010\u50CF\u7D20\u4E00\u81F4\u3002" : "macOS Sequoia 15 \u5B98\u65B9\u624B\u518C\u7684\u7ED3\u6784\u53C2\u7167\uFF1BWindows \u5B57\u4F53\u56DE\u9000\uFF0C\u672A\u5BA3\u79F0\u771F\u673A\u9010\u50CF\u7D20\u4E00\u81F4\u3002", source: mobile ? "https://support.apple.com/zh-cn/guide/iphone/iph59095ec58/18.0/ios/18.0" : "https://support.apple.com/zh-cn/guide/mac-help/mchl83c9e8b8/15.0/mac/15.0" }, render };
   }
@@ -1910,7 +2862,7 @@ var ComponentLibraryRuntime = (() => {
 `;
 
   // families/apple-macos-extra.mjs
-  var components11 = [
+  var components14 = [
     component("mac-calendar", "macOS \xB7 \u65E5\u5386", "\u6708\u89C6\u56FE\u3001\u65E5\u5386\u5206\u7EC4\u548C\u4E8B\u4EF6\u5361\u7247\uFF0C\u4E8B\u4EF6\u4F4D\u7F6E\u7531\u65E5\u671F\u914D\u7F6E\u3002", {
       "title": "2026\u5E749\u6708",
       "firstWeekday": 2,
@@ -1940,7 +2892,7 @@ var ComponentLibraryRuntime = (() => {
       ]
     }, (p, h) => desktop(h, window(h, "\u65E5\u5386", `<div class="ap-split"><aside class="ap-calendar-side"><div class="ap-search">${ai(h, "search", 13)} \u641C\u7D22</div><label>iCloud</label>${["\u5DE5\u4F5C", "\u4E2A\u4EBA", "\u5BB6\u5EAD", "\u751F\u65E5"].map((x, i) => `<p><i style="background:${["#3484e8", "#ed6556", "#6caf9e", "#956dcc"][i]}">\u2713</i>${x}</p>`).join("")}<label>\u5176\u4ED6</label><p><i style="background:#999">\u2713</i>\u4E2D\u56FD\u8282\u5047\u65E5</p></aside><main class="ap-calendar-main"><h1>${h.esc(p.title)}</h1><div class="ap-weeknames">${["\u5468\u65E5", "\u5468\u4E00", "\u5468\u4E8C", "\u5468\u4E09", "\u5468\u56DB", "\u5468\u4E94", "\u5468\u516D"].map((x) => `<span>${x}</span>`).join("")}</div><div class="ap-month-grid">${Array.from({ length: 35 }, (_, i) => {
       const d = i - Number(p.firstWeekday) + 1;
-      return `<div class="${d < 1 || d > p.days ? "empty" : ""}" data-motion="item"><b class="${d === p.today ? "today" : ""}">${d >= 1 && d <= p.days ? d : ""}</b>${array(p.events).filter((x) => Number(x.day) === d).map((x) => `<p style="--event:${/^#[0-9a-f]{6}$/i.test(x.color) ? x.color : "#3484e8"}">${h.esc(x.title)}</p>`).join("")}</div>`;
+      return `<div class="${d < 1 || d > p.days ? "empty" : ""}" data-motion="item"><b class="${d === p.today ? "today" : ""}">${d >= 1 && d <= p.days ? d : ""}</b>${array2(p.events).filter((x) => Number(x.day) === d).map((x) => `<p style="--event:${/^#[0-9a-f]{6}$/i.test(x.color) ? x.color : "#3484e8"}">${h.esc(x.title)}</p>`).join("")}</div>`;
     }).join("")}</div></main></div>`, { toolbar: `${ai(h, "panel")}${ai(h, "plus")}<span class="ap-spacer"></span><div class="ap-segments">\u65E5\u3000\u3000\u5468\u3000\u3000<b>\u6708</b>\u3000\u3000\u5E74</div><span class="ap-spacer"></span>${ai(h, "chevron-left")}<span class="ap-button">\u4ECA\u5929</span>${ai(h, "chevron-right")}` }), "\u65E5\u5386")),
     component("mac-mail", "macOS \xB7 \u90AE\u4EF6", "\u90AE\u7BB1\u3001\u90AE\u4EF6\u5217\u8868\u548C\u6B63\u6587\u4E09\u680F\uFF0C\u53EF\u914D\u7F6E\u53D1\u4EF6\u4EBA\u3001\u4E3B\u9898\u4E0E\u6B63\u6587\u3002", {
       "subject": "\u90AE\u4EF6\u4E3B\u9898",
@@ -1977,7 +2929,7 @@ var ComponentLibraryRuntime = (() => {
         "3. \u8981\u70B9\u5185\u5BB9 C"
       ],
       "senderInitial": "\u53D1"
-    }, (p, h) => desktop(h, window(h, "\u90AE\u4EF6", `<div class="ap-split">${sidebar(h, "\u6536\u4EF6\u7BB1", ["\u6240\u6709\u6536\u4EF6\u7BB1", "\u6536\u4EF6\u7BB1", "\u5DF2\u53D1\u9001", "\u8349\u7A3F", "\u5F52\u6863", "\u5E9F\u7EB8\u7BD3"])}<div class="ap-mail-list">${array(p.messages, 8).map((m, i) => `<article class="${i === 0 ? "active" : ""}" data-motion="item"><small>${h.esc(m[3])}</small><b>${h.esc(m[0])}</b><strong>${h.esc(m[1])}</strong><p>${h.esc(m[2])}</p></article>`).join("")}</div><article class="ap-mail-message"><header><span class="ap-avatar">${h.esc(p.senderInitial)}</span><div><h1>${h.esc(p.subject)}</h1><p><b>${h.esc(p.sender)}</b> &lt;${h.esc(p.email)}&gt;</p><small>\u6536\u4EF6\u4EBA\uFF1A${h.esc(p.to)}</small></div><time>${h.esc(p.date)}</time></header>${array(p.paragraphs).map((x) => `<p>${h.esc(x)}</p>`).join("")}</article></div>`, { toolbar: `${ai(h, "panel")}${ai(h, "mail")}${ai(h, "edit")}<span class="ap-spacer"></span>${ai(h, "trash")}${ai(h, "folder")}${ai(h, "undo")}${ai(h, "share")}<span class="ap-search">${ai(h, "search", 14)} \u641C\u7D22</span>` }), "\u90AE\u4EF6")),
+    }, (p, h) => desktop(h, window(h, "\u90AE\u4EF6", `<div class="ap-split">${sidebar(h, "\u6536\u4EF6\u7BB1", ["\u6240\u6709\u6536\u4EF6\u7BB1", "\u6536\u4EF6\u7BB1", "\u5DF2\u53D1\u9001", "\u8349\u7A3F", "\u5F52\u6863", "\u5E9F\u7EB8\u7BD3"])}<div class="ap-mail-list">${array2(p.messages, 8).map((m, i) => `<article class="${i === 0 ? "active" : ""}" data-motion="item"><small>${h.esc(m[3])}</small><b>${h.esc(m[0])}</b><strong>${h.esc(m[1])}</strong><p>${h.esc(m[2])}</p></article>`).join("")}</div><article class="ap-mail-message"><header><span class="ap-avatar">${h.esc(p.senderInitial)}</span><div><h1>${h.esc(p.subject)}</h1><p><b>${h.esc(p.sender)}</b> &lt;${h.esc(p.email)}&gt;</p><small>\u6536\u4EF6\u4EBA\uFF1A${h.esc(p.to)}</small></div><time>${h.esc(p.date)}</time></header>${array2(p.paragraphs).map((x) => `<p>${h.esc(x)}</p>`).join("")}</article></div>`, { toolbar: `${ai(h, "panel")}${ai(h, "mail")}${ai(h, "edit")}<span class="ap-spacer"></span>${ai(h, "trash")}${ai(h, "folder")}${ai(h, "undo")}${ai(h, "share")}<span class="ap-search">${ai(h, "search", 14)} \u641C\u7D22</span>` }), "\u90AE\u4EF6")),
     component("mac-preview", "macOS \xB7 \u9884\u89C8 PDF", "\u539F\u751F\u7F29\u7565\u56FE\u4FA7\u680F\u3001\u9875\u6570\u3001\u7F29\u653E\u5DE5\u5177\u4E0E\u53EF\u66FF\u6362\u6587\u6863\u9875\u3002", {
       "filename": "\u793A\u4F8B\u6587\u6863.pdf",
       "page": 2,
@@ -2002,7 +2954,7 @@ var ComponentLibraryRuntime = (() => {
         "\u9875\u9762 F"
       ],
       "documentFooter": "\u9875\u811A\u8BF4\u660E"
-    }, (p, h) => desktop(h, window(h, p.filename, `<div class="ap-split"><aside class="ap-pdf-thumbs">${Array.from({ length: Math.min(7, Number(p.pages)) }, (_, i) => `<div class="${i + 1 === p.page ? "active" : ""}" data-motion="item"><article><b>${h.esc(p.thumbnailTitles?.[i] || "\u9875\u9762 " + (i + 1))}</b><hr><p></p><p></p><p></p><i></i></article><small>${i + 1}</small></div>`).join("")}</aside><main class="ap-pdf-canvas"><article class="ap-paper" data-motion="focus"><small>${h.esc(p.subtitle)}</small><h1>${h.esc(p.title)}</h1>${array(p.paragraphs).map((x) => `<p>${h.esc(x)}</p>`).join("")}<div class="ap-paper-steps">${array(p.steps, 4).map((x, i) => `<section data-motion="item"><b>0${i + 1}</b><h3>${h.esc(x)}</h3></section>`).join("")}</div><footer>${h.esc(p.documentFooter)}<span>${h.esc(p.page)}</span></footer></article></main></div>`, { toolbar: `${ai(h, "panel")}<b>${h.esc(p.filename)}</b><span class="ap-tiny">\u7B2C ${h.esc(p.page)} \u9875\uFF0C\u5171 ${h.esc(p.pages)} \u9875</span><span class="ap-spacer"></span>${ai(h, "minus")}${ai(h, "plus")}${ai(h, "share")}${ai(h, "edit")}${ai(h, "search")}` }), "\u9884\u89C8")),
+    }, (p, h) => desktop(h, window(h, p.filename, `<div class="ap-split"><aside class="ap-pdf-thumbs">${Array.from({ length: Math.min(7, Number(p.pages)) }, (_, i) => `<div class="${i + 1 === p.page ? "active" : ""}" data-motion="item"><article><b>${h.esc(p.thumbnailTitles?.[i] || "\u9875\u9762 " + (i + 1))}</b><hr><p></p><p></p><p></p><i></i></article><small>${i + 1}</small></div>`).join("")}</aside><main class="ap-pdf-canvas"><article class="ap-paper" data-motion="focus"><small>${h.esc(p.subtitle)}</small><h1>${h.esc(p.title)}</h1>${array2(p.paragraphs).map((x) => `<p>${h.esc(x)}</p>`).join("")}<div class="ap-paper-steps">${array2(p.steps, 4).map((x, i) => `<section data-motion="item"><b>0${i + 1}</b><h3>${h.esc(x)}</h3></section>`).join("")}</div><footer>${h.esc(p.documentFooter)}<span>${h.esc(p.page)}</span></footer></article></main></div>`, { toolbar: `${ai(h, "panel")}<b>${h.esc(p.filename)}</b><span class="ap-tiny">\u7B2C ${h.esc(p.page)} \u9875\uFF0C\u5171 ${h.esc(p.pages)} \u9875</span><span class="ap-spacer"></span>${ai(h, "minus")}${ai(h, "plus")}${ai(h, "share")}${ai(h, "edit")}${ai(h, "search")}` }), "\u9884\u89C8")),
     component("mac-activity-monitor", "macOS \xB7 \u6D3B\u52A8\u76D1\u89C6\u5668", "\u8FDB\u7A0B\u5217\u8868\u548C\u5E95\u90E8 CPU \u56FE\u8868\uFF0C\u6570\u636E\u53EF\u66FF\u6362\uFF0C\u4E0D\u7ED1\u5B9A\u771F\u5B9E\u8BBE\u5907\u8BFB\u6570\u3002", {
       "tab": "CPU",
       "system": 5.6,
@@ -2058,7 +3010,7 @@ var ComponentLibraryRuntime = (() => {
           "0"
         ]
       ]
-    }, (p, h) => desktop(h, window(h, "\u6D3B\u52A8\u76D1\u89C6\u5668", `<div class="ap-activity"><div class="ap-process-table"><div class="ap-process-row head">${["\u8FDB\u7A0B\u540D\u79F0", "% CPU", "CPU \u65F6\u95F4", "\u7EBF\u7A0B", "\u5524\u9192\u6B21\u6570", "PID"].map((x) => `<span>${x}</span>`).join("")}</div>${array(p.rows, 15).map((r, i) => `<div class="ap-process-row ${!i ? "active" : ""}" data-motion="item">${r.map((x) => `<span>${h.esc(x)}</span>`).join("")}</div>`).join("")}</div><footer><div><p><i class="red"></i>\u7CFB\u7EDF\uFF1A<b>${h.esc(p.system)}%</b></p><p><i class="blue"></i>\u7528\u6237\uFF1A<b>${h.esc(p.user)}%</b></p><p>\u95F2\u7F6E\uFF1A<b>${h.esc(p.idle)}%</b></p></div><section><small>CPU \u8D1F\u8F7D</small><svg viewBox="0 0 230 80"><path d="M0 73 12 69 24 70 36 40 48 66 60 62 72 67 84 34 96 65 108 64 120 46 132 60 144 28 156 63 168 52 180 56 192 38 204 61 216 65 230 53V80H0Z" fill="#6cafeb"/><path data-motion="line" d="M0 74 12 72 24 73 36 66 48 74 60 70 72 74 84 62 96 73 108 71 120 68 132 73 144 59 156 73 168 69 180 73 192 64 204 72 216 73 230 69" fill="none" stroke="#de6f75" stroke-width="2"/></svg></section><div><p>\u7EBF\u7A0B\uFF1A<b>1,402</b></p><p>\u8FDB\u7A0B\uFF1A<b>${array(p.rows).length}</b></p><small>\u793A\u4F8B\u6570\u636E</small></div></footer></div>`, { toolbar: `${ai(h, "x")}${ai(h, "info")}<span class="ap-spacer"></span><div class="ap-segments"><b>${h.esc(p.tab)}</b>\u3000\u5185\u5B58\u3000\u80FD\u8017\u3000\u78C1\u76D8\u3000\u7F51\u7EDC</div><span class="ap-spacer"></span><span class="ap-search">${ai(h, "search", 14)} \u641C\u7D22</span>` }), "\u6D3B\u52A8\u76D1\u89C6\u5668")),
+    }, (p, h) => desktop(h, window(h, "\u6D3B\u52A8\u76D1\u89C6\u5668", `<div class="ap-activity"><div class="ap-process-table"><div class="ap-process-row head">${["\u8FDB\u7A0B\u540D\u79F0", "% CPU", "CPU \u65F6\u95F4", "\u7EBF\u7A0B", "\u5524\u9192\u6B21\u6570", "PID"].map((x) => `<span>${x}</span>`).join("")}</div>${array2(p.rows, 15).map((r, i) => `<div class="ap-process-row ${!i ? "active" : ""}" data-motion="item">${r.map((x) => `<span>${h.esc(x)}</span>`).join("")}</div>`).join("")}</div><footer><div><p><i class="red"></i>\u7CFB\u7EDF\uFF1A<b>${h.esc(p.system)}%</b></p><p><i class="blue"></i>\u7528\u6237\uFF1A<b>${h.esc(p.user)}%</b></p><p>\u95F2\u7F6E\uFF1A<b>${h.esc(p.idle)}%</b></p></div><section><small>CPU \u8D1F\u8F7D</small><svg viewBox="0 0 230 80"><path d="M0 73 12 69 24 70 36 40 48 66 60 62 72 67 84 34 96 65 108 64 120 46 132 60 144 28 156 63 168 52 180 56 192 38 204 61 216 65 230 53V80H0Z" fill="#6cafeb"/><path data-motion="line" d="M0 74 12 72 24 73 36 66 48 74 60 70 72 74 84 62 96 73 108 71 120 68 132 73 144 59 156 73 168 69 180 73 192 64 204 72 216 73 230 69" fill="none" stroke="#de6f75" stroke-width="2"/></svg></section><div><p>\u7EBF\u7A0B\uFF1A<b>1,402</b></p><p>\u8FDB\u7A0B\uFF1A<b>${array2(p.rows).length}</b></p><small>\u793A\u4F8B\u6570\u636E</small></div></footer></div>`, { toolbar: `${ai(h, "x")}${ai(h, "info")}<span class="ap-spacer"></span><div class="ap-segments"><b>${h.esc(p.tab)}</b>\u3000\u5185\u5B58\u3000\u80FD\u8017\u3000\u78C1\u76D8\u3000\u7F51\u7EDC</div><span class="ap-spacer"></span><span class="ap-search">${ai(h, "search", 14)} \u641C\u7D22</span>` }), "\u6D3B\u52A8\u76D1\u89C6\u5668")),
     component("mac-file-dialog", "macOS \xB7 \u4FDD\u5B58\u5BF9\u8BDD\u6846", "\u4FDD\u5B58\u540D\u79F0\u3001\u4F4D\u7F6E\u3001\u6587\u4EF6\u5217\u8868\u548C\u786E\u8BA4\u64CD\u4F5C\uFF0C\u53EF\u7528\u4E8E\u5BFC\u51FA\u6B65\u9AA4\u6F14\u793A\u3002", {
       "title": "\u4FDD\u5B58\u6587\u6863",
       "filename": "\u793A\u4F8B\u6587\u6863.pdf",
@@ -2186,7 +3138,7 @@ var ComponentLibraryRuntime = (() => {
           "1.2 MB"
         ]
       ]
-    }, (p, h) => desktop(h, `${window(h, "\u6587\u7A3F", `<div class="ap-split">${sidebar(h)}<div class="ap-main">${table(h, ["\u540D\u79F0", "\u4FEE\u6539\u65E5\u671F", "\u79CD\u7C7B", "\u5927\u5C0F"], p.files.map((r, i) => i ? r : [p.filename, ...r.slice(1)]), 0)}</div></div>`)}<div class="ap-context"><div class="ap-context-main">${array(p.items, 18).map((x, i) => x[0] === "---" ? "<hr>" : `<div class="${i === p.selected ? "active" : ""}" data-motion="item"><span>${h.esc(x[0])}</span><small>${h.esc(x[1])}</small></div>`).join("")}</div><div class="ap-context-sub">${array(p.submenu, 7).map((x) => `<div>${h.esc(x)}</div>`).join("")}</div></div>`)),
+    }, (p, h) => desktop(h, `${window(h, "\u6587\u7A3F", `<div class="ap-split">${sidebar(h)}<div class="ap-main">${table(h, ["\u540D\u79F0", "\u4FEE\u6539\u65E5\u671F", "\u79CD\u7C7B", "\u5927\u5C0F"], p.files.map((r, i) => i ? r : [p.filename, ...r.slice(1)]), 0)}</div></div>`)}<div class="ap-context"><div class="ap-context-main">${array2(p.items, 18).map((x, i) => x[0] === "---" ? "<hr>" : `<div class="${i === p.selected ? "active" : ""}" data-motion="item"><span>${h.esc(x[0])}</span><small>${h.esc(x[1])}</small></div>`).join("")}</div><div class="ap-context-sub">${array2(p.submenu, 7).map((x) => `<div>${h.esc(x)}</div>`).join("")}</div></div>`)),
     component("mac-dock", "macOS \xB7 \u7A0B\u5E8F\u575E", "\u684C\u9762\u5E95\u90E8\u73BB\u7483\u5E95\u677F\u3001\u5E94\u7528\u56FE\u6807\u3001\u8FD0\u884C\u6307\u793A\u548C\u60AC\u505C\u63D0\u793A\u3002", {
       "apps": [
         [
@@ -2228,7 +3180,7 @@ var ComponentLibraryRuntime = (() => {
         "\u793A\u4F8B\u8D44\u6599",
         "\u793A\u4F8B\u6587\u6863.pdf"
       ]
-    }, (p, h) => desktop(h, `<div class="ap-desktop-files">${array(p.desktopFiles, 5).map((x, i) => `<div data-motion="item">${ai(h, i === 2 ? "file" : "folder", 56)}<p>${h.esc(x)}</p></div>`).join("")}</div><div class="ap-dock">${array(p.apps, 12).map((x, i) => `<div class="ap-dock-item ${i === p.selected ? "active" : ""}" data-motion="item" data-app="${h.esc(x[0])}">${i === p.selected ? `<span class="ap-dock-tip">${h.esc(x[1])}</span>` : ""}${appIcon(h, x[0], 58)}<i></i></div>`).join("")}<b class="ap-dock-separator"></b><div class="ap-dock-item">${appIcon(h, "files", 58)}</div><div class="ap-dock-trash">${ai(h, "trash", 40)}</div></div>`, "\u8BBF\u8FBE", true))
+    }, (p, h) => desktop(h, `<div class="ap-desktop-files">${array2(p.desktopFiles, 5).map((x, i) => `<div data-motion="item">${ai(h, i === 2 ? "file" : "folder", 56)}<p>${h.esc(x)}</p></div>`).join("")}</div><div class="ap-dock">${array2(p.apps, 12).map((x, i) => `<div class="ap-dock-item ${i === p.selected ? "active" : ""}" data-motion="item" data-app="${h.esc(x[0])}">${i === p.selected ? `<span class="ap-dock-tip">${h.esc(x[1])}</span>` : ""}${appIcon(h, x[0], 58)}<i></i></div>`).join("")}<b class="ap-dock-separator"></b><div class="ap-dock-item">${appIcon(h, "files", 58)}</div><div class="ap-dock-trash">${ai(h, "trash", 40)}</div></div>`, "\u8BBF\u8FBE", true))
   ];
 
   // families/apple-macos.mjs
@@ -2260,8 +3212,8 @@ var ComponentLibraryRuntime = (() => {
     ],
     "checklistTitle": "\u68C0\u67E5\u9879"
   };
-  var notesBody = (p, h) => `<aside class="ap-note-list">${array(p.notes).map((x, i) => `<article class="${i === 0 ? "active" : ""}" data-motion="item"><b>${h.esc(x)}</b><p>09:41 <span>${h.esc(p.noteSummaries?.[i] || "\u7B14\u8BB0\u6458\u8981")}</span></p><small>\u25B1 ${h.esc(p.folder)}</small></article>`).join("")}</aside><div class="ap-note-page"><small>${h.esc(p.date)}</small><h1>${h.esc(p.title)}</h1>${array(p.paragraphs).map((x) => `<p>${h.esc(x)}</p>`).join("")}<h2>${h.esc(p.checklistTitle)}</h2>${array(p.checklist).map((x, i) => `<div class="ap-note-check" data-motion="item"><i class="${i < 2 ? "done" : ""}">${i < 2 ? "\u2713" : ""}</i>${h.esc(x)}</div>`).join("")}</div>`;
-  var components12 = [
+  var notesBody = (p, h) => `<aside class="ap-note-list">${array2(p.notes).map((x, i) => `<article class="${i === 0 ? "active" : ""}" data-motion="item"><b>${h.esc(x)}</b><p>09:41 <span>${h.esc(p.noteSummaries?.[i] || "\u7B14\u8BB0\u6458\u8981")}</span></p><small>\u25B1 ${h.esc(p.folder)}</small></article>`).join("")}</aside><div class="ap-note-page"><small>${h.esc(p.date)}</small><h1>${h.esc(p.title)}</h1>${array2(p.paragraphs).map((x) => `<p>${h.esc(x)}</p>`).join("")}<h2>${h.esc(p.checklistTitle)}</h2>${array2(p.checklist).map((x, i) => `<div class="ap-note-check" data-motion="item"><i class="${i < 2 ? "done" : ""}">${i < 2 ? "\u2713" : ""}</i>${h.esc(x)}</div>`).join("")}</div>`;
+  var components15 = [
     component("mac-finder", "macOS \xB7 \u8BBF\u8FBE", "\u539F\u751F\u4FA7\u680F\u3001\u5DE5\u5177\u680F\u4E0E\u6587\u4EF6\u5217\u8868\uFF0C\u53EF\u66FF\u6362\u76EE\u5F55\u3001\u6587\u4EF6\u548C\u9009\u62E9\u72B6\u6001\u3002", {
       "title": "\u6587\u7A3F",
       "path": "iCloud \u4E91\u76D8 \u203A \u6587\u7A3F \u203A \u793A\u4F8B\u6587\u4EF6\u5939",
@@ -2310,7 +3262,7 @@ var ComponentLibraryRuntime = (() => {
         ]
       ],
       "selected": 1
-    }, (p, h) => desktop(h, window(h, p.title, `<div class="ap-split">${sidebar(h, p.title)}<div class="ap-main">${table(h, ["\u540D\u79F0", "\u4FEE\u6539\u65E5\u671F", "\u79CD\u7C7B", "\u5927\u5C0F"], array(p.files), p.selected)}<div class="ap-bottom">${h.esc(p.path)}\u3000 \xB7\u3000${p.files.length} \u4E2A\u9879\u76EE</div></div></div>`, { toolbar: `${ai(h, "chevron-left")}${ai(h, "chevron-right")}<b>${h.esc(p.title)}</b><span class="ap-spacer"></span>${ai(h, "grid")}${ai(h, "list")}${ai(h, "columns")}${ai(h, "share")}${ai(h, "more")}<span class="ap-search">${ai(h, "search", 14)} \u641C\u7D22</span>` }))),
+    }, (p, h) => desktop(h, window(h, p.title, `<div class="ap-split">${sidebar(h, p.title)}<div class="ap-main">${table(h, ["\u540D\u79F0", "\u4FEE\u6539\u65E5\u671F", "\u79CD\u7C7B", "\u5927\u5C0F"], array2(p.files), p.selected)}<div class="ap-bottom">${h.esc(p.path)}\u3000 \xB7\u3000${p.files.length} \u4E2A\u9879\u76EE</div></div></div>`, { toolbar: `${ai(h, "chevron-left")}${ai(h, "chevron-right")}<b>${h.esc(p.title)}</b><span class="ap-spacer"></span>${ai(h, "grid")}${ai(h, "list")}${ai(h, "columns")}${ai(h, "share")}${ai(h, "more")}<span class="ap-search">${ai(h, "search", 14)} \u641C\u7D22</span>` }))),
     component("mac-safari", "macOS \xB7 Safari \u6D4F\u89C8\u5668", "macOS \u7684\u72EC\u7ACB\u5DE5\u5177\u680F\u3001\u5730\u5740\u680F\u4E0E\u6807\u7B7E\u9875\uFF0C\u7F51\u9875\u6B63\u6587\u53EF\u7F16\u8F91\u3002", {
       "title": "\u9875\u9762\u6807\u9898",
       "url": "www.example.com",
@@ -2353,7 +3305,7 @@ var ComponentLibraryRuntime = (() => {
         "node example.js",
         "node example.js --preview"
       ]
-    }, (p, h) => desktop(h, window(h, p.title, `<div class="ap-safari-tabs">${array(p.tabs, 5).map((x, i) => `<div class="${!i ? "active" : ""}">${h.esc(i === 0 ? p.title : x)}<span>\xD7</span></div>`).join("")}</div><div class="ap-safari-page"><nav><b>${h.esc(p.brand)}</b><span>${array(p.navigation, 3).map(h.esc).join("\u3000")}</span><button>${h.esc(p.actionLabel)}</button></nav><div class="ap-site-body"><aside>${h.esc(p.sidebarTitle)}${array(p.sidebarItems, 4).map((x, i) => i ? `<span>${h.esc(x)}</span>` : `<b>${h.esc(x)}</b>`).join("")}</aside><article><small>${h.esc(p.eyebrow)}</small><h1>${h.esc(p.heading)}</h1><p>${h.esc(p.intro)}</p>${array(p.sections, 4).map((x) => `<section data-motion="item"><h2>${h.esc(x.title)}</h2><p>${h.esc(x.detail)}</p></section>`).join("")}<div class="ap-site-code" data-motion="focus">${array(p.commands, 2).map(h.esc).join("<br>")}</div></article></div></div>`, { toolbar: `${ai(h, "panel")}${ai(h, "chevron-left")}${ai(h, "chevron-right")}<div class="ap-safari-address">${ai(h, "lock", 12)} ${h.esc(p.url)}<span>${ai(h, "refresh", 13)}</span></div>${ai(h, "share")}${ai(h, "plus")}${ai(h, "copy")}` }), "Safari")),
+    }, (p, h) => desktop(h, window(h, p.title, `<div class="ap-safari-tabs">${array2(p.tabs, 5).map((x, i) => `<div class="${!i ? "active" : ""}">${h.esc(i === 0 ? p.title : x)}<span>\xD7</span></div>`).join("")}</div><div class="ap-safari-page"><nav><b>${h.esc(p.brand)}</b><span>${array2(p.navigation, 3).map(h.esc).join("\u3000")}</span><button>${h.esc(p.actionLabel)}</button></nav><div class="ap-site-body"><aside>${h.esc(p.sidebarTitle)}${array2(p.sidebarItems, 4).map((x, i) => i ? `<span>${h.esc(x)}</span>` : `<b>${h.esc(x)}</b>`).join("")}</aside><article><small>${h.esc(p.eyebrow)}</small><h1>${h.esc(p.heading)}</h1><p>${h.esc(p.intro)}</p>${array2(p.sections, 4).map((x) => `<section data-motion="item"><h2>${h.esc(x.title)}</h2><p>${h.esc(x.detail)}</p></section>`).join("")}<div class="ap-site-code" data-motion="focus">${array2(p.commands, 2).map(h.esc).join("<br>")}</div></article></div></div>`, { toolbar: `${ai(h, "panel")}${ai(h, "chevron-left")}${ai(h, "chevron-right")}<div class="ap-safari-address">${ai(h, "lock", 12)} ${h.esc(p.url)}<span>${ai(h, "refresh", 13)}</span></div>${ai(h, "share")}${ai(h, "plus")}${ai(h, "copy")}` }), "Safari")),
     component("mac-terminal", "macOS \xB7 \u7EC8\u7AEF", "\u4FDD\u7559 macOS \u7A97\u53E3\u5F62\u5236\u4E0E shell \u63D0\u793A\u7B26\uFF0C\u53EF\u66FF\u6362\u547D\u4EE4\u4E0E\u8F93\u51FA\u3002", {
       "title": "example-project \u2014 zsh \u2014 100\xD728",
       "user": "user@MacBook-Pro",
@@ -2368,7 +3320,7 @@ var ComponentLibraryRuntime = (() => {
         "",
         "\u5904\u7406\u5B8C\u6210\u3002"
       ]
-    }, (p, h) => desktop(h, window(h, p.title, `<div class="ap-terminal"><div>Last login: Thu Sep 17 09:38:24 on ttys001</div><div><span>${h.esc(p.user)}</span> ${h.esc(p.folder)} % <b data-motion="type">${h.esc(p.command)}</b></div>${array(p.lines, 18).map((x) => `<div data-output-line>${h.esc(x) || "&nbsp;"}</div>`).join("")}<div>${h.esc(p.user)} ${h.esc(p.folder)} % <i></i></div></div>`, { cls: "ap-terminal-window" }), "\u7EC8\u7AEF")),
+    }, (p, h) => desktop(h, window(h, p.title, `<div class="ap-terminal"><div>Last login: Thu Sep 17 09:38:24 on ttys001</div><div><span>${h.esc(p.user)}</span> ${h.esc(p.folder)} % <b data-motion="type">${h.esc(p.command)}</b></div>${array2(p.lines, 18).map((x) => `<div data-output-line>${h.esc(x) || "&nbsp;"}</div>`).join("")}<div>${h.esc(p.user)} ${h.esc(p.folder)} % <i></i></div></div>`, { cls: "ap-terminal-window" }), "\u7EC8\u7AEF")),
     component("mac-system-settings", "macOS \xB7 \u7CFB\u7EDF\u8BBE\u7F6E", "\u8BBE\u7F6E\u4FA7\u680F\u3001\u5206\u7EC4\u9762\u677F\u3001\u5F00\u5173\u548C\u8BE6\u60C5\u884C\uFF0C\u53EF\u7528\u4E8E\u6559\u7A0B\u5B9A\u4F4D\u3002", {
       "title": "\u901A\u7528",
       "account": "\u793A\u4F8B\u7528\u6237",
@@ -2408,7 +3360,7 @@ var ComponentLibraryRuntime = (() => {
         ]
       ],
       "accountInitial": "\u7528"
-    }, (p, h) => desktop(h, window(h, p.title, `<div class="ap-split"><aside class="ap-settings-sidebar"><div class="ap-search">${ai(h, "search", 13)} \u641C\u7D22</div><div class="ap-account"><b>${h.esc(p.accountInitial)}</b><div><strong>${h.esc(p.account)}</strong><small>${h.esc(p.subtitle)}</small></div></div>${["Wi-Fi", "\u84DD\u7259", "\u7F51\u7EDC", "\u901A\u77E5", "\u58F0\u97F3", "\u4E13\u6CE8\u6A21\u5F0F", "\u5C4F\u5E55\u4F7F\u7528\u65F6\u95F4", "\u901A\u7528", "\u8F85\u52A9\u529F\u80FD", "\u5916\u89C2", "\u63A7\u5236\u4E2D\u5FC3", "\u684C\u9762\u4E0E\u7A0B\u5E8F\u575E", "\u663E\u793A\u5668", "\u5899\u7EB8", "\u9690\u79C1\u4E0E\u5B89\u5168\u6027"].map((x, i) => `<div class="ap-setting-nav ${x === p.title ? "active" : ""}" data-motion="item"><i style="background:${["#248cef", "#258cf1", "#278ce8", "#ef514a", "#e7638c", "#7767c9", "#5856d6", "#9095a0"][i % 8]}">${ai(h, ["wifi", "bluetooth", "globe", "bell", "volume", "moon", "clock", "settings"][i % 8], 14)}</i>${x}</div>`).join("")}</aside><div class="ap-settings-main"><h2>${h.esc(p.title)}</h2><div class="ap-settings-hero">${appIcon(h, "settings", 54)}<b>${h.esc(p.title)}</b><p>\u7BA1\u7406\u8BBE\u5907\u7684\u6574\u4F53\u8BBE\u7F6E\u548C\u504F\u597D\u3002</p></div><div class="ap-setting-group">${array(p.rows, 10).map((x, i) => `<div data-motion="focus" class="ap-native-row">${ai(h, ["info", "refresh", "folder", "airdrop", "grid", "globe", "clock", "share"][i], 18)}<b>${h.esc(x[0])}</b><span>${h.esc(x[1])}\u3000\u203A</span></div>`).join("")}</div></div></div>`, { style: "left:211px;top:56px;width:858px;height:700px", toolbar: `<span class="ap-spacer"></span>${ai(h, "chevron-left")}${ai(h, "chevron-right")}<span class="ap-spacer"></span>` }), "\u7CFB\u7EDF\u8BBE\u7F6E")),
+    }, (p, h) => desktop(h, window(h, p.title, `<div class="ap-split"><aside class="ap-settings-sidebar"><div class="ap-search">${ai(h, "search", 13)} \u641C\u7D22</div><div class="ap-account"><b>${h.esc(p.accountInitial)}</b><div><strong>${h.esc(p.account)}</strong><small>${h.esc(p.subtitle)}</small></div></div>${["Wi-Fi", "\u84DD\u7259", "\u7F51\u7EDC", "\u901A\u77E5", "\u58F0\u97F3", "\u4E13\u6CE8\u6A21\u5F0F", "\u5C4F\u5E55\u4F7F\u7528\u65F6\u95F4", "\u901A\u7528", "\u8F85\u52A9\u529F\u80FD", "\u5916\u89C2", "\u63A7\u5236\u4E2D\u5FC3", "\u684C\u9762\u4E0E\u7A0B\u5E8F\u575E", "\u663E\u793A\u5668", "\u5899\u7EB8", "\u9690\u79C1\u4E0E\u5B89\u5168\u6027"].map((x, i) => `<div class="ap-setting-nav ${x === p.title ? "active" : ""}" data-motion="item"><i style="background:${["#248cef", "#258cf1", "#278ce8", "#ef514a", "#e7638c", "#7767c9", "#5856d6", "#9095a0"][i % 8]}">${ai(h, ["wifi", "bluetooth", "globe", "bell", "volume", "moon", "clock", "settings"][i % 8], 14)}</i>${x}</div>`).join("")}</aside><div class="ap-settings-main"><h2>${h.esc(p.title)}</h2><div class="ap-settings-hero">${appIcon(h, "settings", 54)}<b>${h.esc(p.title)}</b><p>\u7BA1\u7406\u8BBE\u5907\u7684\u6574\u4F53\u8BBE\u7F6E\u548C\u504F\u597D\u3002</p></div><div class="ap-setting-group">${array2(p.rows, 10).map((x, i) => `<div data-motion="focus" class="ap-native-row">${ai(h, ["info", "refresh", "folder", "airdrop", "grid", "globe", "clock", "share"][i], 18)}<b>${h.esc(x[0])}</b><span>${h.esc(x[1])}\u3000\u203A</span></div>`).join("")}</div></div></div>`, { style: "left:211px;top:56px;width:858px;height:700px", toolbar: `<span class="ap-spacer"></span>${ai(h, "chevron-left")}${ai(h, "chevron-right")}<span class="ap-spacer"></span>` }), "\u7CFB\u7EDF\u8BBE\u7F6E")),
     component("mac-spotlight", "macOS \xB7 \u805A\u7126\u641C\u7D22", "\u72EC\u7ACB\u641C\u7D22\u6D6E\u5C42\u3001\u5206\u7C7B\u7ED3\u679C\u548C\u9884\u89C8\uFF0C\u53EF\u66FF\u6362\u641C\u7D22\u8BCD\u4E0E\u5339\u914D\u9879\u3002", {
       "query": "\u793A\u4F8B",
       "results": [
@@ -2433,7 +3385,7 @@ var ComponentLibraryRuntime = (() => {
           "kind": "globe"
         }
       ]
-    }, (p, h) => desktop(h, `<div class="ap-spotlight"><div class="ap-spot-search">${ai(h, "search", 28)}<span data-motion="type">${h.esc(p.query)}</span></div><div class="ap-spot-body"><div><label>\u6700\u4F73\u5339\u914D</label>${array(p.results, 7).map((r, i) => `<article class="${i === 0 ? "active" : ""}" data-motion="item">${ai(h, r.kind, 28)}<div><b>${h.esc(r.name)}</b><small>${h.esc(r.detail)}</small></div>${i === 0 ? "<span>\u21B5</span>" : ""}</article>`).join("")}</div><aside>${appIcon(h, "files", 76)}<h2>${h.esc(p.results[0]?.name)}</h2><p>\u6587\u4EF6\u5939</p><hr><small>\u4F4D\u7F6E\u3000iCloud \u4E91\u76D8 / \u6587\u7A3F</small><small>\u4FEE\u6539\u3000\u4ECA\u5929 09:30</small><small>\u5927\u5C0F\u30008 \u4E2A\u9879\u76EE</small></aside></div><footer>\u6309\u56DE\u8F66\u952E\u6253\u5F00\u3000 \xB7\u3000\u6309\u4F4F \u2318 \u67E5\u770B\u4F4D\u7F6E</footer></div>`, "\u8BBF\u8FBE", true)),
+    }, (p, h) => desktop(h, `<div class="ap-spotlight"><div class="ap-spot-search">${ai(h, "search", 28)}<span data-motion="type">${h.esc(p.query)}</span></div><div class="ap-spot-body"><div><label>\u6700\u4F73\u5339\u914D</label>${array2(p.results, 7).map((r, i) => `<article class="${i === 0 ? "active" : ""}" data-motion="item">${ai(h, r.kind, 28)}<div><b>${h.esc(r.name)}</b><small>${h.esc(r.detail)}</small></div>${i === 0 ? "<span>\u21B5</span>" : ""}</article>`).join("")}</div><aside>${appIcon(h, "files", 76)}<h2>${h.esc(p.results[0]?.name)}</h2><p>\u6587\u4EF6\u5939</p><hr><small>\u4F4D\u7F6E\u3000iCloud \u4E91\u76D8 / \u6587\u7A3F</small><small>\u4FEE\u6539\u3000\u4ECA\u5929 09:30</small><small>\u5927\u5C0F\u30008 \u4E2A\u9879\u76EE</small></aside></div><footer>\u6309\u56DE\u8F66\u952E\u6253\u5F00\u3000 \xB7\u3000\u6309\u4F4F \u2318 \u67E5\u770B\u4F4D\u7F6E</footer></div>`, "\u8BBF\u8FBE", true)),
     component("mac-control-center", "macOS \xB7 \u63A7\u5236\u4E2D\u5FC3", "\u6309\u5B98\u65B9\u5206\u7EC4\u7EC4\u7EC7\u7F51\u7EDC\u3001\u4E13\u6CE8\u3001\u663E\u793A\u548C\u58F0\u97F3\u63A7\u5236\u3002", {
       "wifi": "Example Wi-Fi",
       "bluetooth": "\u5DF2\u6253\u5F00",
@@ -2471,7 +3423,7 @@ var ComponentLibraryRuntime = (() => {
       "nextEventTitle": "\u65E5\u7A0B\u6807\u9898",
       "nextEventTime": "10:00\u201310:30",
       "calendarLabel": "\u793A\u4F8B\u65E5\u5386"
-    }, (p, h) => desktop(h, `<div class="ap-notifications"><header>${h.esc(p.date)}</header><div class="ap-widget-pair"><section><small>${h.esc(p.weekday)}</small><b>${h.esc(p.day)}</b><p>${h.esc(p.agendaSummary)}</p></section><section><small>\u4E0B\u4E00\u9879\u65E5\u7A0B</small><h3>${h.esc(p.nextEventTitle)}</h3><p>${h.esc(p.nextEventTime)}</p><i>${h.esc(p.calendarLabel)}</i></section></div>${array(p.events, 5).map((x, i) => `<article class="ap-notification" data-motion="item">${appIcon(h, ["calendar", "notes", "messages"][i % 3], 30)}<div><small>${h.esc(x.app)}<span>${h.esc(x.time)}</span></small><b>${h.esc(x.title)}</b><p>${h.esc(x.body)}</p></div></article>`).join("")}<div class="ap-notification-edit">\u7F16\u8F91\u5C0F\u7EC4\u4EF6</div></div>`, "\u8BBF\u8FBE", true)),
+    }, (p, h) => desktop(h, `<div class="ap-notifications"><header>${h.esc(p.date)}</header><div class="ap-widget-pair"><section><small>${h.esc(p.weekday)}</small><b>${h.esc(p.day)}</b><p>${h.esc(p.agendaSummary)}</p></section><section><small>\u4E0B\u4E00\u9879\u65E5\u7A0B</small><h3>${h.esc(p.nextEventTitle)}</h3><p>${h.esc(p.nextEventTime)}</p><i>${h.esc(p.calendarLabel)}</i></section></div>${array2(p.events, 5).map((x, i) => `<article class="ap-notification" data-motion="item">${appIcon(h, ["calendar", "notes", "messages"][i % 3], 30)}<div><small>${h.esc(x.app)}<span>${h.esc(x.time)}</span></small><b>${h.esc(x.title)}</b><p>${h.esc(x.body)}</p></div></article>`).join("")}<div class="ap-notification-edit">\u7F16\u8F91\u5C0F\u7EC4\u4EF6</div></div>`, "\u8BBF\u8FBE", true)),
     component("mac-notes", "macOS \xB7 \u5907\u5FD8\u5F55", "\u6587\u4EF6\u5939\u3001\u7B14\u8BB0\u5217\u8868\u4E0E\u6B63\u6587\u4E09\u680F\uFF0C\u652F\u6301\u6E05\u5355\u548C\u6BB5\u843D\u66FF\u6362\u3002", noteDefault, (p, h) => desktop(h, window(h, "\u5907\u5FD8\u5F55", `<div class="ap-split">${sidebar(h, p.folder, ["\u6240\u6709 iCloud", "\u5907\u5FD8\u5F55", "\u5DE5\u4F5C", "\u4E2A\u4EBA", "\u6700\u8FD1\u5220\u9664"])}${notesBody(p, h)}</div>`, { toolbar: `${ai(h, "panel")}${ai(h, "trash")}<span class="ap-spacer"></span>${ai(h, "edit")}${ai(h, "check-circle")}<b>Aa</b>${ai(h, "grid")}${ai(h, "share")}${ai(h, "search")}` }), "\u5907\u5FD8\u5F55"))
   ];
   var css2 = commonCSS + `
@@ -2482,9 +3434,9 @@ var ComponentLibraryRuntime = (() => {
   var phone = (p, h, body, cls2 = "") => `<section class="am-stage"><div class="am-phone"><div class="am-screen ${cls2}"><div class="am-status"><b>${h.esc(p.time || "9:41")}</b><span><svg width="15" height="12" viewBox="0 0 17 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx=".7"/><rect x="4.5" y="5" width="3" height="7" rx=".7"/><rect x="9" y="2" width="3" height="10" rx=".7"/><rect x="13.5" width="3" height="12" rx=".7"/></svg>${ai(h, "wifi", 15)}<i class="am-battery"></i></span></div><div class="am-island"></div>${body}<div class="am-home"></div></div></div></section>`;
   var nav = (h, title, left = "\u8FD4\u56DE", right = "") => `<nav class="am-nav"><span>${ai(h, "chevron-left", 22)}${h.esc(left)}</span><b>${h.esc(title)}</b><span>${h.esc(right)}</span></nav>`;
   var iosRow = (h, x, i) => `<div class="am-row" data-motion="item"><i style="background:${["#168cff", "#1998ee", "#777e8b", "#ed5a58", "#b156cf", "#615ce4"][i % 6]}">${ai(h, x.icon || ["wifi", "bluetooth", "settings", "bell", "moon", "clock"][i % 6], 17)}</i><b>${h.esc(x.label)}</b><span>${x.toggle !== void 0 ? `<i class="am-switch ${x.toggle ? "" : "off"}" data-motion="focus"></i>` : h.esc(x.value || "") + (x.arrow === false ? "" : "\u3000\u203A")}</span></div>`;
-  var paragraphs = (h, p) => array(p).map((x) => `<p>${h.esc(x)}</p>`).join("");
+  var paragraphs = (h, p) => array2(p).map((x) => `<p>${h.esc(x)}</p>`).join("");
   var pad = (h, body) => `<section class="am-stage"><div class="am-ipad"><div class="am-pad-screen"><header class="am-pad-status">9:41\u30009\u670817\u65E5 \u661F\u671F\u56DB<span>\u25CF \u25CF \u25CF</span><i>${ai(h, "wifi", 14)}\u300085% ${ai(h, "battery", 21)}</i></header>${body}<div class="am-home"></div></div></div></section>`;
-  var components13 = [
+  var components16 = [
     component("ios-settings", "iPhone \xB7 \u8BBE\u7F6E", "iOS 18 \u8BBE\u7F6E\u9996\u9875\u3001\u8D26\u6237\u5361\u7247\u3001\u641C\u7D22\u548C\u5206\u7EC4\u5217\u8868\u3002", {
       "title": "\u8BBE\u7F6E",
       "account": "\u793A\u4F8B\u7528\u6237",
@@ -2541,7 +3493,7 @@ var ComponentLibraryRuntime = (() => {
         ]
       ],
       "accountInitial": "\u7528"
-    }, (p, h) => phone(p, h, `<div class="am-settings"><h1>${h.esc(p.title)}</h1><div class="am-search">${ai(h, "search", 16)} \u641C\u7D22 ${ai(h, "mic", 16)}</div><div class="am-account"><b>${h.esc(p.accountInitial)}</b><div><strong>${h.esc(p.account)}</strong><small>${h.esc(p.accountSubtitle)}</small></div><span>\u203A</span></div>${array(p.groups, 4).map((g) => `<section class="am-group">${array(g, 6).map((x, i) => iosRow(h, x, i)).join("")}</section>`).join("")}</div>`, "am-settings-screen"), true),
+    }, (p, h) => phone(p, h, `<div class="am-settings"><h1>${h.esc(p.title)}</h1><div class="am-search">${ai(h, "search", 16)} \u641C\u7D22 ${ai(h, "mic", 16)}</div><div class="am-account"><b>${h.esc(p.accountInitial)}</b><div><strong>${h.esc(p.account)}</strong><small>${h.esc(p.accountSubtitle)}</small></div><span>\u203A</span></div>${array2(p.groups, 4).map((g2) => `<section class="am-group">${array2(g2, 6).map((x, i) => iosRow(h, x, i)).join("")}</section>`).join("")}</div>`, "am-settings-screen"), true),
     component("ios-messages", "iPhone \xB7 \u4FE1\u606F", "\u8054\u7CFB\u4EBA\u680F\u3001\u6536\u53D1\u6C14\u6CE1\u3001\u53D1\u9001\u72B6\u6001\u548C\u8F93\u5165\u680F\uFF0C\u9002\u5408\u6F14\u793A\u6C9F\u901A\u6D41\u7A0B\u3002", {
       "name": "\u8054\u7CFB\u4EBA",
       "initial": "\u8054",
@@ -2570,7 +3522,7 @@ var ComponentLibraryRuntime = (() => {
       ],
       "draft": "",
       "status": "\u5DF2\u9001\u8FBE"
-    }, (p, h) => phone(p, h, `<div class="am-message-head"><span>${ai(h, "chevron-left", 27)}</span><div><i>${h.esc(p.initial)}</i><b>${h.esc(p.name)} \u203A</b></div>${ai(h, "video", 24)}</div><div class="am-messages"><small>${h.esc(p.date)}</small>${array(p.messages, 8).map((x) => `<article class="${x.from === "me" ? "me" : "them"}" data-motion="item">${h.esc(x.text)}</article>`).join("")}<em>${h.esc(p.status)}</em></div><footer class="am-message-compose">${ai(h, "plus", 27)}<div>${h.esc(p.draft || "iMessage \u4FE1\u606F")}${ai(h, "mic", 17)}</div></footer>`), true),
+    }, (p, h) => phone(p, h, `<div class="am-message-head"><span>${ai(h, "chevron-left", 27)}</span><div><i>${h.esc(p.initial)}</i><b>${h.esc(p.name)} \u203A</b></div>${ai(h, "video", 24)}</div><div class="am-messages"><small>${h.esc(p.date)}</small>${array2(p.messages, 8).map((x) => `<article class="${x.from === "me" ? "me" : "them"}" data-motion="item">${h.esc(x.text)}</article>`).join("")}<em>${h.esc(p.status)}</em></div><footer class="am-message-compose">${ai(h, "plus", 27)}<div>${h.esc(p.draft || "iMessage \u4FE1\u606F")}${ai(h, "mic", 17)}</div></footer>`), true),
     component("ios-safari", "iPhone \xB7 Safari \u6D4F\u89C8\u5668", "\u5E95\u90E8\u5730\u5740\u680F\u548C\u6D4F\u89C8\u5668\u64CD\u4F5C\u6761\uFF1B\u652F\u6301\u66FF\u6362\u7F51\u9875\u6B63\u6587\u3002", {
       "url": "www.example.com",
       "brand": "\u793A\u4F8B\u7AD9\u70B9",
@@ -2591,7 +3543,7 @@ var ComponentLibraryRuntime = (() => {
         }
       ],
       "eyebrow": "\u680F\u76EE / \u9875\u9762"
-    }, (p, h) => phone(p, h, `<div class="am-safari-site"><header><b>${h.esc(p.brand)}</b>${ai(h, "menu", 21)}</header><small>${h.esc(p.eyebrow)}</small><h1>${h.esc(p.title)}</h1><p>${h.esc(p.intro)}</p>${array(p.sections, 4).map((s, i) => `<section data-motion="item"><b>0${i + 1}</b><h2>${h.esc(s.title)}</h2><p>${h.esc(s.detail)}</p></section>`).join("")}</div><footer class="am-safari-bottom"><div class="am-safari-url">aA <span>${ai(h, "lock", 11)} ${h.esc(p.url)}</span>${ai(h, "refresh", 18)}</div><nav>${ai(h, "chevron-left", 23)}${ai(h, "chevron-right", 23)}${ai(h, "share", 23)}${ai(h, "file", 23)}${ai(h, "copy", 23)}</nav></footer>`), true),
+    }, (p, h) => phone(p, h, `<div class="am-safari-site"><header><b>${h.esc(p.brand)}</b>${ai(h, "menu", 21)}</header><small>${h.esc(p.eyebrow)}</small><h1>${h.esc(p.title)}</h1><p>${h.esc(p.intro)}</p>${array2(p.sections, 4).map((s2, i) => `<section data-motion="item"><b>0${i + 1}</b><h2>${h.esc(s2.title)}</h2><p>${h.esc(s2.detail)}</p></section>`).join("")}</div><footer class="am-safari-bottom"><div class="am-safari-url">aA <span>${ai(h, "lock", 11)} ${h.esc(p.url)}</span>${ai(h, "refresh", 18)}</div><nav>${ai(h, "chevron-left", 23)}${ai(h, "chevron-right", 23)}${ai(h, "share", 23)}${ai(h, "file", 23)}${ai(h, "copy", 23)}</nav></footer>`), true),
     component("ios-notes", "iPhone \xB7 \u5907\u5FD8\u5F55", "\u539F\u751F\u5BFC\u822A\u3001\u65E5\u671F\u3001\u6807\u9898\u3001\u6BB5\u843D\u4E0E\u5706\u5F62\u6E05\u5355\u3002", {
       "folder": "\u793A\u4F8B\u6587\u4EF6\u5939",
       "title": "\u7B14\u8BB0\u6807\u9898",
@@ -2622,7 +3574,7 @@ var ComponentLibraryRuntime = (() => {
           "done": false
         }
       ]
-    }, (p, h) => phone(p, h, `${nav(h, "", p.folder, "\u2022\u2022\u2022")}<article class="am-note"><time>${h.esc(p.date)}</time><h1>${h.esc(p.title)}</h1>${paragraphs(h, p.paragraphs)}${array(p.checklist, 8).map((x) => `<div class="am-check" data-motion="item"><i class="${x.done ? "done" : ""}">${x.done ? "\u2713" : ""}</i>${h.esc(x.text)}</div>`).join("")}</article><footer class="am-note-tools">${ai(h, "check-circle", 23)}${ai(h, "camera", 23)}${ai(h, "edit", 23)}${ai(h, "grid", 23)}</footer>`, "am-note-screen"), true),
+    }, (p, h) => phone(p, h, `${nav(h, "", p.folder, "\u2022\u2022\u2022")}<article class="am-note"><time>${h.esc(p.date)}</time><h1>${h.esc(p.title)}</h1>${paragraphs(h, p.paragraphs)}${array2(p.checklist, 8).map((x) => `<div class="am-check" data-motion="item"><i class="${x.done ? "done" : ""}">${x.done ? "\u2713" : ""}</i>${h.esc(x.text)}</div>`).join("")}</article><footer class="am-note-tools">${ai(h, "check-circle", 23)}${ai(h, "camera", 23)}${ai(h, "edit", 23)}${ai(h, "grid", 23)}</footer>`, "am-note-screen"), true),
     component("ios-control-center", "iPhone \xB7 \u63A7\u5236\u4E2D\u5FC3", "iOS 18 \u63A7\u4EF6\u5206\u7EC4\u3001\u5927\u6ED1\u5757\u3001\u64AD\u653E\u5361\u7247\u4E0E\u5706\u5F62\u5FEB\u6377\u64CD\u4F5C\u3002", {
       "network": "Example Wi-Fi",
       "track": "\u672A\u5728\u64AD\u653E",
@@ -2665,7 +3617,7 @@ var ComponentLibraryRuntime = (() => {
       ],
       "documentTitle": "\u6587\u6863\u6807\u9898",
       "documentBody": "\u6B63\u6587\u5185\u5BB9\uFF0C\u53EF\u66FF\u6362\u4E3A\u9700\u8981\u5C55\u793A\u7684\u6587\u5B57\u3002"
-    }, (p, h) => phone(p, h, `<div class="am-share-context"><h2>${h.esc(p.documentTitle)}</h2><p>${h.esc(p.documentBody)}</p></div><div class="am-share-sheet"><div class="am-grabber"></div><header>${appIcon(h, "preview", 42)}<div><b>${h.esc(p.title)}</b><small>${h.esc(p.detail)}</small></div><i>\xD7</i></header><div class="am-share-people">${array(p.people, 4).map((x, i) => `<div data-motion="item"><b style="background:${["#82a6c7", "#b0a3c8", "#99b9ac"][i % 3]}">${h.esc(x[0])}</b><small>${h.esc(x)}</small></div>`).join("")}</div><div class="am-share-apps">${array(p.apps, 4).map((x) => `<div>${x[0] === "airdrop" ? `<i>${ai(h, "airdrop", 33)}</i>` : appIcon(h, x[0], 49)}<small>${h.esc(x[1])}</small></div>`).join("")}</div><section class="am-group">${array(p.actions, 6).map((x, i) => `<div class="am-share-action" data-motion="item">${h.esc(x)}${ai(h, ["copy", "file", "folder", "download", "edit"][i % 5], 20)}</div>`).join("")}</section></div>`, "am-share-screen"), true),
+    }, (p, h) => phone(p, h, `<div class="am-share-context"><h2>${h.esc(p.documentTitle)}</h2><p>${h.esc(p.documentBody)}</p></div><div class="am-share-sheet"><div class="am-grabber"></div><header>${appIcon(h, "preview", 42)}<div><b>${h.esc(p.title)}</b><small>${h.esc(p.detail)}</small></div><i>\xD7</i></header><div class="am-share-people">${array2(p.people, 4).map((x, i) => `<div data-motion="item"><b style="background:${["#82a6c7", "#b0a3c8", "#99b9ac"][i % 3]}">${h.esc(x[0])}</b><small>${h.esc(x)}</small></div>`).join("")}</div><div class="am-share-apps">${array2(p.apps, 4).map((x) => `<div>${x[0] === "airdrop" ? `<i>${ai(h, "airdrop", 33)}</i>` : appIcon(h, x[0], 49)}<small>${h.esc(x[1])}</small></div>`).join("")}</div><section class="am-group">${array2(p.actions, 6).map((x, i) => `<div class="am-share-action" data-motion="item">${h.esc(x)}${ai(h, ["copy", "file", "folder", "download", "edit"][i % 5], 20)}</div>`).join("")}</section></div>`, "am-share-screen"), true),
     component("ipad-split-view", "iPad \xB7 \u5206\u5C4F\u5DE5\u4F5C\u53F0", "iPadOS 18 \u5206\u5C4F Safari \u4E0E\u5907\u5FD8\u5F55\uFF0C\u4FDD\u7559\u5206\u9694\u6761\u548C\u5404\u81EA\u5DE5\u5177\u680F\u3002", {
       "url": "www.example.com",
       "webTitle": "\u9875\u9762\u4E3B\u6807\u9898",
@@ -2696,7 +3648,7 @@ var ComponentLibraryRuntime = (() => {
         "\u5F85\u529E\u5185\u5BB9 A",
         "\u5F85\u529E\u5185\u5BB9 B"
       ]
-    }, (p, h) => pad(h, `<div class="am-pad-split"><section class="am-pad-browser"><div class="am-pad-multi">\u2022\u2022\u2022</div><nav>${ai(h, "panel")}${ai(h, "chevron-left")}${ai(h, "chevron-right")}<span>${ai(h, "lock", 12)} ${h.esc(p.url)}</span>${ai(h, "share")}${ai(h, "plus")}</nav><article><small>${h.esc(p.webEyebrow)}</small><h1>${h.esc(p.webTitle)}</h1><p>${h.esc(p.webIntro)}</p>${array(p.sections, 5).map((s, i) => `<section data-motion="item"><b>0${i + 1}</b><h2>${h.esc(s[0])}</h2><p>${h.esc(s[1])}</p></section>`).join("")}</article></section><div class="am-pad-divider"><i></i></div><section class="am-pad-note"><div class="am-pad-multi">\u2022\u2022\u2022</div><nav>${ai(h, "panel")}<span></span>${ai(h, "share")}${ai(h, "edit")}</nav><article><small>${h.esc(p.noteDate)}</small><h1>${h.esc(p.noteTitle)}</h1>${array(p.notes, 7).map((x) => `<p data-motion="item">${h.esc(x)}</p>`).join("")}${array(p.checklist, 2).map((x) => `<div class="am-pad-note-check">\u25CB\u3000${h.esc(x)}</div>`).join("")}</article></section></div>`), true),
+    }, (p, h) => pad(h, `<div class="am-pad-split"><section class="am-pad-browser"><div class="am-pad-multi">\u2022\u2022\u2022</div><nav>${ai(h, "panel")}${ai(h, "chevron-left")}${ai(h, "chevron-right")}<span>${ai(h, "lock", 12)} ${h.esc(p.url)}</span>${ai(h, "share")}${ai(h, "plus")}</nav><article><small>${h.esc(p.webEyebrow)}</small><h1>${h.esc(p.webTitle)}</h1><p>${h.esc(p.webIntro)}</p>${array2(p.sections, 5).map((s2, i) => `<section data-motion="item"><b>0${i + 1}</b><h2>${h.esc(s2[0])}</h2><p>${h.esc(s2[1])}</p></section>`).join("")}</article></section><div class="am-pad-divider"><i></i></div><section class="am-pad-note"><div class="am-pad-multi">\u2022\u2022\u2022</div><nav>${ai(h, "panel")}<span></span>${ai(h, "share")}${ai(h, "edit")}</nav><article><small>${h.esc(p.noteDate)}</small><h1>${h.esc(p.noteTitle)}</h1>${array2(p.notes, 7).map((x) => `<p data-motion="item">${h.esc(x)}</p>`).join("")}${array2(p.checklist, 2).map((x) => `<div class="am-pad-note-check">\u25CB\u3000${h.esc(x)}</div>`).join("")}</article></section></div>`), true),
     component("ipad-files", "iPad \xB7 \u6587\u4EF6 App", "iPad \u539F\u751F\u4FA7\u680F\u3001\u6D4F\u89C8\u5BFC\u822A\u3001\u6587\u4EF6\u7F29\u7565\u56FE\u4E0E\u9009\u62E9\u6A21\u5F0F\u3002", {
       "folder": "\u793A\u4F8B\u6587\u4EF6\u5939",
       "location": "iCloud \u4E91\u76D8",
@@ -2743,7 +3695,7 @@ var ComponentLibraryRuntime = (() => {
         }
       ],
       "favoriteLabel": "\u793A\u4F8B\u6587\u4EF6\u5939"
-    }, (p, h) => pad(h, `<div class="am-files"><aside><h1>\u6D4F\u89C8</h1><label>\u4F4D\u7F6E</label>${["\u6211\u7684 iPad", "iCloud \u4E91\u76D8", "\u4E0B\u8F7D", "\u6700\u8FD1\u5220\u9664"].map((x, i) => `<p class="${x === p.location ? "active" : ""}">${ai(h, ["phone", "folder", "download", "trash"][i], 21)}${x}</p>`).join("")}<label>\u4E2A\u4EBA\u6536\u85CF</label><p>${ai(h, "folder", 21)} ${h.esc(p.favoriteLabel)}</p><label>\u6807\u7B7E</label>${["\u5DE5\u4F5C", "\u4E2A\u4EBA", "\u5F85\u5904\u7406"].map((x, i) => `<p><i style="background:${["#e56962", "#edb749", "#82baa7"][i]}"></i>${x}</p>`).join("")}</aside><main><nav><span>${ai(h, "chevron-left", 21)} ${h.esc(p.location)}</span><b>${h.esc(p.folder)}</b><span>\u9009\u62E9\u3000\u2022\u2022\u2022</span></nav><div class="am-search">${ai(h, "search", 15)} \u641C\u7D22</div><div class="am-file-controls">\u6309\u540D\u79F0\u3000\u2304<span>${ai(h, "grid", 19)}</span></div><div class="am-files-grid">${array(p.files, 12).map((f) => `<div data-motion="item"><i class="${f.type === "folder" ? "folder" : "document"}">${ai(h, f.type, 57)}</i><b>${h.esc(f.name)}</b><small>${h.esc(f.detail)}</small></div>`).join("")}</div><footer>${array(p.files).length} \u4E2A\u9879\u76EE</footer></main></div>`), true)
+    }, (p, h) => pad(h, `<div class="am-files"><aside><h1>\u6D4F\u89C8</h1><label>\u4F4D\u7F6E</label>${["\u6211\u7684 iPad", "iCloud \u4E91\u76D8", "\u4E0B\u8F7D", "\u6700\u8FD1\u5220\u9664"].map((x, i) => `<p class="${x === p.location ? "active" : ""}">${ai(h, ["phone", "folder", "download", "trash"][i], 21)}${x}</p>`).join("")}<label>\u4E2A\u4EBA\u6536\u85CF</label><p>${ai(h, "folder", 21)} ${h.esc(p.favoriteLabel)}</p><label>\u6807\u7B7E</label>${["\u5DE5\u4F5C", "\u4E2A\u4EBA", "\u5F85\u5904\u7406"].map((x, i) => `<p><i style="background:${["#e56962", "#edb749", "#82baa7"][i]}"></i>${x}</p>`).join("")}</aside><main><nav><span>${ai(h, "chevron-left", 21)} ${h.esc(p.location)}</span><b>${h.esc(p.folder)}</b><span>\u9009\u62E9\u3000\u2022\u2022\u2022</span></nav><div class="am-search">${ai(h, "search", 15)} \u641C\u7D22</div><div class="am-file-controls">\u6309\u540D\u79F0\u3000\u2304<span>${ai(h, "grid", 19)}</span></div><div class="am-files-grid">${array2(p.files, 12).map((f) => `<div data-motion="item"><i class="${f.type === "folder" ? "folder" : "document"}">${ai(h, f.type, 57)}</i><b>${h.esc(f.name)}</b><small>${h.esc(f.detail)}</small></div>`).join("")}</div><footer>${array2(p.files).length} \u4E2A\u9879\u76EE</footer></main></div>`), true)
   ];
 
   // families/broll-graphics.mjs
@@ -2752,7 +3704,7 @@ var ComponentLibraryRuntime = (() => {
     source: "reports/broll-graphics-notes.md",
     level: "designed"
   };
-  var list = (value, limit) => Array.isArray(value) ? value.slice(0, limit).filter((x) => x && typeof x === "object") : [];
+  var list2 = (value, limit) => Array.isArray(value) ? value.slice(0, limit).filter((x) => x && typeof x === "object") : [];
   var textList = (value, limit) => Array.isArray(value) ? value.slice(0, limit) : [];
   var tones4 = ["blue", "mint", "cream", "coral"];
   var tone2 = (value, i = 0) => tones4.includes(value) ? value : tones4[i % tones4.length];
@@ -2768,13 +3720,14 @@ var ComponentLibraryRuntime = (() => {
     width: 1280,
     height: 800,
     defaults: defaults3,
+    defaultEffect: id + "-motion",
     reference: { ...reference4 },
     render(props, helpers2) {
       return render({ ...defaults3, ...props }, helpers2);
     }
   });
   var desk = (id, content2) => '<section class="brg-desk brg-' + id + '"><div class="brg-light" aria-hidden="true"></div>' + content2 + "</section>";
-  var components14 = [
+  var components17 = [
     create2("broll-brief-desk", "\u684C\u9762\u6587\u6863\u4E0E\u4FBF\u7B7E", "\u4FEF\u62CD\u7EB8\u5F20\u4E0E\u56DB\u5F20\u4FBF\u7B7E\uFF0C\u628A\u6A21\u7CCA\u4EFB\u52A1\u8865\u6210\u5BF9\u8C61\u3001\u4EFB\u52A1\u3001\u65F6\u95F4\u548C\u5165\u53E3\uFF1B\u6240\u6709\u6B63\u6587\u53EF\u7F16\u8F91\u3002", {
       "documentLabel": "\u6587\u6863 / 01",
       "title": "\u6587\u6863\u6807\u9898",
@@ -2816,8 +3769,8 @@ var ComponentLibraryRuntime = (() => {
         }
       ]
     }, (p, h) => {
-      const e = h.esc;
-      return desk("brief", '<div class="brg-brief-paper-wrap" data-motion="item" data-broll-part="paper"><article class="brg-paper brg-brief-paper">' + clip + '<div class="brg-paper-meta">' + e(p.documentLabel) + "</div><h2>" + e(p.title) + '</h2><div class="brg-original"><small>' + e(p.originalLabel) + "</small><p>" + e(p.original) + '</p><svg class="brg-underline" viewBox="0 0 430 24" aria-hidden="true"><path data-motion="line" d="M6 10Q144 2 422 11M40 18Q241 7 382 17" fill="none" stroke="#d98371" stroke-width="2.2" stroke-linecap="round"/></svg></div><div class="brg-margin-note" data-motion="emphasis" data-broll-part="mark">' + e(p.marginNote) + '</div><div class="brg-checklist-title">' + e(p.checklistLabel) + '</div><div class="brg-paper-checks">' + textList(p.checklist, 4).map((x) => '<div><span data-motion="reveal" data-broll-part="tick">' + tick + "</span><p>" + e(x) + "</p></div>").join("") + '</div><p class="brg-document-note">' + e(p.documentNote) + "</p>" + corner + '</article></div><div class="brg-notes-grid">' + list(p.notes, 4).map((x, i) => '<div class="brg-note-wrap brg-note-slot-' + i + '" data-motion="item" data-broll-part="note"><article class="brg-sticky brg-tone-' + tone2(x.tone, i) + '"><i class="brg-tape" aria-hidden="true"></i><div class="brg-sticky-top"><span>' + e(x.label) + "</span><small>" + String(i + 1).padStart(2, "0") + "</small></div><strong>" + e(x.value) + "</strong><p>" + e(x.detail) + "</p></article></div>").join("") + "</div>" + pencil + '<div class="brg-paperclip" aria-hidden="true"></div>');
+      const e2 = h.esc;
+      return desk("brief", '<div class="brg-brief-paper-wrap" data-motion="item" data-broll-part="paper"><article class="brg-paper brg-brief-paper">' + clip + '<div class="brg-paper-meta">' + e2(p.documentLabel) + "</div><h2>" + e2(p.title) + '</h2><div class="brg-original"><small>' + e2(p.originalLabel) + "</small><p>" + e2(p.original) + '</p><svg class="brg-underline" viewBox="0 0 430 24" aria-hidden="true"><path data-motion="line" d="M6 10Q144 2 422 11M40 18Q241 7 382 17" fill="none" stroke="#d98371" stroke-width="2.2" stroke-linecap="round"/></svg></div><div class="brg-margin-note" data-motion="emphasis" data-broll-part="mark">' + e2(p.marginNote) + '</div><div class="brg-checklist-title">' + e2(p.checklistLabel) + '</div><div class="brg-paper-checks">' + textList(p.checklist, 4).map((x) => '<div><span data-motion="reveal" data-broll-part="tick">' + tick + "</span><p>" + e2(x) + "</p></div>").join("") + '</div><p class="brg-document-note">' + e2(p.documentNote) + "</p>" + corner + '</article></div><div class="brg-notes-grid">' + list2(p.notes, 4).map((x, i) => '<div class="brg-note-wrap brg-note-slot-' + i + '" data-motion="item" data-broll-part="note"><article class="brg-sticky brg-tone-' + tone2(x.tone, i) + '"><i class="brg-tape" aria-hidden="true"></i><div class="brg-sticky-top"><span>' + e2(x.label) + "</span><small>" + String(i + 1).padStart(2, "0") + "</small></div><strong>" + e2(x.value) + "</strong><p>" + e2(x.detail) + "</p></article></div>").join("") + "</div>" + pencil + '<div class="brg-paperclip" aria-hidden="true"></div>');
     }),
     create2("broll-message-pile", "\u6D88\u606F\u4E0E\u7ED3\u679C\u5361\u7247", "\u62BD\u8C61\u6D88\u606F\u7EB8\u6761\u5806\u79EF\u5728\u684C\u4E0A\uFF0C\u95EE\u9898\u6807\u7B7E\u4E0E\u53F3\u4FA7\u660E\u786E\u901A\u77E5\u5F62\u6210\u5BF9\u7167\uFF1B\u4E0D\u4EFF\u5192\u4EFB\u4F55\u8F6F\u4EF6\u754C\u9762\u3002", {
       "trayLabel": "\u6D88\u606F\u5217\u8868",
@@ -2864,8 +3817,8 @@ var ComponentLibraryRuntime = (() => {
       "resultNote": "\u7ED3\u679C\u8BF4\u660E\u6587\u5B57",
       "indexLabel": "\u680F\u76EE / 02"
     }, (p, h) => {
-      const e = h.esc;
-      return desk("messages", '<div class="brg-message-backboard"><div class="brg-tray-label">' + e(p.trayLabel) + '</div><div class="brg-grid-paper" aria-hidden="true"></div></div><div class="brg-message-pile">' + list(p.messages, 3).map((x, i) => '<div class="brg-message-wrap brg-message-slot-' + i + '" data-motion="item" data-broll-part="message"><article class="brg-message-slip brg-tone-' + tone2(x.tone, i) + '"><div class="brg-slip-meta"><span>' + e(x.author) + "</span><small>" + String(i + 1).padStart(2, "0") + "</small></div><p>" + e(x.text) + '</p><span class="brg-question" data-motion="emphasis" data-broll-part="mark">' + e(x.question) + "</span></article></div>").join("") + '</div><svg class="brg-sort-arrow" viewBox="0 0 146 130" aria-hidden="true"><path data-motion="line" d="M9 94C59 90 48 24 121 31M104 14l20 17-19 18" fill="none" stroke="#8b9f91" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 8"/></svg><div class="brg-clear-paper-wrap" data-motion="reveal" data-broll-part="paper"><article class="brg-paper brg-clear-paper"><div class="brg-green-tab">' + e(p.clearLabel) + '</div><div class="brg-paper-meta">' + e(p.indexLabel) + "</div><h2>" + e(p.clearTitle) + '</h2><div class="brg-clear-fields">' + list(p.fields, 4).map((x) => '<div data-motion="item"><span>' + e(x.label) + "</span><strong>" + e(x.value) + '</strong><i data-motion="reveal" data-broll-part="tick">' + tick + "</i></div>").join("") + '</div><p class="brg-clear-note">' + e(p.resultNote) + "</p>" + corner + '</article></div><div class="brg-message-clip brg-paperclip" aria-hidden="true"></div>');
+      const e2 = h.esc;
+      return desk("messages", '<div class="brg-message-backboard"><div class="brg-tray-label">' + e2(p.trayLabel) + '</div><div class="brg-grid-paper" aria-hidden="true"></div></div><div class="brg-message-pile">' + list2(p.messages, 3).map((x, i) => '<div class="brg-message-wrap brg-message-slot-' + i + '" data-motion="item" data-broll-part="message"><article class="brg-message-slip brg-tone-' + tone2(x.tone, i) + '"><div class="brg-slip-meta"><span>' + e2(x.author) + "</span><small>" + String(i + 1).padStart(2, "0") + "</small></div><p>" + e2(x.text) + '</p><span class="brg-question" data-motion="emphasis" data-broll-part="mark">' + e2(x.question) + "</span></article></div>").join("") + '</div><svg class="brg-sort-arrow" viewBox="0 0 146 130" aria-hidden="true"><path data-motion="line" d="M9 94C59 90 48 24 121 31M104 14l20 17-19 18" fill="none" stroke="#8b9f91" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 8"/></svg><div class="brg-clear-paper-wrap" data-motion="reveal" data-broll-part="paper"><article class="brg-paper brg-clear-paper"><div class="brg-green-tab">' + e2(p.clearLabel) + '</div><div class="brg-paper-meta">' + e2(p.indexLabel) + "</div><h2>" + e2(p.clearTitle) + '</h2><div class="brg-clear-fields">' + list2(p.fields, 4).map((x) => '<div data-motion="item"><span>' + e2(x.label) + "</span><strong>" + e2(x.value) + '</strong><i data-motion="reveal" data-broll-part="tick">' + tick + "</i></div>").join("") + '</div><p class="brg-clear-note">' + e2(p.resultNote) + "</p>" + corner + '</article></div><div class="brg-message-clip brg-paperclip" aria-hidden="true"></div>');
     }),
     create2("broll-revision-stack", "\u6587\u6863\u7248\u672C\u53E0\u5C42", "\u4E09\u7248\u7A3F\u7EB8\u548C\u84DD\u8272\u6807\u6CE8\u5448\u73B0\u9010\u6B21\u4FEE\u8BA2\uFF0C\u6700\u65B0\u4E00\u9875\u5F62\u6210\u53EF\u6838\u5BF9\u6E05\u5355\uFF1B\u7248\u672C\u3001\u7F3A\u53E3\u3001\u6B63\u6587\u5747\u53EF\u66FF\u6362\u3002", {
       "earlier": [
@@ -2916,41 +3869,41 @@ var ComponentLibraryRuntime = (() => {
       "stamp": "\u5DF2\u6838\u5BF9",
       "bottomNote": "\u8865\u5145\u8BF4\u660E\u6587\u5B57"
     }, (p, h) => {
-      const e = h.esc;
-      return desk("revisions", '<div class="brg-revision-shadow" aria-hidden="true"></div>' + list(p.earlier, 2).map((x, i) => '<div class="brg-revision-wrap brg-old-revision brg-revision-' + i + '" data-motion="item" data-broll-part="paper"><article class="brg-paper brg-revision-paper"><div class="brg-version">' + e(x.version) + "</div><small>" + e(x.label) + "</small><h2>" + e(x.title) + '</h2><div class="brg-draft-lines">' + textList(x.lines, 3).map((line3) => "<p>" + e(line3) + "</p>").join("") + '</div><div class="brg-red-gap" data-motion="emphasis" data-broll-part="mark"><span>' + e(x.gap) + '</span><svg viewBox="0 0 260 63" aria-hidden="true"><path data-motion="line" d="M243 17C198-1 38-3 15 26S78 60 162 55 259 36 244 20C220 8 190 4 169 7" fill="none" stroke="#cb8271" stroke-width="2.1" stroke-linecap="round"/></svg></div><p class="brg-red-note">' + e(x.note) + '</p><div class="brg-ruled-filler" aria-hidden="true"></div>' + corner + "</article></div>").join("") + '<div class="brg-revision-wrap brg-latest-revision" data-motion="reveal" data-broll-part="paper"><article class="brg-paper brg-revision-paper"><div class="brg-version brg-version-final">' + e(p.latestVersion) + "</div><small>" + e(p.latestLabel) + "</small><h2>" + e(p.latestTitle) + '</h2><div class="brg-revision-checks">' + list(p.checks, 4).map((x) => '<div><span data-motion="reveal" data-broll-part="tick">' + tick + "</span><p><small>" + e(x.label) + "</small><strong>" + e(x.value) + "</strong></p></div>").join("") + '</div><span class="brg-stamp" data-motion="emphasis" data-broll-part="mark">' + e(p.stamp) + "</span>" + corner + '</article></div><div class="brg-revision-bottom" data-motion="reveal">' + e(p.bottomNote) + '</div><div class="brg-red-pencil">' + pencil + "</div>");
+      const e2 = h.esc;
+      return desk("revisions", '<div class="brg-revision-shadow" aria-hidden="true"></div>' + list2(p.earlier, 2).map((x, i) => '<div class="brg-revision-wrap brg-old-revision brg-revision-' + i + '" data-motion="item" data-broll-part="paper"><article class="brg-paper brg-revision-paper"><div class="brg-version">' + e2(x.version) + "</div><small>" + e2(x.label) + "</small><h2>" + e2(x.title) + '</h2><div class="brg-draft-lines">' + textList(x.lines, 3).map((line3) => "<p>" + e2(line3) + "</p>").join("") + '</div><div class="brg-red-gap" data-motion="emphasis" data-broll-part="mark"><span>' + e2(x.gap) + '</span><svg viewBox="0 0 260 63" aria-hidden="true"><path data-motion="line" d="M243 17C198-1 38-3 15 26S78 60 162 55 259 36 244 20C220 8 190 4 169 7" fill="none" stroke="#cb8271" stroke-width="2.1" stroke-linecap="round"/></svg></div><p class="brg-red-note">' + e2(x.note) + '</p><div class="brg-ruled-filler" aria-hidden="true"></div>' + corner + "</article></div>").join("") + '<div class="brg-revision-wrap brg-latest-revision" data-motion="reveal" data-broll-part="paper"><article class="brg-paper brg-revision-paper"><div class="brg-version brg-version-final">' + e2(p.latestVersion) + "</div><small>" + e2(p.latestLabel) + "</small><h2>" + e2(p.latestTitle) + '</h2><div class="brg-revision-checks">' + list2(p.checks, 4).map((x) => '<div><span data-motion="reveal" data-broll-part="tick">' + tick + "</span><p><small>" + e2(x.label) + "</small><strong>" + e2(x.value) + "</strong></p></div>").join("") + '</div><span class="brg-stamp" data-motion="emphasis" data-broll-part="mark">' + e2(p.stamp) + "</span>" + corner + '</article></div><div class="brg-revision-bottom" data-motion="reveal">' + e2(p.bottomNote) + '</div><div class="brg-red-pencil">' + pencil + "</div>");
     })
   ];
 
   // families/broll-media.mjs
   var reference5 = { level: "designed", basis: "\u539F\u521B B-roll \u7F16\u6392\uFF1B\u793A\u4F8B\u7167\u7247\u4E0E\u89C6\u9891\u4E3A\u8BB8\u53EF\u660E\u786E\u7684\u7D20\u6750\uFF0C\u6765\u6E90\u89C1 assets/broll/CREDITS.md\u3002\u4E0D\u662F\u672C\u671F\u771F\u5B9E\u5DE5\u4F5C\u8BB0\u5F55\u3002", source: "assets/broll/CREDITS.md" };
   var clamp = (v, min, max, d) => Number.isFinite(Number(v)) ? Math.min(max, Math.max(min, Number(v))) : d;
-  var array2 = (v, max = 5) => Array.isArray(v) ? v.slice(0, max) : [];
+  var array3 = (v, max = 5) => Array.isArray(v) ? v.slice(0, max) : [];
   function local(value) {
-    const path = String(value || "").replaceAll("\\", "/");
-    if (!path || /^(?:[a-z][a-z0-9+.-]*:|\/)/i.test(path) || /[\u0000-\u001f]/.test(path)) throw Error("B-roll \u7D20\u6750\u5FC5\u987B\u4F7F\u7528\u5DE5\u7A0B\u5185\u76F8\u5BF9\u8DEF\u5F84");
-    for (const part of path.split("/")) {
-      let decoded = part;
+    const path2 = String(value || "").replaceAll("\\", "/");
+    if (!path2 || /^(?:[a-z][a-z0-9+.-]*:|\/)/i.test(path2) || /[\u0000-\u001f]/.test(path2)) throw Error("B-roll \u7D20\u6750\u5FC5\u987B\u4F7F\u7528\u5DE5\u7A0B\u5185\u76F8\u5BF9\u8DEF\u5F84");
+    for (const part2 of path2.split("/")) {
+      let decoded = part2;
       try {
-        decoded = decodeURIComponent(part);
+        decoded = decodeURIComponent(part2);
       } catch {
       }
       if (decoded === ".." || decoded === "." || decoded.includes("/") || decoded.includes("\\")) throw Error("B-roll \u7D20\u6750\u8DEF\u5F84\u4E0D\u5F97\u8D8A\u8FC7\u5DE5\u7A0B\u76EE\u5F55");
     }
-    return path;
+    return path2;
   }
   function media(m, h, suffix = "media") {
-    const src = h.esc(local(m.src || m.mediaSrc)), x = clamp(m.x, 0, 100, 50), y = clamp(m.y, 0, 100, 50), style = `object-position:${x}% ${y}%`, label2 = h.esc(m.alt || "\u53EF\u66FF\u6362 B-roll \u7D20\u6750");
-    return m.type === "video" ? `<video id="${h.uid(suffix)}" class="brm-asset" src="${src}" muted playsinline preload="auto" data-media-start="${clamp(m.mediaStart, 0, 86400, 0)}" data-volume="0" aria-label="${label2}" style="${style}"></video>` : `<img class="brm-asset" src="${src}" alt="${label2}" style="${style}">`;
+    const src = h.esc(local(m.src || m.mediaSrc)), x = clamp(m.x, 0, 100, 50), y = clamp(m.y, 0, 100, 50), style = `object-position:${x}% ${y}%`, label3 = h.esc(m.alt || "\u53EF\u66FF\u6362 B-roll \u7D20\u6750");
+    return m.type === "video" ? `<video id="${h.uid(suffix)}" class="brm-asset" src="${src}" muted playsinline preload="auto" data-media-start="${clamp(m.mediaStart, 0, 86400, 0)}" data-volume="0" aria-label="${label3}" style="${style}"></video>` : `<img class="brm-asset" src="${src}" alt="${label3}" style="${style}">`;
   }
-  function tag(text6, h) {
-    return text6 ? `<span class="brm-tag">${h.esc(text6)}</span>` : "";
+  function tag(text7, h) {
+    return text7 ? `<span class="brm-tag">${h.esc(text7)}</span>` : "";
   }
-  var components15 = [
+  var components18 = [
     {
       id: "broll-cutaway",
       name: "B-roll \xB7 \u5B9E\u666F\u5207\u955C",
       category: "B-roll \xB7 \u771F\u5B9E\u7D20\u6750",
-      description: "\u8BA9\u771F\u5B9E\u529E\u516C\u955C\u5934\u77ED\u6682\u63A5\u7BA1\u753B\u9762\uFF0C\u5B57\u5E55\u677F\u3001\u53D6\u666F\u4F4D\u7F6E\u4E0E\u7167\u7247/\u89C6\u9891\u5747\u53EF\u66FF\u6362\u3002\u9002\u5408\u201C\u5F00\u59CB\u64CD\u4F5C\u3001\u7B49\u5F85\u3001\u6838\u5BF9\u201D\u65C1\u767D\u3002",
+      description: "\u53EF\u6362\u7D20\u6750\u7684\u5168\u5C4F\u5207\u955C\u6846\u67B6\u3002\u56FE\u7247\u3001\u89C6\u9891\u3001\u5B57\u5E55\u4E0E\u53D6\u666F\u5747\u7531\u672C\u671F\u5185\u5BB9\u51B3\u5B9A\uFF1B\u529E\u516C\u753B\u9762\u4EC5\u4E3A\u6F14\u793A\uFF0C\u4E0D\u9650\u5B9A\u9898\u6750\u3002",
       width: 1280,
       height: 800,
       reference: reference5,
@@ -2976,7 +3929,7 @@ var ComponentLibraryRuntime = (() => {
       id: "broll-sequence",
       name: "B-roll \xB7 \u4E09\u955C\u5934\u7EC4\u63A5",
       category: "B-roll \xB7 \u771F\u5B9E\u7D20\u6750",
-      description: "\u540C\u4E00\u4EF6\u4E8B\u7684\u51C6\u5907\u3001\u64CD\u4F5C\u3001\u4EA4\u6D41\u4E09\u4E2A\u89C2\u5BDF\u89D2\u5EA6\u3002\u72EC\u7ACB\u7D20\u6750\u69FD\u53EF\u7528\u7167\u7247\u6216\u89C6\u9891\uFF0C\u9002\u5408\u627F\u63A5\u8FC7\u7A0B\u3001\u5BF9\u6BD4\u4E0E\u5F52\u7EB3\u3002",
+      description: "\u4E09\u4E2A\u53EF\u72EC\u7ACB\u6362\u56FE\u6216\u89C6\u9891\u7684\u5E76\u6392\u7D20\u6750\u69FD\u3002\u53EA\u56FA\u5B9A\u5E03\u5C40\u4E0E\u52A8\u6548\uFF0C\u4E0D\u9650\u5B9A\u7D20\u6750\u9898\u6750\uFF1B\u7528\u4E8E\u8FC7\u7A0B\u3001\u5BF9\u7167\u4E0E\u5F52\u7EB3\u3002",
       width: 1280,
       height: 800,
       reference: reference5,
@@ -3015,7 +3968,7 @@ var ComponentLibraryRuntime = (() => {
         ]
       },
       render(props, h) {
-        const p = { ...this.defaults, ...props }, shots = array2(p.media, 3);
+        const p = { ...this.defaults, ...props }, shots = array3(p.media, 3);
         if (shots.length !== 3) throw Error("\u4E09\u955C\u5934\u7EC4\u63A5\u9700\u8981\u4E09\u4E2A media \u7D20\u6750");
         return `<section class="brm-scene brm-sequence"><header class="brm-editorial-head"><span>${h.esc(p.eyebrow)}</span><span>01 \u2014 03</span></header><div class="brm-three">${shots.map((m, i) => `<figure class="brm-frame" data-broll-part="shot" data-motion="item"><div class="brm-panel-media"><div class="brm-shot-motion" data-broll-part="camera">${media(m, h, "shot-" + i)}</div></div><figcaption><span class="brm-shot-no">0${i + 1}</span><div><strong>${h.esc(m.label)}</strong><p>${h.esc(m.detail)}</p></div></figcaption></figure>`).join("")}</div><footer class="brm-sequence-footer"><h2>${h.esc(p.title)}</h2><p>${h.esc(p.caption)}</p></footer></section>`;
       }
@@ -3059,30 +4012,199 @@ var ComponentLibraryRuntime = (() => {
       },
       render(props, h) {
         const p = { ...this.defaults, ...props }, w = clamp(p.focusWidth, 10, 75, 30), ht = clamp(p.focusHeight, 10, 65, 30), x = clamp(p.focusX, w / 2, 100 - w / 2, 45), y = clamp(p.focusY, ht / 2, 100 - ht / 2, 48);
-        return `<section class="brm-scene brm-detail"><header class="brm-editorial-head"><span>${h.esc(p.eyebrow)}</span><span>DETAIL / 01</span></header><div class="brm-detail-layout"><div class="brm-detail-image"><div class="brm-shot-motion" data-broll-part="camera">${media({ src: p.mediaSrc, type: p.mediaType, alt: p.mediaAlt, x: p.mediaX, y: p.mediaY }, h)}</div><div class="brm-focus-box" data-broll-part="focus" data-motion="focus" style="left:${x - w / 2}%;top:${y - ht / 2}%;width:${w}%;height:${ht}%"><i></i><i></i><i></i><i></i></div><div class="brm-focus-label" data-broll-part="caption">${h.esc(p.focusLabel)}</div></div><aside class="brm-observation"><h2>${h.esc(p.title)}</h2>${array2(p.notes, 3).map((n3, i) => `<div class="brm-note" data-broll-part="note" data-motion="item"><span>0${i + 1} / ${h.esc(n3.label)}</span><p>${h.esc(n3.text)}</p></div>`).join("")}<small>${h.esc(p.footer)}</small></aside></div></section>`;
+        return `<section class="brm-scene brm-detail"><header class="brm-editorial-head"><span>${h.esc(p.eyebrow)}</span><span>DETAIL / 01</span></header><div class="brm-detail-layout"><div class="brm-detail-image"><div class="brm-shot-motion" data-broll-part="camera">${media({ src: p.mediaSrc, type: p.mediaType, alt: p.mediaAlt, x: p.mediaX, y: p.mediaY, mediaStart: p.mediaStart }, h)}</div><div class="brm-focus-box" data-broll-part="focus" data-motion="focus" style="left:${x - w / 2}%;top:${y - ht / 2}%;width:${w}%;height:${ht}%"><i></i><i></i><i></i><i></i></div><div class="brm-focus-label" data-broll-part="caption">${h.esc(p.focusLabel)}</div></div><aside class="brm-observation"><h2>${h.esc(p.title)}</h2>${array3(p.notes, 3).map((n4, i) => `<div class="brm-note" data-broll-part="note" data-motion="item"><span>0${i + 1} / ${h.esc(n4.label)}</span><p>${h.esc(n4.text)}</p></div>`).join("")}<small>${h.esc(p.footer)}</small></aside></div></section>`;
       }
     }
   ];
 
+  // broll-workflow-primitives.mjs
+  var workflowLayouts = Object.freeze({
+    scan: { sourceSide: ["left", "right"], resultLayout: ["rows", "cards"] },
+    search: { sourceSide: ["left", "right"] },
+    voice: { sourceSide: ["left", "right"], resultLayout: ["rows", "cards"] }
+  });
+  function workflowChoice(value, allowed, path2) {
+    if (!allowed.includes(value)) throw Error(`${path2}: expected ${allowed.join(" | ")}`);
+    return value;
+  }
+  function workflowItems(value, path2, min, max) {
+    if (!Array.isArray(value) || value.length < min || value.length > max) throw Error(`${path2}: requires ${min}\u2013${max} items; content is never silently truncated`);
+    return value;
+  }
+  function workflowColumns(kind, props, { source: source2, result, connector = "" }) {
+    const layout = workflowLayouts[kind];
+    if (!layout) throw Error("Unknown workflow layout: " + kind);
+    const side = workflowChoice(props.sourceSide ?? "left", layout.sourceSide, "sourceSide");
+    const resultLayout = layout.resultLayout ? workflowChoice(props.resultLayout ?? "rows", layout.resultLayout, "resultLayout") : "rows";
+    return `<div class="brw-body brw-${kind}" data-workflow-layout="${kind}" data-source-side="${side}" data-result-layout="${resultLayout}">${source2}${connector}${result}</div>`;
+  }
+  function workflowResultItems(items, { kind, layout = "rows" }, h) {
+    workflowChoice(kind, ["fields", "transcript"], "result kind");
+    workflowChoice(layout, ["rows", "cards"], "resultLayout");
+    return items.map((item) => kind === "fields" ? `<div class="brw-field" data-motion="item" data-broll-part="result"><span>${h.esc(item.label)}</span><strong>${h.esc(item.value)}</strong></div>` : `<div class="brw-transcript-line" data-motion="item" data-broll-part="transcript"><span>${h.esc(item.time)}</span><p>${h.esc(item.text)}</p></div>`).join("");
+  }
+  var workflowLayoutCSS = `
+[data-workflow-layout][data-source-side="right"]>[data-workflow-slot="source"]{grid-column:2;grid-row:1}
+[data-workflow-layout][data-source-side="right"]>[data-workflow-slot="result"]{grid-column:1;grid-row:1}
+.brw-scan[data-source-side="right"]>[data-workflow-slot="source"]{grid-column:3}
+.brw-scan[data-source-side="right"]>.brw-transfer{grid-column:2;grid-row:1}
+.brw-scan[data-source-side="right"]>.brw-transfer svg{transform:rotate(180deg)}
+.brw-search[data-source-side="right"]{grid-template-columns:1fr 620px}
+.brw-voice[data-source-side="right"]{grid-template-columns:1fr 520px}
+.brw-search[data-source-side="right"]>.brw-excerpt{border-left:0;border-right:3px solid #81c9b0;padding:8px 32px 8px 0}
+.brw-scan[data-result-layout="cards"] .brw-result{padding:0;border:0;box-shadow:none;background:transparent;min-height:0}
+.brw-scan[data-result-layout="cards"] .brw-field{background:white;border:1px solid #dce4ee;border-left:3px solid #81c9b0;padding:17px 22px;box-shadow:0 8px 18px #20365508}
+.brw-voice[data-result-layout="cards"] .brw-transcript-line{display:block;border:1px solid #dce4ee;border-radius:10px;padding:14px 20px;margin-top:12px;background:#f7faff;box-shadow:0 5px 16px #20365505}
+.brw-voice[data-result-layout="cards"] .brw-transcript-line>span{display:block;padding:0;margin-bottom:5px}
+.brw-voice[data-result-layout="cards"] .brw-transcript-line p{font-size:20px;line-height:1.55}
+`;
+
+  // families/broll-workflows.mjs
+  var rows = (value, max = 4) => Array.isArray(value) ? value.slice(0, max) : [];
+  var number6 = (value, fallback, min, max) => Number.isFinite(Number(value)) ? Math.max(min, Math.min(max, Number(value))) : fallback;
+  var create3 = (id, name, description, defaults3, render) => ({
+    id,
+    name,
+    category: "B-roll \xB7 \u52A8\u753B\u63D2\u955C",
+    description,
+    width: 1280,
+    height: 800,
+    defaultEffect: id + "-motion",
+    defaults: defaults3,
+    reference: { basis: "\u539F\u521B\u62BD\u8C61\u5DE5\u4F5C\u573A\u666F\uFF1B\u6240\u6709\u6587\u5B57\u53EF\u66FF\u6362\uFF0C\u52A8\u753B\u4EC5\u6F14\u793A\u64CD\u4F5C\u8FC7\u7A0B\uFF0C\u4E0D\u4EE3\u8868\u771F\u5B9E\u8F6F\u4EF6\u7ED3\u679C\u3002", source: "BROLL_WORKFLOWS_GUIDE.md", level: "designed" },
+    render(props, h) {
+      const p = { ...defaults3, ...props };
+      return `<section class="brw-scene"><header class="brw-heading"><span>${h.esc(p.eyebrow)}</span><h2>${h.esc(p.title)}</h2><p>${h.esc(p.subtitle)}</p></header>${render(p, h)}<footer class="brw-footer">${h.esc(p.footer)}</footer></section>`;
+    }
+  });
+  var common6 = { eyebrow: "\u5DE5\u4F5C\u8FC7\u7A0B / \u793A\u610F", subtitle: "\u66FF\u6362\u4E3A\u672C\u671F\u9700\u8981\u8BF4\u660E\u7684\u52A8\u4F5C\u4E0E\u5185\u5BB9", footer: "\u52A8\u753B\u793A\u610F \xB7 \u5185\u5BB9\u53EF\u7F16\u8F91" };
+  var components19 = [
+    create3("broll-document-scan", "\u6587\u6863\u626B\u63CF\u4E0E\u5B57\u6BB5\u63D0\u53D6", "\u626B\u63CF\u7EBF\u8BFB\u8FC7\u539F\u7A3F\uFF0C\u6587\u5B57\u9010\u9879\u843D\u5165\u53F3\u4FA7\u7ED3\u679C\uFF1B\u7528\u4E8E\u8BC6\u522B\u3001\u6458\u5F55\u4E0E\u7ED3\u6784\u5316\u8FC7\u7A0B\u3002", {
+      ...common6,
+      title: "\u6587\u6863\u626B\u63CF\u4E0E\u5B57\u6BB5\u63D0\u53D6",
+      sourceSide: "left",
+      resultLayout: "rows",
+      documentLabel: "\u8F93\u5165\u6587\u6863",
+      documentTitle: "\u539F\u59CB\u5185\u5BB9\u6807\u9898",
+      lines: ["\u539F\u59CB\u5185\u5BB9\u7B2C\u4E00\u884C", "\u539F\u59CB\u5185\u5BB9\u7B2C\u4E8C\u884C", "\u539F\u59CB\u5185\u5BB9\u7B2C\u4E09\u884C", "\u539F\u59CB\u5185\u5BB9\u7B2C\u56DB\u884C"],
+      resultLabel: "\u63D0\u53D6\u7ED3\u679C",
+      fields: [{ label: "\u5B57\u6BB5 A", value: "\u63D0\u53D6\u5185\u5BB9 A" }, { label: "\u5B57\u6BB5 B", value: "\u63D0\u53D6\u5185\u5BB9 B" }, { label: "\u5B57\u6BB5 C", value: "\u63D0\u53D6\u5185\u5BB9 C" }],
+      status: "\u7B49\u5F85\u6838\u5BF9"
+    }, (p, h) => workflowColumns("scan", p, {
+      source: `<article class="brw-sheet" data-workflow-slot="source" data-broll-part="source"><small>${h.esc(p.documentLabel)}</small><h3>${h.esc(p.documentTitle)}</h3><div class="brw-lines">${workflowItems(p.lines, "lines", 1, 4).map((x) => `<p>${h.esc(x)}</p>`).join("")}</div><div class="brw-scan-beam" data-broll-part="scanner"></div></article>`,
+      connector: `<div class="brw-transfer" data-broll-part="link">${h.icon("arrow-right", 42)}</div>`,
+      result: `<article class="brw-result" data-workflow-slot="result"><small>${h.esc(p.resultLabel)}</small>${workflowResultItems(workflowItems(p.fields, "fields", 1, 3), { kind: "fields", layout: p.resultLayout }, h)}<div class="brw-status" data-broll-part="done">${h.icon("check", 20)} ${h.esc(p.status)}</div></article>`
+    })),
+    create3("broll-search-focus", "\u68C0\u7D22\u4E0E\u7ED3\u679C\u5B9A\u4F4D", "\u68C0\u7D22\u8BCD\u5C55\u5F00\uFF0C\u5149\u6807\u9009\u4E2D\u4E00\u6761\u7ED3\u679C\uFF0C\u518D\u5C55\u5F00\u5BF9\u5E94\u6458\u5F55\uFF1B\u9002\u5408\u67E5\u627E\u8D44\u6599\u4E0E\u5B9A\u4F4D\u8BC1\u636E\u3002", {
+      ...common6,
+      title: "\u68C0\u7D22\u4E0E\u7ED3\u679C\u5B9A\u4F4D",
+      sourceSide: "left",
+      query: "\u68C0\u7D22\u5173\u952E\u8BCD",
+      selected: 1,
+      results: [{ title: "\u8D44\u6599\u6807\u9898 A", source: "\u6765\u6E90\u6807\u7B7E A" }, { title: "\u8D44\u6599\u6807\u9898 B", source: "\u6765\u6E90\u6807\u7B7E B" }, { title: "\u8D44\u6599\u6807\u9898 C", source: "\u6765\u6E90\u6807\u7B7E C" }],
+      excerptLabel: "\u9009\u4E2D\u5185\u5BB9",
+      excerptTitle: "\u6458\u5F55\u6807\u9898",
+      excerpt: "\u66FF\u6362\u4E3A\u4E0E\u672C\u671F\u8BB2\u89E3\u76F8\u5173\u7684\u6458\u5F55\u5185\u5BB9\u3002",
+      sourceNote: "\u586B\u5199\u771F\u5B9E\u6765\u6E90\u4E0E\u65E5\u671F"
+    }, (p, h) => {
+      const items = workflowItems(p.results, "results", 1, 3), selected = p.selected;
+      if (!Number.isInteger(selected) || selected < 0 || selected >= items.length) throw Error(`selected: expected an integer in 0\u2013${items.length - 1}`);
+      return workflowColumns("search", p, {
+        source: `<div class="brw-search-list" data-workflow-slot="source"><div class="brw-query">${h.icon("search", 26)}<strong data-broll-part="query">${h.esc(p.query)}</strong></div>${items.map((x, i) => `<article class="brw-search-row" data-motion="item" data-broll-part="hit"><div><h3>${h.esc(x.title)}</h3><small>${h.esc(x.source)}</small></div>${i === selected ? '<i class="brw-selection" data-broll-part="selection"></i>' : ""}</article>`).join("")}<div class="brw-pointer" style="top:${118 + selected * 98}px" data-broll-part="pointer">${h.icon("arrow-up", 32)}</div></div>`,
+        result: `<article class="brw-excerpt" data-workflow-slot="result" data-broll-part="excerpt"><span class="brw-icon-disc">${h.icon("file", 32)}</span><small>${h.esc(p.excerptLabel)}</small><h3>${h.esc(p.excerptTitle)}</h3><p>${h.esc(p.excerpt)}</p><div class="brw-source-note">${h.esc(p.sourceNote)}</div></article>`
+      });
+    }),
+    create3("broll-calendar-pin", "\u65E5\u5386\u6392\u671F\u4E0E\u843D\u70B9", "\u65E5\u5386\u7FFB\u5165\u3001\u65E5\u671F\u9501\u5B9A\u3001\u4EFB\u52A1\u6761\u843D\u4F4D\uFF1B\u9002\u5408\u622A\u6B62\u65E5\u671F\u3001\u9884\u7EA6\u4E0E\u8BA1\u5212\u5B89\u6392\u7684\u63D2\u955C\u3002", {
+      ...common6,
+      title: "\u65E5\u5386\u6392\u671F\u4E0E\u843D\u70B9",
+      calendarLabel: "\u56DB\u5468\u6392\u671F\u793A\u610F",
+      weekdays: ["\u4E00", "\u4E8C", "\u4E09", "\u56DB", "\u4E94", "\u516D", "\u65E5"],
+      selectedDay: 18,
+      eventLabel: "\u5B89\u6392\u4E8B\u9879",
+      eventTitle: "\u4EFB\u52A1\u540D\u79F0",
+      dateLabel: "\u586B\u5199\u5B9E\u9645\u65E5\u671F",
+      timeLabel: "\u586B\u5199\u8D77\u6B62\u65F6\u95F4",
+      note: "\u8865\u5145\u5B89\u6392\u8BF4\u660E",
+      status: "\u8BA1\u5212\u5DF2\u843D\u4F4D"
+    }, (p, h) => `<div class="brw-body brw-calendar"><article class="brw-calendar-board" data-broll-part="calendar"><div class="brw-calendar-title">${h.icon("calendar", 28)}<strong>${h.esc(p.calendarLabel)}</strong></div><div class="brw-weekdays">${rows(p.weekdays, 7).map((x) => `<span>${h.esc(x)}</span>`).join("")}</div><div class="brw-days">${Array.from({ length: 28 }, (_, i) => `<div class="brw-day">${i + 1}${i + 1 === Math.round(number6(p.selectedDay, 18, 1, 28)) ? '<i data-broll-part="date"></i>' : ""}</div>`).join("")}</div></article><article class="brw-event" data-broll-part="event"><small>${h.esc(p.eventLabel)}</small><h3>${h.esc(p.eventTitle)}</h3><strong>${h.esc(p.dateLabel)}</strong><div class="brw-time-chip" data-broll-part="time">${h.icon("clock", 20)}${h.esc(p.timeLabel)}</div><p>${h.esc(p.note)}</p><div class="brw-status" data-broll-part="done">${h.icon("check", 20)}${h.esc(p.status)}</div></article></div>`),
+    create3("broll-folder-sort", "\u6587\u4EF6\u5206\u7C7B\u4E0E\u5F52\u6863", "\u4E09\u5F20\u6587\u4EF6\u5206\u522B\u6ED1\u5165\u5BF9\u5E94\u76EE\u5F55\uFF0C\u5F52\u6863\u6807\u7B7E\u4F9D\u6B21\u843D\u4E0B\uFF1B\u9002\u5408\u7D20\u6750\u6574\u7406\u3001\u77E5\u8BC6\u5206\u7C7B\u4E0E\u5F52\u6863\u3002", {
+      ...common6,
+      title: "\u6587\u4EF6\u5206\u7C7B\u4E0E\u5F52\u6863",
+      groups: [{ file: "\u6587\u4EF6 A", detail: "\u6587\u4EF6\u5185\u5BB9\u6458\u8981 A", folder: "\u5206\u7C7B\u76EE\u5F55 A", status: "\u5F52\u6863\u6807\u7B7E A" }, { file: "\u6587\u4EF6 B", detail: "\u6587\u4EF6\u5185\u5BB9\u6458\u8981 B", folder: "\u5206\u7C7B\u76EE\u5F55 B", status: "\u5F52\u6863\u6807\u7B7E B" }, { file: "\u6587\u4EF6 C", detail: "\u6587\u4EF6\u5185\u5BB9\u6458\u8981 C", folder: "\u5206\u7C7B\u76EE\u5F55 C", status: "\u5F52\u6863\u6807\u7B7E C" }]
+    }, (p, h) => `<div class="brw-body brw-archive">${rows(p.groups, 3).map((x, i) => `<div class="brw-archive-slot"><article class="brw-archive-paper" data-motion="item" data-broll-part="file">${h.icon("file", 30)}<h3>${h.esc(x.file)}</h3><p>${h.esc(x.detail)}</p><div class="brw-paper-lines"><i></i><i></i><i></i></div></article><div class="brw-folder ${i === 1 ? "brw-mint" : ""}"><i></i>${h.icon("folder", 26)}<strong>${h.esc(x.folder)}</strong></div><div class="brw-archive-status" data-broll-part="tag">${h.icon("check", 18)}${h.esc(x.status)}</div></div>`).join("")}</div>`),
+    create3("broll-edit-timeline", "\u526A\u8F91\u8F68\u9053\u4E0E\u64AD\u653E\u5934", "\u56FE\u50CF\u3001\u8BB2\u89E3\u548C\u58F0\u97F3\u8F68\u9053\u6309\u6B21\u5E8F\u94FA\u5F00\uFF0C\u64AD\u653E\u5934\u7A7F\u8FC7\u7EC4\u5408\uFF1B\u9002\u5408\u89E3\u91CA\u6DF7\u526A\u4E0E\u591A\u8F68\u534F\u4F5C\u3002", {
+      ...common6,
+      title: "\u526A\u8F91\u8F68\u9053\u4E0E\u64AD\u653E\u5934",
+      ruler: ["\u8D77\u70B9", "\u8282\u70B9 A", "\u8282\u70B9 B", "\u8282\u70B9 C", "\u7EC8\u70B9"],
+      tracks: [{ label: "\u753B\u9762\u8F68\u9053", clips: [{ label: "\u753B\u9762 A", start: 0, end: 0.3 }, { label: "\u753B\u9762 B", start: 0.32, end: 0.64 }, { label: "\u753B\u9762 C", start: 0.66, end: 1 }] }, { label: "\u8BB2\u89E3\u8F68\u9053", clips: [{ label: "\u8BB2\u89E3\u6BB5\u843D A", start: 0.04, end: 0.46 }, { label: "\u8BB2\u89E3\u6BB5\u843D B", start: 0.49, end: 0.96 }] }, { label: "\u58F0\u97F3\u8F68\u9053", clips: [{ label: "\u97F3\u4E50\u6216\u73AF\u5883\u58F0", start: 0, end: 1 }] }],
+      note: "\u793A\u610F\u8F68\u9053 \xB7 \u4E0D\u5305\u542B\u771F\u5B9E\u5A92\u4F53"
+    }, (p, h) => `<div class="brw-body brw-edit"><div class="brw-ruler">${rows(p.ruler, 5).map((x) => `<span>${h.esc(x)}</span>`).join("")}</div><div class="brw-tracks">${rows(p.tracks, 3).map((track, i) => `<div class="brw-track"><div class="brw-track-name">${h.icon(["video", "mic", "volume"][i], 22)}<strong>${h.esc(track.label)}</strong></div><div class="brw-track-bed">${rows(track.clips, 5).map((x) => {
+      const a2 = number6(x.start, 0, 0, 0.95), b2 = number6(x.end, 1, a2 + 0.04, 1);
+      return `<div class="brw-edit-clip brw-track-tone-${i}" style="left:${a2 * 100}%;width:${(b2 - a2) * 100}%" data-motion="item" data-broll-part="clip"><span>${h.esc(x.label)}</span><div class="brw-clip-texture"></div></div>`;
+    }).join("")}</div></div>`).join("")}<div class="brw-playhead" data-broll-part="playhead"><i></i></div></div><p class="brw-edit-note">${h.esc(p.note)}</p></div>`),
+    create3("broll-voice-transcript", "\u8BED\u97F3\u6CE2\u5F62\u4E0E\u6587\u5B57\u843D\u7A3F", "\u6CE2\u5F62\u6E38\u6807\u626B\u8FC7\u5F55\u97F3\u793A\u610F\uFF0C\u8F6C\u5199\u6BB5\u843D\u9010\u6761\u51FA\u73B0\uFF1B\u9002\u5408\u914D\u97F3\u3001\u91C7\u8BBF\u6574\u7406\u4E0E\u5B57\u5E55\u5236\u4F5C\u3002", {
+      ...common6,
+      title: "\u8BED\u97F3\u6CE2\u5F62\u4E0E\u6587\u5B57\u843D\u7A3F",
+      sourceSide: "left",
+      resultLayout: "rows",
+      audioLabel: "\u97F3\u9891\u5185\u5BB9\u793A\u610F",
+      audioTitle: "\u5F55\u97F3\u7247\u6BB5\u6807\u9898",
+      transcriptLabel: "\u6587\u5B57\u7A3F",
+      segments: [{ time: "00:00", text: "\u7B2C\u4E00\u6BB5\u8F6C\u5199\u5185\u5BB9" }, { time: "00:02", text: "\u7B2C\u4E8C\u6BB5\u8F6C\u5199\u5185\u5BB9" }, { time: "00:04", text: "\u7B2C\u4E09\u6BB5\u8F6C\u5199\u5185\u5BB9" }],
+      status: "\u6587\u5B57\u5F85\u6821\u5BF9",
+      footer: "\u6CE2\u5F62\u4E0E\u65F6\u7801\u4E3A\u793A\u610F \xB7 \u672C\u7EC4\u4EF6\u4E0D\u751F\u6210\u6216\u64AD\u653E\u4EBA\u58F0"
+    }, (p, h) => workflowColumns("voice", p, {
+      source: `<article class="brw-audio-card" data-workflow-slot="source" data-broll-part="audio"><span class="brw-icon-disc">${h.icon("mic", 40)}</span><small>${h.esc(p.audioLabel)}</small><h3>${h.esc(p.audioTitle)}</h3><div class="brw-waveform">${Array.from({ length: 43 }, (_, i) => `<i style="height:${[22, 38, 68, 46, 90, 58, 34, 76, 100, 42, 62][i % 11]}px" data-broll-part="wave"></i>`).join("")}<div class="brw-wave-cursor" data-broll-part="cursor"></div></div></article>`,
+      result: `<article class="brw-transcript" data-workflow-slot="result"><small>${h.esc(p.transcriptLabel)}</small>${workflowResultItems(workflowItems(p.segments, "segments", 1, 3), { kind: "transcript", layout: p.resultLayout }, h)}<div class="brw-status" data-broll-part="done">${h.esc(p.status)}</div></article>`
+    })),
+    create3("broll-focus-timer", "\u4E13\u6CE8\u8BA1\u65F6\u4E0E\u5B8C\u6210", "\u73AF\u5F62\u8BA1\u65F6\u63A8\u8FDB\uFF0C\u4EFB\u52A1\u9010\u9879\u843D\u5B9E\uFF0C\u7ED3\u675F\u6807\u8BB0\u66FF\u6362\u8D77\u59CB\u65F6\u95F4\uFF1B\u9002\u5408\u7B49\u5F85\u3001\u4E13\u6CE8\u4E0E\u5DE5\u4F5C\u9636\u6BB5\u5B8C\u6210\u3002", {
+      ...common6,
+      title: "\u4E13\u6CE8\u8BA1\u65F6\u4E0E\u5B8C\u6210",
+      timerLabel: "\u4E13\u6CE8\u65F6\u6BB5",
+      startLabel: "25:00",
+      endLabel: "00:00",
+      taskLabel: "\u672C\u8F6E\u4EFB\u52A1",
+      tasks: ["\u5904\u7406\u4EFB\u52A1 A", "\u5904\u7406\u4EFB\u52A1 B", "\u6838\u5BF9\u7ED3\u679C"],
+      status: "\u672C\u8F6E\u5B8C\u6210",
+      footer: "\u65F6\u95F4\u538B\u7F29\u793A\u610F \xB7 \u65F6\u957F\u4E0E\u4EFB\u52A1\u540D\u79F0\u5747\u53EF\u66FF\u6362"
+    }, (p, h) => `<div class="brw-body brw-focus"><div class="brw-timer" data-broll-part="timer"><svg viewBox="0 0 360 360" aria-hidden="true"><circle cx="180" cy="180" r="156" fill="none" stroke="#edf2f8" stroke-width="12"/><circle cx="180" cy="180" r="156" fill="none" stroke="#2563eb" stroke-width="12" stroke-linecap="round" pathLength="100" stroke-dasharray="100" transform="rotate(-90 180 180)" data-broll-part="arc"/></svg><div class="brw-time-face"><small>${h.esc(p.timerLabel)}</small><div class="brw-time-digits"><strong data-broll-part="start-time">${h.esc(p.startLabel)}</strong><strong data-broll-part="end-time">${h.esc(p.endLabel)}</strong></div><span data-broll-part="done">${h.esc(p.status)}</span></div></div><article class="brw-focus-tasks"><small>${h.esc(p.taskLabel)}</small>${rows(p.tasks, 3).map((x) => `<div class="brw-focus-task"><i data-broll-part="tick">${h.icon("check", 22)}</i><strong data-motion="item" data-broll-part="task">${h.esc(x)}</strong></div>`).join("")}</article></div>`)
+  ];
+  var css3 = `
+.brw-scene{position:relative;width:1280px;height:800px;background:#fff;color:#1f2329;padding:48px 64px;overflow:hidden}
+.brw-heading{height:146px}.brw-heading>span{font-size:13px;letter-spacing:2px;color:#2563eb}.brw-heading h2{font-size:34px;line-height:1.3;margin-top:12px;max-width:1120px;overflow-wrap:anywhere}.brw-heading p{font-size:17px;color:#657389;margin-top:12px;max-width:1120px;overflow-wrap:anywhere}
+.brw-body{position:relative;height:480px}.brw-footer{position:absolute;bottom:30px;left:64px;right:64px;font-size:13px;color:#657389;line-height:1.6;overflow-wrap:anywhere}
+.brw-scene small{font-size:13px;color:#64748b;letter-spacing:1px}.brw-scene h3{font-size:26px;line-height:1.45;overflow-wrap:anywhere}.brw-scene p,.brw-scene strong,.brw-scene span{overflow-wrap:anywhere}.brw-scene strong{line-height:1.5}
+.brw-sheet,.brw-result{background:white;border:1px solid #dce4ee;border-radius:16px;padding:30px;box-shadow:0 12px 30px #20365508}
+.brw-search{display:grid;grid-template-columns:620px 1fr;gap:54px;align-items:center}.brw-search-list{position:relative}.brw-query{height:70px;border:2px solid #2563eb;border-radius:12px;display:flex;align-items:center;gap:18px;padding:0 24px;color:#2563eb;margin-bottom:22px}.brw-query strong{font-size:21px;color:#1f2329}.brw-search-row{position:relative;height:86px;margin:12px 0;padding:13px 22px;border:1px solid #e0e6ef;border-radius:10px}.brw-search-row h3{font-size:21px;line-height:1.5}.brw-search-row small{font-size:12px}.brw-selection{position:absolute;inset:-1px;border:2px solid #2563eb;border-radius:10px;box-shadow:0 0 0 5px #2563eb0a}.brw-pointer{position:absolute;right:22px;color:#2563eb;transform:rotate(-28deg)}.brw-excerpt{border-left:3px solid #81c9b0;padding:8px 0 8px 32px}.brw-icon-disc{display:flex;align-items:center;justify-content:center;width:66px;height:66px;border-radius:50%;background:#eff5ff;color:#2563eb;margin-bottom:24px}.brw-excerpt h3{margin-top:12px}.brw-excerpt p{font-size:22px;line-height:1.85;margin-top:18px}.brw-source-note{margin-top:28px;font-size:13px;color:#657389;line-height:1.6;overflow-wrap:anywhere}
+.brw-calendar{display:grid;grid-template-columns:644px 1fr;gap:60px;align-items:center}.brw-calendar-board{height:456px;border:1px solid #dce4ee;border-radius:16px;padding:24px;box-shadow:0 12px 30px #20365508}.brw-calendar-title{display:flex;align-items:center;gap:14px;color:#2563eb;font-size:21px}.brw-weekdays,.brw-days{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;text-align:center}.brw-weekdays{margin:26px 0 10px;color:#778397;font-size:13px}.brw-day{position:relative;height:61px;display:flex;align-items:center;justify-content:center;font-size:23px;background:#f7f9fc;border-radius:8px}.brw-day i{position:absolute;inset:0;border:3px solid #2563eb;border-radius:8px;background:#2563eb0b}.brw-event h3{font-size:30px;margin:16px 0 26px}.brw-event>strong{font-size:22px;color:#2563eb}.brw-time-chip{display:flex;align-items:center;gap:12px;background:#eff8f4;border-radius:8px;padding:14px 16px;margin:22px 0;font-size:18px;color:#21715d}.brw-event>p{font-size:19px;line-height:1.8}
+.brw-archive{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:48px;padding:0 16px}.brw-archive-slot{position:relative;height:470px;padding:0 24px}.brw-archive-paper{position:absolute;top:96px;left:36px;right:36px;height:244px;border:1px solid #d3deef;border-radius:9px;background:white;padding:24px;box-shadow:0 8px 24px #2036550a;color:#2563eb}.brw-archive-paper h3{font-size:22px;margin-top:12px;color:#1f2329}.brw-archive-paper p{font-size:14px;color:#657389;line-height:1.6;margin-top:10px}.brw-paper-lines i{display:block;height:3px;background:#e5eaf1;margin-top:12px}.brw-paper-lines i:last-child{width:60%}.brw-folder{position:absolute;top:276px;left:0;right:0;height:128px;background:#e9f1ff;border:1px solid #bad0fa;border-radius:0 14px 14px 14px;padding:35px 24px;display:flex;align-items:center;gap:12px;color:#2563eb}.brw-folder>i{position:absolute;top:-19px;left:-1px;width:104px;height:19px;background:#e9f1ff;border:1px solid #bad0fa;border-bottom:0;border-radius:8px 12px 0 0}.brw-folder strong{font-size:21px}.brw-folder.brw-mint,.brw-folder.brw-mint>i{background:#ebf8f2;border-color:#afd9ca;color:#21715d}.brw-archive-status{position:absolute;top:427px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;color:#64748b}
+.brw-edit{padding:14px 0}.brw-ruler{margin-left:174px;display:flex;justify-content:space-between;padding:0 12px 22px;color:#778397;font-size:13px}.brw-tracks{position:relative}.brw-track{display:grid;grid-template-columns:154px 1fr;gap:20px;height:108px;padding:12px 0}.brw-track-name{display:flex;align-items:center;gap:12px;color:#657389}.brw-track-name strong{font-size:17px}.brw-track-bed{position:relative;border-radius:9px;background:repeating-linear-gradient(90deg,#f5f7fb 0,#f5f7fb calc(25% - 1px),#dce4ee 25%);height:84px}.brw-edit-clip{position:absolute;top:4px;height:76px;border-radius:7px;background:#e7efff;border:1px solid #b9cff8;padding:12px 14px;overflow:hidden;color:#245ac0}.brw-edit-clip>span{display:block;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.brw-track-tone-1{background:#e9f7f0;border-color:#b2dacb;color:#21715d}.brw-track-tone-2{background:#f0edff;border-color:#d3cdf4;color:#6a579a}.brw-clip-texture{height:14px;margin-top:7px;opacity:.2;background:repeating-linear-gradient(90deg,currentColor 0,currentColor 2px,transparent 2px,transparent 6px)}.brw-playhead{position:absolute;top:0;bottom:0;left:174px;width:2px;background:#2563eb}.brw-playhead>i{position:absolute;top:-8px;left:-5px;width:12px;height:13px;background:#2563eb;clip-path:polygon(0 0,100% 0,100% 55%,50% 100%,0 55%)}.brw-edit-note{margin:28px 0 0 174px;font-size:14px;color:#657389}
+.brw-voice{display:grid;grid-template-columns:520px 1fr;gap:66px;align-items:center}.brw-audio-card{border:1px solid #dce4ee;border-radius:16px;padding:30px;height:414px}.brw-audio-card h3{margin-top:12px}.brw-waveform{position:relative;height:120px;display:flex;align-items:center;justify-content:space-between;margin-top:26px;overflow:hidden}.brw-waveform>i{display:block;width:5px;flex-shrink:0;border-radius:3px;background:#81c9b0}.brw-wave-cursor{position:absolute;top:0;bottom:0;left:0;width:2px;background:#2563eb}.brw-transcript-line{padding:20px 0;border-bottom:1px solid #e3e9f1;display:grid;grid-template-columns:56px 1fr;gap:18px;align-items:start}.brw-transcript-line>span{font-size:13px;color:#2563eb;padding-top:5px;font-variant-numeric:tabular-nums}.brw-transcript-line p{font-size:21px;line-height:1.7}
+.brw-focus{display:grid;grid-template-columns:520px 1fr;gap:60px;align-items:center}.brw-timer{position:relative;width:388px;height:388px;margin:auto}.brw-timer>svg{width:388px;height:388px}.brw-time-face{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:22px}.brw-time-face>small{font-size:16px}.brw-time-face>span{font-size:16px;color:#21715d}.brw-time-digits{position:relative;width:260px;height:82px}.brw-time-digits strong{position:absolute;inset:0;text-align:center;font-size:58px;letter-spacing:2px;font-variant-numeric:tabular-nums}.brw-focus-tasks>small{display:block;margin-bottom:25px}.brw-focus-task{display:flex;gap:18px;align-items:center;min-height:85px;border-bottom:1px solid #e5ebf2}.brw-focus-task>i{width:36px;height:36px;border-radius:50%;background:#e8f6ef;color:#21715d;display:flex;align-items:center;justify-content:center;flex-shrink:0}.brw-focus-task strong{font-size:22px}
+.brw-scan{display:grid;grid-template-columns:1fr 96px 1fr;align-items:center}.brw-sheet{height:456px;position:relative;overflow:hidden}.brw-sheet h3{margin-top:20px}.brw-lines{margin-top:26px}.brw-lines p{padding:14px 0;border-bottom:1px solid #e8edf5;font-size:19px;line-height:1.5}.brw-scan-beam{position:absolute;left:16px;right:16px;top:16px;height:44px;border-bottom:3px solid #2563eb;background:linear-gradient(transparent,#2563eb18);box-shadow:0 5px 14px #2563eb0d}.brw-transfer{color:#2563eb;text-align:center}.brw-result{min-height:412px}.brw-field{display:flex;flex-direction:column;gap:6px;padding:15px 18px;margin-top:16px;border-radius:8px;background:#f3f7ff;border-left:3px solid #81c9b0}.brw-field span{font-size:13px;color:#64748b}.brw-field strong{font-size:20px}.brw-status{display:flex;align-items:center;gap:8px;color:#21715d;margin-top:20px;font-size:15px}
+.brw-weekdays,.brw-ruler{color:#657389}
+${workflowLayoutCSS}
+`;
+
   // families/codex-workflow.mjs
-  var array3 = (value) => Array.isArray(value) ? value : [];
+  var array4 = (value) => Array.isArray(value) ? value : [];
   var object = (value) => value && typeof value === "object" && !Array.isArray(value) ? value : {};
   var state = (value) => ["idle", "queued", "running", "complete", "error"].includes(value) ? value : "complete";
-  var number3 = (value, fallback, min, max) => Number.isFinite(Number(value)) ? Math.min(max, Math.max(min, Number(value))) : fallback;
+  var number7 = (value, fallback, min, max) => Number.isFinite(Number(value)) ? Math.min(max, Math.max(min, Number(value))) : fallback;
   var icon2 = (h, name, size = 16) => h.icon(name, size);
   function attachments(items, h, where) {
-    return array3(items).length ? `<div class="cxw-attachments" data-part="${where}-attachments">${array3(items).map((entry, index) => {
+    return array4(items).length ? `<div class="cxw-attachments" data-part="${where}-attachments">${array4(items).map((entry, index) => {
       const item = typeof entry === "string" ? { name: entry } : object(entry);
       return `<div class="cxw-attachment" data-attachment-id="${h.esc(item.id || `${where}-${index}`)}" data-motion="item">${icon2(h, "file", 19)}<span><b>${h.esc(item.name || "\u6587\u4EF6")}</b>${item.detail ? `<small>${h.esc(item.detail)}</small>` : ""}</span></div>`;
     }).join("")}</div>` : "";
   }
   function teachingTable(value, h) {
-    const p = object(value), columns = array3(p.columns), rows2 = array3(p.rows);
-    const selected = new Set(array3(p.selectedIds).map(String)), included = new Set(array3(p.includedIds).map(String));
+    const p = object(value), columns = array4(p.columns), rows3 = array4(p.rows);
+    const selected = new Set(array4(p.selectedIds).map(String)), included = new Set(array4(p.includedIds).map(String));
     return `<section class="cxw-table-result" data-part="teaching-table" data-state="${h.esc(state(p.state))}">
     <div class="cxw-table-heading"><strong>${h.esc(p.title || "\u8868\u683C\u6807\u9898")}</strong><span>${h.esc(p.badge || "\u6559\u5B66\u6570\u636E")}</span></div>
     ${p.note ? `<p class="cxw-table-note">${h.esc(p.note)}</p>` : ""}
-    <div class="cxw-table-viewport"><table><thead><tr>${columns.map((c) => `<th scope="col" data-field="${h.esc(c.key)}">${h.esc(c.label || c.key)}</th>`).join("")}</tr></thead><tbody>${rows2.map((row, index) => {
+    <div class="cxw-table-viewport"><table><thead><tr>${columns.map((c) => `<th scope="col" data-field="${h.esc(c.key)}">${h.esc(c.label || c.key)}</th>`).join("")}</tr></thead><tbody>${rows3.map((row, index) => {
       const id = String(row.id ?? row.orderId ?? index), isIncluded = included.has(id), isSelected = selected.has(id);
       return `<tr data-row-id="${h.esc(id)}" data-included="${isIncluded}" data-selected="${isSelected}" class="${isSelected ? "cxw-row-selected" : ""}" data-motion="item">${columns.map((c) => `<td data-field="${h.esc(c.key)}" data-motion="highlight">${h.esc(row[c.key] ?? "\u2014")}</td>`).join("")}</tr>`;
     }).join("")}</tbody></table></div>
@@ -3091,22 +4213,22 @@ var ComponentLibraryRuntime = (() => {
   </section>`;
   }
   function toolEvents(events, h) {
-    return array3(events).map((value, index) => {
-      const e = object(value), s = state(e.state || e.status), kind = e.kind === "file" ? "file" : "command";
-      return `<div class="cxw-tool-event cxw-tool-${kind}" data-tool-id="${h.esc(e.id || `event-${index}`)}" data-state="${h.esc(s)}" data-motion="item">
+    return array4(events).map((value, index) => {
+      const e2 = object(value), s2 = state(e2.state || e2.status), kind = e2.kind === "file" ? "file" : "command";
+      return `<div class="cxw-tool-event cxw-tool-${kind}" data-tool-id="${h.esc(e2.id || `event-${index}`)}" data-state="${h.esc(s2)}" data-motion="item">
       <div class="cxw-tool-icon">${icon2(h, kind === "file" ? "file" : "terminal", 18)}</div>
-      <div class="cxw-tool-copy"><div>${h.esc(e.label || e.summary || (kind === "file" ? "\u5DF2\u751F\u6210\u6587\u4EF6" : "\u5DF2\u8FD0\u884C\u547D\u4EE4"))}</div>${e.command ? `<code>${h.esc(e.command)}</code>` : ""}${e.detail ? `<small>${h.esc(e.detail)}</small>` : ""}</div>
-      ${e.action ? `<span class="cxw-tool-action">${h.esc(e.action)}${icon2(h, "chevron-right", 12)}</span>` : icon2(h, "chevron-down", 12)}
+      <div class="cxw-tool-copy"><div>${h.esc(e2.label || e2.summary || (kind === "file" ? "\u5DF2\u751F\u6210\u6587\u4EF6" : "\u5DF2\u8FD0\u884C\u547D\u4EE4"))}</div>${e2.command ? `<code>${h.esc(e2.command)}</code>` : ""}${e2.detail ? `<small>${h.esc(e2.detail)}</small>` : ""}</div>
+      ${e2.action ? `<span class="cxw-tool-action">${h.esc(e2.action)}${icon2(h, "chevron-right", 12)}</span>` : icon2(h, "chevron-down", 12)}
     </div>`;
     }).join("");
   }
   function message(value, index, h) {
-    const m = object(value), role = m.role === "user" ? "user" : "assistant", id = m.id || `message-${index}`, s = state(m.state);
+    const m = object(value), role = m.role === "user" ? "user" : "assistant", id = m.id || `message-${index}`, s2 = state(m.state);
     const paragraphs2 = Array.isArray(m.text) ? m.text : [m.text || ""];
-    return `<article class="cxw-message cxw-${role}" data-message-id="${h.esc(id)}" data-role="${role}" data-state="${h.esc(s)}" data-motion="item">
+    return `<article class="cxw-message cxw-${role}" data-message-id="${h.esc(id)}" data-role="${role}" data-state="${h.esc(s2)}" data-motion="item">
     ${role === "assistant" && m.elapsed ? `<div class="cxw-elapsed" data-part="elapsed">${h.esc(m.elapsed)}${icon2(h, "chevron-right", 12)}</div>` : ""}
     <div class="cxw-message-content">${attachments(m.attachments, h, `message-${index}`)}<div class="cxw-message-text" data-part="message-text" data-motion="reveal">${paragraphs2.map((t) => `<p>${h.esc(t)}</p>`).join("")}</div>
-      ${array3(m.bullets).length ? `<ul class="cxw-message-list">${m.bullets.map((t) => `<li data-motion="highlight">${h.esc(t)}</li>`).join("")}</ul>` : ""}
+      ${array4(m.bullets).length ? `<ul class="cxw-message-list">${m.bullets.map((t) => `<li data-motion="highlight">${h.esc(t)}</li>`).join("")}</ul>` : ""}
       ${toolEvents(m.toolEvents, h)}
       ${m.result ? teachingTable(m.result, h) : ""}
       ${role === "assistant" && m.actions !== false ? `<div class="cxw-answer-actions" data-part="answer-actions">${icon2(h, "copy", 15)}${icon2(h, "more", 17)}</div>` : ""}
@@ -3127,16 +4249,16 @@ var ComponentLibraryRuntime = (() => {
     return `<aside class="cxw-sidebar" data-part="sidebar"><div class="cxw-sidebar-top">${icon2(h, "panel", 18)}${icon2(h, "edit", 18)}</div>
     <div class="cxw-sidebar-new">${icon2(h, "plus", 17)}<span>${h.esc(p.newLabel || "\u65B0\u4EFB\u52A1")}</span></div>
     <div class="cxw-sidebar-label">${h.esc(p.sectionLabel || "\u4EFB\u52A1")}</div>
-    <nav>${array3(p.items).map((entry, index) => {
+    <nav>${array4(p.items).map((entry, index) => {
       const item = typeof entry === "string" ? { label: entry } : object(entry);
       return `<div class="cxw-sidebar-item ${item.active ? "cxw-sidebar-active" : ""}" data-sidebar-id="${h.esc(item.id || `sidebar-${index}`)}">${icon2(h, item.icon || "folder", 15)}<span>${h.esc(item.label || "\u4EFB\u52A1")}</span></div>`;
     }).join("")}</nav>
     <div class="cxw-sidebar-bottom">${icon2(h, "settings", 17)}<span>${h.esc(p.footer || "\u6F14\u793A\u5DE5\u4F5C\u533A")}</span></div>
   </aside>`;
   }
-  function panel2(value, h) {
+  function panel3(value, h) {
     const p = object(value);
-    return `<aside class="cxw-preview-panel" data-part="preview-panel"><header><span>${icon2(h, p.kind === "table" ? "grid" : "file", 15)}${h.esc(p.title || "\u6587\u4EF6\u9884\u89C8")}</span><span>${icon2(h, "more", 17)}${icon2(h, "x", 15)}</span></header><div class="cxw-panel-body" data-motion="scroll">${p.kind === "table" ? teachingTable(p.table, h) : `<div class="cxw-document">${p.heading ? `<h3>${h.esc(p.heading)}</h3>` : ""}${array3(p.paragraphs).map((t) => `<p>${h.esc(t)}</p>`).join("")}${p.code ? `<pre>${h.esc(p.code)}</pre>` : ""}</div>`}</div></aside>`;
+    return `<aside class="cxw-preview-panel" data-part="preview-panel"><header><span>${icon2(h, p.kind === "table" ? "grid" : "file", 15)}${h.esc(p.title || "\u6587\u4EF6\u9884\u89C8")}</span><span>${icon2(h, "more", 17)}${icon2(h, "x", 15)}</span></header><div class="cxw-panel-body" data-motion="scroll">${p.kind === "table" ? teachingTable(p.table, h) : `<div class="cxw-document">${p.heading ? `<h3>${h.esc(p.heading)}</h3>` : ""}${array4(p.paragraphs).map((t) => `<p>${h.esc(t)}</p>`).join("")}${p.code ? `<pre>${h.esc(p.code)}</pre>` : ""}</div>`}</div></aside>`;
   }
   var defaults2 = {
     "title": "\u4EFB\u52A1\u6807\u9898",
@@ -3195,7 +4317,7 @@ var ComponentLibraryRuntime = (() => {
     "panel": null,
     "panelWidth": 400
   };
-  var components16 = [{
+  var components20 = [{
     id: "codex-workflow",
     name: "Codex \u591A\u8F6E\u5DE5\u4F5C\u533A",
     category: "Codex",
@@ -3206,10 +4328,10 @@ var ComponentLibraryRuntime = (() => {
     defaults: defaults2,
     render(props, h) {
       const incoming = object(props), p = { ...defaults2, ...incoming, sidebar: { ...defaults2.sidebar, ...object(incoming.sidebar) }, composer: { ...defaults2.composer, ...object(incoming.composer) } };
-      const hasPanel = Boolean(p.panel && typeof p.panel === "object"), panelWidth = number3(p.panelWidth, 400, 320, 520);
+      const hasPanel = Boolean(p.panel && typeof p.panel === "object"), panelWidth = number7(p.panelWidth, 400, 320, 520);
       return `<section class="cxw-workspace ${p.showSidebar ? "" : "cxw-no-sidebar"} ${hasPanel ? "cxw-has-panel" : ""}" style="--cxw-panel-width:${panelWidth}px" data-part="workspace" data-state="${p.composer.running ? "running" : "idle"}">
       ${p.showSidebar ? sidebar2(p.sidebar, h) : ""}<div class="cxw-main"><header class="cxw-header"><div class="cxw-heading">${icon2(h, "folder", 17)}${p.project ? `<span class="cxw-project">${h.esc(p.project)}</span><span class="cxw-heading-divider">/</span>` : ""}<strong>${h.esc(p.title)}</strong></div><div class="cxw-header-actions">${icon2(h, "more", 18)}<span>${icon2(h, "upload", 15)}\u5206\u4EAB</span>${icon2(h, "panel", 17)}</div></header>
-      <div class="cxw-body"><div class="cxw-thread"><div class="cxw-conversation-viewport" data-part="conversation-viewport"><div class="cxw-conversation" data-part="conversation" data-motion="scroll">${array3(p.messages).map((m, i) => message(m, i, h)).join("")}${toolEvents(p.toolEvents, h)}</div></div>${composer(p.composer, h)}<div class="cxw-disclosure" data-part="disclosure">${h.esc(p.disclosure || "\u754C\u9762\u590D\u523B \xB7 \u6848\u4F8B\u6F14\u793A")}</div></div>${hasPanel ? panel2(p.panel, h) : ""}</div></div>
+      <div class="cxw-body"><div class="cxw-thread"><div class="cxw-conversation-viewport" data-part="conversation-viewport"><div class="cxw-conversation" data-part="conversation" data-motion="scroll">${array4(p.messages).map((m, i) => message(m, i, h)).join("")}${toolEvents(p.toolEvents, h)}</div></div>${composer(p.composer, h)}<div class="cxw-disclosure" data-part="disclosure">${h.esc(p.disclosure || "\u754C\u9762\u590D\u523B \xB7 \u6848\u4F8B\u6F14\u793A")}</div></div>${hasPanel ? panel3(p.panel, h) : ""}</div></div>
     </section>`;
     }
   }];
@@ -3222,7 +4344,7 @@ var ComponentLibraryRuntime = (() => {
   function toolCard(p, h) {
     return `<div class="cx-tool-card" data-motion="item"><div class="cx-file-icon">${h.icon("file", 23)}<span>+</span></div><div class="cx-file-copy"><div>${h.esc(p.verb || "\u5DF2\u7F16\u8F91")} ${h.esc(p.file || "App.tsx")}</div><div class="cx-diff-stat"><span>+${h.esc(p.added ?? 18)}</span><span>-${h.esc(p.removed ?? 4)}</span></div></div><div class="cx-tool-actions"><span>${h.esc(p.undoLabel || "\u64A4\u9500")}${h.icon("undo", 14)}</span><button>${h.esc(p.reviewLabel || "\u5BA1\u6838")}</button></div></div>`;
   }
-  var components17 = [
+  var components21 = [
     { id: "codex-chat", name: "Codex \u5BF9\u8BDD\u7A97\u53E3", category: "Codex", description: "\u6309\u672C\u673A Codex \u91CD\u5EFA\u7684\u9ED1\u8272\u7528\u6237\u6D88\u606F\u3001\u65E0\u6C14\u6CE1\u56DE\u590D\u3001\u6267\u884C\u8BB0\u5F55\u548C\u5E95\u90E8\u8F93\u5165\u680F\u3002", width: 1280, height: 800, reference: native, defaults: {
       "title": "\u4EFB\u52A1\u6807\u9898",
       "userMessage": "\u7528\u6237\u6D88\u606F\u5185\u5BB9\u3002\u53EF\u586B\u5199\u4EFB\u52A1\u3001\u8865\u5145\u4FE1\u606F\u4E0E\u9884\u671F\u7ED3\u679C\u3002",
@@ -3285,7 +4407,7 @@ var ComponentLibraryRuntime = (() => {
       ],
       "footer": "2 / 3 \xB7 \u6B63\u5728\u5904\u7406"
     }, render(p, h) {
-      return `<section class="cx-plan-island"><div class="cx-plan"><header>${h.icon("list", 18)}<strong>${h.esc(p.title)}</strong><span>${h.icon("chevron-down", 14)}</span></header><p>${h.esc(p.summary)}</p><div class="cx-plan-steps">${p.steps.map((s) => `<div class="cx-plan-step cx-plan-${h.esc(s.state)}" data-motion="item"><span class="cx-plan-state">${s.state === "done" ? h.icon("check", 15) : s.state === "active" ? "<i></i>" : ""}</span><span>${h.esc(s.text)}</span></div>`).join("")}</div><footer>${h.esc(p.footer)}</footer></div></section>`;
+      return `<section class="cx-plan-island"><div class="cx-plan"><header>${h.icon("list", 18)}<strong>${h.esc(p.title)}</strong><span>${h.icon("chevron-down", 14)}</span></header><p>${h.esc(p.summary)}</p><div class="cx-plan-steps">${p.steps.map((s2) => `<div class="cx-plan-step cx-plan-${h.esc(s2.state)}" data-motion="item"><span class="cx-plan-state">${s2.state === "done" ? h.icon("check", 15) : s2.state === "active" ? "<i></i>" : ""}</span><span>${h.esc(s2.text)}</span></div>`).join("")}</div><footer>${h.esc(p.footer)}</footer></div></section>`;
     } }
   ];
 
@@ -3298,11 +4420,11 @@ var ComponentLibraryRuntime = (() => {
   var n = (v, fallback = 0) => Number.isFinite(Number(v)) ? Number(v) : fallback;
   var cls = (v, options, fallback = "") => options.includes(v) ? v : fallback;
   var cfg = (component2, props) => ({ ...component2.defaults, ...props });
-  function controls(h) {
+  function controls2(h) {
     return `<div class="dev-win-controls"><span>${h.icon("minus", 16)}</span><span>${h.icon("maximize", 14)}</span><span>${h.icon("x", 16)}</span></div>`;
   }
   function titlebar(p, h, brand = "Visual Studio Code") {
-    return `<div class="dev-titlebar"><span class="dev-app-symbol">${h.icon("code", 19)}</span><div class="dev-menus"><span>\u6587\u4EF6</span><span>\u7F16\u8F91</span><span>\u9009\u62E9</span><span>\u67E5\u770B</span><span>\u8F6C\u5230</span><span>\u8FD0\u884C</span><span>\u7EC8\u7AEF</span><span>\u5E2E\u52A9</span></div><div class="dev-command-center">${h.icon("search", 14)}<span>${h.esc(p.project || p.title || brand)}</span></div>${controls(h)}</div>`;
+    return `<div class="dev-titlebar"><span class="dev-app-symbol">${h.icon("code", 19)}</span><div class="dev-menus"><span>\u6587\u4EF6</span><span>\u7F16\u8F91</span><span>\u9009\u62E9</span><span>\u67E5\u770B</span><span>\u8F6C\u5230</span><span>\u8FD0\u884C</span><span>\u7EC8\u7AEF</span><span>\u5E2E\u52A9</span></div><div class="dev-command-center">${h.icon("search", 14)}<span>${h.esc(p.project || p.title || brand)}</span></div>${controls2(h)}</div>`;
   }
   function activity(h, active = "file") {
     return `<nav class="dev-activity">${["file", "search", "git-branch", "play", "grid"].map((i) => `<div class="${active === i ? "dev-activity-active" : ""}">${h.icon(i, 25)}</div>`).join("")}<div class="dev-activity-bottom">${h.icon("settings", 25)}</div></nav>`;
@@ -3344,10 +4466,10 @@ var ComponentLibraryRuntime = (() => {
   function shell2(p, h, body, { sidebar: sidebar5 = "", active = "file" } = {}) {
     return `<article class="dev-stage"><div class="dev-window dev-vscode">${titlebar(p, h)}<div class="dev-workbench">${activity(h, active)}${sidebar5 ? `<aside class="dev-sidebar">${sidebar5}</aside>` : ""}<main class="dev-editor">${body}</main></div>${status(p, h)}</div></article>`;
   }
-  function simpleHead(p, h, label2) {
-    return `<div class="dev-tool-title"><span>${h.icon(p.appIcon || "code", 18)}<b>${h.esc(p.appName || label2)}</b><span class="dev-tool-divider"></span>${h.esc(p.workspace || "\u793A\u4F8B\u9879\u76EE")}</span><div>${h.icon("search", 16)}${h.icon("settings", 16)}${controls(h)}</div></div>`;
+  function simpleHead(p, h, label3) {
+    return `<div class="dev-tool-title"><span>${h.icon(p.appIcon || "code", 18)}<b>${h.esc(p.appName || label3)}</b><span class="dev-tool-divider"></span>${h.esc(p.workspace || "\u793A\u4F8B\u9879\u76EE")}</span><div>${h.icon("search", 16)}${h.icon("settings", 16)}${controls2(h)}</div></div>`;
   }
-  var components18 = [
+  var components22 = [
     {
       id: "terminal-session",
       name: "Windows Terminal \u4F1A\u8BDD",
@@ -3395,7 +4517,7 @@ var ComponentLibraryRuntime = (() => {
       },
       render(props, h) {
         const p = cfg(this, props);
-        return `<article class="dev-stage"><div class="dev-window dev-terminal"><div class="dev-terminal-title"><div class="dev-terminal-tab">${h.icon("terminal", 18)}<span>${h.esc(p.title)}</span>${h.icon("x", 14)}</div><span class="dev-terminal-new">${h.icon("plus", 17)}${h.icon("chevron-down", 13)}</span>${controls(h)}</div><div class="dev-terminal-body"><div class="dev-terminal-greeting">${h.esc(p.greeting)}</div><div class="dev-command-row"><span class="dev-prompt">PS ${h.esc(p.path)}&gt;</span> <span data-motion="type">${h.esc(p.command)}</span></div><div class="dev-terminal-output">${arr(p.lines).map((l) => `<div class="dev-log-${cls(l.tone, ["muted", "success", "error", "link", "normal"], "normal")}" data-motion="line" data-output-line>${h.esc(l.text) || "&#160;"}</div>`).join("")}</div><div class="dev-command-row dev-terminal-last" data-output-line><span class="dev-prompt">PS ${h.esc(p.path)}&gt;</span> <span>${h.esc(p.nextCommand)}</span><span class="dev-terminal-caret" data-motion="cursor"></span></div></div></div></article>`;
+        return `<article class="dev-stage"><div class="dev-window dev-terminal"><div class="dev-terminal-title"><div class="dev-terminal-tab">${h.icon("terminal", 18)}<span>${h.esc(p.title)}</span>${h.icon("x", 14)}</div><span class="dev-terminal-new">${h.icon("plus", 17)}${h.icon("chevron-down", 13)}</span>${controls2(h)}</div><div class="dev-terminal-body"><div class="dev-terminal-greeting">${h.esc(p.greeting)}</div><div class="dev-command-row"><span class="dev-prompt">PS ${h.esc(p.path)}&gt;</span> <span data-motion="type">${h.esc(p.command)}</span></div><div class="dev-terminal-output">${arr(p.lines).map((l) => `<div class="dev-log-${cls(l.tone, ["muted", "success", "error", "link", "normal"], "normal")}" data-motion="line" data-output-line>${h.esc(l.text) || "&#160;"}</div>`).join("")}</div><div class="dev-command-row dev-terminal-last" data-output-line><span class="dev-prompt">PS ${h.esc(p.path)}&gt;</span> <span>${h.esc(p.nextCommand)}</span><span class="dev-terminal-caret" data-motion="cursor"></span></div></div></div></article>`;
       }
     },
     {
@@ -3814,7 +4936,7 @@ var ComponentLibraryRuntime = (() => {
       },
       render(props, h) {
         const p = cfg(this, props);
-        return shell2(p, h, `<div class="dev-markdown-split"><section>${tabs([{ name: p.filename, kind: "M\u2193" }], h)}${crumbs([p.project, p.filename], h)}${codeLines(p.source, h, { compact: true })}</section><section>${tabs([{ name: `\u9884\u89C8 ${p.filename}`, kind: "M\u2193" }], h)}<div class="dev-markdown-scroll-viewport"><div class="dev-markdown-preview" data-motion="scroll"><h1 data-motion="reveal">${h.esc(p.title)}</h1><p>${h.esc(p.intro)}</p><h2>${h.esc(p.sectionTitle)}</h2><ul>${arr(p.tasks).map((t) => `<li data-motion="item"><span class="${t.done ? "dev-checkbox-checked" : "dev-checkbox"}">${t.done ? h.icon("check", 12) : ""}</span>${h.esc(t.text)}</li>`).join("")}</ul><blockquote>${h.esc(p.note)}</blockquote><pre>${h.esc(p.command)}</pre>${arr(p.sections).map((s) => `<h2>${h.esc(s.title)}</h2><p>${h.esc(s.text)}</p>`).join("")}</div></div></section></div>`);
+        return shell2(p, h, `<div class="dev-markdown-split"><section>${tabs([{ name: p.filename, kind: "M\u2193" }], h)}${crumbs([p.project, p.filename], h)}${codeLines(p.source, h, { compact: true })}</section><section>${tabs([{ name: `\u9884\u89C8 ${p.filename}`, kind: "M\u2193" }], h)}<div class="dev-markdown-scroll-viewport"><div class="dev-markdown-preview" data-motion="scroll"><h1 data-motion="reveal">${h.esc(p.title)}</h1><p>${h.esc(p.intro)}</p><h2>${h.esc(p.sectionTitle)}</h2><ul>${arr(p.tasks).map((t) => `<li data-motion="item"><span class="${t.done ? "dev-checkbox-checked" : "dev-checkbox"}">${t.done ? h.icon("check", 12) : ""}</span>${h.esc(t.text)}</li>`).join("")}</ul><blockquote>${h.esc(p.note)}</blockquote><pre>${h.esc(p.command)}</pre>${arr(p.sections).map((s2) => `<h2>${h.esc(s2.title)}</h2><p>${h.esc(s2.text)}</p>`).join("")}</div></div></section></div>`);
       }
     },
     {
@@ -4082,18 +5204,18 @@ var ComponentLibraryRuntime = (() => {
 
   // families/doubao-chat.mjs
   var arr2 = (value) => Array.isArray(value) ? value : [];
-  var str = (value) => String(value ?? "");
+  var str2 = (value) => String(value ?? "");
   var source = (value) => {
-    const text6 = str(value).trim().replaceAll("\\", "/");
-    if (!text6 || /^(?:[a-z][a-z0-9+.-]*:|\/)/i.test(text6) || /[\u0000-\u001f]/.test(text6)) return "";
-    return text6.split("/").every((part) => {
-      let decoded = part;
+    const text7 = str2(value).trim().replaceAll("\\", "/");
+    if (!text7 || /^(?:[a-z][a-z0-9+.-]*:|\/)/i.test(text7) || /[\u0000-\u001f]/.test(text7)) return "";
+    return text7.split("/").every((part2) => {
+      let decoded = part2;
       try {
-        decoded = decodeURIComponent(part);
+        decoded = decodeURIComponent(part2);
       } catch {
       }
       return decoded !== "." && decoded !== ".." && !/[\\/]/.test(decoded);
-    }) ? text6 : "";
+    }) ? text7 : "";
   };
   function chatIcon(size = 18) {
     return `<svg aria-hidden="true" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H9l-6 3V6a2 2 0 0 1 2-2Z"/><path d="M7 9h10M7 13h7"/></svg>`;
@@ -4111,19 +5233,19 @@ var ComponentLibraryRuntime = (() => {
     const role = m.role === "user" ? "user" : "assistant";
     const paragraphs2 = Array.isArray(m.paragraphs) ? m.paragraphs : m.text ? [m.text] : [];
     const state3 = ["idle", "draft", "running", "complete"].includes(m.state) ? m.state : "complete";
-    return `<article class="dbchat-message dbchat-message-${role}" data-message-id="${h.esc(m.id || `message-${index + 1}`)}" data-message-index="${index}" data-state="${state3}" data-motion="item"${m.visible === false ? " hidden" : ""}><div class="dbchat-message-body" data-part="message-text" data-motion="reveal">${m.heading ? `<h3>${h.esc(m.heading)}</h3>` : ""}${paragraphs2.map((text6, i) => `<p data-paragraph-index="${i}" data-motion="line">${h.esc(text6)}</p>`).join("")}${arr2(m.bullets).length ? `<ul>${m.bullets.map((text6) => `<li data-motion="line">${h.esc(text6)}</li>`).join("")}</ul>` : ""}${arr2(m.fields).length ? `<dl>${m.fields.map((field, i) => `<div data-field-index="${i}" data-motion="line"><dt>${h.esc(field.label)}</dt><dd>${h.esc(field.value)}</dd></div>`).join("")}</dl>` : ""}${m.linkLabel ? `<div class="dbchat-demo-link" data-motion="highlight">${h.icon("link", 14)}<span>${h.esc(m.linkLabel)}</span><small>${h.esc(m.linkNote || "\u6F14\u793A\u5360\u4F4D")}</small></div>` : ""}</div>${role === "assistant" && m.actions ? answerActions(h) : ""}</article>`;
+    return `<article class="dbchat-message dbchat-message-${role}" data-message-id="${h.esc(m.id || `message-${index + 1}`)}" data-message-index="${index}" data-state="${state3}" data-motion="item"${m.visible === false ? " hidden" : ""}><div class="dbchat-message-body" data-part="message-text" data-motion="reveal">${m.heading ? `<h3>${h.esc(m.heading)}</h3>` : ""}${paragraphs2.map((text7, i) => `<p data-paragraph-index="${i}" data-motion="line">${h.esc(text7)}</p>`).join("")}${arr2(m.bullets).length ? `<ul>${m.bullets.map((text7) => `<li data-motion="line">${h.esc(text7)}</li>`).join("")}</ul>` : ""}${arr2(m.fields).length ? `<dl>${m.fields.map((field, i) => `<div data-field-index="${i}" data-motion="line"><dt>${h.esc(field.label)}</dt><dd>${h.esc(field.value)}</dd></div>`).join("")}</dl>` : ""}${m.linkLabel ? `<div class="dbchat-demo-link" data-motion="highlight">${h.icon("link", 14)}<span>${h.esc(m.linkLabel)}</span><small>${h.esc(m.linkNote || "\u6F14\u793A\u5360\u4F4D")}</small></div>` : ""}</div>${role === "assistant" && m.actions ? answerActions(h) : ""}</article>`;
   }
   function composer3(p, h) {
     const c = { ...p, ...p.composer };
-    const draft = str(c.draft), running = Boolean(c.running), tools = arr2(c.tools);
+    const draft = str2(c.draft), running = Boolean(c.running), tools2 = arr2(c.tools);
     const requestedLimit = Number(c.maxTools), limit = Number.isFinite(requestedLimit) ? Math.max(0, Math.min(5, requestedLimit)) : 3;
-    return `<div class="dbchat-composer${draft ? " dbchat-has-draft" : ""}${c.focused ? " dbchat-focused" : ""}" data-part="composer" data-state="${running ? "running" : draft ? "draft" : "idle"}" data-motion="focus"><div class="dbchat-editor" data-part="draft" data-motion="type" data-draft="${h.esc(draft)}">${h.esc(draft || c.placeholder)}</div><div class="dbchat-composer-footer"><div class="dbchat-composer-tools"><span class="dbchat-plus">${h.icon("plus", 19)}</span><span class="dbchat-mode">${chatIcon(16)}${h.esc(c.modeLabel)}${h.icon("chevron-down", 10)}</span>${tools.slice(0, limit).map((tool2, i) => `<span class="dbchat-tool" data-tool-index="${i}">${h.icon(tool2.icon || "file", 15)}<span>${h.esc(typeof tool2 === "string" ? tool2 : tool2.label)}</span></span>`).join("")}${tools.length > limit ? `<span class="dbchat-more-tools">${h.icon("more", 18)}</span>` : ""}</div><div class="dbchat-composer-right"><span class="dbchat-model">${h.esc(c.modelLabel)}<span>${h.esc(c.speedLabel)}</span>${h.icon("chevron-right", 10)}</span><span class="dbchat-send${running ? " dbchat-stop" : draft ? " dbchat-send-ready" : " dbchat-send-mic"}" data-part="send" data-state="${running ? "stop" : draft ? "send" : "mic"}" data-motion="cursor">${running ? "<i></i>" : draft ? h.icon("arrow-up", 18) : h.icon("mic", 18)}</span></div></div></div>`;
+    return `<div class="dbchat-composer${draft ? " dbchat-has-draft" : ""}${c.focused ? " dbchat-focused" : ""}" data-part="composer" data-state="${running ? "running" : draft ? "draft" : "idle"}" data-motion="focus"><div class="dbchat-editor" data-part="draft" data-motion="type" data-draft="${h.esc(draft)}">${h.esc(draft || c.placeholder)}</div><div class="dbchat-composer-footer"><div class="dbchat-composer-tools"><span class="dbchat-plus">${h.icon("plus", 19)}</span><span class="dbchat-mode">${chatIcon(16)}${h.esc(c.modeLabel)}${h.icon("chevron-down", 10)}</span>${tools2.slice(0, limit).map((tool2, i) => `<span class="dbchat-tool" data-tool-index="${i}">${h.icon(tool2.icon || "file", 15)}<span>${h.esc(typeof tool2 === "string" ? tool2 : tool2.label)}</span></span>`).join("")}${tools2.length > limit ? `<span class="dbchat-more-tools">${h.icon("more", 18)}</span>` : ""}</div><div class="dbchat-composer-right"><span class="dbchat-model">${h.esc(c.modelLabel)}<span>${h.esc(c.speedLabel)}</span>${h.icon("chevron-right", 10)}</span><span class="dbchat-send${running ? " dbchat-stop" : draft ? " dbchat-send-ready" : " dbchat-send-mic"}" data-part="send" data-state="${running ? "stop" : draft ? "send" : "mic"}" data-motion="cursor">${running ? "<i></i>" : draft ? h.icon("arrow-up", 18) : h.icon("mic", 18)}</span></div></div></div>`;
   }
   function home(p, h) {
     const logo = source(p.logoSrc);
     return `<div class="dbchat-home" data-part="home" data-motion="reveal">${p.showHomeLogo && logo ? `<img class="dbchat-home-logo" src="${h.esc(logo)}" alt="${h.esc(p.brand)}">` : ""}<h2>${h.esc(p.homeTitle)}</h2><div class="dbchat-home-switch"><span class="dbchat-switch-active">${chatIcon(16)}${h.esc(p.conversationModeLabel)}</span><span>${h.icon("monitor", 16)}${h.esc(p.workModeLabel)}</span></div></div>`;
   }
-  var components19 = [{
+  var components23 = [{
     id: "doubao-chat",
     name: "\u8C46\u5305 \xB7 \u666E\u901A\u5BF9\u8BDD",
     category: "\u8C46\u5305",
@@ -4238,19 +5360,19 @@ var ComponentLibraryRuntime = (() => {
     },
     render(props, h) {
       const p = { ...this.defaults, ...props }, c = { ...p, ...p.composer }, running = Boolean(c.running);
-      const requestedHeight = Number(c.height ?? p.composerHeight), draft = str(c.draft);
+      const requestedHeight = Number(c.height ?? p.composerHeight), draft = str2(c.draft);
       const lines3 = draft.split(/\r?\n/).reduce((sum, line3) => sum + Math.max(1, Math.ceil(line3.length / 40)), 0);
       const height = Number.isFinite(requestedHeight) && requestedHeight > 0 ? Math.max(120, Math.min(240, requestedHeight)) : Math.min(240, Math.max(120, lines3 * 28 + 72));
-      const messages = arr2(p.messages), isHome = p.showHome && !messages.length;
-      return `<section class="dbchat-app${p.showSidebar === false ? " dbchat-no-sidebar" : ""}" data-simulation="true" data-state="${running ? "running" : draft ? "draft" : "idle"}" style="--dbchat-composer-height:${height}px">${p.showSidebar === false ? "" : sidebar3(p, h)}<main class="dbchat-main"><header class="dbchat-header"><div class="dbchat-header-left">${h.icon("panel", 18)}${isHome ? "" : h.icon("edit", 17)}</div>${isHome ? "" : `<div class="dbchat-thread-title"><strong>${h.esc(p.title)}</strong><small>${h.esc(p.notice)}</small></div>`}<div class="dbchat-header-right">${h.icon("volume", 17)}${h.icon("more", 18)}</div></header><div class="dbchat-simulation" data-part="disclosure">${h.esc(p.disclosure || p.simulationLabel || "\u754C\u9762\u590D\u523B \xB7 \u6848\u4F8B\u6F14\u793A")}</div><div class="dbchat-conversation" data-part="conversation"><div class="dbchat-viewport" data-part="viewport"><div class="dbchat-messages" data-part="message-list" data-motion="scroll">${isHome ? home(p, h) : messages.map((m, i) => message2(m, i, h)).join("")}${running ? `<div class="dbchat-working" data-part="status" data-state="running" data-motion="reveal"><span>${h.esc(p.workingLabel)}</span><i>\xB7\xB7\xB7</i></div>` : ""}${!isHome && !running && arr2(p.suggestions).length ? `<div class="dbchat-suggestions" data-part="suggestions">${p.suggestions.map((text6, index) => `<span data-suggestion-index="${index}" data-motion="item">${h.esc(text6)}${h.icon("arrow-right", 13)}</span>`).join("")}</div>` : ""}</div></div></div><div class="dbchat-composer-anchor">${composer3(p, h)}</div></main></section>`;
+      const messages2 = arr2(p.messages), isHome = p.showHome && !messages2.length;
+      return `<section class="dbchat-app${p.showSidebar === false ? " dbchat-no-sidebar" : ""}" data-simulation="true" data-state="${running ? "running" : draft ? "draft" : "idle"}" style="--dbchat-composer-height:${height}px">${p.showSidebar === false ? "" : sidebar3(p, h)}<main class="dbchat-main"><header class="dbchat-header"><div class="dbchat-header-left">${h.icon("panel", 18)}${isHome ? "" : h.icon("edit", 17)}</div>${isHome ? "" : `<div class="dbchat-thread-title"><strong>${h.esc(p.title)}</strong><small>${h.esc(p.notice)}</small></div>`}<div class="dbchat-header-right">${h.icon("volume", 17)}${h.icon("more", 18)}</div></header><div class="dbchat-simulation" data-part="disclosure">${h.esc(p.disclosure || p.simulationLabel || "\u754C\u9762\u590D\u523B \xB7 \u6848\u4F8B\u6F14\u793A")}</div><div class="dbchat-conversation" data-part="conversation"><div class="dbchat-viewport" data-part="viewport"><div class="dbchat-messages" data-part="message-list" data-motion="scroll">${isHome ? home(p, h) : messages2.map((m, i) => message2(m, i, h)).join("")}${running ? `<div class="dbchat-working" data-part="status" data-state="running" data-motion="reveal"><span>${h.esc(p.workingLabel)}</span><i>\xB7\xB7\xB7</i></div>` : ""}${!isHome && !running && arr2(p.suggestions).length ? `<div class="dbchat-suggestions" data-part="suggestions">${p.suggestions.map((text7, index) => `<span data-suggestion-index="${index}" data-motion="item">${h.esc(text7)}${h.icon("arrow-right", 13)}</span>`).join("")}</div>` : ""}</div></div></div><div class="dbchat-composer-anchor">${composer3(p, h)}</div></main></section>`;
     }
   }];
 
   // families/doubao-work.mjs
-  var list2 = (value) => Array.isArray(value) ? value : [];
-  var str2 = (value) => String(value ?? "");
+  var list3 = (value) => Array.isArray(value) ? value : [];
+  var str3 = (value) => String(value ?? "");
   var safeLocalSource = (value) => {
-    const source2 = str2(value).trim();
+    const source2 = str3(value).trim();
     return source2 && !/^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(source2) ? source2 : "";
   };
   var state2 = (value) => ["idle", "draft", "running", "complete"].includes(value) ? value : "idle";
@@ -4259,13 +5381,13 @@ var ComponentLibraryRuntime = (() => {
   }
   function sidebar4(p, h) {
     const source2 = safeLocalSource(p.logoSrc);
-    const navigation = list2(p.navigation);
+    const navigation = list3(p.navigation);
     return `<aside class="dbw-sidebar">
     <div class="dbw-brand">${source2 ? `<img src="${h.esc(source2)}" alt="" class="dbw-brand-logo">` : ""}<strong>${h.esc(p.brand)}</strong><span>${h.esc(p.brandSuffix)}</span><span class="dbw-search">${h.icon("search", 17)}</span></div>
     <nav class="dbw-navigation">${navigation.map((item, index) => `<div class="dbw-nav-row${item.active ? " dbw-selected" : ""}" data-nav-index="${index}"><span class="dbw-nav-icon">${h.icon(item.icon || "file", 18)}</span><span>${h.esc(item.label)}</span></div>`).join("")}</nav>
     <div class="dbw-sidebar-section"><div class="dbw-section-label">${h.esc(p.pinnedLabel)}</div><div class="dbw-nav-row">${h.icon("list", 17)}<span>${h.esc(p.pinnedTitle)}</span></div></div>
     <div class="dbw-sidebar-section"><div class="dbw-section-label">${h.esc(p.projectsLabel)}</div><div class="dbw-nav-row dbw-muted">${h.icon("plus", 18)}<span>${h.esc(p.newProjectLabel)}</span></div></div>
-    <div class="dbw-sidebar-section"><div class="dbw-section-label">${h.esc(p.recentLabel)}</div>${list2(p.recentTasks).map((item) => `<div class="dbw-recent-task${item.active ? " dbw-selected" : ""}">${h.esc(typeof item === "string" ? item : item.title)}</div>`).join("")}</div>
+    <div class="dbw-sidebar-section"><div class="dbw-section-label">${h.esc(p.recentLabel)}</div>${list3(p.recentTasks).map((item) => `<div class="dbw-recent-task${item.active ? " dbw-selected" : ""}">${h.esc(typeof item === "string" ? item : item.title)}</div>`).join("")}</div>
     <div class="dbw-account"><span class="dbw-avatar" aria-hidden="true"><i></i></span><div><div class="dbw-account-name">${h.esc(p.accountLabel)}${h.icon("chevron-right", 12)}</div><div class="dbw-plan">${h.esc(p.planLabel)}</div></div></div>
   </aside>`;
   }
@@ -4273,14 +5395,14 @@ var ComponentLibraryRuntime = (() => {
     const role = message4.role === "user" ? "user" : "assistant";
     const messageState = state2(message4.state || "complete");
     const paragraphs2 = Array.isArray(message4.paragraphs) ? message4.paragraphs : message4.text ? [message4.text] : [];
-    const fields = list2(message4.fields);
-    const bullets = list2(message4.bullets);
+    const fields2 = list3(message4.fields);
+    const bullets = list3(message4.bullets);
     return `<article class="dbw-message dbw-message-${role}" data-message-id="${h.esc(message4.id || `message-${index + 1}`)}" data-message-index="${index}" data-state="${messageState}" data-motion="item"${message4.visible === false ? " hidden" : ""}>
     ${role === "assistant" && message4.status ? `<div class="dbw-message-status" data-motion="reveal">${h.esc(message4.status)}${messageState === "running" ? '<span class="dbw-static-dots">\xB7\xB7\xB7</span>' : ""}</div>` : ""}
     <div class="dbw-message-body" data-motion="reveal" data-part="message-text">
       ${message4.heading ? `<h3>${h.esc(message4.heading)}</h3>` : ""}
       ${paragraphs2.map((paragraph, paragraphIndex) => `<p data-motion="line" data-paragraph-index="${paragraphIndex}">${h.esc(paragraph)}</p>`).join("")}
-      ${fields.length ? `<dl class="dbw-message-fields">${fields.map((field, fieldIndex) => `<div data-motion="line" data-field-index="${fieldIndex}"><dt>${h.esc(field.label)}</dt><dd>${h.esc(field.value)}</dd></div>`).join("")}</dl>` : ""}
+      ${fields2.length ? `<dl class="dbw-message-fields">${fields2.map((field, fieldIndex) => `<div data-motion="line" data-field-index="${fieldIndex}"><dt>${h.esc(field.label)}</dt><dd>${h.esc(field.value)}</dd></div>`).join("")}</dl>` : ""}
       ${bullets.length ? `<ul>${bullets.map((item) => `<li data-motion="line">${h.esc(item)}</li>`).join("")}</ul>` : ""}
       ${message4.linkLabel ? `<div class="dbw-demo-link" data-motion="highlight">${h.icon("link", 15)}<span>${h.esc(message4.linkLabel)}</span><small>${h.esc(message4.linkNote || "\u6F14\u793A\u5360\u4F4D")}</small></div>` : ""}
     </div>
@@ -4290,17 +5412,17 @@ var ComponentLibraryRuntime = (() => {
   function composer4(p, h) {
     const c = { ...p, ...p.composer || {} };
     const running = Boolean(c.running);
-    const hasDraft = Boolean(str2(c.draft));
+    const hasDraft = Boolean(str3(c.draft));
     return `<div class="dbw-composer${hasDraft ? " dbw-has-draft" : ""}${c.focused ? " dbw-composer-focused" : ""}" data-state="${running ? "running" : hasDraft ? "draft" : "idle"}" data-part="composer" data-motion="focus">
     <div class="dbw-editor" data-part="draft" data-motion="type" data-draft="${h.esc(c.draft || "")}">${h.esc(hasDraft ? c.draft : c.placeholder)}</div>
     <div class="dbw-composer-footer"><div class="dbw-composer-left"><span class="dbw-plus">${h.icon("plus", 19)}</span><span class="dbw-local-chip">${h.icon("monitor", 15)}${h.esc(c.environmentLabel)}</span><span class="dbw-composer-menu">${h.icon("folder", 15)}${h.esc(c.projectLabel)}${h.icon("chevron-right", 10)}</span><span class="dbw-composer-menu dbw-permission">${h.icon("info", 15)}${h.esc(c.permissionLabel)}${h.icon("chevron-right", 10)}</span><span class="dbw-composer-overflow">${h.icon("more", 18)}</span></div><div class="dbw-composer-right"><span class="dbw-model">${h.esc(c.modeLabel)}<span>${h.esc(c.effortLabel)}</span>${h.icon("chevron-right", 10)}</span><span class="dbw-send ${running ? "dbw-send-stop" : hasDraft ? "dbw-send-ready" : "dbw-send-mic"}" data-part="send" data-motion="cursor" data-state="${running ? "stop" : hasDraft ? "send" : "mic"}">${running ? "<i></i>" : hasDraft ? h.icon("arrow-up", 17) : h.icon("mic", 17)}</span></div></div>
   </div>`;
   }
   function summaryPanel(p, h) {
-    const panel3 = p.summary || {};
-    return `<aside class="dbw-summary" data-motion="reveal"><header><span>${h.esc(panel3.title || p.summaryTitle)}</span>${h.icon("panel", 16)}</header><div class="dbw-summary-body"><div class="dbw-summary-section"><div class="dbw-summary-section-heading"><span>${h.esc(panel3.artifactsLabel || p.artifactsLabel)}</span>${h.icon("plus", 15)}</div>${list2(panel3.artifacts).map((item) => `<div class="dbw-summary-file" data-motion="item">${h.icon("file", 16)}<span>${h.esc(typeof item === "string" ? item : item.name)}</span></div>`).join("")}</div><div class="dbw-summary-section"><div class="dbw-summary-section-heading"><span>${h.esc(panel3.skillsLabel || p.skillsLabel)}</span>${h.icon("chevron-right", 12)}</div></div><div class="dbw-summary-section"><div class="dbw-summary-section-heading"><span>${h.esc(panel3.filesLabel || p.filesLabel)}</span>${h.icon("chevron-right", 12)}</div>${list2(panel3.files).map((item) => `<div class="dbw-summary-file" data-motion="item">${h.icon("file", 16)}<span>${h.esc(typeof item === "string" ? item : item.name)}</span></div>`).join("")}</div></div></aside>`;
+    const panel5 = p.summary || {};
+    return `<aside class="dbw-summary" data-motion="reveal"><header><span>${h.esc(panel5.title || p.summaryTitle)}</span>${h.icon("panel", 16)}</header><div class="dbw-summary-body"><div class="dbw-summary-section"><div class="dbw-summary-section-heading"><span>${h.esc(panel5.artifactsLabel || p.artifactsLabel)}</span>${h.icon("plus", 15)}</div>${list3(panel5.artifacts).map((item) => `<div class="dbw-summary-file" data-motion="item">${h.icon("file", 16)}<span>${h.esc(typeof item === "string" ? item : item.name)}</span></div>`).join("")}</div><div class="dbw-summary-section"><div class="dbw-summary-section-heading"><span>${h.esc(panel5.skillsLabel || p.skillsLabel)}</span>${h.icon("chevron-right", 12)}</div></div><div class="dbw-summary-section"><div class="dbw-summary-section-heading"><span>${h.esc(panel5.filesLabel || p.filesLabel)}</span>${h.icon("chevron-right", 12)}</div>${list3(panel5.files).map((item) => `<div class="dbw-summary-file" data-motion="item">${h.icon("file", 16)}<span>${h.esc(typeof item === "string" ? item : item.name)}</span></div>`).join("")}</div></div></aside>`;
   }
-  var components20 = [{
+  var components24 = [{
     id: "doubao-workflow",
     name: "\u8C46\u5305\u5DE5\u4F5C \xB7 \u591A\u8F6E\u5BF9\u8BDD",
     category: "\u8C46\u5305\u5DE5\u4F5C",
@@ -4403,44 +5525,44 @@ var ComponentLibraryRuntime = (() => {
     render(props, h) {
       const p = { ...this.defaults, ...props };
       const running = Boolean(p.composer?.running ?? p.running);
-      const draft = str2(p.composer?.draft ?? p.draft);
+      const draft = str3(p.composer?.draft ?? p.draft);
       const requestedHeight = Number(p.composer?.height ?? p.composerHeight);
       const lines3 = draft.split(/\r?\n/).reduce((sum, line3) => sum + Math.max(1, Math.ceil(line3.length / 36)), 0);
       const composerHeight = Number.isFinite(requestedHeight) && requestedHeight > 0 ? Math.max(124, Math.min(244, requestedHeight)) : Math.min(244, Math.max(p.composer?.expanded ? 160 : 124, lines3 * 28 + 76));
-      const messages = list2(p.messages);
+      const messages2 = list3(p.messages);
       return `<section class="dbw-app${p.showSidebar === false ? " dbw-no-sidebar" : ""}${p.showSummary === false ? " dbw-no-summary" : ""}" data-state="${running ? "running" : "idle"}" data-simulation="true" style="--dbw-composer-height:${composerHeight}px">
       <div class="dbw-titlebar"><div class="dbw-simulation-label">${h.esc(p.simulationLabel || "\u754C\u9762\u590D\u523B \xB7 \u6848\u4F8B\u6F14\u793A")}</div>${windowControls(h)}</div>
       <div class="dbw-workbench">${p.showSidebar === false ? "" : sidebar4(p, h)}<main class="dbw-main"><header class="dbw-main-header"><span class="dbw-header-start">${h.icon("panel", 18)}${h.icon("edit", 17)}</span><div class="dbw-thread-title"><strong>${h.esc(p.title)}</strong><small>${h.esc(p.notice)}</small></div><span class="dbw-header-end">${h.icon("more", 18)}</span></header>
-      <div class="dbw-conversation" data-part="viewport"><div class="dbw-messages" data-part="message-list" data-motion="scroll">${p.showHome && !messages.length ? `<div class="dbw-home"><h2>${h.esc(p.homeTitle)}</h2></div>` : messages.map((item, index) => message3(item, index, h)).join("")}${running ? `<div class="dbw-working" data-part="status" data-state="running" data-motion="reveal">${h.esc(p.workingLabel)}<span class="dbw-static-dots">\xB7\xB7\xB7</span></div>` : ""}</div></div><div class="dbw-composer-anchor">${composer4(p, h)}</div></main>${p.showSummary === false ? "" : summaryPanel(p, h)}</div>
+      <div class="dbw-conversation" data-part="viewport"><div class="dbw-messages" data-part="message-list" data-motion="scroll">${p.showHome && !messages2.length ? `<div class="dbw-home"><h2>${h.esc(p.homeTitle)}</h2></div>` : messages2.map((item, index) => message3(item, index, h)).join("")}${running ? `<div class="dbw-working" data-part="status" data-state="running" data-motion="reveal">${h.esc(p.workingLabel)}<span class="dbw-static-dots">\xB7\xB7\xB7</span></div>` : ""}</div></div><div class="dbw-composer-anchor">${composer4(p, h)}</div></main>${p.showSummary === false ? "" : summaryPanel(p, h)}</div>
     </section>`;
     }
   }];
 
   // families/education-expanded.mjs
   var colors2 = ["#2563eb", "#5b8def", "#81c9b0", "#f0b35c", "#9b8bd1", "#87a1b9"];
-  var list3 = (v, min = 1, max = 12) => {
+  var list4 = (v, min = 1, max = 12) => {
     if (!Array.isArray(v) || v.length < min || v.length > max) throw Error(`\u9700\u8981 ${min}\u2013${max} \u9879\u6570\u636E`);
     return v;
   };
-  var number4 = (v) => {
-    const n3 = Number(v);
-    if (!Number.isFinite(n3) || n3 < 0) throw Error("\u6570\u503C\u5FC5\u987B\u662F\u6709\u9650\u7684\u975E\u8D1F\u6570");
-    return n3;
+  var number8 = (v) => {
+    const n4 = Number(v);
+    if (!Number.isFinite(n4) || n4 < 0) throw Error("\u6570\u503C\u5FC5\u987B\u662F\u6709\u9650\u7684\u975E\u8D1F\u6570");
+    return n4;
   };
   var svg = (body, view = "0 0 1120 460") => `<svg class="edx-svg" viewBox="${view}" xmlns="http://www.w3.org/2000/svg">${body}</svg>`;
-  var txt3 = (h, x, y, text6, size = 20, anchor = "middle", color2 = "#243247") => `<text x="${x}" y="${y}" font-size="${size}" text-anchor="${anchor}" fill="${color2}">${h.esc(text6)}</text>`;
+  var txt4 = (h, x, y, text7, size = 20, anchor = "middle", color5 = "#243247") => `<text x="${x}" y="${y}" font-size="${size}" text-anchor="${anchor}" fill="${color5}">${h.esc(text7)}</text>`;
   var line2 = (x1, y1, x2, y2, cls2 = "") => `<path ${cls2} d="M${x1} ${y1}L${x2} ${y2}" fill="none" stroke="#b6c9e7" stroke-width="2"/>`;
-  var node2 = (h, x, y, w, label2, detail = "", fill = "#eff5ff") => `<g data-motion="item"><rect x="${x - w / 2}" y="${y - 33}" width="${w}" height="66" rx="14" fill="${fill}" stroke="#bed1ef"/>${txt3(h, x, y - 2, label2, 21)}${txt3(h, x, y + 23, detail, 14, "middle", "#60748c")}</g>`;
+  var node3 = (h, x, y, w, label3, detail = "", fill = "#eff5ff") => `<g data-motion="item"><rect x="${x - w / 2}" y="${y - 33}" width="${w}" height="66" rx="14" fill="${fill}" stroke="#bed1ef"/>${txt4(h, x, y - 2, label3, 21)}${txt4(h, x, y + 23, detail, 14, "middle", "#60748c")}</g>`;
   function shell3(p, h, body, cls2 = "") {
     return `<section class="edx-scene ${cls2}"><header><div><span class="edx-eyebrow">${h.esc(p.eyebrow)}</span><h1>${h.esc(p.title)}</h1><p>${h.esc(p.subtitle)}</p></div><b>${h.esc(p.badge)}</b></header><main>${body}</main><footer><span>${h.esc(p.note)}</span><b>EXPLAIN / ${h.esc(p.code)}</b></footer></section>`;
   }
-  function make5(id, name, description, defaults3, render) {
+  function make6(id, name, description, defaults3, render) {
     return { id, name, description, category: "\u539F\u521B\u8BB2\u89E3\u56FE\u5F62", width: 1280, height: 800, reference: { level: "designed", basis: "\u539F\u521B\u53EF\u7F16\u8F91\u4FE1\u606F\u56FE\uFF1B\u793A\u4F8B\u6570\u636E\u7528\u4E8E\u8BB2\u89E3\uFF0C\u4E0D\u4EE3\u8868\u4EA7\u54C1\u5B9E\u6D4B\u3002", source: "\u672C\u5DE5\u7A0B\u539F\u521B SVG / HTML" }, defaults: { eyebrow: "EXPLAIN / \u7ED3\u6784\u4E0E\u6570\u636E", title: name, subtitle: description, badge: "\u793A\u4F8B\u6570\u636E", note: "\u66FF\u6362\u5185\u5BB9\u540E\uFF0C\u56FE\u5F62\u4E0E\u6570\u503C\u4E00\u8D77\u66F4\u65B0\u3002", code: id.toUpperCase(), ...defaults3 }, render(p, h) {
       return render(p, h);
     } };
   }
-  var components21 = [
-    make5("donut-chart", "\u73AF\u5F62\u5360\u6BD4\u56FE", "\u628A\u6574\u4F53\u62C6\u6210\u51E0\u90E8\u5206\uFF0C\u540C\u65F6\u4FDD\u7559\u6570\u91CF\u4E0E\u767E\u5206\u6BD4\u3002", {
+  var components25 = [
+    make6("donut-chart", "\u73AF\u5F62\u5360\u6BD4\u56FE", "\u628A\u6574\u4F53\u62C6\u6210\u51E0\u90E8\u5206\uFF0C\u540C\u65F6\u4FDD\u7559\u6570\u91CF\u4E0E\u767E\u5206\u6BD4\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -4467,17 +5589,17 @@ var ComponentLibraryRuntime = (() => {
       ],
       "unit": "\u5355\u4F4D"
     }, (p, h) => {
-      const a = list3(p.items, 2, 6), sum = a.reduce((s, x) => s + number4(x.value), 0);
+      const a2 = list4(p.items, 2, 6), sum = a2.reduce((s2, x) => s2 + number8(x.value), 0);
       if (!sum) throw Error("\u5360\u6BD4\u603B\u6570\u4E0D\u80FD\u4E3A\u96F6");
       let offset = 0;
-      const ring = a.map((x, i) => {
+      const ring = a2.map((x, i) => {
         const fraction = x.value / sum, v = `<circle data-motion="segment" cx="290" cy="225" r="150" fill="none" stroke="${colors2[i]}" stroke-width="52" stroke-dasharray="${fraction * 942.4778} 942.4778" stroke-dashoffset="${-offset * 942.4778}" transform="rotate(-90 290 225)"/>`;
         offset += fraction;
         return v;
       }).join("");
-      return shell3(p, h, svg(ring + txt3(h, 290, 224, sum, 52) + txt3(h, 290, 262, p.unit, 18, "middle", "#60748c") + a.map((x, i) => `<g data-motion="item"><rect x="605" y="${88 + i * 83}" width="14" height="14" rx="4" fill="${colors2[i]}"/>${txt3(h, 640, 103 + i * 83, x.label, 23, "start")}${txt3(h, 1010, 103 + i * 83, `${x.value} \xB7 ${(x.value / sum * 100).toFixed(0)}%`, 22, "end")}</g>`).join("")));
+      return shell3(p, h, svg(ring + txt4(h, 290, 224, sum, 52) + txt4(h, 290, 262, p.unit, 18, "middle", "#60748c") + a2.map((x, i) => `<g data-motion="item"><rect x="605" y="${88 + i * 83}" width="14" height="14" rx="4" fill="${colors2[i]}"/>${txt4(h, 640, 103 + i * 83, x.label, 23, "start")}${txt4(h, 1010, 103 + i * 83, `${x.value} \xB7 ${(x.value / sum * 100).toFixed(0)}%`, 22, "end")}</g>`).join("")));
     }),
-    make5("scatter-plot", "\u6563\u70B9\u5173\u7CFB\u56FE", "\u7528\u4E8C\u7EF4\u5750\u6807\u540C\u65F6\u6BD4\u8F83\u4E24\u4E2A\u53D8\u91CF\uFF0C\u4FDD\u7559\u6BCF\u4E2A\u5BF9\u8C61\u7684\u4F4D\u7F6E\u3002", {
+    make6("scatter-plot", "\u6563\u70B9\u5173\u7CFB\u56FE", "\u7528\u4E8C\u7EF4\u5750\u6807\u540C\u65F6\u6BD4\u8F83\u4E24\u4E2A\u53D8\u91CF\uFF0C\u4FDD\u7559\u6BCF\u4E2A\u5BF9\u8C61\u7684\u4F4D\u7F6E\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -4516,13 +5638,13 @@ var ComponentLibraryRuntime = (() => {
         }
       ]
     }, (p, h) => {
-      const a = list3(p.points, 2, 12), xm = number4(p.xMax), ym = number4(p.yMax);
-      if (!xm || !ym || a.some((x) => number4(x.x) > xm || number4(x.y) > ym)) throw Error("\u70B9\u5750\u6807\u5FC5\u987B\u5728\u6B63\u6570\u5750\u6807\u4E0A\u9650\u5185");
+      const a2 = list4(p.points, 2, 12), xm = number8(p.xMax), ym = number8(p.yMax);
+      if (!xm || !ym || a2.some((x) => number8(x.x) > xm || number8(x.y) > ym)) throw Error("\u70B9\u5750\u6807\u5FC5\u987B\u5728\u6B63\u6570\u5750\u6807\u4E0A\u9650\u5185");
       let grid = "";
-      for (let i = 0; i <= 5; i++) grid += line2(100, 370 - i * 62, 1020, 370 - i * 62) + txt3(h, 78, 377 - i * 62, ym * i / 5, 15, "end") + txt3(h, 100 + i * 184, 404, xm * i / 5, 15);
-      return shell3(p, h, svg(grid + txt3(h, 560, 448, p.xLabel, 18) + txt3(h, 102, 34, p.yLabel, 18, "start") + a.map((x, i) => `<g data-motion="point"><circle cx="${100 + x.x / xm * 920}" cy="${370 - x.y / ym * 310}" r="12" fill="${colors2[i % 6]}" opacity=".85"/>${txt3(h, 100 + x.x / xm * 920, 349 - x.y / ym * 310, x.label, 17)}</g>`).join("")));
+      for (let i = 0; i <= 5; i++) grid += line2(100, 370 - i * 62, 1020, 370 - i * 62) + txt4(h, 78, 377 - i * 62, ym * i / 5, 15, "end") + txt4(h, 100 + i * 184, 404, xm * i / 5, 15);
+      return shell3(p, h, svg(grid + txt4(h, 560, 448, p.xLabel, 18) + txt4(h, 102, 34, p.yLabel, 18, "start") + a2.map((x, i) => `<g data-motion="point"><circle cx="${100 + x.x / xm * 920}" cy="${370 - x.y / ym * 310}" r="12" fill="${colors2[i % 6]}" opacity=".85"/>${txt4(h, 100 + x.x / xm * 920, 349 - x.y / ym * 310, x.label, 17)}</g>`).join("")));
     }),
-    make5("heatmap", "\u5F3A\u5EA6\u70ED\u529B\u56FE", "\u7528\u7EDF\u4E00\u8272\u9636\u5B9A\u4F4D\u9AD8\u4F4E\u503C\uFF0C\u9002\u5408\u6BD4\u8F83\u65F6\u95F4\u6BB5\u548C\u7C7B\u522B\u3002", {
+    make6("heatmap", "\u5F3A\u5EA6\u70ED\u529B\u56FE", "\u7528\u7EDF\u4E00\u8272\u9636\u5B9A\u4F4D\u9AD8\u4F4E\u503C\uFF0C\u9002\u5408\u6BD4\u8F83\u65F6\u95F4\u6BB5\u548C\u7C7B\u522B\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -4580,19 +5702,19 @@ var ComponentLibraryRuntime = (() => {
       ],
       "max": 10
     }, (p, h) => {
-      const cols = list3(p.columns, 2, 7), rows2 = list3(p.rows, 2, 5), max = number4(p.max);
+      const cols = list4(p.columns, 2, 7), rows3 = list4(p.rows, 2, 5), max = number8(p.max);
       if (!max) throw Error("max \u5FC5\u987B\u5927\u4E8E\u96F6");
-      const w = 880 / cols.length, ht = 300 / rows2.length;
-      return shell3(p, h, svg(cols.map((x, i) => txt3(h, 195 + (i + 0.5) * w, 48, x, 18)).join("") + rows2.map((r, j) => {
-        if (list3(r.values).length !== cols.length) throw Error("\u6BCF\u884C\u6570\u503C\u9700\u4E0E\u5217\u6570\u4E00\u81F4");
-        return txt3(h, 156, 85 + (j + 0.5) * ht, r.label, 20, "end") + r.values.map((v, i) => {
-          const z = number4(v) / max;
+      const w = 880 / cols.length, ht = 300 / rows3.length;
+      return shell3(p, h, svg(cols.map((x, i) => txt4(h, 195 + (i + 0.5) * w, 48, x, 18)).join("") + rows3.map((r, j) => {
+        if (list4(r.values).length !== cols.length) throw Error("\u6BCF\u884C\u6570\u503C\u9700\u4E0E\u5217\u6570\u4E00\u81F4");
+        return txt4(h, 156, 85 + (j + 0.5) * ht, r.label, 20, "end") + r.values.map((v, i) => {
+          const z = number8(v) / max;
           if (z > 1) throw Error("\u6570\u503C\u4E0D\u80FD\u8D85\u8FC7 max");
-          return `<g data-motion="cell"><rect x="${197 + i * w}" y="${64 + j * ht}" width="${w - 7}" height="${ht - 7}" rx="7" fill="rgb(${Math.round(239 - 202 * z)},${Math.round(245 - 146 * z)},${Math.round(255 - 20 * z)})"/>${txt3(h, 195 + (i + 0.5) * w, 62 + (j + 0.6) * ht, v, 22, "middle", z > 0.6 ? "#fff" : "#24456c")}</g>`;
+          return `<g data-motion="cell"><rect x="${197 + i * w}" y="${64 + j * ht}" width="${w - 7}" height="${ht - 7}" rx="7" fill="rgb(${Math.round(239 - 202 * z)},${Math.round(245 - 146 * z)},${Math.round(255 - 20 * z)})"/>${txt4(h, 195 + (i + 0.5) * w, 62 + (j + 0.6) * ht, v, 22, "middle", z > 0.6 ? "#fff" : "#24456c")}</g>`;
         }).join("");
-      }).join("") + Array.from({ length: 10 }, (_, i) => `<rect x="${400 + i * 30}" y="404" width="30" height="13" fill="rgb(${239 - i * 20},${245 - i * 14},${255 - i * 2})"/>`).join("") + txt3(h, 360, 417, "\u4F4E", 16) + txt3(h, 738, 417, "\u9AD8", 16)));
+      }).join("") + Array.from({ length: 10 }, (_, i) => `<rect x="${400 + i * 30}" y="404" width="30" height="13" fill="rgb(${239 - i * 20},${245 - i * 14},${255 - i * 2})"/>`).join("") + txt4(h, 360, 417, "\u4F4E", 16) + txt4(h, 738, 417, "\u9AD8", 16)));
     }),
-    make5("funnel-chart", "\u8F6C\u5316\u6F0F\u6597\u56FE", "\u6309\u9636\u6BB5\u5BBD\u5EA6\u5C55\u793A\u6570\u91CF\u9012\u51CF\uFF0C\u8BFB\u51FA\u6BCF\u4E00\u6B65\u7684\u8F6C\u5316\u3002", {
+    make6("funnel-chart", "\u8F6C\u5316\u6F0F\u6597\u56FE", "\u6309\u9636\u6BB5\u5BBD\u5EA6\u5C55\u793A\u6570\u91CF\u9012\u51CF\uFF0C\u8BFB\u51FA\u6BCF\u4E00\u6B65\u7684\u8F6C\u5316\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -4619,14 +5741,14 @@ var ComponentLibraryRuntime = (() => {
       ],
       "unit": "\u5355\u4F4D"
     }, (p, h) => {
-      const a = list3(p.stages, 2, 5), max = number4(a[0].value);
-      if (!max || a.some((x, i) => number4(x.value) > (i ? a[i - 1].value : max))) throw Error("\u6F0F\u6597\u6570\u503C\u987B\u6309\u975E\u589E\u987A\u5E8F\u6392\u5217");
-      return shell3(p, h, svg(a.map((x, i) => {
+      const a2 = list4(p.stages, 2, 5), max = number8(a2[0].value);
+      if (!max || a2.some((x, i) => number8(x.value) > (i ? a2[i - 1].value : max))) throw Error("\u6F0F\u6597\u6570\u503C\u987B\u6309\u975E\u589E\u987A\u5E8F\u6392\u5217");
+      return shell3(p, h, svg(a2.map((x, i) => {
         const width = 640 * x.value / max, x0 = 425 - width / 2, y = 30 + i * 96;
-        return `<g data-motion="item"><rect data-motion="bar" x="${x0}" y="${y}" width="${width}" height="72" rx="12" fill="${colors2[i]}"/>${txt3(h, 425, y + 45, `${x.label}  ${x.value}`, 23, "middle", "#fff")}${txt3(h, 880, y + 45, `${(x.value / max * 100).toFixed(0)}%`, 28)}${i ? txt3(h, 1030, y + 44, `\u4E0A\u6B65 ${(x.value / a[i - 1].value * 100).toFixed(0)}%`, 16) : ""}</g>`;
+        return `<g data-motion="item"><rect data-motion="bar" x="${x0}" y="${y}" width="${width}" height="72" rx="12" fill="${colors2[i]}"/>${txt4(h, 425, y + 45, `${x.label}  ${x.value}`, 23, "middle", "#fff")}${txt4(h, 880, y + 45, `${(x.value / max * 100).toFixed(0)}%`, 28)}${i ? txt4(h, 1030, y + 44, `\u4E0A\u6B65 ${(x.value / a2[i - 1].value * 100).toFixed(0)}%`, 16) : ""}</g>`;
       }).join("")));
     }),
-    make5("radar-chart", "\u591A\u7EF4\u96F7\u8FBE\u56FE", "\u5728\u76F8\u540C\u91CF\u5C3A\u4E0A\u6BD4\u8F83\u591A\u4E2A\u80FD\u529B\u7EF4\u5EA6\uFF0C\u8F6E\u5ED3\u4E0E\u5206\u503C\u5BF9\u5E94\u3002", {
+    make6("radar-chart", "\u591A\u7EF4\u96F7\u8FBE\u56FE", "\u5728\u76F8\u540C\u91CF\u5C3A\u4E0A\u6BD4\u8F83\u591A\u4E2A\u80FD\u529B\u7EF4\u5EA6\uFF0C\u8F6E\u5ED3\u4E0E\u5206\u503C\u5BF9\u5E94\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -4650,20 +5772,20 @@ var ComponentLibraryRuntime = (() => {
       ],
       "caption": "\u7CFB\u5217 A"
     }, (p, h) => {
-      const a = list3(p.axes, 3, 7);
-      if (list3(p.values).length !== a.length) throw Error("axes \u4E0E values \u957F\u5EA6\u4E0D\u4E00\u81F4");
-      const max = number4(p.max);
-      if (!max || p.values.some((x) => number4(x) > max)) throw Error("\u8BC4\u5206\u8D85\u51FA\u91CF\u5C3A");
-      const point2 = (i, r) => [470 + Math.sin(i / a.length * Math.PI * 2) * r, 230 - Math.cos(i / a.length * Math.PI * 2) * r];
-      return shell3(p, h, svg([0.25, 0.5, 0.75, 1].map((v) => `<polygon points="${a.map((_, i) => point2(i, 175 * v).join(",")).join(" ")}" fill="none" stroke="#d5e0ef"/>`).join("") + a.map((x, i) => {
-        const [x1, y1] = point2(i, 175), [x2, y2] = point2(i, 211);
-        return line2(470, 230, x1, y1) + txt3(h, x2, y2, x, 19);
-      }).join("") + `<polygon data-motion="radar" points="${p.values.map((v, i) => point2(i, 175 * v / max).join(",")).join(" ")}" fill="#2563eb25" stroke="#2563eb" stroke-width="3"/>` + p.values.map((v, i) => {
-        const [x, y] = point2(i, 175 * v / max);
+      const a2 = list4(p.axes, 3, 7);
+      if (list4(p.values).length !== a2.length) throw Error("axes \u4E0E values \u957F\u5EA6\u4E0D\u4E00\u81F4");
+      const max = number8(p.max);
+      if (!max || p.values.some((x) => number8(x) > max)) throw Error("\u8BC4\u5206\u8D85\u51FA\u91CF\u5C3A");
+      const point3 = (i, r) => [470 + Math.sin(i / a2.length * Math.PI * 2) * r, 230 - Math.cos(i / a2.length * Math.PI * 2) * r];
+      return shell3(p, h, svg([0.25, 0.5, 0.75, 1].map((v) => `<polygon points="${a2.map((_, i) => point3(i, 175 * v).join(",")).join(" ")}" fill="none" stroke="#d5e0ef"/>`).join("") + a2.map((x, i) => {
+        const [x1, y1] = point3(i, 175), [x2, y2] = point3(i, 211);
+        return line2(470, 230, x1, y1) + txt4(h, x2, y2, x, 19);
+      }).join("") + `<polygon data-motion="radar" points="${p.values.map((v, i) => point3(i, 175 * v / max).join(",")).join(" ")}" fill="#2563eb25" stroke="#2563eb" stroke-width="3"/>` + p.values.map((v, i) => {
+        const [x, y] = point3(i, 175 * v / max);
         return `<circle data-motion="point" cx="${x}" cy="${y}" r="5" fill="#2563eb"/>`;
-      }).join("") + txt3(h, 955, 130, p.caption, 22) + a.map((x, i) => txt3(h, 955, 178 + i * 41, `${x}  ${p.values[i]}`, 19)).join("")));
+      }).join("") + txt4(h, 955, 130, p.caption, 22) + a2.map((x, i) => txt4(h, 955, 178 + i * 41, `${x}  ${p.values[i]}`, 19)).join("")));
     }),
-    make5("pyramid-diagram", "\u5C42\u7EA7\u91D1\u5B57\u5854", "\u7528\u5C42\u7EA7\u5173\u7CFB\u89E3\u91CA\u4ECE\u57FA\u7840\u5230\u5E94\u7528\u7684\u7EC4\u7EC7\u65B9\u5F0F\u3002", {
+    make6("pyramid-diagram", "\u5C42\u7EA7\u91D1\u5B57\u5854", "\u7528\u5C42\u7EA7\u5173\u7CFB\u89E3\u91CA\u4ECE\u57FA\u7840\u5230\u5E94\u7528\u7684\u7EC4\u7EC7\u65B9\u5F0F\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -4689,13 +5811,13 @@ var ComponentLibraryRuntime = (() => {
         }
       ]
     }, (p, h) => {
-      const a = list3(p.layers, 3, 5), top = 25, step = 390 / a.length;
-      return shell3(p, h, svg(a.map((x, i) => {
+      const a2 = list4(p.layers, 3, 5), top = 25, step = 390 / a2.length;
+      return shell3(p, h, svg(a2.map((x, i) => {
         const wt = 30 + i * 140, wb = 30 + (i + 1) * 140, y = top + i * step;
-        return `<g data-motion="item"><path d="M${400 - wt / 2} ${y}H${400 + wt / 2}L${400 + wb / 2} ${y + step - 6}H${400 - wb / 2}Z" fill="${colors2[i]}"/>${line2(400 + wb / 2 + 15, y + step / 2, 820, y + step / 2)}${txt3(h, 850, y + step / 2 - 5, x.label, 23, "start")}${txt3(h, 850, y + step / 2 + 23, x.detail, 16, "start", "#667b94")}</g>`;
+        return `<g data-motion="item"><path d="M${400 - wt / 2} ${y}H${400 + wt / 2}L${400 + wb / 2} ${y + step - 6}H${400 - wb / 2}Z" fill="${colors2[i]}"/>${line2(400 + wb / 2 + 15, y + step / 2, 820, y + step / 2)}${txt4(h, 850, y + step / 2 - 5, x.label, 23, "start")}${txt4(h, 850, y + step / 2 + 23, x.detail, 16, "start", "#667b94")}</g>`;
       }).join("")));
     }),
-    make5("venn-diagram", "\u4EA4\u96C6\u5173\u7CFB\u56FE", "\u7528\u4E24\u4E2A\u96C6\u5408\u53CA\u5171\u540C\u533A\u57DF\u89E3\u91CA\u6982\u5FF5\u4E4B\u95F4\u7684\u5173\u7CFB\u3002", {
+    make6("venn-diagram", "\u4EA4\u96C6\u5173\u7CFB\u56FE", "\u7528\u4E24\u4E2A\u96C6\u5408\u53CA\u5171\u540C\u533A\u57DF\u89E3\u91CA\u6982\u5FF5\u4E4B\u95F4\u7684\u5173\u7CFB\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -4707,8 +5829,8 @@ var ComponentLibraryRuntime = (() => {
       "overlap": "\u4EA4\u96C6",
       "leftDetail": "\u96C6\u5408\u8BF4\u660E A",
       "rightDetail": "\u96C6\u5408\u8BF4\u660E B"
-    }, (p, h) => shell3(p, h, svg(`<g data-motion="item"><circle cx="425" cy="218" r="166" fill="#2563eb17" stroke="#6a98e9" stroke-width="2"/>${txt3(h, 339, 205, p.left, 30)}${txt3(h, 339, 246, p.leftDetail, 16)}</g><g data-motion="item"><circle cx="683" cy="218" r="166" fill="#81c9b030" stroke="#63b99c" stroke-width="2"/>${txt3(h, 769, 205, p.right, 30)}${txt3(h, 769, 246, p.rightDetail, 16)}</g><g data-motion="focus"><rect x="477" y="193" width="154" height="54" rx="27" fill="#fff" stroke="#b8cce5"/>${txt3(h, 554, 227, p.overlap, 23)}</g>`))),
-    make5("mind-map", "\u653E\u5C04\u601D\u7EF4\u5BFC\u56FE", "\u56F4\u7ED5\u4E00\u4E2A\u4E3B\u9898\u5C55\u5F00\u5206\u652F\uFF0C\u9002\u5408\u9009\u9898\u62C6\u89E3\u548C\u77E5\u8BC6\u7EC4\u7EC7\u3002", {
+    }, (p, h) => shell3(p, h, svg(`<g data-motion="item"><circle cx="425" cy="218" r="166" fill="#2563eb17" stroke="#6a98e9" stroke-width="2"/>${txt4(h, 339, 205, p.left, 30)}${txt4(h, 339, 246, p.leftDetail, 16)}</g><g data-motion="item"><circle cx="683" cy="218" r="166" fill="#81c9b030" stroke="#63b99c" stroke-width="2"/>${txt4(h, 769, 205, p.right, 30)}${txt4(h, 769, 246, p.rightDetail, 16)}</g><g data-motion="focus"><rect x="477" y="193" width="154" height="54" rx="27" fill="#fff" stroke="#b8cce5"/>${txt4(h, 554, 227, p.overlap, 23)}</g>`))),
+    make6("mind-map", "\u653E\u5C04\u601D\u7EF4\u5BFC\u56FE", "\u56F4\u7ED5\u4E00\u4E2A\u4E3B\u9898\u5C55\u5F00\u5206\u652F\uFF0C\u9002\u5408\u9009\u9898\u62C6\u89E3\u548C\u77E5\u8BC6\u7EC4\u7EC7\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -4744,13 +5866,13 @@ var ComponentLibraryRuntime = (() => {
       ],
       "centerCaption": "\u4E2D\u5FC3\u8BF4\u660E"
     }, (p, h) => {
-      const a = list3(p.branches, 3, 6), coords = [[240, 66], [860, 66], [103, 230], [997, 230], [240, 397], [860, 397]];
-      return shell3(p, h, svg(a.map((x, i) => {
+      const a2 = list4(p.branches, 3, 6), coords = [[240, 66], [860, 66], [103, 230], [997, 230], [240, 397], [860, 397]];
+      return shell3(p, h, svg(a2.map((x, i) => {
         const [x1, y] = coords[i];
         return `<path data-motion="line" d="M560 230Q${x1} 230 ${x1} ${y}" fill="none" stroke="#9dbbec" stroke-width="3"/>`;
-      }).join("") + node2(h, 560, 230, 230, p.center, p.centerCaption, "#dceaff") + a.map((x, i) => node2(h, ...coords[i], 218, x.title, x.detail, i % 2 ? "#eff8f4" : "#f1f5fc")).join("")));
+      }).join("") + node3(h, 560, 230, 230, p.center, p.centerCaption, "#dceaff") + a2.map((x, i) => node3(h, ...coords[i], 218, x.title, x.detail, i % 2 ? "#eff8f4" : "#f1f5fc")).join("")));
     }),
-    make5("cycle-diagram", "\u5FAA\u73AF\u53CD\u9988\u56FE", "\u628A\u6267\u884C\u3001\u89C2\u5BDF\u4E0E\u4FEE\u6B63\u8FDE\u63A5\u6210\u53EF\u91CD\u590D\u7684\u5FAA\u73AF\u3002", {
+    make6("cycle-diagram", "\u5FAA\u73AF\u53CD\u9988\u56FE", "\u628A\u6267\u884C\u3001\u89C2\u5BDF\u4E0E\u4FEE\u6B63\u8FDE\u63A5\u6210\u53EF\u91CD\u590D\u7684\u5FAA\u73AF\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -4777,10 +5899,10 @@ var ComponentLibraryRuntime = (() => {
         }
       ]
     }, (p, h) => {
-      const a = list3(p.steps, 4, 4), pos = [[560, 58], [900, 228], [560, 403], [220, 228]], mark = h.uid("cycle-arrow");
-      return shell3(p, h, svg(`<defs><marker id="${mark}" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0 7 4 0 8" fill="#719ddd"/></marker></defs>` + ["M650 75Q810 70 880 174", "M884 279Q805 395 665 396", "M459 396Q300 389 235 284", "M230 176Q300 66 455 70"].map((d) => `<path data-motion="line" d="${d}" fill="none" stroke="#719ddd" stroke-width="3" marker-end="url(#${mark})"/>`).join("") + txt3(h, 560, 238, p.center, 32) + a.map((x, i) => node2(h, ...pos[i], 230, x.title, x.detail)).join("")));
+      const a2 = list4(p.steps, 4, 4), pos = [[560, 58], [900, 228], [560, 403], [220, 228]], mark = h.uid("cycle-arrow");
+      return shell3(p, h, svg(`<defs><marker id="${mark}" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0 0 7 4 0 8" fill="#719ddd"/></marker></defs>` + ["M650 75Q810 70 880 174", "M884 279Q805 395 665 396", "M459 396Q300 389 235 284", "M230 176Q300 66 455 70"].map((d) => `<path data-motion="line" d="${d}" fill="none" stroke="#719ddd" stroke-width="3" marker-end="url(#${mark})"/>`).join("") + txt4(h, 560, 238, p.center, 32) + a2.map((x, i) => node3(h, ...pos[i], 230, x.title, x.detail)).join("")));
     }),
-    make5("decision-tree", "\u51B3\u7B56\u6811", "\u628A\u6761\u4EF6\u3001\u5206\u652F\u4E0E\u7ED3\u679C\u5206\u5F00\uFF0C\u9002\u5408\u89E3\u91CA\u9009\u62E9\u903B\u8F91\u3002", {
+    make6("decision-tree", "\u51B3\u7B56\u6811", "\u628A\u6761\u4EF6\u3001\u5206\u652F\u4E0E\u7ED3\u679C\u5206\u5F00\uFF0C\u9002\u5408\u89E3\u91CA\u9009\u62E9\u903B\u8F91\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -4795,8 +5917,8 @@ var ComponentLibraryRuntime = (() => {
       "yesLabel": "\u662F",
       "noLabel": "\u5426",
       "yesDetail": "\u7ED3\u679C\u8BF4\u660E A"
-    }, (p, h) => shell3(p, h, svg(`<path data-motion="line" d="M560 94V151H277V220M560 151H837V220M837 286V342H652V388M837 342H1010V388" fill="none" stroke="#88aadd" stroke-width="3"/>` + node2(h, 560, 62, 324, p.question) + node2(h, 277, 252, 232, p.yes, p.yesDetail, "#eaf7f0") + node2(h, 837, 252, 310, p.no) + node2(h, 652, 416, 225, p.yes2) + node2(h, 1010, 416, 211, p.no2) + txt3(h, 300, 142, p.yesLabel, 18) + txt3(h, 810, 142, p.noLabel, 18) + txt3(h, 675, 334, p.yesLabel, 18) + txt3(h, 998, 334, p.noLabel, 18)))),
-    make5("architecture-map", "\u7CFB\u7EDF\u67B6\u6784\u56FE", "\u5C06\u5165\u53E3\u3001\u670D\u52A1\u4E0E\u5B58\u50A8\u5206\u5C42\uFF0C\u8FDE\u7EBF\u8868\u8FBE\u6570\u636E\u6D41\u5411\u3002", {
+    }, (p, h) => shell3(p, h, svg(`<path data-motion="line" d="M560 94V151H277V220M560 151H837V220M837 286V342H652V388M837 342H1010V388" fill="none" stroke="#88aadd" stroke-width="3"/>` + node3(h, 560, 62, 324, p.question) + node3(h, 277, 252, 232, p.yes, p.yesDetail, "#eaf7f0") + node3(h, 837, 252, 310, p.no) + node3(h, 652, 416, 225, p.yes2) + node3(h, 1010, 416, 211, p.no2) + txt4(h, 300, 142, p.yesLabel, 18) + txt4(h, 810, 142, p.noLabel, 18) + txt4(h, 675, 334, p.yesLabel, 18) + txt4(h, 998, 334, p.noLabel, 18)))),
+    make6("architecture-map", "\u7CFB\u7EDF\u67B6\u6784\u56FE", "\u5C06\u5165\u53E3\u3001\u670D\u52A1\u4E0E\u5B58\u50A8\u5206\u5C42\uFF0C\u8FDE\u7EBF\u8868\u8FBE\u6570\u636E\u6D41\u5411\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -4830,10 +5952,10 @@ var ComponentLibraryRuntime = (() => {
         }
       ]
     }, (p, h) => {
-      const a = list3(p.layers, 3, 3);
-      return shell3(p, h, svg(a.map((r, j) => `<rect x="95" y="${24 + j * 142}" width="1010" height="111" rx="14" fill="${j === 1 ? "#f1f6ff" : "#f6f8fb"}"/>${txt3(h, 64, 88 + j * 142, r.name, 19)}${list3(r.items, 3, 3).map((x, i) => node2(h, 290 + i * 330, 78 + j * 142, 253, x, "", j === 1 ? "#e2edff" : "#fff")).join("")}`).join("") + [0, 1].map((j) => [290, 620, 950].map((x) => `<path data-motion="line" d="M${x} ${111 + j * 142}v76" stroke="#94afda" stroke-width="2" stroke-dasharray="5 5"/>`).join("")).join("")));
+      const a2 = list4(p.layers, 3, 3);
+      return shell3(p, h, svg(a2.map((r, j) => `<rect x="95" y="${24 + j * 142}" width="1010" height="111" rx="14" fill="${j === 1 ? "#f1f6ff" : "#f6f8fb"}"/>${txt4(h, 64, 88 + j * 142, r.name, 19)}${list4(r.items, 3, 3).map((x, i) => node3(h, 290 + i * 330, 78 + j * 142, 253, x, "", j === 1 ? "#e2edff" : "#fff")).join("")}`).join("") + [0, 1].map((j) => [290, 620, 950].map((x) => `<path data-motion="line" d="M${x} ${111 + j * 142}v76" stroke="#94afda" stroke-width="2" stroke-dasharray="5 5"/>`).join("")).join("")));
     }),
-    make5("swimlane-flow", "\u804C\u8D23\u6CF3\u9053\u56FE", "\u6309\u89D2\u8272\u6392\u5217\u52A8\u4F5C\uFF0C\u7A81\u51FA\u4EA4\u63A5\u70B9\u4E0E\u8D23\u4EFB\u8FB9\u754C\u3002", {
+    make6("swimlane-flow", "\u804C\u8D23\u6CF3\u9053\u56FE", "\u6309\u89D2\u8272\u6392\u5217\u52A8\u4F5C\uFF0C\u7A81\u51FA\u4EA4\u63A5\u70B9\u4E0E\u8D23\u4EFB\u8FB9\u754C\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -4878,18 +6000,18 @@ var ComponentLibraryRuntime = (() => {
         }
       ]
     }, (p, h) => {
-      const a = list3(p.lanes, 3, 3), xs = [231, 425, 619, 813, 1007], route = a.flatMap((r, j) => r.tasks.map((t) => ({ x: xs[t.column], y: 94 + j * 135, column: t.column }))).sort((a2, b) => a2.column - b.column);
+      const a2 = list4(p.lanes, 3, 3), xs = [231, 425, 619, 813, 1007], route = a2.flatMap((r, j) => r.tasks.map((t) => ({ x: xs[t.column], y: 94 + j * 135, column: t.column }))).sort((a3, b2) => a3.column - b2.column);
       if (new Set(route.map((t) => t.column)).size !== route.length) throw Error("\u6BCF\u4E2A\u6B65\u9AA4\u8BF7\u4F7F\u7528\u4E00\u4E2A\u4E0D\u540C\u7684 column");
-      const links = route.slice(1).map((b, i) => {
-        const a2 = route[i], mx = (a2.x + b.x) / 2;
-        return `M${a2.x + 82} ${a2.y}H${mx}V${b.y}H${b.x - 82}`;
+      const links = route.slice(1).map((b2, i) => {
+        const a3 = route[i], mx = (a3.x + b2.x) / 2;
+        return `M${a3.x + 82} ${a3.y}H${mx}V${b2.y}H${b2.x - 82}`;
       }).join("");
-      return shell3(p, h, svg(a.map((r, j) => `<rect x="0" y="${30 + j * 135}" width="1120" height="127" rx="10" fill="${j % 2 ? "#f7f9fc" : "#edf3fa"}"/>${txt3(h, 61, 103 + j * 135, r.name, 23)}${list3(r.tasks, 1, 5).map((t) => {
+      return shell3(p, h, svg(a2.map((r, j) => `<rect x="0" y="${30 + j * 135}" width="1120" height="127" rx="10" fill="${j % 2 ? "#f7f9fc" : "#edf3fa"}"/>${txt4(h, 61, 103 + j * 135, r.name, 23)}${list4(r.tasks, 1, 5).map((t) => {
         if (!Number.isInteger(t.column) || t.column < 0 || t.column > 4) throw Error("column \u8303\u56F4 0\u20134");
-        return node2(h, xs[t.column], 94 + j * 135, 164, t.title);
+        return node3(h, xs[t.column], 94 + j * 135, 164, t.title);
       }).join("")}`).join("") + `<path data-motion="line" d="${links}" fill="none" stroke="#79a1dc" stroke-width="3"/>`));
     }),
-    make5("kanban-board", "\u4EFB\u52A1\u770B\u677F", "\u8BA9\u4EFB\u52A1\u6309\u72B6\u6001\u5206\u7EC4\uFF0C\u7528\u5361\u7247\u4F4D\u7F6E\u89E3\u91CA\u5DE5\u4F5C\u6D41\u3002", {
+    make6("kanban-board", "\u4EFB\u52A1\u770B\u677F", "\u8BA9\u4EFB\u52A1\u6309\u72B6\u6001\u5206\u7EC4\uFF0C\u7528\u5361\u7247\u4F4D\u7F6E\u89E3\u91CA\u5DE5\u4F5C\u6D41\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -4948,8 +6070,8 @@ var ComponentLibraryRuntime = (() => {
           ]
         }
       ]
-    }, (p, h) => shell3(p, h, `<div class="edx-board">${list3(p.columns, 3, 3).map((c, i) => `<section><h2><i style="background:${colors2[i]}"></i>${h.esc(c.name)}<small>${c.tasks.length}</small></h2>${list3(c.tasks, 1, 4).map((t, j) => `<article data-motion="item"><span class="edx-task-tag">${h.esc(t.tag)}</span><h3>${h.esc(t.title)}</h3><p>${h.esc(t.reference)}</p><div class="edx-task-bottom"><span>\u25F7 ${h.esc(t.period)}</span><b>${h.esc(t.assignee)}</b></div></article>`).join("")}</section>`).join("")}</div>`)),
-    make5("roadmap", "\u9879\u76EE\u8DEF\u7EBF\u56FE", "\u901A\u8FC7\u65F6\u95F4\u533A\u95F4\u5C55\u793A\u5E76\u884C\u4EFB\u52A1\uFF0C\u9002\u5408\u5236\u4F5C\u8BA1\u5212\u548C\u91CC\u7A0B\u7891\u3002", {
+    }, (p, h) => shell3(p, h, `<div class="edx-board">${list4(p.columns, 3, 3).map((c, i) => `<section><h2><i style="background:${colors2[i]}"></i>${h.esc(c.name)}<small>${c.tasks.length}</small></h2>${list4(c.tasks, 1, 4).map((t, j) => `<article data-motion="item"><span class="edx-task-tag">${h.esc(t.tag)}</span><h3>${h.esc(t.title)}</h3><p>${h.esc(t.reference)}</p><div class="edx-task-bottom"><span>\u25F7 ${h.esc(t.period)}</span><b>${h.esc(t.assignee)}</b></div></article>`).join("")}</section>`).join("")}</div>`)),
+    make6("roadmap", "\u9879\u76EE\u8DEF\u7EBF\u56FE", "\u901A\u8FC7\u65F6\u95F4\u533A\u95F4\u5C55\u793A\u5E76\u884C\u4EFB\u52A1\uFF0C\u9002\u5408\u5236\u4F5C\u8BA1\u5212\u548C\u91CC\u7A0B\u7891\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -4986,13 +6108,13 @@ var ComponentLibraryRuntime = (() => {
       ],
       "unit": "\u5355\u4F4D"
     }, (p, h) => {
-      const a = list3(p.tasks, 2, 5), weeks = list3(p.weeks, 4, 4);
-      return shell3(p, h, svg(weeks.map((w, i) => txt3(h, 275 + i * 230, 38, w, 19) + line2(160 + i * 230, 59, 160 + i * 230, 426)).join("") + line2(1080, 59, 1080, 426) + a.map((x, i) => {
-        if (number4(x.start) >= number4(x.end) || x.end > 4) throw Error("\u4EFB\u52A1\u533A\u95F4\u987B\u5728 0\u20134 \u5185");
-        return txt3(h, 135, 115 + i * 84, x.label, 18, "end") + `<g data-motion="item"><rect data-motion="bar" x="${160 + x.start * 230}" y="${82 + i * 84}" width="${(x.end - x.start) * 230}" height="50" rx="9" fill="${colors2[i]}"/>${txt3(h, 170 + x.start * 230, 114 + i * 84, `${Number((x.end - x.start).toFixed(2))} ${p.unit}`, 18, "start", "#fff")}</g>`;
+      const a2 = list4(p.tasks, 2, 5), weeks = list4(p.weeks, 4, 4);
+      return shell3(p, h, svg(weeks.map((w, i) => txt4(h, 275 + i * 230, 38, w, 19) + line2(160 + i * 230, 59, 160 + i * 230, 426)).join("") + line2(1080, 59, 1080, 426) + a2.map((x, i) => {
+        if (number8(x.start) >= number8(x.end) || x.end > 4) throw Error("\u4EFB\u52A1\u533A\u95F4\u987B\u5728 0\u20134 \u5185");
+        return txt4(h, 135, 115 + i * 84, x.label, 18, "end") + `<g data-motion="item"><rect data-motion="bar" x="${160 + x.start * 230}" y="${82 + i * 84}" width="${(x.end - x.start) * 230}" height="50" rx="9" fill="${colors2[i]}"/>${txt4(h, 170 + x.start * 230, 114 + i * 84, `${Number((x.end - x.start).toFixed(2))} ${p.unit}`, 18, "start", "#fff")}</g>`;
       }).join("")));
     }),
-    make5("formula-breakdown", "\u516C\u5F0F\u62C6\u89E3", "\u9010\u9879\u89E3\u91CA\u516C\u5F0F\u7684\u8F93\u5165\u4E0E\u542B\u4E49\uFF0C\u518D\u7ED9\u51FA\u4E00\u6B21\u6F14\u7B97\u3002", {
+    make6("formula-breakdown", "\u516C\u5F0F\u62C6\u89E3", "\u9010\u9879\u89E3\u91CA\u516C\u5F0F\u7684\u8F93\u5165\u4E0E\u542B\u4E49\uFF0C\u518D\u7ED9\u51FA\u4E00\u6B21\u6F14\u7B97\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -5021,10 +6143,10 @@ var ComponentLibraryRuntime = (() => {
         "="
       ]
     }, (p, h) => {
-      const a = list3(p.terms, 3, 3);
-      return shell3(p, h, `<div class="edx-formula">${a.map((x, i) => `<article data-motion="item"><b data-motion="emphasis">${h.esc(x.symbol)}</b><div class="edx-formula-rule"></div><p>${h.esc(x.meaning)}</p><strong data-motion="focus">${h.esc(x.value)}</strong></article>${i < 2 ? `<span>${h.esc(p.operators[i])}</span>` : ""}`).join("")}</div>`);
+      const a2 = list4(p.terms, 3, 3);
+      return shell3(p, h, `<div class="edx-formula">${a2.map((x, i) => `<article data-motion="item"><b data-motion="emphasis">${h.esc(x.symbol)}</b><div class="edx-formula-rule"></div><p>${h.esc(x.meaning)}</p><strong data-motion="focus">${h.esc(x.value)}</strong></article>${i < 2 ? `<span>${h.esc(p.operators[i])}</span>` : ""}`).join("")}</div>`);
     }),
-    make5("spectrum-scale", "\u8FDE\u7EED\u5C3A\u5EA6\u56FE", "\u5728\u8FDE\u7EED\u8303\u56F4\u4E0A\u5B9A\u4F4D\u591A\u4E2A\u5BF9\u8C61\uFF0C\u907F\u514D\u975E\u9ED1\u5373\u767D\u7684\u5206\u7C7B\u3002", {
+    make6("spectrum-scale", "\u8FDE\u7EED\u5C3A\u5EA6\u56FE", "\u5728\u8FDE\u7EED\u8303\u56F4\u4E0A\u5B9A\u4F4D\u591A\u4E2A\u5BF9\u8C61\uFF0C\u907F\u514D\u975E\u9ED1\u5373\u767D\u7684\u5206\u7C7B\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -5052,15 +6174,15 @@ var ComponentLibraryRuntime = (() => {
         }
       ]
     }, (p, h) => {
-      const a = list3(p.markers, 2, 6);
-      return shell3(p, h, svg(`<defs><linearGradient id="${h.uid("spectrum")}"><stop stop-color="#dce8fb"/><stop offset=".5" stop-color="#709bea"/><stop offset="1" stop-color="#81c9b0"/></linearGradient></defs><rect x="75" y="219" width="970" height="38" rx="19" fill="url(#${h.uid("spectrum")})"/>` + a.map((x, i) => {
-        const v = number4(x.value);
+      const a2 = list4(p.markers, 2, 6);
+      return shell3(p, h, svg(`<defs><linearGradient id="${h.uid("spectrum")}"><stop stop-color="#dce8fb"/><stop offset=".5" stop-color="#709bea"/><stop offset="1" stop-color="#81c9b0"/></linearGradient></defs><rect x="75" y="219" width="970" height="38" rx="19" fill="url(#${h.uid("spectrum")})"/>` + a2.map((x, i) => {
+        const v = number8(x.value);
         if (v > 100) throw Error("value \u987B\u5728 0\u2013100");
         const xx = 75 + v / 100 * 970, top = i % 2 === 0;
-        return `<g data-motion="point">${line2(xx, top ? 152 : 257, xx, top ? 219 : 326)}<circle cx="${xx}" cy="238" r="10" fill="#fff" stroke="#386dbc" stroke-width="3"/>${txt3(h, xx, top ? 133 : 356, x.label, 20)}${txt3(h, xx, top ? 104 : 388, v, 18, "middle", "#6c80a0")}</g>`;
-      }).join("") + txt3(h, 75, 437, p.left, 19, "start") + txt3(h, 1045, 437, p.right, 19, "end")));
+        return `<g data-motion="point">${line2(xx, top ? 152 : 257, xx, top ? 219 : 326)}<circle cx="${xx}" cy="238" r="10" fill="#fff" stroke="#386dbc" stroke-width="3"/>${txt4(h, xx, top ? 133 : 356, x.label, 20)}${txt4(h, xx, top ? 104 : 388, v, 18, "middle", "#6c80a0")}</g>`;
+      }).join("") + txt4(h, 75, 437, p.left, 19, "start") + txt4(h, 1045, 437, p.right, 19, "end")));
     }),
-    make5("process-steps", "\u6A2A\u5411\u6B65\u9AA4\u8BF4\u660E", "\u7ED9\u6BCF\u4E00\u6B65\u5206\u914D\u7F16\u53F7\u3001\u52A8\u4F5C\u4E0E\u7ED3\u679C\uFF0C\u9002\u5408\u64CD\u4F5C\u6559\u5B66\u3002", {
+    make6("process-steps", "\u6A2A\u5411\u6B65\u9AA4\u8BF4\u660E", "\u7ED9\u6BCF\u4E00\u6B65\u5206\u914D\u7F16\u53F7\u3001\u52A8\u4F5C\u4E0E\u7ED3\u679C\uFF0C\u9002\u5408\u64CD\u4F5C\u6559\u5B66\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -5089,8 +6211,8 @@ var ComponentLibraryRuntime = (() => {
           "result": "\u7ED3\u679C D"
         }
       ]
-    }, (p, h) => shell3(p, h, `<div class="edx-steps">${list3(p.steps, 3, 5).map((x, i) => `<article data-motion="item"><b class="edx-step-number">${String(i + 1).padStart(2, "0")}</b><h2>${h.esc(x.title)}</h2><p>${h.esc(x.detail)}</p><div class="edx-step-result" data-motion="focus">${h.esc(x.result)}</div>${i < p.steps.length - 1 ? '<span class="edx-step-arrow">\u2192</span>' : ""}</article>`).join("")}</div>`)),
-    make5("lecture-stage", "\u52A8\u6001\u8BFE\u4EF6\u8BB2\u89E3\u821E\u53F0", "\u771F\u5B9E PPT\u3001\u5F55\u5C4F\u6216\u539F\u751F\u56FE\u89E3\u7684\u7EDF\u4E00\u821E\u53F0\uFF0C\u80CC\u666F\u4E0E\u4E3B\u4F53\u5206\u522B\u8FD0\u52A8\u3002", {
+    }, (p, h) => shell3(p, h, `<div class="edx-steps">${list4(p.steps, 3, 5).map((x, i) => `<article data-motion="item"><b class="edx-step-number">${String(i + 1).padStart(2, "0")}</b><h2>${h.esc(x.title)}</h2><p>${h.esc(x.detail)}</p><div class="edx-step-result" data-motion="focus">${h.esc(x.result)}</div>${i < p.steps.length - 1 ? '<span class="edx-step-arrow">\u2192</span>' : ""}</article>`).join("")}</div>`)),
+    make6("lecture-stage", "\u52A8\u6001\u8BFE\u4EF6\u8BB2\u89E3\u821E\u53F0", "\u771F\u5B9E PPT\u3001\u5F55\u5C4F\u6216\u539F\u751F\u56FE\u89E3\u7684\u7EDF\u4E00\u821E\u53F0\uFF0C\u80CC\u666F\u4E0E\u4E3B\u4F53\u5206\u522B\u8FD0\u52A8\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -5121,7 +6243,7 @@ var ComponentLibraryRuntime = (() => {
     }, (p, h) => {
       const m = p.media || {};
       if (m.src && (/^(?:[a-z]+:|\/\/)/i.test(m.src) || m.src.includes(".."))) throw Error("\u7D20\u6750\u987B\u4F7F\u7528\u672C\u5730\u76F8\u5BF9\u8DEF\u5F84");
-      const body = m.src ? m.kind === "video" ? `<video id="${h.uid("lecture-media")}" src="${h.esc(m.src)}" muted playsinline style="object-fit:${m.fit === "cover" ? "cover" : "contain"}"></video>` : `<img src="${h.esc(m.src)}" alt="\u8BFE\u4EF6\u7D20\u6750" style="object-fit:${m.fit === "cover" ? "cover" : "contain"}">` : `<div class="edx-lesson-native"><span>${h.esc(p.chapter)}</span><h1>${h.esc(p.title)}</h1><p>${h.esc(p.subtitle)}</p><div>${list3(p.sections, 2, 4).map((x, i) => `<article data-motion="item"><b>${String(i + 1).padStart(2, "0")}</b><h2>${h.esc(x.title)}</h2><p>${h.esc(x.detail)}</p></article>`).join("")}</div></div>`;
+      const body = m.src ? m.kind === "video" ? `<video id="${h.uid("lecture-media")}" src="${h.esc(m.src)}" muted playsinline style="object-fit:${m.fit === "cover" ? "cover" : "contain"}"></video>` : `<img src="${h.esc(m.src)}" alt="\u8BFE\u4EF6\u7D20\u6750" style="object-fit:${m.fit === "cover" ? "cover" : "contain"}">` : `<div class="edx-lesson-native"><span>${h.esc(p.chapter)}</span><h1>${h.esc(p.title)}</h1><p>${h.esc(p.subtitle)}</p><div>${list4(p.sections, 2, 4).map((x, i) => `<article data-motion="item"><b>${String(i + 1).padStart(2, "0")}</b><h2>${h.esc(x.title)}</h2><p>${h.esc(x.detail)}</p></article>`).join("")}</div></div>`;
       return `<section class="edx-lecture"><div class="edx-ambient" data-motion="background"></div><div class="edx-lesson-shell" data-motion="focus"><i class="edx-corner edx-corner-a"></i><i class="edx-corner edx-corner-b"></i><div class="edx-lesson-media">${body}</div></div><div class="edx-lesson-caption">${h.esc(p.caption)}</div></section>`;
     })
   ];
@@ -5137,15 +6259,15 @@ var ComponentLibraryRuntime = (() => {
   var clamp2 = (value, low, high) => Math.min(high, Math.max(low, n2(value)));
   var fmt = (value) => Number.isInteger(n2(value)) ? String(n2(value)) : n2(value).toFixed(1);
   var localMedia = (value) => {
-    const path = String(value || "");
-    if (/^(?:[a-z]+:|\/\/)/i.test(path) || path.includes("..") || /[\u0000-\u001f]/.test(path)) throw new Error("mediaSrc must be a local relative media path");
-    return path;
+    const path2 = String(value || "");
+    if (/^(?:[a-z]+:|\/\/)/i.test(path2) || path2.includes("..") || /[\u0000-\u001f]/.test(path2)) throw new Error("mediaSrc must be a local relative media path");
+    return path2;
   };
   var tick2 = '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m4.5 10 3.4 3.4 7.6-7.1" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  var arrow2 = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var arrow4 = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   function shell4(p, h, body, extra2 = "") {
-    const e = h.esc;
-    return '<section class="edu-scene ' + extra2 + '"><header class="edu-header"><div><div class="edu-eyebrow">' + e(p.eyebrow) + "</div><h1>" + e(p.title) + "</h1><p>" + e(p.subtitle) + '</p></div><span class="edu-edition">' + e(p.badge) + '</span></header><main class="edu-body">' + body + '</main><footer class="edu-footer"><span>' + e(p.footer) + '</span><span class="edu-footer-mark"><i></i>' + e(p.series) + "</span></footer></section>";
+    const e2 = h.esc;
+    return '<section class="edu-scene ' + extra2 + '"><header class="edu-header"><div><div class="edu-eyebrow">' + e2(p.eyebrow) + "</div><h1>" + e2(p.title) + "</h1><p>" + e2(p.subtitle) + '</p></div><span class="edu-edition">' + e2(p.badge) + '</span></header><main class="edu-body">' + body + '</main><footer class="edu-footer"><span>' + e2(p.footer) + '</span><span class="edu-footer-mark"><i></i>' + e2(p.series) + "</span></footer></section>";
   }
   var base = {
     eyebrow: "\u53EF\u590D\u7528\u8BB2\u89E3\u7EC4\u4EF6",
@@ -5175,7 +6297,7 @@ var ComponentLibraryRuntime = (() => {
       if (tooLong(p.subjectTitle, 18) || tooLong(p.subjectSubtitle, 26) || p.fields.some((x) => tooLong(x.label, 3) || tooLong(x.value, 18)) || p.callouts.some((x) => tooLong(x.title, 9) || tooLong(x.detail, 16))) throw new Error("annotation-callout: text exceeds the measured anchor layout; shorten the copy or adjust the layout");
     }
   }
-  var create3 = (id, name, description, defaults3, render) => ({
+  var create4 = (id, name, description, defaults3, render) => ({
     id,
     name,
     category: "\u539F\u521B\u8BB2\u89E3\u56FE\u5F62",
@@ -5190,8 +6312,8 @@ var ComponentLibraryRuntime = (() => {
       return render(p, helpers2);
     }
   });
-  var components22 = [
-    create3("before-after", "\u524D\u540E\u5BF9\u6BD4", "\u5728\u540C\u4E00\u7EC4\u4EFB\u52A1\u4E2D\u5BF9\u7167\u4E24\u79CD\u7EC4\u7EC7\u65B9\u5F0F\uFF1B\u4E24\u4FA7\u6587\u6848\u3001\u72B6\u6001\u548C\u7ED3\u8BBA\u5747\u53EF\u7F16\u8F91\u3002", {
+  var components26 = [
+    create4("before-after", "\u524D\u540E\u5BF9\u6BD4", "\u5728\u540C\u4E00\u7EC4\u4EFB\u52A1\u4E2D\u5BF9\u7167\u4E24\u79CD\u7EC4\u7EC7\u65B9\u5F0F\uFF1B\u4E24\u4FA7\u6587\u6848\u3001\u72B6\u6001\u548C\u7ED3\u8BBA\u5747\u53EF\u7F16\u8F91\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -5236,14 +6358,14 @@ var ComponentLibraryRuntime = (() => {
       "resultLabel": "\u7ED3\u679C\u8BF4\u660E",
       "result": "\u7ED3\u679C\u5185\u5BB9\uFF0C\u53EF\u66FF\u6362\u4E3A\u9700\u8981\u5C55\u793A\u7684\u7ED3\u8BBA\u3002"
     }, (p, h) => {
-      const e = h.esc;
+      const e2 = h.esc;
       const tasks = arr3(p.tasks, 6);
       const columns = arr3(p.columns, 3);
-      const before = tasks.map((x, i) => '<div class="edu-task-row" data-motion="item"><span class="edu-task-index">' + String(i + 1).padStart(2, "0") + "</span><div><strong>" + e(x.title) + "</strong><p>" + e(x.detail) + '</p></div><span class="edu-task-dot"></span></div>').join("");
-      const after = columns.map((c) => '<div class="edu-kanban-column"><div class="edu-kanban-label"><i class="edu-state-' + e(c.state) + '"></i>' + e(c.label) + "<span>" + tasks.filter((t) => t.state === c.state).length + "</span></div>" + tasks.filter((t) => t.state === c.state).map((t) => '<div class="edu-kanban-task" data-motion="item"><strong>' + e(t.title) + "</strong><p>" + e(t.detail) + '</p><div class="edu-mini-progress"><i class="edu-state-' + e(c.state) + '"></i></div></div>').join("") + "</div>").join("");
-      return shell4(p, h, '<div class="edu-compare-layout"><section class="edu-panel edu-before"><div class="edu-panel-heading"><span class="edu-pill">' + e(p.beforeLabel) + "</span><p>" + e(p.beforeNote) + '</p></div><div class="edu-task-list">' + before + '</div></section><div class="edu-compare-arrow">' + arrow2 + '</div><section class="edu-panel edu-after" data-motion="reveal"><div class="edu-panel-heading"><span class="edu-pill edu-pill-blue">' + e(p.afterLabel) + "</span><p>" + e(p.afterNote) + '</p></div><div class="edu-kanban">' + after + '</div></section></div><div class="edu-takeaway"><span>' + e(p.resultLabel) + "</span><strong>" + e(p.result) + "</strong></div>");
+      const before = tasks.map((x, i) => '<div class="edu-task-row" data-motion="item"><span class="edu-task-index">' + String(i + 1).padStart(2, "0") + "</span><div><strong>" + e2(x.title) + "</strong><p>" + e2(x.detail) + '</p></div><span class="edu-task-dot"></span></div>').join("");
+      const after = columns.map((c) => '<div class="edu-kanban-column"><div class="edu-kanban-label"><i class="edu-state-' + e2(c.state) + '"></i>' + e2(c.label) + "<span>" + tasks.filter((t) => t.state === c.state).length + "</span></div>" + tasks.filter((t) => t.state === c.state).map((t) => '<div class="edu-kanban-task" data-motion="item"><strong>' + e2(t.title) + "</strong><p>" + e2(t.detail) + '</p><div class="edu-mini-progress"><i class="edu-state-' + e2(c.state) + '"></i></div></div>').join("") + "</div>").join("");
+      return shell4(p, h, '<div class="edu-compare-layout"><section class="edu-panel edu-before"><div class="edu-panel-heading"><span class="edu-pill">' + e2(p.beforeLabel) + "</span><p>" + e2(p.beforeNote) + '</p></div><div class="edu-task-list">' + before + '</div></section><div class="edu-compare-arrow">' + arrow4 + '</div><section class="edu-panel edu-after" data-motion="reveal"><div class="edu-panel-heading"><span class="edu-pill edu-pill-blue">' + e2(p.afterLabel) + "</span><p>" + e2(p.afterNote) + '</p></div><div class="edu-kanban">' + after + '</div></section></div><div class="edu-takeaway"><span>' + e2(p.resultLabel) + "</span><strong>" + e2(p.result) + "</strong></div>");
     }),
-    create3("flowchart", "\u6D41\u7A0B\u4E0E\u539F\u7406\u56FE", "\u53EF\u7F16\u8F91\u7684\u4E94\u8282\u70B9\u5206\u652F\u6D41\u7A0B\uFF0C\u8282\u70B9\u4E0E SVG \u8FDE\u7EBF\u72EC\u7ACB\uFF0C\u53EF\u6309\u987A\u5E8F\u70B9\u4EAE\u3002", {
+    create4("flowchart", "\u6D41\u7A0B\u4E0E\u539F\u7406\u56FE", "\u53EF\u7F16\u8F91\u7684\u4E94\u8282\u70B9\u5206\u652F\u6D41\u7A0B\uFF0C\u8282\u70B9\u4E0E SVG \u8FDE\u7EBF\u72EC\u7ACB\uFF0C\u53EF\u6309\u987A\u5E8F\u70B9\u4EAE\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -5284,15 +6406,15 @@ var ComponentLibraryRuntime = (() => {
       "noteTitle": "\u8865\u5145\u6807\u9898",
       "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57"
     }, (p, h) => {
-      const e = h.esc;
+      const e2 = h.esc;
       const nodes = arr3(p.nodes, 5);
       const marker = h.uid("flow-arrow");
       const positions = [{ x: 0, y: 158 }, { x: 286, y: 158 }, { x: 572, y: 158 }, { x: 906, y: 42 }, { x: 906, y: 278 }];
-      const lines3 = '<svg class="edu-flow-lines" viewBox="0 0 1164 460" preserveAspectRatio="none" aria-hidden="true"><defs><marker id="' + e(marker) + '" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M1 1 6 4 1 7" fill="none" stroke="#2563eb" stroke-width="1.5"/></marker></defs><path data-motion="line" d="M238 225H282" fill="none" stroke="#2563eb" stroke-width="2.5" marker-end="url(#' + e(marker) + ')"/><path data-motion="line" d="M524 225H568" fill="none" stroke="#2563eb" stroke-width="2.5" marker-end="url(#' + e(marker) + ')"/><path data-motion="line" d="M810 225H850V109H902" fill="none" stroke="#2563eb" stroke-width="2.5" marker-end="url(#' + e(marker) + ')"/><path data-motion="line" d="M850 225V345H902" fill="none" stroke="#2563eb" stroke-width="2.5" marker-end="url(#' + e(marker) + ')"/><circle cx="850" cy="225" r="5" fill="#2563eb"/></svg>';
-      const cards = nodes.map((x, i) => '<div class="edu-flow-node ' + (i === 2 ? "edu-flow-node-active" : i === 3 ? "edu-flow-node-done" : "") + '" style="left:' + positions[i].x + "px;top:" + positions[i].y + 'px" data-motion="item"><span>' + e(x.tag) + "</span><strong>" + e(x.label) + "</strong><p>" + e(x.detail) + "</p></div>").join("");
-      return shell4(p, h, '<div class="edu-flow-stage">' + lines3 + cards + '<span class="edu-flow-label edu-flow-label-top">' + e(arr3(p.branchLabels, 2)[0] || "") + '</span><span class="edu-flow-label edu-flow-label-bottom">' + e(arr3(p.branchLabels, 2)[1] || "") + '</span></div><div class="edu-note"><strong>' + e(p.noteTitle) + "</strong><span>" + e(p.note) + "</span></div>");
+      const lines3 = '<svg class="edu-flow-lines" viewBox="0 0 1164 460" preserveAspectRatio="none" aria-hidden="true"><defs><marker id="' + e2(marker) + '" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M1 1 6 4 1 7" fill="none" stroke="#2563eb" stroke-width="1.5"/></marker></defs><path data-motion="line" d="M238 225H282" fill="none" stroke="#2563eb" stroke-width="2.5" marker-end="url(#' + e2(marker) + ')"/><path data-motion="line" d="M524 225H568" fill="none" stroke="#2563eb" stroke-width="2.5" marker-end="url(#' + e2(marker) + ')"/><path data-motion="line" d="M810 225H850V109H902" fill="none" stroke="#2563eb" stroke-width="2.5" marker-end="url(#' + e2(marker) + ')"/><path data-motion="line" d="M850 225V345H902" fill="none" stroke="#2563eb" stroke-width="2.5" marker-end="url(#' + e2(marker) + ')"/><circle cx="850" cy="225" r="5" fill="#2563eb"/></svg>';
+      const cards = nodes.map((x, i) => '<div class="edu-flow-node ' + (i === 2 ? "edu-flow-node-active" : i === 3 ? "edu-flow-node-done" : "") + '" style="left:' + positions[i].x + "px;top:" + positions[i].y + 'px" data-motion="item"><span>' + e2(x.tag) + "</span><strong>" + e2(x.label) + "</strong><p>" + e2(x.detail) + "</p></div>").join("");
+      return shell4(p, h, '<div class="edu-flow-stage">' + lines3 + cards + '<span class="edu-flow-label edu-flow-label-top">' + e2(arr3(p.branchLabels, 2)[0] || "") + '</span><span class="edu-flow-label edu-flow-label-bottom">' + e2(arr3(p.branchLabels, 2)[1] || "") + '</span></div><div class="edu-note"><strong>' + e2(p.noteTitle) + "</strong><span>" + e2(p.note) + "</span></div>");
     }),
-    create3("layer-stack", "\u5206\u5C42\u7ED3\u6784\u56FE", "\u7528\u7EDF\u4E00\u7B49\u8DDD\u51E0\u4F55\u548C\u72EC\u7ACB\u5F15\u7EBF\u89E3\u91CA\u4E09\u5C42\u7ED3\u6784\uFF1B\u5C42\u540D\u3001\u8BF4\u660E\u548C\u8981\u70B9\u53EF\u66FF\u6362\u3002", {
+    create4("layer-stack", "\u5206\u5C42\u7ED3\u6784\u56FE", "\u7528\u7EDF\u4E00\u7B49\u8DDD\u51E0\u4F55\u548C\u72EC\u7ACB\u5F15\u7EBF\u89E3\u91CA\u4E09\u5C42\u7ED3\u6784\uFF1B\u5C42\u540D\u3001\u8BF4\u660E\u548C\u8981\u70B9\u53EF\u66FF\u6362\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -5321,17 +6443,17 @@ var ComponentLibraryRuntime = (() => {
       ],
       "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57"
     }, (p, h) => {
-      const e = h.esc;
+      const e2 = h.esc;
       const layers = arr3(p.layers, 3);
       const slabs = layers.map((x, i) => {
         const y = 25 + i * 146;
         const fill = ["#f5f8fe", "#e2edff", "#d9f0e8"][i], side = ["#e6ebf3", "#bad1f9", "#acd8c8"][i];
-        return '<g data-motion="item"><path d="M75 ' + (y + 88) + " 325 " + y + " 560 " + (y + 91) + " 309 " + (y + 182) + 'Z" fill="' + fill + '" stroke="#bdd0e4" stroke-width="1.4"/><path d="M75 ' + (y + 88) + "V" + (y + 111) + "L309 " + (y + 205) + "V" + (y + 182) + 'Z" fill="' + side + '" stroke="#bdd0e4" stroke-width="1.4"/><path d="M309 ' + (y + 182) + " 560 " + (y + 91) + "V" + (y + 114) + "L309 " + (y + 205) + 'Z" fill="' + side + '" stroke="#bdd0e4" stroke-width="1.4"/><text x="318" y="' + (y + 103) + '" text-anchor="middle" fill="#1f2329" font-size="30" font-weight="650">' + e(x.title) + "</text></g>";
+        return '<g data-motion="item"><path d="M75 ' + (y + 88) + " 325 " + y + " 560 " + (y + 91) + " 309 " + (y + 182) + 'Z" fill="' + fill + '" stroke="#bdd0e4" stroke-width="1.4"/><path d="M75 ' + (y + 88) + "V" + (y + 111) + "L309 " + (y + 205) + "V" + (y + 182) + 'Z" fill="' + side + '" stroke="#bdd0e4" stroke-width="1.4"/><path d="M309 ' + (y + 182) + " 560 " + (y + 91) + "V" + (y + 114) + "L309 " + (y + 205) + 'Z" fill="' + side + '" stroke="#bdd0e4" stroke-width="1.4"/><text x="318" y="' + (y + 103) + '" text-anchor="middle" fill="#1f2329" font-size="30" font-weight="650">' + e2(x.title) + "</text></g>";
       }).reverse().join("");
-      const leaders = layers.map((x, i) => '<g><path data-motion="line" d="M560 ' + (116 + i * 146) + 'H613" fill="none" stroke="#8ba8cb" stroke-width="1.5"/><circle cx="560" cy="' + (116 + i * 146) + '" r="4" fill="#2563eb"/><text x="586" y="' + (105 + i * 146) + '" fill="#71849d" font-size="14">' + e(x.index) + "</text></g>").join("");
-      return shell4(p, h, '<div class="edu-layers-layout"><svg class="edu-layer-art" viewBox="0 0 640 525" role="img" aria-label="' + e(p.title) + '">' + slabs + leaders + '</svg><div class="edu-layer-descriptions">' + layers.map((x, i) => '<article data-motion="item"><span class="edu-layer-number">' + e(x.index) + "</span><div><h2>" + e(x.label) + "</h2><p>" + e(x.detail) + "</p></div></article>").join("") + '<p class="edu-fine-note">' + e(p.note) + "</p></div></div>");
+      const leaders = layers.map((x, i) => '<g><path data-motion="line" d="M560 ' + (116 + i * 146) + 'H613" fill="none" stroke="#8ba8cb" stroke-width="1.5"/><circle cx="560" cy="' + (116 + i * 146) + '" r="4" fill="#2563eb"/><text x="586" y="' + (105 + i * 146) + '" fill="#71849d" font-size="14">' + e2(x.index) + "</text></g>").join("");
+      return shell4(p, h, '<div class="edu-layers-layout"><svg class="edu-layer-art" viewBox="0 0 640 525" role="img" aria-label="' + e2(p.title) + '">' + slabs + leaders + '</svg><div class="edu-layer-descriptions">' + layers.map((x, i) => '<article data-motion="item"><span class="edu-layer-number">' + e2(x.index) + "</span><div><h2>" + e2(x.label) + "</h2><p>" + e2(x.detail) + "</p></div></article>").join("") + '<p class="edu-fine-note">' + e2(p.note) + "</p></div></div>");
     }),
-    create3("bar-chart", "\u67F1\u5F62\u6570\u636E\u56FE", "\u6309\u771F\u5B9E\u6570\u636E\u6620\u5C04\u9AD8\u5EA6\uFF0C\u652F\u6301\u53EF\u7F16\u8F91\u7C7B\u76EE\u3001\u6570\u503C\u3001\u8303\u56F4\u548C\u5355\u4F4D\uFF1B\u9ED8\u8BA4\u7528\u793A\u4F8B\u65F6\u957F\u6BD4\u8F83\u3002", {
+    create4("bar-chart", "\u67F1\u5F62\u6570\u636E\u56FE", "\u6309\u771F\u5B9E\u6570\u636E\u6620\u5C04\u9AD8\u5EA6\uFF0C\u652F\u6301\u53EF\u7F16\u8F91\u7C7B\u76EE\u3001\u6570\u503C\u3001\u8303\u56F4\u548C\u5355\u4F4D\uFF1B\u9ED8\u8BA4\u7528\u793A\u4F8B\u65F6\u957F\u6BD4\u8F83\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -5364,22 +6486,22 @@ var ComponentLibraryRuntime = (() => {
       "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57",
       "source": "\u6570\u636E\u6765\u6E90\u8BF4\u660E"
     }, (p, h) => {
-      const e = h.esc;
+      const e2 = h.esc;
       const values = arr3(p.values, 6);
       const max = Math.max(1, n2(p.max, 100), ...values.map((x) => n2(x.value)));
       const left = 64, top = 58, bottom = 356, width = 1030, slot = width / Math.max(1, values.length), barWidth = Math.min(114, slot * 0.52);
       const grid = Array.from({ length: 5 }, (_, i) => {
         const y = bottom - (bottom - top) * i / 4;
-        return '<line x1="' + left + '" y1="' + y + '" x2="1110" y2="' + y + '" stroke="#e7ecf3"/><text x="44" y="' + (y + 6) + '" text-anchor="end" font-size="18" fill="#687387">' + e(fmt(max * i / 4)) + "</text>";
+        return '<line x1="' + left + '" y1="' + y + '" x2="1110" y2="' + y + '" stroke="#e7ecf3"/><text x="44" y="' + (y + 6) + '" text-anchor="end" font-size="18" fill="#687387">' + e2(fmt(max * i / 4)) + "</text>";
       }).join("");
       const bars = values.map((x, i) => {
         const height = (bottom - top) * clamp2(x.value, 0, max) / max;
         const cx = left + slot * (i + 0.5);
-        return '<g><rect data-motion="bar" x="' + (cx - barWidth / 2) + '" y="' + (bottom - height) + '" width="' + barWidth + '" height="' + height + '" rx="7" fill="' + (i === n2(p.highlight) ? "#2563eb" : "#bfd5f8") + '"/><text data-motion="counter" x="' + cx + '" y="' + (bottom - height - 13) + '" text-anchor="middle" font-size="26" font-weight="650" fill="#1f2329">' + e(fmt(x.value)) + '</text><text x="' + cx + '" y="397" text-anchor="middle" font-size="21" fill="#455064">' + e(x.label) + "</text></g>";
+        return '<g><rect data-motion="bar" x="' + (cx - barWidth / 2) + '" y="' + (bottom - height) + '" width="' + barWidth + '" height="' + height + '" rx="7" fill="' + (i === n2(p.highlight) ? "#2563eb" : "#bfd5f8") + '"/><text data-motion="counter" x="' + cx + '" y="' + (bottom - height - 13) + '" text-anchor="middle" font-size="26" font-weight="650" fill="#1f2329">' + e2(fmt(x.value)) + '</text><text x="' + cx + '" y="397" text-anchor="middle" font-size="21" fill="#455064">' + e2(x.label) + "</text></g>";
       }).join("");
-      return shell4(p, h, '<section class="edu-chart-panel"><div class="edu-chart-heading"><h2>' + e(p.chartTitle) + "</h2><span>" + e(p.unit) + '</span></div><svg class="edu-bar-svg" viewBox="0 0 1164 426" role="img" aria-label="' + e(p.chartTitle) + '">' + grid + bars + '</svg><div class="edu-chart-source">' + e(p.source) + '</div></section><div class="edu-takeaway edu-takeaway-compact"><span>' + e(p.noteLabel) + "</span><strong>" + e(p.note) + "</strong></div>");
+      return shell4(p, h, '<section class="edu-chart-panel"><div class="edu-chart-heading"><h2>' + e2(p.chartTitle) + "</h2><span>" + e2(p.unit) + '</span></div><svg class="edu-bar-svg" viewBox="0 0 1164 426" role="img" aria-label="' + e2(p.chartTitle) + '">' + grid + bars + '</svg><div class="edu-chart-source">' + e2(p.source) + '</div></section><div class="edu-takeaway edu-takeaway-compact"><span>' + e2(p.noteLabel) + "</span><strong>" + e2(p.note) + "</strong></div>");
     }),
-    create3("line-chart", "\u8D8B\u52BF\u6298\u7EBF\u56FE", "\u53EF\u7F16\u8F91\u8D8B\u52BF\u3001\u76EE\u6807\u7EBF\u4E0E\u9009\u4E2D\u70B9\uFF1B\u6570\u503C\u51B3\u5B9A\u5750\u6807\uFF0C\u6298\u7EBF\u4E0E\u9762\u79EF\u4F7F\u7528\u539F\u751F SVG\u3002", {
+    create4("line-chart", "\u8D8B\u52BF\u6298\u7EBF\u56FE", "\u53EF\u7F16\u8F91\u8D8B\u52BF\u3001\u76EE\u6807\u7EBF\u4E0E\u9009\u4E2D\u70B9\uFF1B\u6570\u503C\u51B3\u5B9A\u5750\u6807\uFF0C\u6298\u7EBF\u4E0E\u9762\u79EF\u4F7F\u7528\u539F\u751F SVG\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -5420,24 +6542,24 @@ var ComponentLibraryRuntime = (() => {
       "selected": 4,
       "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57"
     }, (p, h) => {
-      const e = h.esc;
+      const e2 = h.esc;
       const values = arr3(p.values, 10);
       const max = Math.max(1, n2(p.max, 40), n2(p.target), ...values.map((x) => n2(x.value)));
       const left = 64, right = 1095, top = 60, bottom = 370;
       const points = values.map((x, i) => ({ x: left + (right - left) * i / Math.max(1, values.length - 1), y: bottom - (bottom - top) * clamp2(x.value, 0, max) / max, ...x }));
       const line3 = points.map((x, i) => (i ? "L" : "M") + x.x + " " + x.y).join(" ");
       const area = points.length ? line3 + "L" + points.at(-1).x + " " + bottom + "L" + points[0].x + " " + bottom + "Z" : "";
-      const grad = h.uid("trend-fill");
+      const grad2 = h.uid("trend-fill");
       const targetY = bottom - (bottom - top) * clamp2(p.target, 0, max) / max;
       const grid = Array.from({ length: 5 }, (_, i) => {
         const y = bottom - (bottom - top) * i / 4;
-        return '<line x1="' + left + '" y1="' + y + '" x2="' + right + '" y2="' + y + '" stroke="#e6ecf3"/><text x="44" y="' + (y + 6) + '" font-size="18" text-anchor="end" fill="#687387">' + e(fmt(max * i / 4)) + "</text>";
+        return '<line x1="' + left + '" y1="' + y + '" x2="' + right + '" y2="' + y + '" stroke="#e6ecf3"/><text x="44" y="' + (y + 6) + '" font-size="18" text-anchor="end" fill="#687387">' + e2(fmt(max * i / 4)) + "</text>";
       }).join("");
       const chosen = points[clamp2(p.selected, 0, Math.max(0, points.length - 1))];
-      const chip = chosen ? '<g data-motion="focus"><rect x="' + clamp2(chosen.x - 82, 64, 931) + '" y="' + Math.max(4, chosen.y - 66) + '" width="164" height="43" rx="8" fill="#1f2329"/><text x="' + (clamp2(chosen.x - 82, 64, 931) + 82) + '" y="' + Math.max(31, chosen.y - 39) + '" text-anchor="middle" fill="white" font-size="20">' + e(chosen.label) + " \xB7 " + e(fmt(chosen.value)) + " " + e(p.unit) + "</text></g>" : "";
-      return shell4(p, h, '<section class="edu-chart-panel"><div class="edu-chart-heading"><h2>' + e(p.chartTitle) + "</h2><span>" + e(p.unit) + '</span></div><svg class="edu-line-svg" viewBox="0 0 1164 442" role="img" aria-label="' + e(p.chartTitle) + '"><defs><linearGradient id="' + e(grad) + '" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#2563eb" stop-opacity=".18"/><stop offset="1" stop-color="#2563eb" stop-opacity=".01"/></linearGradient></defs>' + grid + '<line x1="' + left + '" y1="' + targetY + '" x2="' + right + '" y2="' + targetY + '" stroke="#4c9d83" stroke-width="1.7" stroke-dasharray="6 6"/><text x="' + (left + 16) + '" y="' + (targetY - 12) + '" text-anchor="start" font-size="18" fill="#28735d">' + e(p.targetLabel) + " " + e(fmt(p.target)) + '</text><path d="' + area + '" fill="url(#' + e(grad) + ')"/><path data-motion="line" d="' + line3 + '" fill="none" stroke="#2563eb" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>' + points.map((x) => '<circle cx="' + x.x + '" cy="' + x.y + '" r="5.5" fill="white" stroke="#2563eb" stroke-width="3"/><text x="' + x.x + '" y="415" text-anchor="middle" font-size="20" fill="#455064">' + e(x.label) + "</text>").join("") + chip + '</svg><div class="edu-chart-source">' + e(p.note) + "</div></section>");
+      const chip = chosen ? '<g data-motion="focus"><rect x="' + clamp2(chosen.x - 82, 64, 931) + '" y="' + Math.max(4, chosen.y - 66) + '" width="164" height="43" rx="8" fill="#1f2329"/><text x="' + (clamp2(chosen.x - 82, 64, 931) + 82) + '" y="' + Math.max(31, chosen.y - 39) + '" text-anchor="middle" fill="white" font-size="20">' + e2(chosen.label) + " \xB7 " + e2(fmt(chosen.value)) + " " + e2(p.unit) + "</text></g>" : "";
+      return shell4(p, h, '<section class="edu-chart-panel"><div class="edu-chart-heading"><h2>' + e2(p.chartTitle) + "</h2><span>" + e2(p.unit) + '</span></div><svg class="edu-line-svg" viewBox="0 0 1164 442" role="img" aria-label="' + e2(p.chartTitle) + '"><defs><linearGradient id="' + e2(grad2) + '" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#2563eb" stop-opacity=".18"/><stop offset="1" stop-color="#2563eb" stop-opacity=".01"/></linearGradient></defs>' + grid + '<line x1="' + left + '" y1="' + targetY + '" x2="' + right + '" y2="' + targetY + '" stroke="#4c9d83" stroke-width="1.7" stroke-dasharray="6 6"/><text x="' + (left + 16) + '" y="' + (targetY - 12) + '" text-anchor="start" font-size="18" fill="#28735d">' + e2(p.targetLabel) + " " + e2(fmt(p.target)) + '</text><path d="' + area + '" fill="url(#' + e2(grad2) + ')"/><path data-motion="line" d="' + line3 + '" fill="none" stroke="#2563eb" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>' + points.map((x) => '<circle cx="' + x.x + '" cy="' + x.y + '" r="5.5" fill="white" stroke="#2563eb" stroke-width="3"/><text x="' + x.x + '" y="415" text-anchor="middle" font-size="20" fill="#455064">' + e2(x.label) + "</text>").join("") + chip + '</svg><div class="edu-chart-source">' + e2(p.note) + "</div></section>");
     }),
-    create3("comparison-matrix", "\u65B9\u6848\u6BD4\u8F83\u77E9\u9635", "\u6309\u7EDF\u4E00\u7EF4\u5EA6\u6BD4\u8F83\u4E09\u79CD\u65B9\u6848\uFF0C\u4F7F\u7528\u6587\u5B57\u800C\u975E\u4E3B\u89C2\u6253\u5206\uFF1B\u5217\u3001\u884C\u4E0E\u63A8\u8350\u8BF4\u660E\u53EF\u7F16\u8F91\u3002", {
+    create4("comparison-matrix", "\u65B9\u6848\u6BD4\u8F83\u77E9\u9635", "\u6309\u7EDF\u4E00\u7EF4\u5EA6\u6BD4\u8F83\u4E09\u79CD\u65B9\u6848\uFF0C\u4F7F\u7528\u6587\u5B57\u800C\u975E\u4E3B\u89C2\u6253\u5206\uFF1B\u5217\u3001\u884C\u4E0E\u63A8\u8350\u8BF4\u660E\u53EF\u7F16\u8F91\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -5495,11 +6617,11 @@ var ComponentLibraryRuntime = (() => {
       "noteLabel": "\u8865\u5145\u6807\u7B7E",
       "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57"
     }, (p, h) => {
-      const e = h.esc;
-      const columns = arr3(p.columns, 3), rows2 = arr3(p.rows, 5);
-      return shell4(p, h, '<div class="edu-matrix-panel"><table class="edu-matrix"><thead><tr><th></th>' + columns.map((c) => "<th><strong>" + e(c.name) + "</strong><span>" + e(c.tag) + "</span></th>").join("") + "</tr></thead><tbody>" + rows2.map((r) => '<tr data-motion="item"><th>' + e(r.criterion) + "</th>" + columns.map((_, i) => "<td>" + e(arr3(r.values, 3)[i] || "") + "</td>").join("") + "</tr>").join("") + '</tbody></table></div><div class="edu-takeaway"><span>' + e(p.noteLabel) + "</span><strong>" + e(p.note) + "</strong></div>");
+      const e2 = h.esc;
+      const columns = arr3(p.columns, 3), rows3 = arr3(p.rows, 5);
+      return shell4(p, h, '<div class="edu-matrix-panel"><table class="edu-matrix"><thead><tr><th></th>' + columns.map((c) => "<th><strong>" + e2(c.name) + "</strong><span>" + e2(c.tag) + "</span></th>").join("") + "</tr></thead><tbody>" + rows3.map((r) => '<tr data-motion="item"><th>' + e2(r.criterion) + "</th>" + columns.map((_, i) => "<td>" + e2(arr3(r.values, 3)[i] || "") + "</td>").join("") + "</tr>").join("") + '</tbody></table></div><div class="edu-takeaway"><span>' + e2(p.noteLabel) + "</span><strong>" + e2(p.note) + "</strong></div>");
     }),
-    create3("event-timeline", "\u4E8B\u4EF6\u65F6\u95F4\u7EBF", "\u4E94\u4E2A\u9636\u6BB5\u6CBF\u6C34\u5E73\u65F6\u95F4\u8F74\u5C55\u793A\uFF0C\u533A\u5206\u5DF2\u5B8C\u6210\u3001\u5F53\u524D\u548C\u5F85\u5F00\u59CB\uFF1B\u652F\u6301\u66FF\u6362\u65F6\u95F4\u3001\u5185\u5BB9\u548C\u72B6\u6001\u3002", {
+    create4("event-timeline", "\u4E8B\u4EF6\u65F6\u95F4\u7EBF", "\u4E94\u4E2A\u9636\u6BB5\u6CBF\u6C34\u5E73\u65F6\u95F4\u8F74\u5C55\u793A\uFF0C\u533A\u5206\u5DF2\u5B8C\u6210\u3001\u5F53\u524D\u548C\u5F85\u5F00\u59CB\uFF1B\u652F\u6301\u66FF\u6362\u65F6\u95F4\u3001\u5185\u5BB9\u548C\u72B6\u6001\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -5541,11 +6663,11 @@ var ComponentLibraryRuntime = (() => {
       "activeLabel": "\u5F53\u524D\u9636\u6BB5",
       "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57"
     }, (p, h) => {
-      const e = h.esc;
+      const e2 = h.esc;
       const events = arr3(p.events, 5);
-      return shell4(p, h, '<div class="edu-event-track"><div class="edu-event-baseline" data-motion="line"></div>' + events.map((x, i) => '<article class="edu-event edu-event-' + e(x.status) + '" style="left:' + i * 100 / Math.max(1, events.length - 1) + '%" data-motion="item"><div class="edu-event-time">' + e(x.time) + '</div><div class="edu-event-node">' + (x.status === "done" ? tick2 : "<i></i>") + '</div><div class="edu-event-card"><span class="edu-event-number">' + String(i + 1).padStart(2, "0") + "</span><h2>" + e(x.title) + "</h2><p>" + e(x.detail) + "</p>" + (x.status === "active" ? '<span class="edu-event-active">' + e(p.activeLabel) + "</span>" : "") + "</div></article>").join("") + '</div><div class="edu-timeline-note">' + e(p.note) + "</div>");
+      return shell4(p, h, '<div class="edu-event-track"><div class="edu-event-baseline" data-motion="line"></div>' + events.map((x, i) => '<article class="edu-event edu-event-' + e2(x.status) + '" style="left:' + i * 100 / Math.max(1, events.length - 1) + '%" data-motion="item"><div class="edu-event-time">' + e2(x.time) + '</div><div class="edu-event-node">' + (x.status === "done" ? tick2 : "<i></i>") + '</div><div class="edu-event-card"><span class="edu-event-number">' + String(i + 1).padStart(2, "0") + "</span><h2>" + e2(x.title) + "</h2><p>" + e2(x.detail) + "</p>" + (x.status === "active" ? '<span class="edu-event-active">' + e2(p.activeLabel) + "</span>" : "") + "</div></article>").join("") + '</div><div class="edu-timeline-note">' + e2(p.note) + "</div>");
     }),
-    create3("metric-dashboard", "\u5173\u952E\u6307\u6807\u9762\u677F", "\u4EE5\u4E09\u4E2A\u6307\u6807\u3001\u8FDB\u5EA6\u548C\u9A8C\u6536\u6E05\u5355\u590D\u76D8\u5236\u4F5C\u72B6\u6001\uFF1B\u793A\u4F8B\u6570\u636E\u3001\u5355\u4F4D\u4E0E\u8BF4\u660E\u53EF\u7F16\u8F91\u3002", {
+    create4("metric-dashboard", "\u5173\u952E\u6307\u6807\u9762\u677F", "\u4EE5\u4E09\u4E2A\u6307\u6807\u3001\u8FDB\u5EA6\u548C\u9A8C\u6536\u6E05\u5355\u590D\u76D8\u5236\u4F5C\u72B6\u6001\uFF1B\u793A\u4F8B\u6570\u636E\u3001\u5355\u4F4D\u4E0E\u8BF4\u660E\u53EF\u7F16\u8F91\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -5611,15 +6733,15 @@ var ComponentLibraryRuntime = (() => {
       ],
       "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57"
     }, (p, h) => {
-      const e = h.esc;
+      const e2 = h.esc;
       const metrics = arr3(p.metrics, 3), progress = arr3(p.progress, 8), labels = arr3(p.progressLabels, 8);
       const pts = progress.map((v, i) => 25 + i * 500 / Math.max(1, progress.length - 1) + "," + (195 - clamp2(v, 0, 100) * 1.5)).join(" ");
-      return shell4(p, h, '<div class="edu-metric-grid">' + metrics.map((x) => '<article class="edu-metric-card" data-motion="item"><div class="edu-metric-label">' + e(x.label) + '</div><div class="edu-metric-value"><strong data-motion="counter">' + e(x.value) + "</strong><span>" + e(x.unit) + '</span></div><div class="edu-metric-progress"><i data-motion="bar" style="width:' + clamp2(x.progress, 0, 1) * 100 + '%"></i></div><p>' + e(x.detail) + "</p></article>").join("") + '</div><div class="edu-dashboard-bottom"><section class="edu-progress-panel"><h2>' + e(p.progressTitle) + '</h2><svg viewBox="0 0 550 235" role="img" aria-label="' + e(p.progressTitle) + '"><path d="M25 45H525M25 120H525M25 195H525" fill="none" stroke="#e9edf4"/><polyline points="' + pts + '" fill="none" stroke="#2563eb" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" data-motion="line"/>' + progress.map((v, i) => {
+      return shell4(p, h, '<div class="edu-metric-grid">' + metrics.map((x) => '<article class="edu-metric-card" data-motion="item"><div class="edu-metric-label">' + e2(x.label) + '</div><div class="edu-metric-value"><strong data-motion="counter">' + e2(x.value) + "</strong><span>" + e2(x.unit) + '</span></div><div class="edu-metric-progress"><i data-motion="bar" style="width:' + clamp2(x.progress, 0, 1) * 100 + '%"></i></div><p>' + e2(x.detail) + "</p></article>").join("") + '</div><div class="edu-dashboard-bottom"><section class="edu-progress-panel"><h2>' + e2(p.progressTitle) + '</h2><svg viewBox="0 0 550 235" role="img" aria-label="' + e2(p.progressTitle) + '"><path d="M25 45H525M25 120H525M25 195H525" fill="none" stroke="#e9edf4"/><polyline points="' + pts + '" fill="none" stroke="#2563eb" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" data-motion="line"/>' + progress.map((v, i) => {
         const x = 25 + i * 500 / Math.max(1, progress.length - 1), y = 195 - clamp2(v, 0, 100) * 1.5;
-        return '<circle cx="' + x + '" cy="' + y + '" r="4" fill="#2563eb"/><text x="' + x + '" y="' + (y - 13) + '" text-anchor="middle" font-size="18" fill="#1f2329">' + e(fmt(v)) + '%</text><text x="' + x + '" y="227" text-anchor="middle" font-size="16" fill="#687387">' + e(labels[i] || "") + "</text>";
-      }).join("") + '</svg></section><section class="edu-check-panel"><h2>' + e(p.checklistTitle) + "</h2>" + arr3(p.checks, 5).map((x) => '<div class="edu-check-item" data-motion="item"><span class="' + (x.done ? "edu-check-done" : "edu-check-pending") + '">' + (x.done ? tick2 : "") + "</span><strong>" + e(x.label) + "</strong></div>").join("") + '</section></div><div class="edu-dashboard-note">' + e(p.note) + "</div>");
+        return '<circle cx="' + x + '" cy="' + y + '" r="4" fill="#2563eb"/><text x="' + x + '" y="' + (y - 13) + '" text-anchor="middle" font-size="18" fill="#1f2329">' + e2(fmt(v)) + '%</text><text x="' + x + '" y="227" text-anchor="middle" font-size="16" fill="#687387">' + e2(labels[i] || "") + "</text>";
+      }).join("") + '</svg></section><section class="edu-check-panel"><h2>' + e2(p.checklistTitle) + "</h2>" + arr3(p.checks, 5).map((x) => '<div class="edu-check-item" data-motion="item"><span class="' + (x.done ? "edu-check-done" : "edu-check-pending") + '">' + (x.done ? tick2 : "") + "</span><strong>" + e2(x.label) + "</strong></div>").join("") + '</section></div><div class="edu-dashboard-note">' + e2(p.note) + "</div>");
     }),
-    create3("definition-card", "\u6982\u5FF5\u89E3\u91CA\u5361", "\u7528\u5B9A\u4E49\u3001\u4E09\u4E2A\u5173\u952E\u8981\u7D20\u548C\u5177\u4F53\u4F8B\u5B50\u8BB2\u6E05\u4E00\u4E2A\u540D\u8BCD\uFF0C\u907F\u514D\u53EA\u5806\u6807\u9898\u548C\u6807\u7B7E\u3002", {
+    create4("definition-card", "\u6982\u5FF5\u89E3\u91CA\u5361", "\u7528\u5B9A\u4E49\u3001\u4E09\u4E2A\u5173\u952E\u8981\u7D20\u548C\u5177\u4F53\u4F8B\u5B50\u8BB2\u6E05\u4E00\u4E2A\u540D\u8BCD\uFF0C\u907F\u514D\u53EA\u5806\u6807\u9898\u548C\u6807\u7B7E\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -5648,10 +6770,10 @@ var ComponentLibraryRuntime = (() => {
       "example": "\u793A\u4F8B\u6B63\u6587\u5185\u5BB9\uFF0C\u53EF\u66FF\u6362\u4E3A\u9700\u8981\u5C55\u793A\u7684\u6587\u5B57\u3002",
       "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57"
     }, (p, h) => {
-      const e = h.esc;
-      return shell4(p, h, '<div class="edu-definition-layout"><section class="edu-definition-main"><span class="edu-definition-en">' + e(p.english) + '</span><h2 data-motion="emphasis">' + e(p.term) + '</h2><p class="edu-definition-sentence" data-motion="reveal">' + e(p.definition) + '</p><div class="edu-factor-list">' + arr3(p.factors, 3).map((x, i) => '<div data-motion="item"><span>' + String(i + 1).padStart(2, "0") + "</span><strong>" + e(x.label) + "</strong><p>" + e(x.detail) + "</p></div>").join("") + '</div></section><aside class="edu-example-panel"><span class="edu-pill edu-pill-mint">' + e(p.exampleLabel) + "</span><h2>" + e(p.exampleTitle) + '</h2><blockquote data-motion="type">' + e(p.example) + '</blockquote><div class="edu-example-note">' + tick2 + "<p>" + e(p.note) + "</p></div></aside></div>");
+      const e2 = h.esc;
+      return shell4(p, h, '<div class="edu-definition-layout"><section class="edu-definition-main"><span class="edu-definition-en">' + e2(p.english) + '</span><h2 data-motion="emphasis">' + e2(p.term) + '</h2><p class="edu-definition-sentence" data-motion="reveal">' + e2(p.definition) + '</p><div class="edu-factor-list">' + arr3(p.factors, 3).map((x, i) => '<div data-motion="item"><span>' + String(i + 1).padStart(2, "0") + "</span><strong>" + e2(x.label) + "</strong><p>" + e2(x.detail) + "</p></div>").join("") + '</div></section><aside class="edu-example-panel"><span class="edu-pill edu-pill-mint">' + e2(p.exampleLabel) + "</span><h2>" + e2(p.exampleTitle) + '</h2><blockquote data-motion="type">' + e2(p.example) + '</blockquote><div class="edu-example-note">' + tick2 + "<p>" + e2(p.note) + "</p></div></aside></div>");
     }),
-    create3("chapter-summary", "\u7AE0\u8282\u4E0E\u603B\u7ED3\u9875", "\u7AE0\u8282\u7F16\u53F7\u3001\u6838\u5FC3\u7ED3\u8BBA\u3001\u4E09\u9879\u603B\u7ED3\u4E0E\u4E0B\u4E00\u6B65\u7EC4\u6210\u5B8C\u6574\u6536\u675F\u753B\u9762\u3002", {
+    create4("chapter-summary", "\u7AE0\u8282\u4E0E\u603B\u7ED3\u9875", "\u7AE0\u8282\u7F16\u53F7\u3001\u6838\u5FC3\u7ED3\u8BBA\u3001\u4E09\u9879\u603B\u7ED3\u4E0E\u4E0B\u4E00\u6B65\u7EC4\u6210\u5B8C\u6574\u6536\u675F\u753B\u9762\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -5678,10 +6800,10 @@ var ComponentLibraryRuntime = (() => {
       "nextLabel": "\u4E0B\u4E00\u6B65",
       "next": "\u4E0B\u4E00\u7AE0\u8282\u8BF4\u660E"
     }, (p, h) => {
-      const e = h.esc;
-      return shell4(p, h, '<div class="edu-chapter-layout"><div class="edu-chapter-index"><span data-motion="counter">' + e(p.number) + "</span><div>" + e(p.chapterLabel) + '</div><i></i></div><div class="edu-chapter-content"><h2>' + e(p.headline) + "</h2>" + arr3(p.points, 3).map((x) => '<article data-motion="item"><span>' + tick2 + "</span><div><h3>" + e(x.title) + "</h3><p>" + e(x.detail) + "</p></div></article>").join("") + '</div></div><div class="edu-next-strip" data-motion="reveal"><span>' + e(p.nextLabel) + "</span><strong>" + e(p.next) + "</strong>" + arrow2 + "</div>");
+      const e2 = h.esc;
+      return shell4(p, h, '<div class="edu-chapter-layout"><div class="edu-chapter-index"><span data-motion="counter">' + e2(p.number) + "</span><div>" + e2(p.chapterLabel) + '</div><i></i></div><div class="edu-chapter-content"><h2>' + e2(p.headline) + "</h2>" + arr3(p.points, 3).map((x) => '<article data-motion="item"><span>' + tick2 + "</span><div><h3>" + e2(x.title) + "</h3><p>" + e2(x.detail) + "</p></div></article>").join("") + '</div></div><div class="edu-next-strip" data-motion="reveal"><span>' + e2(p.nextLabel) + "</span><strong>" + e2(p.next) + "</strong>" + arrow4 + "</div>");
     }),
-    create3("media-stage", "\u56FE\u7247\u4E0E\u89C6\u9891\u5C55\u793A\u53F0", "\u5A92\u4F53\u69FD\u4F4D\u4FDD\u7559\u539F\u59CB\u6BD4\u4F8B\uFF0C\u53F3\u4FA7\u8BF4\u660E\u4E0E\u7AE0\u8282\u6807\u7B7E\u53EF\u66F4\u6362\uFF1B\u9ED8\u8BA4\u793A\u4F8B\u4E3A\u539F\u751F SVG \u4FE1\u606F\u793A\u610F\u3002", {
+    create4("media-stage", "\u56FE\u7247\u4E0E\u89C6\u9891\u5C55\u793A\u53F0", "\u5A92\u4F53\u69FD\u4F4D\u4FDD\u7559\u539F\u59CB\u6BD4\u4F8B\uFF0C\u53F3\u4FA7\u8BF4\u660E\u4E0E\u7AE0\u8282\u6807\u7B7E\u53EF\u66F4\u6362\uFF1B\u9ED8\u8BA4\u793A\u4F8B\u4E3A\u539F\u751F SVG \u4FE1\u606F\u793A\u610F\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -5723,21 +6845,21 @@ var ComponentLibraryRuntime = (() => {
       ],
       "caption": "\u7D20\u6750\u8BF4\u660E\u6587\u5B57"
     }, (p, h) => {
-      const e = h.esc;
+      const e2 = h.esc;
       const src = localMedia(p.mediaSrc);
       const marker = h.uid("media-arrow");
       let media3 = "";
-      if (src) media3 = p.mediaKind === "video" ? '<video class="edu-media-element" id="' + e(h.uid("video")) + '" src="' + e(src) + '" muted playsinline preload="metadata"></video>' : '<img class="edu-media-element" src="' + e(src) + '" alt="' + e(p.mediaAlt) + '"/>';
+      if (src) media3 = p.mediaKind === "video" ? '<video class="edu-media-element" id="' + e2(h.uid("video")) + '" src="' + e2(src) + '" muted playsinline preload="metadata"></video>' : '<img class="edu-media-element" src="' + e2(src) + '" alt="' + e2(p.mediaAlt) + '"/>';
       else {
         const nodes = arr3(p.diagramNodes, 3);
-        media3 = '<svg class="edu-media-diagram" viewBox="0 0 760 428" role="img" aria-label="' + e(p.mediaAlt) + '"><defs><marker id="' + e(marker) + '" markerWidth="7" markerHeight="7" refX="5.5" refY="3.5" orient="auto"><path d="m1 1 4.5 2.5L1 6" fill="none" stroke="#2563eb" stroke-width="1.4"/></marker></defs><path d="M70 68H690M70 360H690" stroke="#e5edf7"/><path data-motion="line" d="M232 211H293" stroke="#2563eb" stroke-width="2.4" marker-end="url(#' + e(marker) + ')"/><path data-motion="line" d="M465 211H526" fill="none" stroke="#2563eb" stroke-width="2.4" marker-end="url(#' + e(marker) + ')"/>' + nodes.map((x, i) => {
+        media3 = '<svg class="edu-media-diagram" viewBox="0 0 760 428" role="img" aria-label="' + e2(p.mediaAlt) + '"><defs><marker id="' + e2(marker) + '" markerWidth="7" markerHeight="7" refX="5.5" refY="3.5" orient="auto"><path d="m1 1 4.5 2.5L1 6" fill="none" stroke="#2563eb" stroke-width="1.4"/></marker></defs><path d="M70 68H690M70 360H690" stroke="#e5edf7"/><path data-motion="line" d="M232 211H293" stroke="#2563eb" stroke-width="2.4" marker-end="url(#' + e2(marker) + ')"/><path data-motion="line" d="M465 211H526" fill="none" stroke="#2563eb" stroke-width="2.4" marker-end="url(#' + e2(marker) + ')"/>' + nodes.map((x, i) => {
           const cx = 147 + i * 233;
-          return '<g data-motion="item"><rect x="' + (cx - 84) + '" y="125" width="168" height="174" rx="18" fill="' + (i === 2 ? "#e3f3eb" : i === 1 ? "#edf3ff" : "#ffffff") + '" stroke="' + (i === 1 ? "#93b8f7" : "#d9e4ef") + '" stroke-width="1.6"/><rect x="' + (cx - 17) + '" y="151" width="34" height="34" rx="9" fill="' + (i === 2 ? "#81c9b0" : "#2563eb") + '"/><path d="M' + (cx - 7) + ' 161h14m-14 7h14m-14 7h9" stroke="white" stroke-width="2" stroke-linecap="round"/><text x="' + cx + '" y="229" text-anchor="middle" font-size="30" font-weight="650" fill="#1f2329">' + e(x.title) + '</text><text x="' + cx + '" y="266" text-anchor="middle" font-size="20" fill="#5f6875">' + e(x.detail) + "</text></g>";
+          return '<g data-motion="item"><rect x="' + (cx - 84) + '" y="125" width="168" height="174" rx="18" fill="' + (i === 2 ? "#e3f3eb" : i === 1 ? "#edf3ff" : "#ffffff") + '" stroke="' + (i === 1 ? "#93b8f7" : "#d9e4ef") + '" stroke-width="1.6"/><rect x="' + (cx - 17) + '" y="151" width="34" height="34" rx="9" fill="' + (i === 2 ? "#81c9b0" : "#2563eb") + '"/><path d="M' + (cx - 7) + ' 161h14m-14 7h14m-14 7h9" stroke="white" stroke-width="2" stroke-linecap="round"/><text x="' + cx + '" y="229" text-anchor="middle" font-size="30" font-weight="650" fill="#1f2329">' + e2(x.title) + '</text><text x="' + cx + '" y="266" text-anchor="middle" font-size="20" fill="#5f6875">' + e2(x.detail) + "</text></g>";
         }).join("") + "</svg>";
       }
-      return shell4(p, h, '<div class="edu-media-layout"><div class="edu-media-main"><div class="edu-media-canvas">' + media3 + '</div><div class="edu-media-caption"><span class="edu-pill">' + e(p.mediaLabel) + "</span><p>" + e(p.caption) + '</p></div></div><aside class="edu-media-notes"><h2>' + e(p.noteTitle) + "</h2>" + arr3(p.notes, 3).map((x, i) => '<article data-motion="item"><span>' + String(i + 1).padStart(2, "0") + "</span><div><h3>" + e(x.label) + "</h3><p>" + e(x.detail) + "</p></div></article>").join("") + "</aside></div>");
+      return shell4(p, h, '<div class="edu-media-layout"><div class="edu-media-main"><div class="edu-media-canvas">' + media3 + '</div><div class="edu-media-caption"><span class="edu-pill">' + e2(p.mediaLabel) + "</span><p>" + e2(p.caption) + '</p></div></div><aside class="edu-media-notes"><h2>' + e2(p.noteTitle) + "</h2>" + arr3(p.notes, 3).map((x, i) => '<article data-motion="item"><span>' + String(i + 1).padStart(2, "0") + "</span><div><h3>" + e2(x.label) + "</h3><p>" + e2(x.detail) + "</p></div></article>").join("") + "</aside></div>");
     }),
-    create3("annotation-callout", "\u7BAD\u5934\u4E0E\u8BF4\u660E\u6807\u6CE8", "\u4E09\u4E2A\u7CBE\u786E\u951A\u70B9\u8FDE\u63A5\u793A\u610F\u4E3B\u4F53\u4E0E\u8BF4\u660E\u5361\uFF1B\u8BF4\u660E\u3001\u76EE\u6807\u6807\u7B7E\u548C\u5173\u7CFB\u5747\u53EF\u66FF\u6362\u3002", {
+    create4("annotation-callout", "\u7BAD\u5934\u4E0E\u8BF4\u660E\u6807\u6CE8", "\u4E09\u4E2A\u7CBE\u786E\u951A\u70B9\u8FDE\u63A5\u793A\u610F\u4E3B\u4F53\u4E0E\u8BF4\u660E\u5361\uFF1B\u8BF4\u660E\u3001\u76EE\u6807\u6807\u7B7E\u548C\u5173\u7CFB\u5747\u53EF\u66FF\u6362\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -5776,12 +6898,12 @@ var ComponentLibraryRuntime = (() => {
       ],
       "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57"
     }, (p, h) => {
-      const e = h.esc;
+      const e2 = h.esc;
       const marker = h.uid("callout-arrow");
-      return shell4(p, h, '<div class="edu-callout-stage"><section class="edu-callout-subject"><div class="edu-callout-subject-head"><span>' + e(p.subjectSubtitle) + "</span><h2>" + e(p.subjectTitle) + "</h2></div>" + arr3(p.fields, 3).map((x, i) => '<div class="edu-callout-field" data-motion="highlight"><span>' + e(x.label) + "</span><strong>" + e(x.value) + "</strong><i></i></div>").join("") + '</section><svg class="edu-callout-lines" viewBox="0 0 1164 470" aria-hidden="true"><defs><marker id="' + e(marker) + '" markerWidth="8" markerHeight="8" refX="5" refY="4" orient="auto"><path d="M1 1 5 4 1 7" fill="none" stroke="#2563eb" stroke-width="1.5"/></marker></defs><path data-motion="line" d="M772 90C668 90 687 203 579 203" fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#' + e(marker) + ')"/><path data-motion="line" d="M772 278C690 278 665 289 579 289" fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#' + e(marker) + ')"/><path data-motion="line" d="M772 439C681 439 678 375 579 375" fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#' + e(marker) + ')"/></svg><div class="edu-callout-notes">' + arr3(p.callouts, 3).map((x, i) => '<article style="top:' + [37, 225, 386][i] + 'px" data-motion="item"><span>' + String(i + 1).padStart(2, "0") + "</span><div><h3>" + e(x.title) + "</h3><p>" + e(x.detail) + "</p></div></article>").join("") + '</div></div><div class="edu-timeline-note">' + e(p.note) + "</div>");
+      return shell4(p, h, '<div class="edu-callout-stage"><section class="edu-callout-subject"><div class="edu-callout-subject-head"><span>' + e2(p.subjectSubtitle) + "</span><h2>" + e2(p.subjectTitle) + "</h2></div>" + arr3(p.fields, 3).map((x, i) => '<div class="edu-callout-field" data-motion="highlight"><span>' + e2(x.label) + "</span><strong>" + e2(x.value) + "</strong><i></i></div>").join("") + '</section><svg class="edu-callout-lines" viewBox="0 0 1164 470" aria-hidden="true"><defs><marker id="' + e2(marker) + '" markerWidth="8" markerHeight="8" refX="5" refY="4" orient="auto"><path d="M1 1 5 4 1 7" fill="none" stroke="#2563eb" stroke-width="1.5"/></marker></defs><path data-motion="line" d="M772 90C668 90 687 203 579 203" fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#' + e2(marker) + ')"/><path data-motion="line" d="M772 278C690 278 665 289 579 289" fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#' + e2(marker) + ')"/><path data-motion="line" d="M772 439C681 439 678 375 579 375" fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#' + e2(marker) + ')"/></svg><div class="edu-callout-notes">' + arr3(p.callouts, 3).map((x, i) => '<article style="top:' + [37, 225, 386][i] + 'px" data-motion="item"><span>' + String(i + 1).padStart(2, "0") + "</span><div><h3>" + e2(x.title) + "</h3><p>" + e2(x.detail) + "</p></div></article>").join("") + '</div></div><div class="edu-timeline-note">' + e2(p.note) + "</div>");
     })
   ];
-  var css3 = String.raw`
+  var css4 = String.raw`
   .edu-scene{box-sizing:border-box;width:100%;height:100%;padding:44px 58px 24px;background:#fff;color:#1f2329;font-family:"Segoe UI","Microsoft YaHei",sans-serif;display:flex;flex-direction:column;overflow:hidden}
   .edu-scene *{box-sizing:border-box}.edu-scene h1,.edu-scene h2,.edu-scene h3,.edu-scene p{margin:0}.edu-scene svg text{font-family:"Segoe UI","Microsoft YaHei",sans-serif}
   .edu-header{display:flex;align-items:flex-start;justify-content:space-between;gap:26px;height:137px;flex:none}.edu-eyebrow{font-size:15px;letter-spacing:1.3px;font-weight:650;color:#2563eb;margin-bottom:11px}.edu-header h1{font-size:36px;line-height:1.3;letter-spacing:-.8px;font-weight:670}.edu-header p{font-size:19px;line-height:1.5;color:#687387;margin-top:9px}.edu-edition{font-size:15px;color:#5f6f86;border:1px solid #dbe3ed;border-radius:6px;padding:7px 11px;white-space:nowrap;margin-top:4px}
@@ -5802,14 +6924,319 @@ var ComponentLibraryRuntime = (() => {
   .edu-callout-stage{position:relative;height:480px;width:1164px}.edu-callout-subject{position:absolute;left:28px;top:37px;width:578px;background:#fbfcfe;border:1px solid #d9e2ee;border-radius:13px;padding:25px 26px}.edu-callout-subject-head{height:87px;padding:0 0 21px;border-bottom:1px solid #e4eaf2}.edu-callout-subject-head>span{font-size:14px;color:#91a0b3}.edu-callout-subject h2{font-size:27px;margin-top:10px;font-weight:650}.edu-callout-field{display:flex;align-items:center;gap:17px;border:1px solid #dce6f4;border-radius:7px;background:#fff;height:66px;padding:15px 18px;margin-top:20px;position:relative}.edu-callout-field>span{font-size:15px;color:#2563eb;background:#edf3ff;padding:5px 8px;border-radius:4px;white-space:nowrap}.edu-callout-field>strong{font-size:21px;font-weight:550;letter-spacing:-.3px}.edu-callout-field>i{display:none}.edu-callout-lines{position:absolute;inset:0;width:1164px;height:470px;overflow:visible;pointer-events:none}.edu-callout-notes{position:absolute;left:772px;top:0;width:363px}.edu-callout-notes article{position:absolute;left:0;right:0;border:1px solid #cdddf5;border-radius:9px;padding:19px 20px;display:flex;align-items:flex-start;gap:15px;background:#fff}.edu-callout-notes article>span{font-size:13px;color:#2563eb;background:#edf3ff;padding:5px 6px;border-radius:4px;margin-top:1px}.edu-callout-notes h3{font-size:23px;font-weight:620;color:#2563eb}.edu-callout-notes p{font-size:17px;color:#708097;line-height:1.6;margin-top:7px}
 `;
 
+  // mixed-media-layouts.mjs
+  var mediaPresentations = Object.freeze([
+    { id: "pip", name: "\u753B\u4E2D\u753B", panels: 1, purpose: "\u4E3B\u753B\u9762\u6301\u7EED\u64AD\u653E\uFF0C\u8F85\u52A9\u753B\u9762\u8FDB\u5165\u540E\u505C\u7559\uFF0C\u9002\u5408\u6F14\u793A\u4E0E\u8865\u5145\u8BC1\u636E\u3002" },
+    { id: "compare", name: "\u53CC\u753B\u9762\u5BF9\u7167", panels: 1, purpose: "\u4E24\u4E2A\u753B\u9762\u5E76\u5217\uFF0C\u5148\u5EFA\u7ACB\u5DE6\u4FA7\u518D\u63ED\u793A\u53F3\u4FA7\uFF0C\u9002\u5408\u5E76\u884C\u64CD\u4F5C\u6216\u65B9\u6848\u5BF9\u7167\u3002" },
+    { id: "wipe", name: "\u64E6\u9664\u5BF9\u6BD4", panels: 1, purpose: "\u540C\u4E00\u89C6\u53E3\u6ED1\u52A8\u63ED\u793A\u7B2C\u4E8C\u7D20\u6750\uFF1B\u771F\u5B9E\u524D\u540E\u5BF9\u6BD4\u9700\u63D0\u4F9B\u914D\u51C6\u7D20\u6750\u3002" },
+    { id: "triptych", name: "\u4E09\u8054\u753B", panels: 2, purpose: "\u4E09\u4E2A\u7D20\u6750\u9519\u65F6\u8FDB\u5165\u540E\u540C\u65F6\u505C\u7559\uFF0C\u9002\u5408\u4E09\u4E2A\u7EC6\u8282\u6216\u540C\u4E3B\u9898\u591A\u89C6\u89D2\u3002" },
+    { id: "collage", name: "\u9519\u843D\u62FC\u8D34", panels: 2, purpose: "\u4E3B\u56FE\u4FDD\u6301\u4E3B\u4F53\uFF0C\u4E24\u4E2A\u8865\u5145\u753B\u9762\u9519\u843D\u53E0\u653E\uFF0C\u9002\u5408\u7D20\u6750\u7EFC\u8FF0\u3002" },
+    { id: "focus", name: "\u5C40\u90E8\u653E\u5927\u7A97", panels: 0, purpose: "\u4FDD\u7559\u540C\u6E90\u5168\u8C8C\u4E0E\u653E\u5927\u7A97\uFF0C\u84DD\u6846\u6807\u660E\u5B9E\u9645\u653E\u5927\u533A\u57DF\uFF1B\u624B\u5DE5\u7126\u70B9\uFF0C\u4E0D\u81EA\u52A8\u8DDF\u8E2A\u3002" }
+  ]);
+  var box = (x, y, w, h, extra2 = {}) => ({ x, y, width: w, height: h, ...extra2 });
+  function presentationBoxes(layout, width = 1280, height = 720) {
+    const layouts = {
+      pip: [box(40, 112, 1200, 500), box(828, 362, 380, 214, { delay: 0.18 })],
+      compare: [box(40, 132, 588, 444), box(652, 132, 588, 444, { delay: 0.14 })],
+      wipe: [box(40, 112, 1200, 500), box(40, 112, 1200, 500)],
+      triptych: [box(40, 132, 384, 444), box(448, 132, 384, 444, { delay: 0.13 }), box(856, 132, 384, 444, { delay: 0.26 })],
+      collage: [box(88, 148, 730, 418, { rotation: -2 }), box(828, 132, 356, 212, { rotation: 3, delay: 0.16 }), box(798, 370, 390, 220, { rotation: -2, delay: 0.3 })],
+      focus: [box(40, 132, 770, 444), box(842, 238, 398, 260, { delay: 0.2 })]
+    };
+    if (!layouts[layout]) throw Error("Unknown media layout: " + layout);
+    return layouts[layout].map((b2) => ({ ...b2, x: b2.x * width / 1280, y: b2.y * height / 720, width: b2.width * width / 1280, height: b2.height * height / 720 }));
+  }
+  function presentationSources(shot2) {
+    return shot2.layout === "focus" ? [
+      { ...shot2, fit: "contain", camera: [{ at: 0, x: 0.5, y: 0.5, zoom: 1 }, { at: 1, x: 0.5, y: 0.5, zoom: 1 }] },
+      { ...shot2, fit: "cover", maxZoom: shot2.focus.zoom, camera: [{ at: 0, ...shot2.focus }, { at: 1, ...shot2.focus }], regions: [], panelLabel: shot2.focus.label ?? "\u5C40\u90E8\u7EC6\u8282" }
+    ] : [shot2, ...shot2.mediaPanels];
+  }
+  function renderPresentation(shot2, index, h, renderWorld) {
+    const boxes = presentationBoxes(shot2.layout), sources = presentationSources(shot2);
+    return `<div class="mm-layout mm-layout-${shot2.layout}" style="--mm-wipe:0">${sources.map((s2, j) => {
+      const b2 = boxes[j];
+      return `<div class="mm-pane" data-mm-pane="${j}" style="left:${b2.x}px;top:${b2.y}px;width:${b2.width}px;height:${b2.height}px;${shot2.layout === "wipe" && j === 1 ? "clip-path:inset(0 calc((100 - var(--mm-wipe)) * 1%) 0 0);" : ""}"><div class="mm-pane-crop">${renderWorld(s2, index * 4 + j)}</div>${s2.panelLabel ? `<span class="mm-pane-label">${h.esc(s2.panelLabel)}</span>` : ""}</div>`;
+    }).join("")}${shot2.layout === "wipe" ? '<div class="mm-wipe-track"><div class="mm-wipe-divider"></div></div>' : ""}</div>`;
+  }
+  var presentationCSS = `
+.mm-layout{position:absolute;inset:0;background:#fff}
+.mm-pane{position:absolute;transform-origin:50% 50%;border-radius:10px;box-shadow:0 0 0 1px #dce4ee,0 10px 28px #182b4417;background:#edf2f7}
+.mm-pane-crop{position:absolute;inset:0;overflow:hidden;border-radius:inherit}
+.mm-pane-label{position:absolute;left:12px;bottom:12px;padding:7px 12px;background:#fff;border:1px solid #dce4ee;border-radius:6px;font-size:18px;line-height:1.35;color:#1749ad;max-width:calc(100% - 24px);overflow-wrap:anywhere}
+.mm-layout-pip .mm-pane[data-mm-pane="1"]{box-shadow:0 0 0 4px #fff,0 0 0 5px #81c9b0,0 8px 24px #182b4433}
+.mm-layout-wipe .mm-pane{border-radius:0;box-shadow:none}
+.mm-layout-wipe .mm-pane[data-mm-pane="0"] .mm-pane-label{left:auto;right:12px}
+.mm-wipe-track{position:absolute;left:40px;top:112px;width:1200px;height:500px;pointer-events:none}
+.mm-wipe-divider{position:absolute;left:calc(var(--mm-wipe) * 1%);top:0;bottom:0;width:3px;background:#fff;box-shadow:0 0 0 1px #2563eb;transform:translateX(-50%);opacity:0}
+.mm-wipe-divider::after{content:'\u2194';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;color:#2563eb;border:2px solid #2563eb;border-radius:50%;width:34px;height:34px;display:grid;place-items:center;font-size:22px}
+.mm-focus-region{position:absolute;border:4px solid #2563eb;box-shadow:0 0 0 2px white;pointer-events:none;opacity:0}
+.mm-layout-focus .mm-pane[data-mm-pane="1"]{box-shadow:0 0 0 3px #2563eb,0 8px 28px #182b4417}
+`;
+  function buildPresentation(timeline, wrapper, shot2, strength, cameraPose2) {
+    const boxes = presentationBoxes(shot2.layout), sources = presentationSources(shot2);
+    const move = Math.min(0.65, shot2.seconds * 0.15), factor = strength === "still" ? 0 : strength === "light" ? 0.6 : strength === "emphasis" ? 1.3 : 1;
+    sources.forEach((source2, j) => {
+      const pane = wrapper.querySelector(`[data-mm-pane="${j}"]`), world = pane.querySelector(".mm-world"), b2 = boxes[j];
+      const frames = source2.camera, poses = frames.map((f) => cameraPose2(b2, source2, strength === "still" ? frames[0] : f, shot2.layout === "focus" ? "standard" : strength));
+      timeline.set(world, { ...poses[0], transformOrigin: "0 0" }, 0);
+      timeline.set(pane, { rotation: b2.rotation ?? 0 }, 0);
+      if (shot2.layout !== "focus") for (let k = 1; k < frames.length; k++) timeline.fromTo(world, poses[k - 1], { ...poses[k], duration: (frames[k].at - frames[k - 1].at) * shot2.seconds * (strength === "emphasis" ? 0.78 : 1), ease: frames[k].ease, immediateRender: false, lazy: false }, shot2.at + frames[k - 1].at * shot2.seconds);
+      if (b2.delay) {
+        timeline.set(pane, { opacity: 0, y: 22 * factor, scale: shot2.layout === "pip" ? 0.94 : 1 }, 0);
+        timeline.fromTo(pane, { opacity: 0, y: 22 * factor, scale: shot2.layout === "pip" ? 0.94 : 1 }, { opacity: 1, y: 0, scale: 1, duration: move, ease: "power3.out", immediateRender: false }, shot2.at + b2.delay * shot2.seconds);
+      }
+      source2.regions.forEach((r, k) => {
+        const node4 = pane.querySelector(`[data-mm-region="${k}"]`), at2 = shot2.at + r.start * shot2.seconds, end = shot2.at + r.end * shot2.seconds, fade = Math.min(0.18, (end - at2) / 3);
+        timeline.fromTo(node4, { opacity: 0 }, { opacity: 1, duration: fade, immediateRender: false }, at2);
+        timeline.to(node4, { opacity: 0, duration: fade }, end - fade);
+      });
+    });
+    if (shot2.layout === "wipe") {
+      const layout = wrapper.querySelector(".mm-layout"), at2 = shot2.at + shot2.wipeAt * shot2.seconds;
+      timeline.set(layout, { "--mm-wipe": 0 }, 0);
+      timeline.fromTo(layout, { "--mm-wipe": 0 }, { "--mm-wipe": shot2.wipeRest * 100, duration: Math.min(1.1, shot2.seconds * 0.28), ease: "sine.inOut", immediateRender: false }, at2);
+      timeline.fromTo(wrapper.querySelector(".mm-wipe-divider"), { opacity: 0 }, { opacity: 1, duration: Math.min(0.18, move), immediateRender: false }, at2);
+    }
+    if (shot2.layout === "focus") {
+      const pose = cameraPose2(boxes[1], sources[1], sources[1].camera[0], "standard");
+      const left = Math.max(0, -pose.x / pose.scale), top = Math.max(0, -pose.y / pose.scale), right = Math.min(shot2.width, (boxes[1].width - pose.x) / pose.scale), bottom = Math.min(shot2.height, (boxes[1].height - pose.y) / pose.scale);
+      const region2 = wrapper.ownerDocument.createElement("div");
+      region2.className = "mm-focus-region";
+      region2.style.cssText = `left:${left}px;top:${top}px;width:${right - left}px;height:${bottom - top}px`;
+      wrapper.querySelector('[data-mm-pane="0"] .mm-world').append(region2);
+      timeline.fromTo(region2, { opacity: 0 }, { opacity: 1, duration: move, immediateRender: false }, shot2.at + boxes[1].delay * shot2.seconds);
+    }
+  }
+
+  // mixed-media-motion.mjs
+  var motionStrengths = Object.freeze({ still: 0, light: 0.6, standard: 1, emphasis: 1.3 });
+  var mixedMediaEffect = { id: "media-sequence-motion", name: "\u6DF7\u526A \xB7 \u53D6\u666F\u4E0E\u7126\u70B9\u4EA4\u63A5", component: "mixed-media-sequence", exclusive: "mixed-media-sequence", category: "\u6DF7\u526A\u955C\u5934", description: "\u56FE\u7247\u3001\u5F55\u5C4F\u3001\u89C6\u9891\u6309\u65F6\u95F4\u7EC4\u63A5\uFF1B\u6E90\u5750\u6807\u805A\u7126\u548C\u6807\u6CE8\u3001\u9605\u8BFB\u505C\u7559\u3001\u5168\u5C4F/\u5206\u5C4F\u4EA4\u63A5\u3002\u53EF\u8C03\u5F3A\u5EA6\u4E0E\u65F6\u957F\uFF0C\u771F\u5B9E\u89C6\u9891\u4FDD\u6301\u539F\u901F\u3002", selector: ".mm-sequence", duration: 8, previewTime: 5.8, silent: true, cueHints: [], mediaClock: "source" };
+  var finite3 = (v, name, min, max) => {
+    if (typeof v !== "number" || !Number.isFinite(v) || v < min || v > max) throw Error(`${name} must be in [${min}, ${max}]`);
+    return v;
+  };
+  var clamp3 = (v, min, max) => Math.min(max, Math.max(min, v));
+  function cameraPose(view, source2, frame2, strength = "standard") {
+    if (!(strength in motionStrengths)) throw Error("Unknown motion strength: " + strength);
+    const base2 = (source2.fit === "contain" ? Math.min : Math.max)(view.width / source2.width, view.height / source2.height);
+    const zoom = clamp3(1 + (frame2.zoom - 1) * motionStrengths[strength], 1, source2.maxZoom ?? 3);
+    const scale = base2 * zoom, width = source2.width * scale, height = source2.height * scale;
+    const x = view.width / 2 - source2.width * frame2.x * scale, y = view.height / 2 - source2.height * frame2.y * scale;
+    return {
+      x: width <= view.width ? (view.width - width) / 2 : clamp3(x, view.width - width, 0),
+      y: height <= view.height ? (view.height - height) / 2 : clamp3(y, view.height - height, 0),
+      scale
+    };
+  }
+  function normalizeMediaSequence(props, duration = 8) {
+    finite3(duration, "duration", 0.1, 600);
+    const strength = props.strength ?? "standard";
+    if (!(strength in motionStrengths)) throw Error("Unknown motion strength: " + strength);
+    const source2 = normalizeMediaProps(props).media;
+    if (!Array.isArray(source2) || source2.length < 1 || source2.length > 12) throw Error("media requires 1\u201312 shots");
+    const shots = source2.map((m, i) => {
+      if (!["image", "video"].includes(m.type)) throw Error("media.type must be image or video");
+      if (typeof m.src !== "string" || !m.src || /^(?:[a-z][a-z0-9+.-]*:|\/)/i.test(m.src) || m.src.split(/[\\/]/).includes("..")) throw Error("Use local project-relative media.src");
+      const width = finite3(m.width, "media.width", 1, 32e3), height = finite3(m.height, "media.height", 1, 32e3);
+      const start = finite3(m.start, "shot.start", 0, 1), end = finite3(m.end, "shot.end", 0, 1);
+      if (end <= start) throw Error("shot.end must be after start");
+      const fit4 = m.fit ?? "cover";
+      if (!["contain", "cover"].includes(fit4)) throw Error("fit must be contain or cover");
+      const offset = finite3(m.sourceStart ?? 0, "sourceStart", 0, 86400);
+      const seconds = (end - start) * duration;
+      if (m.type === "video" && m.sourceDuration !== void 0 && offset + seconds > finite3(m.sourceDuration, "sourceDuration", 0.01, 86400) + 1e-3) throw Error(`Shot ${i + 1} exceeds source video; trim the shot or provide longer media`);
+      const maxZoom = finite3(m.maxZoom ?? 2.4, "maxZoom", 1, 4);
+      const camera = (m.camera ?? [{ at: 0, x: 0.5, y: 0.5, zoom: 1 }, { at: 1, x: 0.5, y: 0.5, zoom: 1 }]).map((f) => ({
+        at: finite3(f.at, "camera.at", 0, 1),
+        x: finite3(f.x, "camera.x", 0, 1),
+        y: finite3(f.y, "camera.y", 0, 1),
+        zoom: finite3(f.zoom, "camera.zoom", 1, 4),
+        ease: f.ease ?? "power2.inOut"
+      }));
+      if (camera.length < 2 || camera[0].at !== 0 || camera.at(-1).at !== 1) throw Error("camera must begin at 0 and end at 1");
+      for (let j = 1; j < camera.length; j++) if (camera[j].at <= camera[j - 1].at) throw Error("Camera keyframes must be ordered");
+      const regions = (m.regions ?? []).map((r) => {
+        if (r.kind && !["frame", "spotlight", "arrow"].includes(r.kind)) throw Error("Unknown annotation kind");
+        const result = { ...r, x: finite3(r.x, "region.x", 0, 1), y: finite3(r.y, "region.y", 0, 1), width: finite3(r.width, "region.width", 1e-3, 1), height: finite3(r.height, "region.height", 1e-3, 1), start: finite3(r.start ?? 0, "region.start", 0, 1), end: finite3(r.end ?? 1, "region.end", 0, 1) };
+        if (result.x + result.width > 1.000001 || result.y + result.height > 1.000001 || result.end <= result.start) throw Error("Region must fit source and have a positive time range");
+        return result;
+      });
+      const transition = m.transition ?? (i ? "dissolve" : "cut");
+      if (!["cut", "dissolve", "push"].includes(transition)) throw Error("Unknown media transition");
+      const transitionSeconds = transition === "cut" ? 0 : Math.min(finite3(m.transitionSeconds ?? 0.4, "transitionSeconds", 0.05, 2), seconds * 0.2);
+      const splitAt = m.splitAt === void 0 ? null : finite3(m.splitAt, "splitAt", 0, 0.9);
+      const layout = m.layout ?? "full", recipe = mediaPresentations.find((p) => p.id === layout);
+      if (layout !== "full" && !recipe) throw Error("Unknown media layout: " + layout);
+      if (layout !== "full" && (splitAt !== null || m.splitFrom)) throw Error("Presentation layouts cannot also use explanation split");
+      const panels = m.mediaPanels ?? [];
+      if (!Array.isArray(panels) || panels.length !== (recipe?.panels ?? 0)) throw Error(`${layout} requires ${recipe?.panels ?? 0} mediaPanels`);
+      if (panels.some((p) => p.layout || p.mediaPanels || p.splitAt !== void 0 || p.splitFrom)) throw Error("Nested presentation layouts are not supported");
+      const mediaPanels = panels.map((p) => normalizeMediaSequence({ strength, media: [{ ...p, start: 0, end: 1, transition: "cut" }] }, seconds).shots[0]);
+      const focus = layout === "focus" ? { x: finite3(m.focus?.x ?? 0.5, "focus.x", 0, 1), y: finite3(m.focus?.y ?? 0.5, "focus.y", 0, 1), zoom: Math.min(maxZoom, finite3(m.focus?.zoom ?? 2, "focus.zoom", 1, 4)), label: m.focus?.label ?? "\u5C40\u90E8\u7EC6\u8282" } : null;
+      const wipeAt = finite3(m.wipeAt ?? 0.2, "wipeAt", 0, 0.6), wipeRest = finite3(m.wipeRest ?? 0.5, "wipeRest", 0.05, 0.95);
+      if (m.notes !== void 0 && (!Array.isArray(m.notes) || m.notes.length > 4)) throw Error("notes supports up to 4 short lines");
+      return {
+        ...m,
+        width,
+        height,
+        start,
+        end,
+        fit: fit4,
+        sourceStart: offset,
+        maxZoom,
+        camera,
+        regions,
+        transition,
+        transitionSeconds,
+        splitAt,
+        layout,
+        mediaPanels,
+        focus,
+        wipeAt,
+        wipeRest,
+        at: start * duration,
+        until: end * duration,
+        seconds
+      };
+    });
+    if (shots[0].start !== 0 || shots.at(-1).end !== 1) throw Error("Shots must cover the entire scene");
+    for (let i = 1; i < shots.length; i++) if (Math.abs(shots[i].start - shots[i - 1].end) > 1e-6) throw Error("Shots must be contiguous; transition overlaps are managed automatically");
+    for (let i = 0; i < shots.length; i++) {
+      const shot2 = shots[i], extra2 = shots[i + 1]?.transitionSeconds ?? 0;
+      shot2.mediaDuration = shot2.seconds + extra2;
+      if (shot2.type === "video" && shot2.sourceDuration !== void 0 && shot2.sourceStart + shot2.mediaDuration > shot2.sourceDuration + 1e-3) throw Error(`Shot ${i + 1} lacks transition handles`);
+      for (const panel5 of shot2.mediaPanels) {
+        Object.assign(panel5, { at: shot2.at, until: shot2.until, mediaDuration: shot2.mediaDuration });
+        if (panel5.type === "video" && panel5.sourceDuration !== void 0 && panel5.sourceStart + panel5.mediaDuration > panel5.sourceDuration + 1e-3) throw Error(`Shot ${i + 1} panel lacks transition handles`);
+      }
+    }
+    return { duration, strength, shots };
+  }
+  function renderMediaSequence(props, h) {
+    const { shots } = normalizeMediaSequence(props, props.previewDuration ?? 8);
+    const renderWorld = (s2, id) => {
+      const asset = s2.type === "video" ? `<video id="${h.uid("media-" + id)}" class="mm-asset clip" src="${h.esc(s2.src)}" muted playsinline preload="auto" data-start="${s2.at}" data-duration="${s2.mediaDuration}" data-track-index="${id}" data-media-start="${s2.sourceStart}" data-volume="0" aria-label="${h.esc(s2.alt ?? "\u89C6\u9891\u7D20\u6750")}"></video>` : `<img class="mm-asset" src="${h.esc(s2.src)}" alt="${h.esc(s2.alt ?? "\u56FE\u7247\u7D20\u6750")}">`;
+      return `<div class="mm-world" data-layout-allow-overflow style="width:${s2.width}px;height:${s2.height}px">${asset}${s2.regions.map((r, j) => `<div class="mm-region mm-region-${r.kind ?? "frame"}" data-mm-region="${j}" style="left:${r.x * s2.width}px;top:${r.y * s2.height}px;width:${r.width * s2.width}px;height:${r.height * s2.height}px;opacity:0"><span>${h.esc(r.label ?? "")}</span></div>`).join("")}</div>`;
+    };
+    return `<section class="mm-sequence" data-mm-config="${h.esc(JSON.stringify(props))}">${shots.map((s2, i) => {
+      if (s2.layout !== "full") return `<article class="mm-shot" data-mm-shot="${i}" style="z-index:${i + 1};opacity:${i ? 0 : 1}">${renderPresentation(s2, i, h, renderWorld)}<header class="mm-heading"><span>${h.esc(s2.label ?? "")}</span><h2>${h.esc(s2.title ?? "")}</h2></header>${s2.caption ? `<footer class="mm-caption"><p>${h.esc(s2.caption)}</p></footer>` : ""}</article>`;
+      const sourceStyle = `width:${s2.width}px;height:${s2.height}px`;
+      const asset = s2.type === "video" ? `<video id="${h.uid("media-" + i * 4)}" class="mm-asset clip" src="${h.esc(s2.src)}" muted playsinline preload="auto" data-start="${s2.at}" data-duration="${s2.mediaDuration}" data-track-index="${i * 4}" data-media-start="${s2.sourceStart}" data-volume="0" aria-label="${h.esc(s2.alt ?? "\u89C6\u9891\u7D20\u6750")}"></video>` : `<img class="mm-asset" src="${h.esc(s2.src)}" alt="${h.esc(s2.alt ?? "\u56FE\u7247\u7D20\u6750")}">`;
+      return `<article class="mm-shot" data-mm-shot="${i}" style="z-index:${i + 1};opacity:${i ? 0 : 1}"><div class="mm-handoff"><div class="mm-viewport"><div class="mm-world" data-layout-allow-overflow style="${sourceStyle}">${asset}${s2.regions.map((r, j) => `<div class="mm-region mm-region-${r.kind ?? "frame"}" data-mm-region="${j}" style="left:${r.x * s2.width}px;top:${r.y * s2.height}px;width:${r.width * s2.width}px;height:${r.height * s2.height}px;opacity:0"><span>${h.esc(r.label ?? "")}</span></div>`).join("")}</div></div><aside class="mm-explanation"><span class="mm-kicker">${h.esc(s2.noteLabel ?? "\u8981\u70B9")}</span><h2>${h.esc(s2.noteTitle ?? s2.title ?? "")}</h2>${(s2.notes ?? []).map((n4) => `<p class="mm-note">${h.esc(n4)}</p>`).join("")}</aside></div><header class="mm-heading"><span>${h.esc(s2.label ?? "")}</span><h2>${h.esc(s2.title ?? "")}</h2></header>${s2.caption ? `<footer class="mm-caption"><p>${h.esc(s2.caption)}</p></footer>` : ""}</article>`;
+    }).join("")}</section>`;
+  }
+  var mediaSequenceCSS = `
+.mm-sequence,.mm-sequence *{box-sizing:border-box}
+.mm-sequence{position:absolute;inset:0;overflow:hidden;background:#fff;color:#1f2329;font-family:ComponentUI,ComponentHan,sans-serif}
+.mm-shot,.mm-handoff{position:absolute;inset:0;overflow:hidden;background:#fff}
+.mm-viewport{position:absolute;inset:0;overflow:hidden;background:#edf2f7;transform-origin:0 0}
+.mm-world{position:absolute;left:0;top:0;transform-origin:0 0}
+.mm-asset{display:block;width:100%;height:100%;object-fit:fill}
+.mm-region{position:absolute;border:3px solid #2563eb;border-radius:6px;box-shadow:0 0 0 1px #ffffff;pointer-events:none}
+.mm-region span{position:absolute;left:6px;top:6px;font-size:19px;line-height:1.3;white-space:nowrap;padding:5px 9px;border-radius:5px;background:#fff;color:#1749ad}
+.mm-region-spotlight{box-shadow:0 0 0 32000px #142f6759}
+.mm-region-arrow::after{content:'';position:absolute;left:8px;top:50%;width:35px;height:20px;background:#2563eb;clip-path:polygon(0 30%,60% 30%,60% 0,100% 50%,60% 100%,60% 70%,0 70%)}
+.mm-heading{position:absolute;left:44px;right:44px;top:30px;display:flex;align-items:center;justify-content:space-between;gap:20px;pointer-events:none}
+.mm-heading span,.mm-heading h2{margin:0;padding:8px 13px;background:#fff;border-radius:7px;border:1px solid #dce4ee;font-size:17px;line-height:1.4;color:#1749ad;font-weight:600}
+.mm-heading h2{color:#1f2329;font-size:20px;max-width:60%}
+.mm-heading span:empty,.mm-heading h2:empty{display:none}
+.mm-caption{position:absolute;left:64px;right:64px;bottom:28px;display:flex;justify-content:center;pointer-events:none}
+.mm-caption p{margin:0;background:#fff;color:#1f2329;border:1px solid #dce4ee;border-radius:8px;padding:12px 22px;font-size:25px;line-height:1.45;text-align:center;max-width:100%;box-shadow:0 4px 16px #182b4410}
+.mm-explanation{position:absolute;left:64%;right:4%;top:20%;bottom:20%;display:flex;flex-direction:column;justify-content:center;gap:22px;opacity:0}
+.mm-kicker{color:#1749ad;font-size:17px;font-weight:600;letter-spacing:1px}
+.mm-explanation h2{font-size:35px;line-height:1.4;margin:0;overflow-wrap:anywhere}
+.mm-note{margin:0;border-left:4px solid #81c9b0;padding:8px 0 8px 18px;font-size:23px;line-height:1.5;overflow-wrap:anywhere}
+` + presentationCSS;
+  function buildMediaSequence(gsap, root, { duration = 8, strength: override } = {}) {
+    const stage = root.querySelector(".mm-sequence");
+    if (!stage) throw Error("media-sequence-motion requires a media-sequence component");
+    const props = JSON.parse(stage.dataset.mmConfig), model = normalizeMediaSequence({ ...props, ...override ? { strength: override } : {} }, duration);
+    const width = Number(root.dataset.width) || 1280, height = Number(root.dataset.height) || 720;
+    const timeline = gsap.timeline({ paused: true });
+    model.shots.forEach((shot2, i) => {
+      const wrapper = stage.querySelector(`[data-mm-shot="${i}"]`), handoff = wrapper.querySelector(".mm-handoff"), view = wrapper.querySelector(".mm-viewport"), world = wrapper.querySelector(".mm-world");
+      const poses = shot2.camera.map((frame2) => cameraPose({ width, height }, shot2, model.strength === "still" ? shot2.camera[0] : frame2, model.strength));
+      if (i < model.shots.length - 1) {
+        const next = model.shots[i + 1];
+        timeline.set(wrapper, { autoAlpha: 0 }, shot2.until + next.transitionSeconds);
+        if (next.transitionSeconds) timeline.set(wrapper.querySelectorAll(".mm-heading,.mm-caption"), { autoAlpha: 0 }, shot2.until);
+      }
+      if (shot2.layout !== "full") buildPresentation(timeline, wrapper, shot2, model.strength, cameraPose);
+      else {
+        timeline.set(world, { ...poses[0], transformOrigin: "0 0" }, 0);
+        for (let j = 1; j < shot2.camera.length; j++) {
+          const previous = shot2.camera[j - 1], current = shot2.camera[j];
+          timeline.fromTo(world, poses[j - 1], { ...poses[j], duration: (current.at - previous.at) * shot2.seconds * (model.strength === "emphasis" ? 0.78 : 1), ease: current.ease, immediateRender: false, lazy: false }, shot2.at + previous.at * shot2.seconds);
+        }
+      }
+      if (i === 0) timeline.set(wrapper, { opacity: 1 }, 0);
+      else if (shot2.transition === "cut") timeline.set(wrapper, { opacity: 1 }, shot2.at);
+      else if (shot2.transition === "dissolve") timeline.fromTo(wrapper, { opacity: 0 }, { opacity: 1, duration: shot2.transitionSeconds, ease: "sine.inOut", immediateRender: false }, shot2.at);
+      else {
+        timeline.set(wrapper, { opacity: 1 }, shot2.at);
+        timeline.fromTo(wrapper, { x: width }, { x: 0, duration: shot2.transitionSeconds, ease: "power2.inOut", immediateRender: false }, shot2.at);
+      }
+      const media3 = shot2.layout === "full" ? wrapper.querySelector("video") : null;
+      if (media3) {
+        media3.classList.add("clip");
+        media3.dataset.start = String(shot2.at);
+        media3.dataset.duration = String(shot2.mediaDuration);
+        media3.dataset.mediaStart = String(shot2.sourceStart);
+        media3.dataset.trackIndex = String(i * 4);
+      }
+      if (shot2.layout === "full") shot2.regions.forEach((region2, j) => {
+        const node4 = wrapper.querySelector(`[data-mm-region="${j}"]`), at2 = shot2.at + region2.start * shot2.seconds, end = shot2.at + region2.end * shot2.seconds;
+        const fade = Math.min(0.18, (end - at2) / 3);
+        timeline.fromTo(node4, { opacity: 0 }, { opacity: 1, duration: fade, immediateRender: false }, at2);
+        timeline.to(node4, { opacity: 0, duration: fade }, end - fade);
+      });
+      if (shot2.splitAt !== null) {
+        const at2 = shot2.at + shot2.splitAt * shot2.seconds, move = Math.min(0.8, shot2.seconds * (1 - shot2.splitAt) * 0.35), panel5 = wrapper.querySelector(".mm-explanation");
+        const full = { scale: 1, x: 0, y: 0 }, split = { scale: 0.57, x: width * 0.04, y: height * 0.215 };
+        timeline.fromTo(view, shot2.splitFrom ? split : full, { ...shot2.splitFrom ? full : split, duration: move, ease: "power2.inOut", immediateRender: false }, at2);
+        if (shot2.splitFrom) timeline.set(view, split, 0);
+        timeline.fromTo(panel5, { opacity: shot2.splitFrom ? 1 : 0, x: shot2.splitFrom ? 0 : 24 }, { opacity: shot2.splitFrom ? 0 : 1, x: shot2.splitFrom ? 24 : 0, duration: move * 0.2, ease: "power2.out", immediateRender: false }, at2 + (shot2.splitFrom ? 0 : move * 0.8));
+        if (shot2.splitFrom) timeline.set(panel5, { opacity: 1, x: 0 }, 0);
+        const notes = panel5.querySelectorAll(".mm-note");
+        if (notes.length && !shot2.splitFrom) timeline.fromTo(notes, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: Math.min(0.32, move), stagger: Math.min(0.22, (shot2.until - at2 - move) / Math.max(1, notes.length)), immediateRender: false }, at2 + move);
+      }
+      timeline.addLabel("shot-" + (i + 1), shot2.at);
+    });
+    timeline.to({ t: 0 }, { t: duration, duration, ease: "none" }, 0);
+    root.dataset.effectId = "media-sequence-motion";
+    root.dataset.effectTargets = String(model.shots.length);
+    root.__mediaSequenceModel = model;
+    return timeline;
+  }
+
+  // families/mixed-media.mjs
+  var components27 = [{
+    id: "mixed-media-sequence",
+    name: "\u6DF7\u526A \xB7 \u987A\u5E8F\u955C\u5934\u7EC4",
+    category: "B-roll \xB7 \u771F\u5B9E\u7D20\u6750",
+    description: "\u56FE\u7247\u3001\u5F55\u5C4F\u3001\u89C6\u9891\u6309\u539F\u901F\u6DF7\u526A\u3002\u652F\u6301\u753B\u4E2D\u753B\u3001\u53CC\u753B\u9762\u5BF9\u7167\u3001\u64E6\u9664\u5BF9\u6BD4\u3001\u4E09\u8054\u753B\u3001\u9519\u843D\u62FC\u8D34\u3001\u5C40\u90E8\u653E\u5927\u7A97\uFF0C\u4EE5\u53CA\u53D6\u666F\u3001\u6807\u6CE8\u3001\u5168\u5C4F/\u5206\u5C4F\u4E0EA/B\u4EA4\u63A5\u3002",
+    width: 1280,
+    height: 720,
+    defaultEffect: "media-sequence-motion",
+    reference: { level: "designed", basis: "\u539F\u521B\u6E90\u5750\u6807\u955C\u5934\u7F16\u6392\uFF1B\u793A\u4F8B\u4E3A\u8BB8\u53EF\u7D20\u6750\uFF0C\u4E0D\u80FD\u4F5C\u4E3A\u672C\u671F\u64CD\u4F5C\u8BC1\u636E\u3002\u8BE6\u89C1 MIXED_MEDIA_GUIDE.md\u3002", source: "assets/broll/CREDITS.md" },
+    defaults: { strength: "emphasis", previewDuration: 8, media: [
+      { type: "image", src: "assets/broll/planning.jpg", width: 1920, height: 1280, start: 0, end: 0.5, fit: "cover", maxZoom: 1.6, label: "\u753B\u9762 A", title: "\u5168\u8C8C \u2192 \u91CD\u70B9", camera: [{ at: 0, x: 0.5, y: 0.5, zoom: 1 }, { at: 0.16, x: 0.5, y: 0.5, zoom: 1 }, { at: 0.62, x: 0.65, y: 0.55, zoom: 1.38 }, { at: 1, x: 0.65, y: 0.55, zoom: 1.38 }], regions: [{ x: 0.61, y: 0.34, width: 0.2, height: 0.42, start: 0.64, end: 0.97, label: "\u89C2\u5BDF\u533A\u57DF" }] },
+      { type: "image", src: "assets/broll/keyboard.jpg", width: 1920, height: 1440, start: 0.5, end: 1, fit: "cover", maxZoom: 1.6, label: "\u753B\u9762 B", title: "\u5168\u5C4F \u2192 \u7D20\u6750\u4E0E\u89E3\u91CA", transition: "push", transitionSeconds: 0.42, splitAt: 0.4, noteTitle: "\u8F85\u52A9\u8BF4\u660E", notes: ["\u8981\u70B9 A", "\u8981\u70B9 B"], camera: [{ at: 0, x: 0.5, y: 0.5, zoom: 1.15 }, { at: 0.3, x: 0.5, y: 0.5, zoom: 1 }, { at: 1, x: 0.5, y: 0.5, zoom: 1 }] }
+    ] },
+    render(props, h) {
+      return renderMediaSequence({ ...this.defaults, ...props }, h);
+    }
+  }];
+
   // families/systems.mjs
   var ref2 = (basis, source2) => ({ basis, source: source2, level: "documented" });
   var arr4 = (v) => Array.isArray(v) ? v : [];
-  var num5 = (v, fallback = 0) => Number.isFinite(Number(v)) ? Number(v) : fallback;
+  var num6 = (v, fallback = 0) => Number.isFinite(Number(v)) ? Number(v) : fallback;
   var safeSrc = (v) => {
-    const s = String(v || "");
-    if (/^(?:[a-z]+:|\/\/)/i.test(s) || s.includes("..")) return "";
-    return s;
+    const s2 = String(v || "");
+    if (/^(?:[a-z]+:|\/\/)/i.test(s2) || s2.includes("..")) return "";
+    return s2;
   };
   var nativePaths = {
     cut: "M6 3l12 18M18 3 6 21M8 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0m14 0a3 3 0 1 1-6 0 3 3 0 0 1 6 0",
@@ -5822,9 +7249,9 @@ var ComponentLibraryRuntime = (() => {
   };
   var cn = (h, name, size = 18) => nativePaths[name] ? `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${nativePaths[name]}"/></svg>` : h.icon(name, size);
   var winButtons = (h) => `<div class="os-window-buttons"><span>${cn(h, "minus", 12)}</span><span>${cn(h, "maximize", 12)}</span><span>${cn(h, "x", 14)}</span></div>`;
-  var tool = (h, name, label2 = "") => `<span class="os-tool">${cn(h, name, 17)}${label2 ? `<span>${h.esc(label2)}</span>` : ""}</span>`;
+  var tool = (h, name, label3 = "") => `<span class="os-tool">${cn(h, name, 17)}${label3 ? `<span>${h.esc(label3)}</span>` : ""}</span>`;
   var fileIcon = (h, kind = "file", size = 18) => `<span class="os-file-icon os-kind-${["folder", "image", "video", "code", "file"].includes(kind) ? kind : "file"}">${cn(h, kind, size)}</span>`;
-  var status2 = (p, h) => `<div class="os-ios-status"><b>${h.esc(p.time)}</b><span class="os-island" aria-hidden="true"></span><span class="os-ios-status-right"><svg viewBox="0 0 20 14" width="18" height="14" fill="currentColor" aria-hidden="true"><rect x="0" y="9" width="3" height="5" rx="1"/><rect x="5" y="6" width="3" height="8" rx="1"/><rect x="10" y="3" width="3" height="11" rx="1"/><rect x="15" width="3" height="14" rx="1"/></svg>${cn(h, "wifi", 17)}<span class="os-ios-battery"><i style="width:${Math.max(0, Math.min(100, num5(p.battery, 100)))}%"></i></span></span></div>`;
+  var status2 = (p, h) => `<div class="os-ios-status"><b>${h.esc(p.time)}</b><span class="os-island" aria-hidden="true"></span><span class="os-ios-status-right"><svg viewBox="0 0 20 14" width="18" height="14" fill="currentColor" aria-hidden="true"><rect x="0" y="9" width="3" height="5" rx="1"/><rect x="5" y="6" width="3" height="8" rx="1"/><rect x="10" y="3" width="3" height="11" rx="1"/><rect x="15" width="3" height="14" rx="1"/></svg>${cn(h, "wifi", 17)}<span class="os-ios-battery"><i style="width:${Math.max(0, Math.min(100, num6(p.battery, 100)))}%"></i></span></span></div>`;
   var media2 = (p, h, fallback, klass = "") => {
     const src = safeSrc(p.media?.src);
     const kind = p.media?.kind;
@@ -5839,11 +7266,11 @@ var ComponentLibraryRuntime = (() => {
     return `<div class="os-address-row">${tool(h, "chevron-left")}${tool(h, "chevron-right")}${tool(h, "arrow-up")}${tool(h, "refresh")}<div class="os-win-address">${cn(h, "folder", 17)}${arr4(p.path).map((x) => `<span>${h.esc(x)}</span>${cn(h, "chevron-right", 12)}`).join("")}<span class="os-flex"></span>${cn(h, "chevron-down", 13)}</div><div class="os-win-search"><span>${h.esc(p.search)}</span>${cn(h, "search", 16)}</div></div>`;
   }
   function winRows(p, h) {
-    return `<div class="os-files-table"><div class="os-file-row os-table-head">${arr4(p.columns).map((x) => `<span>${h.esc(x)}</span>`).join("")}</div><div class="os-files-body" data-motion="scroll">${arr4(p.files).map((x, i) => `<div data-motion="item" class="os-file-row ${i === num5(p.selected, -1) ? "os-row-selected" : ""}"><span>${fileIcon(h, x.kind, 18)}<span>${h.esc(x.name)}</span></span><span>${h.esc(x.date)}</span><span>${h.esc(x.type)}</span><span>${h.esc(x.size)}</span></div>`).join("")}</div></div>`;
+    return `<div class="os-files-table"><div class="os-file-row os-table-head">${arr4(p.columns).map((x) => `<span>${h.esc(x)}</span>`).join("")}</div><div class="os-files-body" data-motion="scroll">${arr4(p.files).map((x, i) => `<div data-motion="item" class="os-file-row ${i === num6(p.selected, -1) ? "os-row-selected" : ""}"><span>${fileIcon(h, x.kind, 18)}<span>${h.esc(x.name)}</span></span><span>${h.esc(x.date)}</span><span>${h.esc(x.type)}</span><span>${h.esc(x.size)}</span></div>`).join("")}</div></div>`;
   }
   function phoneFolderSvg(h, index) {
-    const back = h.uid(`phone-folder-back-${index}`), front = h.uid(`phone-folder-front-${index}`);
-    return `<svg class="os-phone-folder-icon" viewBox="0 0 104 80" width="104" height="80" aria-hidden="true"><defs><linearGradient id="${back}" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#54baf1"/><stop offset="1" stop-color="#319cde"/></linearGradient><linearGradient id="${front}" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#98d9f9"/><stop offset=".12" stop-color="#85d1f6"/><stop offset="1" stop-color="#63bef0"/></linearGradient></defs><path d="M6 14.5C6 10.9 8.9 8 12.5 8H35.8C37.8 8 39.1 8.7 40.5 10.1L46.1 15.7C47.3 16.9 48.7 17.5 50.6 17.5H91.5C95.1 17.5 98 20.4 98 24V67.5C98 71.1 95.1 74 91.5 74H12.5C8.9 74 6 71.1 6 67.5Z" fill="url(#${back})"/><path d="M9 26H95V65.5C95 69.1 93.1 71 89.5 71H14.5C10.9 71 9 69.1 9 65.5Z" fill="#d3eefc"/><path d="M6 30C6 26.7 8.7 24 12 24H92C95.3 24 98 26.7 98 30V68C98 71.3 95.3 74 92 74H12C8.7 74 6 71.3 6 68Z" fill="url(#${front})"/><path d="M6.5 30C6.5 26.9 8.9 24.5 12 24.5H92C95.1 24.5 97.5 26.9 97.5 30" fill="none" stroke="#bfeafa" stroke-width=".8"/><path d="M12 73.5H92" stroke="#46a8df" stroke-opacity=".25"/></svg>`;
+    const back = h.uid(`phone-folder-back-${index}`), front2 = h.uid(`phone-folder-front-${index}`);
+    return `<svg class="os-phone-folder-icon" viewBox="0 0 104 80" width="104" height="80" aria-hidden="true"><defs><linearGradient id="${back}" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#54baf1"/><stop offset="1" stop-color="#319cde"/></linearGradient><linearGradient id="${front2}" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#98d9f9"/><stop offset=".12" stop-color="#85d1f6"/><stop offset="1" stop-color="#63bef0"/></linearGradient></defs><path d="M6 14.5C6 10.9 8.9 8 12.5 8H35.8C37.8 8 39.1 8.7 40.5 10.1L46.1 15.7C47.3 16.9 48.7 17.5 50.6 17.5H91.5C95.1 17.5 98 20.4 98 24V67.5C98 71.1 95.1 74 91.5 74H12.5C8.9 74 6 71.1 6 67.5Z" fill="url(#${back})"/><path d="M9 26H95V65.5C95 69.1 93.1 71 89.5 71H14.5C10.9 71 9 69.1 9 65.5Z" fill="#d3eefc"/><path d="M6 30C6 26.7 8.7 24 12 24H92C95.3 24 98 26.7 98 30V68C98 71.3 95.3 74 92 74H12C8.7 74 6 71.3 6 68Z" fill="url(#${front2})"/><path d="M6.5 30C6.5 26.9 8.9 24.5 12 24.5H92C95.1 24.5 97.5 26.9 97.5 30" fill="none" stroke="#bfeafa" stroke-width=".8"/><path d="M12 73.5H92" stroke="#46a8df" stroke-opacity=".25"/></svg>`;
   }
   function phoneTabIcon(h, name, active) {
     if (name === "refresh" || name === "clock") return `<svg viewBox="0 0 28 28" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" aria-hidden="true"><circle cx="14" cy="14" r="10.6"/><path d="M14 7.3v7.2l4.7 2.8"/></svg>`;
@@ -5855,9 +7282,9 @@ var ComponentLibraryRuntime = (() => {
     return '<svg viewBox="0 0 26 26" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="13" cy="13" r="10"/><g fill="currentColor" stroke="none"><circle cx="8" cy="13" r="1.3"/><circle cx="13" cy="13" r="1.3"/><circle cx="18" cy="13" r="1.3"/></g></svg>';
   }
   function iosFiles(p, h, tablet = false) {
-    return `<div class="os-ios-files ${tablet ? "os-ipad-files" : ""}">${tablet ? `<aside class="os-ipad-sidebar"><div class="os-ios-side-head">${cn(h, "menu", 19)}${cn(h, "more", 19)}</div><h2>${h.esc(p.appTitle)}</h2><div class="os-ios-search">${cn(h, "search", 17)}${h.esc(p.search)}</div>${arr4(p.sidebar).map((x, i) => `<div class="os-ios-sidebar-item ${i === num5(p.selectedSidebar) ? "os-ios-selected" : ""}" data-motion="item">${cn(h, x.icon, 21)}<span>${h.esc(x.label)}</span></div>`).join("")}<h4>${h.esc(p.tagsTitle)}</h4>${arr4(p.tags).map((x) => `<div class="os-ios-tag"><i style="background:${/^#[0-9a-f]{6}$/i.test(x.color) ? x.color : "#7d7d7d"}"></i>${h.esc(x.label)}</div>`).join("")}</aside>` : ""}<div class="os-ios-files-main"><div class="os-ios-nav">${tablet ? cn(h, "chevron-left", 21) : `<span>${cn(h, "chevron-left", 22)}${h.esc(p.backLabel)}</span>`}<b>${tablet ? h.esc(p.folderTitle) : ""}</b><span>${tablet ? cn(h, "more", 22) : phoneMoreIcon()}</span></div>${tablet ? "" : `<h2>${h.esc(p.folderTitle)}</h2><div class="os-ios-search">${cn(h, "search", 17)}${h.esc(p.search)}</div>`}<div class="os-ios-sort"><span>${h.esc(p.sortLabel)}</span>${cn(h, "chevron-down", 12)}<span class="os-flex"></span>${cn(h, "grid", 18)}</div><div class="os-ios-filegrid">${arr4(p.folders).map((x, index) => `<div data-motion="item" class="os-ios-gridfile">${tablet ? `<svg viewBox="0 0 104 78" width="104" height="78" aria-hidden="true"><path d="M3 12Q3 6 9 6H39L48 16H94Q101 16 101 23V65Q101 72 94 72H9Q3 72 3 65Z" fill="#55bdf8"/><path d="M3 25Q3 19 9 19H95Q101 19 101 25V66Q101 72 95 72H9Q3 72 3 66Z" fill="#77c9f9"/><path d="M4 25Q4 20 9 20H95Q100 20 100 25" fill="none" stroke="#a9e2ff"/></svg>` : phoneFolderSvg(h, index)}<span>${h.esc(x.name)}</span><small>${h.esc(x.count)}</small></div>`).join("")}</div><div class="os-ios-filecount">${h.esc(p.itemCount)}</div></div>${tablet ? "" : `<div class="os-ios-tabs">${arr4(p.tabs).map((x, i) => `<div class="${i === num5(p.activeTab) ? "os-ios-tab-active" : ""}">${phoneTabIcon(h, x.icon, i === num5(p.activeTab))}<small>${h.esc(x.label)}</small></div>`).join("")}</div>`}</div>`;
+    return `<div class="os-ios-files ${tablet ? "os-ipad-files" : ""}">${tablet ? `<aside class="os-ipad-sidebar"><div class="os-ios-side-head">${cn(h, "menu", 19)}${cn(h, "more", 19)}</div><h2>${h.esc(p.appTitle)}</h2><div class="os-ios-search">${cn(h, "search", 17)}${h.esc(p.search)}</div>${arr4(p.sidebar).map((x, i) => `<div class="os-ios-sidebar-item ${i === num6(p.selectedSidebar) ? "os-ios-selected" : ""}" data-motion="item">${cn(h, x.icon, 21)}<span>${h.esc(x.label)}</span></div>`).join("")}<h4>${h.esc(p.tagsTitle)}</h4>${arr4(p.tags).map((x) => `<div class="os-ios-tag"><i style="background:${/^#[0-9a-f]{6}$/i.test(x.color) ? x.color : "#7d7d7d"}"></i>${h.esc(x.label)}</div>`).join("")}</aside>` : ""}<div class="os-ios-files-main"><div class="os-ios-nav">${tablet ? cn(h, "chevron-left", 21) : `<span>${cn(h, "chevron-left", 22)}${h.esc(p.backLabel)}</span>`}<b>${tablet ? h.esc(p.folderTitle) : ""}</b><span>${tablet ? cn(h, "more", 22) : phoneMoreIcon()}</span></div>${tablet ? "" : `<h2>${h.esc(p.folderTitle)}</h2><div class="os-ios-search">${cn(h, "search", 17)}${h.esc(p.search)}</div>`}<div class="os-ios-sort"><span>${h.esc(p.sortLabel)}</span>${cn(h, "chevron-down", 12)}<span class="os-flex"></span>${cn(h, "grid", 18)}</div><div class="os-ios-filegrid">${arr4(p.folders).map((x, index) => `<div data-motion="item" class="os-ios-gridfile">${tablet ? `<svg viewBox="0 0 104 78" width="104" height="78" aria-hidden="true"><path d="M3 12Q3 6 9 6H39L48 16H94Q101 16 101 23V65Q101 72 94 72H9Q3 72 3 65Z" fill="#55bdf8"/><path d="M3 25Q3 19 9 19H95Q101 19 101 25V66Q101 72 95 72H9Q3 72 3 66Z" fill="#77c9f9"/><path d="M4 25Q4 20 9 20H95Q100 20 100 25" fill="none" stroke="#a9e2ff"/></svg>` : phoneFolderSvg(h, index)}<span>${h.esc(x.name)}</span><small>${h.esc(x.count)}</small></div>`).join("")}</div><div class="os-ios-filecount">${h.esc(p.itemCount)}</div></div>${tablet ? "" : `<div class="os-ios-tabs">${arr4(p.tabs).map((x, i) => `<div class="${i === num6(p.activeTab) ? "os-ios-tab-active" : ""}">${phoneTabIcon(h, x.icon, i === num6(p.activeTab))}<small>${h.esc(x.label)}</small></div>`).join("")}</div>`}</div>`;
   }
-  var components23 = [
+  var components28 = [
     {
       id: "chrome-browser",
       name: "Chrome \u6D4F\u89C8\u5668 \xB7 Windows",
@@ -5930,7 +7357,7 @@ var ComponentLibraryRuntime = (() => {
         "button": "\u4E0B\u4E00\u6B65"
       },
       render(p, h) {
-        return `<div class="os-stage"><div class="os-window os-chrome" data-motion="reveal"><div class="os-chrome-tabs"><span class="os-tab-search">${cn(h, "chevron-down", 15)}</span>${arr4(p.tabs).map((t) => `<div class="os-chrome-tab ${t.active ? "os-chrome-tab-active" : ""}"><span class="os-favicon">${cn(h, "file", 13)}</span><span>${h.esc(t.title)}</span>${cn(h, "x", 13)}</div>`).join("")}<span class="os-new-tab">${cn(h, "plus", 17)}</span><span class="os-flex"></span>${winButtons(h)}</div><div class="os-chrome-toolbar">${tool(h, "chevron-left")}${tool(h, "chevron-right")}${tool(h, "refresh")}<div class="os-omnibox">${cn(h, "tune", 15)}<span>${h.esc(p.url)}</span><span class="os-flex"></span><span class="os-bookmark-star">\u2606</span></div>${tool(h, "download")}<span class="os-profile">${h.esc(p.profile)}</span>${tool(h, "vertical-more")}</div><div class="os-bookmarks">${arr4(p.bookmarks).map((x) => `<span>${cn(h, "folder", 14)}${h.esc(x)}</span>`).join("")}</div><div class="os-web-viewport">${media2(p, h, `<div class="os-docsite"><header><strong>${h.esc(p.brand)}</strong><nav>${arr4(p.nav).map((x) => `<span>${h.esc(x)}</span>`).join("")}</nav><button type="button" class="os-doc-action" data-motion="focus">${h.esc(p.actionButton)}</button>${cn(h, "search", 18)}</header><div class="os-doc-body"><aside><b>${h.esc(p.section)}</b>${arr4(p.sidebar).map((x, i) => `<span class="${i === num5(p.activePage) ? "os-doc-active" : ""}">${h.esc(x)}</span>`).join("")}</aside><article data-motion="scroll"><div class="os-doc-eyebrow">${h.esc(p.eyebrow)}</div><h1>${h.esc(p.title)}</h1><p>${h.esc(p.intro)}</p>${arr4(p.steps).map((x, i) => `<section data-motion="item"><h2>${h.esc(x.title)}</h2><p>${h.esc(x.body)}</p>${i === 0 ? `<pre data-motion="type">${h.esc(p.code)}</pre>` : ""}</section>`).join("")}<div class="os-doc-next">${h.esc(p.button)}${cn(h, "arrow-right", 16)}</div></article><div class="os-doc-toc"><b>${h.esc(p.tocTitle)}</b>${arr4(p.toc).map((x) => `<span>${h.esc(x)}</span>`).join("")}</div></div></div>`)}</div></div></div>`;
+        return `<div class="os-stage"><div class="os-window os-chrome" data-motion="reveal"><div class="os-chrome-tabs"><span class="os-tab-search">${cn(h, "chevron-down", 15)}</span>${arr4(p.tabs).map((t) => `<div class="os-chrome-tab ${t.active ? "os-chrome-tab-active" : ""}"><span class="os-favicon">${cn(h, "file", 13)}</span><span>${h.esc(t.title)}</span>${cn(h, "x", 13)}</div>`).join("")}<span class="os-new-tab">${cn(h, "plus", 17)}</span><span class="os-flex"></span>${winButtons(h)}</div><div class="os-chrome-toolbar">${tool(h, "chevron-left")}${tool(h, "chevron-right")}${tool(h, "refresh")}<div class="os-omnibox">${cn(h, "tune", 15)}<span>${h.esc(p.url)}</span><span class="os-flex"></span><span class="os-bookmark-star">\u2606</span></div>${tool(h, "download")}<span class="os-profile">${h.esc(p.profile)}</span>${tool(h, "vertical-more")}</div><div class="os-bookmarks">${arr4(p.bookmarks).map((x) => `<span>${cn(h, "folder", 14)}${h.esc(x)}</span>`).join("")}</div><div class="os-web-viewport">${media2(p, h, `<div class="os-docsite"><header><strong>${h.esc(p.brand)}</strong><nav>${arr4(p.nav).map((x) => `<span>${h.esc(x)}</span>`).join("")}</nav><button type="button" class="os-doc-action" data-motion="focus">${h.esc(p.actionButton)}</button>${cn(h, "search", 18)}</header><div class="os-doc-body"><aside><b>${h.esc(p.section)}</b>${arr4(p.sidebar).map((x, i) => `<span class="${i === num6(p.activePage) ? "os-doc-active" : ""}">${h.esc(x)}</span>`).join("")}</aside><article data-motion="scroll"><div class="os-doc-eyebrow">${h.esc(p.eyebrow)}</div><h1>${h.esc(p.title)}</h1><p>${h.esc(p.intro)}</p>${arr4(p.steps).map((x, i) => `<section data-motion="item"><h2>${h.esc(x.title)}</h2><p>${h.esc(x.body)}</p>${i === 0 ? `<pre data-motion="type">${h.esc(p.code)}</pre>` : ""}</section>`).join("")}<div class="os-doc-next">${h.esc(p.button)}${cn(h, "arrow-right", 16)}</div></article><div class="os-doc-toc"><b>${h.esc(p.tocTitle)}</b>${arr4(p.toc).map((x) => `<span>${h.esc(x)}</span>`).join("")}</div></div></div>`)}</div></div></div>`;
       }
     },
     {
@@ -6099,7 +7526,7 @@ var ComponentLibraryRuntime = (() => {
         ]
       },
       render(p, h) {
-        return `<div class="os-stage os-device-stage"><div class="os-ipad" data-motion="reveal"><i class="os-ipad-camera"></i><div class="os-ipad-screen"><div class="os-ipad-logical"><div class="os-ipad-status"><span>${h.esc(p.time)}\u3000${h.esc(p.date)}</span><span>${cn(h, "wifi", 15)} ${h.esc(p.battery)}% <span class="os-ios-battery"><i style="width:${Math.max(0, Math.min(100, num5(p.battery, 100)))}%"></i></span></span></div><div class="os-ipad-content">${media2(p, h, iosFiles(p, h, true))}</div><div class="os-home-indicator"></div></div></div></div></div>`;
+        return `<div class="os-stage os-device-stage"><div class="os-ipad" data-motion="reveal"><i class="os-ipad-camera"></i><div class="os-ipad-screen"><div class="os-ipad-logical"><div class="os-ipad-status"><span>${h.esc(p.time)}\u3000${h.esc(p.date)}</span><span>${cn(h, "wifi", 15)} ${h.esc(p.battery)}% <span class="os-ios-battery"><i style="width:${Math.max(0, Math.min(100, num6(p.battery, 100)))}%"></i></span></span></div><div class="os-ipad-content">${media2(p, h, iosFiles(p, h, true))}</div><div class="os-home-indicator"></div></div></div></div></div>`;
       }
     },
     {
@@ -6419,7 +7846,7 @@ var ComponentLibraryRuntime = (() => {
         "orientationValue": "\u6A2A\u5411"
       },
       render(p, h) {
-        return `<div class="os-stage"><div class="os-window os-settings" data-motion="reveal"><div class="os-settings-title">${cn(h, "chevron-left", 16)}<span>${h.esc(p.title)}</span><span class="os-flex"></span>${winButtons(h)}</div><div class="os-settings-layout"><aside class="os-settings-nav"><div class="os-account"><span>${h.esc(p.initial)}</span><div><b>${h.esc(p.user)}</b><small>${h.esc(p.email)}</small></div></div><div class="os-settings-search">${h.esc(p.search)}${cn(h, "search", 15)}</div>${arr4(p.nav).map((x, i) => `<div class="${i === num5(p.selectedNav) ? "os-setting-selected" : ""}" data-motion="item">${cn(h, ["home", "monitor", "phone", "globe", "image", "grid", "file", "calendar", "play", "check-circle", "lock", "refresh"][i] || "settings", 19)}${h.esc(x)}</div>`).join("")}</aside><main class="os-settings-main"><h1><span>${h.esc(p.breadcrumb)}</span>${cn(h, "chevron-right", 23)}${h.esc(p.pageTitle)}</h1><div class="os-display-preview"><div>${h.esc(p.displayNumber)}</div><span>${h.esc(p.displayNote)}</span></div><h2>${h.esc(p.sectionTitle)}</h2><div class="os-setting-row" data-motion="item">${cn(h, "monitor", 21)}<div><b>${h.esc(p.brightnessLabel)}</b><small>${h.esc(p.brightnessHelp)}</small></div><div class="os-slider" style="--os-value:${Math.max(0, Math.min(100, num5(p.brightness, 70)))}%"><i data-motion="bar"></i><em></em></div>${cn(h, "chevron-down", 13)}</div><div class="os-setting-row" data-motion="item">${cn(h, "monitor", 21)}<div><b>${h.esc(p.nightTitle)}</b><small>${h.esc(p.nightHelp)}</small></div><span class="os-flex"></span><span>${h.esc(p.nightOn ? p.onLabel : p.offLabel)}</span><span class="os-toggle ${p.nightOn ? "os-toggle-on" : ""}"><i></i></span>${cn(h, "chevron-right", 13)}</div><div class="os-setting-row" data-motion="item">${cn(h, "video", 21)}<div><b>${h.esc(p.hdrTitle)}</b><small>${h.esc(p.hdrHelp)}</small></div><span class="os-flex"></span>${cn(h, "chevron-right", 13)}</div><h2>${h.esc(p.layoutTitle)}</h2>${[[p.scaleTitle, p.scaleHelp, p.scaleValue], [p.resolutionTitle, "", p.resolutionValue], [p.orientationTitle, "", p.orientationValue]].map((x, i) => `<div class="os-setting-row" data-motion="item">${cn(h, i === 0 ? "search" : "monitor", 21)}<div><b>${h.esc(x[0])}</b>${x[1] ? `<small>${h.esc(x[1])}</small>` : ""}</div><span class="os-flex"></span><div class="os-select" ${i === 2 ? 'data-motion="focus"' : ""}>${h.esc(x[2])}${cn(h, "chevron-down", 13)}</div></div>`).join("")}</main></div></div></div>`;
+        return `<div class="os-stage"><div class="os-window os-settings" data-motion="reveal"><div class="os-settings-title">${cn(h, "chevron-left", 16)}<span>${h.esc(p.title)}</span><span class="os-flex"></span>${winButtons(h)}</div><div class="os-settings-layout"><aside class="os-settings-nav"><div class="os-account"><span>${h.esc(p.initial)}</span><div><b>${h.esc(p.user)}</b><small>${h.esc(p.email)}</small></div></div><div class="os-settings-search">${h.esc(p.search)}${cn(h, "search", 15)}</div>${arr4(p.nav).map((x, i) => `<div class="${i === num6(p.selectedNav) ? "os-setting-selected" : ""}" data-motion="item">${cn(h, ["home", "monitor", "phone", "globe", "image", "grid", "file", "calendar", "play", "check-circle", "lock", "refresh"][i] || "settings", 19)}${h.esc(x)}</div>`).join("")}</aside><main class="os-settings-main"><h1><span>${h.esc(p.breadcrumb)}</span>${cn(h, "chevron-right", 23)}${h.esc(p.pageTitle)}</h1><div class="os-display-preview"><div>${h.esc(p.displayNumber)}</div><span>${h.esc(p.displayNote)}</span></div><h2>${h.esc(p.sectionTitle)}</h2><div class="os-setting-row" data-motion="item">${cn(h, "monitor", 21)}<div><b>${h.esc(p.brightnessLabel)}</b><small>${h.esc(p.brightnessHelp)}</small></div><div class="os-slider" style="--os-value:${Math.max(0, Math.min(100, num6(p.brightness, 70)))}%"><i data-motion="bar"></i><em></em></div>${cn(h, "chevron-down", 13)}</div><div class="os-setting-row" data-motion="item">${cn(h, "monitor", 21)}<div><b>${h.esc(p.nightTitle)}</b><small>${h.esc(p.nightHelp)}</small></div><span class="os-flex"></span><span>${h.esc(p.nightOn ? p.onLabel : p.offLabel)}</span><span class="os-toggle ${p.nightOn ? "os-toggle-on" : ""}"><i></i></span>${cn(h, "chevron-right", 13)}</div><div class="os-setting-row" data-motion="item">${cn(h, "video", 21)}<div><b>${h.esc(p.hdrTitle)}</b><small>${h.esc(p.hdrHelp)}</small></div><span class="os-flex"></span>${cn(h, "chevron-right", 13)}</div><h2>${h.esc(p.layoutTitle)}</h2>${[[p.scaleTitle, p.scaleHelp, p.scaleValue], [p.resolutionTitle, "", p.resolutionValue], [p.orientationTitle, "", p.orientationValue]].map((x, i) => `<div class="os-setting-row" data-motion="item">${cn(h, i === 0 ? "search" : "monitor", 21)}<div><b>${h.esc(x[0])}</b>${x[1] ? `<small>${h.esc(x[1])}</small>` : ""}</div><span class="os-flex"></span><div class="os-select" ${i === 2 ? 'data-motion="focus"' : ""}>${h.esc(x[2])}${cn(h, "chevron-down", 13)}</div></div>`).join("")}</main></div></div></div>`;
       }
     },
     {
@@ -6485,7 +7912,7 @@ var ComponentLibraryRuntime = (() => {
         "dismiss": "Esc \u5173\u95ED"
       },
       render(p, h) {
-        return `<div class="os-stage"><div class="os-window os-terminal-window"><div class="os-terminal-tabs"><div>${cn(h, "terminal", 16)}${h.esc(p.title)}${cn(h, "x", 12)}</div>${tool(h, "plus")}${tool(h, "chevron-down")}<span class="os-flex"></span>${winButtons(h)}</div><pre class="os-terminal-content">${h.esc(arr4(p.terminalLines).join("\n"))}</pre><div class="os-palette" data-motion="reveal"><div class="os-palette-input"><span data-motion="type">${h.esc(p.query)}</span><i class="os-text-caret" data-motion="cursor"></i></div><div class="os-palette-heading">${h.esc(p.heading)}</div>${arr4(p.commands).map((x, i) => `<div class="os-palette-command ${i === num5(p.selected) ? "os-palette-active" : ""}" data-motion="item">${cn(h, x.icon, 20)}<div><b>${h.esc(x.label)}</b><small>${h.esc(x.detail)}</small></div><kbd>${h.esc(x.shortcut)}</kbd></div>`).join("")}<div class="os-palette-footer"><span>${h.esc(p.hint)}</span><span>${h.esc(p.dismiss)}</span></div></div></div></div>`;
+        return `<div class="os-stage"><div class="os-window os-terminal-window"><div class="os-terminal-tabs"><div>${cn(h, "terminal", 16)}${h.esc(p.title)}${cn(h, "x", 12)}</div>${tool(h, "plus")}${tool(h, "chevron-down")}<span class="os-flex"></span>${winButtons(h)}</div><pre class="os-terminal-content">${h.esc(arr4(p.terminalLines).join("\n"))}</pre><div class="os-palette" data-motion="reveal"><div class="os-palette-input"><span data-motion="type">${h.esc(p.query)}</span><i class="os-text-caret" data-motion="cursor"></i></div><div class="os-palette-heading">${h.esc(p.heading)}</div>${arr4(p.commands).map((x, i) => `<div class="os-palette-command ${i === num6(p.selected) ? "os-palette-active" : ""}" data-motion="item">${cn(h, x.icon, 20)}<div><b>${h.esc(x.label)}</b><small>${h.esc(x.detail)}</small></div><kbd>${h.esc(x.shortcut)}</kbd></div>`).join("")}<div class="os-palette-footer"><span>${h.esc(p.hint)}</span><span>${h.esc(p.dismiss)}</span></div></div></div></div>`;
       }
     },
     {
@@ -6548,9 +7975,9 @@ var ComponentLibraryRuntime = (() => {
         "focusTime": "30 \u5206\u949F"
       },
       render(p, h) {
-        const count = Math.max(28, Math.min(31, num5(p.monthDays, 30)));
-        const offset = Math.max(0, Math.min(6, num5(p.monthStartOffset, 0)));
-        return `<div class="os-stage os-notification-stage"><div class="os-notification-shell" data-motion="reveal"><section class="os-notification-panel"><header><b>${h.esc(p.title)}</b><span class="os-button">${h.esc(p.clear)}</span></header>${arr4(p.notifications).map((x) => `<article class="os-notification" data-motion="item"><div class="os-notification-source">${fileIcon(h, x.icon, 17)}<span>${h.esc(x.app)}</span><small>${h.esc(x.time)}</small>${cn(h, "more", 16)}${cn(h, "x", 13)}</div><h3>${h.esc(x.title)}</h3><p>${h.esc(x.body)}</p>${arr4(x.actions).length ? `<div class="os-notification-actions">${x.actions.map((a) => `<span class="os-button">${h.esc(a)}</span>`).join("")}</div>` : ""}</article>`).join("")}</section><section class="os-calendar-panel"><header><b>${h.esc(p.date)}</b>${cn(h, "chevron-down", 15)}</header><div class="os-month-label"><b>${h.esc(p.month)}</b><span>${cn(h, "chevron-left", 16)}${cn(h, "chevron-right", 16)}</span></div><div class="os-calendar-grid">${arr4(p.weekdayLabels).map((x) => `<span class="os-weekday">${h.esc(x)}</span>`).join("")}${Array.from({ length: offset }, () => "<span></span>").join("")}${Array.from({ length: count }, (_, i) => `<span class="${i + 1 === num5(p.selectedDay) ? "os-day-selected" : ""}">${i + 1}</span>`).join("")}</div><footer><span>${h.esc(p.focusTime)}</span><span class="os-button">${cn(h, "play", 14)}${h.esc(p.focus)}</span></footer></section></div></div>`;
+        const count2 = Math.max(28, Math.min(31, num6(p.monthDays, 30)));
+        const offset = Math.max(0, Math.min(6, num6(p.monthStartOffset, 0)));
+        return `<div class="os-stage os-notification-stage"><div class="os-notification-shell" data-motion="reveal"><section class="os-notification-panel"><header><b>${h.esc(p.title)}</b><span class="os-button">${h.esc(p.clear)}</span></header>${arr4(p.notifications).map((x) => `<article class="os-notification" data-motion="item"><div class="os-notification-source">${fileIcon(h, x.icon, 17)}<span>${h.esc(x.app)}</span><small>${h.esc(x.time)}</small>${cn(h, "more", 16)}${cn(h, "x", 13)}</div><h3>${h.esc(x.title)}</h3><p>${h.esc(x.body)}</p>${arr4(x.actions).length ? `<div class="os-notification-actions">${x.actions.map((a2) => `<span class="os-button">${h.esc(a2)}</span>`).join("")}</div>` : ""}</article>`).join("")}</section><section class="os-calendar-panel"><header><b>${h.esc(p.date)}</b>${cn(h, "chevron-down", 15)}</header><div class="os-month-label"><b>${h.esc(p.month)}</b><span>${cn(h, "chevron-left", 16)}${cn(h, "chevron-right", 16)}</span></div><div class="os-calendar-grid">${arr4(p.weekdayLabels).map((x) => `<span class="os-weekday">${h.esc(x)}</span>`).join("")}${Array.from({ length: offset }, () => "<span></span>").join("")}${Array.from({ length: count2 }, (_, i) => `<span class="${i + 1 === num6(p.selectedDay) ? "os-day-selected" : ""}">${i + 1}</span>`).join("")}</div><footer><span>${h.esc(p.focusTime)}</span><span class="os-button">${cn(h, "play", 14)}${h.esc(p.focus)}</span></footer></section></div></div>`;
       }
     },
     {
@@ -6651,7 +8078,7 @@ var ComponentLibraryRuntime = (() => {
         "selectedSub": 0
       },
       render(p, h) {
-        return `<div class="os-stage"><div class="os-context-scene"><div class="os-context-file">${fileIcon(h, "file", 48)}<div><b>${h.esc(p.filename)}</b><small>${h.esc(p.filetype)}</small></div></div><div class="os-context-menu" data-motion="reveal"><div class="os-context-actions">${arr4(p.topActions).map((x) => `<span>${cn(h, x.icon, 18)}<small>${h.esc(x.label)}</small></span>`).join("")}</div>${arr4(p.items).map((x, i) => x.separator ? '<div class="os-menu-separator"></div>' : `<div class="os-menu-row ${i === num5(p.selected) ? "os-menu-hover" : ""}" data-motion="item">${cn(h, x.icon, 17)}<span>${h.esc(x.label)}</span><kbd>${h.esc(x.shortcut || "")}</kbd>${x.submenu ? cn(h, "chevron-right", 12) : ""}</div>`).join("")}</div><div class="os-context-submenu" data-motion="reveal">${arr4(p.submenu).map((x, i) => x.separator ? '<div class="os-menu-separator"></div>' : `<div class="os-menu-row ${i === num5(p.selectedSub) ? "os-menu-hover" : ""}" data-motion="item">${cn(h, x.icon, 18)}<span>${h.esc(x.label)}</span></div>`).join("")}</div></div></div>`;
+        return `<div class="os-stage"><div class="os-context-scene"><div class="os-context-file">${fileIcon(h, "file", 48)}<div><b>${h.esc(p.filename)}</b><small>${h.esc(p.filetype)}</small></div></div><div class="os-context-menu" data-motion="reveal"><div class="os-context-actions">${arr4(p.topActions).map((x) => `<span>${cn(h, x.icon, 18)}<small>${h.esc(x.label)}</small></span>`).join("")}</div>${arr4(p.items).map((x, i) => x.separator ? '<div class="os-menu-separator"></div>' : `<div class="os-menu-row ${i === num6(p.selected) ? "os-menu-hover" : ""}" data-motion="item">${cn(h, x.icon, 17)}<span>${h.esc(x.label)}</span><kbd>${h.esc(x.shortcut || "")}</kbd>${x.submenu ? cn(h, "chevron-right", 12) : ""}</div>`).join("")}</div><div class="os-context-submenu" data-motion="reveal">${arr4(p.submenu).map((x, i) => x.separator ? '<div class="os-menu-separator"></div>' : `<div class="os-menu-row ${i === num6(p.selectedSub) ? "os-menu-hover" : ""}" data-motion="item">${cn(h, x.icon, 18)}<span>${h.esc(x.label)}</span></div>`).join("")}</div></div></div>`;
       }
     },
     {
@@ -6728,13 +8155,13 @@ var ComponentLibraryRuntime = (() => {
         "submit": "\u63D0\u4EA4"
       },
       render(p, h) {
-        return `<div class="os-stage"><div class="os-window os-form-window" data-motion="reveal"><div class="os-settings-title">${cn(h, "video", 17)}<span>${h.esc(p.appTitle)}</span><span class="os-flex"></span>${winButtons(h)}</div><div class="os-form-layout"><aside>${arr4(p.nav).map((x, i) => `<div class="${i === num5(p.activeNav) ? "os-setting-selected" : ""}">${cn(h, x.icon, 19)}${h.esc(x.label)}</div>`).join("")}</aside><main><h1>${h.esc(p.title)}</h1><p>${h.esc(p.description)}</p><div class="os-form-fields">${arr4(p.fields).map((x) => `<div class="os-form-field" data-motion="item"><label>${h.esc(x.label)}</label><div class="os-input ${x.focused ? "os-focused" : ""}"><span data-motion="${x.focused ? "type" : "reveal"}">${h.esc(x.value)}</span>${x.kind === "select" ? cn(h, "chevron-down", 13) : x.kind === "folder" ? cn(h, "folder", 17) : ""}</div>${x.help ? `<small>${h.esc(x.help)}</small>` : ""}</div>`).join("")}</div><h2>${h.esc(p.optionsTitle)}</h2><div class="os-form-options">${arr4(p.options).map((x) => `<div data-motion="item"><span class="os-checkbox ${x.checked ? "os-checkbox-checked" : ""}">${x.checked ? cn(h, "check", 14) : ""}</span>${h.esc(x.label)}</div>`).join("")}</div><div class="os-form-note">${cn(h, "info", 17)}${h.esc(p.note)}</div><footer><div class="os-button">${h.esc(p.cancel)}</div><div class="os-button os-primary">${h.esc(p.submit)}</div></footer></main></div></div></div>`;
+        return `<div class="os-stage"><div class="os-window os-form-window" data-motion="reveal"><div class="os-settings-title">${cn(h, "video", 17)}<span>${h.esc(p.appTitle)}</span><span class="os-flex"></span>${winButtons(h)}</div><div class="os-form-layout"><aside>${arr4(p.nav).map((x, i) => `<div class="${i === num6(p.activeNav) ? "os-setting-selected" : ""}">${cn(h, x.icon, 19)}${h.esc(x.label)}</div>`).join("")}</aside><main><h1>${h.esc(p.title)}</h1><p>${h.esc(p.description)}</p><div class="os-form-fields">${arr4(p.fields).map((x) => `<div class="os-form-field" data-motion="item"><label>${h.esc(x.label)}</label><div class="os-input ${x.focused ? "os-focused" : ""}"><span data-motion="${x.focused ? "type" : "reveal"}">${h.esc(x.value)}</span>${x.kind === "select" ? cn(h, "chevron-down", 13) : x.kind === "folder" ? cn(h, "folder", 17) : ""}</div>${x.help ? `<small>${h.esc(x.help)}</small>` : ""}</div>`).join("")}</div><h2>${h.esc(p.optionsTitle)}</h2><div class="os-form-options">${arr4(p.options).map((x) => `<div data-motion="item"><span class="os-checkbox ${x.checked ? "os-checkbox-checked" : ""}">${x.checked ? cn(h, "check", 14) : ""}</span>${h.esc(x.label)}</div>`).join("")}</div><div class="os-form-note">${cn(h, "info", 17)}${h.esc(p.note)}</div><footer><div class="os-button">${h.esc(p.cancel)}</div><div class="os-button os-primary">${h.esc(p.submit)}</div></footer></main></div></div></div>`;
       }
     }
   ];
 
   // shared.mjs
-  var esc = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  var esc3 = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   var paths = {
     menu: "M4 6h16M4 12h16M4 18h16",
     "chevron-down": "m6 9 6 6 6-6",
@@ -6789,11 +8216,11 @@ var ComponentLibraryRuntime = (() => {
     clock: "M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0M12 6v6l4 2"
   };
   function icon3(name, size = 18) {
-    const path = paths[name] ?? paths.file;
-    return `<svg aria-hidden="true" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><path d="${path}"/></svg>`;
+    const path2 = paths[name] ?? paths.file;
+    return `<svg aria-hidden="true" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><path d="${path2}"/></svg>`;
   }
   function helpers(id) {
-    return { esc, icon: icon3, uid: (s) => `${id}-${String(s).replace(/[^a-z0-9_-]/gi, "-")}` };
+    return { esc: esc3, icon: icon3, uid: (s2) => `${id}-${String(s2).replace(/[^a-z0-9_-]/gi, "-")}` };
   }
 
   // sound-runtime.mjs
@@ -6836,8 +8263,8 @@ var ComponentLibraryRuntime = (() => {
           return;
         }
         state3.lastError = "";
-      } catch (e) {
-        if (request === state3.token) state3.lastError = e.message || "\u89C6\u9891\u64AD\u653E\u5931\u8D25";
+      } catch (e2) {
+        if (request === state3.token) state3.lastError = e2.message || "\u89C6\u9891\u64AD\u653E\u5931\u8D25";
       } finally {
         if (request === state3.token) state3.pending = false;
       }
@@ -6897,9 +8324,9 @@ var ComponentLibraryRuntime = (() => {
         }
         lastError = "";
         align();
-      } catch (e) {
+      } catch (e2) {
         if (request === token) {
-          lastError = e.message || "\u58F0\u97F3\u64AD\u653E\u5931\u8D25";
+          lastError = e2.message || "\u58F0\u97F3\u64AD\u653E\u5931\u8D25";
           active = false;
           tl.pause();
           syncMedia(true);
@@ -7007,7 +8434,7 @@ var ComponentLibraryRuntime = (() => {
   }
 
   // motion-expanded.mjs
-  var rows = [
+  var rows2 = [
     ["scale-settle", "\u8F7B\u7F29\u653E\u843D\u4F4D", "\u5165\u573A", "mac-finder", ".motion-wrap", "\u7531\u5C0F\u5E45\u7F29\u653E\u4E0E\u67D4\u548C\u8FC7\u51B2\u843D\u4F4D\u3002"],
     ["curtain-open", "\u53CC\u4FA7\u5E18\u5E55\u5F00\u573A", "\u5165\u573A", "chapter-summary", ".motion-wrap", "\u5185\u5BB9\u4ECE\u4E2D\u7EBF\u5411\u4E24\u4FA7\u5C55\u5F00\u3002"],
     ["blur-resolve", "\u7531\u865A\u5230\u5B9E", "\u5165\u573A", "definition-card", ".motion-wrap", "\u77ED\u6682\u6563\u7126\u540E\u6536\u655B\u5230\u539F\u59CB\u6E05\u6670\u753B\u9762\u3002"],
@@ -7090,36 +8517,36 @@ var ComponentLibraryRuntime = (() => {
     if (category === "\u955C\u5934") return [{ sound: "whoosh", at: 0.6, gain: 0.1, duration: 1.15 }];
     return [{ sound: category === "\u6807\u6CE8" ? "ping" : "whoosh-short", at: 0.6, gain: 0.19, duration: 0.55 }];
   };
-  var expandedEffects = rows.map(([id, name, category, component2, selector, description]) => ({ id, name, category, component: component2, selector, description, duration: 8, previewTime: category === "\u8F6C\u573A" ? 2.28 : category === "\u9000\u573A" ? 3.6 : category === "\u80CC\u666F" ? 3.5 : 1.4, cueHints: cuesFor(id, category), silent: category === "\u80CC\u666F" }));
+  var expandedEffects = rows2.map(([id, name, category, component2, selector, description]) => ({ id, name, category, component: component2, selector, description, duration: 8, previewTime: category === "\u8F6C\u573A" ? 2.28 : category === "\u9000\u573A" ? 3.6 : category === "\u80CC\u666F" ? 3.5 : 1.4, cueHints: cuesFor(id, category), silent: category === "\u80CC\u666F" }));
   function extendMotion(gsap, root, id, options, tl) {
     const wrap3 = root.querySelector(".motion-wrap") || root, start = Number(options.start ?? 0.6), W = root.clientWidth, H = root.clientHeight;
-    const choose = (s) => [...root.querySelectorAll(options.selector || s)];
-    const box = (e) => {
-      const a = e.getBoundingClientRect(), b = root.getBoundingClientRect();
-      return { x: a.x - b.x, y: a.y - b.y, w: a.width, h: a.height };
+    const choose = (s2) => [...root.querySelectorAll(options.selector || s2)];
+    const box2 = (e2) => {
+      const a2 = e2.getBoundingClientRect(), b2 = root.getBoundingClientRect();
+      return { x: a2.x - b2.x, y: a2.y - b2.y, w: a2.width, h: a2.height };
     };
-    const make6 = (css4, html = "", parent = root) => {
-      const e = document.createElement("div");
-      e.dataset.generatedEffect = id;
-      e.style.cssText = css4;
-      e.innerHTML = html;
-      parent.append(e);
-      return e;
+    const make7 = (css5, html = "", parent = root) => {
+      const e2 = document.createElement("div");
+      e2.dataset.generatedEffect = id;
+      e2.style.cssText = css5;
+      e2.innerHTML = html;
+      parent.append(e2);
+      return e2;
     };
     const overlay = () => {
-      const e = make6("position:absolute;inset:0;z-index:900;pointer-events:none");
-      e.className = "fx-layer";
-      return e;
+      const e2 = make7("position:absolute;inset:0;z-index:900;pointer-events:none");
+      e2.className = "fx-layer";
+      return e2;
     };
-    const frame2 = (b, color2 = "#2563eb") => make6(`position:absolute;left:${b.x - 6}px;top:${b.y - 6}px;width:${b.w + 12}px;height:${b.h + 12}px;border:2px solid ${color2};border-radius:8px;transform-origin:0 0`, "", overlay());
-    const items = (s = '[data-motion="item"]') => {
-      const a = choose(s);
-      return a.length ? a : [wrap3];
+    const frame2 = (b2, color5 = "#2563eb") => make7(`position:absolute;left:${b2.x - 6}px;top:${b2.y - 6}px;width:${b2.w + 12}px;height:${b2.h + 12}px;border:2px solid ${color5};border-radius:8px;transform-origin:0 0`, "", overlay());
+    const items = (s2 = '[data-motion="item"]') => {
+      const a2 = choose(s2);
+      return a2.length ? a2 : [wrap3];
     };
-    const draw = (el, at, duration = 0.8) => {
+    const draw = (el, at2, duration = 0.8) => {
       if (el.getTotalLength) {
         const length = el.getTotalLength();
-        tl.fromTo(el, { strokeDasharray: length, strokeDashoffset: length }, { strokeDashoffset: 0, duration, ease: "power2.inOut" }, at);
+        tl.fromTo(el, { strokeDasharray: length, strokeDashoffset: length }, { strokeDashoffset: 0, duration, ease: "power2.inOut" }, at2);
       }
     };
     let targets = [];
@@ -7141,84 +8568,84 @@ var ComponentLibraryRuntime = (() => {
     }
     if (id === "cards-deal") {
       targets = items(".edx-board article");
-      targets.forEach((e, i) => tl.fromTo(e, { x: -45, y: 40, rotation: -6, opacity: 0 }, { x: 0, y: 0, rotation: 0, opacity: 1, duration: 0.65, ease: "power3.out" }, start + i * 0.13));
+      targets.forEach((e2, i) => tl.fromTo(e2, { x: -45, y: 40, rotation: -6, opacity: 0 }, { x: 0, y: 0, rotation: 0, opacity: 1, duration: 0.65, ease: "power3.out" }, start + i * 0.13));
     }
     if (id === "center-stagger") {
       targets = items();
-      targets.forEach((e, i) => {
-        const b = box(e);
-        tl.fromTo(e, { x: (W / 2 - b.x - b.w / 2) * 0.38, y: (H / 2 - b.y - b.h / 2) * 0.38, scale: 0.75, opacity: 0 }, { x: 0, y: 0, scale: 1, opacity: 1, duration: 0.75, ease: "power3.out" }, start + i * 0.12);
+      targets.forEach((e2, i) => {
+        const b2 = box2(e2);
+        tl.fromTo(e2, { x: (W / 2 - b2.x - b2.w / 2) * 0.38, y: (H / 2 - b2.y - b2.h / 2) * 0.38, scale: 0.75, opacity: 0 }, { x: 0, y: 0, scale: 1, opacity: 1, duration: 0.75, ease: "power3.out" }, start + i * 0.12);
       });
       const lines3 = choose('[data-motion="line"]');
       tl.fromTo(lines3, { opacity: 0 }, { opacity: 1, duration: 0.5, stagger: 0.12 }, start + 0.65);
     }
     if (id === "border-assemble") {
       targets = items(".edx-lesson-shell");
-      const b = box(targets[0]), l = overlay();
-      const s = make6(`position:absolute;left:${b.x}px;top:${b.y}px;width:${b.w}px;height:${b.h}px`, `<svg width="100%" height="100%" viewBox="0 0 ${b.w} ${b.h}"><rect x="2" y="2" width="${b.w - 4}" height="${b.h - 4}" rx="25" fill="none" stroke="#2563eb" stroke-width="2"/></svg>`, l);
-      draw(s.querySelector("rect"), start, 0.9);
+      const b2 = box2(targets[0]), l = overlay();
+      const s2 = make7(`position:absolute;left:${b2.x}px;top:${b2.y}px;width:${b2.w}px;height:${b2.h}px`, `<svg width="100%" height="100%" viewBox="0 0 ${b2.w} ${b2.h}"><rect x="2" y="2" width="${b2.w - 4}" height="${b2.h - 4}" rx="25" fill="none" stroke="#2563eb" stroke-width="2"/></svg>`, l);
+      draw(s2.querySelector("rect"), start, 0.9);
       tl.fromTo(targets, { opacity: 0 }, { opacity: 1, duration: 0.5 }, start + 0.55);
-      tl.to(s, { opacity: 0, duration: 0.3 }, start + 1.1);
+      tl.to(s2, { opacity: 0, duration: 0.3 }, start + 1.1);
     }
     if (id === "toggle-switch") {
       targets = items(".am-switch").slice(0, 1);
-      const e = targets[0];
-      e.style.setProperty("--knob-x", "0px");
-      e.classList.add("fx-toggle");
+      const e2 = targets[0];
+      e2.style.setProperty("--knob-x", "0px");
+      e2.classList.add("fx-toggle");
       const style = document.createElement("style");
       style.textContent = ".fx-toggle:after{margin-left:0!important;transform:translateX(var(--knob-x))}";
       root.append(style);
-      tl.fromTo(e, { backgroundColor: "#e5e5ea", "--knob-x": "0px" }, { backgroundColor: "#34c759", "--knob-x": "17px", duration: 0.3, ease: "power2.inOut" }, start);
+      tl.fromTo(e2, { backgroundColor: "#e5e5ea", "--knob-x": "0px" }, { backgroundColor: "#34c759", "--knob-x": "17px", duration: 0.3, ease: "power2.inOut" }, start);
     }
     if (id === "drag-drop") {
       targets = items(".edx-board article").slice(0, 1);
-      const e = targets[0], b = box(e), cols = choose(".edx-board>section"), from = e.closest("section"), last = cols.at(-1), r = box(last), destCards = [...last.querySelectorAll("article")];
+      const e2 = targets[0], b2 = box2(e2), cols = choose(".edx-board>section"), from = e2.closest("section"), last = cols.at(-1), r = box2(last), destCards = [...last.querySelectorAll("article")];
       if (from === last || destCards.length > 1) throw Error("\u4EFB\u52A1\u62D6\u653E\u9700\u8981\u6E90\u5217\u4E0E\u76EE\u6807\u5217\u4E0D\u540C\uFF0C\u4E14\u76EE\u6807\u5217\u6700\u591A\u5DF2\u6709\u4E00\u5F20\u5361");
-      const lastCard = destCards.at(-1), destY = lastCard ? box(lastCard).y + box(lastCard).h + 14 : box(last.querySelector("h2")).y + box(last.querySelector("h2")).h + 20, dx = r.x + 19 - b.x, dy = destY - b.y;
-      gsap.set(e, { zIndex: 20, position: "relative" });
-      tl.to(e, { scale: 1.03, boxShadow: "0 15px 28px #20426a30", rotation: -2, duration: 0.2 }, start);
-      tl.to(e, { x: dx * 0.5, y: Math.min(0, dy) - 45, rotation: 1, duration: 0.55, ease: "power2.in" }, start + 0.2);
-      tl.to(e, { x: dx, y: dy, rotation: 0, duration: 0.55, ease: "power2.out" }, start + 0.75);
-      tl.to(e, { scale: 1, boxShadow: "0 3px 9px #19365705", duration: 0.22 }, start + 1.3);
-      const remaining = [...from.querySelectorAll("article")].filter((x) => x !== e);
-      tl.to(remaining, { y: -b.h - 14, duration: 0.35, ease: "power2.inOut" }, start + 0.65);
+      const lastCard = destCards.at(-1), destY = lastCard ? box2(lastCard).y + box2(lastCard).h + 14 : box2(last.querySelector("h2")).y + box2(last.querySelector("h2")).h + 20, dx = r.x + 19 - b2.x, dy = destY - b2.y;
+      gsap.set(e2, { zIndex: 20, position: "relative" });
+      tl.to(e2, { scale: 1.03, boxShadow: "0 15px 28px #20426a30", rotation: -2, duration: 0.2 }, start);
+      tl.to(e2, { x: dx * 0.5, y: Math.min(0, dy) - 45, rotation: 1, duration: 0.55, ease: "power2.in" }, start + 0.2);
+      tl.to(e2, { x: dx, y: dy, rotation: 0, duration: 0.55, ease: "power2.out" }, start + 0.75);
+      tl.to(e2, { scale: 1, boxShadow: "0 3px 9px #19365705", duration: 0.22 }, start + 1.3);
+      const remaining = [...from.querySelectorAll("article")].filter((x) => x !== e2);
+      tl.to(remaining, { y: -b2.h - 14, duration: 0.35, ease: "power2.inOut" }, start + 0.65);
       tl.set(from.querySelector("small"), { textContent: String(remaining.length) }, start + 1.3);
       tl.set(last.querySelector("small"), { textContent: String(destCards.length + 1) }, start + 1.3);
     }
     if (id === "text-select") {
       targets = items('[data-motion="type"]').slice(0, 1);
-      const b = box(targets[0]), l = overlay(), m = make6(`position:absolute;left:${b.x}px;top:${b.y}px;width:${b.w}px;height:${b.h}px;background:#2776d63d;transform-origin:left center`, "", l), cursor = make6(`position:absolute;left:${b.x}px;top:${b.y - 2}px;height:${b.h + 4}px;width:1px;background:#265aa0`, "", l);
+      const b2 = box2(targets[0]), l = overlay(), m = make7(`position:absolute;left:${b2.x}px;top:${b2.y}px;width:${b2.w}px;height:${b2.h}px;background:#2776d63d;transform-origin:left center`, "", l), cursor = make7(`position:absolute;left:${b2.x}px;top:${b2.y - 2}px;height:${b2.h + 4}px;width:1px;background:#265aa0`, "", l);
       tl.fromTo(m, { scaleX: 0 }, { scaleX: 1, duration: 1.05, ease: "none" }, start);
-      tl.fromTo(cursor, { x: 0, opacity: 0 }, { x: b.w, opacity: 1, duration: 1.05, ease: "none" }, start);
+      tl.fromTo(cursor, { x: 0, opacity: 0 }, { x: b2.w, opacity: 1, duration: 1.05, ease: "none" }, start);
       tl.to(cursor, { opacity: 0, duration: 0.1 }, start + 1.08);
     }
     if (id === "slider-drag") {
       targets = items(".ap-control-slider i").slice(0, 1);
-      targets.forEach((e) => {
-        const width = e.style.width || "65%";
-        tl.fromTo(e, { width: "12%" }, { width, duration: 1.05, ease: "power2.inOut" }, start);
+      targets.forEach((e2) => {
+        const width = e2.style.width || "65%";
+        tl.fromTo(e2, { width: "12%" }, { width, duration: 1.05, ease: "power2.inOut" }, start);
       });
     }
     if (id === "dashed-frame") {
       targets = items(".edx-lesson-shell");
-      const b = box(targets[0]), l = overlay();
-      const f = make6(`position:absolute;left:${b.x}px;top:${b.y}px;width:${b.w}px;height:${b.h}px;border:3px dashed #2563eb;border-radius:25px`, "", l);
+      const b2 = box2(targets[0]), l = overlay();
+      const f = make7(`position:absolute;left:${b2.x}px;top:${b2.y}px;width:${b2.w}px;height:${b2.h}px;border:3px dashed #2563eb;border-radius:25px`, "", l);
       tl.fromTo(f, { clipPath: "inset(0 100% 0 0)", opacity: 0 }, { clipPath: "inset(0 0% 0 0)", opacity: 1, duration: 1.15, ease: "power2.inOut" }, start);
     }
     if (id === "corner-brackets") {
       targets = items('[data-motion="focus"]').slice(0, 1);
-      const b = box(targets[0]), l = overlay();
-      [[b.x - 7, b.y - 7, 1, 1], [b.x + b.w - 15, b.y - 7, -1, 1], [b.x - 7, b.y + b.h - 15, 1, -1], [b.x + b.w - 15, b.y + b.h - 15, -1, -1]].forEach(([x, y, sx, sy], i) => {
-        const e = make6(`position:absolute;left:${x}px;top:${y}px;width:22px;height:22px;border-${sy > 0 ? "top" : "bottom"}:3px solid #2563eb;border-${sx > 0 ? "left" : "right"}:3px solid #2563eb`, "", l);
-        tl.fromTo(e, { x: -sx * 15, y: -sy * 15, opacity: 0 }, { x: 0, y: 0, opacity: 1, duration: 0.6, ease: "power3.out" }, start + i * 0.055);
+      const b2 = box2(targets[0]), l = overlay();
+      [[b2.x - 7, b2.y - 7, 1, 1], [b2.x + b2.w - 15, b2.y - 7, -1, 1], [b2.x - 7, b2.y + b2.h - 15, 1, -1], [b2.x + b2.w - 15, b2.y + b2.h - 15, -1, -1]].forEach(([x, y, sx, sy], i) => {
+        const e2 = make7(`position:absolute;left:${x}px;top:${y}px;width:22px;height:22px;border-${sy > 0 ? "top" : "bottom"}:3px solid #2563eb;border-${sx > 0 ? "left" : "right"}:3px solid #2563eb`, "", l);
+        tl.fromTo(e2, { x: -sx * 15, y: -sy * 15, opacity: 0 }, { x: 0, y: 0, opacity: 1, duration: 0.6, ease: "power3.out" }, start + i * 0.055);
       });
     }
     if (id === "callout-pin") {
       targets = items('[data-motion="highlight"]').slice(0, 1);
-      const field = targets[0], path = root.querySelector('.edu-callout-lines [data-motion="line"]'), note = root.querySelector(".edu-callout-notes article"), pin = field.querySelector("i");
-      if (!path || !note || !pin) throw Error("\u5F15\u7EBF\u6807\u6CE8\u9700\u8981 annotation-callout \u7684\u771F\u5B9E\u951A\u70B9\u3001\u5F15\u7EBF\u548C\u8BF4\u660E\u5361");
-      const length = path.getTotalLength();
-      tl.fromTo(path, { strokeDasharray: length, strokeDashoffset: -length, opacity: 0 }, { strokeDashoffset: 0, opacity: 1, duration: 0.75, ease: "power2.inOut" }, start + 0.2);
+      const field = targets[0], path2 = root.querySelector('.edu-callout-lines [data-motion="line"]'), note = root.querySelector(".edu-callout-notes article"), pin = field.querySelector("i");
+      if (!path2 || !note || !pin) throw Error("\u5F15\u7EBF\u6807\u6CE8\u9700\u8981 annotation-callout \u7684\u771F\u5B9E\u951A\u70B9\u3001\u5F15\u7EBF\u548C\u8BF4\u660E\u5361");
+      const length = path2.getTotalLength();
+      tl.fromTo(path2, { strokeDasharray: length, strokeDashoffset: -length, opacity: 0 }, { strokeDashoffset: 0, opacity: 1, duration: 0.75, ease: "power2.inOut" }, start + 0.2);
       tl.fromTo(pin, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.25, ease: "back.out(1.4)" }, start);
       tl.fromTo(note, { x: 12, opacity: 0 }, { x: 0, opacity: 1, duration: 0.4 }, start + 0.75);
       if (options.label) note.querySelector("h3").textContent = options.label;
@@ -7226,32 +8653,32 @@ var ComponentLibraryRuntime = (() => {
     if (id === "number-tags") {
       targets = items().slice(0, 7);
       const l = overlay();
-      targets.forEach((e, i) => {
-        const b = box(e), tag2 = make6(`position:absolute;left:${Math.max(8, b.x - 11)}px;top:${Math.max(8, b.y - 13)}px;width:29px;height:29px;border-radius:50%;background:#2563eb;border:2px solid #fff;color:white;display:grid;place-items:center;font:14px ComponentMono`, String(i + 1), l);
+      targets.forEach((e2, i) => {
+        const b2 = box2(e2), tag2 = make7(`position:absolute;left:${Math.max(8, b2.x - 11)}px;top:${Math.max(8, b2.y - 13)}px;width:29px;height:29px;border-radius:50%;background:#2563eb;border:2px solid #fff;color:white;display:grid;place-items:center;font:14px ComponentMono`, String(i + 1), l);
         tl.fromTo(tag2, { scale: 0.2, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.38, ease: "back.out(1.4)" }, start + i * 0.42);
       });
     }
     if (id === "branch-reveal" || id === "mindmap-expand") {
       const lines3 = choose('[data-motion="line"]'), nodes = items();
       targets = [...lines3, ...nodes];
-      lines3.forEach((e, i) => draw(e, start + 0.3 + i * 0.15, 1.05));
-      nodes.forEach((e, i) => tl.fromTo(e, { opacity: 0, scale: id === "mindmap-expand" ? 0.92 : 1, transformOrigin: "center center" }, { opacity: 1, scale: 1, duration: 0.4 }, start + (i === 0 ? 0 : 0.75 + i * 0.2)));
+      lines3.forEach((e2, i) => draw(e2, start + 0.3 + i * 0.15, 1.05));
+      nodes.forEach((e2, i) => tl.fromTo(e2, { opacity: 0, scale: id === "mindmap-expand" ? 0.92 : 1, transformOrigin: "center center" }, { opacity: 1, scale: 1, duration: 0.4 }, start + (i === 0 ? 0 : 0.75 + i * 0.2)));
       if (id === "branch-reveal") tl.fromTo(choose(".edx-svg > text"), { opacity: 0 }, { opacity: 1, duration: 0.35, stagger: 0.16 }, start + 0.8);
     }
     if (id === "orbit-steps") {
       targets = items();
       const svg3 = root.querySelector(".edx-svg"), lines3 = choose('[data-motion="line"]'), NS = "http://www.w3.org/2000/svg";
-      const path = document.createElementNS(NS, "path");
-      path.setAttribute("d", lines3.map((p, i) => p.getAttribute("d").replace(/^M/, i ? "L" : "M")).join(" ") + "Z");
-      path.setAttribute("fill", "none");
-      path.setAttribute("stroke", "none");
-      svg3.insertBefore(path, svg3.querySelector('[data-motion="item"]'));
+      const path2 = document.createElementNS(NS, "path");
+      path2.setAttribute("d", lines3.map((p, i) => p.getAttribute("d").replace(/^M/, i ? "L" : "M")).join(" ") + "Z");
+      path2.setAttribute("fill", "none");
+      path2.setAttribute("stroke", "none");
+      svg3.insertBefore(path2, svg3.querySelector('[data-motion="item"]'));
       const dot = document.createElementNS(NS, "circle");
       dot.setAttribute("r", "6");
       dot.setAttribute("fill", "#2563eb");
       svg3.insertBefore(dot, svg3.querySelector('[data-motion="item"]'));
-      const length = path.getTotalLength(), state3 = { progress: 0 }, move = () => {
-        const p = path.getPointAtLength(state3.progress * length);
+      const length = path2.getTotalLength(), state3 = { progress: 0 }, move = () => {
+        const p = path2.getPointAtLength(state3.progress * length);
         dot.setAttribute("cx", p.x);
         dot.setAttribute("cy", p.y);
       };
@@ -7262,15 +8689,15 @@ var ComponentLibraryRuntime = (() => {
     }
     if (id === "compare-sweep") {
       targets = items('[data-motion="reveal"]');
-      const b = box(targets[0]), l = overlay(), line3 = make6(`position:absolute;left:${b.x}px;top:${b.y}px;width:3px;height:${b.h}px;background:#2563eb;box-shadow:0 0 10px #2563eb30`, "", l);
+      const b2 = box2(targets[0]), l = overlay(), line3 = make7(`position:absolute;left:${b2.x}px;top:${b2.y}px;width:3px;height:${b2.h}px;background:#2563eb;box-shadow:0 0 10px #2563eb30`, "", l);
       tl.fromTo(targets, { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 2.4, ease: "power2.inOut" }, start);
-      tl.fromTo(line3, { x: 0, opacity: 0 }, { x: b.w, opacity: 1, duration: 2.4, ease: "power2.inOut" }, start);
+      tl.fromTo(line3, { x: 0, opacity: 0 }, { x: b2.w, opacity: 1, duration: 2.4, ease: "power2.inOut" }, start);
       tl.to(line3, { opacity: 0, duration: 0.2 }, start + 2.4);
     }
     if (id === "equation-build") {
       targets = items(".edx-formula article");
-      targets.forEach((e, i) => tl.fromTo(e, { y: 25, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" }, start + i * 0.85));
-      choose(".edx-formula>span").forEach((e, i) => tl.fromTo(e, { scale: 0.5, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.35 }, start + 0.55 + i * 0.85));
+      targets.forEach((e2, i) => tl.fromTo(e2, { y: 25, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" }, start + i * 0.85));
+      choose(".edx-formula>span").forEach((e2, i) => tl.fromTo(e2, { scale: 0.5, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.35 }, start + 0.55 + i * 0.85));
     }
     if (id === "pyramid-build") {
       targets = items().reverse();
@@ -7278,16 +8705,16 @@ var ComponentLibraryRuntime = (() => {
     }
     if (id === "step-track") {
       targets = items(".edx-steps article");
-      targets.forEach((e, i) => {
-        tl.to(e, { borderColor: "#2563eb", backgroundColor: "#eaf2ff", duration: 0.25 }, start + i * 1.2);
-        if (i < targets.length - 1) tl.to(e, { borderColor: "#dae6f4", backgroundColor: "#f5f8fd", duration: 0.25 }, start + (i + 1) * 1.2);
-        const r = e.querySelector(".edx-step-result");
+      targets.forEach((e2, i) => {
+        tl.to(e2, { borderColor: "#2563eb", backgroundColor: "#eaf2ff", duration: 0.25 }, start + i * 1.2);
+        if (i < targets.length - 1) tl.to(e2, { borderColor: "#dae6f4", backgroundColor: "#f5f8fd", duration: 0.25 }, start + (i + 1) * 1.2);
+        const r = e2.querySelector(".edx-step-result");
         if (r) tl.fromTo(r, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.4 }, start + i * 1.2 + 0.45);
       });
     }
-    const focus = (e, scale) => {
-      const b = box(e);
-      return { scale, x: (W / 2 - b.x - b.w / 2) * scale, y: (H / 2 - b.y - b.h / 2) * scale };
+    const focus = (e2, scale) => {
+      const b2 = box2(e2);
+      return { scale, x: (W / 2 - b2.x - b2.w / 2) * scale, y: (H / 2 - b2.y - b2.h / 2) * scale };
     };
     if (id === "pan-scan") {
       targets = [wrap3];
@@ -7299,8 +8726,8 @@ var ComponentLibraryRuntime = (() => {
     }
     if (id === "focus-return" || id === "focus-hop-camera") {
       targets = items('[data-motion="focus"]');
-      const a = focus(targets[0], 1.25);
-      tl.to(wrap3, { ...a, duration: 1.15, ease: "power3.inOut" }, start);
+      const a2 = focus(targets[0], 1.25);
+      tl.to(wrap3, { ...a2, duration: 1.15, ease: "power3.inOut" }, start);
       if (id === "focus-return") tl.to(wrap3, { scale: 1, x: 0, y: 0, duration: 1.2, ease: "power3.inOut" }, 4.5);
       else tl.to(wrap3, { ...focus(targets.at(-1), 1.25), duration: 1.3, ease: "power3.inOut" }, 3.3);
     }
@@ -7310,7 +8737,7 @@ var ComponentLibraryRuntime = (() => {
     }
     if (id === "parallax-depth") {
       targets = items();
-      targets.forEach((e, i) => tl.fromTo(e, { x: (i % 3 - 1) * 30, y: (i % 3 - 1) * 12 }, { x: -(i % 3 - 1) * 30, y: -(i % 3 - 1) * 12, duration: 5.6, ease: "sine.inOut" }, start));
+      targets.forEach((e2, i) => tl.fromTo(e2, { x: (i % 3 - 1) * 30, y: (i % 3 - 1) * 12 }, { x: -(i % 3 - 1) * 30, y: -(i % 3 - 1) * 12, duration: 5.6, ease: "sine.inOut" }, start));
     }
     if (id === "frame-push") {
       targets = items(".edx-lesson-media");
@@ -7322,9 +8749,9 @@ var ComponentLibraryRuntime = (() => {
     }
     if (id === "donut-draw") {
       targets = items('[data-motion="segment"]');
-      targets.forEach((e, i) => {
-        const original = e.getAttribute("stroke-dasharray"), len = Number(original.split(" ")[0]);
-        tl.fromTo(e, { strokeDasharray: `0 ${942.4778}` }, { strokeDasharray: `${len} ${942.4778}`, duration: 1.15, ease: "power2.out" }, start + i * 0.35);
+      targets.forEach((e2, i) => {
+        const original = e2.getAttribute("stroke-dasharray"), len = Number(original.split(" ")[0]);
+        tl.fromTo(e2, { strokeDasharray: `0 ${942.4778}` }, { strokeDasharray: `${len} ${942.4778}`, duration: 1.15, ease: "power2.out" }, start + i * 0.35);
       });
     }
     if (id === "scatter-pop") {
@@ -7341,9 +8768,9 @@ var ComponentLibraryRuntime = (() => {
     }
     if (id === "radar-expand") {
       targets = items('[data-motion="radar"]');
-      targets.forEach((e) => {
-        const end = e.getAttribute("points"), zero = end.trim().split(/\s+/).map(() => "470,230").join(" ");
-        tl.fromTo(e, { attr: { points: zero } }, { attr: { points: end }, duration: 1.65, ease: "power2.out" }, start);
+      targets.forEach((e2) => {
+        const end = e2.getAttribute("points"), zero = end.trim().split(/\s+/).map(() => "470,230").join(" ");
+        tl.fromTo(e2, { attr: { points: zero } }, { attr: { points: end }, duration: 1.65, ease: "power2.out" }, start);
       });
       const points = choose('[data-motion="point"]');
       tl.fromTo(points, { opacity: 0 }, { opacity: 1, duration: 0.3, stagger: 0.06 }, start + 1.4);
@@ -7354,54 +8781,54 @@ var ComponentLibraryRuntime = (() => {
     }
     const exits = ["fade-out", "slide-out-left", "lift-away", "shrink-center", "iris-close", "mask-retract", "stagger-out", "blur-out", "split-away"];
     if (exits.includes(id)) {
-      const at = start + 2.7;
+      const at2 = start + 2.7;
       targets = [wrap3];
-      if (id === "fade-out") tl.to(wrap3, { opacity: 0, duration: 0.85 }, at);
+      if (id === "fade-out") tl.to(wrap3, { opacity: 0, duration: 0.85 }, at2);
       if (id === "slide-out-left") {
         wrap3.style.willChange = "transform, opacity";
-        tl.to(wrap3, { x: -W, opacity: 0.3, duration: 0.8, ease: "power3.in" }, at);
+        tl.to(wrap3, { x: -W, opacity: 0.3, duration: 0.8, ease: "power3.in" }, at2);
       }
-      if (id === "lift-away") tl.to(wrap3, { y: -H, scale: 0.97, duration: 0.85, ease: "power3.in" }, at);
-      if (id === "shrink-center") tl.to(wrap3, { scale: 0.65, opacity: 0, duration: 0.7, ease: "power3.in" }, at);
-      if (id === "iris-close") tl.fromTo(wrap3, { clipPath: "circle(75% at 50% 50%)" }, { clipPath: "circle(0% at 50% 50%)", duration: 0.85, ease: "power3.inOut" }, at);
-      if (id === "mask-retract") tl.fromTo(wrap3, { clipPath: "inset(0 0% 0 0)" }, { clipPath: "inset(0 100% 0 0)", duration: 0.8, ease: "power3.inOut" }, at);
+      if (id === "lift-away") tl.to(wrap3, { y: -H, scale: 0.97, duration: 0.85, ease: "power3.in" }, at2);
+      if (id === "shrink-center") tl.to(wrap3, { scale: 0.65, opacity: 0, duration: 0.7, ease: "power3.in" }, at2);
+      if (id === "iris-close") tl.fromTo(wrap3, { clipPath: "circle(75% at 50% 50%)" }, { clipPath: "circle(0% at 50% 50%)", duration: 0.85, ease: "power3.inOut" }, at2);
+      if (id === "mask-retract") tl.fromTo(wrap3, { clipPath: "inset(0 0% 0 0)" }, { clipPath: "inset(0 100% 0 0)", duration: 0.8, ease: "power3.inOut" }, at2);
       if (id === "stagger-out") {
         targets = items();
-        tl.to(targets, { opacity: 0, y: -20, duration: 0.4, stagger: 0.14, ease: "power2.in" }, at);
+        tl.to(targets, { opacity: 0, y: -20, duration: 0.4, stagger: 0.14, ease: "power2.in" }, at2);
       }
       if (id === "blur-out") {
         gsap.set(wrap3, { filter: "blur(0px)" });
-        tl.to(wrap3, { filter: "blur(12px)", opacity: 0, scale: 1.03, duration: 0.8, ease: "power2.in" }, at);
+        tl.to(wrap3, { filter: "blur(12px)", opacity: 0, scale: 1.03, duration: 0.8, ease: "power2.in" }, at2);
       }
       if (id === "split-away") {
-        const clone = wrap3.cloneNode(true);
-        clone.querySelectorAll("[id]").forEach((e) => e.removeAttribute("id"));
-        clone.style.cssText = "position:absolute;inset:0;pointer-events:none";
-        wrap3.parentNode.append(clone);
+        const clone2 = wrap3.cloneNode(true);
+        clone2.querySelectorAll("[id]").forEach((e2) => e2.removeAttribute("id"));
+        clone2.style.cssText = "position:absolute;inset:0;pointer-events:none";
+        wrap3.parentNode.append(clone2);
         tl.set(wrap3, { clipPath: "inset(0 50% 0 0)" }, 0);
-        tl.set(clone, { clipPath: "inset(0 0 0 50%)" }, 0);
-        tl.to(wrap3, { x: -W * 0.55, opacity: 0, duration: 0.8, ease: "power3.in" }, at);
-        tl.to(clone, { x: W * 0.55, opacity: 0, duration: 0.8, ease: "power3.in" }, at);
-        targets.push(clone);
+        tl.set(clone2, { clipPath: "inset(0 0 0 50%)" }, 0);
+        tl.to(wrap3, { x: -W * 0.55, opacity: 0, duration: 0.8, ease: "power3.in" }, at2);
+        tl.to(clone2, { x: W * 0.55, opacity: 0, duration: 0.8, ease: "power3.in" }, at2);
+        targets.push(clone2);
       }
     }
     if (["success-toast", "save-pulse", "copy-confirm", "loading-resolve", "warning-breathe", "notification-ping", "soft-confetti"].includes(id)) {
       targets = items('[data-motion="focus"]').slice(0, 1);
       const l = overlay();
       if (id === "success-toast" || id === "save-pulse") {
-        const save = id === "save-pulse", t = make6(`position:absolute;left:${save ? W - 236 : W / 2 - 120}px;top:${save ? 94 : 38}px;background:${save ? "#edf8f2" : "#fff"};border:1px solid #c7e2d6;border-radius:10px;padding:13px 18px;box-shadow:0 6px 20px #1f423718;color:#326c53;font-size:15px`, "", l);
+        const save = id === "save-pulse", t = make7(`position:absolute;left:${save ? W - 236 : W / 2 - 120}px;top:${save ? 94 : 38}px;background:${save ? "#edf8f2" : "#fff"};border:1px solid #c7e2d6;border-radius:10px;padding:13px 18px;box-shadow:0 6px 20px #1f423718;color:#326c53;font-size:15px`, "", l);
         t.textContent = "\u2713\u3000" + (options.label || (save ? "\u5DF2\u4FDD\u5B58" : "\u64CD\u4F5C\u5DF2\u5B8C\u6210"));
         tl.fromTo(t, { opacity: 0, y: -12, scale: save ? 0.9 : 1 }, { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "power3.out" }, start);
         if (save) tl.to(t, { scale: 1.035, duration: 0.22, repeat: 1, yoyo: true }, start + 0.4);
         else tl.to(t, { opacity: 0, y: -8, duration: 0.35 }, start + 2.6);
       }
       if (id === "copy-confirm") {
-        const b = box(targets[0]), tag2 = make6(`position:absolute;left:${Math.min(W - 145, b.x + b.w - 110)}px;top:${Math.max(12, b.y - 39)}px;border-radius:7px;padding:8px 13px;background:#25364f;color:white;font-size:14px`, "\u2713 \u5DF2\u590D\u5236", l);
+        const b2 = box2(targets[0]), tag2 = make7(`position:absolute;left:${Math.min(W - 145, b2.x + b2.w - 110)}px;top:${Math.max(12, b2.y - 39)}px;border-radius:7px;padding:8px 13px;background:#25364f;color:white;font-size:14px`, "\u2713 \u5DF2\u590D\u5236", l);
         tl.fromTo(tag2, { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.3 }, start);
         tl.to(tag2, { opacity: 0, y: -4, duration: 0.3 }, start + 2);
       }
       if (id === "loading-resolve") {
-        const t = make6(`position:absolute;left:${W / 2 - 95}px;top:${H / 2 - 32}px;width:190px;height:64px;border:1px solid #d7e3f3;border-radius:12px;background:white;box-shadow:0 10px 25px #24426622;display:flex;align-items:center;gap:14px;padding:17px;color:#356194;font-size:14px`, '<i style="width:23px;height:23px;border:2px solid #dce9fa;border-top-color:#2563eb;border-radius:50%"></i><span>\u6B63\u5728\u5904\u7406\u2026</span><b style="position:absolute;left:18px;color:#438967;opacity:0">\u2713</b>', l);
+        const t = make7(`position:absolute;left:${W / 2 - 95}px;top:${H / 2 - 32}px;width:190px;height:64px;border:1px solid #d7e3f3;border-radius:12px;background:white;box-shadow:0 10px 25px #24426622;display:flex;align-items:center;gap:14px;padding:17px;color:#356194;font-size:14px`, '<i style="width:23px;height:23px;border:2px solid #dce9fa;border-top-color:#2563eb;border-radius:50%"></i><span>\u6B63\u5728\u5904\u7406\u2026</span><b style="position:absolute;left:18px;color:#438967;opacity:0">\u2713</b>', l);
         tl.fromTo(t, { opacity: 0 }, { opacity: 1, duration: 0.2 }, start);
         tl.to(t.querySelector("i"), { rotation: 540, duration: 1.55, ease: "none" }, start);
         tl.to(t.querySelector("i"), { opacity: 0, duration: 0.1 }, start + 1.65);
@@ -7410,24 +8837,24 @@ var ComponentLibraryRuntime = (() => {
         tl.to(t, { opacity: 0, duration: 0.35 }, start + 3.4);
       }
       if (id === "warning-breathe") {
-        const b = box(targets[0]), f = frame2(b, "#6686c5");
+        const b2 = box2(targets[0]), f = frame2(b2, "#6686c5");
         tl.fromTo(f, { opacity: 0 }, { opacity: 1, duration: 0.3 }, start);
         tl.to(f, { scaleX: 1.02, scaleY: 1.04, opacity: 0.45, duration: 0.5, repeat: 3, yoyo: true, ease: "sine.inOut" }, start + 0.3);
       }
       if (id === "notification-ping") {
         targets = items(".ap-notification").slice(0, 1);
-        const b = box(targets[0]);
+        const b2 = box2(targets[0]);
         for (let i = 0; i < 2; i++) {
-          const e = make6(`position:absolute;left:${b.x - 7}px;top:${b.y + 9}px;width:15px;height:15px;border:2px solid #4c92d5;border-radius:50%`, "", l);
-          tl.fromTo(e, { scale: 0, opacity: 0 }, { scale: 2.7, opacity: 0.8, duration: 0.35 }, start + i * 0.2);
-          tl.to(e, { scale: 4, opacity: 0, duration: 0.6 }, start + 0.35 + i * 0.2);
+          const e2 = make7(`position:absolute;left:${b2.x - 7}px;top:${b2.y + 9}px;width:15px;height:15px;border:2px solid #4c92d5;border-radius:50%`, "", l);
+          tl.fromTo(e2, { scale: 0, opacity: 0 }, { scale: 2.7, opacity: 0.8, duration: 0.35 }, start + i * 0.2);
+          tl.to(e2, { scale: 4, opacity: 0, duration: 0.6 }, start + 0.35 + i * 0.2);
         }
       }
       if (id === "soft-confetti") {
         for (let i = 0; i < 16; i++) {
-          const e = make6(`position:absolute;left:${W * 0.5}px;top:${H * 0.34}px;width:${i % 2 ? 5 : 7}px;height:${i % 2 ? 12 : 7}px;border-radius:2px;background:${i % 2 ? "#81c9b0" : "#4980df"}`, "", l), a = i / 16 * Math.PI * 2;
-          tl.fromTo(e, { x: 0, y: 0, rotation: 0, opacity: 0 }, { x: Math.cos(a) * 180, y: Math.sin(a) * 105, rotation: i * 33, opacity: 0.8, duration: 0.65, ease: "power3.out" }, start);
-          tl.to(e, { y: Math.sin(a) * 105 + 120, rotation: i * 33 + 90, opacity: 0, duration: 1.2, ease: "power2.in" }, start + 0.65);
+          const e2 = make7(`position:absolute;left:${W * 0.5}px;top:${H * 0.34}px;width:${i % 2 ? 5 : 7}px;height:${i % 2 ? 12 : 7}px;border-radius:2px;background:${i % 2 ? "#81c9b0" : "#4980df"}`, "", l), a2 = i / 16 * Math.PI * 2;
+          tl.fromTo(e2, { x: 0, y: 0, rotation: 0, opacity: 0 }, { x: Math.cos(a2) * 180, y: Math.sin(a2) * 105, rotation: i * 33, opacity: 0.8, duration: 0.65, ease: "power3.out" }, start);
+          tl.to(e2, { y: Math.sin(a2) * 105 + 120, rotation: i * 33 + 90, opacity: 0, duration: 1.2, ease: "power2.in" }, start + 0.65);
         }
       }
     }
@@ -7436,65 +8863,65 @@ var ComponentLibraryRuntime = (() => {
       const next = root.querySelector(".motion-next");
       if (!next) throw Error("\u8F6C\u573A\u9700\u8981 A/B \u4E24\u5E45\u5185\u5BB9\uFF0C\u8BF7\u901A\u8FC7 mountNext \u88C5\u914D");
       targets = [wrap3, next];
-      const at = Number(options.transitionAt ?? 2.1), duration = Number(options.transitionDuration ?? 0.66);
-      if (at < 0 || duration < 0.35 || at + duration > 7.8) throw Error("\u8F6C\u573A\u65F6\u70B9\u6216\u957F\u5EA6\u8D85\u51FA\u516B\u79D2\u6A21\u677F\u8303\u56F4");
+      const at2 = Number(options.transitionAt ?? 2.1), duration = Number(options.transitionDuration ?? 0.66);
+      if (at2 < 0 || duration < 0.35 || at2 + duration > 7.8) throw Error("\u8F6C\u573A\u65F6\u70B9\u6216\u957F\u5EA6\u8D85\u51FA\u516B\u79D2\u6A21\u677F\u8303\u56F4");
       tl.set(next, { opacity: 0 }, 0);
-      root.dataset.transitionStart = String(at);
-      root.dataset.transitionEnd = String(at + duration);
-      root.dataset.transitionCut = String(at + duration * 0.5);
+      root.dataset.transitionStart = String(at2);
+      root.dataset.transitionEnd = String(at2 + duration);
+      root.dataset.transitionCut = String(at2 + duration * 0.5);
       if (id === "iris-reveal") {
-        tl.set(next, { opacity: 1, clipPath: "circle(0% at 50% 50%)" }, at);
-        tl.to(next, { clipPath: "circle(75% at 50% 50%)", duration, ease: "power3.inOut" }, at);
-        tl.set(wrap3, { opacity: 0 }, at + duration);
+        tl.set(next, { opacity: 1, clipPath: "circle(0% at 50% 50%)" }, at2);
+        tl.to(next, { clipPath: "circle(75% at 50% 50%)", duration, ease: "power3.inOut" }, at2);
+        tl.set(wrap3, { opacity: 0 }, at2 + duration);
       }
       if (id === "shared-slide") {
         const oldParts = [...wrap3.querySelectorAll(".edx-lesson-shell,.edx-lesson-caption")], nextBg = next.querySelector(".edx-ambient"), nextStage = next.querySelector(".edx-lecture");
         if (nextBg) nextBg.style.opacity = "0";
         if (nextStage) nextStage.style.background = "transparent";
-        tl.set(next, { opacity: 1, x: W }, at);
-        tl.to(oldParts.length ? oldParts : wrap3, { x: -W, duration, ease: "power3.inOut" }, at);
-        tl.to(next, { x: 0, duration, ease: "power3.inOut" }, at);
+        tl.set(next, { opacity: 1, x: W }, at2);
+        tl.to(oldParts.length ? oldParts : wrap3, { x: -W, duration, ease: "power3.inOut" }, at2);
+        tl.to(next, { x: 0, duration, ease: "power3.inOut" }, at2);
       }
       if (id === "soft-dissolve") {
-        tl.to(wrap3, { opacity: 0, filter: "blur(5px)", duration, ease: "sine.inOut" }, at);
-        tl.fromTo(next, { opacity: 0, filter: "blur(5px)" }, { opacity: 1, filter: "blur(0px)", duration, ease: "sine.inOut" }, at);
+        tl.to(wrap3, { opacity: 0, filter: "blur(5px)", duration, ease: "sine.inOut" }, at2);
+        tl.fromTo(next, { opacity: 0, filter: "blur(5px)" }, { opacity: 1, filter: "blur(0px)", duration, ease: "sine.inOut" }, at2);
       }
       if (id === "zoom-through") {
-        tl.to(wrap3, { scale: 1.28, opacity: 0, duration, ease: "power2.in" }, at);
-        tl.fromTo(next, { scale: 0.88, opacity: 0 }, { scale: 1, opacity: 1, duration, ease: "power2.out" }, at);
+        tl.to(wrap3, { scale: 1.28, opacity: 0, duration, ease: "power2.in" }, at2);
+        tl.fromTo(next, { scale: 0.88, opacity: 0 }, { scale: 1, opacity: 1, duration, ease: "power2.out" }, at2);
       }
       if (id === "card-lift") {
         tl.set(wrap3, { zIndex: 3, position: "relative" }, 0);
-        tl.set(next, { opacity: 1, zIndex: 2 }, at);
-        tl.to(wrap3, { y: -H * 1.2, rotation: -5, scale: 0.97, duration, ease: "power3.in" }, at);
-        tl.fromTo(next, { scale: 0.97 }, { scale: 1, duration, ease: "power3.out" }, at);
+        tl.set(next, { opacity: 1, zIndex: 2 }, at2);
+        tl.to(wrap3, { y: -H * 1.2, rotation: -5, scale: 0.97, duration, ease: "power3.in" }, at2);
+        tl.fromTo(next, { scale: 0.97 }, { scale: 1, duration, ease: "power3.out" }, at2);
       }
       if (id === "blinds-swap") {
         const key = (root.closest("[data-composition-src]")?.id || root.dataset.compositionId || "gallery") + "-blind-mask";
-        const defs = make6("position:absolute;width:0;height:0;overflow:hidden", `<svg width="0" height="0"><defs><clipPath id="${key}" clipPathUnits="userSpaceOnUse">${Array.from({ length: 6 }, (_, i) => `<rect x="${i * W / 6}" y="0" width="${W / 6 + 0.5}" height="0"/>`).join("")}</clipPath></defs></svg>`);
-        tl.set(next, { opacity: 1, clipPath: `url(#${key})` }, at);
-        [...defs.querySelectorAll("rect")].forEach((r, i) => tl.fromTo(r, { attr: { height: 0 } }, { attr: { height: H }, duration: duration * 0.68, ease: "power3.inOut" }, at + i * duration * 0.064));
-        tl.set(next, { clipPath: "none" }, at + duration);
-        tl.set(wrap3, { opacity: 0 }, at + duration);
+        const defs2 = make7("position:absolute;width:0;height:0;overflow:hidden", `<svg width="0" height="0"><defs><clipPath id="${key}" clipPathUnits="userSpaceOnUse">${Array.from({ length: 6 }, (_, i) => `<rect x="${i * W / 6}" y="0" width="${W / 6 + 0.5}" height="0"/>`).join("")}</clipPath></defs></svg>`);
+        tl.set(next, { opacity: 1, clipPath: `url(#${key})` }, at2);
+        [...defs2.querySelectorAll("rect")].forEach((r, i) => tl.fromTo(r, { attr: { height: 0 } }, { attr: { height: H }, duration: duration * 0.68, ease: "power3.inOut" }, at2 + i * duration * 0.064));
+        tl.set(next, { clipPath: "none" }, at2 + duration);
+        tl.set(wrap3, { opacity: 0 }, at2 + duration);
       }
       if (["wipe-transition", "curve-ribbon", "diagonal-ribbon", "liquid-sweep"].includes(id)) {
-        const l = overlay(), colors3 = ["#d9e8ff", "#81c9b0", "#2563eb"], stagger = duration * 0.05, enter2 = duration * 0.4, cut = at + enter2 + 2 * stagger;
+        const l = overlay(), colors3 = ["#d9e8ff", "#81c9b0", "#2563eb"], stagger = duration * 0.05, enter2 = duration * 0.4, cut = at2 + enter2 + 2 * stagger;
         l.dataset.effectSpace = "canvas";
         root.dataset.transitionCut = String(cut);
         tl.set(next, { opacity: 1 }, cut);
         tl.set(wrap3, { opacity: 0 }, cut);
-        colors3.forEach((color2, i) => {
-          let e;
+        colors3.forEach((color5, i) => {
+          let e2;
           if (id === "curve-ribbon" || id === "liquid-sweep") {
             const k = id === "curve-ribbon" ? W * 0.19 : W * 0.12, shape = id === "curve-ribbon" ? `M0 0H${W + k}Q${W - k} ${H * 0.5} ${W + k} ${H}H0Z` : `M0 0H${W + k}C${W - k} ${H * 0.24} ${W + 2 * k} ${H * 0.7} ${W + k} ${H}H0Z`;
-            e = make6(`position:absolute;inset:0;width:${W + k * 2}px;height:${H}px`, `<svg width="100%" height="100%" viewBox="0 0 ${W + k * 2} ${H}"><path d="${shape}" fill="${color2}"/></svg>`, l);
-            tl.fromTo(e, { x: -W - k * 2 }, { x: 0, duration: enter2, ease: "power2.inOut" }, at + i * stagger);
-            tl.to(e, { x: W + k * 2, duration: enter2 * 0.85, ease: "power2.inOut" }, cut + 0.025 + i * stagger);
+            e2 = make7(`position:absolute;inset:0;width:${W + k * 2}px;height:${H}px`, `<svg width="100%" height="100%" viewBox="0 0 ${W + k * 2} ${H}"><path d="${shape}" fill="${color5}"/></svg>`, l);
+            tl.fromTo(e2, { x: -W - k * 2 }, { x: 0, duration: enter2, ease: "power2.inOut" }, at2 + i * stagger);
+            tl.to(e2, { x: W + k * 2, duration: enter2 * 0.85, ease: "power2.inOut" }, cut + 0.025 + i * stagger);
           } else {
             const diagonal = id === "diagonal-ribbon", off = W * (diagonal ? 1.65 : 1.06);
-            e = make6(`position:absolute;left:-${W * (diagonal ? 0.15 : 0.01)}px;top:-${H * (diagonal ? 0.35 : 0.05)}px;width:${W * (diagonal ? 1.3 : 1.02)}px;height:${H * (diagonal ? 1.7 : 1.1)}px;border-radius:${diagonal ? "130" : "0"}px;background:${color2}`, "", l);
-            tl.fromTo(e, { x: -off, rotation: diagonal ? -17 : 0 }, { x: 0, duration: enter2, ease: "power2.inOut" }, at + i * stagger);
-            tl.to(e, { x: off, duration: enter2 * 0.85, ease: "power2.inOut" }, cut + 0.025 + i * stagger);
+            e2 = make7(`position:absolute;left:-${W * (diagonal ? 0.15 : 0.01)}px;top:-${H * (diagonal ? 0.35 : 0.05)}px;width:${W * (diagonal ? 1.3 : 1.02)}px;height:${H * (diagonal ? 1.7 : 1.1)}px;border-radius:${diagonal ? "130" : "0"}px;background:${color5}`, "", l);
+            tl.fromTo(e2, { x: -off, rotation: diagonal ? -17 : 0 }, { x: 0, duration: enter2, ease: "power2.inOut" }, at2 + i * stagger);
+            tl.to(e2, { x: off, duration: enter2 * 0.85, ease: "power2.inOut" }, cut + 0.025 + i * stagger);
           }
         });
         tl.fromTo(next, { x: -12 }, { x: 0, duration: 0.28, ease: "power3.out" }, cut);
@@ -7508,7 +8935,7 @@ var ComponentLibraryRuntime = (() => {
       for (const bg of backgrounds) {
         bg.style.background = "none";
         bg.style.overflow = "hidden";
-        const inner = make6("position:absolute;inset:-120px;pointer-events:none", "", bg);
+        const inner = make7("position:absolute;inset:-120px;pointer-events:none", "", bg);
         const d = Number(options.duration || 8);
         if (id === "grid-drift" || id === "dot-drift" || id === "diagonal-hatch" || id === "blueprint-pan") {
           inner.style.backgroundImage = id === "dot-drift" ? "radial-gradient(#7a9dcd66 1.25px,transparent 1.5px)" : id === "diagonal-hatch" ? "repeating-linear-gradient(120deg,transparent 0 40px,#88a8d02d 40px 41px,transparent 41px 80px)" : id === "blueprint-pan" ? "linear-gradient(#93b1d530 1px,transparent 1px),linear-gradient(90deg,#93b1d530 1px,transparent 1px),linear-gradient(#769dd644 1px,transparent 1px),linear-gradient(90deg,#769dd644 1px,transparent 1px)" : "linear-gradient(#93b1d544 1px,transparent 1px),linear-gradient(90deg,#93b1d544 1px,transparent 1px)";
@@ -7527,11 +8954,11 @@ var ComponentLibraryRuntime = (() => {
           inner.append(svg3);
           const cx = W / 2, vanishY = -H * 0.98, spacing = W * 0.132, depth = 6, phase = 0.72, speed = 1.5, pad2 = 8;
           const line3 = (x1, y1, x2, y2, kind) => {
-            const e = document.createElementNS(ns, "line");
-            for (const [k, v] of Object.entries({ x1, y1, x2, y2, stroke: "#9cb8df", "stroke-width": 1.25, "stroke-opacity": 0.48 })) e.setAttribute(k, String(v));
-            e.dataset.gridLine = kind;
-            svg3.append(e);
-            return e;
+            const e2 = document.createElementNS(ns, "line");
+            for (const [k, v] of Object.entries({ x1, y1, x2, y2, stroke: "#9cb8df", "stroke-width": 1.25, "stroke-opacity": 0.48 })) e2.setAttribute(k, String(v));
+            e2.dataset.gridLine = kind;
+            svg3.append(e2);
+            return e2;
           };
           for (let i = -8; i <= 8; i++) {
             const x = cx + i * spacing;
@@ -7548,9 +8975,9 @@ var ComponentLibraryRuntime = (() => {
           }
         }
         if (id === "orb-parallax" || id === "ambient-breath") {
-          [["#c5ddff", -120, -105, 370], ["#b4e2d1", W - 200, H - 200, 420], ["#e4edff", W - 260, -180, 250]].forEach(([color2, x, y, size], i) => {
-            const e = make6(`position:absolute;left:${x}px;top:${y}px;width:${size}px;height:${size}px;border-radius:50%;background:${color2};opacity:${id === "ambient-breath" ? 0.37 : 0.46};filter:${id === "ambient-breath" ? "blur(40px)" : "none"}`, "", bg);
-            tl.fromTo(e, { x: 0, y: 0, scale: 1 }, { x: i % 2 ? -26 : 28, y: i % 2 ? -24 : 20, scale: id === "ambient-breath" ? 1.22 : 1.03, duration: d, ease: "sine.inOut" }, 0);
+          [["#c5ddff", -120, -105, 370], ["#b4e2d1", W - 200, H - 200, 420], ["#e4edff", W - 260, -180, 250]].forEach(([color5, x, y, size], i) => {
+            const e2 = make7(`position:absolute;left:${x}px;top:${y}px;width:${size}px;height:${size}px;border-radius:50%;background:${color5};opacity:${id === "ambient-breath" ? 0.37 : 0.46};filter:${id === "ambient-breath" ? "blur(40px)" : "none"}`, "", bg);
+            tl.fromTo(e2, { x: 0, y: 0, scale: 1 }, { x: i % 2 ? -26 : 28, y: i % 2 ? -24 : 20, scale: id === "ambient-breath" ? 1.22 : 1.03, duration: d, ease: "sine.inOut" }, 0);
           });
         }
         if (id === "contour-flow" || id === "wave-bands") {
@@ -7560,10 +8987,10 @@ var ComponentLibraryRuntime = (() => {
         }
         if (id === "ring-orbit") {
           [[15, 5, 430], [W - 125, H - 60, 520]].forEach(([x, y, size], j) => {
-            const e = make6(`position:absolute;left:${x - size / 2}px;top:${y - size / 2}px;width:${size}px;height:${size}px;border-radius:50%;border:1px solid #7aa2d94a`, "", bg);
-            [0.7, 0.85].forEach((s) => make6(`position:absolute;inset:${(1 - s) * 50}%;border-radius:50%;border:1px dashed #82b8a860`, "", e));
-            make6(`position:absolute;left:50%;top:-4px;width:8px;height:8px;border-radius:50%;background:#81b0dc`, "", e);
-            tl.fromTo(e, { rotation: 0 }, { rotation: j ? -48 : 42, duration: d, ease: "none" }, 0);
+            const e2 = make7(`position:absolute;left:${x - size / 2}px;top:${y - size / 2}px;width:${size}px;height:${size}px;border-radius:50%;border:1px solid #7aa2d94a`, "", bg);
+            [0.7, 0.85].forEach((s2) => make7(`position:absolute;inset:${(1 - s2) * 50}%;border-radius:50%;border:1px dashed #82b8a860`, "", e2));
+            make7(`position:absolute;left:50%;top:-4px;width:8px;height:8px;border-radius:50%;background:#81b0dc`, "", e2);
+            tl.fromTo(e2, { rotation: 0 }, { rotation: j ? -48 : 42, duration: d, ease: "none" }, 0);
           });
         }
       }
@@ -7624,20 +9051,20 @@ var ComponentLibraryRuntime = (() => {
       silent: true
     }
   ];
-  function compareFlow(flow, tl, at) {
+  function compareFlow(flow, tl, at2) {
     const joins = [...flow.querySelectorAll("[data-ani-flow-join]")];
     const trunks = [...flow.querySelectorAll("[data-ani-flow-trunk]")];
-    const bridge = [...flow.querySelectorAll("[data-ani-flow-bridge] path")];
+    const bridge2 = [...flow.querySelectorAll("[data-ani-flow-bridge] path")];
     const result = flow.querySelector("[data-ani-flow-result]");
     const footer2 = flow.querySelector("[data-ani-flow-footer]");
-    const draw = (paths2, start, duration) => paths2.forEach((path) => {
-      const length = path.getTotalLength();
-      path.style.strokeDasharray = String(length);
-      path.style.strokeDashoffset = String(length);
-      path.style.opacity = "0";
-      tl.set(path, { strokeDasharray: length, strokeDashoffset: length, opacity: 0 }, 0);
-      tl.set(path, { opacity: 1 }, start);
-      tl.fromTo(path, { strokeDashoffset: length }, {
+    const draw = (paths2, start, duration) => paths2.forEach((path2) => {
+      const length = path2.getTotalLength();
+      path2.style.strokeDasharray = String(length);
+      path2.style.strokeDashoffset = String(length);
+      path2.style.opacity = "0";
+      tl.set(path2, { strokeDasharray: length, strokeDashoffset: length, opacity: 0 }, 0);
+      tl.set(path2, { opacity: 1 }, start);
+      tl.fromTo(path2, { strokeDashoffset: length }, {
         strokeDashoffset: 0,
         duration,
         ease: "none",
@@ -7645,20 +9072,20 @@ var ComponentLibraryRuntime = (() => {
         immediateRender: false
       }, start);
     });
-    draw(joins, at, 0.45);
-    draw(trunks, at + 0.45, 0.7);
+    draw(joins, at2, 0.45);
+    draw(trunks, at2 + 0.45, 0.7);
     tl.fromTo(result, { opacity: 0 }, {
       opacity: 1,
       duration: 0.35,
       ease: "power2.out"
-    }, at + 1.15);
-    draw(bridge, at + 1.55, 0.25);
+    }, at2 + 1.15);
+    draw(bridge2, at2 + 1.55, 0.25);
     tl.fromTo(footer2, { opacity: 0 }, {
       opacity: 1,
       duration: 0.35,
       ease: "power2.out"
-    }, at + 1.8);
-    return [...joins, ...trunks, ...bridge, result, footer2];
+    }, at2 + 1.8);
+    return [...joins, ...trunks, ...bridge2, result, footer2];
   }
   function diagramBuild(root, options, tl) {
     const enter2 = [...root.querySelectorAll("[data-ani-enter]")];
@@ -7679,19 +9106,19 @@ var ComponentLibraryRuntime = (() => {
       return [...enter2, ...compareFlow(flow, tl, labelsReady + 0.35)];
     }
     const linksAt = start + Math.max(0, enter2.length - 1) * gap + 0.4;
-    links.forEach((node3, index) => {
-      const at = linksAt + index * Math.min(0.2, 1.2 / Math.max(1, links.length - 1));
-      const length = typeof node3.getTotalLength === "function" ? node3.getTotalLength() : 0;
-      if (length > 0) tl.fromTo(node3, { strokeDasharray: length, strokeDashoffset: length, opacity: 0 }, {
+    links.forEach((node4, index) => {
+      const at2 = linksAt + index * Math.min(0.2, 1.2 / Math.max(1, links.length - 1));
+      const length = typeof node4.getTotalLength === "function" ? node4.getTotalLength() : 0;
+      if (length > 0) tl.fromTo(node4, { strokeDasharray: length, strokeDashoffset: length, opacity: 0 }, {
         strokeDashoffset: 0,
         opacity: 1,
         duration: 0.65,
         ease: "power2.inOut"
-      }, at);
-      else tl.fromTo(node3, { opacity: 0 }, { opacity: 1, duration: 0.45, ease: "sine.out" }, at);
+      }, at2);
+      else tl.fromTo(node4, { opacity: 0 }, { opacity: 1, duration: 0.45, ease: "sine.out" }, at2);
     });
     const resultAt = Math.max(4.8, linksAt + 1.5);
-    const movingResults = result.filter((node3) => !node3.hasAttribute("data-ani-stationary"));
+    const movingResults = result.filter((node4) => !node4.hasAttribute("data-ani-stationary"));
     if (movingResults.length) tl.fromTo(movingResults, { y: 10, opacity: 0 }, {
       y: 0,
       opacity: 1,
@@ -7699,12 +9126,12 @@ var ComponentLibraryRuntime = (() => {
       stagger: 0.12,
       ease: "power2.out"
     }, resultAt);
-    result.filter((node3) => node3.hasAttribute("data-ani-stationary")).forEach((node3) => {
-      tl.fromTo(node3, { opacity: 0 }, {
+    result.filter((node4) => node4.hasAttribute("data-ani-stationary")).forEach((node4) => {
+      tl.fromTo(node4, { opacity: 0 }, {
         opacity: 1,
         duration: 0.45,
         ease: "power2.out"
-      }, resultAt + result.indexOf(node3) * 0.12);
+      }, resultAt + result.indexOf(node4) * 0.12);
     });
     return [...enter2, ...links, ...result];
   }
@@ -7725,10 +9152,10 @@ var ComponentLibraryRuntime = (() => {
       gsap.set(excluded, { opacity: 1 });
       tl.set(excluded, { opacity: 1 }, 0);
       excluded.forEach((row, index) => {
-        [...row.querySelectorAll("[data-ani-row-bg], [data-ani-status-bg]")].forEach((node3) => {
-          const originalFill = node3.getAttribute("fill") || "#ffffff";
-          const finalFill = node3.hasAttribute("data-ani-status-bg") ? "#e2e8f0" : "#f4f6f8";
-          tl.fromTo(node3, { fill: originalFill }, {
+        [...row.querySelectorAll("[data-ani-row-bg], [data-ani-status-bg]")].forEach((node4) => {
+          const originalFill = node4.getAttribute("fill") || "#ffffff";
+          const finalFill = node4.hasAttribute("data-ani-status-bg") ? "#e2e8f0" : "#f4f6f8";
+          tl.fromTo(node4, { fill: originalFill }, {
             fill: finalFill,
             duration: 0.5,
             ease: "sine.inOut"
@@ -7796,36 +9223,36 @@ var ComponentLibraryRuntime = (() => {
     if (id === "ani-order-select") return orderSelect(gsap, root, options, tl);
     if (id === "ani-machine-process") return machineProcess(root, options, tl);
     if (id !== "ani-notice-verify") return [];
-    const rows2 = [...root.querySelectorAll("[data-ani-row]")];
+    const rows3 = [...root.querySelectorAll("[data-ani-row]")];
     const focus = [...root.querySelectorAll("[data-ani-focus]")];
     const checks = [...root.querySelectorAll("[data-ani-check]")];
     const results = [...root.querySelectorAll("[data-ani-result]")];
     const total = Number(options.duration || 8);
     const start = Number(options.start ?? 0.6);
-    const count = Math.max(rows2.length, focus.length, checks.length, 1);
-    const step = Math.min(1.18, Math.max(0.42, (total - start - 2) / count));
+    const count2 = Math.max(rows3.length, focus.length, checks.length, 1);
+    const step = Math.min(1.18, Math.max(0.42, (total - start - 2) / count2));
     const targets = [...focus, ...checks, ...results];
     if (targets.length) {
       gsap.set(targets, { opacity: 0 });
       tl.set(targets, { opacity: 0 }, 0);
     }
-    focus.forEach((node3, index) => {
-      const at = start + index * step;
-      tl.fromTo(node3, { opacity: 0 }, {
+    focus.forEach((node4, index) => {
+      const at2 = start + index * step;
+      tl.fromTo(node4, { opacity: 0 }, {
         opacity: 1,
         duration: 0.16,
         ease: "sine.out",
         immediateRender: false
-      }, at);
-      tl.fromTo(node3, { opacity: 1 }, {
+      }, at2);
+      tl.fromTo(node4, { opacity: 1 }, {
         opacity: 0,
         duration: 0.2,
         ease: "sine.inOut",
         immediateRender: false
-      }, at + step - 0.22);
+      }, at2 + step - 0.22);
     });
-    checks.forEach((node3, index) => {
-      tl.fromTo(node3, { opacity: 0 }, {
+    checks.forEach((node4, index) => {
+      tl.fromTo(node4, { opacity: 0 }, {
         opacity: 1,
         duration: 0.24,
         ease: "sine.out",
@@ -7837,8 +9264,238 @@ var ComponentLibraryRuntime = (() => {
       duration: 0.4,
       ease: "sine.out",
       immediateRender: false
-    }, start + count * step + 0.25);
+    }, start + count2 * step + 0.25);
     return targets;
+  }
+
+  // transfer-motion.mjs
+  var names = {
+    "purpose-fork": "\u5171\u540C\u5165\u53E3\u4E0E\u53CC\u8DEF\u5F84\u5C55\u5F00",
+    "context-bridge": "\u5BF9\u8C61\u51FA\u73B0\u4E0E\u5173\u7CFB\u5EFA\u7ACB",
+    "field-reuse": "\u5171\u540C\u5B57\u6BB5\u9010\u9879\u5BF9\u5E94",
+    "capacity-limit": "\u69FD\u4F4D\u586B\u6EE1\u4E0E\u5BB9\u91CF\u63D0\u793A",
+    "batch-delivery": "\u8F7D\u8D27\u5230\u8FBE\u4E0E\u7A7A\u8F66\u8FD4\u7A0B",
+    "batch-cycle": "\u8BFB\u53D6\u4FDD\u5B58\u91CA\u653E\u5FAA\u73AF",
+    "relationship-map": "\u8DE8\u5BF9\u8C61\u5173\u7CFB\u63D0\u53D6",
+    "copy-verify": "\u526F\u672C\u4E0E\u9010\u9879\u6838\u9A8C",
+    "guided-steps": "\u95EE\u9898\u5230\u884C\u52A8\u5C55\u5F00"
+  };
+  var transferEffects = Object.entries(names).map(([key, name]) => ({ id: "ani-transfer-" + key, name, component: "ani-transfer-" + key, description: "\u6309\u72B6\u6001\u987A\u5E8F\u5C55\u5F00\u5E76\u4FDD\u7559\u6700\u7EC8\u7ED3\u679C\uFF0C\u53EF\u6B63\u53CD\u5411\u62D6\u52A8\uFF1B\u672C\u914D\u65B9\u4F7F\u7528\u9759\u97F3\u8F68\u3002", category: "\u52A8\u753B\u98CE", selector: `[data-transfer-kind="${key}"]`, duration: 8, previewTime: 7.4, cueHints: [], silent: true }));
+  function extendTransferMotion(gsap, root, id, options, tl) {
+    if (!transferEffects.some((e2) => e2.id === id)) return [];
+    const scene2 = root.querySelector('[data-transfer-kind="' + id.replace("ani-transfer-", "") + '"]');
+    if (!scene2) return [];
+    const scale = Number(options.duration || 8) / 8, offset = Number(options.start ?? 0.6) - 0.6, when = (v) => Math.max(0, Number(v) * scale + offset), targets = [...scene2.querySelectorAll("[data-tr-cue], [data-tr-draw]")];
+    for (const el of targets) {
+      if (el.hasAttribute("data-tr-draw")) {
+        const length = el.getTotalLength();
+        gsap.set(el, { strokeDasharray: length, strokeDashoffset: length, opacity: 0 });
+        tl.fromTo(el, { strokeDasharray: length, strokeDashoffset: length, opacity: 0 }, { strokeDashoffset: 0, opacity: 1, duration: 0.45 * scale, ease: "none", immediateRender: false, lazy: false }, when(el.dataset.trDraw));
+      } else {
+        const at2 = when(el.dataset.trCue);
+        gsap.set(el, { opacity: 0 });
+        tl.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.22 * scale, ease: "sine.out", immediateRender: false, lazy: false }, at2);
+        if (el.hasAttribute("data-tr-until")) tl.fromTo(el, { opacity: 1 }, { opacity: 0, duration: 0.12 * scale, ease: "none", immediateRender: false, lazy: false }, when(el.dataset.trUntil) - 0.12 * scale);
+        if (el.hasAttribute("data-tr-dx")) {
+          gsap.set(el, { x: 0, y: 0 });
+          tl.fromTo(el, { x: 0, y: 0 }, { x: Number(el.dataset.trDx), y: Number(el.dataset.trDy), duration: Number(el.dataset.trTravel) * scale, ease: "power2.inOut", immediateRender: false, lazy: false }, at2 + 0.25 * scale);
+        }
+      }
+    }
+    return targets;
+  }
+
+  // broll-workflow-motion.mjs
+  var definitions2 = [
+    ["broll-document-scan", "\u626B\u63CF\u63D0\u53D6", "\u626B\u63CF\u7EBF\u63A8\u8FDB\u540E\u9010\u9879\u843D\u4E0B\u5B57\u6BB5"],
+    ["broll-search-focus", "\u68C0\u7D22\u5B9A\u4F4D", "\u68C0\u7D22\u8BCD\u5C55\u5F00\uFF0C\u9009\u4E2D\u7ED3\u679C\u540E\u5C55\u5F00\u6458\u5F55"],
+    ["broll-calendar-pin", "\u6392\u671F\u843D\u4F4D", "\u65E5\u5386\u7FFB\u5165\uFF0C\u9501\u5B9A\u65E5\u671F\u540E\u653E\u4E0B\u5B89\u6392"],
+    ["broll-folder-sort", "\u5206\u7C7B\u5F52\u6863", "\u4E09\u5F20\u6587\u4EF6\u9519\u5CF0\u5F52\u5165\u5BF9\u5E94\u76EE\u5F55"],
+    ["broll-edit-timeline", "\u526A\u8F91\u7EC4\u88C5", "\u9010\u8F68\u94FA\u5F00\u7247\u6BB5\uFF0C\u64AD\u653E\u5934\u5300\u901F\u626B\u8FC7"],
+    ["broll-voice-transcript", "\u8BED\u97F3\u843D\u7A3F", "\u6CE2\u5F62\u6E38\u6807\u626B\u8FC7\uFF0C\u4E09\u6BB5\u6587\u5B57\u4F9D\u6B21\u843D\u7A3F"],
+    ["broll-focus-timer", "\u4E13\u6CE8\u5B8C\u6210", "\u73AF\u5F62\u8FDB\u5EA6\u63A8\u8FDB\uFF0C\u4EFB\u52A1\u843D\u5B9E\u540E\u5207\u6362\u7ED3\u675F\u65F6\u95F4"]
+  ];
+  var workflowRecipeOptions = Object.freeze({
+    "broll-document-scan-motion": ["standard", "guided"],
+    "broll-search-focus-motion": ["standard", "guided"],
+    "broll-voice-transcript-motion": ["standard", "guided"]
+  });
+  var workflowActionCues = Object.freeze({
+    "broll-document-scan-motion": { source: 0.15, scan: 0.75, link: 1.35, result1: 1.65, result2: 2.35, result3: 3.05, done: 4.15 },
+    "broll-search-focus-motion": { query: 0.2, results: 1.2, pointer: 2.1, selection: 2.8, excerpt: 3.2 },
+    "broll-voice-transcript-motion": { source: 0.15, waveform: 0.55, cursor: 0.75, result1: 1.3, result2: 2.4, result3: 3.5, done: 4.9 }
+  });
+  var recipeInfo = {
+    standard: { id: "standard", name: "\u9010\u9879\u843D\u4F4D", description: "\u5BF9\u8C61\u8FDB\u5165\u540E\u9010\u9879\u6ED1\u5165\u7ED3\u679C\uFF0C\u4FDD\u7559\u6E90\u5185\u5BB9\u4E0E\u64CD\u4F5C\u987A\u5E8F\u3002", motionFamily: "staggered-placement" },
+    guided: { id: "guided", name: "\u9605\u8BFB\u5F15\u5BFC", description: "\u6E90\u5185\u5BB9\u56FA\u5B9A\uFF0C\u6CBF\u9605\u8BFB\u65B9\u5411\u906E\u7F69\u63ED\u793A\u7ED3\u679C\uFF1B\u68C0\u7D22\u4F7F\u7528\u6846\u9009\uFF0C\u8BED\u97F3\u6CE2\u5F62\u9010\u6BB5\u663E\u9732\u3002", motionFamily: "directional-reveal" }
+  };
+  var workflowEffects = definitions2.map(([component2, name, description]) => ({
+    id: component2 + "-motion",
+    component: component2,
+    exclusive: component2,
+    name: "\u63D2\u955C \xB7 " + name,
+    description,
+    category: "\u63D2\u955C\u52A8\u4F5C",
+    selector: "[data-broll-part]",
+    duration: 8,
+    previewTime: 5.8,
+    silent: true,
+    cueHints: [],
+    recipes: (workflowRecipeOptions[component2 + "-motion"] || ["standard"]).map((id) => recipeInfo[id]),
+    optionsSchema: { properties: { recipe: { type: "string", enum: workflowRecipeOptions[component2 + "-motion"] || ["standard"], default: "standard" } } },
+    motionOwnership: { scope: "[data-broll-part]", properties: ["transform", "opacity", "clipPath", "strokeDashoffset"], camera: "parent-wrapper-only", rule: "One recipe controls the internal objects. Do not apply a second effect to the same parts." }
+  }));
+  function buildWorkflowMotion(gsap, root, id, { duration = 8, recipe = "standard" } = {}) {
+    const effect = workflowEffects.find((e2) => e2.id === id);
+    if (!effect) throw Error("Unknown B-roll motion: " + id);
+    if (!Number.isFinite(duration) || duration <= 0) throw Error("B-roll duration must be positive");
+    if (!effect.recipes.some((r) => r.id === recipe)) throw Error(`${id} recipe: expected ${effect.recipes.map((r) => r.id).join(" | ")}`);
+    gsap.config({ force3D: false });
+    const tl = gsap.timeline({ paused: true }), part2 = (name) => [...root.querySelectorAll(`[data-broll-part="${name}"]`)];
+    const guided = recipe === "guided", direction2 = root.querySelector("[data-source-side]")?.dataset.sourceSide || "left";
+    const enter2 = (name, at2, stagger = 0.3) => {
+      const nodes = part2(name);
+      if (!nodes.length) return;
+      if (guided && ["result", "excerpt", "transcript"].includes(name)) tl.fromTo(nodes, { opacity: 0, clipPath: direction2 === "left" ? "inset(0 100% 0 0)" : "inset(0 0 0 100%)" }, { opacity: 1, clipPath: "inset(0 0% 0 0%)", duration: 0.5, stagger, ease: "power2.inOut" }, at2);
+      else if (guided) tl.fromTo(nodes, { opacity: 0 }, { opacity: 1, duration: 0.5, stagger, ease: "sine.out" }, at2);
+      else tl.fromTo(nodes, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, stagger, ease: "power3.out" }, at2);
+    };
+    if (effect.component === "broll-document-scan") {
+      enter2("source", 0.15);
+      const travel = Math.max(0, (part2("source")[0]?.offsetHeight || 456) - (part2("scanner")[0]?.offsetHeight || 44) - 62);
+      tl.fromTo(part2("scanner"), { y: 0, opacity: 0 }, { opacity: 1, duration: 0.15 }, 0.75).to(part2("scanner"), { y: travel, duration: 2.7, ease: "none" }, 0.9).to(part2("scanner"), { opacity: 0, duration: 0.3 }, 3.6);
+      enter2("link", 1.35);
+      enter2("result", 1.65, 0.7);
+      enter2("done", 4.15);
+    } else if (effect.component === "broll-search-focus") {
+      if (guided) tl.fromTo(part2("query"), { opacity: 0 }, { opacity: 1, duration: 0.45, ease: "sine.out" }, 0.2);
+      else tl.fromTo(part2("query"), { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 1.1, ease: "steps(12)" }, 0.2);
+      enter2("hit", 1.2, 0.22);
+      if (guided) {
+        tl.set(part2("pointer"), { opacity: 0 }, 0);
+        tl.fromTo(part2("selection"), { opacity: 0, clipPath: "inset(0 100% 0 0)" }, { opacity: 1, clipPath: "inset(0 0% 0 0)", duration: 0.35, ease: "power2.inOut" }, 2.8);
+      } else {
+        tl.fromTo(part2("pointer"), { x: 50, y: 64, opacity: 0 }, { x: 0, y: 0, opacity: 1, duration: 0.7, ease: "power2.inOut" }, 2.1);
+        tl.fromTo(part2("selection"), { opacity: 0, scale: 1.035 }, { opacity: 1, scale: 1, duration: 0.35 }, 2.8);
+      }
+      enter2("excerpt", 3.2);
+    } else if (effect.component === "broll-calendar-pin") {
+      tl.fromTo(part2("calendar"), { rotationX: -18, y: 25, opacity: 0, transformPerspective: 1e3 }, { rotationX: 0, y: 0, opacity: 1, duration: 0.75, ease: "power3.out" }, 0.15);
+      tl.fromTo(part2("date"), { opacity: 0, scale: 1.3 }, { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.5)" }, 1.25);
+      enter2("event", 2.1);
+      enter2("time", 2.65);
+      enter2("done", 3.6);
+    } else if (effect.component === "broll-folder-sort") {
+      tl.fromTo(part2("file"), { y: -82, rotation: -7, opacity: 0 }, { y: 0, rotation: 0, opacity: 1, duration: 0.9, stagger: 0.8, ease: "power3.out" }, 0.25);
+      enter2("tag", 1.3, 0.8);
+    } else if (effect.component === "broll-edit-timeline") {
+      tl.fromTo(part2("clip"), { scaleX: 0, transformOrigin: "left center", opacity: 0 }, { scaleX: 1, opacity: 1, duration: 0.5, stagger: 0.24, ease: "power2.out" }, 0.2);
+      const width = root.querySelector(".brw-track-bed")?.clientWidth || 978;
+      tl.fromTo(part2("playhead"), { x: 0, opacity: 0 }, { opacity: 1, duration: 0.15 }, 2.1).to(part2("playhead"), { x: width - 2, duration: 3.7, ease: "none" }, 2.25);
+    } else if (effect.component === "broll-voice-transcript") {
+      enter2("audio", 0.15);
+      if (guided) tl.fromTo(part2("wave"), { opacity: 0.16 }, { opacity: 1, duration: 0.24, stagger: 0.065, ease: "none" }, 0.55);
+      else tl.fromTo(part2("wave"), { scaleY: 0.2, transformOrigin: "center" }, { scaleY: 1, duration: 0.5, stagger: 0.025, ease: "sine.out" }, 0.55);
+      const width = root.querySelector(".brw-waveform")?.clientWidth || 458;
+      tl.fromTo(part2("cursor"), { x: 0 }, { x: width - 2, duration: 4.15, ease: "none" }, 0.75);
+      enter2("transcript", 1.3, 1.1);
+      enter2("done", 4.9);
+    } else if (effect.component === "broll-focus-timer") {
+      enter2("timer", 0.15);
+      enter2("task", 0.35, 0.2);
+      tl.fromTo(part2("arc"), { strokeDashoffset: 100 }, { strokeDashoffset: 0, duration: 4.1, ease: "none" }, 0.75);
+      tl.fromTo(part2("tick"), { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4, stagger: 1.15, ease: "back.out(1.3)" }, 1.45);
+      tl.fromTo(part2("start-time"), { opacity: 1, y: 0 }, { opacity: 0, y: -12, duration: 0.25 }, 4.8);
+      tl.fromTo(part2("end-time"), { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.3 }, 4.95);
+      enter2("done", 5.15);
+    }
+    tl.to({ t: 0 }, { t: 8, duration: 8, ease: "none" }, 0);
+    root.dataset.effectId = id;
+    root.dataset.effectRecipe = recipe;
+    root.dataset.effectTargets = String(root.querySelectorAll("[data-broll-part]").length);
+    if (duration === 8) return tl;
+    return gsap.timeline({ paused: true }).fromTo(tl, { time: 0 }, { time: 8, duration, ease: "none", immediateRender: false, lazy: false });
+  }
+
+  // broll-motion.mjs
+  var brollGraphicEffects = [
+    ["broll-brief-desk", "\u4FBF\u7B7E\u843D\u4F4D"],
+    ["broll-message-pile", "\u6D88\u606F\u6574\u7406"],
+    ["broll-revision-stack", "\u7248\u672C\u53E0\u653E"]
+  ].map(([component2, name]) => ({
+    id: component2 + "-motion",
+    component: component2,
+    exclusive: component2,
+    name: "\u63D2\u955C \xB7 " + name,
+    category: "\u63D2\u955C\u52A8\u4F5C",
+    description: "\u73B0\u6709 B-roll \u4E13\u5C5E\u52A8\u4F5C\uFF0C\u6309\u5185\u5BB9\u987A\u5E8F\u5C55\u793A\u3002",
+    selector: "[data-broll-part]",
+    duration: 8,
+    previewTime: 5.8,
+    silent: true,
+    cueHints: []
+  }));
+  function buildBrollMotion(gsap, root, id, { duration = 6 } = {}) {
+    gsap.config({ force3D: false });
+    const tl = gsap.timeline({ paused: true }), q = (s2) => [...root.querySelectorAll(s2)], part2 = (n4) => q(`[data-broll-part="${n4}"]`);
+    if (id === "broll-brief-desk" || id === "broll-revision-stack") q("[data-broll-part]").forEach((node4) => {
+      node4.style.willChange = "transform,opacity";
+    });
+    const enter2 = (nodes, at2 = 0.3, stagger = 0.24) => {
+      if (nodes.length) tl.fromTo(nodes, { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.55, stagger, ease: "power3.out" }, at2);
+    };
+    if (id === "broll-cutaway") {
+      tl.fromTo(part2("camera"), { scale: 1 }, { scale: 1.045, duration, ease: "none" }, 0);
+      enter2(part2("caption"), 0.45);
+    } else if (id === "broll-sequence") {
+      enter2(part2("shot"), 0.15, 0.45);
+      tl.fromTo(part2("camera"), { scale: 1.065, x: -7 }, { scale: 1.065, x: 7, duration: 5.5, ease: "sine.inOut" }, 0.3);
+    } else if (id === "broll-detail") {
+      tl.fromTo(part2("camera"), { scale: 1 }, { scale: 1.025, duration: 5.8, ease: "sine.inOut" }, 0);
+      tl.fromTo(part2("focus"), { opacity: 0, scale: 1.14 }, { opacity: 1, scale: 1, duration: 0.75, ease: "power3.out" }, 0.55);
+      enter2(part2("note"), 1.15, 0.5);
+      enter2(part2("caption"), 0.7);
+    } else if (id === "broll-brief-desk") {
+      enter2(part2("paper"), 0.1);
+      enter2(part2("note"), 0.65, 0.47);
+      enter2(part2("tick"), 3, 0.2);
+    } else if (id === "broll-message-pile") {
+      const nodes = part2("message");
+      if (nodes.length) tl.fromTo(nodes, { x: 95, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, stagger: 0.53, ease: "power3.out" }, 0.18);
+      enter2(part2("paper"), 2.55);
+      enter2(part2("note"), 3.1, 0.25);
+      enter2(part2("tick"), 4, 0.2);
+    } else if (id === "broll-revision-stack") {
+      enter2(part2("paper"), 0.2, 0.66);
+      enter2(part2("note"), 2.25, 0.24);
+      enter2(part2("tick"), 3.3, 0.2);
+    }
+    const marks = part2("mark");
+    if (marks.length) tl.fromTo(marks, { opacity: 0 }, { opacity: 1, duration: 0.45, stagger: 0.18, ease: "sine.out" }, 2.5);
+    root.dataset.effectId = id + "-motion";
+    root.dataset.effectTargets = String(q("[data-broll-part]").length);
+    tl.to({ hold: 0 }, { hold: 1, duration, ease: "none" }, 0);
+    return tl;
+  }
+
+  // transfer-kit-motion.mjs
+  var kitEffects = [{ id: "ani-hd-parts", name: "\u9AD8\u6E05\u90E8\u4EF6\u5206\u5C42\u52A8\u4F5C", component: "ani-module-hd-truck", category: "\u52A8\u753B\u98CE", selector: '[data-hd-kit="layout"]', duration: 8, previewTime: 7.4, silent: true, description: "\u6309\u6BCF\u4E2A layers \u5BF9\u8C61\u7684 enter/exit\u3001\u8D77\u70B9\u548C\u5206\u6BB5\u8DEF\u5F84\u72EC\u7ACB\u7F16\u6392\uFF1B\u53EF\u6B63\u53CD\u62D6\u52A8\uFF0C\u4E0D\u64AD\u653E\u6574\u5F20\u53C2\u8003\u56FE\u3002" }];
+  function buildKitMotion(gsap, root, options = {}) {
+    const tl = gsap.timeline({ paused: true }), scale = (options.duration ?? 8) / 8;
+    for (const el of root.querySelectorAll("[data-kit-motion]")) {
+      const m = JSON.parse(el.dataset.kitMotion), start = { opacity: m.enter === 0 ? 1 : 0, x: m.fromX, y: m.fromY };
+      gsap.set(el, start);
+      tl.fromTo(el, start, { opacity: 1, x: 0, y: 0, duration: Math.max(m.fade, 1e-3) * scale, ease: "power2.out", immediateRender: false, lazy: false }, m.enter * scale);
+      let x = 0, y = 0;
+      for (const s2 of m.steps) {
+        tl.fromTo(el, { x, y }, { x: s2.x, y: s2.y, duration: s2.duration * scale, ease: s2.ease, immediateRender: false, lazy: false }, s2.at * scale);
+        x = s2.x;
+        y = s2.y;
+      }
+      if (m.exit < 8) tl.fromTo(el, { opacity: 1 }, { opacity: 0, duration: Math.max(m.fade, 1e-3) * scale, ease: "none", immediateRender: false, lazy: false }, (m.exit - m.fade) * scale);
+    }
+    tl.to({}, { duration: 1e-3 }, 8 * scale - 1e-3);
+    return tl;
   }
 
   // animations.mjs
@@ -7905,28 +9562,33 @@ var ComponentLibraryRuntime = (() => {
     "stamp-confirm": { category: "\u53CD\u9988", previewTime: 1.4, cueHints: [{ sound: "pop", at: 1, gain: 0.38 }, { sound: "chime", at: 1.1, gain: 0.27 }] },
     "error-shake": { category: "\u53CD\u9988", previewTime: 0.95, cueHints: [{ sound: "error", at: 0.6, gain: 0.29 }] }
   }[effect.id] }));
-  var effects = [...legacyEffects.map((e) => e.category === "\u8F6C\u573A" ? { ...e, component: "lecture-stage", previewTime: 2.28, cueHints: [{ sound: "whoosh", at: 2.1, gain: 0.24, duration: 0.7 }], name: e.id === "wipe-transition" ? "\u4E09\u5C42\u77ED\u906E\u5E45\u8F6C\u573A" : "\u5706\u5F62\u753B\u9762\u4EA4\u63A5", description: e.id === "wipe-transition" ? "\u6D45\u84DD\u3001\u8584\u8377\u4E0E\u84DD\u8272\u77ED\u906E\u5E45\u63A5\u529B\uFF1B\u5B8C\u5168\u906E\u6321\u65F6\u5207\u6362\u5230\u72EC\u7ACB\u7684\u65B0\u753B\u9762\u3002" : "\u5706\u5F62\u906E\u7F69\u4ECE\u4E0A\u4E00\u5E45\u5185\u5BB9\u4E2D\u63ED\u5F00\u4E0B\u4E00\u5E45\u5185\u5BB9\u3002" } : e), ...expandedEffects, ...animationStyleEffects, ...pendingAnimationStyleEffects];
+  var effects = [...legacyEffects.map((e2) => e2.category === "\u8F6C\u573A" ? { ...e2, component: "lecture-stage", previewTime: 2.28, cueHints: [{ sound: "whoosh", at: 2.1, gain: 0.24, duration: 0.7 }], name: e2.id === "wipe-transition" ? "\u4E09\u5C42\u77ED\u906E\u5E45\u8F6C\u573A" : "\u5706\u5F62\u753B\u9762\u4EA4\u63A5", description: e2.id === "wipe-transition" ? "\u6D45\u84DD\u3001\u8584\u8377\u4E0E\u84DD\u8272\u77ED\u906E\u5E45\u63A5\u529B\uFF1B\u5B8C\u5168\u906E\u6321\u65F6\u5207\u6362\u5230\u72EC\u7ACB\u7684\u65B0\u753B\u9762\u3002" : "\u5706\u5F62\u906E\u7F69\u4ECE\u4E0A\u4E00\u5E45\u5185\u5BB9\u4E2D\u63ED\u5F00\u4E0B\u4E00\u5E45\u5185\u5BB9\u3002" } : e2), ...expandedEffects, ...animationStyleEffects, ...pendingAnimationStyleEffects, ...transferEffects, ...kitEffects, mixedMediaEffect, ...workflowEffects, ...brollGraphicEffects];
   function buildEffect(gsap, root, id, options = {}) {
+    if (id === "ani-hd-parts") return buildKitMotion(gsap, root, options);
+    if (workflowEffects.some((e2) => e2.id === id)) return buildWorkflowMotion(gsap, root, id, options);
+    const broll = brollGraphicEffects.find((e2) => e2.id === id);
+    if (broll) return buildBrollMotion(gsap, root, broll.component, { duration: options.duration ?? 8 });
+    if (id === "media-sequence-motion") return buildMediaSequence(gsap, root, options);
     gsap.config({ force3D: false });
     const tl = gsap.timeline({ paused: true });
     const wrap3 = root.querySelector(".motion-wrap") || root;
     gsap.set(wrap3, { x: 0, y: 0, scale: 1, rotation: 0, opacity: 1 });
     const total = Number(options.duration || 8), start = Number(options.start ?? 0.6);
     const choose = (selector, fallback) => {
-      let n3 = [...root.querySelectorAll(options.selector || selector)];
-      if (!n3.length && fallback) n3 = [...root.querySelectorAll(fallback)];
-      return n3;
+      let n4 = [...root.querySelectorAll(options.selector || selector)];
+      if (!n4.length && fallback) n4 = [...root.querySelectorAll(fallback)];
+      return n4;
     };
-    const rect = (el) => {
-      const a = el.getBoundingClientRect(), b = root.getBoundingClientRect();
-      return { x: a.x - b.x, y: a.y - b.y, w: a.width, h: a.height };
+    const rect2 = (el) => {
+      const a2 = el.getBoundingClientRect(), b2 = root.getBoundingClientRect();
+      return { x: a2.x - b2.x, y: a2.y - b2.y, w: a2.width, h: a2.height };
     };
-    const layer = () => {
-      const e = document.createElement("div");
-      e.className = "fx-layer";
-      e.dataset.generatedEffect = id;
-      root.appendChild(e);
-      return e;
+    const layer2 = () => {
+      const e2 = document.createElement("div");
+      e2.className = "fx-layer";
+      e2.dataset.generatedEffect = id;
+      root.appendChild(e2);
+      return e2;
     };
     let targets = [];
     if (options.background && options.background !== id) {
@@ -7964,20 +9626,20 @@ var ComponentLibraryRuntime = (() => {
         const texts = [];
         while (walker.nextNode()) texts.push(walker.currentNode);
         const chars = [];
-        for (const node3 of texts) {
+        for (const node4 of texts) {
           const f = document.createDocumentFragment();
-          for (const c of Array.from(node3.textContent)) {
+          for (const c of Array.from(node4.textContent)) {
             const span = document.createElement("span");
             span.textContent = c;
             span.dataset.fxChar = "";
             f.appendChild(span);
             chars.push(span);
           }
-          node3.replaceWith(f);
+          node4.replaceWith(f);
         }
-        const typingDuration = 1.2, characterFade = 0.025, stagger = chars.length > 1 ? (typingDuration - characterFade) / (chars.length - 1) : 0, at = start + row * 0.58;
-        if (chars.length) tl.fromTo(chars, { opacity: 0 }, { opacity: 1, duration: characterFade, stagger, ease: "none" }, at);
-        commandsEnd = Math.max(commandsEnd, Number((at + typingDuration).toFixed(6)));
+        const typingDuration = 1.2, characterFade = 0.025, stagger = chars.length > 1 ? (typingDuration - characterFade) / (chars.length - 1) : 0, at2 = start + row * 0.58;
+        if (chars.length) tl.fromTo(chars, { opacity: 0 }, { opacity: 1, duration: characterFade, stagger, ease: "none" }, at2);
+        commandsEnd = Math.max(commandsEnd, Number((at2 + typingDuration).toFixed(6)));
       }
       const output = [...root.querySelectorAll("[data-output-line]")];
       if (output.length) tl.fromTo(output, { opacity: 0 }, { opacity: 1, duration: 0.04, stagger: 0.13, ease: "none" }, commandsEnd + 0.2);
@@ -7994,7 +9656,7 @@ var ComponentLibraryRuntime = (() => {
     }
     if (id === "draw-path") {
       targets = choose('[data-motion="line"]', "svg path");
-      targets = targets.filter((e) => e.getBoundingClientRect().width > 18 || e.getBoundingClientRect().height > 18);
+      targets = targets.filter((e2) => e2.getBoundingClientRect().width > 18 || e2.getBoundingClientRect().height > 18);
       targets.forEach((el, i) => {
         if (typeof el.getTotalLength === "function") {
           const marker = el.getAttribute("marker-end");
@@ -8011,9 +9673,9 @@ var ComponentLibraryRuntime = (() => {
     }
     if (id === "click-ripple") {
       targets = choose('[data-motion="focus"]', "button");
-      const target = targets[0] || wrap3, b = rect(target);
-      const x = b.x + b.w * 0.6, y = b.y + b.h * 0.54;
-      const l = layer();
+      const target = targets[0] || wrap3, b2 = rect2(target);
+      const x = b2.x + b2.w * 0.6, y = b2.y + b2.h * 0.54;
+      const l = layer2();
       const cursor = document.createElement("div");
       cursor.style.cssText = `position:absolute;left:${x}px;top:${y}px;width:27px;height:35px;filter:drop-shadow(0 2px 2px #0003)`;
       cursor.innerHTML = '<svg width="27" height="35" viewBox="0 0 27 35"><path d="M3 2v26l6-6 5 11 5-2-5-10 9-1Z" fill="#101010" stroke="white" stroke-width="1.6"/></svg>';
@@ -8032,16 +9694,16 @@ var ComponentLibraryRuntime = (() => {
     }
     if (id === "zoom-focus") {
       targets = choose('[data-motion="focus"]', "pre");
-      const b = rect(targets[0] || wrap3), rb = rect(root);
+      const b2 = rect2(targets[0] || wrap3), rb = rect2(root);
       const factor = Number(options.scale || 1.32);
-      const x = (rb.w / 2 - (b.x + b.w / 2)) * (factor - 1), y = (rb.h / 2 - (b.y + b.h / 2)) * (factor - 1);
+      const x = (rb.w / 2 - (b2.x + b2.w / 2)) * (factor - 1), y = (rb.h / 2 - (b2.y + b2.h / 2)) * (factor - 1);
       tl.to(wrap3, { scale: factor, x, y, duration: 1.2, ease: "power3.inOut" }, start);
     }
     if (id === "spotlight") {
       targets = choose('[data-motion="focus"]', "input");
-      const b = rect(targets[0] || wrap3), rb = rect(root);
-      const x = Math.max(0, b.x - 7), y = Math.max(0, b.y - 7), w = Math.min(rb.w - x, b.w + 14), h = Math.min(rb.h - y, b.h + 14);
-      const l = layer();
+      const b2 = rect2(targets[0] || wrap3), rb = rect2(root);
+      const x = Math.max(0, b2.x - 7), y = Math.max(0, b2.y - 7), w = Math.min(rb.w - x, b2.w + 14), h = Math.min(rb.h - y, b2.h + 14);
+      const l = layer2();
       l.innerHTML = `<svg class="fx-spotlight" viewBox="0 0 ${rb.w} ${rb.h}"><path fill="#182534" fill-rule="evenodd" d="M0 0H${rb.w}V${rb.h}H0ZM${x} ${y}V${y + h}H${x + w}V${y}Z"/><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="5" fill="none" stroke="#2563eb" stroke-width="2"/></svg>`;
       tl.fromTo(l, { opacity: 0 }, { opacity: 0.62, duration: 0.65, ease: "sine.inOut" }, start);
     }
@@ -8062,17 +9724,17 @@ var ComponentLibraryRuntime = (() => {
       targets.forEach((el, i) => {
         const original = el.textContent, match = original.match(/-?[\d,]+(?:\.\d+)?/);
         if (!match) return;
-        const number5 = Number(match[0].replaceAll(",", "")), decimals = (match[0].split(".")[1] || "").length, state3 = { n: 0 };
+        const number9 = Number(match[0].replaceAll(",", "")), decimals = (match[0].split(".")[1] || "").length, state3 = { n: 0 };
         const update = () => {
           let formatted = state3.n.toFixed(decimals);
           if (match[0].includes(",")) {
-            const parts = formatted.split(".");
-            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-            formatted = parts.join(".");
+            const parts3 = formatted.split(".");
+            parts3[0] = parts3[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            formatted = parts3.join(".");
           }
           el.textContent = original.replace(match[0], formatted);
         };
-        tl.fromTo(state3, { n: 0 }, { n: number5, duration: 1.7, ease: "power2.out", onUpdate: update }, start + i * 0.14);
+        tl.fromTo(state3, { n: 0 }, { n: number9, duration: 1.7, ease: "power2.out", onUpdate: update }, start + i * 0.14);
       });
     }
     if (id === "scroll-panel") {
@@ -8085,19 +9747,19 @@ var ComponentLibraryRuntime = (() => {
     }
     if (id === "word-emphasis") {
       targets = choose('[data-motion="emphasis"]', "strong");
-      const l = layer();
+      const l = layer2();
       targets.slice(0, 5).forEach((el, i) => {
-        const b = rect(el), line3 = document.createElement("div");
+        const b2 = rect2(el), line3 = document.createElement("div");
         line3.className = "fx-underline";
-        line3.style.cssText = `left:${b.x}px;top:${b.y + b.h + 4}px;width:${b.w}px`;
+        line3.style.cssText = `left:${b2.x}px;top:${b2.y + b2.h + 4}px;width:${b2.w}px`;
         l.appendChild(line3);
         tl.fromTo(line3, { scaleX: 0 }, { scaleX: 1, duration: 0.65, ease: "power2.out" }, start + i * 0.85);
       });
     }
     if (id === "window-exit") {
       targets = [wrap3];
-      const b = rect(root);
-      tl.fromTo(wrap3, { x: 0, y: 0, scale: 1, opacity: 1 }, { x: b.w * 0.28, y: b.h * 0.3, scale: 0.7, opacity: 0, duration: 0.78, ease: "power3.in", transformOrigin: "right bottom" }, start + 2.75);
+      const b2 = rect2(root);
+      tl.fromTo(wrap3, { x: 0, y: 0, scale: 1, opacity: 1 }, { x: b2.w * 0.28, y: b2.h * 0.3, scale: 0.7, opacity: 0, duration: 0.78, ease: "power3.in", transformOrigin: "right bottom" }, start + 2.75);
     }
     if (id === "modal-pop") {
       targets = choose(".os-palette", '[data-motion="reveal"]');
@@ -8119,18 +9781,18 @@ var ComponentLibraryRuntime = (() => {
     if (id === "focus-ring") {
       targets = choose('[data-motion="focus"]', "button,.os-input");
       if (!targets.length) targets = [wrap3];
-      const b = rect(targets[0]), l = layer(), pad2 = 6, w = b.w + pad2 * 2, h = b.h + pad2 * 2;
-      l.innerHTML = `<svg style="position:absolute;left:${b.x - pad2}px;top:${b.y - pad2}px;overflow:visible" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><rect x="1.5" y="1.5" width="${Math.max(1, w - 3)}" height="${Math.max(1, h - 3)}" rx="7" fill="none" stroke="#2563eb" stroke-width="2.5"/></svg>`;
-      const path = l.querySelector("rect"), length = path.getTotalLength();
-      tl.fromTo(path, { strokeDasharray: length, strokeDashoffset: length }, { strokeDashoffset: 0, duration: 0.7, ease: "power2.inOut" }, start);
+      const b2 = rect2(targets[0]), l = layer2(), pad2 = 6, w = b2.w + pad2 * 2, h = b2.h + pad2 * 2;
+      l.innerHTML = `<svg style="position:absolute;left:${b2.x - pad2}px;top:${b2.y - pad2}px;overflow:visible" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><rect x="1.5" y="1.5" width="${Math.max(1, w - 3)}" height="${Math.max(1, h - 3)}" rx="7" fill="none" stroke="#2563eb" stroke-width="2.5"/></svg>`;
+      const path2 = l.querySelector("rect"), length = path2.getTotalLength();
+      tl.fromTo(path2, { strokeDasharray: length, strokeDashoffset: length }, { strokeDashoffset: 0, duration: 0.7, ease: "power2.inOut" }, start);
     }
     if (id === "marker-sweep") {
       targets = choose('[data-motion="emphasis"]', "strong");
       if (!targets.length) targets = [wrap3];
-      const l = layer();
+      const l = layer2();
       targets.slice(0, 4).forEach((el, i) => {
-        const b = rect(el), mark = document.createElement("div");
-        mark.style.cssText = `position:absolute;left:${b.x - 3}px;top:${b.y + b.h * 0.44}px;width:${b.w + 6}px;height:${Math.max(7, b.h * 0.55)}px;background:#81c9b057;border-radius:3px;transform-origin:left center;mix-blend-mode:multiply`;
+        const b2 = rect2(el), mark = document.createElement("div");
+        mark.style.cssText = `position:absolute;left:${b2.x - 3}px;top:${b2.y + b2.h * 0.44}px;width:${b2.w + 6}px;height:${Math.max(7, b2.h * 0.55)}px;background:#81c9b057;border-radius:3px;transform-origin:left center;mix-blend-mode:multiply`;
         l.appendChild(mark);
         tl.fromTo(mark, { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: "power2.inOut" }, start + i * 0.85);
       });
@@ -8139,12 +9801,12 @@ var ComponentLibraryRuntime = (() => {
       targets = choose('[data-motion="highlight"]', '[data-motion="item"]');
       if (!targets.length) targets = [wrap3];
       targets = targets.slice(0, 3);
-      const boxes = targets.map((el) => rect(el)), b = boxes[0], l = layer(), frame2 = document.createElement("div");
-      frame2.style.cssText = `position:absolute;left:${b.x - 6}px;top:${b.y - 6}px;width:${b.w + 12}px;height:${b.h + 12}px;border:2px solid #2563eb;border-radius:6px;background:#2563eb08;transform-origin:left top`;
+      const boxes = targets.map((el) => rect2(el)), b2 = boxes[0], l = layer2(), frame2 = document.createElement("div");
+      frame2.style.cssText = `position:absolute;left:${b2.x - 6}px;top:${b2.y - 6}px;width:${b2.w + 12}px;height:${b2.h + 12}px;border:2px solid #2563eb;border-radius:6px;background:#2563eb08;transform-origin:left top`;
       l.appendChild(frame2);
       tl.fromTo(frame2, { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "sine.out" }, start);
       boxes.slice(1).forEach((next, i) => {
-        tl.to(frame2, { x: next.x - b.x, y: next.y - b.y, scaleX: (next.w + 12) / (b.w + 12), scaleY: (next.h + 12) / (b.h + 12), duration: 0.42, ease: "power3.inOut" }, start + (i + 1) * 1.4);
+        tl.to(frame2, { x: next.x - b2.x, y: next.y - b2.y, scaleX: (next.w + 12) / (b2.w + 12), scaleY: (next.h + 12) / (b2.h + 12), duration: 0.42, ease: "power3.inOut" }, start + (i + 1) * 1.4);
       });
     }
     if (id === "check-complete") {
@@ -8155,9 +9817,9 @@ var ComponentLibraryRuntime = (() => {
       const summary = root.querySelector(".dev-test-summary"), icons = targets.flatMap((el) => [...el.querySelectorAll("path")]);
       if (summary) tl.fromTo(summary, { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "sine.out" }, start + 0.95);
       tl.fromTo(targets, { scale: 0.82, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.35, ease: "back.out(1.4)" }, start + 0.95);
-      icons.forEach((path) => {
-        const length = path.getTotalLength();
-        tl.fromTo(path, { strokeDasharray: length, strokeDashoffset: length }, { strokeDashoffset: 0, duration: 0.4, ease: "power2.out" }, start + 1.08);
+      icons.forEach((path2) => {
+        const length = path2.getTotalLength();
+        tl.fromTo(path2, { strokeDasharray: length, strokeDashoffset: length }, { strokeDashoffset: 0, duration: 0.4, ease: "power2.out" }, start + 1.08);
       });
     }
     if (id === "row-reveal") {
@@ -8172,13 +9834,13 @@ var ComponentLibraryRuntime = (() => {
     if (id === "chart-trace") {
       targets = choose('.edu-line-svg [data-motion="line"]', 'svg [data-motion="line"]');
       targets = targets.filter((el) => typeof el.getTotalLength === "function");
-      const path = targets[0];
-      if (path) {
-        const length = path.getTotalLength(), matrix = path.getScreenCTM(), rb = root.getBoundingClientRect(), pathRect = rect(path), points = Array.from({ length: 65 }, (_, i) => {
-          const p = path.getPointAtLength(length * i / 64);
+      const path2 = targets[0];
+      if (path2) {
+        const length = path2.getTotalLength(), matrix = path2.getScreenCTM(), rb = root.getBoundingClientRect(), pathRect = rect2(path2), points = Array.from({ length: 65 }, (_, i) => {
+          const p = path2.getPointAtLength(length * i / 64);
           return { x: matrix.a * p.x + matrix.c * p.y + matrix.e - rb.x, y: matrix.b * p.x + matrix.d * p.y + matrix.f - rb.y };
         });
-        const l = layer(), needle = document.createElement("div"), dot = document.createElement("div");
+        const l = layer2(), needle = document.createElement("div"), dot = document.createElement("div");
         needle.style.cssText = `position:absolute;left:0;top:${pathRect.y - 14}px;width:1px;height:${pathRect.h + 30}px;background:#2563eb66`;
         dot.style.cssText = "position:absolute;left:-6px;top:-6px;width:12px;height:12px;border:3px solid #2563eb;background:white;border-radius:50%;box-shadow:0 0 0 5px #2563eb15";
         l.append(needle, dot);
@@ -8194,13 +9856,13 @@ var ComponentLibraryRuntime = (() => {
     if (id === "card-stack") {
       targets = choose('.edu-layer-art g[data-motion="item"]', '[data-motion="item"]');
       if (!targets.length) targets = [wrap3];
-      const boxes = targets.map((el) => rect(el)), middle = boxes.reduce((sum, b) => sum + b.y + b.h / 2, 0) / boxes.length;
+      const boxes = targets.map((el) => rect2(el)), middle = boxes.reduce((sum, b2) => sum + b2.y + b2.h / 2, 0) / boxes.length;
       targets.forEach((el, i) => {
-        const b = boxes[i];
-        tl.fromTo(el, { y: middle - b.y - b.h / 2, opacity: i === targets.length - 1 ? 1 : 0 }, { y: 0, opacity: 1, duration: 1.2, ease: "power3.inOut" }, start);
+        const b2 = boxes[i];
+        tl.fromTo(el, { y: middle - b2.y - b2.h / 2, opacity: i === targets.length - 1 ? 1 : 0 }, { y: 0, opacity: 1, duration: 1.2, ease: "power3.inOut" }, start);
       });
-      const text6 = [...root.querySelectorAll(".edu-layer-descriptions article")], lines3 = [...root.querySelectorAll('.edu-layer-art [data-motion="line"]')];
-      if (text6.length) tl.fromTo(text6, { opacity: 0, x: 12 }, { opacity: 1, x: 0, duration: 0.4, stagger: 0.12, ease: "power2.out" }, start + 0.85);
+      const text7 = [...root.querySelectorAll(".edu-layer-descriptions article")], lines3 = [...root.querySelectorAll('.edu-layer-art [data-motion="line"]')];
+      if (text7.length) tl.fromTo(text7, { opacity: 0, x: 12 }, { opacity: 1, x: 0, duration: 0.4, stagger: 0.12, ease: "power2.out" }, start + 0.85);
       if (lines3.length) tl.fromTo(lines3, { opacity: 0 }, { opacity: 1, duration: 0.35 }, start + 0.85);
     }
     if (id === "media-pan") {
@@ -8211,8 +9873,8 @@ var ComponentLibraryRuntime = (() => {
     if (id === "stamp-confirm") {
       targets = choose(".edu-next-strip", '[data-motion="reveal"]');
       if (!targets.length) targets = [wrap3];
-      const b = rect(targets[0]), l = layer(), stamp = document.createElement("div");
-      const x = Math.max(14, b.x + b.w - 92), y = Math.max(14, b.y - 66);
+      const b2 = rect2(targets[0]), l = layer2(), stamp = document.createElement("div");
+      const x = Math.max(14, b2.x + b2.w - 92), y = Math.max(14, b2.y - 66);
       stamp.style.cssText = `position:absolute;left:${x}px;top:${y}px;width:60px;height:60px;border:2px solid #5fa58b;border-radius:50%;background:#eef8f3;display:grid;place-items:center;color:#28735d`;
       stamp.innerHTML = '<svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4L19 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
       l.appendChild(stamp);
@@ -8224,15 +9886,17 @@ var ComponentLibraryRuntime = (() => {
       targets = choose(".os-form-field .os-focused", '.os-input,[data-motion="focus"]');
       if (!targets.length) targets = [wrap3];
       targets = targets.slice(0, 1);
-      const color2 = getComputedStyle(targets[0]).borderColor;
+      const color5 = getComputedStyle(targets[0]).borderColor;
       tl.to(targets, { keyframes: [{ x: -7, duration: 0.08 }, { x: 6, duration: 0.08 }, { x: -4, duration: 0.08 }, { x: 3, duration: 0.08 }, { x: 0, duration: 0.13 }], ease: "none" }, start);
-      tl.fromTo(targets, { borderColor: color2 }, { borderColor: "#be5260", duration: 0.15, ease: "sine.out" }, start);
-      tl.to(targets, { borderColor: color2, duration: 0.35, ease: "sine.inOut" }, start + 1.1);
+      tl.fromTo(targets, { borderColor: color5 }, { borderColor: "#be5260", duration: 0.15, ease: "sine.out" }, start);
+      tl.to(targets, { borderColor: color5, duration: 0.35, ease: "sine.inOut" }, start + 1.1);
     }
     const extended = extendMotion(gsap, root, id, options, tl);
     if (extended.length) targets = extended;
     const animationStyleTargets = extendAnimationStyleMotion(gsap, root, id, options, tl);
     if (animationStyleTargets.length) targets = animationStyleTargets;
+    const transferTargets = extendTransferMotion(gsap, root, id, options, tl);
+    if (transferTargets.length) targets = transferTargets;
     root.dataset.effectTargets = String(targets.length);
     root.dataset.effectId = id;
     const clock = { t: 0 };
@@ -8310,9 +9974,9 @@ var ComponentLibraryRuntime = (() => {
   function removeAppearance(root) {
     const prior = applied.get(root);
     if (!prior) return;
-    for (const { node: node3, anchor } of prior.nodes) {
+    for (const { node: node4, anchor } of prior.nodes) {
       if (anchor.parentNode === root) {
-        root.insertBefore(node3, anchor);
+        root.insertBefore(node4, anchor);
         anchor.remove();
       }
     }
@@ -8352,38 +10016,38 @@ var ComponentLibraryRuntime = (() => {
     }
     return "";
   }
-  function decorateFrame(back, front, id, w, h, radius) {
+  function decorateFrame(back, front2, id, w, h, radius) {
     const size = `border-radius:${radius}px;`;
     back.style.cssText += size;
-    front.style.cssText += size;
-    if (id === "thin-blue") front.style.cssText += "border:1.5px solid #6d9ade;";
+    front2.style.cssText += size;
+    if (id === "thin-blue") front2.style.cssText += "border:1.5px solid #6d9ade;";
     if (id === "dashed-round") {
-      front.style.cssText += "border:1.7px dashed #6696e2;";
+      front2.style.cssText += "border:1.7px dashed #6696e2;";
       back.style.cssText += "box-shadow:0 10px 25px #214b8210;";
     }
     if (id === "double-line") {
-      front.style.cssText += "border:1.7px solid #6d9ade;";
-      front.innerHTML = `<div style="position:absolute;inset:7px;border:1px solid #a7d5c4;border-radius:${Math.max(2, radius - 5)}px"></div>`;
+      front2.style.cssText += "border:1.7px solid #6d9ade;";
+      front2.innerHTML = `<div style="position:absolute;inset:7px;border:1px solid #a7d5c4;border-radius:${Math.max(2, radius - 5)}px"></div>`;
     }
     if (id === "software-window") {
-      front.style.cssText += "border:1.7px solid #7295c3;";
+      front2.style.cssText += "border:1.7px solid #7295c3;";
       back.style.cssText += "box-shadow:0 var(--sap-shadow-step) 0 #dceafb;";
-      front.innerHTML = '<div class="sap-window-bar"><i></i><i></i><i></i><span></span></div>';
+      front2.innerHTML = '<div class="sap-window-bar"><i></i><i></i><i></i><span></span></div>';
     }
     if (id === "folded-paper") {
       const fold = Math.min(31, w * 0.055, h * 0.08);
       const step = Math.min(7, h * 0.012), outline = `M1 1H${w - fold}L${w - 1} ${fold}V${h - 1}H1Z`;
       back.style.cssText += "background:transparent;border-radius:2px;";
       back.innerHTML = svg2(`<path d="${outline}" fill="#d8e8f8" transform="translate(${step} ${step})"/><path d="${outline}" fill="#fff"/>`, w, h);
-      front.innerHTML = svg2(`<path d="M1 1H${w - fold}L${w - 1} ${fold}V${h - 1}H1Z" fill="none" stroke="#7597c5" stroke-width="1.8"/><path d="M${w - fold} 1V${fold}H${w - 1}" fill="#e4efff" stroke="#7597c5" stroke-width="1.8" stroke-linejoin="round"/>`, w, h);
+      front2.innerHTML = svg2(`<path d="M1 1H${w - fold}L${w - 1} ${fold}V${h - 1}H1Z" fill="none" stroke="#7597c5" stroke-width="1.8"/><path d="M${w - fold} 1V${fold}H${w - 1}" fill="#e4efff" stroke="#7597c5" stroke-width="1.8" stroke-linejoin="round"/>`, w, h);
     }
     if (id === "animation-outline") {
-      front.style.cssText += "border:3px solid #16376d;";
+      front2.style.cssText += "border:3px solid #16376d;";
       back.style.cssText += "box-shadow:var(--sap-shadow-step) var(--sap-shadow-step) 0 #c8e2fc;";
-      front.innerHTML = `<div style="position:absolute;inset:5px;border:1px solid #d0e5fb;border-radius:${Math.max(2, radius - 6)}px"></div>`;
+      front2.innerHTML = `<div style="position:absolute;inset:5px;border:1px solid #d0e5fb;border-radius:${Math.max(2, radius - 6)}px"></div>`;
     }
     if (id === "shadow-card") {
-      front.style.cssText += "border:1px solid #e2ebf5;";
+      front2.style.cssText += "border:1px solid #e2ebf5;";
       back.style.cssText += "box-shadow:0 10px 25px #183b6621;";
     }
   }
@@ -8394,8 +10058,8 @@ var ComponentLibraryRuntime = (() => {
     root.dataset.appearanceFrame = appearance.frame;
     root.dataset.appearanceBackground = appearance.background;
     if (appearance.frame === "none" && appearance.background === "original") return appearance;
-    const nodes = [...root.children].filter((node3) => node3.matches(".component-stage") || node3.matches(".fx-layer") && node3.dataset.effectSpace !== "canvas");
-    if (!nodes.some((node3) => node3.matches(".component-stage"))) return appearance;
+    const nodes = [...root.children].filter((node4) => node4.matches(".component-stage") || node4.matches(".fx-layer") && node4.dataset.effectSpace !== "canvas");
+    if (!nodes.some((node4) => node4.matches(".component-stage"))) return appearance;
     const positive = (value2, fallback) => Number.isFinite(Number(value2)) && Number(value2) > 0 ? Number(value2) : fallback;
     const w = positive(options.width, positive(root.dataset.width, root.clientWidth || 1280));
     const h = positive(options.height, positive(root.dataset.height, root.clientHeight || 720));
@@ -8423,26 +10087,26 @@ var ComponentLibraryRuntime = (() => {
     background.innerHTML = backgroundMarkup(appearance.background, w, h);
     stage.append(background);
     if (appearance.frame !== "none") {
-      const back = doc.createElement("div"), front = doc.createElement("div");
+      const back = doc.createElement("div"), front2 = doc.createElement("div");
       back.className = "sap-frame-back";
-      front.className = "sap-frame-front";
-      for (const el of [back, front]) {
+      front2.className = "sap-frame-front";
+      for (const el of [back, front2]) {
         el.dataset.appearanceFrameLayer = appearance.frame;
         el.style.cssText = `left:${edge}px;top:${edge}px;width:${w - edge * 2}px;height:${h - edge * 2}px;`;
         el.setAttribute("aria-hidden", "true");
       }
-      decorateFrame(back, front, appearance.frame, w - edge * 2, h - edge * 2, Math.min(22, small * 0.03));
-      stage.append(back, front);
+      decorateFrame(back, front2, appearance.frame, w - edge * 2, h - edge * 2, Math.min(22, small * 0.03));
+      stage.append(back, front2);
     }
     const content2 = doc.createElement("div");
     content2.dataset.appearanceContent = "";
     content2.style.cssText = `left:${x}px;top:${y}px;width:${w}px;height:${h}px;transform:scale(${scale});`;
     stage.append(content2);
-    const saved = nodes.map((node3) => {
+    const saved = nodes.map((node4) => {
       const anchor = doc.createComment("stage appearance slot");
-      root.insertBefore(anchor, node3);
-      content2.append(node3);
-      return { node: node3, anchor };
+      root.insertBefore(anchor, node4);
+      content2.append(node4);
+      return { node: node4, anchor };
     });
     root.append(stage);
     root.classList.add("sap-active");
@@ -8450,43 +10114,612 @@ var ComponentLibraryRuntime = (() => {
     return appearance;
   }
 
+  // component-props-overrides.mjs
+  var propsRules = {};
+  var add = (ids, source2, entries) => {
+    for (const id of ids.split(" ")) {
+      const target = propsRules[id] ??= [];
+      for (const [path2, rule] of Object.entries(entries)) target.push({ path: path2, ...rule, "x-evidence": { kind: "renderer", source: source2 } });
+    }
+  };
+  var a = (min, max) => ({ type: "array", ...min === void 0 ? {} : { minItems: min }, ...max === void 0 ? {} : { maxItems: max } });
+  var n3 = (min, max, integer2 = false) => ({ type: integer2 ? "integer" : "number", ...min === void 0 ? {} : { minimum: min }, ...max === void 0 ? {} : { maximum: max }, "x-numericString": true });
+  var e = (...values) => ({ type: "string", enum: values });
+  var s = { type: "string" };
+  var b = { type: "boolean" };
+  var obj = (properties) => ({ type: "object", properties, additionalProperties: true });
+  var list5 = (items) => ({ type: "array", items });
+  var union = (...anyOf) => ({ anyOf });
+  var textOrNumber = union(s, { type: "number" });
+  var point2 = obj({ x: n3(0, 1), y: n3(0, 1) });
+  add("ani-order-filter ani-compare-extract", "families/animation-style-analysis.mjs:11", { rows: a(5, 5), headers: a(4, 4), month: { type: "string", pattern: "^\\d{4}-\\d{2}$" } });
+  add("ani-compare-extract", "families/animation-style-analysis.mjs:192", { fields: a(4, 4), leftSteps: a(2, 2), rightSteps: a(2, 2) });
+  add("ani-notice-check", "families/animation-style.mjs:32", { rows: a(4, 4) });
+  add("ani-tool-workbench", "families/animation-style-learning.mjs:57", { tags: a(2, 2) });
+  add("ani-file-collection", "families/animation-style-learning.mjs:76", { files: a(3, 3) });
+  add("ani-method-transfer", "families/animation-style-learning.mjs:95", { steps: a(3, 3) });
+  add("ani-knowledge-network", "families/animation-style-learning.mjs:126", { fields: a(3, 3), steps: a(2, 2) });
+  add("ani-capability-tiles", "families/animation-style-learning.mjs:149", { tiles: a(6, 6) });
+  add("ani-processing-machine", "families/animation-style-objects.mjs:11", { inputs: a(3, 3), outputs: a(3, 3) });
+  add("ani-question-outro", "families/animation-style-objects.mjs:20", { examples: a(2, 2), "examples.*.lines": a(0, 3) });
+  var control = "families/animation-style-atoms-controls.mjs";
+  var controlSizes = { window: [260, 140], tabs: [240, 56], address: [220, 42], button: [100, 42], input: [220, 50], status: [110, 44], checkbox: [60, 38], cursor: [50, 70] };
+  for (const [id, [w, h]] of Object.entries(controlSizes)) add("ani-atom-" + id, control, { x: n3(0, 1240), y: n3(0, 700), objectWidth: n3(w, 1220), objectHeight: n3(h, 660) });
+  add("ani-atom-window", control, { chromeHeight: n3(36, 84) });
+  add("ani-atom-tabs", control, { tabs: a(1, 5), activeTab: n3(0, 4, true) });
+  add("ani-atom-button", control, { state: e("normal", "pressed", "disabled"), accent: e("blue", "green", "orange", "neutral"), icon: e("none", "play", "plus", "check", "arrow") });
+  add("ani-atom-input", control, { state: e("empty", "input", "error") });
+  add("ani-atom-status", control, { state: e("success", "pending", "error", "neutral", "info") });
+  add("ani-atom-checkbox", control, { state: e("unchecked", "checked", "error") });
+  add("ani-atom-cursor", control, { mode: e("pointer", "click"), accent: e("blue", "green", "orange") });
+  add("ani-atom-cell ani-atom-table-row", "families/animation-style-atoms-data.mjs:5", { x: n3(0, 1200), y: n3(0, 650), objectHeight: n3(80, 480) });
+  add("ani-atom-cell", "families/animation-style-atoms-data.mjs:9", { objectWidth: n3(140, 1220), tone: e("blue", "green", "orange", "gray", "white") });
+  add("ani-atom-table-row", "families/animation-style-atoms-data.mjs:54", { objectWidth: n3(360, 1220), cells: { ...a(2, 6), items: union(s, obj({ text: textOrNumber, tone: e("blue", "green", "orange", "gray", "white") })) }, weights: { ...a(0, 6), items: n3(0.5, 6) } });
+  var diagram = "families/animation-style-atoms-diagram.mjs";
+  for (const [id, w, h] of [["node", 190, 108], ["callout", 240, 132], ["highlight", 90, 54], ["progress", 360, 166], ["symbol", 100, 110]]) add("ani-atom-" + id, diagram, { x: n3(5, 1260), y: n3(5, 700), objectWidth: n3(w, 1250), objectHeight: n3(h, 690), tone: e("blue", "green", "orange", "ink"), state: e("normal", "active", "complete", "warning") });
+  add("ani-atom-node", diagram, { shape: e("step", "decision", "terminal") });
+  add("ani-atom-callout", diagram, { direction: e("none", "top", "right", "bottom", "left"), pointerOffset: n3(0, 1) });
+  add("ani-atom-highlight", diagram, { shape: e("rectangle", "circle", "underline"), lineWidth: n3(2, 12), fillOpacity: n3(0, 0.25) });
+  add("ani-atom-progress", diagram, { value: n3(0, 100), steps: a(2, 6) });
+  add("ani-atom-symbol", diagram, { kind: e("magnifier", "pencil", "gear", "link", "check", "document", "documents", "table", "calendar", "people"), rotation: n3(-180, 180) });
+  var paper2 = "families/animation-style-atoms-paper.mjs";
+  add("ani-atom-file ani-atom-document ani-atom-folder", paper2, { objectWidth: n3(80, 1200), objectHeight: n3(80, 680), accent: e("blue", "green", "orange", "purple") });
+  add("ani-atom-file", paper2, { fileType: e("image", "table", "text") });
+  add("ani-atom-document", paper2, { rows: a(1, 6) });
+  add("ani-atom-folder", paper2, { fileLabels: a(0, 4) });
+  var parts2 = "families/animation-style-atoms-paper-parts.mjs";
+  add("ani-atom-paper ani-atom-text ani-atom-document-row ani-atom-file-stack ani-atom-title-label", parts2, { x: n3(-1280, 1280), y: n3(-720, 720), objectWidth: n3(80, 1240), objectHeight: n3(80, 700) });
+  add("ani-atom-paper", parts2, { objectWidth: n3(160, 1240), objectHeight: n3(140, 700), depth: n3(0, 18), foldSize: n3(16, 100), lineSpacing: n3(24, 64), foldSide: e("left", "right"), ruling: e("none", "lines", "grid") });
+  add("ani-atom-text", parts2, { objectWidth: n3(160, 1240), fontSize: n3(20, 64), titleSize: n3(24, 76), lineHeight: n3(1.2, 1.9), align: e("left", "center", "right"), variant: e("paragraph", "bullets"), accent: e("blue", "green", "orange", "purple") });
+  add("ani-atom-document-row", parts2, { objectWidth: n3(340, 1240), objectHeight: n3(88, 700), fontSize: n3(22, 42), status: e("none", "pending", "complete", "warning"), accent: e("blue", "green", "orange", "purple") });
+  add("ani-atom-file-stack", parts2, { files: a(2, 5), layout: e("stack", "fan"), "files.*.fileType": e("image", "table", "text"), "files.*.accent": e("blue", "green", "orange", "purple") });
+  add("ani-atom-title-label", parts2, { variant: e("filled", "outline"), accent: e("blue", "green", "orange", "purple") });
+  var ui = "families/animation-style-atoms-ui.mjs";
+  add("ani-atom-table ani-atom-browser", ui, { x: n3(0, 1200), y: n3(0, 650), objectWidth: n3(100, 1240), objectHeight: n3(100, 680) });
+  add("ani-atom-table", ui, { columns: a(2, 6), "columns.*.weight": n3(0.5, 6), rows: { ...a(1, 8), items: { type: "object", properties: {}, additionalProperties: union(textOrNumber, obj({ label: s, tone: e("blue", "green", "orange", "gray", "ink") })) } } });
+  add("ani-atom-browser", ui, { tabs: a(1, 3), activeTab: n3(0, 2, true), body: a(0, 3), items: a(0, 4), imageFit: e("contain", "cover") });
+  add("ani-atom-connector", ui, { kind: e("straight", "curve", "elbow"), tone: e("blue", "green", "orange", "gray", "ink"), lineWidth: n3(3, 14), cornerRadius: n3(0, 80), controlPoints: { ...a(2, 2), items: obj({ x: n3(8, 1272), y: n3(8, 712) }) }, waypoints: { ...a(0, 6), items: obj({ x: n3(8, 1272), y: n3(8, 712) }) }, labelX: n3(30, 1250), labelY: n3(30, 690) });
+  var transfer = "transfer-primitives.mjs";
+  add("ani-atom-truck ani-atom-cargo ani-atom-warehouse ani-atom-buffer ani-atom-resource ani-atom-relation-bridge", "families/animation-style-transfer-atoms.mjs:11", { x: n3(0, 1270), y: n3(0, 710), objectWidth: n3(100, 1240), objectHeight: n3(80, 690) });
+  add("ani-atom-truck", transfer, { load: n3(0, 4, true) });
+  add("ani-atom-cargo", transfer, { tone: e("blue", "green", "orange") });
+  add("ani-atom-warehouse", transfer, { stock: n3(0, 6, true) });
+  add("ani-atom-buffer", transfer, { capacity: n3(1, 8, true), occupied: n3(0, 8, true), kinds: { ...a(1), items: e("image", "cup", "lamp", "bag") }, state: e("normal", "warning", "released") });
+  add("ani-atom-resource", transfer, { kind: e("image", "cup", "lamp", "bag") });
+  add("ani-atom-relation-bridge", transfer, { width: n3(160, 1e3), direction: e("down", "up") });
+  add("ani-transfer-purpose-fork", transfer, { leftLines: a(0, 4), rightLines: a(0, 4) });
+  add("ani-transfer-context-bridge ani-transfer-relationship-map ani-transfer-copy-verify", transfer, { windowLines: a(0, 4) });
+  add("ani-transfer-field-reuse", transfer, { labels: a(3, 3), sourceValues: a(3, 3), targetValues: a(3, 3) });
+  add("ani-transfer-capacity-limit", "families/animation-style-transfer-scenes.mjs", { itemLabels: a(3, 3), kinds: { ...a(3, 3), items: e("image", "cup", "lamp", "bag") } });
+  add("ani-transfer-batch-delivery ani-transfer-batch-cycle", "families/animation-style-transfer-scenes.mjs", { phaseLabels: a(4, 4) });
+  add("ani-transfer-batch-cycle", "families/animation-style-transfer-scenes.mjs", { itemLabels: a(3, 3) });
+  add("ani-transfer-relationship-map", "families/animation-style-transfer-scenes.mjs", { steps: a(3, 3) });
+  add("ani-transfer-copy-verify", "families/animation-style-transfer-scenes.mjs", { sourceFiles: a(0, 4), copyFiles: a(0, 4), checks: a(3, 3), checkResults: a(3, 3) });
+  add("ani-transfer-guided-steps", "families/animation-style-transfer-scenes.mjs", { questionLines: a(0, 4), actions: a(3, 3), phaseLabels: a(3, 3) });
+  var brg = "families/broll-graphics.mjs";
+  add("broll-brief-desk", brg, { checklist: a(0, 4), notes: a(0, 4) });
+  add("broll-message-pile", brg, { messages: a(0, 3), fields: a(0, 4) });
+  add("broll-revision-stack", brg, { earlier: a(0, 2), "earlier.*.lines": a(0, 3), checks: a(0, 4) });
+  var brm = "families/broll-media.mjs";
+  add("broll-cutaway broll-detail", brm, { mediaType: e("image", "video"), mediaX: n3(0, 100), mediaY: n3(0, 100), mediaStart: n3(0, 86400) });
+  add("broll-sequence", brm, { media: a(3, 3), "media.*.type": e("image", "video"), "media.*.x": n3(0, 100), "media.*.y": n3(0, 100), "media.*.mediaStart": n3(0, 86400) });
+  add("broll-detail", brm, { notes: a(0, 3), focusWidth: n3(10, 75), focusHeight: n3(10, 65), focusX: n3(0, 100), focusY: n3(0, 100) });
+  var brw = "families/broll-workflows.mjs";
+  add("broll-document-scan", brw, { lines: a(0, 4), fields: a(0, 3) });
+  add("broll-search-focus", brw, { results: a(1, 3), selected: n3(0, 2, true) });
+  add("broll-calendar-pin", brw, { weekdays: a(7, 7), selectedDay: n3(1, 28, true) });
+  add("broll-folder-sort", brw, { groups: a(0, 3) });
+  add("broll-edit-timeline", brw, { ruler: a(0, 5), tracks: a(0, 3), "tracks.*.clips": a(0, 5), "tracks.*.clips.*.start": n3(0, 0.95), "tracks.*.clips.*.end": n3(0.04, 1) });
+  add("broll-voice-transcript", brw, { segments: a(0, 3) });
+  add("broll-focus-timer", brw, { tasks: a(0, 3) });
+  add("broll-document-scan broll-search-focus broll-voice-transcript", brw, { sourceSide: e("left", "right") });
+  add("broll-document-scan broll-voice-transcript", brw, { resultLayout: e("rows", "cards") });
+  var apple = "apple-ui.mjs:2,11";
+  var appleLimits = {
+    "mac-finder": { files: 14 },
+    "mac-safari": { tabs: 5, navigation: 3, sidebarItems: 4, sections: 4, commands: 2 },
+    "mac-terminal": { lines: 18 },
+    "mac-system-settings": { rows: 10 },
+    "mac-spotlight": { results: 7 },
+    "mac-notification-center": { events: 5 },
+    "mac-notes": { notes: 20, noteSummaries: 20, paragraphs: 20, checklist: 20 },
+    "mac-calendar": { events: 20 },
+    "mac-mail": { messages: 8, paragraphs: 20 },
+    "mac-preview": { paragraphs: 20, steps: 4 },
+    "mac-activity-monitor": { rows: 14 },
+    "mac-file-dialog": { files: 14 },
+    "mac-context-menu": { items: 18, submenu: 7, files: 14 },
+    "mac-dock": { desktopFiles: 5, apps: 12 },
+    "ios-settings": { groups: 4, "groups.*.rows": 20 },
+    "ios-messages": { messages: 8 },
+    "ios-safari": { sections: 4 },
+    "ios-notes": { paragraphs: 20, checklist: 8 },
+    "ios-share-sheet": { people: 4, apps: 4, actions: 6 },
+    "ipad-split-view": { sections: 5, notes: 7, paragraphs: 20, checklist: 2 },
+    "ipad-files": { files: 12 }
+  };
+  for (const [id, limits] of Object.entries(appleLimits)) add(id, apple, Object.fromEntries(Object.entries(limits).map(([path2, max]) => [path2, a(0, max)])));
+  add("mac-control-center ios-control-center", "families/apple-macos.mjs / apple-mobile.mjs", { brightness: n3(0, 100), volume: n3(0, 100) });
+  add("mac-calendar", "families/apple-macos-extra.mjs:30", { days: n3(28, 31, true), firstWeekday: n3(0, 6, true), today: n3(1, 31, true), "events.*.day": n3(1, 31, true) });
+  add("mac-preview", "families/apple-macos-extra.mjs:91", { page: n3(1, void 0, true), pages: n3(1, void 0, true) });
+  var edu = "families/education.mjs";
+  add("before-after", edu, { tasks: a(0, 6), columns: a(0, 3) });
+  add("flowchart", edu, { nodes: a(5, 5), branchLabels: a(0, 2) });
+  add("layer-stack", edu, { layers: a(3, 3) });
+  add("bar-chart", edu, { values: a(2, 6), "values.*.value": n3(0), max: { ...n3(0), exclusiveMinimum: 0 }, highlight: n3(0, 5, true) });
+  add("line-chart", edu, { values: a(2, 10), "values.*.value": n3(0), max: { ...n3(0), exclusiveMinimum: 0 }, target: n3(0), selected: n3(0, 9, true) });
+  add("comparison-matrix", edu, { columns: a(2, 3), rows: a(0, 5), "rows.*.values": a(0, 3) });
+  add("event-timeline", edu, { events: a(2, 5), "events.*.status": e("done", "active", "todo") });
+  add("metric-dashboard", edu, { metrics: a(3, 3), "metrics.*.progress": n3(0, 1), progress: { ...a(2, 8), items: n3(0, 100) }, progressLabels: a(0, 8), checks: a(0, 5) });
+  add("definition-card", edu, { factors: a(0, 3) });
+  add("chapter-summary", edu, { points: a(0, 3) });
+  add("media-stage", edu, { diagramNodes: a(0, 3), notes: a(0, 3), mediaKind: e("image", "video") });
+  add("annotation-callout", edu, { fields: a(3, 3), callouts: a(3, 3), subjectTitle: { maxLength: 18 }, subjectSubtitle: { maxLength: 26 }, "fields.*.label": { maxLength: 3 }, "fields.*.value": { maxLength: 18 }, "callouts.*.title": { maxLength: 9 }, "callouts.*.detail": { maxLength: 16 } });
+  var edx = "families/education-expanded.mjs";
+  add("donut-chart", edx, { items: a(2, 6), "items.*.value": n3(0) });
+  add("scatter-plot", edx, { points: a(2, 12), xMax: { ...n3(0), exclusiveMinimum: 0 }, yMax: { ...n3(0), exclusiveMinimum: 0 }, "points.*.x": n3(0), "points.*.y": n3(0) });
+  add("heatmap", edx, { columns: a(2, 7), rows: a(2, 5), "rows.*.values": { ...a(2, 7), items: n3(0) }, max: { ...n3(0), exclusiveMinimum: 0 } });
+  add("funnel-chart", edx, { stages: a(2, 5), "stages.*.value": n3(0) });
+  add("radar-chart", edx, { axes: a(3, 7), values: { ...a(3, 7), items: n3(0) }, max: { ...n3(0), exclusiveMinimum: 0 } });
+  add("pyramid-diagram", edx, { layers: a(3, 5) });
+  add("mind-map", edx, { branches: a(3, 6) });
+  add("cycle-diagram", edx, { steps: a(4, 4) });
+  add("architecture-map", edx, { layers: a(3, 3), "layers.*.items": a(3, 3) });
+  add("swimlane-flow", edx, { lanes: a(3, 3), "lanes.*.tasks": a(1, 5), "lanes.*.tasks.*.column": n3(0, 4, true) });
+  add("kanban-board", edx, { columns: a(3, 3), "columns.*.tasks": a(1, 4) });
+  add("roadmap", edx, { tasks: a(2, 5), weeks: a(4, 4), "tasks.*.start": n3(0, 4), "tasks.*.end": n3(0, 4) });
+  add("formula-breakdown", edx, { terms: a(3, 3), operators: a(2, 2) });
+  add("spectrum-scale", edx, { markers: a(2, 6), "markers.*.value": n3(0, 100) });
+  add("process-steps", edx, { steps: a(3, 5) });
+  add("lecture-stage", edx, { "media.kind": e("image", "video"), "media.fit": e("contain", "cover") });
+  var messages = obj({ id: s, role: e("user", "assistant"), state: e("idle", "draft", "running", "complete"), text: s, paragraphs: list5(s), heading: s, bullets: list5(s), fields: list5(obj({ label: s, value: textOrNumber })), visible: b, actions: b, linkLabel: s, linkNote: s, status: s });
+  var tools = list5(union(s, obj({ icon: s, label: s })));
+  add("doubao-chat doubao-workflow", "families/doubao-chat.mjs / doubao-work.mjs", { "messages": list5(messages), recentTasks: list5(union(s, obj({ title: s, active: b }))), navigation: list5(obj({ label: s, icon: s, active: b })) });
+  add("doubao-chat", "families/doubao-chat.mjs:34", { "composer.maxTools": n3(0, 5, true), "composer.tools": tools });
+  var attachment = union(s, obj({ id: s, name: s, detail: s }));
+  var toolEvent = obj({ id: s, state: e("idle", "queued", "running", "complete", "error"), status: e("idle", "queued", "running", "complete", "error"), kind: e("file", "command"), label: s, summary: s, command: s, detail: s, action: s });
+  var table2 = obj({ title: s, badge: s, note: s, state: e("idle", "queued", "running", "complete", "error"), columns: list5(obj({ key: s, label: s })), rows: list5({ type: "object", properties: {}, additionalProperties: textOrNumber }), selectedIds: list5(textOrNumber), includedIds: list5(textOrNumber), summary: s, disclosure: s });
+  add("codex-workflow", "families/codex-workflow.mjs", {
+    panelWidth: n3(320, 520),
+    messages: list5(obj({ id: s, role: e("user", "assistant"), state: e("idle", "queued", "running", "complete", "error"), text: union(s, list5(s)), elapsed: s, attachments: list5(attachment), bullets: list5(s), toolEvents: list5(toolEvent), result: table2, actions: b })),
+    toolEvents: list5(toolEvent),
+    panel: union({ type: "null" }, obj({ kind: e("table", "document"), title: s, heading: s, paragraphs: list5(s), code: s, table: table2 })),
+    "composer.attachments": list5(attachment),
+    "sidebar.items": list5(union(s, obj({ id: s, label: s, icon: s, active: b })))
+  });
+  add("doubao-workflow", "families/doubao-work.mjs:59", { "panel.artifacts": list5(union(s, obj({ name: s }))), "panel.files": list5(union(s, obj({ name: s }))) });
+  add("data-table", "families/developer.mjs:683", { rows: list5({ type: "object", properties: {}, additionalProperties: textOrNumber }) });
+  add("iphone-screen ipad-screen", "families/systems.mjs:20", { battery: n3(0, 100) });
+  add("chrome-browser iphone-screen ipad-screen", "families/systems.mjs:22", { "media.kind": e("demo", "image", "video"), "media.fit": e("contain", "cover") });
+  add("settings-panel", "families/systems.mjs:583", { brightness: n3(0, 100) });
+  add("notification-stack", "families/systems.mjs:700", { monthDays: n3(28, 31, true), monthStartOffset: n3(0, 6, true), selectedDay: n3(1, 31, true), weekdayLabels: a(7, 7) });
+  var strictNum = (min, max) => ({ type: "number", minimum: min, maximum: max });
+  var region = obj({ x: strictNum(0, 1), y: strictNum(0, 1), width: strictNum(1e-3, 1), height: strictNum(1e-3, 1), start: strictNum(0, 1), end: strictNum(0, 1), kind: e("frame", "spotlight", "arrow"), label: s });
+  region.required = ["x", "y", "width", "height"];
+  var keyframe = obj({ at: strictNum(0, 1), x: strictNum(0, 1), y: strictNum(0, 1), zoom: strictNum(1, 4), ease: s });
+  keyframe.required = ["at", "x", "y", "zoom"];
+  var mediaProperties = { type: e("image", "video"), src: { type: "string", minLength: 1 }, alt: s, width: strictNum(1, 32e3), height: strictNum(1, 32e3), fit: e("contain", "cover"), maxZoom: strictNum(1, 4), sourceStart: strictNum(0, 86400), sourceDuration: strictNum(0.01, 86400), label: s, title: s, caption: s, camera: { type: "array", minItems: 2, items: keyframe }, regions: list5(region) };
+  var panel4 = obj(mediaProperties);
+  panel4.required = ["type", "src", "width", "height"];
+  var shot = obj({ ...mediaProperties, start: strictNum(0, 1), end: strictNum(0, 1), transition: e("cut", "dissolve", "push"), transitionSeconds: strictNum(0.05, 2), splitAt: strictNum(0, 0.9), splitFrom: b, noteLabel: s, noteTitle: s, notes: { ...a(0, 4), items: s }, layout: e("full", "pip", "compare", "wipe", "triptych", "collage", "focus"), mediaPanels: list5(panel4), focus: obj({ ...point2.properties, zoom: strictNum(1, 4), label: s }), wipeAt: strictNum(0, 0.6), wipeRest: strictNum(0.05, 0.95) });
+  shot.required = ["type", "src", "width", "height", "start", "end"];
+  add("mixed-media-sequence", "mixed-media-motion.mjs:24", { strength: e("still", "light", "standard", "emphasis"), previewDuration: strictNum(0.1, 600), media: { ...a(1, 12), items: shot } });
+  var schemaConditions = {
+    "ani-atom-browser": [{ when: "imageSrc is non-empty", hidden: ["heading", "body", "items"], reason: "imageSrc replaces the native page body" }],
+    "ani-atom-folder": [{ when: "open is false", hidden: ["fileLabels"], reason: "closed folders conceal files" }],
+    "ani-atom-input": [{ when: "state is empty", hidden: ["value", "errorText"], reason: "placeholder is displayed" }, { when: "state is input", hidden: ["placeholder", "errorText"], reason: "value is displayed" }],
+    "ani-atom-connector": [{ when: "kind is straight", hidden: ["controlPoints", "waypoints"], reason: "straight connectors use endpoints only" }, { when: "kind is curve", hidden: ["waypoints"], reason: "curve uses two controlPoints" }, { when: "kind is elbow", hidden: ["controlPoints"], reason: "elbow uses waypoints" }],
+    "media-stage": [{ when: "mediaSrc is non-empty", hidden: ["diagramNodes"], reason: "media replaces the native diagram" }],
+    "lecture-stage": [{ when: "media.src is non-empty", hidden: ["sections", "chapter"], reason: "media replaces the native slide" }],
+    "mixed-media-sequence": [{ when: "media[].layout is focus", hidden: ["media[].camera"], reason: "focus layout uses focus coordinates" }, { when: "media[].splitAt is absent", hidden: ["media[].notes", "media[].noteTitle", "media[].noteLabel"], reason: "explanation panel is not opened" }]
+  };
+
+  // component-props.mjs
+  var clone = (value) => structuredClone(value);
+  var isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+  var type = (value) => value === null ? "null" : Array.isArray(value) ? "array" : typeof value;
+  var same = (a2, b2) => JSON.stringify(a2) === JSON.stringify(b2);
+  function infer(values) {
+    const groups = /* @__PURE__ */ new Map();
+    for (const value of values) {
+      const t2 = type(value);
+      if (!groups.has(t2)) groups.set(t2, []);
+      groups.get(t2).push(value);
+    }
+    if (!groups.size) return { "x-evidence": { kind: "open", reason: "No default item; renderer-specific optional schema may extend this." } };
+    if (groups.size > 1) return { anyOf: [...groups.values()].map(infer), "x-evidence": { kind: "defaults-structure" } };
+    const [[t, samples]] = groups;
+    const schema = { type: t, "x-evidence": { kind: "defaults-structure" } };
+    if (t === "object") {
+      schema.properties = {};
+      schema.additionalProperties = true;
+      for (const key of new Set(samples.flatMap(Object.keys))) schema.properties[key] = infer(samples.filter((x) => Object.hasOwn(x, key)).map((x) => x[key]));
+    } else if (t === "array") schema.items = infer(samples.flat());
+    return schema;
+  }
+  function ruleAt(root, path2, rule) {
+    const parts3 = path2.split(".");
+    let cursor = root;
+    for (const key2 of parts3.slice(0, -1)) {
+      if (key2 === "*") {
+        cursor.type = "array";
+        cursor.items ??= {};
+        cursor = cursor.items;
+      } else {
+        cursor.type = "object";
+        cursor.properties ??= {};
+        cursor.properties[key2] ??= {};
+        cursor = cursor.properties[key2];
+      }
+    }
+    const last = parts3.at(-1), container = last === "*" ? cursor : cursor.properties ??= {}, key = last === "*" ? "items" : last;
+    const previous = container[key] || {};
+    container[key] = { ...previous, ...clone(rule) };
+    if (rule.anyOf) delete container[key].type;
+    if (rule.type) delete container[key].anyOf;
+  }
+  function addDefaults(schema, value) {
+    schema.default = clone(value);
+    if (isObject(value) && schema.properties) {
+      for (const [key, v] of Object.entries(value)) if (schema.properties[key]) addDefaults(schema.properties[key], v);
+    }
+  }
+  function getPropsSchema(component2) {
+    if (!component2 || typeof component2.id !== "string" || !isObject(component2.defaults)) throw Error("getPropsSchema requires a component with id and defaults");
+    const schema = infer([component2.defaults]);
+    if (component2.id.includes("-hd-")) {
+      const number9 = (min, max) => ({ type: "number", minimum: min, maximum: max });
+      schema.properties.layers = { type: "array", minItems: 1, maxItems: 160, items: { anyOf: parts.map((part2) => ({ type: "object", required: ["id", "part", "x", "y", "width", "height", "props", "enter", "exit", "fade", "fromX", "fromY", "steps"], additionalProperties: false, properties: { id: { type: "string", pattern: "^[a-z][a-z0-9-]*$" }, part: { type: "string", enum: [part2.key] }, x: number9(0, 1280), y: number9(0, 720), width: number9(1, 1280), height: number9(1, 720), props: { ...infer([part2.defaults]), description: part2.description }, enter: number9(0, 7.8), exit: number9(0.1, 8), fade: number9(0, 0.8), fromX: number9(-1280, 1280), fromY: number9(-720, 720), steps: { type: "array", maxItems: 12, items: { type: "object", required: ["at", "duration", "x", "y", "ease"], additionalProperties: false, properties: { at: number9(0, 8), duration: number9(0.01, 8), x: number9(-1280, 1280), y: number9(-720, 720), ease: { type: "string", enum: ["none", "sine.inOut", "power2.inOut", "power2.out"] } } } } } })) }, description: "Ordered SVG layers. Each part is independent. Timeline is native 0\u20138 seconds; timing.duration retimes it. props supports ONLY the selected part fields. Placement remains separate from motion; list order is paint order." };
+    }
+    if (component2.id.includes("-hd-")) {
+      schema.properties.style = clone(styleSchema);
+      for (const variant of schema.properties.layers.items.anyOf) {
+        const key = variant.properties.part.enum[0];
+        Object.assign(variant.properties.props.properties, clone(partRules[key] || {}));
+        variant.properties.style = clone(styleSchema);
+      }
+    }
+    for (const { path: path2, ...rule } of propsRules[component2.id] || []) ruleAt(schema, path2, rule);
+    schema.properties.transitionNext = { type: "object", properties: { component: { type: "string" }, props: { type: "object", additionalProperties: true, "x-openKeys": true } }, required: ["component"], additionalProperties: true, "x-evidence": { kind: "runtime", source: "component-runtime.mjs / export-director-scene.mjs" }, description: "Explicit second scene for a transition; its props are validated against that component separately." };
+    addDefaults(schema, component2.defaults);
+    return { $schema: "https://json-schema.org/draft/2020-12/schema", ...schema, title: component2.id + " props", "x-merge": "Shallow merge component defaults with supplied props; nested objects and arrays replace the whole field.", "x-unknownProperties": "warn", "x-conditions": clone(schemaConditions[component2.id] || []), "x-rendererValidation": true, "x-validationNote": "Structure is inferred from all default examples; explicit bounds and enums cite renderer evidence. Geometry/text fit and remaining semantic checks also run the actual renderer. No inferred array maxima or invented string limits." };
+  }
+  function walk(schema, value, path2, errors, warnings, { strictUnknown = false } = {}) {
+    const issue = (code, message4) => errors.push({ path: path2, code, message: message4 });
+    if (schema.anyOf) {
+      const alternatives = schema.anyOf.map((s2) => {
+        const e2 = [], w = [];
+        walk(s2, value, path2, e2, w, { strictUnknown });
+        return { e: e2, w };
+      });
+      const match = alternatives.find((x) => !x.e.length);
+      if (match) warnings.push(...match.w);
+      else issue("type", "Value does not match any supported shape (" + schema.anyOf.map((s2) => s2.type || "union").join(", ") + ")");
+      return;
+    }
+    const actual = type(value), expected = schema.type;
+    const numeric = (expected === "number" || expected === "integer") && schema["x-numericString"] && actual === "string" && value.trim() !== "" && Number.isFinite(Number(value));
+    if (expected && (expected === "integer" ? actual !== "number" && !numeric || !Number.isInteger(Number(value)) : actual !== expected && !numeric)) {
+      issue("type", `Expected ${expected}, received ${actual}`);
+      return;
+    }
+    if (numeric) warnings.push({ path: path2, code: "numeric-string", message: "Legacy numeric string accepted; use a JSON number for new configurations." });
+    if (schema.enum && !schema.enum.some((x) => same(x, value))) issue("enum", "Use one of: " + schema.enum.map(String).join(", "));
+    if (actual === "number" || numeric) {
+      const number9 = Number(value);
+      if (!Number.isFinite(number9)) issue("finite", "Number must be finite");
+      if (schema.minimum !== void 0 && number9 < schema.minimum) issue("minimum", `Must be >= ${schema.minimum}`);
+      if (schema.maximum !== void 0 && number9 > schema.maximum) issue("maximum", `Must be <= ${schema.maximum}`);
+      if (schema.exclusiveMinimum !== void 0 && number9 <= schema.exclusiveMinimum) issue("exclusiveMinimum", `Must be > ${schema.exclusiveMinimum}`);
+    }
+    if (actual === "string") {
+      const count2 = [...value].length;
+      if (schema.minLength !== void 0 && count2 < schema.minLength) issue("minLength", `Requires at least ${schema.minLength} characters`);
+      if (schema.maxLength !== void 0 && count2 > schema.maxLength) issue("maxLength", `Supports at most ${schema.maxLength} characters`);
+      if (schema.pattern && !new RegExp(schema.pattern).test(value)) issue("pattern", "Must match " + schema.pattern);
+    }
+    if (actual === "array") {
+      if (schema.minItems !== void 0 && value.length < schema.minItems) issue("minItems", `Requires at least ${schema.minItems} items; received ${value.length}`);
+      if (schema.maxItems !== void 0 && value.length > schema.maxItems) issue("maxItems", `Supports at most ${schema.maxItems} items; received ${value.length}. Split the content or choose another layout; nothing will be truncated.`);
+      if (schema.items) value.forEach((item, i) => walk(schema.items, item, `${path2}[${i}]`, errors, warnings, { strictUnknown }));
+    }
+    if (actual === "object") {
+      for (const key of schema.required || []) if (!Object.hasOwn(value, key)) errors.push({ path: path2 + "." + key, code: "required", message: "Required field is missing" });
+      for (const [key, v] of Object.entries(value)) {
+        const child = schema.properties?.[key];
+        if (child) walk(child, v, path2 + "." + key, errors, warnings, { strictUnknown });
+        else if (isObject(schema.additionalProperties)) walk(schema.additionalProperties, v, path2 + "." + key, errors, warnings, { strictUnknown });
+        else if (!schema["x-openKeys"]) {
+          const issue2 = { path: path2 + "." + key, code: "unknown-field", message: "This field is not declared by the component. Verify its renderer support; it may have no visible effect." };
+          (strictUnknown ? errors : warnings).push(issue2);
+        }
+      }
+    }
+  }
+  function semanticChecks(component2, p, errors, warnings) {
+    const id = component2.id, fail = (path2, message4) => errors.push({ path: "props." + path2, code: "relationship", message: message4 });
+    const warn = (path2, message4) => warnings.push({ path: "props." + path2, code: "inactive-field", message: message4 });
+    const changed = (path2) => {
+      const get = (obj2) => path2.split(".").reduce((x, k) => x?.[k], obj2);
+      return get(p) !== void 0 && !same(get(p), get(component2.defaults));
+    };
+    const hidden = (path2, why) => {
+      if (changed(path2)) warn(path2, why);
+    };
+    const index = (key, items, { allowNone = false } = {}) => {
+      if (Array.isArray(items) && p[key] !== void 0) {
+        const v = Number(p[key]);
+        if (!Number.isInteger(v) || v < (allowNone ? -1 : 0) || v >= items.length) fail(key, `Index must address an existing item${allowNone ? " or use -1 for none" : ""}; received ${p[key]}, count ${items.length}`);
+      }
+    };
+    const sameLength = (key, other) => {
+      if (Array.isArray(p[key]) && Array.isArray(p[other]) && p[key].length !== p[other].length) fail(key, `Length must equal ${other} (${p[other].length})`);
+    };
+    if (["ani-atom-tabs", "ani-atom-browser", "iphone-screen"].includes(id)) index("activeTab", p.tabs);
+    if (id === "ipad-screen") index("selectedSidebar", p.sidebar, { allowNone: true });
+    if (id === "settings-panel") index("selectedNav", p.nav, { allowNone: true });
+    if (id === "chrome-browser") index("activePage", p.sidebar, { allowNone: true });
+    if (id === "form-panel") index("activeNav", p.nav, { allowNone: true });
+    if (["windows-file-dialog", "file-explorer"].includes(id)) index("selected", p.files, { allowNone: true });
+    if (id === "command-palette") index("selected", p.commands, { allowNone: true });
+    if (id === "context-menu") {
+      index("selected", p.items, { allowNone: true });
+      index("selectedSub", p.submenu, { allowNone: true });
+    }
+    if (id === "mac-context-menu") index("selected", p.items, { allowNone: true });
+    if (id === "mac-dock") index("selected", p.apps, { allowNone: true });
+    if (id === "broll-search-focus") index("selected", p.results);
+    if (id === "bar-chart") index("highlight", p.values, { allowNone: true });
+    if (id === "line-chart") index("selected", p.values, { allowNone: true });
+    if (id === "ani-atom-buffer" && Number(p.occupied) > Number(p.capacity)) fail("occupied", "Must not exceed capacity");
+    if (id === "ani-atom-table-row" && Array.isArray(p.weights) && p.weights.length > p.cells?.length) fail("weights", "Extra weights would be ignored; provide at most one per cell");
+    if (id === "ani-atom-progress" && p.state === "complete" && Number(p.value) !== 100) fail("value", "Complete progress requires value 100");
+    if (id === "ani-atom-text" && p.variant === "bullets" && p.align !== "left") fail("align", "Bullet text requires left alignment");
+    if (id === "ani-atom-browser" && p.imageSrc) for (const key of ["heading", "body", "items"]) hidden(key, "imageSrc replaces the page body; this field is currently hidden.");
+    if (id === "ani-atom-folder" && !p.open) hidden("fileLabels", "The closed folder conceals its files.");
+    if (id === "ani-atom-input") for (const key of p.state === "empty" ? ["value", "errorText"] : p.state === "input" ? ["placeholder", "errorText"] : ["placeholder"]) hidden(key, "This field is hidden by input state " + p.state + ".");
+    if (id === "ani-atom-connector") for (const key of p.kind === "straight" ? ["controlPoints", "waypoints"] : p.kind === "curve" ? ["waypoints"] : ["controlPoints"]) hidden(key, "This field does not control a " + p.kind + " connector.");
+    if (id === "media-stage" && p.mediaSrc) hidden("diagramNodes", "The media source replaces the native diagram.");
+    if (id === "lecture-stage" && p.media?.src) for (const key of ["chapter", "sections"]) hidden(key, "The media source replaces native slide content.");
+    if (["chrome-browser", "iphone-screen", "ipad-screen"].includes(id) && p.media?.src && p.media.kind === "demo") fail("media.kind", "media.src is ignored with kind=demo; choose image or video.");
+    if (id === "mac-calendar") {
+      if (Number(p.days) + Number(p.firstWeekday) > 35) fail("firstWeekday", "This template has 35 cells; choose a layout supporting six weeks for this month.");
+      if (Number(p.today) > Number(p.days)) fail("today", "Must be a day within this month");
+      for (const [i, event] of (p.events || []).entries()) if (Number(event.day) > Number(p.days)) fail(`events[${i}].day`, "Must be a day within this month");
+    }
+    if (id === "mac-preview") {
+      if (Number(p.page) > Number(p.pages)) fail("page", "Must not exceed pages");
+      if (Number(p.pages) > 7) warnings.push({ path: "props.pages", code: "partial-preview", message: "Only the first seven page thumbnails are shown; the current page label remains editable." });
+    }
+    if (id === "notification-stack" && Number(p.selectedDay) > Number(p.monthDays)) fail("selectedDay", "Must be within monthDays");
+    if (id === "broll-detail") for (const [axis, size] of [["X", "Width"], ["Y", "Height"]]) {
+      const v = Number(p["focus" + axis]), half = Number(p["focus" + size]) / 2;
+      if (v < half || v > 100 - half) fail("focus" + axis, "Focus rectangle must fit inside the source; move its center or reduce its size.");
+    }
+    if (id === "broll-edit-timeline") {
+      for (const [ti, track] of (p.tracks || []).entries()) for (const [ci, clip2] of (track.clips || []).entries()) if (Number(clip2.end) - Number(clip2.start) < 0.04 - 1e-9) fail(`tracks[${ti}].clips[${ci}].end`, "Clip must span at least 0.04 of the track; increase end or reduce start.");
+    }
+    if (id === "comparison-matrix") {
+      for (const [i, row] of (p.rows || []).entries()) if (row.values?.length !== p.columns?.length) fail(`rows[${i}].values`, "Each row must have exactly one value per column");
+    }
+    if (id === "metric-dashboard") sameLength("progressLabels", "progress");
+    if (id === "radar-chart") sameLength("values", "axes");
+    if (id === "roadmap") {
+      for (const [i, t] of (p.tasks || []).entries()) if (Number(t.end) <= Number(t.start)) fail(`tasks[${i}].end`, "End must be after start");
+    }
+    const tableChecks = (table3, path2) => {
+      if (!table3 || !Array.isArray(table3.columns) || !Array.isArray(table3.rows)) return;
+      const keys = table3.columns.map((c) => c.key);
+      if (new Set(keys).size !== keys.length) fail(path2 + "columns", "Column keys must be unique");
+      for (const [i, row] of table3.rows.entries()) for (const key of Object.keys(row)) if (!keys.includes(key) && !["id", "orderId"].includes(key)) warnings.push({ path: "props." + path2 + `rows[${i}].` + key, code: "inactive-field", message: "No column displays this row field." });
+    };
+    if (id === "ani-atom-table" || id === "data-table") tableChecks(p, "");
+    if (id === "codex-workflow") {
+      if (!p.showSidebar) hidden("sidebar", "showSidebar is false.");
+      for (const [i, m] of (p.messages || []).entries()) if (m.result) tableChecks(m.result, `messages[${i}].result.`);
+      if (p.panel?.kind === "table") tableChecks(p.panel.table, "panel.table.");
+    }
+    if (["doubao-chat", "doubao-workflow"].includes(id)) {
+      for (const [i, m] of (p.messages || []).entries()) if (m.visible === false) warnings.push({ path: `props.messages[${i}]`, code: "inactive-field", message: "visible=false hides this entire message." });
+      if (id === "doubao-chat" && (p.composer?.tools?.length || 0) > Number(p.composer?.maxTools ?? 3)) warnings.push({ path: "props.composer.tools", code: "partial-preview", message: "Only maxTools items are shown; remaining tools appear as an overflow menu indicator." });
+    }
+    if (id === "mixed-media-sequence") for (const [i, m] of (p.media || []).entries()) {
+      if (m.layout === "focus" && m.camera) warn(`media[${i}].camera`, "focus layout uses focus coordinates, not camera keyframes.");
+      if (m.splitAt === void 0 && (m.notes?.length || m.noteTitle || m.noteLabel)) warn(`media[${i}].notes`, "No splitAt is configured, so the explanation text is hidden.");
+      if (m.splitFrom && m.splitAt === void 0) fail(`media[${i}].splitFrom`, "splitFrom requires splitAt");
+    }
+  }
+  function validateComponentProps(component2, props, { partial = false, render = true, strictUnknown = false } = {}) {
+    const errors = [], warnings = [];
+    if (!isObject(props)) return { ok: false, errors: [{ path: "props", code: "type", message: "props must be a JSON object" }], warnings };
+    const resolved = partial ? { ...clone(component2.defaults), ...clone(props) } : props;
+    walk(getPropsSchema(component2), resolved, "props", errors, warnings, { strictUnknown });
+    if (!errors.length) {
+      try {
+        semanticChecks(component2, resolved, errors, warnings);
+      } catch (error) {
+        errors.push({ path: "props", code: "relationship", message: error.message });
+      }
+    }
+    if (!errors.length && render) try {
+      component2.render(normalizeMediaProps(resolved), helpers("props-validation"));
+    } catch (error) {
+      errors.push({ path: "props", code: "renderer", message: error.message });
+    }
+    return { ok: errors.length === 0, errors, warnings };
+  }
+  function assertComponentProps(component2, props, options = {}) {
+    const result = validateComponentProps(component2, props, options);
+    if (!result.ok) {
+      const error = new Error(component2.id + ": " + result.errors.map((e2) => `${e2.path}: ${e2.message}`).join("; "));
+      error.code = "INVALID_COMPONENT_PROPS";
+      error.errors = result.errors;
+      error.warnings = result.warnings;
+      throw error;
+    }
+    return props;
+  }
+
+  // effect-contracts.mjs
+  function markupMatches(markup, selector) {
+    const root = { tag: "div", attrs: { class: "motion-wrap" }, parent: null, children: [] }, nodes = [root], stack = [root];
+    const voids = /* @__PURE__ */ new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"]);
+    for (const token of markup.matchAll(/<!--[\s\S]*?-->|<\/?([a-z][\w:-]*)\b([^>]*?)>/gi)) {
+      if (!token[1]) continue;
+      const tag2 = token[1].toLowerCase();
+      if (token[0].startsWith("</")) {
+        for (let i = stack.length - 1; i > 0; i--) if (stack[i].tag === tag2) {
+          stack.length = i;
+          break;
+        }
+        continue;
+      }
+      const attrs = {};
+      for (const a2 of token[2].matchAll(/([^\s=/'"<>]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s'"=<>`]+)))?/g)) attrs[a2[1]] = a2[2] ?? a2[3] ?? a2[4] ?? "";
+      const node4 = { tag: tag2, attrs, parent: stack.at(-1), children: [] };
+      node4.parent.children.push(node4);
+      nodes.push(node4);
+      if (!voids.has(tag2) && !token[0].endsWith("/>")) stack.push(node4);
+    }
+    const atom = (node4, s2) => {
+      if (!node4) return false;
+      const tag2 = /^(\*|[a-z][\w-]*)/i.exec(s2);
+      if (tag2) {
+        if (tag2[1] !== "*" && node4.tag !== tag2[1].toLowerCase()) return false;
+        s2 = s2.slice(tag2[0].length);
+      }
+      while (s2) {
+        let m;
+        if (m = /^\.([\w-]+)/.exec(s2)) {
+          if (!(node4.attrs.class || "").split(/\s+/).includes(m[1])) return false;
+        } else if (m = /^#([\w-]+)/.exec(s2)) {
+          if (node4.attrs.id !== m[1]) return false;
+        } else if (m = /^\[([\w-]+)(?:=(?:"([^"]*)"|'([^']*)'|([^\]]+)))?\]/.exec(s2)) {
+          if (!(m[1] in node4.attrs)) return false;
+          const v = m[2] ?? m[3] ?? m[4];
+          if (v !== void 0 && node4.attrs[m[1]] !== v) return false;
+        } else return false;
+        s2 = s2.slice(m[0].length);
+      }
+      return true;
+    };
+    return String(selector || "").split(",").some((branch) => {
+      const tokens2 = branch.trim().replace(/\s*>\s*/g, " > ").split(/\s+/).filter(Boolean);
+      const match = (node4, i) => {
+        if (i < 0) return true;
+        if (!atom(node4, tokens2[i])) return false;
+        if (i === 0) return true;
+        if (tokens2[i - 1] === ">") return match(node4.parent, i - 2);
+        for (let p = node4.parent; p; p = p.parent) if (match(p, i - 1)) return true;
+        return false;
+      };
+      return tokens2.length > 0 && nodes.some((node4) => match(node4, tokens2.length - 1));
+    });
+  }
+  var familyAliases = {
+    "slide-in": "slide",
+    "slide-out-left": "slide",
+    "shared-slide": "slide",
+    "zoom-focus": "zoom",
+    "zoom-out-reveal": "zoom",
+    "zoom-through": "zoom",
+    "micro-dolly": "zoom",
+    "frame-push": "zoom",
+    "fade-in": "fade",
+    "fade-out": "fade",
+    "soft-dissolve": "dissolve",
+    "wipe-transition": "wipe",
+    "curve-ribbon": "wipe",
+    "diagonal-ribbon": "wipe",
+    "liquid-sweep": "wipe"
+  };
+  function describeEffect(effect) {
+    if (!effect || effect.id === "none") return { role: "still", family: "still", controls: [], optionsSchema: { type: "object", properties: {}, additionalProperties: false }, requiresNextScene: false };
+    const role = effect.category === "\u80CC\u666F" ? "background" : effect.category === "\u8F6C\u573A" ? "transition" : effect.exclusive || effect.id.startsWith("ani-") ? "internal" : effect.selector === ".motion-wrap" ? "wrapper" : "target";
+    const properties = {};
+    if (!["internal"].includes(role) && effect.id !== "media-sequence-motion") properties.background = { type: "string", description: "\u80CC\u666F\u6548\u679C ID\uFF1B\u4EC5\u4F5C\u7528\u4E8E\u58F0\u660E background \u76EE\u6807\u7684\u7EC4\u4EF6" };
+    if (!effect.exclusive && !effect.id.startsWith("ani-")) properties.selector = { type: "string", description: "\u663E\u5F0F\u76EE\u6807\uFF1B\u5FC5\u987B\u5339\u914D\u5B9E\u9645\u5185\u5BB9\uFF0C\u4E0D\u80FD\u8986\u76D6\u6DF7\u526A\u5A92\u4F53\u4E16\u754C" };
+    if (effect.id === "zoom-focus") properties.scale = { type: "number", minimum: 1, maximum: 3, default: 1.32 };
+    if (effect.id === "scroll-panel") properties.distance = { type: "number", minimum: 0 };
+    if (effect.id === "ani-machine-process") properties.travelDistance = { type: "number", description: "\u8F93\u5165\u6750\u6599\u5230\u5904\u7406\u88C5\u7F6E\u7684\u79FB\u52A8\u8DDD\u79BB\uFF1B\u4EC5\u5728\u7EC4\u4EF6\u5E03\u5C40\u4ECD\u4FDD\u7559\u771F\u5B9E\u76EE\u6807\u65F6\u8C03\u6574" };
+    if (["callout-pin", "success-toast", "save-pulse"].includes(effect.id)) properties.label = { type: "string", description: "\u66FF\u6362\u53CD\u9988\u6216\u6807\u6CE8\u6587\u5B57\uFF1B\u4E0D\u6539\u53D8\u52A8\u4F5C\u951A\u70B9" };
+    if (role === "transition") properties.nextScene = { type: "object", required: ["component"], properties: { component: { type: "string" }, props: { type: "object" } }, additionalProperties: false };
+    Object.assign(properties, effect.optionsSchema?.properties || {});
+    return {
+      role,
+      family: familyAliases[effect.id] || effect.motionFamily || effect.id,
+      controls: role === "background" ? ["background"] : effect.id === "media-sequence-motion" ? ["source-camera", "source-annotations", "media-viewports"] : role === "wrapper" || role === "transition" ? ["motion-wrap"] : ["component-targets"],
+      excludes: effect.id === "media-sequence-motion" ? ["another camera on .mm-world"] : role === "internal" ? ["another timeline controlling the same component targets"] : [],
+      replacesDefault: true,
+      requiresNextScene: role === "transition",
+      optionsSchema: { type: "object", properties, additionalProperties: false },
+      timing: effect.id === "media-sequence-motion" ? "source-clock" : "native-8s-retime",
+      silent: effect.silent === true,
+      soundCues: effect.soundCues || effect.cueHints || []
+    };
+  }
+  function effectCompatibility(component2, effect, props = component2.defaults, { selector } = {}) {
+    const id = effect?.id || "none", contract = describeEffect(effect), warnings = [];
+    const reject = (reason) => ({ compatible: false, reason, warnings, ...contract });
+    if (component2.id === "mixed-media-sequence" && id !== "media-sequence-motion") return reject("\u6DF7\u526A\u7EC4\u4EF6\u5FC5\u987B\u4FDD\u6301\u6E90\u65F6\u949F\uFF1B\u9759\u6B62\u53D6\u666F\u4F7F\u7528 props.strength=still");
+    if (effect?.exclusive && effect.exclusive !== component2.id) return reject("\u4E13\u5C5E\u6548\u679C\u4EC5\u9002\u7528\u4E8E " + effect.exclusive);
+    if (id !== "none") {
+      let markup;
+      try {
+        markup = component2.render(props, helpers("contract-probe"));
+      } catch (e2) {
+        return reject("\u5185\u5BB9\u4E0D\u80FD\u6E32\u67D3\uFF1A" + e2.message);
+      }
+      if (!markupMatches(markup, selector || effect.selector)) return reject("\u5F53\u524D\u5185\u5BB9\u6CA1\u6709\u6548\u679C\u76EE\u6807 " + (selector || effect.selector));
+    }
+    if (component2.defaultEffect && component2.defaultEffect !== "none" && id !== component2.defaultEffect) warnings.push("\u6B64\u9009\u62E9\u66FF\u6362\u9ED8\u8BA4\u5185\u90E8\u52A8\u4F5C\uFF1B\u4E0D\u4F1A\u53E0\u52A0\u9ED8\u8BA4\u52A8\u4F5C\u3002\u6838\u5BF9\u8BB2\u89E3\u6B65\u9AA4\uFF0C\u9759\u6001\u5185\u5BB9\u53EF\u80FD\u76F4\u63A5\u663E\u793A\u7EC8\u6001\u3002");
+    return { compatible: true, reason: id === "none" ? "\u9759\u6001\u9605\u8BFB" : effect?.exclusive ? "\u7EC4\u4EF6\u4E13\u5C5E\u52A8\u4F5C" : contract.role === "transition" ? "\u76EE\u6807\u5B58\u5728\uFF1B\u8FD8\u9700\u663E\u5F0F\u63D0\u4F9B\u4E0B\u4E00\u753B\u9762" : "\u5F53\u524D\u5185\u5BB9\u542B\u5B9E\u9645\u76EE\u6807", warnings, ...contract };
+  }
+
   // component-renderers-entry.mjs
-  var components24 = [...components, ...components2, ...components3, ...components4, ...components6, ...components5, ...components7, ...components8, ...components9, ...components10, ...components11, ...components12, ...components13, ...components14, ...components15, ...components16, ...components17, ...components18, ...components19, ...components20, ...components21, ...components22, ...components23];
-  function mountNext(root, id, props, instance, effect, options = {}) {
+  var components29 = [...components, ...components2, ...components3, ...components4, ...components6, ...components5, ...components7, ...components8, ...components9, ...components10, ...components11, ...components12, ...components13, ...components14, ...components15, ...components16, ...components17, ...components18, ...components19, ...components20, ...components21, ...components22, ...components23, ...components24, ...components25, ...components26, ...components27, ...components28];
+  function mountNext(root, id, props, instance, effect, options = {}, mediaBase = assetBaseURL) {
+    const current = components29.find((c) => c.id === id), definition = effects.find((e2) => e2.id === effect) || { id: effect };
+    const compatible = effectCompatibility(current, definition, props, { selector: options.selector });
+    if (!compatible.compatible) throw Error(compatible.reason);
     root.querySelector(".motion-next")?.remove();
-    if (!effects.some((e) => e.id === effect && e.category === "\u8F6C\u573A")) return;
+    if (!effects.some((e2) => e2.id === effect && e2.category === "\u8F6C\u573A")) return;
     const next = options.nextScene || props.transitionNext || (effect === "shared-slide" ? { component: "lecture-stage", props: { title: "\u4E0B\u4E00\u573A\u666F\u6807\u9898", subtitle: "\u4E0B\u4E00\u573A\u666F\u8BF4\u660E", chapter: "\u7AE0\u8282 / 02" } } : { component: "chapter-summary", props: { title: "\u4E0B\u4E00\u573A\u666F\u6807\u9898", subtitle: "\u4E0B\u4E00\u573A\u666F\u8BF4\u660E" } });
-    const target = components24.find((c) => c.id === next.component);
+    const target = components29.find((c) => c.id === next.component);
     if (!target) throw Error("\u4E0B\u4E00\u5E45\u753B\u9762\u7684\u7EC4\u4EF6\u4E0D\u5B58\u5728\uFF1A" + next.component);
-    const node3 = document.createElement("div");
-    node3.className = "motion-next";
-    node3.dataset.scene = "B";
-    node3.style.cssText = "position:absolute;inset:0;width:100%;height:100%;opacity:0";
-    node3.innerHTML = rewriteRenderedMediaMarkup(target.render(normalizeMediaProps({ ...target.defaults, ...next.props }), helpers(instance + "-next")), assetBaseURL);
-    root.querySelector(".component-stage").append(node3);
+    assertComponentProps(target, { ...target.defaults, ...next.props }, { render: true });
+    const node4 = document.createElement("div");
+    node4.className = "motion-next";
+    node4.dataset.scene = "B";
+    node4.style.cssText = "position:absolute;inset:0;width:100%;height:100%;opacity:0";
+    node4.innerHTML = rewriteRenderedMediaMarkup(target.render(normalizeMediaProps({ ...target.defaults, ...next.props }), helpers(instance + "-next")), mediaBase);
+    root.querySelector(".component-stage").append(node4);
     root.querySelector(".motion-wrap").dataset.scene = "A";
-    const at = Number(options.transitionAt ?? 2.1), duration = Number(options.transitionDuration ?? 0.66), covered = ["wipe-transition", "curve-ribbon", "diagonal-ribbon", "liquid-sweep"].includes(effect), nextStart = at + (covered ? duration * 0.5 : 0);
-    node3.querySelectorAll("video,audio").forEach((media3, index) => {
+    const at2 = Number(options.transitionAt ?? 2.1), duration = Number(options.transitionDuration ?? 0.66), covered = ["wipe-transition", "curve-ribbon", "diagonal-ribbon", "liquid-sweep"].includes(effect), nextStart = at2 + (covered ? duration * 0.5 : 0);
+    node4.querySelectorAll("video,audio").forEach((media3, index) => {
       media3.id = instance + "-next-media-" + index;
       media3.classList.add("clip");
       media3.dataset.start = String(nextStart);
       media3.dataset.duration = String(Number(root.dataset.duration || 8) - nextStart);
       media3.dataset.trackIndex = "1";
     });
-    root.querySelector(".motion-wrap").querySelectorAll("video,audio").forEach((media3) => media3.dataset.duration = String(at + duration));
+    root.querySelector(".motion-wrap").querySelectorAll("video,audio").forEach((media3) => media3.dataset.duration = String(at2 + duration));
   }
   var assetBaseURL = new URL("../", document.currentScript?.src || new URL("vendor/component-renderers.js", document.baseURI).href).href;
-  function mount(root, id, props, instance) {
-    const component2 = components24.find((c) => c.id === id);
+  function mount(root, id, props, instance, mediaBase = assetBaseURL) {
+    const component2 = components29.find((c) => c.id === id);
     if (!component2) throw Error("Unknown component " + id);
-    const html = component2.render(normalizeMediaProps({ ...component2.defaults, ...props }), helpers(instance));
-    root.querySelector(".motion-wrap").innerHTML = rewriteRenderedMediaMarkup(html, assetBaseURL);
+    assertComponentProps(component2, { ...component2.defaults, ...props }, { render: true });
+    const html = component2.render(normalizeMediaProps({ ...component2.defaults, ...props, ...id === "mixed-media-sequence" ? { previewDuration: Number(root.dataset.duration || 8) } : {} }), helpers(instance));
+    root.querySelector(".motion-wrap").innerHTML = rewriteRenderedMediaMarkup(html, mediaBase);
     root.querySelectorAll("video,audio:not([data-component-sfx])").forEach((media3, index) => {
       if (!media3.id) media3.id = instance + "-media-" + index;
       media3.classList.add("clip");
-      media3.setAttribute("data-start", "0");
-      media3.setAttribute("data-duration", root.getAttribute("data-duration") || "8");
-      media3.setAttribute("data-track-index", "0");
+      if (id !== "mixed-media-sequence") {
+        media3.setAttribute("data-start", "0");
+        media3.setAttribute("data-duration", root.getAttribute("data-duration") || "8");
+        media3.setAttribute("data-track-index", "0");
+      }
     });
     return root;
   }

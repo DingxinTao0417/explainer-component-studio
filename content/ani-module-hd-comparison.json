@@ -1,0 +1,213 @@
+{
+  "label": "高清关系括线组",
+  "background": "#f8fcff",
+  "style": {
+    "palette": {
+      "accent": "",
+      "ink": "",
+      "surface": "",
+      "mint": "",
+      "orange": ""
+    },
+    "fontScale": 1,
+    "fontFamily": "original",
+    "strokeScale": 1,
+    "shadowOpacity": 1,
+    "shadowBlur": 0,
+    "opacity": 1
+  },
+  "layers": [
+    {
+      "id": "left-paper",
+      "part": "notice-paper",
+      "x": 60,
+      "y": 150,
+      "width": 338.4,
+      "height": 388.8,
+      "props": {
+        "title": "已有情境"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "left-field-0",
+      "part": "notice-field",
+      "x": 87.36,
+      "y": 279.6,
+      "width": 282.24,
+      "height": 60.48,
+      "props": {
+        "label": "原因",
+        "tone": "blue"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "left-field-1",
+      "part": "notice-field",
+      "x": 87.36,
+      "y": 353.03999999999996,
+      "width": 282.24,
+      "height": 60.48,
+      "props": {
+        "label": "影响",
+        "tone": "orange"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "left-field-2",
+      "part": "notice-field",
+      "x": 87.36,
+      "y": 426.48,
+      "width": 282.24,
+      "height": 60.48,
+      "props": {
+        "label": "处理办法",
+        "tone": "mint"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "left-brace",
+      "part": "brace",
+      "x": 430,
+      "y": 205,
+      "width": 54,
+      "height": 240,
+      "props": {},
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "relation",
+      "part": "status-pill",
+      "x": 486,
+      "y": 285,
+      "width": 305,
+      "height": 59.61363636363637,
+      "props": {
+        "text": "借用思路",
+        "tone": "light"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "right-brace",
+      "part": "brace",
+      "x": 800,
+      "y": 205,
+      "width": 54,
+      "height": 240,
+      "props": {
+        "side": "right"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "right-paper",
+      "part": "notice-paper",
+      "x": 865,
+      "y": 150,
+      "width": 338.4,
+      "height": 388.8,
+      "props": {
+        "title": "新情境"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "right-field-0",
+      "part": "notice-field",
+      "x": 892.36,
+      "y": 279.6,
+      "width": 282.24,
+      "height": 60.48,
+      "props": {
+        "label": "原因",
+        "tone": "blue"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "right-field-1",
+      "part": "notice-field",
+      "x": 892.36,
+      "y": 353.03999999999996,
+      "width": 282.24,
+      "height": 60.48,
+      "props": {
+        "label": "影响",
+        "tone": "orange"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    },
+    {
+      "id": "right-field-2",
+      "part": "notice-field",
+      "x": 892.36,
+      "y": 426.48,
+      "width": 282.24,
+      "height": 60.48,
+      "props": {
+        "label": "处理办法",
+        "tone": "mint"
+      },
+      "enter": 0,
+      "exit": 8,
+      "fade": 0.18,
+      "fromX": 0,
+      "fromY": 0,
+      "steps": []
+    }
+  ]
+}

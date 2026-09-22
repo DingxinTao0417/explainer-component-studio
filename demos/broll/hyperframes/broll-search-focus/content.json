@@ -1,0 +1,26 @@
+{
+  "eyebrow": "工作过程 / 示意",
+  "subtitle": "替换为本期需要说明的动作与内容",
+  "footer": "动画示意 · 内容可编辑",
+  "title": "检索与结果定位",
+  "query": "检索关键词",
+  "selected": 1,
+  "results": [
+    {
+      "title": "资料标题 A",
+      "source": "来源标签 A"
+    },
+    {
+      "title": "资料标题 B",
+      "source": "来源标签 B"
+    },
+    {
+      "title": "资料标题 C",
+      "source": "来源标签 C"
+    }
+  ],
+  "excerptLabel": "选中内容",
+  "excerptTitle": "摘录标题",
+  "excerpt": "替换为与本期讲解相关的摘录内容。",
+  "sourceNote": "填写真实来源与日期"
+}

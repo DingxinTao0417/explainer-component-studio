@@ -1,0 +1,37 @@
+{
+  "version": 5,
+  "component": "mixed-media-sequence",
+  "effect": "media-sequence-motion",
+  "timing": {"duration": 10},
+  "props": {
+    "strength": "emphasis",
+    "previewDuration": 10,
+    "media": [
+      {
+        "type": "image", "src": "assets/broll/planning.jpg", "width": 1920, "height": 1280,
+        "start": 0, "end": 0.5, "fit": "cover", "maxZoom": 1.5,
+        "title": "先建立全貌", "caption": "再把视线带到重点",
+        "camera": [
+          {"at": 0, "x": 0.5, "y": 0.5, "zoom": 1},
+          {"at": 0.2, "x": 0.5, "y": 0.5, "zoom": 1},
+          {"at": 0.65, "x": 0.65, "y": 0.55, "zoom": 1.35},
+          {"at": 1, "x": 0.65, "y": 0.55, "zoom": 1.35}
+        ],
+        "regions": [{"x": 0.61, "y": 0.34, "width": 0.2, "height": 0.42, "start": 0.65, "end": 0.95, "kind": "frame", "label": "重点区域"}]
+      },
+      {
+        "type": "video", "src": "assets/broll/office.mp4", "width": 1920, "height": 1080,
+        "start": 0.5, "end": 1, "sourceStart": 0.4, "sourceDuration": 7.04,
+        "fit": "cover", "transition": "push", "transitionSeconds": 0.35,
+        "title": "素材继续，说明加入", "splitAt": 0.45,
+        "noteTitle": "解释重点", "notes": ["替换为本期要点", "按内容决定是否分屏"]
+      }
+    ]
+  },
+  "soundEnabled": true,
+  "soundGain": 0.65,
+  "soundCues": [
+    {"sound": "ping", "cue": "shot1.region1", "gain": 0.18},
+    {"sound": "whoosh-short", "cue": "shot2.enter", "gain": 0.2}
+  ]
+}
