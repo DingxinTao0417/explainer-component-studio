@@ -1,4 +1,4 @@
-"""Use the author's compatible local Qwen3-TTS voice setup without a web service."""
+"""Use the existing D-drive Qwen3-TTS voice locally without a web service."""
 import argparse
 import hashlib
 import importlib.util
@@ -11,8 +11,9 @@ from datetime import datetime
 from importlib.metadata import version
 from pathlib import Path
 
-from episode import load, save, sha, within
 from runtime_paths import default_qwen
+
+from episode import load, save, sha, within
 
 MODEL = 'Qwen3-TTS-12Hz-1.7B-Base'
 

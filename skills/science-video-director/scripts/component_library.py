@@ -1,4 +1,8 @@
-"""Bind frozen component bundles to EDIT scenes and verify real local integration."""
+"""把组件库导出的组件包接到 EDIT 镜头里，并检查主工程确实挂上了。
+
+组件库是加速工具，不是必经关卡：镜头也可以直接在 HyperFrames 里手写。
+检查结果全部是提示，不会阻止制作；手动微调过的组件包会提示“文件已改动”，确认是有意的即可。
+"""
 import argparse
 import hashlib
 import json
@@ -9,9 +13,9 @@ import subprocess
 import sys
 from html.parser import HTMLParser
 from pathlib import Path
-from urllib.parse import unquote, urlsplit
 
 from runtime_paths import default_library
+from urllib.parse import unquote, urlsplit
 
 DEFAULT_LIBRARY = default_library()
 
@@ -107,23 +111,15 @@ def bundle_files(root, binding):
     return [lock_path, *[within(lock_path.parent, key) for key in lock['files']]]
 
 
-def check_bindings(root, manifest, edit, strict):
+def check_bindings(root, manifest, edit, strict=False):
+    """只返回提示（warnings）。strict 参数保留给旧调用方，不再产生阻断错误。"""
     errors, warnings = [], []
-    issue = errors.append if strict else warnings.append
-    required = manifest.get('settings', {}).get('component_library_contract') == 'component-library-v1'
-    references = composition_references(root, manifest['paths']['hyperframes'])
+    issue = warnings.append
+    references = composition_references(root, manifest.get('paths', {}).get('hyperframes', 'hyperframes'))
     reachable = {r['entry'] for r in references}
-    if required:
-        snapshot = manifest['paths'].get('library_index')
-        if not snapshot or not within(root, snapshot).is_file():
-            issue('组件库索引尚未固化到本期；先读取并保存当前 director-index.json。')
     for scene in edit.get('scenes', []):
         sid = scene.get('id', '?')
         bindings = scene.get('component_bindings', [])
-        if required and not bindings:
-            decision = scene.get('library_decision', {})
-            if decision.get('mode') != 'external' or not str(decision.get('reason', '')).strip():
-                issue(f'{sid}: 缺少组件绑定；使用其他画面时登记 library_decision.mode=external 及实际理由。')
         seen = set()
         for binding in bindings:
             try:
@@ -143,7 +139,7 @@ def check_bindings(root, manifest, edit, strict):
                 for name, expected in lock['files'].items():
                     file = within(lock_path.parent, name)
                     if not file.is_file() or sha(file) != expected:
-                        raise ValueError('组件文件缺失或修改后未重新导出: ' + name)
+                        raise ValueError('组件包文件缺失或已被改动（手动微调属正常，确认即可）: ' + name)
                 config = load(within(lock_path.parent, lock['config']))
                 if within(root, binding['config']) != within(lock_path.parent, lock['config']):
                     raise ValueError('绑定的配置路径与组件包不一致')
@@ -186,14 +182,6 @@ def check_bindings(root, manifest, edit, strict):
 def bind(args):
     root = Path(args.project).resolve()
     manifest = load(root / 'PROJECT.json')
-    # New projects must pass the user-confirmed opening-plan gate before a
-    # bundle is exported or EDIT.json is changed.  Scene binding is deferred
-    # here because this command is the operation that creates the new mount.
-    if manifest.get('settings', {}).get('opening_plan_contract') == 'user-confirmed-v1':
-        from opening_plan import check_plan
-        plan = check_plan(root, manifest, True, check_scene_bindings=False)
-        if plan['errors']:
-            raise ValueError('开场策划案尚未确认或已失效，禁止绑定组件：' + '；'.join(plan['errors']))
     edit_path = within(root, manifest['paths']['edit'])
     edit = load(edit_path)
     scene = next((s for s in edit.get('scenes', []) if s.get('id') == args.scene), None)

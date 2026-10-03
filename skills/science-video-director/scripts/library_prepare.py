@@ -1,7 +1,7 @@
 """Use the library's native director API; validate scene pools before seeded choice.
 
 No registry, schema, renderer, or random-selection algorithm is duplicated here.
-Planning outputs do not confirm a proposal, bind a scene, or change EDIT.json.
+Planning outputs do not bind a scene or change EDIT.json.
 """
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ DEFAULT_LIBRARY = default_library()
 def _run_node(library: Path, node: str, mode: str, query: str | None = None,
               limit: int = 5, kind: str | None = None,
               media_type: str | None = None, config: Path | None = None,
-              strict: bool = False, adjustments: Path | None = None) -> dict:
+              strict: bool = False, adjustments: Path | None = None, include_hidden: bool = False) -> dict:
     command = [node, str(library / 'scripts/director.mjs'), mode]
     if mode == 'prepare':
         command += [query or '', '--limit', str(limit)]
@@ -30,6 +30,8 @@ def _run_node(library: Path, node: str, mode: str, query: str | None = None,
             command += ['--kind', kind]
         if media_type:
             command += ['--media-type', media_type]
+        if include_hidden:
+            command += ['--include', 'hidden']
     else:
         command.append(str(config))
         if mode == 'tune':
@@ -84,7 +86,7 @@ def choose_validated_pool(library: Path, node: str, pool_path: Path) -> dict:
         unit['options'] = options
     result = select_variations(eligible)
     return {'ok': True, **result, 'validation': {'verified': verified, 'rejected': rejected},
-            'scope': 'Validated planning choices only; semantic fitness and proposal confirmation still required.'}
+            'scope': 'Validated planning choices only; whether a candidate fits the shot is still the director\'s call.'}
 
 
 def main() -> int:
@@ -100,6 +102,7 @@ def main() -> int:
             command.add_argument('--limit', type=int, default=5)
             command.add_argument('--kind')
             command.add_argument('--media-type')
+            command.add_argument('--include-hidden', action='store_true', help='连 episode / legacy / hidden-platform 一起找')
         elif name in ('validate', 'tune'):
             command.add_argument('--config', type=Path, required=True)
             command.add_argument('--strict', action='store_true')
@@ -114,7 +117,7 @@ def main() -> int:
         if not node:
             raise ValueError('找不到 Node；用 --node 指定实际可执行文件')
         if args.command == 'prepare':
-            result = _run_node(library, node, 'prepare', args.query, args.limit, args.kind, args.media_type)
+            result = _run_node(library, node, 'prepare', args.query, args.limit, args.kind, args.media_type, include_hidden=args.include_hidden)
         elif args.command == 'validate':
             result = _run_node(library, node, 'validate', config=args.config.resolve(), strict=args.strict)
         elif args.command == 'tune':

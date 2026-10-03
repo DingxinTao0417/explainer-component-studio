@@ -82,7 +82,7 @@ node scripts/export-director-scene.mjs "本期场景.json" "本期项目/hyperfr
 python -X utf8 skills/science-video-director/scripts/component_library.py bind "本期项目" --scene S01 --config "本期场景.json" --node "Node可执行文件"
 ```
 
-新一期须先展示完整 PROPOSAL/PLAN 并取得用户明确确认，再写 DIRECTING、建立 EDIT 镜头和绑定；已回答偏好不等于确认制作。`bind` 在导出和写 EDIT 前检查方案指纹、预览文件和场景配置，未确认、确认失效或配置无效都会失败。该命令导出新版本并绑定，同时返回可放入本镜的 mount_in_scene HTML，不生成已通过的审片记录，也不自动改写整个主时间轴。制作方按原生尺寸等比摆放，指定轨道与位置；若直接放主时间轴，data-start 要加上 EDIT 镜头起点。
+新版 Skill 取消了开场策划案确认这道门槛：全片开工前唯一的确认点是 15–20 秒动态样片，组件库是加速工具，不是必经关卡。`bind` 只要求 EDIT 里有对应镜头，并在导出前校验场景配置，配置无效会失败。该命令导出新版本并绑定，同时返回可放入本镜的 mount_in_scene HTML，不生成已通过的审片记录，也不自动改写整个主时间轴。制作方按原生尺寸等比摆放，指定轨道与位置；若直接放主时间轴，data-start 要加上 EDIT 镜头起点。
 
 手动导出用于父合成时，用 `export-director-scene.mjs scene.json <新目录> --mount-base components/S01-main-r1/` 明确包相对父 HyperFrames 根的位置。父页面加载自己的 GSAP 和 HyperFrames 运行时，使用 `data-composition-src="components/S01-main-r1/composition.html"` 加载；子合成不启动第二个播放器。多个实例必须使用不同宿主 ID。
 
@@ -90,7 +90,7 @@ python -X utf8 skills/science-video-director/scripts/component_library.py bind "
 
 索引反映源库当前能力，项目保存规划时的索引副本；每个包的 lock 单独记录实际采用内容版本和文件哈希。后续升级共享库不修改已导出包。修改包内画面、配置或运行文件后应重新导出新版本，并复查受影响镜头。
 
-Skill 的 plan 检查保留待办；ready/review/delivery 会核对组件包身份、文件哈希、时长、主入口实际引用。宿主必须显式写 data-start 与 data-duration；检查会累计嵌套合成起点，与 EDIT 镜头及实例偏移核对。只下载或导出、没有接入的包不能算已采用。另行检查模板残留、字体、叠字、连线先后、对象守恒、背景和转场覆盖；文件检查不替代视觉审片。
+Skill 的 `episode.py check` 会核对组件包身份、文件哈希、时长、主入口实际引用；结果都是提示，不阻止制作，手动微调过的包会提示“文件已改动”。宿主必须显式写 data-start 与 data-duration；检查会累计嵌套合成起点，与 EDIT 镜头及实例偏移核对。只下载或导出、没有接入的包不能算已采用。另行检查模板残留、字体、叠字、连线先后、对象守恒、背景和转场覆盖；文件检查不替代视觉审片。
 
 ```powershell
 node scripts/verify-director.mjs

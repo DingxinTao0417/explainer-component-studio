@@ -92,7 +92,7 @@ npm run build:site
 | `snapshots/` | 目录展示所需缩略图 |
 | `vendor/` | 页面必须加载的浏览器运行文件 |
 | `scripts/` | 构建、预览、导出、技能安装和验证工具 |
-| `skills/` | 三套编排技能、配套脚本、模板与审片协议 |
+| `skills/` | 三套编排技能、分主题指南、配套脚本与模板 |
 | `director-index.json` | 从当前源码生成的能力、参数、动效和版本索引 |
 
 - [完整组件目录](CATALOG.md)

@@ -1,4 +1,14 @@
-"""Create isolated episode folders and check production records. Standard library only."""
+"""每期项目小助手：建目录、看进度、记阶段、查时间轴、导字幕。只用标准库。
+
+  init     新建一期项目并复制输入（不覆盖已有目录）
+  add      给已有项目登记新输入（配音、稿子、SRT、素材），项目外的文件会复制进来
+  status   看这一期走到哪一步、缺什么
+  stage    记录阶段变化和用户原话（写进 PROJECT.json 和 planning/NOTES.md）
+  check    检查时间轴、旁白、字幕和素材文件；只报告问题，不拦截制作
+  captions 把 subtitles/CAPTIONS.json 导出成 zh-CN.srt / zh-CN.vtt
+
+它管的是“文件齐不齐、时间对不对”，不评价画面好坏；看片用 frames.py。
+"""
 import argparse
 import hashlib
 import json
@@ -8,29 +18,36 @@ import shutil
 import subprocess
 import sys
 import wave
+from collections import Counter
 from datetime import datetime
 from pathlib import Path
 
-SKILL = Path(__file__).resolve().parents[1]
 from runtime_paths import default_projects, default_qwen
 
+from _media import find_ffprobe
+
+SKILL = Path(__file__).resolve().parents[1]
 DEFAULT_ROOT = default_projects()
-MODES = {'graphic', 'user_media', 'screen_record', 'external_image', 'external_video', 'ai_image', 'ai_animation'}
-from workflow_state import STATE_SCHEMA, proposal_fingerprint, record_event, verify_events
+STAGES = ['brief', 'sample', 'production', 'review', 'delivered']
+STAGE_NAMES = {'brief': '定方向与导演阐述', 'sample': '做动态样片等用户看', 'production': '全片制作',
+               'review': '自查与用户预览', 'delivered': '已导出'}
+SHOT_TYPES = {'host', 'evidence', 'structure', 'metaphor'}
+TYPE_NAMES = {'host': '主持人', 'evidence': '证据', 'structure': '结构卡', 'metaphor': '比喻/情境'}
 
 
 def load(path):
-    return json.loads(path.read_text(encoding='utf-8-sig'))
+    return json.loads(Path(path).read_text(encoding='utf-8-sig'))
 
 
 def save(path, value):
+    path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 
 
 def sha(path):
     digest = hashlib.sha256()
-    with path.open('rb') as stream:
+    with Path(path).open('rb') as stream:
         for chunk in iter(lambda: stream.read(1024 * 1024), b''):
             digest.update(chunk)
     return digest.hexdigest()
@@ -38,10 +55,10 @@ def sha(path):
 
 def within(root, relative):
     if not isinstance(relative, str) or not relative or Path(relative).is_absolute():
-        raise ValueError(f'Expected project-relative path: {relative!r}')
-    path = (root / relative).resolve()
-    if not path.is_relative_to(root.resolve()):
-        raise ValueError(f'Path escapes project: {relative}')
+        raise ValueError(f'需要项目内相对路径：{relative!r}')
+    path = (Path(root) / relative).resolve()
+    if not path.is_relative_to(Path(root).resolve()):
+        raise ValueError(f'路径跑出了项目目录：{relative}')
     return path
 
 
@@ -49,374 +66,327 @@ def number(value):
     return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
 
 
-def duration(path, ffprobe=None):
+def media_duration(path, ffprobe=None):
+    path = Path(path)
     if path.suffix.lower() == '.wav':
         try:
             with wave.open(str(path), 'rb') as wav:
                 return wav.getnframes() / wav.getframerate()
         except (wave.Error, EOFError):
             pass
-    binary = ffprobe or shutil.which('ffprobe')
+    binary = ffprobe or find_ffprobe()  # 顺序：FFPROBE_PATH → 本机 Qwen3-TTS 自带 → PATH
     if not binary:
         return None
     try:
-        proc = subprocess.run([str(binary), '-v', 'error', '-show_entries', 'format=duration', '-of', 'json', str(path)], capture_output=True, text=True, timeout=30, check=True)
+        proc = subprocess.run([str(binary), '-v', 'error', '-show_entries', 'format=duration', '-of', 'json', str(path)],
+                              capture_output=True, text=True, timeout=30, check=True)
         value = float(json.loads(proc.stdout)['format']['duration'])
         return value if math.isfinite(value) and value > 0 else None
     except (OSError, subprocess.SubprocessError, KeyError, ValueError):
         return None
 
 
+def now():
+    return datetime.now().astimezone().isoformat(timespec='seconds')
+
+
+def append_note(root, text):
+    notes = Path(root) / 'planning' / 'NOTES.md'
+    notes.parent.mkdir(parents=True, exist_ok=True)
+    if not notes.exists():
+        notes.write_text('# 本期记录\n\n用户决定、反馈和待办按时间追加在这里。\n', encoding='utf-8')
+    with notes.open('a', encoding='utf-8') as stream:
+        stream.write(f'\n- {datetime.now().strftime("%Y-%m-%d %H:%M")} {text}\n')
+
+
+# ---------------------------------------------------------------- init
+
 def init(args):
-    if not re.fullmatch(r'[\w\-\u4e00-\u9fff]+', args.slug) or args.slug.endswith('.'):
-        raise ValueError('主题简称只用中文、字母、数字、下划线或连字符，不能是路径。')
+    if not re.fullmatch(r'[\w\-\u4e00-\u9fff]+', args.slug):
+        raise ValueError('主题简称只用中文、字母、数字、下划线或连字符。')
     date = datetime.strptime(args.date, '%Y%m%d').strftime('%Y%m%d')
-    from component_library import DEFAULT_LIBRARY
-    library_root = Path(args.library or DEFAULT_LIBRARY).expanduser().resolve() if args.library != 'none' else None
-    library_index = library_root / 'director-index.json' if library_root else None
-    library = load(library_index) if library_index and library_index.is_file() else None
-    if library and library.get('protocol') != 1:
-        raise ValueError('不支持的组件库接入协议；核对当前 director-index.json。')
     pending = []
     for role, items in [('script', args.script), ('narration', args.voice), ('srt', args.srt),
                         ('design', [args.design] if args.design else []), ('material', args.material)]:
         for item in items:
             source = Path(item).expanduser().resolve()
             if not source.is_file():
-                raise ValueError(f'Input file missing: {source}')
-            if role in {'srt', 'design'}:
-                extension = '.srt' if role == 'srt' else '.md'
-                if source.suffix.lower() != extension or not source.read_text(encoding='utf-8-sig').strip():
-                    raise ValueError(f'{role}: expected a nonempty UTF-8 {extension} file: {source}')
+                raise ValueError(f'找不到输入文件：{source}')
             pending.append((role, source))
-    project = (Path(args.root).expanduser().resolve() / f'{date}_{args.slug}')
+    project = Path(args.root).expanduser().resolve() / f'{date}_{args.slug}'
     project.mkdir(parents=True, exist_ok=False)
-    for directory in ['input/script', 'input/narration', 'input/subtitles', 'input/design', 'input/materials', 'input/recordings', 'planning', 'assets/images', 'assets/video', 'assets/bgm', 'assets/sfx', 'assets/licenses', 'generated', 'subtitles', 'qa', 'exports']:
+    for directory in ['input/script', 'input/narration', 'input/subtitles', 'input/design', 'input/materials',
+                      'input/recordings', 'planning', 'assets/images', 'assets/video', 'assets/bgm', 'assets/sfx',
+                      'generated', 'subtitles', 'qa', 'exports']:
         (project / directory).mkdir(parents=True, exist_ok=True)
-    inputs = []
     folders = {'script': 'script', 'narration': 'narration', 'srt': 'subtitles', 'design': 'design', 'material': 'materials'}
+    inputs = []
     for index, (role, source) in enumerate(pending, 1):
         relative = f'input/{folders[role]}/I{index:03d}_{source.name}'
         dest = within(project, relative)
         shutil.copy2(source, dest)
         if role == 'design':
             shutil.copy2(dest, project / 'design.md')
-        inputs.append({'id': f'I{index:03d}', 'role': role, 'original_path': str(source), 'file': relative, 'sha256': sha(dest), 'duration': duration(dest, args.ffprobe) if role == 'narration' else None})
+        inputs.append({'id': f'I{index:03d}', 'role': role, 'original_path': str(source), 'file': relative,
+                       'sha256': sha(dest), 'duration': media_duration(dest, args.ffprobe) if role == 'narration' else None})
     manifest = {
-        'schema_version': 1, 'episode_id': project.name, 'title': args.title,
-        'created_at': datetime.now().astimezone().isoformat(), 'status': 'planning', 'inputs': inputs,
+        'schema_version': 2, 'episode_id': project.name, 'title': args.title, 'created_at': now(),
+        'stage': 'brief', 'stage_history': [{'stage': 'brief', 'at': now(), 'note': 'init'}],
+        'decisions': {'host': None, 'tone': None, 'materials': None},
+        'inputs': inputs,
         'output': {'width': 1920, 'height': 1080, 'fps': 24, 'sample_rate': 48000},
-        'style': {'background': '#ffffff', 'accent': '#2563eb', 'mint': '#81c9b0'},
-        'workflow': {
-            'state_schema': STATE_SCHEMA,
-            'phase': 'opening_plan',
-            'opening_plan_status': 'not_started',
-            'production_unlocked': False,
-            'confirmed_proposal_fingerprint': None,
-            'last_event_id': None,
-            'last_event_at': None,
-        },
-        'settings': {'input_contract': 'srt-audio-design-v1', 'opening_plan_contract': 'user-confirmed-v1', 'narration_policy': 'preserve', 'bgm_required': True, 'burn_captions': True, 'ai_video_mode': 'user_handoff',
-                     'tts': {'provider': 'qwen3-tts-local', 'root': str(default_qwen()), 'profile': 'voice-20260918', 'variant': 'A'}},
-        'generation': {'h3_profile': 'budget', 'authorization': None, 'max_runs': None, 'max_cost': None, 'runs': []},
-        'paths': {'design': 'design.md' if args.design else None, 'edit': 'planning/EDIT.json', 'assets': 'planning/ASSETS.json', 'recordings': 'planning/RECORDINGS.json', 'captions': 'subtitles/CAPTIONS.json', 'hyperframes': 'hyperframes', 'plan': 'planning/PLAN.md', 'proposal': 'planning/PROPOSAL.json', 'events': 'qa/workflow-events.jsonl'},
-        'collaboration': {'review_policy': 'independent', 'review_report': None},
-        'deliverables': {'video': None, 'srt': None, 'vtt': None, 'attribution': None, 'qa': None}
+        'settings': {'ai_video_mode': 'user_handoff', 'narration_policy': 'preserve', 'burn_captions': True,
+                     'tts': {'provider': 'qwen3-tts-local', 'root': default_qwen().as_posix(), 'profile': 'voice-20260918', 'variant': 'A'}},
+        'paths': {'design': 'design.md' if args.design else None, 'brief': 'planning/BRIEF.md', 'edit': 'planning/EDIT.json',
+                  'assets': 'planning/ASSETS.json', 'notes': 'planning/NOTES.md', 'captions': 'subtitles/CAPTIONS.json',
+                  'hyperframes': 'hyperframes'},
+        'deliverables': {'video': None, 'srt': None, 'vtt': None, 'attribution': None},
     }
     save(project / 'PROJECT.json', manifest)
-    if library_root:
-        manifest['settings']['component_library_contract'] = 'component-library-v1'
-        manifest['library'] = {**(library['library'] if library else {}), 'source_root': str(library_root)}
-        manifest['paths']['library_index'] = 'planning/LIBRARY.json' if library else None
-        if library:
-            shutil.copy2(library_index, project / 'planning/LIBRARY.json')
-        save(project / 'PROJECT.json', manifest)
-    save(project / manifest['paths']['edit'], {'duration': None, 'timing_basis': 'pending', 'narration': [], 'scenes': []})
-    save(project / manifest['paths']['assets'], [])
-    save(project / manifest['paths']['recordings'], [])
-    save(project / manifest['paths']['captions'], {'timing_basis': 'pending', 'method': None, 'reviewed': False, 'audio_sources': [], 'cues': []})
-    # The opening-plan contract keeps directing work behind user confirmation.
-    # The director can use assets/directing-template.md once the proposal is
-    # confirmed; init creates planning records only, not even a draft script.
-    shutil.copy2(SKILL / 'assets/team-template.md', project / 'planning/TEAM.md')
-    shutil.copy2(SKILL / 'assets/plan-template.md', project / 'planning/PLAN.md')
-    record_event(project, 'project_initialized', phase='opening_plan',
-                 details={'inputs': len(inputs), 'component_library': bool(library_root)})
-    print(json.dumps({'project': str(project), 'inputs': len(inputs), 'status': 'planning',
-                      'next': '先出开场策划案（planning/PROPOSAL.json → planning/PLAN.md）并取得用户确认，再写编导稿、分镜稿与制作。',
-                      'note': 'Only folders and input copies were created; no media generation or rendering.'}, ensure_ascii=False))
+    save(project / 'planning/EDIT.json', {'duration': None, 'timing_basis': 'pending', 'narration': [], 'scenes': []})
+    save(project / 'planning/ASSETS.json', [])
+    save(project / 'subtitles/CAPTIONS.json', {'timing_basis': 'pending', 'method': None, 'reviewed': False, 'cues': []})
+    shutil.copy2(SKILL / 'templates/brief-template.md', project / 'planning/BRIEF.md')
+    append_note(project, f'建立项目，输入 {len(inputs)} 个文件。')
+    print(json.dumps({'project': str(project), 'inputs': len(inputs), 'stage': 'brief',
+                      'next': '问本期三个决定（主持人/调性/素材路线），然后写 planning/BRIEF.md。'}, ensure_ascii=False))
 
 
-def cue_errors(captions, total=None):
-    errors, previous, ids = [], 0, set()
-    if captions.get('timing_basis') != 'audio' or not captions.get('method') or captions.get('reviewed') is not True:
-        errors.append('字幕必须经过真实声音对齐和校对，不接受估算时间。')
+def add_input(args):
+    root = Path(args.project).resolve()
+    manifest = load(root / 'PROJECT.json')
+    source = Path(args.file).expanduser().resolve()
+    if not source.is_file():
+        raise ValueError(f'找不到文件：{source}')
+    folders = {'script': 'script', 'narration': 'narration', 'srt': 'subtitles', 'design': 'design', 'material': 'materials'}
+    inputs = manifest.setdefault('inputs', [])
+    used = {int(i['id'][1:]) for i in inputs if str(i.get('id', '')).startswith('I') and str(i['id'][1:]).isdigit()}
+    ident = f'I{(max(used) + 1 if used else 1):03d}'
+    if source.is_relative_to(root):
+        relative = source.relative_to(root).as_posix()
+    else:
+        relative = f'input/{folders[args.role]}/{ident}_{source.name}'
+        dest = within(root, relative)
+        if dest.exists():
+            raise ValueError(f'目标已存在：{relative}')
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, dest)
+    target = within(root, relative)
+    if any(i.get('file') == relative for i in inputs):
+        raise ValueError(f'这个文件已经登记过：{relative}')
+    item = {'id': ident, 'role': args.role, 'original_path': str(source), 'file': relative, 'sha256': sha(target),
+            'duration': media_duration(target, args.ffprobe) if args.role == 'narration' else None}
+    if args.note:
+        item['note'] = args.note
+    inputs.append(item)
+    save(root / 'PROJECT.json', manifest)
+    append_note(root, f'登记输入 {ident}（{args.role}）：{relative}')
+    print(json.dumps(item, ensure_ascii=False))
+    return 0
+
+
+# ---------------------------------------------------------------- status / stage
+
+def infer_stage(root, manifest):
+    """老项目没有 stage 字段时，根据已有文件推断。"""
+    if manifest.get('stage') in STAGES:
+        return manifest['stage']
+    if any((root / 'exports').glob('*.mp4')):
+        return 'delivered'
+    if (root / 'hyperframes' / 'index.html').is_file():
+        return 'review'
+    edit = root / 'planning' / 'EDIT.json'
+    if edit.is_file() and load(edit).get('scenes'):
+        return 'production'
+    return 'brief'
+
+
+def status(args):
+    root = Path(args.project).resolve()
+    manifest = load(root / 'PROJECT.json')
+    stage = infer_stage(root, manifest)
+    edit_path = root / manifest.get('paths', {}).get('edit', 'planning/EDIT.json')
+    scenes = load(edit_path).get('scenes', []) if edit_path.is_file() else []
+    brief = root / 'planning' / 'BRIEF.md'
+    brief_filled = brief.is_file() and '（填写）' not in brief.read_text(encoding='utf-8-sig')
+    notes = root / 'planning' / 'NOTES.md'
+    recent = notes.read_text(encoding='utf-8-sig').strip().splitlines()[-6:] if notes.is_file() else []
+    samples = sorted(p.name for p in (root / 'exports').glob('*sample*')) if (root / 'exports').is_dir() else []
+    exports = sorted(p.name for p in (root / 'exports').glob('*.mp4')) if (root / 'exports').is_dir() else []
+    todo = {
+        'brief': '确定本期三个决定，按 guide/ideation.md 构思（三处发散、手法卡、惊喜时刻），写好 BRIEF.md，然后做 15–20 秒动态样片（拿不准时做两版）。',
+        'sample': '把 BRIEF 和样片给用户看，等一句“按这个方向做”或修改意见。',
+        'production': '按 BRIEF 做全片：EDIT.json 分镜 → align.py 对齐 → 素材 → brand-kit + HyperFrames → 音效和 BGM 闪避。',
+        'review': '渲染预览，跑 frames.py（有参考片时加 --compare）和 audio.py report 自查并修改，然后请用户预览，等明确的导出指令。',
+        'delivered': '已导出。小修改回到 production 另存新版本；要整期重做就 stage brief --note "重做：…" 重新构思；发布后用户发数据截图时按 guide/retro.md 复盘。',
+    }[stage]
+    print(json.dumps({
+        'project': str(root), 'title': manifest.get('title'), 'stage': stage, 'stage_name': STAGE_NAMES[stage],
+        'decisions': manifest.get('decisions'), 'brief_filled': brief_filled, 'scene_count': len(scenes),
+        'hyperframes_ready': (root / 'hyperframes' / 'index.html').is_file(),
+        'samples': samples, 'exports': exports, 'recent_notes': recent, 'next': todo,
+        'legacy_project': manifest.get('schema_version') != 2,
+    }, ensure_ascii=False, indent=2))
+    return 0
+
+
+def set_stage(args):
+    root = Path(args.project).resolve()
+    manifest = load(root / 'PROJECT.json')
+    if args.stage not in STAGES:
+        raise ValueError('阶段只能是：' + ', '.join(STAGES))
+    manifest['stage'] = args.stage
+    manifest.setdefault('stage_history', []).append({'stage': args.stage, 'at': now(), 'note': args.note or ''})
+    for key in ('host', 'tone', 'materials'):
+        value = getattr(args, key)
+        if value:
+            manifest.setdefault('decisions', {})[key] = value
+    save(root / 'PROJECT.json', manifest)
+    append_note(root, f'进入「{STAGE_NAMES[args.stage]}」' + (f'：{args.note}' if args.note else ''))
+    print(json.dumps({'stage': args.stage, 'decisions': manifest.get('decisions')}, ensure_ascii=False))
+    return 0
+
+
+# ---------------------------------------------------------------- check
+
+def cue_problems(captions, total=None):
+    problems, previous, ids = [], 0, set()
     cues = captions.get('cues', [])
     if not cues:
-        errors.append('字幕为空。')
+        return ['字幕为空。']
     for cue in cues:
         cid, start, end = cue.get('id'), cue.get('start'), cue.get('end')
         if not cid or cid in ids:
-            errors.append(f'字幕 ID 缺失或重复: {cid}')
+            problems.append(f'字幕 ID 缺失或重复：{cid}')
         ids.add(cid)
         if not number(start) or not number(end) or start < 0 or end <= start:
-            errors.append(f'字幕时间无效: {cid}')
+            problems.append(f'字幕时间无效：{cid}')
             continue
         if start < previous - 0.001:
-            errors.append(f'字幕重叠或乱序: {cid}')
-        if number(total) and end > total + 0.001:
-            errors.append(f'字幕超出成片时长: {cid}')
-        if round(end * 1000) <= round(start * 1000):
-            errors.append(f'字幕短于可输出的毫秒精度: {cid}')
-        previous = end
+            problems.append(f'字幕重叠或乱序：{cid}')
+        if number(total) and end > total + 0.05:
+            problems.append(f'字幕超出成片时长：{cid}')
         if not str(cue.get('text', '')).strip():
-            errors.append(f'空字幕: {cid}')
-    return errors
+            problems.append(f'空字幕：{cid}')
+        previous = end
+    return problems
 
 
 def check(args):
     root = Path(args.project).resolve()
-    errors, warnings = [], []
-    strict = args.phase in {'ready', 'review', 'delivery'}
     manifest = load(root / 'PROJECT.json')
-    workflow = manifest.get('workflow') or {}
-    if workflow.get('state_schema') == STATE_SCHEMA:
-        event_result = verify_events(root, manifest)
-        if event_result['errors']:
-            errors.extend(event_result['errors'])
-    elif strict and manifest.get('settings', {}).get('opening_plan_contract') == 'user-confirmed-v1':
-        warnings.append('项目缺少 workflow 状态摘要；按兼容模式检查，但建议由当前 skill 重新登记。')
-    paths = manifest['paths']
-    edit = load(within(root, paths['edit']))
-    assets = load(within(root, paths['assets']))
-    recordings = load(within(root, paths['recordings']))
-    captions = load(within(root, paths['captions']))
-
-    def issue(message):
-        (errors if strict else warnings).append(message)
-
-    def file_ok(relative, label, expected_hash=None):
-        if not relative:
-            issue(f'{label}: 缺少文件。')
-            return False
-        try:
-            path = within(root, relative)
-        except ValueError as exc:
-            errors.append(str(exc))
-            return False
-        if not path.is_file():
-            errors.append(f'{label}: 文件不存在 {relative}')
-            return False
-        if expected_hash and sha(path) != expected_hash:
-            errors.append(f'{label}: 文件哈希与登记不一致。')
-            return False
-        return True
-
-    def indexed(items, name):
-        out = {}
-        for item in items:
-            ident = item.get('id')
-            if not ident or ident in out:
-                errors.append(f'{name}: ID 缺失或重复 {ident}')
-            else:
-                out[ident] = item
-        return out
-
-    inputs = indexed(manifest.get('inputs', []), 'input')
-    voices = {k: v for k, v in inputs.items() if v['role'] == 'narration'}
-    for ident, item in inputs.items():
-        file_ok(item.get('file'), ident, item.get('sha256'))
-    if not voices:
-        issue('缺少本期配音。')
-    if manifest.get('settings', {}).get('input_contract') == 'srt-audio-design-v1':
-        for role, label in [('srt', 'SRT'), ('design', 'design.md 原始输入')]:
-            if not any(item.get('role') == role for item in inputs.values()):
-                issue(f'三项输入未齐：缺少 {label}。')
-        if file_ok(paths.get('design'), 'design.md 工作版'):
-            if not within(root, paths['design']).read_text(encoding='utf-8-sig').strip():
-                errors.append('design.md 工作版为空。')
+    paths = manifest.get('paths', {})
+    problems, hints = [], []
+    edit = load(within(root, paths.get('edit', 'planning/EDIT.json')))
+    assets_path = within(root, paths.get('assets', 'planning/ASSETS.json'))
+    assets = {a.get('id'): a for a in (load(assets_path) if assets_path.is_file() else [])}
     total = edit.get('duration')
-    if strict and (not number(total) or total <= 0 or edit.get('timing_basis') != 'audio'):
-        errors.append('时间轴需基于实测声音，并填写有效总时长。')
-    ranges = {ident: [] for ident in voices}
-    previous_end = 0
-    narration = edit.get('narration', [])
-    for clip in narration:
-        ident = clip.get('input_id')
-        a, b, start = clip.get('source_in'), clip.get('source_out'), clip.get('start')
+    fps = manifest.get('output', {}).get('fps', 24)
+
+    # 旁白：完整、不重叠、原速
+    voices = {i['id']: i for i in manifest.get('inputs', []) if i.get('role') == 'narration'}
+    cursor = {}
+    last_end = 0
+    for clip in edit.get('narration', []):
+        ident, a, b, start = clip.get('input_id'), clip.get('source_in'), clip.get('source_out'), clip.get('start')
         if ident not in voices:
-            errors.append(f'旁白引用未知配音: {ident}')
+            problems.append(f'旁白引用了未登记的配音：{ident}')
             continue
-        if not all(number(x) for x in (a, b, start)) or a < 0 or b <= a or start < 0:
-            errors.append(f'无效旁白区间: {ident}')
+        if not all(number(x) for x in (a, b, start)) or b <= a:
+            problems.append(f'旁白区间无效：{ident}')
             continue
         if clip.get('rate', 1) != 1:
-            errors.append('默认流程不接受旁白变速；需明确的专门处理和复核。')
+            hints.append(f'{ident} 被变速了（rate={clip.get("rate")}）；确认用户同意。')
+        if start < last_end - 0.02:
+            problems.append(f'旁白片段重叠或乱序：{ident} @ {start}')
+        last_end = start + (b - a)
+        if manifest.get('settings', {}).get('narration_policy') == 'preserve' and abs(a - cursor.get(ident, 0)) > 0.05:
+            hints.append(f'{ident} 在 {cursor.get(ident, 0):.2f}–{a:.2f} 秒之间有旁白没用上，确认是有意删改。')
+        cursor[ident] = b
+    for ident, used in cursor.items():
         measured = voices[ident].get('duration')
-        if not number(measured):
-            issue(f'{ident}: 缺少实际配音时长，先探测媒体并登记。')
-        elif b > measured + 0.05:
-            errors.append(f'{ident}: 采用区间超出源音频。')
-        finish = start + b - a
-        if start < previous_end - 0.02:
-            errors.append('主旁白片段重叠或乱序。')
-        if number(total) and finish > total + 0.05:
-            errors.append('主旁白超出成片时长。')
-        previous_end = finish
-        ranges[ident].append((a, b))
-    if strict and not narration:
-        errors.append('时间轴没有用户配音片段。')
-    if strict and manifest['settings'].get('narration_policy') == 'preserve':
-        for ident, used in ranges.items():
-            cursor = 0
-            for a, b in used:
-                if abs(a - cursor) > 0.05:
-                    errors.append(f'{ident}: preserve 模式存在漏句、重复或重排。')
-                cursor = b
-            measured = voices[ident].get('duration')
-            if not number(measured) or abs(cursor - measured) > 0.05:
-                errors.append(f'{ident}: 原配音没有完整覆盖。')
-    asset_map = indexed(assets, 'asset')
-    recording_map = indexed(recordings, 'recording')
-    bgm = False
-    for ident, item in asset_map.items():
-        if item.get('selected') is not True:
-            continue
-        bgm = bgm or item.get('kind') == 'bgm'
-        file_ok(item.get('file'), ident, item.get('sha256'))
-        if strict and (item.get('status') != 'acquired' or item.get('reviewed') is not True):
-            errors.append(f'{ident}: 采用素材尚未获取或查看。')
-        license_info = item.get('license', {})
-        if strict and (license_info.get('status') != 'confirmed' or not license_info.get('evidence')):
-            errors.append(f'{ident}: 缺少适用许可/用户提供/自制依据。')
-        if item.get('origin') == 'external' and strict:
-            if not item.get('source_url') or not license_info.get('name'):
-                errors.append(f'{ident}: 外部素材缺少原页或许可名称。')
-        if strict and not item.get('sha256'):
-            errors.append(f'{ident}: 缺少采用文件哈希。')
-    if strict and manifest['settings'].get('bgm_required') and not bgm:
-        errors.append('尚未取得并登记本期 BGM。')
+        if number(measured) and abs(used - measured) > 0.05:
+            hints.append(f'{ident} 结尾 {used:.2f}/{measured:.2f} 秒，末尾可能没用完。')
+
+    # 镜头：覆盖、空隙、类型节奏
     scenes = edit.get('scenes', [])
-    indexed(scenes, 'scene')
-    frontier = 0
+    frontier, runs, counts, untyped, unready = 0.0, [], Counter(), [], []
+    previous_type, run_length, run_start = None, 0.0, 0.0
     for scene in scenes:
-        ident, mode = scene.get('id'), scene.get('visual_mode')
-        if mode not in MODES:
-            errors.append(f'{ident}: 未知画面来源 {mode}')
-        a, b = scene.get('start'), scene.get('end')
-        if strict or a is not None or b is not None:
-            if not number(a) or not number(b) or a < 0 or b <= a:
-                errors.append(f'{ident}: 无效镜头时间。')
-            else:
-                if strict and a > frontier + 1 / manifest['output']['fps']:
-                    errors.append(f'{ident}: 画面时间轴有空隙。')
-                frontier = max(frontier, b)
-                if number(total) and b > total + 0.05:
-                    errors.append(f'{ident}: 镜头超出总时长。')
-        if strict and (scene.get('status') != 'ready' or scene.get('placeholder', False)):
-            errors.append(f'{ident}: 镜头仍是草稿或占位。')
-        if mode not in {'graphic', 'screen_record'} and not scene.get('asset_ids'):
-            issue(f'{ident}: 缺少采用素材引用。')
-        for aid in scene.get('asset_ids', []):
-            if aid not in asset_map or not asset_map[aid].get('selected'):
-                errors.append(f'{ident}: 未知或未采用素材 {aid}')
-        if mode == 'screen_record':
-            record = recording_map.get(scene.get('recording_id'))
-            if not record:
-                errors.append(f'{ident}: 缺少录屏任务。')
-            elif strict:
-                file_ok(record.get('file'), record['id'])
-                if record.get('status') != 'acquired' or record.get('reviewed') is not True:
-                    errors.append(f'{ident}: 录屏未实际取得并查看。')
-    if strict:
-        if not scenes or (number(total) and frontier < total - 1 / manifest['output']['fps']):
-            errors.append('镜头尚未覆盖全片。')
-        errors.extend(cue_errors(captions, total))
-        registered = {s.get('input_id'): s.get('sha256') for s in captions.get('audio_sources', [])}
-        for ident in {clip.get('input_id') for clip in narration}:
-            if ident in voices and registered.get(ident) != voices[ident].get('sha256'):
-                errors.append(f'{ident}: 字幕未绑定当前配音哈希。')
-        file_ok(paths['hyperframes'] + '/index.html', 'HyperFrames composition')
-    if args.phase == 'delivery':
-        for kind in ['video', 'srt', 'vtt', 'attribution', 'qa']:
-            file_ok(manifest['deliverables'].get(kind), kind)
-    from component_library import check_bindings
-    component_result = check_bindings(root, manifest, edit, strict)
-    errors.extend(component_result['errors'])
-    warnings.extend(component_result['warnings'])
-    from opening_plan import check_plan
-    plan_result = check_plan(root, manifest, strict)
-    errors.extend(plan_result['errors'])
-    warnings.extend(plan_result['warnings'])
-    collaboration = manifest.get('collaboration', {})
-    review_report = args.review_report or collaboration.get('review_report')
-    if args.phase == 'review' or (args.phase == 'delivery' and (collaboration.get('review_policy') == 'independent' or review_report)):
-        if not review_report:
-            errors.append('缺少当前版本审查报告；登记 collaboration.review_report 或传入 --review-report。')
+        sid, a, b = scene.get('id'), scene.get('start'), scene.get('end')
+        if not number(a) or not number(b) or b <= a:
+            hints.append(f'{sid}：还没有有效时间。')
+            continue
+        if a > frontier + 1 / fps:
+            problems.append(f'{sid} 前有 {a - frontier:.2f} 秒空白画面。')
+        frontier = max(frontier, b)
+        shot_type = scene.get('type')
+        if shot_type not in SHOT_TYPES:
+            untyped.append(sid)
         else:
-            from review_gate import check_review
-            result = check_review(root, review_report, require_export=args.phase == 'delivery', allow_self_review=args.allow_self_review)
-            errors.extend(result['errors'])
-            warnings.extend(result['warnings'])
-    elif args.phase == 'delivery':
-        warnings.append('旧项目未配置独立审片记录，本次 delivery 仅验证交付文件结构。接续制作应补齐协作和审片记录。')
-    report = {'phase': args.phase, 'ok': not errors, 'errors': errors, 'warnings': warnings,
-              'note': 'Structural checks only; not a content, license, listening or rendered-video quality verdict.'}
+            counts[shot_type] += b - a
+        if shot_type == previous_type:
+            run_length += b - a
+        else:
+            if previous_type:
+                runs.append((previous_type, run_start, run_length))
+            previous_type, run_start, run_length = shot_type, a, b - a
+        if scene.get('status') != 'ready' or scene.get('placeholder'):
+            unready.append(sid + ('（占位）' if scene.get('placeholder') else ''))
+        for aid in scene.get('asset_ids', []) or []:
+            asset = assets.get(aid)
+            if not asset:
+                problems.append(f'{sid} 引用了 ASSETS 里没有的素材 {aid}')
+            elif asset.get('file') and not within(root, asset['file']).is_file():
+                problems.append(f'{sid} 的素材 {aid} 文件不存在：{asset["file"]}')
+    if previous_type:
+        runs.append((previous_type, run_start, run_length))
+    if unready:
+        hints.append(f'{len(unready)} 个镜头还不是 ready：' + '、'.join(unready[:8]) + ('…' if len(unready) > 8 else ''))
+    if untyped:
+        hints.append(f'{len(untyped)} 个镜头没标画面类型 type（host/evidence/structure/metaphor）：'
+                     + '、'.join(untyped[:8]) + ('…' if len(untyped) > 8 else ''))
+    if number(total) and scenes and frontier < total - 1 / fps:
+        problems.append(f'镜头只排到 {frontier:.2f} 秒，成片 {total:.2f} 秒。')
+    long_runs = [(t, s, l) for t, s, l in runs if t in SHOT_TYPES and l > args.max_run]
+    for t, s, l in long_runs:
+        hints.append(f'从 {s:.1f} 秒起连续 {l:.1f} 秒都是「{TYPE_NAMES[t]}」画面，考虑穿插其他类型。')
+    covered = sum(counts.values())
+    mix = {TYPE_NAMES[k]: f'{v / covered:.0%}' for k, v in counts.items()} if covered else {}
+    if covered and 'host' not in counts and manifest.get('decisions', {}).get('host') not in (None, 'none', '不用'):
+        hints.append('时间轴里还没有主持人镜头。')
+
+    # 字幕
+    captions_path = within(root, paths.get('captions', 'subtitles/CAPTIONS.json'))
+    if captions_path.is_file():
+        captions = load(captions_path)
+        if captions.get('cues'):
+            problems.extend(cue_problems(captions, total))
+            if captions.get('reviewed') is not True:
+                hints.append('字幕还没对照实际声音校对（CAPTIONS.reviewed 不是 true）。')
+        else:
+            hints.append('还没有对齐后的字幕。')
+
+    # 组件库挂载（只在用了组件时检查，结果都是提示）
+    if any(scene.get('component_bindings') for scene in scenes):
+        try:
+            from component_library import check_bindings
+            hints.extend(check_bindings(root, manifest, edit)['warnings'])
+        except Exception as exc:  # 组件检查失败不影响其他结果
+            hints.append(f'组件挂载检查没跑成：{exc}')
+
+    # 采用素材的来源
+    for aid, asset in assets.items():
+        if asset.get('selected') and asset.get('origin') == 'external' and not asset.get('source_url'):
+            hints.append(f'{aid}：外部素材缺来源链接，署名时会用到。')
+
+    report = {'ok': not problems, 'problems': problems, 'hints': hints, 'shot_mix': mix,
+              'note': '只检查文件和时间；画面好不好用 frames.py 看片判断。'}
     print(json.dumps(report, ensure_ascii=False, indent=2))
-    return 0 if report['ok'] else 1
+    return 0 if not problems else 1
 
 
-def status(args):
-    """Show the resumable workflow state without changing project files."""
-    root = Path(args.project).resolve()
-    manifest = load(root / 'PROJECT.json')
-    workflow = manifest.get('workflow') or {}
-    proposal_path = within(root, manifest.get('paths', {}).get('proposal') or 'planning/PROPOSAL.json')
-    proposal = load(proposal_path) if proposal_path.is_file() else {}
-    confirmation = proposal.get('confirmation') or {}
-    requires_opening_plan = manifest.get('settings', {}).get('opening_plan_contract') == 'user-confirmed-v1'
-    confirmation_stale = bool(
-        confirmation.get('proposal_fingerprint')
-        and confirmation.get('proposal_fingerprint') != proposal_fingerprint(proposal)
-    )
-    edit_path = within(root, manifest.get('paths', {}).get('edit') or 'planning/EDIT.json')
-    edit = load(edit_path) if edit_path.is_file() else {}
-    scenes = edit.get('scenes') or []
-    review = manifest.get('collaboration', {}).get('review_report')
-    if requires_opening_plan and not proposal_path.is_file():
-        phase, next_step = 'opening_plan', '建立 PROPOSAL.json，检索候选并生成 PLAN.md。'
-    elif requires_opening_plan and not confirmation.get('by_user'):
-        phase, next_step = 'opening_plan', '把 PLAN.md 交给用户，等待逐项确认；确认前不要制作。'
-    elif requires_opening_plan and confirmation_stale:
-        phase, next_step = 'opening_plan', '策划案已被改动；重新 build，把变更交给用户并取得新的确认。'
-    elif not scenes:
-        phase, next_step = 'directing', '按已确认方案写 DIRECTING.md、EDIT.json 和分镜。'
-    elif not (root / (manifest.get('paths', {}).get('hyperframes') or 'hyperframes') / 'index.html').is_file():
-        phase, next_step = 'production', '进入 HyperFrames 制作并完成结构检查。'
-    elif not review:
-        phase, next_step = 'review', '冻结当前版本并安排独立审片。'
-    else:
-        phase, next_step = 'delivery', '按审片结果执行预览选择与导出确认。'
-    event_result = verify_events(root, manifest)
-    print(json.dumps({
-        'ok': not event_result['errors'],
-        'project': str(root),
-        'episode_id': manifest.get('episode_id'),
-        'phase': phase,
-        'workflow': workflow,
-        'confirmed': bool(confirmation.get('by_user')),
-        'confirmation_stale': confirmation_stale,
-        'usable_confirmation': bool(confirmation.get('by_user')) and not confirmation_stale,
-        'scene_count': len(scenes),
-        'review_report': review,
-        'event_count': len(event_result['events']),
-        'event_log': str(event_result['path']),
-        'event_errors': event_result['errors'],
-        'next': next_step,
-        'note': '只读状态摘要；PROJECT.json 是状态单一真源，事件日志用于追溯，不替代实际审片。',
-    }, ensure_ascii=False, indent=2))
-    return 0 if not event_result['errors'] else 1
-
+# ---------------------------------------------------------------- captions
 
 def timestamp(seconds, sep):
     milliseconds = round(seconds * 1000)
@@ -429,32 +399,31 @@ def timestamp(seconds, sep):
 def export_captions(args):
     root = Path(args.project).resolve()
     manifest = load(root / 'PROJECT.json')
-    captions = load(within(root, manifest['paths']['captions']))
-    edit = load(within(root, manifest['paths']['edit']))
-    errors = cue_errors(captions, edit.get('duration'))
-    if errors:
-        raise ValueError('; '.join(errors))
+    paths = manifest.get('paths', {})
+    captions = load(within(root, paths.get('captions', 'subtitles/CAPTIONS.json')))
+    edit = load(within(root, paths.get('edit', 'planning/EDIT.json')))
+    problems = cue_problems(captions, edit.get('duration'))
+    if problems:
+        raise ValueError('；'.join(problems))
     outputs = [within(root, 'subtitles/zh-CN.srt'), within(root, 'subtitles/zh-CN.vtt')]
     if not args.overwrite and any(p.exists() for p in outputs):
-        raise ValueError('字幕已存在；确认替换后显式使用 --overwrite。')
+        raise ValueError('字幕文件已存在；确认替换后加 --overwrite。')
     srt, vtt = [], ['WEBVTT\n']
     for index, cue in enumerate(captions['cues'], 1):
         text = str(cue['text']).strip().replace('\r\n', '\n').replace('\r', '\n')
-        if '\n\n' in text:
-            raise ValueError('字幕正文含空行，应拆成独立 cue。')
         srt.append(f'{index}\n{timestamp(cue["start"], ",")} --> {timestamp(cue["end"], ",")}\n{text}\n')
-        # Escape WebVTT markup without changing spoken text in SRT.
         escaped = text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
         vtt.append(f'{timestamp(cue["start"], ".")} --> {timestamp(cue["end"], ".")}\n{escaped}\n')
     outputs[0].write_text('\n'.join(srt), encoding='utf-8')
     outputs[1].write_text('\n'.join(vtt), encoding='utf-8')
-    manifest['deliverables'].update({'srt': outputs[0].relative_to(root).as_posix(), 'vtt': outputs[1].relative_to(root).as_posix()})
+    manifest.setdefault('deliverables', {}).update({'srt': 'subtitles/zh-CN.srt', 'vtt': 'subtitles/zh-CN.vtt'})
     save(root / 'PROJECT.json', manifest)
     print(json.dumps({'written': [str(p) for p in outputs]}, ensure_ascii=False))
+    return 0
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest='command', required=True)
     create = sub.add_parser('init')
     create.add_argument('--root', default=str(DEFAULT_ROOT))
@@ -463,32 +432,35 @@ def main():
     create.add_argument('--title', required=True)
     create.add_argument('--script', action='append', default=[])
     create.add_argument('--voice', action='append', default=[])
-    create.add_argument('--srt', action='append', default=[], help='Original UTF-8 SRT; repeat for multiple audio segments.')
-    create.add_argument('--design', help='Original design.md; copied as source plus a project-root working copy.')
+    create.add_argument('--srt', action='append', default=[])
+    create.add_argument('--design')
     create.add_argument('--material', action='append', default=[])
     create.add_argument('--ffprobe')
-    create.add_argument('--library', help='Component-library root; default is the paired local library. Use none only for an explicitly library-free project.')
-    verify = sub.add_parser('check')
-    verify.add_argument('project')
-    verify.add_argument('--phase', choices=['plan', 'ready', 'review', 'delivery'], default='plan')
-    verify.add_argument('--review-report', help='Project-relative review JSON; overrides collaboration.review_report.')
-    verify.add_argument('--allow-self-review', action='store_true', help='Only after explicit user acceptance of self-review.')
+    extra = sub.add_parser('add')
+    extra.add_argument('project')
+    extra.add_argument('file')
+    extra.add_argument('--role', required=True, choices=['script', 'narration', 'srt', 'design', 'material'])
+    extra.add_argument('--note')
+    extra.add_argument('--ffprobe')
     state = sub.add_parser('status')
     state.add_argument('project')
+    stage = sub.add_parser('stage')
+    stage.add_argument('project')
+    stage.add_argument('stage', choices=STAGES)
+    stage.add_argument('--note', help='用户原话或一句说明')
+    stage.add_argument('--host', help='主持人形象，如 真人口播 / 插画角色：小陶 / 头像角标 / 不用')
+    stage.add_argument('--tone', help='视觉调性，如 A 深色科技（主色 #3B82F6）')
+    stage.add_argument('--materials', help='本期素材路线一句话')
+    verify = sub.add_parser('check')
+    verify.add_argument('project')
+    verify.add_argument('--max-run', type=float, default=20.0, help='同一类画面连续超过这个秒数就提示，默认 20')
     captions = sub.add_parser('captions')
     captions.add_argument('project')
     captions.add_argument('--overwrite', action='store_true')
     args = parser.parse_args()
     try:
-        if args.command == 'init':
-            init(args)
-        elif args.command == 'check':
-            return check(args)
-        elif args.command == 'status':
-            return status(args)
-        else:
-            export_captions(args)
-        return 0
+        return {'init': init, 'add': add_input, 'status': status, 'stage': set_stage, 'check': check,
+                'captions': export_captions}[args.command](args) or 0
     except (ValueError, OSError, KeyError, TypeError) as exc:
         print(json.dumps({'ok': False, 'error': str(exc)}, ensure_ascii=False), file=sys.stderr)
         return 1

@@ -1,4 +1,4 @@
 interface:
-  display_name: "科普视频编导"
-  short_description: "设计钩子、正文与结尾，编写逐字稿，查找素材并安排本人录屏和 AI 画面"
-  default_prompt: "使用 $science-video-preproduction，围绕我想讲的内容设计钩子、正文和结尾，制作逐字稿与混合分镜，查找外部视频图片素材，并给我可照做的录屏流程和 AI 画面提示词。"
+  display_name: "科普视频前期"
+  short_description: "从主题或原稿写出钩子、口播稿和四类画面分镜，并列出录屏、口播和素材任务"
+  default_prompt: "使用 $science-video-preproduction。我想讲：……。帮我设计 2–3 个开头钩子并推荐一个，写完整口播稿，出分镜表（标明主持人/证据/结构/比喻四类画面和素材来源），再列出需要我录屏或录口播的任务卡。"

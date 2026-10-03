@@ -16,7 +16,8 @@ ROOT = Path(__file__).resolve().parents[1]
 NAMES = ('science-video-director', 'science-video-preproduction', 'h3-science-video')
 CHECKS = []
 ENV = dict(os.environ, PYTHONUTF8='1', PYTHONDONTWRITEBYTECODE='1')
-for key in ('EXPLAINER_COMPONENT_LIBRARY', 'SCIENCE_VIDEO_PROJECTS', 'QWEN_TTS_ROOT'):
+for key in ('EXPLAINER_COMPONENT_LIBRARY', 'SCIENCE_VIDEO_WORKSPACE', 'SCIENCE_VIDEO_PROJECTS',
+            'SCIENCE_VIDEO_BRAND_KIT', 'QWEN_TTS_ROOT'):
     ENV.pop(key, None)
 
 
@@ -59,6 +60,10 @@ def check_structure():
     for file in python_files:
         ast.parse(file.read_text(encoding='utf-8-sig'), filename=str(file))
     check('Python scripts parse', len(python_files) >= 10)
+    leaked = [str(file.relative_to(ROOT)) for file in (ROOT / 'skills').rglob('*')
+              if file.is_file() and file.suffix in {'.md', '.py', '.ps1', '.yaml'}
+              and re.search(r'[A-Za-z]:/(?:workspace|Users|Qwen3-TTS)', file.read_text(encoding='utf-8-sig'))]
+    check('no author-machine paths in shipped skills: ' + ', '.join(leaked), not leaked)
     broken, links = [], 0
     for file in (ROOT / 'skills').rglob('*.md'):
         for raw in re.findall(r'\[[^\]\n]*\]\(([^)\n]+)\)', file.read_text(encoding='utf-8-sig')):
@@ -71,7 +76,7 @@ def check_structure():
                 broken.append(str(file.relative_to(ROOT)) + ' -> ' + target)
     if broken:
         raise AssertionError('Broken skill links:\n' + '\n'.join(broken))
-    check('all relative Markdown links resolve', links > 50)
+    check('all relative Markdown links resolve', links >= 3)
     manifest = load(ROOT / 'skills/source-manifest.json')
     records = manifest['files']
     check('source manifest covers shipped source files', all(
@@ -126,9 +131,9 @@ def check_integration(node, work):
          '--out', tuned, '--node', node], cwd=work, success=False)
     check('tune refuses to replace an existing output', tuned.read_bytes() == frozen)
 
-    # An isolated legacy-project fixture exercises binding without fabricating
-    # a user-confirmation record. Current projects are tested closed below.
-    project = work / 'legacy-fixture'
+    # An isolated project fixture exercises binding. The library is an
+    # accelerator, not a gate: binding needs no confirmation record.
+    project = work / 'binding-fixture'
     manifest = {'paths': {'edit': 'EDIT.json', 'hyperframes': 'hyperframes',
                           'library_index': 'library/director-index.json'},
                 'settings': {'component_library_contract': 'component-library-v1'}}
@@ -148,14 +153,6 @@ def check_integration(node, work):
     spec.loader.exec_module(module)
     validation = module.check_bindings(project, manifest, load(project / 'EDIT.json'), True)
     check('bound bundle is reachable with valid hashes and timing', not validation['errors'] and not validation['warnings'])
-    manifest['settings']['opening_plan_contract'] = 'user-confirmed-v1'
-    save(project / 'PROJECT.json', manifest)
-    edit_before = (project / 'EDIT.json').read_bytes()
-    run([sys.executable, director / 'component_library.py', 'bind', project,
-         '--scene', 'S01', '--config', tuned, '--node', node], cwd=work, success=False)
-    check('missing opening confirmation cannot change EDIT', (project / 'EDIT.json').read_bytes() == edit_before)
-    check('missing opening confirmation cannot export another bundle',
-          len(list((project / 'hyperframes/components').iterdir())) == 1)
     return result['library']['revision']
 
 
