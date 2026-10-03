@@ -37,9 +37,9 @@ python scripts/install-skills.py
 | `QWEN_TTS_ROOT` | 本地 Qwen3-TTS | `~/Qwen3-TTS` |
 | `FFMPEG_PATH` / `FFPROBE_PATH` | ffmpeg / ffprobe | Qwen 目录里的 ffmpeg 9，再找 PATH |
 
-## 本仓库没有带的东西
+## 品牌包和手法库要自己准备
 
-技能里提到、但属于作者工作区的资产不在这个仓库：频道品牌包 `brand-kit`（组件、四种调性、字体、音效映射、角色声音库）、`手法库`（从参考片拆出来的手法卡）、参考视频和 `频道复盘.md`。没有它们时，方法、画面标准和大部分脚本照常可用；用到品牌包的步骤（调性静帧、品牌组件、`shot_semantics.py` 的品牌包候选）需要自备一套同结构的资产，或直接在 HyperFrames 里手写镜头。
+技能要用的品牌包 `brand-kit`（组件、调性、字体、音效映射、主持人、角色声音库）、`手法库`（从参考片拆出来的手法卡）和 `频道复盘.md` 是作者自己频道的东西，没有随仓库发布。仓库提供的是空骨架 [workspace-starter/](../workspace-starter/README.md) 和一份 [工作区初始化指引](../WORKSPACE_SETUP.md)：先运行 `python scripts/init-workspace.py --workspace <你的工作区>` 建好目录，再照指引一步一步准备自己的品牌包和手法库，同一条命令加 `--check` 会列出还剩哪几步。
 
 仓库里的组件库是 2026-09-22 的版本。新版技能提到的组件分级（`component-semantics.json`，core / episode / legacy / hidden-platform）是之后加的，仓库这份还没有；`library_prepare.py` 的检索、调参、校验和 `component_library.py` 的绑定在这份组件库上可用（见下方命令和分发检查）。
 

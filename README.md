@@ -22,7 +22,7 @@ python scripts/install-skills.py
 python scripts/verify-skills.py
 ```
 
-安装默认写入 Codex 技能目录，并拒绝覆盖已有同名技能。也可直接读取仓库内的技能，不安装。详见 [安装、依赖与调用示例](skills/README.md) 和 [编导组件接口](DIRECTOR_GUIDE.md)。模型、HyperFrames 官方技能和本期素材按需另行配置；不自动安装模型或写入凭据。
+安装默认写入 Codex 技能目录，并拒绝覆盖已有同名技能。技能要用的品牌包和手法库需要自己准备，照 [工作区初始化指引](WORKSPACE_SETUP.md) 一步一步做。也可直接读取仓库内的技能，不安装。详见 [安装、依赖与调用示例](skills/README.md) 和 [编导组件接口](DIRECTOR_GUIDE.md)。模型、HyperFrames 官方技能和本期素材按需另行配置；不自动安装模型或写入凭据。
 
 ## 快速预览
 
@@ -93,6 +93,7 @@ npm run build:site
 | `vendor/` | 页面必须加载的浏览器运行文件 |
 | `scripts/` | 构建、预览、导出、技能安装和验证工具 |
 | `skills/` | 三套编排技能、分主题指南、配套脚本与模板 |
+| `workspace-starter/` | 视频工作区的空骨架：品牌包占位、手法库模板；准备步骤见 [工作区初始化指引](WORKSPACE_SETUP.md) |
 | `director-index.json` | 从当前源码生成的能力、参数、动效和版本索引 |
 
 - [完整组件目录](CATALOG.md)
