@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "source": "author-maintained local skills",
-  "snapshot_date": "2026-10-03",
+  "snapshot_date": "2026-10-06",
   "adaptation": "Repository distribution: portable runtime paths (scripts/runtime_paths.py), placeholder paths in guides, deprecated placeholder files omitted. Installed source skills are unchanged.",
   "files": [
     {
@@ -30,7 +30,7 @@
     },
     {
       "path": "science-video-director/guide/style-profile.md",
-      "source_sha256": "b8ccd1feab9c1aa9f7c9e6905b1614f85e69295803f0916a681a85f479f89cb0"
+      "source_sha256": "d8f31fce715cb53de8fa815bd5f9e22fc9b290319ecb3f301432217d73b60648"
     },
     {
       "path": "science-video-director/guide/visual-grammar.md",
@@ -38,7 +38,7 @@
     },
     {
       "path": "science-video-director/guide/voice.md",
-      "source_sha256": "61aa3e97d77626f3be8dcb1b05a8780144426bdc5a1235fc7d076bbedd5e8ca0"
+      "source_sha256": "db8539c840ab8104270c1880a9cb40bb2ef9456ebc1e9119feb1989d3486bdb0"
     },
     {
       "path": "science-video-director/scripts/_media.py",
@@ -62,7 +62,7 @@
     },
     {
       "path": "science-video-director/scripts/episode.py",
-      "source_sha256": "32f92cb852b3ee2d3fb9c86bbcf7653c8e6d85262ccf747d4ef4f14612de76a2"
+      "source_sha256": "1db7ed6069bf84f6d66240dd9120968b8d1908ed0a111c7e4fa4e44b70f71d51"
     },
     {
       "path": "science-video-director/scripts/frames.py",
@@ -82,7 +82,7 @@
     },
     {
       "path": "science-video-director/scripts/qwen_voiceover.py",
-      "source_sha256": "b5603d6d2f760242a409943bd5bd65062308d2921116574a9555f0e1541399e3"
+      "source_sha256": "6628aca737d9dc85c12a1599251dce4d4be175e78e820555a108dc9372956efe"
     },
     {
       "path": "science-video-director/scripts/retention.py",
@@ -102,7 +102,7 @@
     },
     {
       "path": "science-video-director/SKILL.md",
-      "source_sha256": "fafeaa3bae4107b2141b1d90c5fad79191cec9965ba6a6336bfa5632ef548497"
+      "source_sha256": "22dd58573774ffd4c5e5cb86599dc2623f8906cbe24a182460cc65fae743405a"
     },
     {
       "path": "science-video-director/templates/brief-template.md",

@@ -136,7 +136,7 @@ def init(args):
         'inputs': inputs,
         'output': {'width': 1920, 'height': 1080, 'fps': 24, 'sample_rate': 48000},
         'settings': {'ai_video_mode': 'user_handoff', 'narration_policy': 'preserve', 'burn_captions': True,
-                     'tts': {'provider': 'qwen3-tts-local', 'root': default_qwen().as_posix(), 'profile': 'voice-20260918', 'variant': 'A'}},
+                     'tts': {'provider': 'qwen3-tts-local', 'root': default_qwen().as_posix(), 'profile': 'voice-20260918', 'variant': 'B'}},
         'paths': {'design': 'design.md' if args.design else None, 'brief': 'planning/BRIEF.md', 'edit': 'planning/EDIT.json',
                   'assets': 'planning/ASSETS.json', 'notes': 'planning/NOTES.md', 'captions': 'subtitles/CAPTIONS.json',
                   'hyperframes': 'hyperframes'},

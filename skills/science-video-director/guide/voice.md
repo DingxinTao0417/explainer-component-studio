@@ -17,31 +17,40 @@
   - `Base`：克隆声音；
   - `VoiceDesign`：按文字描述造声音；
   - `CustomVoice`：预设音色，可以加语气指令。
-- 旁白音色 `voice-20260918`（用户本人）：
-  - **A 版**（默认）：原始语速和停顿；
-  - **B 版**：多一些气口。用户选 B 时，在 PROJECT.settings.tts.variant 记下。
+- 旁白音色：
+  - `voice-20260918`（用户本人）：默认音色。它另有一份冻结的 **A 版**（整句生成、原始停顿），只在用户点名要 A 版时用。
+  - 新音色放进 `<Qwen3-TTS>/voices/<名字>/voice-new.pt` 就能用 `--voice <名字>` 调用。
 - 显卡一次只跑一个任务，靠 `runtime.lock` 控制。Qwen 网页或别的任务正在占用时，告诉用户，不要关掉用户的进程。
 
 ## 旁白：qwen_voiceover.py
 
+**默认做法：按气口分段生成，不整段、也不整句一口气生成**（用户 2026-10-06 定）。稿子先按句切，句子里再在逗号处切成气口（两边都够长才切）。每个气口单独生成、单独存一个文件，气口之间的停顿是计划里的一个数字。这样用户说“这半句重来”或“这里停久一点”时，只动那一处，其余不变。
+
 把定稿的口播存成 UTF-8 纯文本（只放要读的字，不放镜头号和注释），然后：
 
 ```powershell
-$py = '<Qwen3-TTS>/.venv/Scripts/python.exe'
+$py  = '<Qwen3-TTS>/.venv/Scripts/python.exe'
+$asr = '<Qwen3-TTS>/.venv-asr/Scripts/python.exe'
 $tts = '<skills目录>/science-video-director/scripts/qwen_voiceover.py'
-& $py -B -X utf8 $tts doctor                                   # 检查依赖、CUDA、占用，不加载模型
-& $py -B -X utf8 $tts plan --project '<项目>' --text-file '<稿子.txt>'      # 只分句，看切分是否合理
-& $py -B -X utf8 $tts generate --project '<项目>' --text-file '<稿子.txt>' --run-id voice-v1
+& $py  -B -X utf8 $tts doctor                                                    # 检查依赖、CUDA、占用，不加载模型
+& $py  -B -X utf8 $tts plan     --project '<项目>' --text-file '<稿子.txt>'       # 只看怎么切、每处停多久
+& $py  -B -X utf8 $tts generate --project '<项目>' --text-file '<稿子.txt>' --run-id voice-v1
+& $asr -B -X utf8 $tts check    --project '<项目>' --run-id voice-v1             # 逐段回听，列出和稿子不一样的段
+& $py  -B -X utf8 $tts redo     --project '<项目>' --run-id voice-v1 --chunks 5,9      # 只重配第 5、9 段
+& $py  -B -X utf8 $tts pause    --project '<项目>' --run-id voice-v1 --chunks 5 --seconds 0.35   # 第 5 段后面停 0.35 秒
 ```
 
-- 可选参数：`--variant B`、`--seed <整数>`。
-  - 每次生成用新的 run-id。
-  - 中途断了、稿子和参数都没变时，加 `--resume` 续跑。
+- **先 plan 再 generate**：看一眼切分。默认停顿是气口 0.20–0.24 秒、句末 0.27 秒、换段 0.35 秒。
+- **在稿子里手动标气口**：`｜` 表示这里一定要断，`｜0.35` 表示断开并停 0.35 秒。这两个记号只影响切分，不会被读出来，字幕里也没有。不想在某个逗号处断，就把那个逗号删掉或换成顿号。
+- **生成后先 check**：它用本地语音识别把每一段单独听一遍。同音字、数字和英文的写法不同属于正常；词不一样的，用 `redo` 重配那一段。check 要用 `.venv-asr` 的解释器运行。
+- **redo 和 pause 不覆盖旧文件**：每调整一次，产出一个新的修订版 `narration-r2.wav`、`narration-r3.wav`…和对应的 `generation-rN.json`；旧的段落音频也留在 `raw/` 里。调完把最新一版用 `episode.py add --role narration` 登记，并重新对齐字幕。
+- 其他参数：`--voice <音色>`、`--variant A`（整句生成，只有 `voice-20260918` 有）、`--seed <整数>`。稿子改了就用新的 run-id；中途断了、稿子和参数都没变时，加 `--resume` 续跑。
 - 输出在 `generated/tts/<run-id>/`：
-  - `narration.wav`：拼好的整段；
-  - `raw/`：逐句音频；
-  - `generation.json`：句级拼接时间。
-- 生成后把 `narration.wav` 用 `episode.py add --role narration` 登记，再建 EDIT.narration。
+  - `narration.wav`（及修订版）：拼好的整段；
+  - `raw/`：逐段音频，文件名开头的四位数就是段号；
+  - `generation.json`：每一段的文字、起止时间和它后面的停顿；
+  - `chunk-check.json`：逐段回听的结果。
+- 你听不到声音。check 只能发现读错的字，语气和气口是否自然交给用户试听；用户提意见时，按段号用 redo / pause 处理。
 
 ## 角色声音：voices.py
 
@@ -92,7 +101,7 @@ $v  = '<skills目录>/science-video-director/scripts/voices.py'
 ## 读音和语气
 
 - 生成前挑出容易读错的：英文产品名（Codex、Agent）、数字、多音字、缩写。先生成一两句试读，读错的在喂给 TTS 的文本里改写读法，比如把“2.0”写成“二点零”。原稿和字幕都不动。
-- 用户说某个词读得不对、或语气怪时，连同前后一句一起重新生成那一小段，不要只补一个词。接缝处要试听。
+- 用户说某个词读得不对、或语气怪时，用 `redo` 重配它所在的那一个气口（整段短语，不是单个词）；改完请用户试听前后接缝。觉得停顿不对，用 `pause` 改数字，不用重新生成。
 
 ## 逐字对齐、字幕和关键词卡点：align.py
 

@@ -203,7 +203,7 @@ description: 把用户的稿件或 SRT、配音和素材做成完整的中文科
 | `frames.py` | 把视频变成开头逐秒图、全片接触表和节奏报告；`--compare` 和参考片或另一版样片并排比较 |
 | `align.py` | `run` 逐字对齐稿子，产出 transcript / captions；`find` 查关键词被说出的时间；`cues` 生成品牌字幕组件的变量 |
 | `audio.py` | `report` 查响度、峰值、削波、BGM 差距；`snap` 切点对拍；`envelope` 生成 BGM 闪避曲线 |
-| `qwen_voiceover.py` | 用户本人音色的旁白 |
+| `qwen_voiceover.py` | 用户本人音色的旁白：按气口分段生成；`check` 逐段回听，`redo` 重配某一段，`pause` 改某处停顿 |
 | `voices.py` | 角色声音库：design / pick / lock / import / preset / plan / speak |
 | `retention.py` | 留存曲线对镜头，找掉人的地方 |
 | `dissect.py` | 拆解参考视频，写进手法库 |
