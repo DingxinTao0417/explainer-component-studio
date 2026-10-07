@@ -1,0 +1,55 @@
+{
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "note": "补充说明文字",
+  "style": {
+    "accent": "#0879ff",
+    "secondary": "#009e7a",
+    "ink": "#142f67",
+    "muted": "#58718c",
+    "surface": "#eff8ff",
+    "background": "#ffffff",
+    "border": "#bedbf3",
+    "fontSize": 28,
+    "labelSize": 21,
+    "strokeWidth": 2,
+    "cornerRadius": 14,
+    "shadowOpacity": 0.1
+  },
+  "xLabel": "横向维度",
+  "yLabel": "纵向维度",
+  "xLow": "低",
+  "xHigh": "高",
+  "yLow": "低",
+  "yHigh": "高",
+  "focus": "top-right",
+  "dashedAxis": true,
+  "gapX": 48,
+  "gapY": 44,
+  "quadrants": [
+    {
+      "id": "top-left",
+      "label": "类型 A",
+      "detail": "情境说明 A",
+      "at": 0.45
+    },
+    {
+      "id": "top-right",
+      "label": "类型 B",
+      "detail": "情境说明 B",
+      "at": 1.25
+    },
+    {
+      "id": "bottom-left",
+      "label": "类型 C",
+      "detail": "情境说明 C",
+      "at": 2.05
+    },
+    {
+      "id": "bottom-right",
+      "label": "类型 D",
+      "detail": "情境说明 D",
+      "at": 2.85
+    }
+  ]
+}

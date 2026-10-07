@@ -1,0 +1,64 @@
+{
+  "version": 5,
+  "title": "来源引用 · 可调示例",
+  "component": "source-citations",
+  "props": {
+    "title": "判断有依据，来源能查到",
+    "subtitle": "正文中的编号与右侧材料一一对应",
+    "note": "下面是来源占位示例，正式使用时替换为核实过的材料。",
+    "style": {
+      "accent": "#0879ff",
+      "secondary": "#009e7a",
+      "ink": "#142f67",
+      "muted": "#58718c",
+      "surface": "#eff8ff",
+      "background": "#ffffff",
+      "border": "#bedbf3",
+      "fontSize": 28,
+      "labelSize": 21,
+      "strokeWidth": 2,
+      "cornerRadius": 14,
+      "shadowOpacity": 0.1
+    },
+    "claim": "先明确通知对象，\n再确认具体事项，\n最后补齐截止时间。",
+    "claimLabel": "这次要说明的判断",
+    "citedIds": [
+      "source-a",
+      "source-b"
+    ],
+    "activeId": "source-a",
+    "sources": [
+      {
+        "id": "source-a",
+        "title": "会议纪要",
+        "locator": "第 2 页 · 行动安排",
+        "quote": "先确认负责人和具体事项。",
+        "kind": "file",
+        "at": 0.5
+      },
+      {
+        "id": "source-b",
+        "title": "任务说明",
+        "locator": "第 3 节 · 提交要求",
+        "quote": "补齐提交时间和材料位置。",
+        "kind": "file",
+        "at": 1.7
+      },
+      {
+        "id": "source-c",
+        "title": "背景材料",
+        "locator": "相关条目",
+        "quote": "需要时继续查阅背景信息。",
+        "kind": "web",
+        "at": 2.9
+      }
+    ]
+  },
+  "effect": "cn-information-reveal",
+  "effectOptions": {},
+  "timing": {
+    "duration": 8
+  },
+  "soundEnabled": false,
+  "soundGain": 0
+}

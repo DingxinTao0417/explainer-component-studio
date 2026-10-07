@@ -3515,6 +3515,19 @@
       "rms": 0,
       "onset": null,
       "ceilingScale": 1
+    },
+    {
+      "id": "cn-information-reveal",
+      "src": "assets/sfx/tracks/cn-information-reveal.wav",
+      "duration": 8,
+      "sampleRate": 48000,
+      "channels": 1,
+      "cues": [],
+      "peak": 0,
+      "peakDb": null,
+      "rms": 0,
+      "onset": null,
+      "ceilingScale": 1
     }
   ]
 }

@@ -1,5 +1,6 @@
 // Renderer-backed constraints supplement structural inference. Array limits are
 // read from renderers/helpers, never inferred from the number of demo entries.
+import {diagramStyleSchema} from './cn-infographic.mjs';
 export const propsRules = {};
 const add=(ids,source,entries)=>{for(const id of ids.split(' ')){const target=propsRules[id]??=[];for(const [path,rule] of Object.entries(entries))target.push({path,...rule,'x-evidence':{kind:'renderer',source}});}};
 const a=(min,max)=>({type:'array',...(min===undefined?{}:{minItems:min}),...(max===undefined?{}:{maxItems:max})});
@@ -117,6 +118,13 @@ add('layer-stack',edu,{layers:a(3,3)});
 add('bar-chart',edu,{values:a(2,6),'values.*.value':n(0),max:{...n(0),exclusiveMinimum:0},highlight:n(0,5,true)});
 add('line-chart',edu,{values:a(2,10),'values.*.value':n(0),max:{...n(0),exclusiveMinimum:0},target:n(0),selected:n(0,9,true)});
 add('comparison-matrix',edu,{columns:a(2,3),rows:a(0,5),'rows.*.values':a(0,3)});
+const cn='families/cn-information.mjs / cn-infographic.mjs';
+const cnNum=(minimum,maximum,type='number')=>({type,minimum,maximum});
+add('quadrant-map pictorial-ratio source-citations comparison-matrix',cn,{style:diagramStyleSchema});
+add('comparison-matrix',cn,{layout:e('matrix','correspondence'),'correspondence.gap':cnNum(120,300),'correspondence.rowHeight':cnNum(58,100),'correspondence.rowGap':cnNum(6,28),'correspondence.highlightRow':cnNum(-1,4,'integer'),'correspondence.arrow':e('auto','tapered','swallowtail'),'correspondence.revealAt':{...a(1,5),items:cnNum(0,7.2)}});
+add('quadrant-map',cn,{focus:e('none','top-left','top-right','bottom-left','bottom-right'),dashedAxis:b,gapX:cnNum(24,72),gapY:cnNum(24,72),quadrants:{...a(4,4),items:{type:'object',additionalProperties:false,required:['id','label','detail','at'],properties:{id:e('top-left','top-right','bottom-left','bottom-right'),label:s,detail:s,at:cnNum(0,7.2)}}}});
+add('pictorial-ratio',cn,{total:cnNum(1,50,'integer'),value:cnNum(0,50),columns:cnNum(1,10,'integer'),gap:cnNum(8,28),icon:e('file','person','circle'),at:cnNum(0,6),step:cnNum(0,.5)});
+add('source-citations',cn,{sources:{...a(1,4),items:{type:'object',additionalProperties:false,required:['id','title','locator','quote','kind','at'],properties:{id:{type:'string',pattern:'^source-[a-z0-9-]+$'},title:s,locator:s,quote:s,kind:e('file','web'),at:cnNum(0,7.2)}}},citedIds:{...a(1,4),items:s},activeId:s});
 add('event-timeline',edu,{events:a(2,5),'events.*.status':e('done','active','todo')});
 add('metric-dashboard',edu,{metrics:a(3,3),'metrics.*.progress':n(0,1),progress:{...a(2,8),items:n(0,100)},progressLabels:a(0,8),checks:a(0,5)});
 add('definition-card',edu,{factors:a(0,3)});
@@ -171,6 +179,11 @@ const shot=obj({...mediaProperties,start:strictNum(0,1),end:strictNum(0,1),trans
 add('mixed-media-sequence','mixed-media-motion.mjs:24',{strength:e('still','light','standard','emphasis'),previewDuration:strictNum(.1,600),media:{...a(1,12),items:shot}});
 
 export const schemaConditions = {
+ 'comparison-matrix':[{when:'layout is matrix',hidden:['correspondence','style'],reason:'Legacy table keeps its original layout; these controls apply only to correspondence'},{when:'layout is correspondence',hidden:['eyebrow','badge','series','footer','columns[].tag'],reason:'Correspondence uses title, subtitle, note, column names and row values; exactly two columns, 1–5 rows, total row height ≤435px'}],
+ 'quadrant-map':[{when:'always',reason:'Exactly four unique position IDs; text must fit the visible width at the chosen font sizes; gapX/gapY change inner spacing while axis centers remain fixed'}],
+ 'pictorial-ratio':[{when:'always',reason:'0 ≤ value ≤ total; each full icon is one unit, partial icon is fractional; total/columns/gap must keep icon size ≥30px and at+(total-1)*step ≤7.2'}],
+ 'source-citations':[{when:'always',reason:'IDs are unique; citedIds and activeId refer to existing sources; supply verified source text and location, not template placeholders'}],
+ 'ani-atom-hd-attachment-card':[{when:'layers[].props.display is legacy',hidden:['layers[].props.fileName','layers[].props.fileBytes','layers[].props.fileType','layers[].props.status','layers[].props.progress'],reason:'Original attachment appearance retained; states must be empty'},{when:'layers[].props.display is file',hidden:['layers[].props.title','layers[].props.kind','layers[].props.lineCount'],reason:'File metadata mode; states require ani-hd-parts to animate. With effect none, the last state is displayed.'},{when:'layers[].props.states is non-empty',hidden:['layers[].props.status','layers[].props.progress'],reason:'Explicit states control native 0–8s status; first at=0, strictly increasing; idle progress=0, success progress=100'}],
  'ani-atom-browser':[{when:'imageSrc is non-empty',hidden:['heading','body','items'],reason:'imageSrc replaces the native page body'}],
  'ani-atom-folder':[{when:'open is false',hidden:['fileLabels'],reason:'closed folders conceal files'}],
  'ani-atom-input':[{when:'state is empty',hidden:['value','errorText'],reason:'placeholder is displayed'},{when:'state is input',hidden:['placeholder','errorText'],reason:'value is displayed'}],

@@ -43,10 +43,10 @@ const familyAliases={
 };
 export function describeEffect(effect) {
   if(!effect||effect.id==='none')return {role:'still',family:'still',controls:[],optionsSchema:{type:'object',properties:{},additionalProperties:false},requiresNextScene:false};
-  const role=effect.category==='背景'?'background':effect.category==='转场'?'transition':effect.exclusive||effect.id.startsWith('ani-')?'internal':effect.selector==='.motion-wrap'?'wrapper':'target';
+  const role=effect.category==='背景'?'background':effect.category==='转场'?'transition':effect.internal||effect.exclusive||effect.id.startsWith('ani-')?'internal':effect.selector==='.motion-wrap'?'wrapper':'target';
   const properties={};
   if(!['internal'].includes(role)&&effect.id!=='media-sequence-motion')properties.background={type:'string',description:'背景效果 ID；仅作用于声明 background 目标的组件'};
-  if(!effect.exclusive&&!effect.id.startsWith('ani-'))properties.selector={type:'string',description:'显式目标；必须匹配实际内容，不能覆盖混剪媒体世界'};
+  if(!effect.internal&&!effect.exclusive&&!effect.id.startsWith('ani-'))properties.selector={type:'string',description:'显式目标；必须匹配实际内容，不能覆盖混剪媒体世界'};
   if(effect.id==='zoom-focus')properties.scale={type:'number',minimum:1,maximum:3,default:1.32};
   if(effect.id==='scroll-panel')properties.distance={type:'number',minimum:0};
   if(effect.id==='ani-machine-process')properties.travelDistance={type:'number',description:'输入材料到处理装置的移动距离；仅在组件布局仍保留真实目标时调整'};

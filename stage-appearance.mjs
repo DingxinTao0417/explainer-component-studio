@@ -1,3 +1,5 @@
+import {toneIds,modeIds,toneVariablesCSS,tonalizeCSS,toneElement,videoModeBaseCSS} from './tone-css.mjs';
+import {videoModeCSS} from './video-mode.mjs';
 /** Reusable presentation shells. Apply after building the component timeline. */
 export const frameStyles = [
   {id:'none',name:'不加外框',description:'保留组件自身的边框。'},
@@ -40,12 +42,17 @@ export function normalizeAppearance(value) {
   return {
     frame: frameIds.has(input.frame) ? input.frame : 'none',
     background: backgroundIds.has(input.background) ? input.background : 'original',
+    // 2026-09-28：调性跟品牌包 A–D；mode=video 是成片模式（去栏目眉/页脚，字放大）。见 tone-css.mjs / video-mode.mjs。
+    tone: toneIds.includes(input.tone) ? input.tone : 'original',
+    mode: modeIds.includes(input.mode) ? input.mode : 'original',
   };
 }
+export const toneOptions = toneIds.map(id => ({id, name: {original:'组件原色',A:'A 深色科技',B:'B 暖色手绘',C:'C 白底高对比',D:'D 橙黑产品'}[id]}));
+export const modeOptions = modeIds.map(id => ({id, name: {original:'画廊原样',video:'成片模式'}[id]}));
 
 // Every selector belongs to this module. Component colors and timeline targets
 // remain owned by their original renderers and animation functions.
-export const stageAppearanceCSS = `
+const rawStageCSS = `
 [data-appearance-stage]{position:absolute;inset:0;isolation:isolate;pointer-events:none;overflow:visible}
 [data-appearance-stage]>.sap-background{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
 [data-appearance-stage]>.sap-background>svg{position:absolute;inset:0;width:100%;height:100%;display:block}
@@ -69,7 +76,10 @@ export const stageAppearanceCSS = `
 .sap-active[data-appearance-frame]:not([data-appearance-frame="none"]) [data-appearance-content] .edx-corner{display:none}
 .sap-active[data-appearance-background]:not([data-appearance-background="original"]) [data-appearance-content] .edx-ambient{visibility:hidden}
 .sap-active[data-appearance-background]:not([data-appearance-background="original"]) [data-appearance-content] .edx-lecture{background:transparent}
+[data-appearance-tone]:not([data-appearance-tone="original"]){background:var(--hf-bg)}
+[data-appearance-tone]:not([data-appearance-tone="original"]) .component-stage{background:var(--hf-bg);color:var(--hf-ink)}
 `;
+export const stageAppearanceCSS = tonalizeCSS(rawStageCSS) + '\n' + toneVariablesCSS() + '\n' + videoModeBaseCSS + '\n' + videoModeCSS;
 
 const applied = new WeakMap();
 function removeAppearance(root) {
@@ -98,23 +108,22 @@ function svg(markup,w,h) {
 }
 function backgroundMarkup(id,w,h) {
   if (id==='perspective-grid') {
-    const vertical=Array.from({length:13},(_,i)=>{
-      const bottom=(i-1)*w/10,top=w/2+(bottom-w/2)*.4;
-      return `<path d="M${top} 0L${bottom} ${h}"/>`;
-    }).join('');
-    const horizontal=[.035,.12,.23,.37,.55,.77,.97].map(y=>`<path d="M0 ${h*y}H${w}"/>`).join('');
-    return svg(`<g fill="none" stroke="#afcaed" stroke-width="1" opacity=".72">${vertical}${horizontal}</g>`,w,h);
+    // 《迁移》v3 的改法：上半是墙面方格，下半是地面透视线；地面线的上端正好落在墙面竖线的脚上，不再错位。
+    const cols=12,step=w/cols,horizon=Math.round(h*.52);
+    const wall=[...Array.from({length:cols+1},(_,i)=>`<path d="M${i*step} 0V${horizon}"/>`),...Array.from({length:Math.floor(horizon/step)+1},(_,i)=>`<path d="M0 ${i*step}H${w}"/>`)].join('');
+    const floor=[...Array.from({length:cols+1},(_,i)=>{const x=i*step,bottom=w/2+(x-w/2)*3.2;return `<path d="M${x} ${horizon}L${bottom} ${h}"/>`;}),...[.074,.148,.241,.361].map(f=>`<path d="M0 ${horizon+Math.round(h*f)}H${w}"/>`)].join('');
+    return svg(`<g fill="none" style="stroke:var(--hf-grid,#afcaed)" stroke-width="1.2" opacity=".85">${wall}${floor}</g>`,w,h);
   }
   if (id==='blue-waves') {
     const paths=Array.from({length:7},(_,i)=>{
       const shift=i*16;
       return `<path d="M${-w*.2+shift} ${-h*.15}C${w*.18+shift} ${h*.22} ${-w*.16+shift} ${h*.7} ${w*.3+shift} ${h*1.1}"/><path d="M${w*.73+shift} ${-h*.1}C${w*1.16+shift} ${h*.35} ${w*.7+shift} ${h*.58} ${w*1.1+shift} ${h*1.08}"/>`;
     }).join('');
-    return svg(`<g fill="none" stroke="#bad3ef" stroke-width="1.6" opacity=".65">${paths}</g>`,w,h);
+    return svg(`<g fill="none" style="stroke:var(--hf-grid,#bad3ef)" stroke-width="1.6" opacity=".8">${paths}</g>`,w,h);
   }
   if(id==='blueprint') {
     const ticks=Array.from({length:Math.floor(w/100)},(_,i)=>`<path d="M${i*100} 0V9M${i*100} ${h}v-9"/>`).join('')+Array.from({length:Math.floor(h/100)},(_,i)=>`<path d="M0 ${i*100}h9M${w} ${i*100}h-9"/>`).join('');
-    return svg(`<g fill="none" stroke="#709bc7" stroke-width="1.5" opacity=".6">${ticks}</g>`,w,h);
+    return svg(`<g fill="none" style="stroke:var(--hf-grid,#709bc7)" stroke-width="1.5" opacity=".8">${ticks}</g>`,w,h);
   }
   return '';
 }
@@ -154,6 +163,69 @@ function decorateFrame(back,front,id,w,h,radius) {
   }
 }
 
+/** 成片模式：讲解图形的 SVG 按实际绘制内容收紧 viewBox，让主体撑满可用区域（原 viewBox 记在元素上，mode 回到 original 时恢复）。
+ * 动画起点常常是缩放 0 / 透明，所以量 bbox 前把时间轴拨到末尾。 */
+const FIT_SVG='svg.edx-svg,svg.edu-bar-svg,svg.edu-line-svg,svg.edu-layer-art,svg.edu-media-diagram,.edu-progress-panel svg,svg.cn-diagram,svg[data-video-fit]';
+function fitVideoMode(stageNode, video, timeline) {
+  const svgs=[...stageNode.querySelectorAll(FIT_SVG)];
+  let progress=null;
+  if(timeline&&typeof timeline.progress==='function'){progress=timeline.progress();timeline.progress(1,true);}
+  for(const svg of svgs){
+    if(!svg.__hfViewBox)svg.__hfViewBox=svg.getAttribute('viewBox');
+    if(!video){if(svg.__hfViewBox)svg.setAttribute('viewBox',svg.__hfViewBox);else svg.removeAttribute('viewBox');delete svg.dataset.videoFitted;continue;}
+    let bb;try{bb=svg.getBBox();}catch{continue;}
+    if(!bb||bb.width<40||bb.height<20)continue;
+    const vb=(svg.__hfViewBox||'').split(/[\s,]+/).map(Number);
+    if(vb.length===4&&bb.width*bb.height>vb[2]*vb[3]*.82)continue; // 已经撑满，不动
+    const pad=Math.max(6,Math.min(bb.width,bb.height)*.05);
+    svg.setAttribute('viewBox',`${bb.x-pad} ${bb.y-pad} ${bb.width+pad*2} ${bb.height+pad*2}`);
+    svg.setAttribute('preserveAspectRatio','xMidYMid meet');
+    svg.dataset.videoFitted='1';
+  }
+  fitStageZoom(stageNode, video);
+  if(progress!==null)timeline.progress(progress,true);
+}
+/** 成片模式：内容包围盒明显小于舞台时，把 .motion-wrap 整体放大居中（上限 1.5），等于"推近到主体"。原 transform 记在元素上。 */
+const ZOOM_BODY='.edu-body,.edx-scene main,.brw-body,.brg-desk,.brm-scene,.cn-scene';
+const ZOOM_SKIP='.edu-header,.edx-scene header,.brw-heading,.brm-editorial-head,.edu-footer,.edx-scene footer,.brw-footer';
+function fitStageZoom(stageNode, video) {
+  const wrap=stageNode.querySelector('.motion-wrap');if(!wrap)return;
+  const body=wrap.querySelector(ZOOM_BODY)||wrap;
+  for(const el of [wrap,body]){if(el.__hfZoom===undefined)el.__hfZoom=el.style.transform||'';el.style.transform=el.__hfZoom;el.style.transformOrigin='';delete el.dataset.videoZoom;}
+  if(!video)return;
+  const stage=stageNode.getBoundingClientRect();if(stage.width<10||stage.height<10)return;
+  const doc=stageNode.ownerDocument,win=doc.defaultView;
+  const bodyRect=body===wrap?stage:body.getBoundingClientRect();
+  // 可用区：正文块顶到舞台底（正文块常常是 auto 高度，只占一半），左右取舞台
+  const pad=Math.min(stage.width,stage.height)*.035;
+  const avail={left:stage.left+pad,top:Math.max(stage.top,bodyRect.top)+pad*.5,right:stage.right-pad,bottom:stage.bottom-pad};
+  let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity,count=0;
+  for(const el of body.querySelectorAll('*')){
+    if(['SCRIPT','STYLE','AUDIO','defs','clipPath','mask','pattern','filter','svg'].includes(el.tagName))continue;
+    if(el.closest(ZOOM_SKIP))continue;
+    const cs=win.getComputedStyle(el);if(cs.display==='none'||cs.visibility==='hidden')continue;
+    const r=el.getBoundingClientRect();if(r.width<2||r.height<2)continue;
+    if(r.width>=stage.width*.9&&r.height>=stage.height*.85)continue; // 满幅底板不算内容
+    const ownText=[...el.childNodes].some(n=>n.nodeType===3&&n.textContent.trim());
+    const graphic=['IMG','VIDEO','CANVAS','path','rect','circle','ellipse','line','polyline','polygon','text','tspan','use','image'].includes(el.tagName);
+    const painted=cs.backgroundColor!=='rgba(0, 0, 0, 0)'||(cs.borderTopWidth!=='0px'&&cs.borderTopStyle!=='none')||cs.boxShadow!=='none';
+    if(!ownText&&!graphic&&!painted)continue;
+    x0=Math.min(x0,r.left);y0=Math.min(y0,r.top);x1=Math.max(x1,r.right);y1=Math.max(y1,r.bottom);count++;
+  }
+  if(!count||!isFinite(x0))return;
+  x0=Math.max(x0,stage.left);y0=Math.max(y0,stage.top);x1=Math.min(x1,stage.right);y1=Math.min(y1,stage.bottom);
+  const bw=x1-x0,bh=y1-y0;if(bw<40||bh<40)return;
+  const scale=Math.min((avail.right-avail.left)/bw,(avail.bottom-avail.top)/bh,1.5);
+  if(scale<1.04)return;
+  const target=body;const tr=target.getBoundingClientRect();
+  // 以内容中心为原点放大，再平移到可用区中心（坐标换算到 target 自身）
+  const cx=(x0+x1)/2-tr.left,cy=(y0+y1)/2-tr.top;
+  const ax=(avail.left+avail.right)/2-tr.left,ay=(avail.top+avail.bottom)/2-tr.top;
+  target.style.transformOrigin='0 0';
+  target.style.transform=`translate(${(ax-cx*scale).toFixed(2)}px,${(ay-cy*scale).toFixed(2)}px) scale(${scale.toFixed(4)})`;
+  target.dataset.videoZoom=scale.toFixed(3);
+}
+
 /** Scale content and local annotations; full-screen covers retain canvas coordinates. */
 export function applyStageAppearance(root,value,options={}) {
   const appearance=normalizeAppearance(value);
@@ -161,6 +233,13 @@ export function applyStageAppearance(root,value,options={}) {
   removeAppearance(root);
   root.dataset.appearanceFrame=appearance.frame;
   root.dataset.appearanceBackground=appearance.background;
+  root.dataset.appearanceTone=appearance.tone;
+  root.dataset.appearanceMode=appearance.mode;
+  ensureCSS(root.ownerDocument);
+  // 行内颜色（SVG fill/stroke、style=）只对讲解图形族换色；界面复刻保持软件原色（options.toneable 由构建/导出按族传入）。
+  const stageNode=root.querySelector('.component-stage');
+  if (stageNode && options.toneable) toneElement(stageNode, appearance.tone==='original'?null:appearance.tone);
+  if (stageNode && options.toneable) fitVideoMode(stageNode, appearance.mode==='video', options.timeline);
   if (appearance.frame==='none' && appearance.background==='original') return appearance;
   const nodes=[...root.children].filter(node=>node.matches('.component-stage') ||
     (node.matches('.fx-layer') && node.dataset.effectSpace!=='canvas'));

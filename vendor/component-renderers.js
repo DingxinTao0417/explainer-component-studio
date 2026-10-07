@@ -82,10 +82,10 @@ var ComponentLibraryRuntime = (() => {
 
   // families/animation-style-analysis.mjs
   var units = (value) => Array.from(String(value ?? "")).reduce((n4, c) => n4 + (/[\u0000-\u00ff]/.test(c) ? 0.54 : 1), 0);
-  var fit = (value, max, width, min = 16) => Math.max(min, Math.min(max, width / Math.max(1, units(value))));
-  var scoped = (h, prefix) => {
+  var fit = (value, max, width2, min = 16) => Math.max(min, Math.min(max, width2 / Math.max(1, units(value))));
+  var scoped = (h, prefix2) => {
     let n4 = 0;
-    return { ...h, uid: (name) => h.uid(`${prefix}-${++n4}-${name}`) };
+    return { ...h, uid: (name) => h.uid(`${prefix2}-${++n4}-${name}`) };
   };
   var text = (x, y, label3, size, h, extra2 = "") => `<text x="${x}" y="${y}" font-size="${size}" fill="${tokens.ink}" ${extra2}>${h.esc(label3 ?? "")}</text>`;
   var rowState = (r) => r.state || { "\u5DF2\u5B8C\u6210": "complete", "\u5DF2\u53D6\u6D88": "cancelled", "\u5F85\u4ED8\u6B3E": "pending" }[r.status] || r.status;
@@ -169,7 +169,7 @@ var ComponentLibraryRuntime = (() => {
     if (!/^\d{4}-\d{2}$/.test(p.month)) throw new Error("month must use YYYY-MM");
     if (!Array.isArray(p.headers) || p.headers.length !== 4) throw new Error("order headers require four labels");
     const h = scoped(helpers2, "order"), e2 = h.esc;
-    const x = 326, y = 180, width = 888, head = 58, rowH = 64, cols = [126, 157, 169, 180, 256];
+    const x = 326, y = 180, width2 = 888, head = 58, rowH = 64, cols = [126, 157, 169, 180, 256];
     const starts = [x];
     cols.forEach((w, i) => starts.push(starts[i] + w));
     const count2 = p.rows.filter((r) => matches(r, p.month, p.matchState)).length;
@@ -180,11 +180,11 @@ var ComponentLibraryRuntime = (() => {
       const cells = [r.id, dateLabel(r.orderDate), dateLabel(r.completedDate)].map((v, k) => text(starts[k] + cols[k] / 2, yy + 41, v, 28, h, 'text-anchor="middle"')).join("");
       const raw = `<g data-ani-raw><circle cx="${starts[4] + 57}" cy="${yy + 32}" r="11" fill="${tokens.blue}"/>${text(starts[4] + 86, yy + 41, p.includedLabel, 27, h)}</g>`;
       const final = `<g data-ani-final>${ok ? `<circle cx="${starts[4] + 57}" cy="${yy + 32}" r="11" fill="${tokens.green}"/>` : `<path d="M${starts[4] + 47} ${yy + 32}H${starts[4] + 67}" stroke="#727d8d" stroke-width="4" stroke-linecap="round"/>`}${text(starts[4] + 86, yy + 41, ok ? p.includedLabel : p.excludedLabel, 27, h)}</g>`;
-      return `<g ${ok ? "data-ani-filtered" : "data-ani-excluded"}="${e2(r.id)}" data-text-panel="order-${i}" data-panel-bounds="${x} ${yy} ${width} ${rowH}"><rect data-ani-row-bg x="${x + 1}" y="${yy}" width="${width - 2}" height="${rowH}" fill="${i % 2 ? "#f4faff" : "#ffffff"}"/>${cells}${badge(starts[3] + 20, yy + 13, cols[3] - 40, r.status, statusColor, h)}${raw}${final}</g>`;
+      return `<g ${ok ? "data-ani-filtered" : "data-ani-excluded"}="${e2(r.id)}" data-text-panel="order-${i}" data-panel-bounds="${x} ${yy} ${width2} ${rowH}"><rect data-ani-row-bg x="${x + 1}" y="${yy}" width="${width2 - 2}" height="${rowH}" fill="${i % 2 ? "#f4faff" : "#ffffff"}"/>${cells}${badge(starts[3] + 20, yy + 13, cols[3] - 40, r.status, statusColor, h)}${raw}${final}</g>`;
     }).join("");
-    const grid = starts.slice(1, -1).map((xx) => `<path d="M${xx} ${y}V${y + head + 5 * rowH}"/>`).join("") + Array.from({ length: 5 }, (_, i) => `<path d="M${x} ${y + head + i * rowH}H${x + width}"/>`).join("");
+    const grid = starts.slice(1, -1).map((xx) => `<path d="M${xx} ${y}V${y + head + 5 * rowH}"/>`).join("") + Array.from({ length: 5 }, (_, i) => `<path d="M${x} ${y + head + i * rowH}H${x + width2}"/>`).join("");
     const countGroup = (which, label3, n4) => `<g data-ani-${which}><rect x="380" y="595" width="442" height="62" rx="20" fill="#e6f4ff" stroke="#6eaff6" stroke-width="2.5"/>${text(601, 636, label3 + " " + n4 + " " + p.unit, fit(label3 + " " + n4 + " " + p.unit, 28, 406), h, 'text-anchor="middle"')}</g>`;
-    const content2 = `${sourceSheet(h, p.sourceLabel, p.sourceNote)}<path d="M258 307L310 238V516L258 410Z" fill="#cceaff" fill-opacity=".65" stroke="#89bffc" stroke-width="2"/>${paper(309, 139, 920, 437, { fold: 18, depth: 10 }, h)}${banner(337, 65, 440, p.title, tokens.blue, h)}${text(805, 101, p.month + " \xB7 " + p.periodLabel, 23, h)}${text(807, 130, p.subtitle, fit(p.subtitle, 19, 388), h)}<rect x="${x}" y="${y}" width="${width}" height="${head + 5 * rowH}" rx="13" fill="#fff" stroke="${tokens.ink}" stroke-width="3"/><path d="M${x + 13} ${y}H${x + width - 13}Q${x + width} ${y} ${x + width} ${y + 13}V${y + head}H${x}V${y + 13}Q${x} ${y} ${x + 13} ${y}Z" fill="#dceeff"/>${rows3}${header}${headLast}<g stroke="#7b97bf" stroke-width="1.3" fill="none">${grid}</g><rect x="${x}" y="${y}" width="${width}" height="${head + 5 * rowH}" rx="13" fill="none" stroke="${tokens.ink}" stroke-width="2.5"/>${countGroup("raw", p.rawCountLabel, p.rows.length)}${countGroup("final", p.finalCountLabel, count2)}<rect x="855" y="595" width="345" height="62" rx="20" fill="#e9f5ff" stroke="#91bdeb" stroke-width="2.5"/>${text(1027, 636, p.sampleNote, fit(p.sampleNote, 29, 310), h, 'text-anchor="middle"')}<g data-ani-pop>${text(778, 694, p.footer, fit(p.footer, 21, 910), h, 'text-anchor="middle" fill="#55749b"')}</g>`;
+    const content2 = `${sourceSheet(h, p.sourceLabel, p.sourceNote)}<path d="M258 307L310 238V516L258 410Z" fill="#cceaff" fill-opacity=".65" stroke="#89bffc" stroke-width="2"/>${paper(309, 139, 920, 437, { fold: 18, depth: 10 }, h)}${banner(337, 65, 440, p.title, tokens.blue, h)}${text(805, 101, p.month + " \xB7 " + p.periodLabel, 23, h)}${text(807, 130, p.subtitle, fit(p.subtitle, 19, 388), h)}<rect x="${x}" y="${y}" width="${width2}" height="${head + 5 * rowH}" rx="13" fill="#fff" stroke="${tokens.ink}" stroke-width="3"/><path d="M${x + 13} ${y}H${x + width2 - 13}Q${x + width2} ${y} ${x + width2} ${y + 13}V${y + head}H${x}V${y + 13}Q${x} ${y} ${x + 13} ${y}Z" fill="#dceeff"/>${rows3}${header}${headLast}<g stroke="#7b97bf" stroke-width="1.3" fill="none">${grid}</g><rect x="${x}" y="${y}" width="${width2}" height="${head + 5 * rowH}" rx="13" fill="none" stroke="${tokens.ink}" stroke-width="2.5"/>${countGroup("raw", p.rawCountLabel, p.rows.length)}${countGroup("final", p.finalCountLabel, count2)}<rect x="855" y="595" width="345" height="62" rx="20" fill="#e9f5ff" stroke="#91bdeb" stroke-width="2.5"/>${text(1027, 636, p.sampleNote, fit(p.sampleNote, 29, 310), h, 'text-anchor="middle"')}<g data-ani-pop>${text(778, 694, p.footer, fit(p.footer, 21, 910), h, 'text-anchor="middle" fill="#55749b"')}</g>`;
     return svgScene(content2, h);
   }
   var compareDefaults = {
@@ -281,16 +281,16 @@ var ComponentLibraryRuntime = (() => {
       const y2 = 131 + i * 57;
       return `<rect x="79" y="${y2}" width="467" height="52" rx="13" fill="#eaf5ff"/>${icon(r.icon, 87, y2 - 2, 53, h)}${text(159, y2 + 34, r.label + "\uFF1A" + r.text, fit(r.label + "\uFF1A" + r.text, 23, 372, 17), h)}`;
     }).join("");
-    const x = 712, y = 135, width = 469, header = 39, rowH = 39, colW = [96, 111, 136, 126], starts = [x];
+    const x = 712, y = 135, width2 = 469, header = 39, rowH = 39, colW = [96, 111, 136, 126], starts = [x];
     colW.forEach((w, i) => starts.push(starts[i] + w));
     const hdr = p.headers.map((v, i) => text(starts[i] + colW[i] / 2, y + 27, v, fit(v, 20, colW[i] - 10), h, 'text-anchor="middle"')).join("");
     const rightRows = p.rows.map((r, i) => {
       const yy = y + header + i * rowH, ok = matches(r, p.month, p.matchState);
-      return `<rect x="${x + 1}" y="${yy}" width="${width - 2}" height="${rowH}" fill="${i % 2 ? "#f4faff" : "#fff"}"/>${text(starts[0] + 48, yy + 27, r.id, 21, h, 'text-anchor="middle"')}${text(starts[1] + 55.5, yy + 27, dateLabel(r.completedDate), 21, h, 'text-anchor="middle"')}${badge(starts[2] + 13, yy + 5, colW[2] - 26, r.status, rowState(r) === "complete" ? tokens.green : rowState(r) === "cancelled" ? "#9aa3b1" : tokens.orange, h, 28)}${ok ? `<circle cx="${starts[3] + 26}" cy="${yy + 20}" r="7" fill="${tokens.green}"/>` : `<path d="M${starts[3] + 19} ${yy + 20}H${starts[3] + 33}" stroke="#788393" stroke-width="3"/>`}${text(starts[3] + 44, yy + 27, ok ? p.includedLabel : p.excludedLabel, 19, h)}`;
+      return `<rect x="${x + 1}" y="${yy}" width="${width2 - 2}" height="${rowH}" fill="${i % 2 ? "#f4faff" : "#fff"}"/>${text(starts[0] + 48, yy + 27, r.id, 21, h, 'text-anchor="middle"')}${text(starts[1] + 55.5, yy + 27, dateLabel(r.completedDate), 21, h, 'text-anchor="middle"')}${badge(starts[2] + 13, yy + 5, colW[2] - 26, r.status, rowState(r) === "complete" ? tokens.green : rowState(r) === "cancelled" ? "#9aa3b1" : tokens.orange, h, 28)}${ok ? `<circle cx="${starts[3] + 26}" cy="${yy + 20}" r="7" fill="${tokens.green}"/>` : `<path d="M${starts[3] + 19} ${yy + 20}H${starts[3] + 33}" stroke="#788393" stroke-width="3"/>`}${text(starts[3] + 44, yy + 27, ok ? p.includedLabel : p.excludedLabel, 19, h)}`;
     }).join("");
-    const grid = starts.slice(1, -1).map((xx) => `<path d="M${xx} ${y}V${y + header + 5 * rowH}"/>`).join("") + Array.from({ length: 5 }, (_, i) => `<path d="M${x} ${y + header + i * rowH}H${x + width}"/>`).join("");
+    const grid = starts.slice(1, -1).map((xx) => `<path d="M${xx} ${y}V${y + header + 5 * rowH}"/>`).join("") + Array.from({ length: 5 }, (_, i) => `<path d="M${x} ${y + header + i * rowH}H${x + width2}"/>`).join("");
     const left = `<g data-ani-enter>${paper(61, 88, 505, 305, { fold: 38, depth: 10 }, h)}${banner(143, 48, 332, p.leftTitle, tokens.blue, h)}${leftFields}</g>`;
-    const right = `<g data-ani-enter>${paper(694, 88, 505, 305, { fold: 18, depth: 10 }, h)}${banner(770, 48, 350, p.rightTitle, tokens.blue, h)}<rect x="${x}" y="${y}" width="${width}" height="${header + 5 * rowH}" rx="7" fill="#dceeff" stroke="${tokens.ink}" stroke-width="2"/>${rightRows}${hdr}<g fill="none" stroke="#7b97bf" stroke-width="1">${grid}</g><rect x="${x}" y="${y}" width="${width}" height="${header + 5 * rowH}" rx="7" fill="none" stroke="${tokens.ink}" stroke-width="2"/>${text(1180, 387, p.sampleNote, 14, h, 'text-anchor="end" fill="#527094"')}</g>`;
+    const right = `<g data-ani-enter>${paper(694, 88, 505, 305, { fold: 18, depth: 10 }, h)}${banner(770, 48, 350, p.rightTitle, tokens.blue, h)}<rect x="${x}" y="${y}" width="${width2}" height="${header + 5 * rowH}" rx="7" fill="#dceeff" stroke="${tokens.ink}" stroke-width="2"/>${rightRows}${hdr}<g fill="none" stroke="#7b97bf" stroke-width="1">${grid}</g><rect x="${x}" y="${y}" width="${width2}" height="${header + 5 * rowH}" rx="7" fill="none" stroke="${tokens.ink}" stroke-width="2"/>${text(1180, 387, p.sampleNote, 14, h, 'text-anchor="end" fill="#527094"')}</g>`;
     const steps = `<g data-ani-enter data-ani-compare-steps>${banner(84, 419, 209, p.leftSteps[0], tokens.green, h)}${banner(320, 419, 209, p.leftSteps[1], tokens.orange, h)}</g><g data-ani-enter data-ani-compare-steps>${banner(751, 419, 209, p.rightSteps[0], tokens.green, h)}${banner(987, 419, 209, p.rightSteps[1], tokens.orange, h)}</g>`;
     const links = `<g data-ani-compare-links fill="none" stroke="${tokens.blue}" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path data-ani-flow-join d="M188.5 482V488Q188.5 495 195.5 495H306.5"/><path data-ani-flow-join d="M424.5 482V488Q424.5 495 417.5 495H306.5"/><path data-ani-flow-join d="M855.5 482V488Q855.5 495 862.5 495H973.5"/><path data-ani-flow-join d="M1091.5 482V488Q1091.5 495 1084.5 495H973.5"/><path data-ani-flow-trunk d="M306.5 495V500Q306.5 508 314.5 508H507Q515 508 515 516V526"/><path data-ani-flow-trunk d="M973.5 495V500Q973.5 508 965.5 508H773Q765 508 765 516V526"/></g>`;
     const bridge2 = `<g data-ani-flow-bridge fill="none"><path d="M638 625V643" stroke="${tokens.ink}" stroke-width="10"/><path d="M638 625V643" stroke="${tokens.blue}" stroke-width="5"/></g>`;
@@ -528,11 +528,11 @@ var ComponentLibraryRuntime = (() => {
     if (x + w + 10 > 1280 || y + height + 10 > 720) throw Error("\u5BF9\u8C61\u9700\u5728\u753B\u5E03\u8303\u56F4\u5185\u3002");
     return { x, y, w, height };
   }
-  function lines(text7, width, size) {
+  function lines(text8, width2, size) {
     const out = [];
     let line3 = "";
-    for (const c of [...String(text7 ?? "")]) {
-      if (units3(line3 + c) * size > width) {
+    for (const c of [...String(text8 ?? "")]) {
+      if (units3(line3 + c) * size > width2) {
         out.push(line3);
         line3 = "";
       }
@@ -641,12 +641,12 @@ var ComponentLibraryRuntime = (() => {
     return { color: tones2[tone3], wash: tone3 === "orange" ? "#fff5df" : tone3 === "green" ? "#eaf8f1" : "#edf7ff" };
   }
   var txt = (x, y, value, size, h, extra2 = "") => `<text x="${x}" y="${y}" font-size="${size}" ${extra2.includes("fill=") ? "" : `fill="${tokens.ink}"`} ${extra2}>${h.esc(value)}</text>`;
-  function fit2(value, size, width, min = 18) {
-    const result = Math.min(size, width / Math.max(1, units4(value)));
+  function fit2(value, size, width2, min = 18) {
+    const result = Math.min(size, width2 / Math.max(1, units4(value)));
     if (result < min) throw new Error("Text does not fit at a readable size; shorten it or enlarge the object");
     return result;
   }
-  function wrap(value, width, size, maxLines) {
+  function wrap(value, width2, size, maxLines) {
     const lines3 = [];
     let line3 = "";
     for (const c of Array.from(value)) {
@@ -655,7 +655,7 @@ var ComponentLibraryRuntime = (() => {
         line3 = "";
         continue;
       }
-      if (units4(line3 + c) * size > width && line3) {
+      if (units4(line3 + c) * size > width2 && line3) {
         let carry = "";
         if (/[，。！？；：、,.!?;:）】》”’]/.test(c)) {
           const chars = Array.from(line3);
@@ -751,17 +751,17 @@ var ComponentLibraryRuntime = (() => {
     const p = { ...highlightDefaults, ...props }, { x, y, w, height } = geometry(p, 90, 54), colors3 = palette(p);
     choice2(p.shape, "shape", ["rectangle", "circle", "underline"]);
     const stroke = number(p.lineWidth, "lineWidth", 2, 12), fillOpacity = number(p.fillOpacity, "fillOpacity", 0, 0.25), label3 = copy2(p.label, "label", 36), dash = p.dashed ? 'stroke-dasharray="15 10"' : "", inset = stroke / 2 + 2;
-    let art, labelX = w / 2, labelY = height / 2 + 9, textWidth = w - 44;
+    let art, labelX = w / 2, labelY = height / 2 + 9, textWidth2 = w - 44;
     if (p.shape === "circle") {
       const radius = Math.min(w, height) / 2 - inset;
       art = `<circle cx="${w / 2 + 4}" cy="${height / 2 + 5}" r="${radius}" fill="none" stroke="${tokens.shadow}" stroke-width="${stroke + 2}"/><circle data-atom-outline cx="${w / 2}" cy="${height / 2}" r="${radius}" fill="${colors3.color}" fill-opacity="${fillOpacity}" stroke="${colors3.color}" stroke-width="${stroke}" ${dash}/>`;
-      textWidth = radius * 1.45;
+      textWidth2 = radius * 1.45;
     } else if (p.shape === "underline") {
       const yy = height - 15;
       art = `<path d="M${inset} ${yy + 5}Q${w / 2} ${yy - 6} ${w - inset} ${yy + 2}" fill="none" stroke="${tokens.shadow}" stroke-width="${stroke + 3}" stroke-linecap="round"/><path data-atom-outline d="M${inset} ${yy}Q${w / 2} ${yy - 11} ${w - inset} ${yy - 3}" fill="none" stroke="${colors3.color}" stroke-width="${stroke}" stroke-linecap="round" ${dash}/>`;
       labelY = height - 34;
     } else art = `<rect x="${inset + 4}" y="${inset + 5}" width="${w - 2 * inset}" height="${height - 2 * inset}" rx="16" fill="none" stroke="${tokens.shadow}" stroke-width="${stroke + 2}"/><rect data-atom-outline x="${inset}" y="${inset}" width="${w - 2 * inset}" height="${height - 2 * inset}" rx="16" fill="${colors3.color}" fill-opacity="${fillOpacity}" stroke="${colors3.color}" stroke-width="${stroke}" ${dash}/>`;
-    const size = label3 ? fit2(label3, Math.min(31, height * 0.25), textWidth, 17) : 0;
+    const size = label3 ? fit2(label3, Math.min(31, height * 0.25), textWidth2, 17) : 0;
     return `<g data-atom="highlight" data-highlight-shape="${p.shape}" data-state="${p.state}" transform="translate(${x} ${y})" style="${font2}">${art}${label3 ? txt(labelX, labelY, label3, size, h, 'text-anchor="middle"') : ""}</g>`;
   }
   var progressDefaults = {
@@ -837,10 +837,10 @@ var ComponentLibraryRuntime = (() => {
     return Math.min(max, Math.max(min, Number.isFinite(n4) ? n4 : fallback));
   };
   var units5 = (v) => [...String(v ?? "")].reduce((sum, c) => sum + (/[\x00-\x7f]/.test(c) ? 0.55 : 1), 0);
-  function label(h, x, y, value, size, width, extra2 = "") {
+  function label(h, x, y, value, size, width2, extra2 = "") {
     const s2 = String(value ?? "");
     if (units5(s2) > 60) throw Error("\u57FA\u7840\u7EC4\u4EF6\u6807\u7B7E\u8FC7\u957F\uFF0C\u8BF7\u4F7F\u7528\u77ED\u8BED\u3002");
-    const font5 = Math.min(size, width / Math.max(1, units5(s2)));
+    const font5 = Math.min(size, width2 / Math.max(1, units5(s2)));
     if (font5 < Math.min(size, 16)) throw Error("\u6807\u7B7E\u653E\u4E0D\u4E0B\uFF0C\u8BF7\u7F29\u77ED\u5185\u5BB9\uFF1B\u6587\u5B57\u4E0D\u4F1A\u7EE7\u7EED\u7F29\u5C0F\u6216\u8D8A\u8FC7\u90E8\u4EF6\u8FB9\u754C\u3002");
     return `<text x="${x}" y="${y}" font-size="${font5}" fill="${tokens.ink}" ${extra2}>${h.esc(s2)}</text>`;
   }
@@ -997,14 +997,14 @@ var ComponentLibraryRuntime = (() => {
   }
   var group3 = (type2, g2, content2) => `<g data-atom="${type2}" data-motion="item" transform="translate(${g2.x} ${g2.y})" style="${font3}" fill="${tokens.ink}">${content2}</g>`;
   var canvas3 = (content2) => `<section class="ani-paper-part" style="width:100%;height:100%;background:transparent"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" style="${font3};background:transparent" fill="${tokens.ink}">${content2}</svg></section>`;
-  function lines2(value, width, size, maxLines, name = "\u6587\u5B57") {
+  function lines2(value, width2, size, maxLines, name = "\u6587\u5B57") {
     const content2 = String(value ?? "");
     if (content2.length > 1200) throw Error(`${name}\u8FC7\u957F\u3002`);
     const result = [];
     for (const paragraph of content2.split("\n")) {
       let line3 = "";
       for (const char of paragraph) {
-        if (units6(line3 + char) * size > width && line3) {
+        if (units6(line3 + char) * size > width2 && line3) {
           result.push(line3);
           line3 = "";
         }
@@ -1015,8 +1015,8 @@ var ComponentLibraryRuntime = (() => {
     if (result.length > maxLines) throw Error(`${name}\u8D85\u51FA ${maxLines} \u884C\uFF0C\u8BF7\u589E\u52A0\u5C3A\u5BF8\u6216\u7F29\u77ED\u6587\u5B57\u3002`);
     return result;
   }
-  function fit3(value, width, preferred, min, name) {
-    const size = Math.min(preferred, width / Math.max(1, units6(value)));
+  function fit3(value, width2, preferred, min, name) {
+    const size = Math.min(preferred, width2 / Math.max(1, units6(value)));
     if (size < min) throw Error(`${name}\u8FC7\u957F\uFF0C\u8BF7\u4F7F\u7528\u77ED\u8BED\u3002`);
     return size;
   }
@@ -1238,9 +1238,9 @@ var ComponentLibraryRuntime = (() => {
     if (units7(s2) > max) throw new Error(`${name} is too long for this object`);
     return s2;
   };
-  var scope3 = (h, prefix) => {
+  var scope3 = (h, prefix2) => {
     let n4 = 0;
-    return { ...h, uid: (s2) => h.uid(`${prefix}-${++n4}-${s2}`) };
+    return { ...h, uid: (s2) => h.uid(`${prefix2}-${++n4}-${s2}`) };
   };
   var txt2 = (x, y, label3, size, h, extra2 = "") => `<text x="${x}" y="${y}" ${extra2.includes('fill="') ? "" : `fill="${tokens.ink}"`} font-size="${size}" ${extra2}>${h.esc(label3)}</text>`;
   function geometry2(p, minW, minH) {
@@ -1248,11 +1248,11 @@ var ComponentLibraryRuntime = (() => {
     if (x + w + 12 > 1280 || y + height + 12 > 720) throw new Error("Object plus its 12 px depth must fit the preview canvas");
     return { x, y, w, height };
   }
-  function wrap2(value, width, fontSize, maxLines = 2) {
+  function wrap2(value, width2, fontSize, maxLines = 2) {
     const lines3 = [];
     let line3 = "";
     for (const c of Array.from(String(value ?? ""))) {
-      if (units7(line3 + c) * fontSize > width && line3) {
+      if (units7(line3 + c) * fontSize > width2 && line3) {
         lines3.push(line3);
         line3 = "";
       }
@@ -1630,10 +1630,29 @@ var ComponentLibraryRuntime = (() => {
     if (p.style === "tapered") body = g("shaft", area(`M${x0} ${cy}L${end} ${cy - h * 0.64}V${cy - h}L${x1} ${cy}L${end} ${cy + h}V${cy + h * 0.64}Z`)) + g("highlight", `<path d="M${x0 + span * 0.17} ${cy - 2}L${end - 8} ${cy - h * 0.38}" stroke="${s2}" stroke-width="${Math.max(2, w * 0.35)}" fill="none"/>`);
     return `<g data-kit-node="arrow" data-arrow-style="${p.style}" data-direction="${p.direction}" transform="translate(${p.boxWidth / 2} ${p.boxHeight / 2}) scale(${p.scale}) translate(${-p.boxWidth / 2} ${-p.boxHeight / 2})"><g transform="${turn}"><g transform="${p.flipBend ? `translate(0 ${H}) scale(1 -1)` : ""}">${body}</g></g></g>`;
   }
-  function fitLines(p, width) {
+  function arrowAnchors(input = {}) {
+    const p = { ...arrowDefaults, ...input };
+    for (const [k, v] of Object.entries(p)) {
+      const r = semanticRules["direction-arrow"][k];
+      if (!r || typeof v !== r.type || r.enum && !r.enum.includes(v) || r.type === "number" && (!Number.isFinite(v) || v < r.minimum || v > r.maximum) || r.pattern && !new RegExp(r.pattern).test(v)) throw Error("arrowAnchors: invalid " + k);
+    }
+    const a2 = arrowStyles.find((x) => x.id === p.style);
+    if (!a2) throw Error("Unknown arrow style");
+    const q = arrowGeometry(p), bent = a2.geometry !== "straight";
+    const map = (point3) => {
+      let [x, y] = point3;
+      if (p.flipBend) y = q.H - y;
+      if (p.direction === "left") x = p.boxWidth - x;
+      else if (p.direction === "up") [x, y] = [y, p.boxHeight - x];
+      else if (p.direction === "down") [x, y] = [p.boxWidth - y, x];
+      return [p.boxWidth / 2 + (x - p.boxWidth / 2) * p.scale, p.boxHeight / 2 + (y - p.boxHeight / 2) * p.scale];
+    };
+    return { tail: map([q.x0 + (p.style === "swallowtail" ? p.tailDepth : 0), bent ? q.bottom : q.cy]), head: map([q.x1, bent ? q.top : q.cy]), nativeWidth: p.boxWidth, nativeHeight: p.boxHeight };
+  }
+  function fitLines(p, width2) {
     const units10 = (t) => [...t].reduce((n4, c) => n4 + (/[\u0000-\u00ff]/.test(c) ? 0.56 : 1), 0);
     if (p.lines.length) {
-      if (p.lines.some((l) => units10(l) * p.fontSize > width)) throw Error("semantic-label: explicit line exceeds available width; shorten it or lower fontSize");
+      if (p.lines.some((l) => units10(l) * p.fontSize > width2)) throw Error("semantic-label: explicit line exceeds available width; shorten it or lower fontSize");
       return p.lines;
     }
     const result = [];
@@ -1644,7 +1663,7 @@ var ComponentLibraryRuntime = (() => {
         current = "";
         continue;
       }
-      if (current && units10(current + ch) * p.fontSize > width) {
+      if (current && units10(current + ch) * p.fontSize > width2) {
         result.push(current);
         current = "";
       }
@@ -1657,7 +1676,7 @@ var ComponentLibraryRuntime = (() => {
   function label2(p, h) {
     const c = esc(p.color), bg = esc(p.background), bc = esc(p.borderColor), w = p.strokeWidth;
     const shape = (d, fill = bg, stroke = bc) => `<path d="${d}" fill="${fill}" stroke="${stroke}" stroke-width="${w}" stroke-linejoin="round"/>`;
-    const box2 = (x, y, width, height, fill = bg) => `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="${fill}" stroke="${bc}" stroke-width="${w}"/>`;
+    const box2 = (x, y, width2, height, fill = bg) => `<rect x="${x}" y="${y}" width="${width2}" height="${height}" fill="${fill}" stroke="${bc}" stroke-width="${w}"/>`;
     let decor = "", left = 42, right = 558, centerY = 86;
     if (p.variant === "heading-underline") decor = g("underline", shape("M34 145H566", "none") + shape("M34 137H153V150H34Z", bc, bc));
     if (p.variant === "object-tab") {
@@ -1703,27 +1722,85 @@ var ComponentLibraryRuntime = (() => {
     centerY *= sy;
     const lines3 = fitLines(p, right - left), lineHeight = p.fontSize * 1.15, startY = centerY - (lines3.length - 1) * lineHeight / 2 + p.fontSize * 0.34;
     if (lines3.length * lineHeight > p.boxHeight * 0.76) throw Error("semantic-label: viewport height too small for fontSize and line count");
-    const text7 = lines3.map((line3, i) => `<text data-kit-node="text-line-${i}" x="${p.align === "left" ? left : (left + right) / 2}" y="${startY + i * lineHeight}" text-anchor="${p.align === "left" ? "start" : "middle"}" fill="${c}" font-size="${p.fontSize}" style="font-weight:${p.fontWeight}">${h?.esc ? h.esc(line3) : esc(line3)}</text>`).join("");
+    const text8 = lines3.map((line3, i) => `<text data-kit-node="text-line-${i}" x="${p.align === "left" ? left : (left + right) / 2}" y="${startY + i * lineHeight}" text-anchor="${p.align === "left" ? "start" : "middle"}" fill="${c}" font-size="${p.fontSize}" style="font-weight:${p.fontWeight}">${h?.esc ? h.esc(line3) : esc(line3)}</text>`).join("");
     decor = decor.replaceAll("<path ", '<path vector-effect="non-scaling-stroke" ').replaceAll("<rect ", '<rect vector-effect="non-scaling-stroke" ');
-    return `<g data-kit-node="label" data-label-variant="${p.variant}" transform="translate(${p.boxWidth / 2} ${p.boxHeight / 2}) scale(${p.scale}) translate(${-p.boxWidth / 2} ${-p.boxHeight / 2})"><g transform="scale(${sx} ${sy})">${decor}</g>${text7}</g>`;
+    return `<g data-kit-node="label" data-label-variant="${p.variant}" transform="translate(${p.boxWidth / 2} ${p.boxHeight / 2}) scale(${p.scale}) translate(${-p.boxWidth / 2} ${-p.boxHeight / 2})"><g transform="scale(${sx} ${sy})">${decor}</g>${text8}</g>`;
   }
   var semanticParts = [
     { key: "direction-arrow", name: "\u53EF\u8C03\u65B9\u5411\u7BAD\u5934", width: 480, height: 240, defaults: arrowDefaults, description: "13\u79CD\u771F\u5B9E\u7BAD\u5934\u5F62\u6001\uFF1B\u660E\u786E\u5934\u90E8\u4E0E\u5C3E\u7AEF\u3002\u65B9\u5411right/left/up/down\u3002strokeWidth2\u201314\uFF0CheadSize8\u201350\uFF0Cscale0.5\u20131\u3002swallowtail\u7684tailDepth6\u201360\u4E3A\u5B9E\u9645\u50CF\u7D20\u7A7AV\u53E3\u6DF1\u5EA6\uFF1B\u539F12\u79CD\u5916\u89C2\u4FDD\u6301\u3002arrowAnchors\u8FD4\u56DE\u7CBE\u786E\u7AEF\u70B9\u3002\u4E0D\u662F\u5173\u8054\u62EC\u7EBF\u3002", draw: arrow },
     { key: "semantic-label", name: "\u8BED\u4E49\u6587\u5B57\u6807\u6CE8\u6846", width: 600, height: 180, defaults: labelDefaults, description: "8\u79CD\u6807\u9898/\u5BF9\u8C61/\u52A8\u4F5C/\u7ED3\u8BBA/\u6CE8\u610F/\u7591\u95EE/\u6CE8\u89E3\u5F62\u6001\u3002text\u226432\u5B57\uFF0C\u6700\u591A2\u884C\uFF1Blines\u53EF\u660E\u786E\u6700\u591A2\u884C\u6BCF\u884C\u226424\u3002\u5B57\u53F718\u201346\u4E14\u4E0D\u81EA\u52A8\u7F29\u5B57\uFF0C\u8FC7\u957F\u62A5\u9519\u3002\u540C\u8BED\u4E49\u5168\u7247\u51BB\u7ED3variant\u3002", draw: label2 }
   ];
 
+  // attachment-metadata.mjs
+  var attachmentDefaults = { display: "legacy", fileName: "\u6587\u4EF6.pdf", fileBytes: 1024, fileType: "pdf", status: "idle", progress: 0, states: [] };
+  var num5 = (minimum, maximum, type2 = "number") => ({ type: type2, minimum, maximum });
+  var stateStatus = { type: "string", enum: ["idle", "reading", "success", "error"] };
+  var attachmentRules = { display: { type: "string", enum: ["legacy", "file"] }, fileName: { type: "string", minLength: 1, maxLength: 120 }, fileBytes: num5(0, 1099511627776, "integer"), fileType: { type: "string", enum: ["pdf", "doc", "sheet", "image", "code", "file"] }, status: stateStatus, progress: num5(0, 100), states: { type: "array", minItems: 0, maxItems: 12, items: { type: "object", additionalProperties: false, required: ["at", "status", "progress"], properties: { at: num5(0, 7.99), status: stateStatus, progress: num5(0, 100) } } } };
+  var validNumber = (x, min, max) => typeof x === "number" && Number.isFinite(x) && x >= min && x <= max;
+  function attachmentPhases(p) {
+    if (!attachmentRules.display.enum.includes(p.display)) throw Error("attachment-card.display must be legacy or file");
+    if (!Array.isArray(p.states) || p.states.length > 12) throw Error("attachment-card.states requires 0\u201312 states");
+    if (p.display === "legacy") {
+      if (p.states.length) throw Error("Attachment states require display: file");
+      return [];
+    }
+    if (typeof p.fileName !== "string" || !p.fileName.trim() || Array.from(p.fileName).length > 120) throw Error("fileName requires 1\u2013120 characters");
+    if (!Number.isInteger(p.fileBytes) || !validNumber(p.fileBytes, 0, 1099511627776)) throw Error("fileBytes requires an integer byte count");
+    if (!attachmentRules.fileType.enum.includes(p.fileType)) throw Error("Unsupported fileType");
+    const phases = p.states.length ? p.states : [{ at: 0, status: p.status, progress: p.progress }];
+    let previous = -1;
+    for (const [i, s2] of phases.entries()) {
+      if (!s2 || typeof s2 !== "object" || Object.keys(s2).some((k) => !["at", "status", "progress"].includes(k))) throw Error("Attachment state accepts only at, status and progress");
+      if (!validNumber(s2.at, 0, 7.99) || i === 0 && s2.at !== 0 || s2.at <= previous) throw Error("Attachment states must start at 0 and have strictly increasing at < 8");
+      if (!stateStatus.enum.includes(s2.status) || !validNumber(s2.progress, 0, 100)) throw Error("Attachment state requires a status and progress 0\u2013100");
+      if (s2.status === "success" && s2.progress !== 100) throw Error("Successful attachment progress must equal 100");
+      if (s2.status === "idle" && s2.progress !== 0) throw Error("Idle attachment progress must equal 0");
+      previous = s2.at;
+    }
+    return phases.map((s2, i) => ({ ...s2, end: phases[i + 1]?.at ?? 8 }));
+  }
+  function fileSize(bytes) {
+    const i = bytes < 1024 ? 0 : Math.min(4, Math.floor(Math.log(bytes) / Math.log(1024))), value = bytes / 1024 ** i;
+    return `${Number(value.toFixed(i ? 1 : 0))} ${["B", "KiB", "MiB", "GiB", "TiB"][i]}`;
+  }
+  var width = (t) => Array.from(t).reduce((n4, c) => n4 + (/[\u0000-\u00ff]/.test(c) ? 0.57 : 1), 0) * 16;
+  function fileNameLines(name) {
+    const chars = Array.from(name), lines3 = ["", ""];
+    let i = 0;
+    const available = 154 / 1.25;
+    while (chars.length && width(lines3[0] + chars[0]) <= available) lines3[0] += chars.shift();
+    if (width(chars.join("")) <= available) {
+      lines3[1] = chars.join("");
+      return lines3;
+    }
+    const extension = name.match(/\.[a-zA-Z0-9]{1,8}$/)?.[0] ?? "", suffix = "\u2026" + extension;
+    while (i < chars.length && width(lines3[1] + chars[i] + suffix) <= available) lines3[1] += chars[i++];
+    lines3[1] += suffix;
+    return lines3;
+  }
+  function renderAttachmentFile(p, h) {
+    const phases = attachmentPhases(p), lines3 = fileNameLines(p.fileName), esc4 = h.esc;
+    const tx = (value, x, y, size, fill = "#142f67", extra2 = "") => `<text x="${x}" y="${y}" font-size="${size}" fill="${fill}" ${extra2}>${esc4(value)}</text>`;
+    const base2 = `<rect x="4" y="4" width="270" height="124" rx="15" fill="#ffffff" stroke="#9dccff" stroke-width="2"/><title>${esc4(p.fileName)} \u2014 ${fileSize(p.fileBytes)}</title><path d="M29 27H68L86 46V105H29Z" fill="#e5f4ff" stroke="#8ac1f2" stroke-width="2"/><path d="M68 27V46H86" fill="none" stroke="#8ac1f2" stroke-width="2"/>${tx(p.fileType.toUpperCase(), 57.5, 79, 13, "#0879ff", 'text-anchor="middle"')}${tx(lines3[0], 104, 32, 16)}${tx(lines3[1], 104, 52, 16)}${tx(fileSize(p.fileBytes), 104, 76, 14, "#58718c")}`;
+    const states2 = phases.map((s2, i) => {
+      const tone3 = { idle: "#58718c", reading: "#0879ff", success: "#009e7a", error: "#e75b24" }[s2.status], label3 = { idle: "\u5F85\u5904\u7406", reading: `\u8BFB\u53D6\u4E2D ${s2.progress}%`, success: "\u5DF2\u5B8C\u6210", error: "\u8BFB\u53D6\u5931\u8D25" }[s2.status];
+      return `<g data-attachment-state="${s2.status}" data-state-at="${s2.at}" data-state-end="${s2.end}" data-progress="${s2.progress}" style="opacity:${i === phases.length - 1 ? 1 : 0}"><circle cx="109" cy="97" r="4" fill="${tone3}"/>${tx(label3, 120, 103, 15, tone3)}<rect x="104" y="115" width="150" height="4" rx="2" fill="#e1edf6"/><rect x="104" y="115" width="${150 * s2.progress / 100}" height="4" rx="2" fill="${tone3}"/></g>`;
+    }).join("");
+    return `<g data-kit-node="file-metadata" data-attachment-states="true" data-file-name="${esc4(p.fileName)}" data-file-bytes="${p.fileBytes}">${base2}${states2}</g>`;
+  }
+
   // transfer-kit-primitives.mjs
   var C = { ink: "#10275f", blue: "#0879ff", light: "#dff2ff", edge: "#86c6ff", shadow: "#b4dafe", mint: "#009e7a", orange: "#ff8709", gray: "#bbc9d5" };
   var kitCSS = '.ani-kit text{font-family:ComponentHan,ComponentUI,"Microsoft YaHei",sans-serif;font-weight:700}.ani-kit [data-kit-node]{transform-box:fill-box;transform-origin:center}.ani-kit path,.ani-kit rect,.ani-kit circle,.ani-kit ellipse{stroke-linecap:round;stroke-linejoin:round}';
   var safe = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   var esc2 = (h, v) => h?.esc ? h.esc(v) : safe(v);
-  var num5 = (v, d = 0) => Number.isFinite(Number(v)) ? Number(v) : d;
-  var bounded = (v, a2, b2, d = a2) => Math.min(b2, Math.max(a2, num5(v, d)));
+  var num6 = (v, d = 0) => Number.isFinite(Number(v)) ? Number(v) : d;
+  var bounded = (v, a2, b2, d = a2) => Math.min(b2, Math.max(a2, num6(v, d)));
   var node = (name, s2, attrs = "") => `<g data-kit-node="${name}" ${attrs}>${s2}</g>`;
   var path = (d, fill = C.light, stroke = C.ink, sw = 3) => `<path d="${d}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
   var rect = (x, y, w, ht, r, fill, stroke = "none", sw = 2) => `<rect x="${x}" y="${y}" width="${w}" height="${ht}" rx="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>`;
-  var txt3 = (h, x, y, text7, size = 28, max = 420, fill = C.ink, anchor = "start") => {
-    const value = String(text7 ?? "");
+  var txt3 = (h, x, y, text8, size = 28, max = 420, fill = C.ink, anchor = "start") => {
+    const value = String(text8 ?? "");
     const chars = Array.from(value).reduce((n4, c) => n4 + (/[\u0000-\u00ff]/.test(c) ? 0.57 : 1), 0);
     const actual = Math.min(size, max / Math.max(chars, 1));
     if (actual < size * 0.69) throw new Error(`Transfer kit text exceeds readable width: ${value}`);
@@ -1737,7 +1814,7 @@ var ComponentLibraryRuntime = (() => {
     const g2 = defs(h, key, colors3);
     return g2.html + fn(g2.fill);
   };
-  var part = (key, name, width, height, defaults3, description, draw) => ({ key, name, width, height, defaults: defaults3, description, draw });
+  var part = (key, name, width2, height, defaults3, description, draw) => ({ key, name, width: width2, height, defaults: defaults3, description, draw });
   var controls = (x, y, scale = 1) => `<g transform="translate(${x} ${y}) scale(${scale})">${["#ff5953", "#ffd438", "#08c9a3"].map((c, i) => `<circle cx="${i * 31}" cy="0" r="10" fill="${c}" stroke="${C.ink}" stroke-width="1.7"/><circle cx="${i * 31 - 3}" cy="-4" r="3" fill="white" opacity=".6"/>`).join("")}</g>`;
   var product = (kind, h) => {
     if (kind === "shoe") return grad(h, "shoe", ["#ecfaff", "#a2d9ff", "#308ce0"], (g2) => node(
@@ -1765,7 +1842,7 @@ var ComponentLibraryRuntime = (() => {
       const body = node("roof", path("M14 56C89 52 126 71 151 121L28 128Z", g2)) + node("cab-body", path("M21 115L171 120Q198 121 213 154L258 249Q270 267 270 313V353H23Z", g2) + path("M25 130H123Q151 130 163 155L212 257V339H28Z", "#faffff", C.ink, 3) + path("M28 328H107Q147 279 195 317L213 356H28Z", "#0871c0", C.ink, 3)) + node("side-window", path("M48 144H104Q118 144 124 159L148 221Q152 236 138 237L111 218L47 210Q39 207 39 195V154Q39 145 48 144Z", "#087bcc", C.ink, 3) + path("M54 194L100 151M82 209L119 169", "none", "#35b5ff", 10) + path("M106 217L125 193Q139 191 145 221", "none", "#075696", 6)) + node("windscreen", path("M137 143L179 146Q192 148 199 167L240 248L173 231Z", "#50bff0", C.ink, 3) + path("M170 153L160 184M194 170L183 207", "none", "#cdf6ff", 8) + path("M169 229L237 244", "none", "#02538a", 6)) + node("mirror", path("M220 174L232 173L237 206L224 211Z", "#0b4673") + path("M229 208L230 232H205", "none", C.ink, 3)) + node("details", rect(42, 254, 27, 16, 4, "#075894", C.ink, 2) + rect(202, 275, 55, 32, 5, "#003c71", C.ink, 3) + path("M210 290H247", "none", "#77c6f4", 5) + rect(166, 263, 18, 38, 4, "#ffbc24", C.ink, 2) + rect(187, 267, 17, 36, 4, "#f2fcff", C.ink, 2) + rect(8, 350, 273, 26, 5, "#8ccff4", C.ink, 3) + rect(209, 353, 40, 18, 3, "#f3fdff", C.ink, 2) + path("M34 236L95 243", "none", "#d2efff", 5));
       return p.facing === "left" ? `<g transform="translate(300 0) scale(-1 1)">${body}</g>` : body;
     })),
-    part("wheel", "\u8D27\u8F66\u8F6E\u80CE", 120, 120, { rotation: 0 }, "\u539F\u751F120\xD7120\uFF1B\u65CB\u8F6C\u4EC5\u63A7\u5236\u8F6E\u6BC2\u7EC4\uFF1B\u65E0\u6587\u5B57\u3002", (p, h) => `<g transform="rotate(${num5(p.rotation)} 60 60)">${node("tire", `<circle cx="60" cy="60" r="56" fill="#092c56" stroke="${C.ink}" stroke-width="4"/><circle cx="60" cy="60" r="44" fill="#164577" stroke="#2163a0" stroke-width="5"/>`)}${node("hub", `<circle cx="60" cy="60" r="31" fill="#acd8f6" stroke="#061d4d" stroke-width="3"/><circle cx="60" cy="60" r="13" fill="#245b8c" stroke="#08234e" stroke-width="3"/>` + Array.from({ length: 6 }, (_, i) => {
+    part("wheel", "\u8D27\u8F66\u8F6E\u80CE", 120, 120, { rotation: 0 }, "\u539F\u751F120\xD7120\uFF1B\u65CB\u8F6C\u4EC5\u63A7\u5236\u8F6E\u6BC2\u7EC4\uFF1B\u65E0\u6587\u5B57\u3002", (p, h) => `<g transform="rotate(${num6(p.rotation)} 60 60)">${node("tire", `<circle cx="60" cy="60" r="56" fill="#092c56" stroke="${C.ink}" stroke-width="4"/><circle cx="60" cy="60" r="44" fill="#164577" stroke="#2163a0" stroke-width="5"/>`)}${node("hub", `<circle cx="60" cy="60" r="31" fill="#acd8f6" stroke="#061d4d" stroke-width="3"/><circle cx="60" cy="60" r="13" fill="#245b8c" stroke="#08234e" stroke-width="3"/>` + Array.from({ length: 6 }, (_, i) => {
       const a2 = i * Math.PI / 3;
       return `<circle cx="${60 + 22 * Math.cos(a2)}" cy="${60 + 22 * Math.sin(a2)}" r="4" fill="#245c91"/>`;
     }).join(""))}</g>`),
@@ -1773,7 +1850,7 @@ var ComponentLibraryRuntime = (() => {
     part("ground-shadow", "\u692D\u5706\u5730\u9762\u6295\u5F71", 600, 70, { opacity: 0.55, color: "#a9d6fc" }, "\u539F\u751F600\xD770\uFF1Bopacity 0\u20131\uFF1B\u4E0D\u542B\u5BF9\u8C61\u3002", (p) => `<ellipse cx="300" cy="35" rx="295" ry="30" fill="${safe(p.color)}" opacity="${bounded(p.opacity, 0, 1, 0.55)}"/>`),
     part("photo-card", "\u5546\u54C1\u7167\u7247\u5361\u7247", 180, 200, { kind: "cup", label: "", shadow: true }, "\u539F\u751F180\xD7200\uFF1Bkind cup/lamp/bag/shoe/chair/plant\uFF1Blabel\u22648\u5B57\u3002\u5546\u54C1\u59CB\u7EC8\u5728\u7167\u7247\u8FB9\u6846\u5185\u3002", (p, h) => grad(h, "photo", ["#fbfeff", "#e5f5ff", "#c6e7fd"], (g2) => node("shadow", p.shadow ? rect(17, 21, 158, 176, 13, "#bbdffa") : "") + node("photo-frame", rect(3, 3, 158, 176, 13, "#fff", C.edge, 2.6) + rect(13, 15, 137, 153, 9, g2)) + `<g data-kit-node="photo-product" transform="translate(18 21) scale(.94)">${product(p.kind, h)}</g>` + txt3(h, 81, 195, p.label, 17, 152, C.ink, "middle"))),
     part("window-shell", "\u84DD\u6807\u9898\u680F\u8F6F\u4EF6\u7A97\u53E3", 760, 560, { title: "\u5E94\u7528\u7A97\u53E3", controls: true, caption: "", brandSrc: "" }, "\u539F\u751F760\xD7560\uFF1B\u4E0D\u542B\u5185\u5C42\u56FE\u6216\u6B63\u6587\uFF1Btitle\u226416\u5B57\uFF0Ccaption\u22649\u5B57\u3002", (p, h) => grad(h, "window", ["#ffffff", "#effaff", "#d6edff"], (g2) => node("shadow", `<ellipse cx="386" cy="544" rx="367" ry="16" fill="#b9ddfc"/>`) + node("shell", rect(6, 7, 742, 535, 24, g2, C.ink, 3.5) + rect(11, 12, 732, 525, 20, "none", "#83caff", 3)) + grad(h, "bar", ["#39baff", "#007aff", "#0065ef"], (b2) => node("titlebar", path("M31 8H724Q749 8 749 32V74H7V32Q7 8 31 8Z", b2, C.ink, 3) + path("M20 20H726", "none", "#a2e9ff", 3))) + (p.controls ? node("window-controls", controls(43, 41) + path("M600 40H615M649 30H665V47H649ZM704 30L721 47M721 30L704 47", "none", "white", 3)) : "") + txt3(h, p.brandSrc ? 207 : 167, 53, p.title, 32, p.brandSrc ? 370 : 418, "white") + (p.brandSrc ? `<image href="${esc2(h, p.brandSrc)}" x="156" y="15" width="40" height="40"/>` : "") + (p.caption ? node("caption", rect(584, 89, 143, 36, 10, "#f7fdff", C.edge, 1.5) + txt3(h, 655, 114, p.caption, 20, 125, C.ink, "middle")) : ""))),
-    part("buffer-area", "\u865A\u7EBF\u4E34\u65F6\u533A", 680, 370, { title: "\u4E34\u65F6\u533A\u57DF", labelWidth: 270, showLabel: true }, "\u539F\u751F680\xD7370\uFF1B\u53EA\u542B\u865A\u7EBF\u56F4\u5408\u4E0E\u6807\u7B7E\uFF1Btitle\u226414\u5B57\u3002", (p, h) => node("boundary", rect(5, 27, 670, 337, 21, "#f4fbff", "#0787ff", 2.6).replace("/>", ' stroke-dasharray="10 7"/>')) + (p.showLabel ? grad(h, "bufferlabel", ["#38aeff", "#0077fa"], (g2) => node("label", rect(340 - num5(p.labelWidth, 270) / 2, 2, num5(p.labelWidth, 270), 49, 24, g2) + txt3(h, 340, 36, p.title, 28, num5(p.labelWidth, 270) - 26, "white", "middle"))) : "")),
+    part("buffer-area", "\u865A\u7EBF\u4E34\u65F6\u533A", 680, 370, { title: "\u4E34\u65F6\u533A\u57DF", labelWidth: 270, showLabel: true }, "\u539F\u751F680\xD7370\uFF1B\u53EA\u542B\u865A\u7EBF\u56F4\u5408\u4E0E\u6807\u7B7E\uFF1Btitle\u226414\u5B57\u3002", (p, h) => node("boundary", rect(5, 27, 670, 337, 21, "#f4fbff", "#0787ff", 2.6).replace("/>", ' stroke-dasharray="10 7"/>')) + (p.showLabel ? grad(h, "bufferlabel", ["#38aeff", "#0077fa"], (g2) => node("label", rect(340 - num6(p.labelWidth, 270) / 2, 2, num6(p.labelWidth, 270), 49, 24, g2) + txt3(h, 340, 36, p.title, 28, num6(p.labelWidth, 270) - 26, "white", "middle"))) : "")),
     part("chat-shell", "\u53EF\u586B\u6D88\u606F\u7684\u804A\u5929\u7A97\u53E3", 660, 640, { title: "\u667A\u80FD\u52A9\u624B", brandSrc: "", inputPlaceholder: "\u8F93\u5165\u6D88\u606F\u2026", showControls: true, caption: "\u60C5\u5883\u793A\u610F" }, "\u539F\u751F660\xD7640\uFF1B\u4E0D\u542B\u6D88\u606F\uFF0C\u6D88\u606F\u533A\u57DFx32 y165 w596 h370\uFF1Btitle\u226410\u5B57\uFF0Cinput\u226424\u5B57\u3002", (p, h) => grad(h, "chat", ["#ffffff", "#f2faff", "#ddf0ff"], (g2) => node("shadow", `<ellipse cx="334" cy="622" rx="319" ry="16" fill="#bfdefa"/>`) + node("shell", rect(5, 5, 646, 614, 23, g2, C.ink, 3.5) + rect(11, 11, 634, 602, 18, "none", "#72bffd", 2.5)) + grad(h, "chatbar", ["#35baff", "#087dff", "#0870ef"], (g3) => node("titlebar", path("M29 6H626Q651 6 651 31V59H5V31Q5 6 29 6Z", g3, C.ink, 3))) + (p.showControls ? node("controls", controls(34, 33, 0.83)) : "") + node("brand", `<circle cx="77" cy="111" r="42" fill="#e6f4ff" stroke="#8ac8fc" stroke-width="1.5"/>` + (p.brandSrc ? `<image href="${esc2(h, p.brandSrc)}" x="36" y="70" width="82" height="82" preserveAspectRatio="xMidYMid meet"/>` : path("M61 95H93V124H81L72 132V124H61Z", "#8fcdf8", C.ink, 2)) + txt3(h, 141, 126, p.title, 37, 435)) + node("input", rect(28, 551, 595, 50, 13, "white", "#a6d2ff", 2) + txt3(h, 48, 585, p.inputPlaceholder, 23, 504, "#9baab9")) + txt3(h, 609, 533, p.caption, 16, 190, "#87a8d1", "end"))),
     part("chat-message", "\u5355\u6761\u89D2\u8272\u6D88\u606F\u6C14\u6CE1", 500, 150, { role: "user", text: "\u53EF\u7F16\u8F91\u6D88\u606F", lines: [], tone: "blue", showAvatar: false, brandSrc: "" }, "\u539F\u751F500\xD7150\uFF1Brole user/assistant\uFF1Btext\u226420\u5B57\u6216lines\u6700\u591A3\u884C\u6BCF\u884C20\u5B57\u3002", (p, h) => {
       const user = p.role === "user", x = p.showAvatar ? 74 : 8, w = p.showAvatar ? 414 : 480, bg = p.tone === "orange" ? "#ffe9c1" : p.tone === "mint" ? "#d4f3eb" : user ? "#acd5ff" : "#deefff";
@@ -1792,15 +1869,15 @@ var ComponentLibraryRuntime = (() => {
     }),
     part("photo-stack", "\u4FDD\u6301\u5546\u54C1\u8EAB\u4EFD\u7684\u7167\u7247\u7EC4", 380, 230, { kinds: ["cup", "lamp", "bag"], count: 3, spread: 95, labels: [], tilt: true }, "\u539F\u751F380\xD7230\uFF1Bcount1\u20133\uFF0Ckinds cup/lamp/bag/shoe/chair/plant\uFF1B\u6BCF\u5F20\u53EF\u5355\u72EC\u52A8\u753B\u3002", (p, h) => Array.from({ length: bounded(p.count, 1, 3, 3) }, (_, i) => {
       const a2 = p.tilt ? [-8, 3, 9][i] : 0;
-      return node("photo-" + i, `<g transform="translate(${i * num5(p.spread, 95) + 13} ${i === 1 ? 3 : 16}) rotate(${a2} 85 98)">${partAt("photo-card", { kind: p.kinds?.[i] || "cup", label: p.labels?.[i] || "", instanceKey: String(i) }, h, { width: 166, height: 185 })}</g>`, 'data-motion="item"');
+      return node("photo-" + i, `<g transform="translate(${i * num6(p.spread, 95) + 13} ${i === 1 ? 3 : 16}) rotate(${a2} 85 98)">${partAt("photo-card", { kind: p.kinds?.[i] || "cup", label: p.labels?.[i] || "", instanceKey: String(i) }, h, { width: 166, height: 185 })}</g>`, 'data-motion="item"');
     }).join("")),
     part("notice-paper", "\u53EF\u586B\u5B57\u6BB5\u7684\u6298\u89D2\u901A\u77E5", 470, 540, { title: "\u901A\u77E5\u6807\u9898", subtitle: "", foldTone: "gold", showShadow: true }, "\u539F\u751F470\xD7540\uFF1Btitle\u226414\u5B57\uFF0Csubtitle\u226418\u5B57\uFF1B\u5185\u90E8\u6B63\u6587\u533A\u57DFx38 y170 w389 h320\u3002", (p, h) => grad(h, "paper", ["#fff", "#fcfeff", "#e8f6ff"], (g2) => node("shadow", p.showShadow ? `<ellipse cx="238" cy="524" rx="226" ry="14" fill="#cce8ff"/>` : "") + node("sheet", path("M21 27L388 8L454 77V507Q454 523 437 523H24Q8 523 9 506L13 47Q13 29 21 27Z", g2, C.ink, 3.6) + path("M27 37L379 19", "none", "white", 4)) + node("fold", path("M388 9V65Q388 78 402 77L452 77Z", p.foldTone === "blue" ? "#91d5ff" : "#ffe095", C.ink, 3) + path("M395 23V65L438 68", "none", "#fff8dc", 4)) + node("heading", txt3(h, 236, 136, p.title, 39, 395, "#ff620c", "middle") + txt3(h, 236, 171, p.subtitle, 24, 375, C.ink, "middle")))),
     part("notice-field", "\u6807\u7B7E\u4E0E\u672C\u6B21\u4E8B\u5B9E\u5B57\u6BB5", 400, 86, { label: "\u5B57\u6BB5", value: "", tone: "blue", lineCount: 2 }, "\u539F\u751F400\xD786\uFF1Blabel\u22646\u5B57\uFF0Cvalue\u226412\u5B57\uFF1B\u7A7A\u503C\u75281\u20133\u7070\u8272\u884C\u3002", (p, h) => {
       const c = { blue: "#087cff", orange: "#ff850a", mint: "#009976" }[p.tone] || "#087cff";
       return node("label", rect(3, 6, 140, 70, 15, c) + txt3(h, 73, 51, p.label, 29, 124, "white", "middle")) + node("value", p.value ? txt3(h, 163, 49, p.value, 23, 230) : Array.from({ length: bounded(p.lineCount, 1, 3, 2) }, (_, i) => rect(164, 15 + i * 22, i ? 184 : 226, 13, 6, C.gray)).join(""));
     }),
-    part("attachment-card", "\u62A5\u9519\u6216\u4EE3\u7801\u9644\u4EF6\u5361", 280, 135, { title: "\u9644\u4EF6", kind: "document", lineCount: 3 }, "\u539F\u751F280\xD7135\uFF1Bkind document/code/error/image\uFF1Btitle\u22648\u5B57\uFF0C\u7070\u884C0\u20133\u3002", (p, h) => node("card", rect(4, 4, 270, 124, 15, "white", "#9dccff", 2)) + node("file", path("M29 27H68L86 46V105H29Z", "#e5f4ff", "#8ac1f2", 2) + path("M68 27V46H86", "none", "#8ac1f2", 2) + (p.kind === "code" ? path("M47 56L35 69L47 81M70 56L82 69L70 81M63 53L54 86", "none", "#185adb", 3.8) : p.kind === "image" ? path("M37 85L48 67L58 77L66 59L78 85Z", "#087cfc", "none") : path("M39 57H60M39 69H73M39 81H62", "none", "#8eacd3", 4)) + (p.kind === "error" ? `<circle cx="77" cy="94" r="15" fill="#ff6923" stroke="white" stroke-width="2"/>` + path("M77 84V96M77 102V103", "none", "white", 3) : "")) + node("details", txt3(h, 104, 46, p.title, 26, 158) + Array.from({ length: bounded(p.lineCount, 0, 3, 3) }, (_, i) => rect(105, 62 + i * 18, i === 2 ? 103 : 146, 10, 5, C.gray)).join(""))),
-    part("reply-lines", "\u53EF\u9010\u884C\u63ED\u793A\u7684\u5360\u4F4D\u56DE\u590D", 450, 120, { count: 4, color: "#becbd6", lengths: [1, 0.87, 0.95, 0.7], lineHeight: 13, gap: 17 }, "\u539F\u751F450\xD7120\uFF1Bcount0\u20134\uFF0Clengths\u4E3A0\u20131\uFF1B\u6BCF\u884C\u72EC\u7ACBdata-kit-node\u3002", (p) => Array.from({ length: bounded(p.count, 0, 4, 4) }, (_, i) => node("line-" + i, rect(5, 7 + i * (num5(p.lineHeight, 13) + num5(p.gap, 17)), 435 * bounded(p.lengths?.[i], 0.08, 1, 1), bounded(p.lineHeight, 3, 18, 13), 7, safe(p.color)), 'data-motion="line"')).join("")),
+    part("attachment-card", "\u9644\u4EF6\u4E0E\u5904\u7406\u72B6\u6001\u5361", 280, 135, { title: "\u9644\u4EF6", kind: "document", lineCount: 3, ...attachmentDefaults }, "\u539F\u751F280\xD7135\uFF1Bdisplay legacy\u4FDD\u7559\u539F\u5361\uFF0Cfile\u663E\u793A\u6587\u4EF6\u540D\u3001\u5B57\u8282\u5927\u5C0F\u3001\u7C7B\u578B\u548C\u5904\u7406\u72B6\u6001\u3002states\u4ECE0\u5F00\u59CB\u6309at\u9012\u589E\uFF0C\u5728ani-hd-parts\u65F6\u95F4\u8F74\u4E0A\u53EF\u56DE\u653E\uFF1B\u9759\u6001\u663E\u793A\u6700\u540E\u4E00\u6001\u3002", (p, h) => p.display === "file" ? renderAttachmentFile(p, h) : node("card", rect(4, 4, 270, 124, 15, "white", "#9dccff", 2)) + node("file", path("M29 27H68L86 46V105H29Z", "#e5f4ff", "#8ac1f2", 2) + path("M68 27V46H86", "none", "#8ac1f2", 2) + (p.kind === "code" ? path("M47 56L35 69L47 81M70 56L82 69L70 81M63 53L54 86", "none", "#185adb", 3.8) : p.kind === "image" ? path("M37 85L48 67L58 77L66 59L78 85Z", "#087cfc", "none") : path("M39 57H60M39 69H73M39 81H62", "none", "#8eacd3", 4)) + (p.kind === "error" ? `<circle cx="77" cy="94" r="15" fill="#ff6923" stroke="white" stroke-width="2"/>` + path("M77 84V96M77 102V103", "none", "white", 3) : "")) + node("details", txt3(h, 104, 46, p.title, 26, 158) + Array.from({ length: bounded(p.lineCount, 0, 3, 3) }, (_, i) => rect(105, 62 + i * 18, i === 2 ? 103 : 146, 10, 5, C.gray)).join(""))),
+    part("reply-lines", "\u53EF\u9010\u884C\u63ED\u793A\u7684\u5360\u4F4D\u56DE\u590D", 450, 120, { count: 4, color: "#becbd6", lengths: [1, 0.87, 0.95, 0.7], lineHeight: 13, gap: 17 }, "\u539F\u751F450\xD7120\uFF1Bcount0\u20134\uFF0Clengths\u4E3A0\u20131\uFF1B\u6BCF\u884C\u72EC\u7ACBdata-kit-node\u3002", (p) => Array.from({ length: bounded(p.count, 0, 4, 4) }, (_, i) => node("line-" + i, rect(5, 7 + i * (num6(p.lineHeight, 13) + num6(p.gap, 17)), 435 * bounded(p.lengths?.[i], 0.08, 1, 1), bounded(p.lineHeight, 3, 18, 13), 7, safe(p.color)), 'data-motion="line"')).join("")),
     part("send-icon", "\u4E00\u4F53\u7EB8\u98DE\u673A\u53D1\u9001\u56FE\u6807", 64, 64, { tone: "blue" }, "\u539F\u751F64\xD764\uFF1B\u4E0D\u542B\u6309\u94AE\u80CC\u666F\u3002", (p) => node("plane", path("M6 26L57 8L41 58L28 37L6 26Z", p.tone === "mint" ? C.mint : C.blue, "none") + path("M28 37L47 19", "none", "#ceecff", 2.6))),
     part("checklist-row", "\u4E0D\u9884\u8BBE\u7ED3\u679C\u7684\u68C0\u67E5\u884C", 470, 74, { text: "\u5F85\u68C0\u67E5\u9879\u76EE", state: "unchecked", highlight: false }, "\u539F\u751F470\xD774\uFF1Bstate unchecked/checked/failed\uFF1B\u9ED8\u8BA4\u7A7A\u6846\uFF1Btext\u226420\u5B57\u3002", (p, h) => node("row", rect(1, 1, 466, 71, 12, p.highlight ? "#fff0cf" : "#f7fcff", p.highlight ? "#ffb443" : "#d0e7f9", 1.4)) + node("checkbox", rect(16, 19, 32, 32, 5, "white", "#3669a3", 2.2) + (p.state === "checked" ? path("M23 34L31 42L43 27", "none", "#009e79", 3.5) : p.state === "failed" ? path("M24 27L41 44M41 27L24 44", "none", "#ed6d27", 3.5) : "")) + txt3(h, 65, 46, p.text, 27, 383)),
     part("magnifier", "\u53EF\u79FB\u52A8\u7684\u653E\u5927\u955C", 180, 190, { glassOpacity: 0.2 }, "\u539F\u751F180\xD7190\uFF1B\u955C\u7247\u4E0E\u624B\u67C4\u5206\u79BB\uFF1B\u53EA\u4F5C\u68C0\u67E5\u6307\u793A\uFF0C\u65E0\u865A\u6784\u653E\u5927\u7ED3\u679C\u3002", (p) => node("handle", path("M113 120L158 161Q170 177 156 184Q148 188 141 179L98 134Z", "#0878cb", C.ink, 3) + path("M122 133L153 163", "none", "#59bfff", 6)) + node("lens", `<circle cx="71" cy="73" r="62" fill="#329bec" stroke="${C.ink}" stroke-width="3"/><circle cx="71" cy="73" r="48" fill="#e2f6ff" fill-opacity="${bounded(p.glassOpacity, 0, 1, 0.2)}" stroke="#a4defc" stroke-width="7"/>` + path("M40 43Q55 27 76 29", "none", "white", 6))),
@@ -1819,7 +1896,7 @@ var ComponentLibraryRuntime = (() => {
     }),
     part("question-bubble", "\u6A59\u8272\u63D0\u95EE\u6C14\u6CE1", 610, 280, { lines: ["\u9700\u8981\u601D\u8003\u7684\u95EE\u9898\uFF1F"], tone: "orange" }, "\u539F\u751F610\xD7280\uFF1Blines1\u20133\u884C\uFF0C\u6BCF\u884C\u226417\u5B57\u3002", (p, h) => grad(h, "question", ["#fff8df", "#ffebbe", "#ffd28a"], (g2) => node("bubble", path("M37 9H571Q601 9 601 41V211Q601 242 569 242H269L208 274L221 242H38Q8 242 8 211V41Q8 9 37 9Z", g2, p.tone === "blue" ? C.blue : "#ffa630", 3)) + node("question", (p.lines || []).slice(0, 3).map((t, i) => txt3(h, 305, 82 + i * 59, t, 46, 552, C.ink, "middle")).join("")))),
     part("brand-badge", "\u5B98\u65B9\u5C0F\u56FE\u6807\u4E0E\u53EF\u7F16\u8F91\u540D\u79F0", 370, 95, { title: "\u667A\u80FD\u52A9\u624B", brandSrc: "", neutralMark: "chat" }, "\u539F\u751F370\xD795\uFF1BbrandSrc\u53EF\u9009\u51C6\u786E\u5B98\u65B9\u539F\u4EF6\uFF1B\u9ED8\u8BA4\u4E2D\u6027\u56FE\u6807\uFF1Btitle\u226410\u5B57\u3002", (p, h) => node("badge", rect(3, 3, 362, 87, 16, "#f5fbff", "#82bcf1", 2)) + node("brand", p.brandSrc ? `<image href="${esc2(h, p.brandSrc)}" x="14" y="10" width="72" height="72" preserveAspectRatio="xMidYMid meet"/>` : `<circle cx="49" cy="46" r="33" fill="#d5edff"/>` + path("M31 30H68V58H49L39 67V58H31Z", "#8ac7f4", C.ink, 2)) + txt3(h, 103, 59, p.title, 35, 242)),
-    part("code-lines", "\u975E\u6267\u884C\u6027\u4EE3\u7801\u5360\u4F4D\u884C", 480, 190, { count: 6, highlightLine: -1, tone: "blue" }, "\u539F\u751F480\xD7190\uFF1Bcount0\u20136\uFF0ChighlightLine -1\u62160\u20135\uFF1B\u4EC5\u62BD\u8C61\u884C\uFF0C\u4E0D\u5192\u5145\u53EF\u6267\u884C\u4EE3\u7801\u3002", (p) => Array.from({ length: bounded(p.count, 0, 6, 6) }, (_, i) => node("line-" + i, rect(7, 8 + i * 29, 20, 10, 4, "#c5d3df") + rect(42 + [0, 20, 40, 20, 40, 0][i], 8 + i * 29, [320, 266, 303, 242, 279, 194][i], 12, 6, i === num5(p.highlightLine, -1) ? p.tone === "orange" ? "#ffab42" : "#479ffc" : "#b7c9d8"), 'data-motion="line"')).join("")),
+    part("code-lines", "\u975E\u6267\u884C\u6027\u4EE3\u7801\u5360\u4F4D\u884C", 480, 190, { count: 6, highlightLine: -1, tone: "blue" }, "\u539F\u751F480\xD7190\uFF1Bcount0\u20136\uFF0ChighlightLine -1\u62160\u20135\uFF1B\u4EC5\u62BD\u8C61\u884C\uFF0C\u4E0D\u5192\u5145\u53EF\u6267\u884C\u4EE3\u7801\u3002", (p) => Array.from({ length: bounded(p.count, 0, 6, 6) }, (_, i) => node("line-" + i, rect(7, 8 + i * 29, 20, 10, 4, "#c5d3df") + rect(42 + [0, 20, 40, 20, 40, 0][i], 8 + i * 29, [320, 266, 303, 242, 279, 194][i], 12, 6, i === num6(p.highlightLine, -1) ? p.tone === "orange" ? "#ffab42" : "#479ffc" : "#b7c9d8"), 'data-motion="line"')).join("")),
     part("destination-pad", "\u5378\u8D27\u533A\u57DF\u5730\u57AB", 600, 130, { label: "" }, "\u539F\u751F600\xD7130\uFF1B\u4E0D\u542B\u7BB1\u5B50\uFF1Blabel\u226416\u5B57\u3002", (p, h) => node("pad", path("M87 12H493L590 116H9Z", "#f6fbff", "#5ba5ed", 4) + path("M106 25H479L558 98H48Z", "#f6fbff", "#d1e3f2", 3)) + txt3(h, 300, 82, p.label, 29, 410, C.ink, "middle")),
     part("focus-ring", "\u53EF\u9000\u573A\u7684\u5C40\u90E8\u5F3A\u8C03\u6846", 400, 180, { tone: "orange", dashed: false }, "\u539F\u751F400\xD7180\uFF1B\u53EA\u7A81\u51FA\u5C40\u90E8\uFF0C\u4E0D\u6539\u53D8\u5BF9\u8C61\u72B6\u6001\u3002", (p) => node("focus", rect(5, 5, 390, 170, 21, "none", p.tone === "blue" ? C.blue : "#ffa127", 5).replace("/>", p.dashed ? ' stroke-dasharray="11 8"/>' : "/>"), 'data-motion="highlight"')),
     part("truck", "\u655E\u53A2\u6574\u8F66\uFF08\u542B\u8D27\u7269\u4E0E\u6295\u5F71\uFF09", 870, 486, { cargoCount: 5, shadowOpacity: 0.55, shadowScale: 1, shadowOffsetY: 0 }, "\u539F\u751F870\xD7486\uFF1B\u6574\u8F66\u3001\u4E09\u8F6E\u3001\u5730\u9762\u6295\u5F71\u53CA\u5E38\u89C4\u8D27\u7269\u662F\u540C\u4E00\u5BF9\u8C61\u3002cargoCount 0\u20135\uFF1B\u79FB\u52A8\u548C\u7F29\u653E\u6574\u8F66\u65F6\u6295\u5F71\u540C\u6B65\uFF1B\u4EC5\u5378\u8D27\u52A8\u4F5C\u53E6\u7528\u72EC\u7ACB\u8D27\u7269\u3002", (p, h) => {
@@ -1861,7 +1938,7 @@ var ComponentLibraryRuntime = (() => {
     "photo-stack": { kinds: array(enumeration("cup", "lamp", "bag", "shoe", "chair", "plant"), 1, 3), count: integer(1, 3), spread: number4(60, 96), labels: array(str(8), 0, 3), tilt: bool },
     "notice-paper": { title: str(14), subtitle: str(18), foldTone: enumeration("gold", "blue"), showShadow: bool },
     "notice-field": { label: str(6), value: str(12), tone: enumeration("blue", "orange", "mint"), lineCount: integer(1, 3) },
-    "attachment-card": { title: str(8), kind: enumeration("document", "code", "error", "image"), lineCount: integer(0, 3) },
+    "attachment-card": { title: str(8), kind: enumeration("document", "code", "error", "image"), lineCount: integer(0, 3), ...attachmentRules },
     "reply-lines": { count: integer(0, 4), color: color3, lengths: array(number4(0.08, 1), 0, 4), lineHeight: number4(3, 18), gap: number4(0, 17) },
     "send-icon": { tone: enumeration("blue", "mint") },
     "checklist-row": { text: str(20), state: enumeration("unchecked", "checked", "failed"), highlight: bool },
@@ -1877,6 +1954,16 @@ var ComponentLibraryRuntime = (() => {
     "focus-ring": { tone: enumeration("blue", "orange"), dashed: bool }
   };
   function validateValue(v, r, label3) {
+    if (r.type === "object") {
+      if (!v || typeof v !== "object" || Array.isArray(v)) throw Error(label3 + ": expected object");
+      for (const key of r.required ?? []) if (!(key in v)) throw Error(label3 + "." + key + ": required");
+      for (const [key, value] of Object.entries(v)) {
+        const rule = r.properties?.[key];
+        if (rule) validateValue(value, rule, label3 + "." + key);
+        else if (r.additionalProperties === false) throw Error(label3 + "." + key + ": unknown property");
+      }
+      return;
+    }
     if (r.type === "array") {
       if (!Array.isArray(v)) throw Error(label3 + ": expected array");
       if (v.length < r.minItems || v.length > r.maxItems) throw Error(label3 + `: requires ${r.minItems}\u2013${r.maxItems} items`);
@@ -1895,16 +1982,17 @@ var ComponentLibraryRuntime = (() => {
     if (label3.endsWith(".brandSrc") && v && (/^(?:https?:|data:|javascript:|\/\/)/i.test(v) || /[<>"']/.test(v))) throw Error(label3 + ": use a frozen local official image path");
   }
   function validatePart(key, p) {
-    const rules = partRules[key];
+    const rules2 = partRules[key];
     for (const [name, v] of Object.entries(p)) {
       if (name === "instanceKey") {
         validateValue(v, str(80), key + ".instanceKey");
         continue;
       }
-      if (!rules[name]) throw Error(key + "." + name + ": unknown property");
-      validateValue(v, rules[name], key + "." + name);
+      if (!rules2[name]) throw Error(key + "." + name + ": unknown property");
+      validateValue(v, rules2[name], key + "." + name);
     }
     if (key === "photo-stack" && p.kinds.length < p.count) throw Error(key + ".kinds: provide an explicit product identity for each photo");
+    if (key === "attachment-card") attachmentPhases(p);
     if (key === "reply-lines" && p.lengths.length < p.count) throw Error(key + ".lengths: provide one length per line");
     if (key === "reply-lines" && p.count > 0 && 7 + (p.count - 1) * (p.lineHeight + p.gap) + p.lineHeight > 120) throw Error(key + ": lines exceed native height");
   }
@@ -1926,18 +2014,18 @@ var ComponentLibraryRuntime = (() => {
   function partAt(key, props = {}, h = {}, options = {}) {
     const def = parts.find((p) => p.key === key);
     if (!def) throw new Error("Unknown transfer kit part: " + key);
-    const { x = 0, y = 0, width = def.width, height = def.height, opacity = 1 } = options;
+    const { x = 0, y = 0, width: width2 = def.width, height = def.height, opacity = 1 } = options;
     for (const [name, v] of Object.entries({ x, y })) if (typeof v !== "number" || !Number.isFinite(v)) throw Error("partAt." + name + ": expected finite number");
-    for (const [name, v] of Object.entries({ width, height })) if (typeof v !== "number" || !Number.isFinite(v) || v <= 0 || v > 16384) throw Error("partAt." + name + ": expected positive size \u226416384");
+    for (const [name, v] of Object.entries({ width: width2, height })) if (typeof v !== "number" || !Number.isFinite(v) || v <= 0 || v > 16384) throw Error("partAt." + name + ": expected positive size \u226416384");
     validateValue(opacity, number4(0, 1), "partAt.opacity");
     if (key === "direction-arrow" || key === "semantic-label") {
       const scoped4 = { ...h, uid: (s2) => h.uid ? h.uid(`${key}-${x}-${y}-${s2}`) : `${key}-${x}-${y}-${s2}` };
-      return `<g data-kit-placement="${safe(key)}" transform="translate(${x} ${y})" opacity="${opacity}">${drawPart(key, { ...props, boxWidth: width, boxHeight: height }, scoped4)}</g>`;
+      return `<g data-kit-placement="${safe(key)}" transform="translate(${x} ${y})" opacity="${opacity}">${drawPart(key, { ...props, boxWidth: width2, boxHeight: height }, scoped4)}</g>`;
     }
-    const scale = Math.min(width / def.width, height / def.height);
-    const suffix = [key, x, y, width, height, props.instanceKey || ""].join("-");
+    const scale = Math.min(width2 / def.width, height / def.height);
+    const suffix = [key, x, y, width2, height, props.instanceKey || ""].join("-");
     const scoped3 = { ...h, uid: (s2) => h.uid ? h.uid(`${suffix}-${s2}`) : `${suffix}-${s2}` };
-    return `<g data-kit-placement="${safe(key)}" transform="translate(${num5(x)} ${num5(y)}) scale(${scale})" opacity="${bounded(opacity, 0, 1, 1)}">${drawPart(key, props, scoped3)}</g>`;
+    return `<g data-kit-placement="${safe(key)}" transform="translate(${num6(x)} ${num6(y)}) scale(${scale})" opacity="${bounded(opacity, 0, 1, 1)}">${drawPart(key, props, scoped3)}</g>`;
   }
 
   // component-style.mjs
@@ -1961,8 +2049,8 @@ var ComponentLibraryRuntime = (() => {
     check(local2, styleSchema, "layer.style");
     return { ...styleDefaults, ...base2, ...local2, palette: { ...styleDefaults.palette, ...base2.palette, ...local2.palette } };
   }
-  function hsl(hex) {
-    const rgb2 = hex.slice(1).match(/../g).map((v) => parseInt(v, 16) / 255), max = Math.max(...rgb2), min = Math.min(...rgb2), d = max - min, l = (max + min) / 2;
+  function hsl(hex2) {
+    const rgb2 = hex2.slice(1).match(/../g).map((v) => parseInt(v, 16) / 255), max = Math.max(...rgb2), min = Math.min(...rgb2), d = max - min, l = (max + min) / 2;
     let h = 0, s2 = 0;
     if (d) {
       s2 = d / (1 - Math.abs(2 * l - 1));
@@ -1978,11 +2066,11 @@ var ComponentLibraryRuntime = (() => {
     };
     return "#" + f(0) + f(8) + f(4);
   }
-  function recolor(hex, p) {
-    const c = hsl(hex);
-    if (c.s < 0.12) return hex;
+  function recolor(hex2, p) {
+    const c = hsl(hex2);
+    if (c.s < 0.12) return hex2;
     const key = c.h >= 180 && c.h <= 255 ? c.l < 0.26 ? "ink" : c.l > 0.87 ? "surface" : "accent" : c.h >= 15 && c.h <= 65 ? "orange" : c.h > 65 && c.h < 180 ? "mint" : null;
-    if (!key || !p[key]) return hex;
+    if (!key || !p[key]) return hex2;
     const t = hsl(p[key]);
     return rgb({ h: t.h, s: t.s, l: Math.max(0.05, Math.min(0.98, c.l + (t.l - 0.5) * 0.35)) });
   }
@@ -1999,7 +2087,7 @@ var ComponentLibraryRuntime = (() => {
 
   // transfer-kit-layout.mjs
   var kitReference = { basis: "\u7528\u6237\u63D0\u4F9B\u768423\u5F20\u72EC\u7ACB\u9AD8\u6E05\u72B6\u6001\u56FE\uFF0C\u6309\u5BF9\u8C61\u62C6\u89E3\u91CD\u5EFA\uFF1B\u975E\u6574\u56FE\u8D34\u7247\uFF0C\u975E\u9010\u50CF\u7D20\u63CF\u6479\u3002", source: "references/transfer-hd/manifest.json", level: "designed" };
-  var layer = (id, part2, x, y, width, height, props = {}, motion = {}) => ({ id, part: part2, x, y, width, height, props, enter: 0, exit: 8, fade: 0.18, fromX: 0, fromY: 0, steps: [], ...motion });
+  var layer = (id, part2, x, y, width2, height, props = {}, motion = {}) => ({ id, part: part2, x, y, width: width2, height, props, enter: 0, exit: 8, fade: 0.18, fromX: 0, fromY: 0, steps: [], ...motion });
   var finite2 = (v, name, min, max) => {
     if (typeof v !== "number" || !Number.isFinite(v) || v < min || v > max) throw Error(`${name} must be in [${min}, ${max}]`);
   };
@@ -2052,13 +2140,13 @@ var ComponentLibraryRuntime = (() => {
   }
 
   // transfer-kit-recipes.mjs
-  var place = (items, prefix, x, y, s2 = 1) => items.map((l) => ({ ...structuredClone(l), id: prefix + "-" + l.id, x: x + l.x * s2, y: y + l.y * s2, width: l.width * s2, height: l.height * s2, fromX: l.fromX * s2, fromY: l.fromY * s2, steps: l.steps.map((a2) => ({ ...a2, x: a2.x * s2, y: a2.y * s2 })) }));
+  var place = (items, prefix2, x, y, s2 = 1) => items.map((l) => ({ ...structuredClone(l), id: prefix2 + "-" + l.id, x: x + l.x * s2, y: y + l.y * s2, width: l.width * s2, height: l.height * s2, fromX: l.fromX * s2, fromY: l.fromY * s2, steps: l.steps.map((a2) => ({ ...a2, x: a2.x * s2, y: a2.y * s2 })) }));
   function truck(loaded = true) {
     return [layer("vehicle", "truck", 0, 0, 870, 486, { cargoCount: loaded ? 5 : 0 })];
   }
   var modules = [makeKit("ani-module-hd-truck", "\u9AD8\u6E05\u655E\u53A2\u6574\u8F66\uFF08\u542B\u6295\u5F71\uFF09", "\u6574\u8F66\u3001\u4E09\u8F6E\u3001\u6295\u5F71\u548C\u5E38\u89C4\u8D27\u7269\u7ED1\u5B9A\u4E3A\u4E00\u4E2A\u8F66\u8F86\u5BF9\u8C61\uFF1B\u6574\u4F53\u79FB\u52A8\u7F29\u653E\u3002\u53EA\u6709\u5378\u8D27\u52A8\u4F5C\u5C06\u8D27\u7269\u72EC\u7ACB\u3002", place(truck(), "truck", 130, 130, 0.98), { layerType: "module", intentIds: ["transport", "batch"] })];
-  var pill = (id, text7, x, y, w = 280, tone3 = "light", motion = {}) => layer(id, "status-pill", x, y, w, w * 86 / 440, { text: text7, tone: tone3 }, motion);
-  var heading = (id, text7, x = 280, y = 35, w = 720) => layer(id, "title", x, y, w, w * 130 / 720, { text: text7 });
+  var pill = (id, text8, x, y, w = 280, tone3 = "light", motion = {}) => layer(id, "status-pill", x, y, w, w * 86 / 440, { text: text8, tone: tone3 }, motion);
+  var heading = (id, text8, x = 280, y = 35, w = 720) => layer(id, "title", x, y, w, w * 130 / 720, { text: text8 });
   function folder(name = "\u6E90\u6587\u4EF6", tone3 = "blue", filled = true) {
     return [
       layer("back", "folder-shell", 0, 0, 360, 310, { tone: tone3, layer: "back" }),
@@ -2084,10 +2172,10 @@ var ComponentLibraryRuntime = (() => {
     return [layer("shell", "chat-shell", 0, 0, 660, 640, { title }), ...messages2.map((m, i) => layer("message-" + i, "chat-message", m.role === "user" ? 126 : 34, 168 + i * 115, 490, 147, m)), layer("send", "send-icon", 583, 557, 45, 45)];
   }
   function checklist() {
-    return [layer("paper", "notice-paper", 0, 0, 470, 540, { title: "\u5F85\u6838\u5BF9" }), ...["\u662F\u5426\u4ECD\u7136\u62A5\u9519\uFF1F", "\u7ED3\u679C\u662F\u5426\u7B26\u5408\u8981\u6C42\uFF1F", "\u662F\u5426\u5B58\u5728\u9057\u6F0F\uFF1F"].map((text7, i) => layer("check-" + i, "checklist-row", 34, 176 + i * 102, 399, 63, { text: text7, state: "unchecked" }))];
+    return [layer("paper", "notice-paper", 0, 0, 470, 540, { title: "\u5F85\u6838\u5BF9" }), ...["\u662F\u5426\u4ECD\u7136\u62A5\u9519\uFF1F", "\u7ED3\u679C\u662F\u5426\u7B26\u5408\u8981\u6C42\uFF1F", "\u662F\u5426\u5B58\u5728\u9057\u6F0F\uFF1F"].map((text8, i) => layer("check-" + i, "checklist-row", 34, 176 + i * 102, 399, 63, { text: text8, state: "unchecked" }))];
   }
   function productGallery() {
-    return [layer("shell", "window-shell", 0, 0, 760, 560, { title: "\u7A0B\u5E8F\u793A\u610F", caption: "\u60C5\u5883\u793A\u610F" }), ...["\u76EE\u5F55", "\u56FE\u50CF", "\u8BBE\u7F6E"].map((text7, i) => pill("nav-" + i, text7, 24, 120 + i * 75, 121, i === 0 ? "blue" : "light")), ...["cup", "lamp", "bag", "shoe", "chair", "plant"].map((kind, i) => layer("product-" + i, "photo-card", 178 + i % 3 * 121, 137 + Math.floor(i / 3) * 168, 106, 118, { kind })), layer("properties", "reply-lines", 568, 152, 157, 70, { count: 4 }), layer("properties-more", "reply-lines", 568, 274, 157, 70, { count: 3 })];
+    return [layer("shell", "window-shell", 0, 0, 760, 560, { title: "\u7A0B\u5E8F\u793A\u610F", caption: "\u60C5\u5883\u793A\u610F" }), ...["\u76EE\u5F55", "\u56FE\u50CF", "\u8BBE\u7F6E"].map((text8, i) => pill("nav-" + i, text8, 24, 120 + i * 75, 121, i === 0 ? "blue" : "light")), ...["cup", "lamp", "bag", "shoe", "chair", "plant"].map((kind, i) => layer("product-" + i, "photo-card", 178 + i % 3 * 121, 137 + Math.floor(i / 3) * 168, 106, 118, { kind })), layer("properties", "reply-lines", 568, 152, 157, 70, { count: 4 }), layer("properties-more", "reply-lines", 568, 274, 157, 70, { count: 3 })];
   }
   var registerModule = (key, name, description, layers, intentIds) => modules.push(makeKit("ani-module-hd-" + key, name, description, layers, { layerType: "module", intentIds }));
   registerModule("photo-folder", "\u9AD8\u6E05\u7167\u7247\u6587\u4EF6\u5939", "\u524D\u540E\u4E24\u5C42\u6587\u4EF6\u5939\u5939\u4F4F\u72EC\u7ACB\u7167\u7247\uFF1B\u539F\u56FE\u4E0D\u4F1A\u88AB\u5DE5\u4F5C\u526F\u672C\u66FF\u4EE3\u3002", place(folder(), "folder", 412, 145, 1.28), ["folder", "file"]);
@@ -2144,7 +2232,7 @@ var ComponentLibraryRuntime = (() => {
     layer("editor", "window-shell", 637, 95, 580, 427, { title: "\u4EE3\u7801\u52A9\u624B" }),
     layer("code", "code-lines", 688, 218, 470, 186),
     layer("proposal", "notice-paper", 991, 377, 259, 298, { title: "\u6309\u601D\u8DEF\u4FEE\u6539" }),
-    ...["\u68C0\u67E5\u539F\u56E0", "\u4FEE\u6539\u526F\u672C", "\u6838\u5BF9\u7ED3\u679C"].map((text7, i) => layer("step-" + i, "checklist-row", 1014, 481 + i * 43, 214, 34, { text: text7 }))
+    ...["\u68C0\u67E5\u539F\u56E0", "\u4FEE\u6539\u526F\u672C", "\u6838\u5BF9\u7ED3\u679C"].map((text8, i) => layer("step-" + i, "checklist-row", 1014, 481 + i * 43, 214, 34, { text: text8 }))
   ], ["verify", "code"]);
   scene("S10B", "copy-verify", "\u4FDD\u7559\u539F\u56FE\uFF0C\u526F\u672C\u8BD5\u9A8C", [
     ...place(folder("\u539F\u56FE\u4FDD\u7559"), "original", 33, 350, 0.65),
@@ -2226,10 +2314,10 @@ var ComponentLibraryRuntime = (() => {
     }
   }
   recipes.find((c) => c.id === "ani-transfer-hd-next-topic").defaults.layers.find((l) => l.id === "topic").props.text = "\u8BA4\u77E5\u7075\u6D3B\u6027";
-  for (const [key, prefix, x, y, s2] of [["experience-problem", "program", 710, 285, 0.68], ["near-far", "far-right", 831, 344, 0.49], ["next-topic", "program", 718, 426, 0.37]]) {
+  for (const [key, prefix2, x, y, s2] of [["experience-problem", "program", 710, 285, 0.68], ["near-far", "far-right", 831, 344, 0.49], ["next-topic", "program", 718, 426, 0.37]]) {
     const c = recipes.find((c2) => c2.id === "ani-transfer-hd-" + key);
-    c.defaults.layers = c.defaults.layers.filter((l) => !l.id.startsWith(prefix + "-"));
-    c.defaults.layers.push(...place(productGallery(), prefix, x, y, s2));
+    c.defaults.layers = c.defaults.layers.filter((l) => !l.id.startsWith(prefix2 + "-"));
+    c.defaults.layers.push(...place(productGallery(), prefix2, x, y, s2));
   }
   for (const c of recipes) for (const l of c.defaults.layers) {
     if (l.part === "notice-paper" && ["\u4E8B\u9879\u901A\u77E5", "\u5DF2\u6709\u4E8B\u9879\u901A\u77E5", "\u5DF2\u6709\u901A\u77E5"].includes(l.props.title)) l.props.title = "\u53D1\u8D27\u5EF6\u8BEF\u901A\u77E5";
@@ -2243,9 +2331,9 @@ var ComponentLibraryRuntime = (() => {
     return { ...structuredClone(l), id: "unloaded-" + l.id.at(-1), x: l.x + end.x, y: l.y + end.y, steps: [] };
   }));
   for (const c of [...modules, ...recipes]) if (/notice|field-motion/.test(c.id)) c.intentIds = ["noticeWriting", ...c.intentIds];
-  for (const [key, text7, tone3] of [["batch-read", "\u5C0F\u6279\u5DF2\u8BFB\u5165", "light"], ["batch-saved", "\u5904\u7406\u7ED3\u679C\u5DF2\u4FDD\u5B58", "mint"], ["batch-released", "\u5DF2\u91CA\u653E\u4E34\u65F6\u5360\u7528", "light"], ["batch-next", "\u4E0B\u4E00\u5C0F\u6279\u8BFB\u5165", "light"]]) {
+  for (const [key, text8, tone3] of [["batch-read", "\u5C0F\u6279\u5DF2\u8BFB\u5165", "light"], ["batch-saved", "\u5904\u7406\u7ED3\u679C\u5DF2\u4FDD\u5B58", "mint"], ["batch-released", "\u5DF2\u91CA\u653E\u4E34\u65F6\u5360\u7528", "light"], ["batch-next", "\u4E0B\u4E00\u5C0F\u6279\u8BFB\u5165", "light"]]) {
     const state3 = recipes.find((c) => c.id === "ani-transfer-hd-" + key);
-    state3.defaults.layers.find((l) => l.id === "program-status").props = { text: text7, tone: tone3 };
+    state3.defaults.layers.find((l) => l.id === "program-status").props = { text: text8, tone: tone3 };
   }
   var reuseScene = recipes.find((c) => c.id === "ani-transfer-hd-notice-reuse");
   for (const l of reuseScene.defaults.layers) {
@@ -2284,6 +2372,7 @@ var ComponentLibraryRuntime = (() => {
   // families/animation-style-hd-kit.mjs
   var purposes = { "truck-body": ["transport"], "truck-cab": ["transport"], wheel: ["transport"], "cargo-box": ["transport", "collection"], "cargo-stack": ["transport", "collection"], warehouse: ["warehouse", "transport"], "ground-shadow": ["annotation"], "photo-card": ["file"], "photo-stack": ["file", "collection"], "window-shell": ["window"], "buffer-area": ["memory"], "chat-shell": ["messages", "window"], "chat-message": ["messages"], "notice-paper": ["noticeWriting", "paper"], "notice-field": ["noticeWriting", "reuse", "paper"], "folder-shell": ["folder"], "attachment-card": ["messages", "file"], "reply-lines": ["messages", "text"], "send-icon": ["messages", "symbol"], "checklist-row": ["verify", "checkbox"], magnifier: ["detail", "verify"], "flow-arrow": ["connector"], brace: ["relation", "connector"], "status-pill": ["status"], title: ["text"], "question-bubble": ["clarify", "annotation"], "brand-badge": ["symbol"], "code-lines": ["code"], "destination-pad": ["warehouse", "transport"], "focus-ring": ["highlight"] };
   purposes.truck = ["transport", "batch"];
+  purposes["attachment-card"] = ["attachmentState", "file", "messages"];
   purposes["direction-arrow"] = ["direction", "connector"];
   purposes["semantic-label"] = ["semanticLabel", "text"];
   var components8 = [...parts.map((p) => {
@@ -2305,12 +2394,12 @@ var ComponentLibraryRuntime = (() => {
   // families/animation-style-learning.mjs
   var scope4 = (h, key) => ({ ...h, uid: (s2) => h.uid(key + "-" + s2) });
   var units8 = (s2) => Array.from(String(s2 ?? "")).reduce((n4, c) => n4 + (/[\u0000-\u00ff]/.test(c) ? 0.55 : 1), 0);
-  function text4(x, y, value, size, width, h, extra2 = "") {
-    const u = units8(value), font5 = Math.min(size, width / Math.max(1, u));
+  function text4(x, y, value, size, width2, h, extra2 = "") {
+    const u = units8(value), font5 = Math.min(size, width2 / Math.max(1, u));
     if (font5 < Math.min(17, size * 0.7)) throw new Error("\u52A8\u753B\u98CE\uFF1A\u6587\u5B57\u8D85\u51FA\u53EF\u8BFB\u8303\u56F4\uFF0C\u8BF7\u7F29\u77ED\uFF1A" + String(value).slice(0, 22));
     return `<text x="${x}" y="${y}" font-size="${font5}" ${/\bfill=/.test(extra2) ? "" : `fill="${tokens.ink}"`} ${extra2}>${h.esc(value)}</text>`;
   }
-  var line = (d, color5 = tokens.green, width = 4) => `<path data-ani-link d="${d}" fill="none" stroke="${color5}" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  var line = (d, color5 = tokens.green, width2 = 4) => `<path data-ani-link d="${d}" fill="none" stroke="${color5}" stroke-width="${width2}" stroke-linecap="round" stroke-linejoin="round"/>`;
   var node2 = (x, y, color5 = tokens.green) => `<circle cx="${x}" cy="${y}" r="8" fill="white" stroke="${color5}" stroke-width="4"/>`;
   var enter = (html) => `<g data-ani-enter>${html}</g>`;
   var pop = (html) => `<g data-ani-pop>${html}</g>`;
@@ -2467,8 +2556,8 @@ var ComponentLibraryRuntime = (() => {
   // families/animation-style-objects.mjs
   var context = (h, id) => ({ ...h, uid: (s2) => h.uid(id + "-" + s2) });
   var units9 = (s2) => Array.from(String(s2 ?? "")).reduce((n4, c) => n4 + (c.charCodeAt(0) < 256 ? 0.55 : 1), 0);
-  var text5 = (h, x, y, value, size = 24, width = 600, extra2 = "") => {
-    const font5 = Math.min(size, width / Math.max(1, units9(value)));
+  var text5 = (h, x, y, value, size = 24, width2 = 600, extra2 = "") => {
+    const font5 = Math.min(size, width2 / Math.max(1, units9(value)));
     if (font5 < 14) throw Error("\u6587\u5B57\u8FC7\u957F\uFF0C\u8BF7\u7F29\u77ED\u5F53\u524D\u6587\u6848\u540E\u518D\u5E94\u7528\u3002");
     return `<text x="${x}" y="${y}" font-size="${font5}" fill="${tokens.ink}" ${extra2}>${h.esc(value)}</text>`;
   };
@@ -2566,8 +2655,8 @@ var ComponentLibraryRuntime = (() => {
     if (!Number.isInteger(n4)) throw Error(name + ": expected integer");
     return n4;
   }
-  function text6(x, y, value, size, width, h, extra2 = "") {
-    const copy4 = String(value ?? ""), units10 = Array.from(copy4).reduce((n4, c) => n4 + (c.charCodeAt(0) < 128 ? 0.55 : 1), 0), font5 = Math.min(size, width / Math.max(units10, 1));
+  function text6(x, y, value, size, width2, h, extra2 = "") {
+    const copy4 = String(value ?? ""), units10 = Array.from(copy4).reduce((n4, c) => n4 + (c.charCodeAt(0) < 128 ? 0.55 : 1), 0), font5 = Math.min(size, width2 / Math.max(units10, 1));
     if (font5 < Math.min(19, size * 0.8)) throw Error("\u6587\u5B57\u8FC7\u957F\uFF0C\u8BF7\u7F29\u77ED\u5185\u5BB9\u6216\u589E\u5927\u90E8\u4EF6\u5C3A\u5BF8");
     return `<text x="${x}" y="${y}" font-size="${font5}" fill="${tokens.ink}" ${extra2}>${h.esc(copy4)}</text>`;
   }
@@ -2611,11 +2700,11 @@ var ComponentLibraryRuntime = (() => {
       return at(x, y, `<rect width="94" height="94" rx="12" fill="#e4f2ff" stroke="#8bbceb" stroke-width="2"/>${i < occupied ? `<g data-tr-slot="${i}">${resource({ kind: kinds[i % kinds.length] }, scoped2(h, "item" + i))}</g>` : ""}`, 0.9);
     }).join("")}${state3 === "warning" ? `<rect x="4" y="4" width="${w - 8}" height="${height - 8}" rx="14" fill="none" stroke="#ee8526" stroke-width="5"/>` : ""}</g>`;
   }
-  function bridge({ label: label3 = "\u5173\u7CFB\u6807\u7B7E", direction: direction2 = "down", width = 320 } = {}, h) {
-    number5(width, 160, 1e3, "width");
+  function bridge({ label: label3 = "\u5173\u7CFB\u6807\u7B7E", direction: direction2 = "down", width: width2 = 320 } = {}, h) {
+    number5(width2, 160, 1e3, "width");
     if (!["down", "up"].includes(direction2)) throw Error("Invalid bracket direction");
     const y = direction2 === "down" ? 57 : 6, end = direction2 === "down" ? 79 : 0;
-    return `<path data-motion="line" d="M5 ${end}V${y}Q5 ${y - 12} 17 ${y - 12}H${width - 17}Q${width - 5} ${y - 12} ${width - 5} ${y}V${end}" fill="none" stroke="${tokens.blue}" stroke-width="4" stroke-linecap="round"/>${text6(width / 2, 33, label3, 26, width - 38, h, 'text-anchor="middle"')}`;
+    return `<path data-motion="line" d="M5 ${end}V${y}Q5 ${y - 12} 17 ${y - 12}H${width2 - 17}Q${width2 - 5} ${y - 12} ${width2 - 5} ${y}V${end}" fill="none" stroke="${tokens.blue}" stroke-width="4" stroke-linecap="round"/>${text6(width2 / 2, 33, label3, 26, width2 - 38, h, 'text-anchor="middle"')}`;
   }
   function documentCard({ title = "\u6587\u6863\u6807\u9898", labels = ["\u5B57\u6BB5 A", "\u5B57\u6BB5 B", "\u5B57\u6BB5 C"], values = ["\u5185\u5BB9 A", "\u5185\u5BB9 B", "\u5185\u5BB9 C"] } = {}, h) {
     if (labels.length !== 3 || values.length !== 3) throw Error("Document needs three fields");
@@ -2638,8 +2727,8 @@ var ComponentLibraryRuntime = (() => {
   var components11 = definitions.map(([key, name, base2, draw, w, h]) => ({ id: "ani-atom-" + key, name: "\u52A8\u753B\u98CE \xB7 " + name, category: "\u52A8\u753B\u98CE \xB7 \u57FA\u7840\u7EC4\u4EF6", description: "\u539F\u751F SVG \u72EC\u7ACB\u90E8\u4EF6\uFF0C\u53EF\u66FF\u6362\u5185\u5BB9\u3001\u72B6\u6001\u3001\u4F4D\u7F6E\u4E0E\u7B49\u6BD4\u5C3A\u5BF8\u3002", width: 1280, height: 720, defaults: { ...base2, x: 360, y: 160, objectWidth: 540, objectHeight: 380 }, reference: { level: "designed", source: "references/transfer/sources.json", basis: "\u7528\u6237\u8FC1\u79FB\u9759\u6001\u72B6\u6001\u56FE\uFF1B\u539F\u751F\u51E0\u4F55\u91CD\u5EFA\uFF0C\u975E\u622A\u56FE\u90E8\u4EF6\u3002" }, render(props, helpers2) {
     const p = { ...this.defaults, ...props }, x = number5(p.x, 0, 1270, "x"), y = number5(p.y, 0, 710, "y"), ow = number5(p.objectWidth, 100, 1240, "objectWidth"), oh = number5(p.objectHeight, 80, 690, "objectHeight");
     if (x + ow > 1270 || y + oh > 710) throw Error("\u90E8\u4EF6\u8D85\u51FA\u753B\u5E03");
-    const width = key === "buffer" ? p.capacity > 4 ? 352 : 244 : key === "relation-bridge" ? p.width + 10 : w, height = key === "buffer" ? Math.ceil(p.capacity / (p.capacity > 4 ? 3 : 2)) * 108 + 100 : h, scale = Math.min(ow / width, oh / height);
-    return `<section class="ani-atom-scene"><svg xmlns="http://www.w3.org/2000/svg" class="ani-transfer-canvas" viewBox="0 0 1280 720" width="1280" height="720" role="img" aria-label="${helpers2.esc(name)}">${at(x + (ow - width * scale) / 2, y + (oh - height * scale) / 2, draw(p, helpers2), scale)}</svg></section>`;
+    const width2 = key === "buffer" ? p.capacity > 4 ? 352 : 244 : key === "relation-bridge" ? p.width + 10 : w, height = key === "buffer" ? Math.ceil(p.capacity / (p.capacity > 4 ? 3 : 2)) * 108 + 100 : h, scale = Math.min(ow / width2, oh / height);
+    return `<section class="ani-atom-scene"><svg xmlns="http://www.w3.org/2000/svg" class="ani-transfer-canvas" viewBox="0 0 1280 720" width="1280" height="720" role="img" aria-label="${helpers2.esc(name)}">${at(x + (ow - width2 * scale) / 2, y + (oh - height * scale) / 2, draw(p, helpers2), scale)}</svg></section>`;
   } }));
 
   // families/animation-style-transfer-scenes.mjs
@@ -3895,8 +3984,8 @@ var ComponentLibraryRuntime = (() => {
     const src = h.esc(local(m.src || m.mediaSrc)), x = clamp(m.x, 0, 100, 50), y = clamp(m.y, 0, 100, 50), style = `object-position:${x}% ${y}%`, label3 = h.esc(m.alt || "\u53EF\u66FF\u6362 B-roll \u7D20\u6750");
     return m.type === "video" ? `<video id="${h.uid(suffix)}" class="brm-asset" src="${src}" muted playsinline preload="auto" data-media-start="${clamp(m.mediaStart, 0, 86400, 0)}" data-volume="0" aria-label="${label3}" style="${style}"></video>` : `<img class="brm-asset" src="${src}" alt="${label3}" style="${style}">`;
   }
-  function tag(text7, h) {
-    return text7 ? `<span class="brm-tag">${h.esc(text7)}</span>` : "";
+  function tag(text8, h) {
+    return text8 ? `<span class="brm-tag">${h.esc(text8)}</span>` : "";
   }
   var components18 = [
     {
@@ -4186,6 +4275,212 @@ var ComponentLibraryRuntime = (() => {
 ${workflowLayoutCSS}
 `;
 
+  // cn-infographic.mjs
+  var diagramStyleDefaults = { accent: "#0879ff", secondary: "#009e7a", ink: "#142f67", muted: "#58718c", surface: "#eff8ff", background: "#ffffff", border: "#bedbf3", fontSize: 28, labelSize: 21, strokeWidth: 2, cornerRadius: 14, shadowOpacity: 0.1 };
+  var numeric = (minimum, maximum) => ({ type: "number", minimum, maximum });
+  var hex = { type: "string", pattern: "^#[0-9a-fA-F]{6}$" };
+  var diagramStyleSchema = { type: "object", additionalProperties: false, properties: { ...Object.fromEntries(["accent", "secondary", "ink", "muted", "surface", "background", "border"].map((k) => [k, hex])), fontSize: numeric(22, 36), labelSize: numeric(18, 26), strokeWidth: numeric(1, 4), cornerRadius: numeric(0, 24), shadowOpacity: numeric(0, 0.25) } };
+  var diagramStyleControls = Object.keys(diagramStyleSchema.properties);
+  function styleFor(input = {}) {
+    const s2 = { ...diagramStyleDefaults, ...input };
+    for (const [key, v] of Object.entries(s2)) {
+      const rule = diagramStyleSchema.properties[key];
+      if (!rule) throw Error("style." + key + " is not supported");
+      if (rule.type === "string" && !/^#[0-9a-fA-F]{6}$/.test(v)) throw Error("style." + key + " requires #RRGGBB");
+      if (rule.type === "number") finite3(v, "style." + key, rule.minimum, rule.maximum);
+    }
+    return s2;
+  }
+  function finite3(value, path2, min, max, integer2 = false) {
+    if (typeof value !== "number" || !Number.isFinite(value) || value < min || value > max || integer2 && !Number.isInteger(value)) throw Error(path2 + ` must be ${integer2 ? "an integer " : ""}in [${min}, ${max}]`);
+    return value;
+  }
+  function entries(value, path2, min, max) {
+    if (!Array.isArray(value) || value.length < min || value.length > max) throw Error(path2 + ` requires ${min}\u2013${max} entries`);
+    return value;
+  }
+  var textWidth = (value, size) => Array.from(String(value ?? "")).reduce((n4, c) => n4 + (/[\u0000-\u00ff]/.test(c) ? 0.57 : 1), 0) * size;
+  function wrapText(value, width2, size, maxLines = 2) {
+    const output = [];
+    let line3 = "";
+    for (const char of String(value ?? "")) {
+      if (char === "\n") {
+        output.push(line3);
+        line3 = "";
+        continue;
+      }
+      if (line3 && textWidth(line3 + char, size) > width2) {
+        output.push(line3);
+        line3 = "";
+      }
+      line3 += char;
+    }
+    if (line3 || !output.length) output.push(line3);
+    if (output.length > maxLines) throw Error("Text does not fit " + maxLines + " readable lines: " + String(value));
+    return output;
+  }
+  function text7(h, value, x, y, width2, size, color5, options = {}) {
+    const { maxLines = 2, anchor = "start", weight = 650, lineHeight = 1.34 } = options;
+    const lines3 = wrapText(value, width2, size, maxLines), left = anchor === "middle" ? x - width2 / 2 : anchor === "end" ? x - width2 : x;
+    return `<text class="cn-text" x="${x}" y="${y}" fill="${color5}" font-size="${size}" font-weight="${weight}" text-anchor="${anchor}" data-text-left="${left}" data-text-width="${width2}" data-text-lines="${lines3.length}">${lines3.map((line3, i) => `<tspan x="${x}" dy="${i ? size * lineHeight : 0}">${h.esc(line3)}</tspan>`).join("")}</text>`;
+  }
+  var reveal = (body, at2 = 0.4, extra2 = "") => `<g data-cn-reveal="${at2}" data-motion="item" ${extra2}>${body}</g>`;
+  var panel3 = (x, y, w, h, s2, fill = s2.background) => `<rect x="${x}" y="${y + 6}" width="${w}" height="${h}" rx="${s2.cornerRadius}" fill="${s2.accent}" opacity="${s2.shadowOpacity}"/><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${s2.cornerRadius}" fill="${fill}" stroke="${s2.border}" stroke-width="${s2.strokeWidth}"/>`;
+  function canvas4(p, h, body, { height = 720, kind = "diagram" } = {}) {
+    const s2 = styleFor(p.style), title = text7(h, p.title, 64, 77, 1030, 36, s2.ink, { maxLines: 1 }), subtitle = text7(h, p.subtitle, 64, 116, 1100, 21, s2.muted, { maxLines: 1, weight: 450 });
+    return `<section class="cn-scene" data-cn-kind="${kind}"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 ${height}" width="1280" height="${height}" role="img" aria-label="${h.esc(p.title)}"><rect width="1280" height="${height}" fill="${s2.background}"/><path d="M64 38H98" stroke="${s2.accent}" stroke-width="5"/>${title}${subtitle}${body}<path d="M64 ${height - 63}H1216" stroke="${s2.border}" stroke-width="1"/>${text7(h, p.note ?? p.footer ?? "", 64, height - 31, 1152, 18, s2.muted, { maxLines: 1, weight: 450 })}</svg></section>`;
+  }
+  function rowGeometry(count2, gap, rowHeight, rowGap) {
+    finite3(count2, "rows.length", 1, 5, true);
+    finite3(gap, "correspondence.gap", 120, 300);
+    finite3(rowHeight, "correspondence.rowHeight", 58, 100);
+    finite3(rowGap, "correspondence.rowGap", 6, 28);
+    const height = count2 * rowHeight + (count2 - 1) * rowGap;
+    if (height > 435) throw Error("Correspondence rows exceed 435px; reduce rowHeight/rowGap or split the content");
+    const width2 = (1120 - gap) / 2, left = 80, right = 80 + width2 + gap, top = 253 + (435 - height) / 2;
+    return Array.from({ length: count2 }, (_, i) => ({ left, right, width: width2, y: top + i * (rowHeight + rowGap), height: rowHeight, centerY: top + i * (rowHeight + rowGap) + rowHeight / 2, from: left + width2 + 8, to: right - 8 }));
+  }
+  var correspondenceDefaults = { gap: 180, rowHeight: 82, rowGap: 16, highlightRow: -1, arrow: "auto", revealAt: [0.45, 1.35, 2.25, 3.15, 4.05] };
+  function renderCorrespondence(p, h) {
+    if (p.columns?.length !== 2) throw Error("correspondence layout requires exactly two columns");
+    const rows3 = entries(p.rows, "rows", 1, 5), o = { ...correspondenceDefaults, ...p.correspondence }, s2 = styleFor(p.style);
+    finite3(o.highlightRow, "correspondence.highlightRow", -1, rows3.length - 1, true);
+    if (!["auto", "tapered", "swallowtail"].includes(o.arrow)) throw Error("correspondence.arrow must be auto, tapered or swallowtail");
+    const times = entries(o.revealAt, "correspondence.revealAt", rows3.length, 5);
+    times.forEach((v, i) => finite3(v, "correspondence.revealAt[" + i + "]", 0, 7.2));
+    const geometry3 = rowGeometry(rows3.length, o.gap, o.rowHeight, o.rowGap), first = geometry3[0];
+    const arrow5 = semanticParts.find((part2) => part2.key === "direction-arrow");
+    let body = "";
+    for (const [i, x] of [first.left, first.right].entries()) {
+      const color5 = i ? s2.secondary : s2.accent;
+      body += panel3(x, 178, first.width, 520, s2) + `<path d="M${x + 24} 239H${x + first.width - 24}" stroke="${color5}" stroke-width="3"/>` + text7(h, p.columns[i].name, x + 24, 220, first.width - 48, s2.fontSize, color5, { maxLines: 1 });
+    }
+    rows3.forEach((row, i) => {
+      if (row.values?.length !== 2) throw Error("Each correspondence row requires two values");
+      const g2 = geometry3[i], selected = i === o.highlightRow;
+      for (const [side, x] of [g2.left, g2.right].entries()) {
+        const color5 = side ? s2.secondary : s2.accent;
+        body += reveal((selected ? `<rect x="${x + 12}" y="${g2.y}" width="${g2.width - 24}" height="${g2.height}" rx="${Math.min(s2.cornerRadius, 10)}" fill="${s2.surface}"/>` : "") + `<path d="M${x + 24} ${g2.y + g2.height}H${x + g2.width - 24}" stroke="${s2.border}" stroke-width="1"/>` + text7(h, row.values[side], x + 24, g2.centerY + s2.fontSize * 0.33, g2.width - 48, s2.fontSize, selected ? color5 : s2.ink, { maxLines: 1 }), times[i] + side * 0.38, `data-cn-object="row-${i}-${side}" data-center-y="${g2.centerY}"`);
+      }
+      const W = g2.to - g2.from, kind = o.arrow === "auto" ? W <= 190 ? "tapered" : "swallowtail" : o.arrow;
+      const arrowProps = { ...arrow5.defaults, style: kind, boxWidth: W, boxHeight: 48, headSize: 14, strokeWidth: 4, tailDepth: 12, color: s2.accent, outlineColor: s2.accent, scale: 1 }, anchors = arrowAnchors(arrowProps);
+      const markup = arrow5.draw(arrowProps, h);
+      body += reveal(text7(h, row.criterion, (g2.from + g2.to) / 2, g2.centerY - 25, W, s2.labelSize, s2.muted, { anchor: "middle", maxLines: 1, weight: 500 }) + `<g transform="translate(${g2.from} ${g2.centerY - 24})" data-cn-arrow="${kind}" data-from-x="${g2.from + anchors.tail[0]}" data-to-x="${g2.from + anchors.head[0]}" data-center-y="${g2.centerY}">${markup}</g>`, times[i] + 0.18);
+    });
+    return canvas4({ ...p, note: p.note }, h, body, { height: 800, kind: "correspondence" });
+  }
+
+  // families/cn-information.mjs
+  function quadrantPositions(w, h, bounds) {
+    const centerX = w / 2, centerY = h / 2;
+    return [{ x: centerX - bounds.width / 2, y: centerY - bounds.height / 2 }, { x: w + centerX - bounds.width / 2, y: centerY - bounds.height / 2 }, { x: centerX - bounds.width / 2, y: h + centerY - bounds.height / 2 }, { x: w + centerX - bounds.width / 2, y: h + centerY - bounds.height / 2 }];
+  }
+  function pictorialCells(total, value, columns, gap = 16) {
+    finite3(total, "total", 1, 50, true);
+    finite3(value, "value", 0, total);
+    finite3(columns, "columns", 1, 10, true);
+    finite3(gap, "gap", 8, 28);
+    const cols = Math.min(columns, total), rows3 = Math.ceil(total / cols), cell = Math.min(732 / cols, 368 / rows3), size = Math.min(104, cell - gap);
+    if (size < 30) throw Error("Pictorial icons would be smaller than 30px; increase columns or split total");
+    const left = 80 + (732 - cols * cell) / 2, top = 190 + (368 - rows3 * cell) / 2;
+    return Array.from({ length: total }, (_, i) => ({ x: left + i % cols * cell + (cell - size) / 2, y: top + Math.floor(i / cols) * cell + (cell - size) / 2, size, fraction: Math.max(0, Math.min(1, value - i)) }));
+  }
+  var create4 = (id, name, description, defaults3, render, intentIds) => ({ id, name, description, category: "\u539F\u521B\u8BB2\u89E3\u56FE\u5F62", width: 1280, height: 720, defaultEffect: "cn-information-reveal", intentIds, styleControls: diagramStyleControls, reference: { level: "designed", basis: "\u56FD\u5185\u5F00\u6E90\u7EC4\u4EF6\u7684\u7ED3\u6784/\u8868\u8FBE\u53C2\u8003\uFF0C\u6539\u7F16\u4E3A\u53EF\u8C03\u4E14\u53EF\u5B9A\u4F4D\u65F6\u95F4\u7684\u89C6\u9891\u7EC4\u4EF6\u3002\u672A\u6574\u9875\u622A\u56FE\u6216\u5D4C\u5165\u7B2C\u4E09\u65B9\u5728\u7EBF\u670D\u52A1\u3002", source: "references/cn-batch1/provenance.json" }, defaults: { title: "\u4E3B\u6807\u9898", subtitle: "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57", note: "\u8865\u5145\u8BF4\u660E\u6587\u5B57", style: structuredClone(diagramStyleDefaults), ...defaults3 }, render });
+  var components20 = [
+    create4("quadrant-map", "\u56DB\u8C61\u9650\u5B9A\u4F4D", "\u4EE5\u4E24\u6761\u7EF4\u5EA6\u7EC4\u7EC7\u56DB\u7C7B\u60C5\u5883\uFF1B\u652F\u6301\u8F74\u6807\u7B7E\u3001\u8C61\u9650\u6587\u6848\u3001\u7126\u70B9\u3001\u95F4\u8DDD\u548C\u51FA\u73B0\u65F6\u70B9\u3002", {
+      xLabel: "\u6A2A\u5411\u7EF4\u5EA6",
+      yLabel: "\u7EB5\u5411\u7EF4\u5EA6",
+      xLow: "\u4F4E",
+      xHigh: "\u9AD8",
+      yLow: "\u4F4E",
+      yHigh: "\u9AD8",
+      focus: "top-right",
+      dashedAxis: true,
+      gapX: 48,
+      gapY: 44,
+      quadrants: [{ id: "top-left", label: "\u7C7B\u578B A", detail: "\u60C5\u5883\u8BF4\u660E A", at: 0.45 }, { id: "top-right", label: "\u7C7B\u578B B", detail: "\u60C5\u5883\u8BF4\u660E B", at: 1.25 }, { id: "bottom-left", label: "\u7C7B\u578B C", detail: "\u60C5\u5883\u8BF4\u660E C", at: 2.05 }, { id: "bottom-right", label: "\u7C7B\u578B D", detail: "\u60C5\u5883\u8BF4\u660E D", at: 2.85 }]
+    }, (p, h) => {
+      const s2 = styleFor(p.style), a2 = entries(p.quadrants, "quadrants", 4, 4), ids = ["top-left", "top-right", "bottom-left", "bottom-right"];
+      if (new Set(a2.map((q) => q.id)).size !== 4 || a2.some((q) => !ids.includes(q.id))) throw Error("quadrants must include each of the four position IDs exactly once");
+      if (p.focus !== "none" && !ids.includes(p.focus)) throw Error("focus must name a quadrant or none");
+      finite3(p.gapX, "gapX", 24, 72);
+      finite3(p.gapY, "gapY", 24, 72);
+      const cellWidth = 504 - p.gapX, cellHeight = 208 - p.gapY, positions = quadrantPositions(504, 208, { width: cellWidth, height: cellHeight });
+      let body = "";
+      ids.forEach((id, i) => {
+        const q = a2.find((q2) => q2.id === id);
+        finite3(q.at, "quadrants." + id + ".at", 0, 7.2);
+        const r = positions[i], x = 136 + r.x, y = 172 + r.y, selected = id === p.focus, tone3 = i % 2 ? s2.secondary : s2.accent;
+        body += reveal(`<g data-cn-object="${id}" data-center-x="${x + cellWidth / 2}" data-center-y="${y + cellHeight / 2}">${panel3(x, y, cellWidth, cellHeight, s2, s2.surface)}${selected ? `<rect x="${x}" y="${y}" width="${cellWidth}" height="${cellHeight}" rx="${s2.cornerRadius}" fill="none" stroke="${tone3}" stroke-width="${s2.strokeWidth + 1}"/>` : ""}<rect x="${x + 20}" y="${y + 24}" width="5" height="32" rx="2" fill="${tone3}"/>` + text7(h, q.label, x + 44, y + 49, cellWidth - 68, s2.fontSize, selected ? tone3 : s2.ink, { maxLines: 1 }) + text7(h, q.detail, x + 44, y + 88, cellWidth - 68, s2.labelSize, s2.muted, { maxLines: 2, weight: 450 }) + "</g>", q.at);
+      });
+      const dash = p.dashedAxis ? ' stroke-dasharray="6 7"' : "";
+      body += `<path d="M122 380H1154M640 160V606" fill="none" stroke="${s2.muted}" stroke-width="${s2.strokeWidth}"${dash}/><path d="M1144 373L1154 380L1144 387M633 171L640 160L647 171" fill="none" stroke="${s2.muted}" stroke-width="${s2.strokeWidth}"/>`;
+      body += text7(h, p.xLow, 82, 387, 56, 20, s2.muted, { anchor: "middle", maxLines: 1 }) + text7(h, p.xHigh, 1191, 387, 56, 20, s2.muted, { anchor: "middle", maxLines: 1 }) + text7(h, p.yHigh, 640, 153, 90, 19, s2.muted, { anchor: "middle", maxLines: 1 }) + text7(h, p.yLow, 640, 635, 90, 19, s2.muted, { anchor: "middle", maxLines: 1 });
+      body += text7(h, p.xLabel, 1144, 632, 380, 20, s2.muted, { anchor: "end", maxLines: 1 }) + text7(h, p.yLabel, 665, 170, 360, 20, s2.muted, { maxLines: 1 });
+      return canvas4(p, h, body, { kind: "quadrant" });
+    }, ["quadrant", "compare"]),
+    create4("pictorial-ratio", "\u8C61\u5F62\u6BD4\u4F8B\u9635\u5217", "\u6BCF\u4E2A\u5B8C\u6574\u56FE\u5F62\u8868\u793A\u4E00\u4E2A\u5355\u4F4D\uFF0C\u652F\u6301\u90E8\u5206\u586B\u5145\uFF1B\u6570\u91CF\u3001\u6BD4\u4F8B\u548C\u5355\u4F4D\u7531\u540C\u4E00\u7EC4\u6570\u636E\u8BA1\u7B97\u3002", {
+      total: 10,
+      value: 3,
+      columns: 5,
+      gap: 16,
+      icon: "file",
+      unit: "\u4EFD",
+      valueLabel: "\u76EE\u6807\u90E8\u5206",
+      restLabel: "\u5176\u4F59\u90E8\u5206",
+      at: 0.45,
+      step: 0.12
+    }, (p, h) => {
+      const s2 = styleFor(p.style), cells = pictorialCells(p.total, p.value, p.columns, p.gap);
+      if (!["file", "person", "circle"].includes(p.icon)) throw Error("icon must be file, person or circle");
+      finite3(p.at, "at", 0, 6);
+      finite3(p.step, "step", 0, 0.5);
+      if (p.at + p.step * (cells.length - 1) > 7.2) throw Error("Pictorial sequence must finish by 7.2 native seconds; reduce step");
+      const shape = p.icon === "person" ? '<circle cx="50" cy="21" r="15"/><path d="M29 43Q50 34 71 43L78 74H67L63 99H37L33 74H22Z"/>' : p.icon === "circle" ? '<circle cx="50" cy="50" r="43"/>' : '<path d="M19 5H62L84 27V95H19Z"/><path d="M62 5V27H84" fill="none"/>';
+      let body = panel3(80, 180, 732, 405, s2);
+      cells.forEach((cell, i) => {
+        const id = h.uid("ratio-clip-" + i), clipY = 100 * (1 - cell.fraction), ratio = cell.fraction;
+        const icon4 = `<g transform="translate(${cell.x} ${cell.y}) scale(${cell.size / 100})" data-cn-cell="${i}" data-fraction="${ratio}"><defs><clipPath id="${id}"><rect x="0" y="${clipY}" width="100" height="${ratio * 100}"/></clipPath></defs><g fill="${s2.surface}" stroke="${s2.border}" stroke-width="${s2.strokeWidth * 1.4}">${shape}</g><g clip-path="url(#${id})" fill="${s2.accent}" stroke="${s2.accent}" stroke-width="${s2.strokeWidth * 1.4}">${shape}</g>${p.icon === "file" ? '<path d="M30 47H69M30 61H69M30 75H58" fill="none" stroke="' + (ratio === 1 ? "#ffffff" : s2.muted) + '" opacity=".65" stroke-width="3"/>' : ""}</g>`;
+        body += reveal(icon4, p.at + p.step * i);
+      });
+      const percent = Math.round(p.value / p.total * 1e3) / 10, rest = Math.round((p.total - p.value) * 1e6) / 1e6;
+      body += `<path d="M853 205V538" stroke="${s2.border}" stroke-width="2"/>` + text7(h, p.valueLabel, 895, 244, 307, s2.labelSize, s2.muted, { maxLines: 1 }) + text7(h, String(p.value), 890, 337, 280, s2.fontSize * 82 / 28, s2.accent, { maxLines: 1 }) + text7(h, "/ " + p.total + " " + p.unit, 896, 389, 294, s2.fontSize, s2.ink, { maxLines: 1 }) + text7(h, percent + "%", 895, 468, 290, 54, s2.secondary, { maxLines: 1 }) + text7(h, "\u6BCF\u4E2A\u56FE\u5F62 = 1 " + p.unit, 895, 517, 303, 19, s2.muted, { maxLines: 1, weight: 450 });
+      body += `<circle cx="105" cy="607" r="7" fill="${s2.accent}"/>` + text7(h, p.valueLabel + " " + p.value + " " + p.unit, 125, 614, 340, 21, s2.ink, { maxLines: 1 }) + text7(h, p.restLabel + " " + rest + " " + p.unit, 810, 614, 330, 21, s2.muted, { anchor: "end", maxLines: 1 });
+      return canvas4(p, h, body, { kind: "pictorial-ratio" });
+    }, ["pictorial", "proportions"]),
+    create4("source-citations", "\u6765\u6E90\u5F15\u7528\u4E0E\u4F9D\u636E", "\u628A\u4E00\u4E2A\u5224\u65AD\u4E0E\u6750\u6599\u6761\u76EE\u9010\u9879\u5173\u8054\uFF1B\u6807\u9898\u3001\u9875\u7801\u3001\u6458\u5F55\u548C\u91CD\u70B9\u6765\u6E90\u53EF\u66FF\u6362\u3002", {
+      claim: "\u8FD9\u91CC\u653E\u9700\u8981\u8BF4\u660E\u4F9D\u636E\u7684\u5224\u65AD\u3002",
+      claimLabel: "\u5F53\u524D\u5224\u65AD",
+      citedIds: ["source-a", "source-b"],
+      activeId: "source-a",
+      sources: [{ id: "source-a", title: "\u53C2\u8003\u6750\u6599 A", locator: "\u7B2C 1 \u9875", quote: "\u6765\u6E90\u5185\u5BB9\u6458\u8981 A", kind: "file", at: 0.55 }, { id: "source-b", title: "\u53C2\u8003\u6750\u6599 B", locator: "\u7B2C 2 \u8282", quote: "\u6765\u6E90\u5185\u5BB9\u6458\u8981 B", kind: "file", at: 1.65 }, { id: "source-c", title: "\u53C2\u8003\u6750\u6599 C", locator: "\u6765\u6E90\u4F4D\u7F6E", quote: "\u6765\u6E90\u5185\u5BB9\u6458\u8981 C", kind: "web", at: 2.75 }]
+    }, (p, h) => {
+      const s2 = styleFor(p.style), a2 = entries(p.sources, "sources", 1, 4), ids = a2.map((x) => x.id);
+      if (new Set(ids).size !== ids.length || ids.some((id) => !/^source-[a-z0-9-]+$/.test(id))) throw Error("Source IDs must be unique source-* identifiers");
+      entries(p.citedIds, "citedIds", 1, 4);
+      if (new Set(p.citedIds).size !== p.citedIds.length || p.citedIds.some((id) => !ids.includes(id))) throw Error("Every cited ID must refer to a distinct existing source");
+      if (p.activeId !== "none" && !ids.includes(p.activeId)) throw Error("activeId must refer to an existing source or none");
+      let body = `<path d="M80 212V461" stroke="${s2.secondary}" stroke-width="5"/>` + text7(h, p.claimLabel, 105, 209, 412, s2.labelSize, s2.secondary, { maxLines: 1 }) + text7(h, p.claim, 105, 265, 401, s2.fontSize + 4, s2.ink, { maxLines: 5, lineHeight: 1.48 });
+      body += text7(h, "\u4F9D\u636E", 105, 544, 88, 20, s2.muted, { maxLines: 1 });
+      p.citedIds.forEach((id, i) => {
+        const number9 = ids.indexOf(id) + 1, x = 175 + i * 63;
+        body += `<g data-cn-citation="${h.esc(id)}"><rect x="${x}" y="519" width="46" height="34" rx="5" fill="${s2.surface}" stroke="${s2.border}"/>` + text7(h, "[" + number9 + "]", x + 23, 543, 43, 20, s2.accent, { anchor: "middle", maxLines: 1 }) + "</g>";
+      });
+      const gap = 16, rowHeight = (432 - gap * (a2.length - 1)) / a2.length;
+      a2.forEach((source2, i) => {
+        finite3(source2.at, "sources[" + i + "].at", 0, 7.2);
+        if (!["file", "web"].includes(source2.kind)) throw Error("source.kind must be file or web");
+        const x = 582, y = 178 + i * (rowHeight + gap), W = 630, selected = p.activeId === source2.id;
+        const compact = a2.length === 4, titleSize = Math.min(s2.fontSize, compact ? 24 : 28), quoteSize = Math.min(s2.labelSize, compact ? 20 : 26), titleY = compact ? 28 : 37, metaY = compact ? 50 : 64, quoteY = compact ? 79 : 99, maxLines = Math.max(1, Math.floor((rowHeight - quoteY - 8) / (quoteSize * 1.34)) + 1);
+        let item = panel3(x, y, W, rowHeight, s2, selected ? s2.surface : s2.background) + `<path d="M${x + 17} ${y + 17}V${y + rowHeight - 17}" stroke="${selected ? s2.accent : s2.border}" stroke-width="${selected ? 4 : 2}"/>`;
+        item += text7(h, "0" + (i + 1), x + 37, y + titleY, 62, 22, selected ? s2.accent : s2.muted, { maxLines: 1 }) + text7(h, source2.title, x + 105, y + titleY, 489, titleSize, s2.ink, { maxLines: 1 });
+        item += text7(h, (source2.kind === "web" ? "\u7F51\u9875" : "\u6587\u4EF6") + " \xB7 " + source2.locator, x + 105, y + metaY, 489, compact ? 16 : 18, s2.muted, { maxLines: 1, weight: 450 }) + text7(h, source2.quote, x + 105, y + quoteY, 489, quoteSize, s2.muted, { maxLines, weight: 450 });
+        body += reveal(item, source2.at, `data-cn-source="${h.esc(source2.id)}" data-active="${selected}"`);
+      });
+      return canvas4(p, h, body, { kind: "source-citations" });
+    }, ["citation", "file"])
+  ];
+
   // families/codex-workflow.mjs
   var array4 = (value) => Array.isArray(value) ? value : [];
   var object = (value) => value && typeof value === "object" && !Array.isArray(value) ? value : {};
@@ -4256,7 +4551,7 @@ ${workflowLayoutCSS}
     <div class="cxw-sidebar-bottom">${icon2(h, "settings", 17)}<span>${h.esc(p.footer || "\u6F14\u793A\u5DE5\u4F5C\u533A")}</span></div>
   </aside>`;
   }
-  function panel3(value, h) {
+  function panel4(value, h) {
     const p = object(value);
     return `<aside class="cxw-preview-panel" data-part="preview-panel"><header><span>${icon2(h, p.kind === "table" ? "grid" : "file", 15)}${h.esc(p.title || "\u6587\u4EF6\u9884\u89C8")}</span><span>${icon2(h, "more", 17)}${icon2(h, "x", 15)}</span></header><div class="cxw-panel-body" data-motion="scroll">${p.kind === "table" ? teachingTable(p.table, h) : `<div class="cxw-document">${p.heading ? `<h3>${h.esc(p.heading)}</h3>` : ""}${array4(p.paragraphs).map((t) => `<p>${h.esc(t)}</p>`).join("")}${p.code ? `<pre>${h.esc(p.code)}</pre>` : ""}</div>`}</div></aside>`;
   }
@@ -4317,7 +4612,7 @@ ${workflowLayoutCSS}
     "panel": null,
     "panelWidth": 400
   };
-  var components20 = [{
+  var components21 = [{
     id: "codex-workflow",
     name: "Codex \u591A\u8F6E\u5DE5\u4F5C\u533A",
     category: "Codex",
@@ -4331,7 +4626,7 @@ ${workflowLayoutCSS}
       const hasPanel = Boolean(p.panel && typeof p.panel === "object"), panelWidth = number7(p.panelWidth, 400, 320, 520);
       return `<section class="cxw-workspace ${p.showSidebar ? "" : "cxw-no-sidebar"} ${hasPanel ? "cxw-has-panel" : ""}" style="--cxw-panel-width:${panelWidth}px" data-part="workspace" data-state="${p.composer.running ? "running" : "idle"}">
       ${p.showSidebar ? sidebar2(p.sidebar, h) : ""}<div class="cxw-main"><header class="cxw-header"><div class="cxw-heading">${icon2(h, "folder", 17)}${p.project ? `<span class="cxw-project">${h.esc(p.project)}</span><span class="cxw-heading-divider">/</span>` : ""}<strong>${h.esc(p.title)}</strong></div><div class="cxw-header-actions">${icon2(h, "more", 18)}<span>${icon2(h, "upload", 15)}\u5206\u4EAB</span>${icon2(h, "panel", 17)}</div></header>
-      <div class="cxw-body"><div class="cxw-thread"><div class="cxw-conversation-viewport" data-part="conversation-viewport"><div class="cxw-conversation" data-part="conversation" data-motion="scroll">${array4(p.messages).map((m, i) => message(m, i, h)).join("")}${toolEvents(p.toolEvents, h)}</div></div>${composer(p.composer, h)}<div class="cxw-disclosure" data-part="disclosure">${h.esc(p.disclosure || "\u754C\u9762\u590D\u523B \xB7 \u6848\u4F8B\u6F14\u793A")}</div></div>${hasPanel ? panel3(p.panel, h) : ""}</div></div>
+      <div class="cxw-body"><div class="cxw-thread"><div class="cxw-conversation-viewport" data-part="conversation-viewport"><div class="cxw-conversation" data-part="conversation" data-motion="scroll">${array4(p.messages).map((m, i) => message(m, i, h)).join("")}${toolEvents(p.toolEvents, h)}</div></div>${composer(p.composer, h)}<div class="cxw-disclosure" data-part="disclosure">${h.esc(p.disclosure || "\u754C\u9762\u590D\u523B \xB7 \u6848\u4F8B\u6F14\u793A")}</div></div>${hasPanel ? panel4(p.panel, h) : ""}</div></div>
     </section>`;
     }
   }];
@@ -4344,7 +4639,7 @@ ${workflowLayoutCSS}
   function toolCard(p, h) {
     return `<div class="cx-tool-card" data-motion="item"><div class="cx-file-icon">${h.icon("file", 23)}<span>+</span></div><div class="cx-file-copy"><div>${h.esc(p.verb || "\u5DF2\u7F16\u8F91")} ${h.esc(p.file || "App.tsx")}</div><div class="cx-diff-stat"><span>+${h.esc(p.added ?? 18)}</span><span>-${h.esc(p.removed ?? 4)}</span></div></div><div class="cx-tool-actions"><span>${h.esc(p.undoLabel || "\u64A4\u9500")}${h.icon("undo", 14)}</span><button>${h.esc(p.reviewLabel || "\u5BA1\u6838")}</button></div></div>`;
   }
-  var components21 = [
+  var components22 = [
     { id: "codex-chat", name: "Codex \u5BF9\u8BDD\u7A97\u53E3", category: "Codex", description: "\u6309\u672C\u673A Codex \u91CD\u5EFA\u7684\u9ED1\u8272\u7528\u6237\u6D88\u606F\u3001\u65E0\u6C14\u6CE1\u56DE\u590D\u3001\u6267\u884C\u8BB0\u5F55\u548C\u5E95\u90E8\u8F93\u5165\u680F\u3002", width: 1280, height: 800, reference: native, defaults: {
       "title": "\u4EFB\u52A1\u6807\u9898",
       "userMessage": "\u7528\u6237\u6D88\u606F\u5185\u5BB9\u3002\u53EF\u586B\u5199\u4EFB\u52A1\u3001\u8865\u5145\u4FE1\u606F\u4E0E\u9884\u671F\u7ED3\u679C\u3002",
@@ -4469,7 +4764,7 @@ ${workflowLayoutCSS}
   function simpleHead(p, h, label3) {
     return `<div class="dev-tool-title"><span>${h.icon(p.appIcon || "code", 18)}<b>${h.esc(p.appName || label3)}</b><span class="dev-tool-divider"></span>${h.esc(p.workspace || "\u793A\u4F8B\u9879\u76EE")}</span><div>${h.icon("search", 16)}${h.icon("settings", 16)}${controls2(h)}</div></div>`;
   }
-  var components22 = [
+  var components23 = [
     {
       id: "terminal-session",
       name: "Windows Terminal \u4F1A\u8BDD",
@@ -5206,16 +5501,16 @@ ${workflowLayoutCSS}
   var arr2 = (value) => Array.isArray(value) ? value : [];
   var str2 = (value) => String(value ?? "");
   var source = (value) => {
-    const text7 = str2(value).trim().replaceAll("\\", "/");
-    if (!text7 || /^(?:[a-z][a-z0-9+.-]*:|\/)/i.test(text7) || /[\u0000-\u001f]/.test(text7)) return "";
-    return text7.split("/").every((part2) => {
+    const text8 = str2(value).trim().replaceAll("\\", "/");
+    if (!text8 || /^(?:[a-z][a-z0-9+.-]*:|\/)/i.test(text8) || /[\u0000-\u001f]/.test(text8)) return "";
+    return text8.split("/").every((part2) => {
       let decoded = part2;
       try {
         decoded = decodeURIComponent(part2);
       } catch {
       }
       return decoded !== "." && decoded !== ".." && !/[\\/]/.test(decoded);
-    }) ? text7 : "";
+    }) ? text8 : "";
   };
   function chatIcon(size = 18) {
     return `<svg aria-hidden="true" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H9l-6 3V6a2 2 0 0 1 2-2Z"/><path d="M7 9h10M7 13h7"/></svg>`;
@@ -5233,7 +5528,7 @@ ${workflowLayoutCSS}
     const role = m.role === "user" ? "user" : "assistant";
     const paragraphs2 = Array.isArray(m.paragraphs) ? m.paragraphs : m.text ? [m.text] : [];
     const state3 = ["idle", "draft", "running", "complete"].includes(m.state) ? m.state : "complete";
-    return `<article class="dbchat-message dbchat-message-${role}" data-message-id="${h.esc(m.id || `message-${index + 1}`)}" data-message-index="${index}" data-state="${state3}" data-motion="item"${m.visible === false ? " hidden" : ""}><div class="dbchat-message-body" data-part="message-text" data-motion="reveal">${m.heading ? `<h3>${h.esc(m.heading)}</h3>` : ""}${paragraphs2.map((text7, i) => `<p data-paragraph-index="${i}" data-motion="line">${h.esc(text7)}</p>`).join("")}${arr2(m.bullets).length ? `<ul>${m.bullets.map((text7) => `<li data-motion="line">${h.esc(text7)}</li>`).join("")}</ul>` : ""}${arr2(m.fields).length ? `<dl>${m.fields.map((field, i) => `<div data-field-index="${i}" data-motion="line"><dt>${h.esc(field.label)}</dt><dd>${h.esc(field.value)}</dd></div>`).join("")}</dl>` : ""}${m.linkLabel ? `<div class="dbchat-demo-link" data-motion="highlight">${h.icon("link", 14)}<span>${h.esc(m.linkLabel)}</span><small>${h.esc(m.linkNote || "\u6F14\u793A\u5360\u4F4D")}</small></div>` : ""}</div>${role === "assistant" && m.actions ? answerActions(h) : ""}</article>`;
+    return `<article class="dbchat-message dbchat-message-${role}" data-message-id="${h.esc(m.id || `message-${index + 1}`)}" data-message-index="${index}" data-state="${state3}" data-motion="item"${m.visible === false ? " hidden" : ""}><div class="dbchat-message-body" data-part="message-text" data-motion="reveal">${m.heading ? `<h3>${h.esc(m.heading)}</h3>` : ""}${paragraphs2.map((text8, i) => `<p data-paragraph-index="${i}" data-motion="line">${h.esc(text8)}</p>`).join("")}${arr2(m.bullets).length ? `<ul>${m.bullets.map((text8) => `<li data-motion="line">${h.esc(text8)}</li>`).join("")}</ul>` : ""}${arr2(m.fields).length ? `<dl>${m.fields.map((field, i) => `<div data-field-index="${i}" data-motion="line"><dt>${h.esc(field.label)}</dt><dd>${h.esc(field.value)}</dd></div>`).join("")}</dl>` : ""}${m.linkLabel ? `<div class="dbchat-demo-link" data-motion="highlight">${h.icon("link", 14)}<span>${h.esc(m.linkLabel)}</span><small>${h.esc(m.linkNote || "\u6F14\u793A\u5360\u4F4D")}</small></div>` : ""}</div>${role === "assistant" && m.actions ? answerActions(h) : ""}</article>`;
   }
   function composer3(p, h) {
     const c = { ...p, ...p.composer };
@@ -5245,7 +5540,7 @@ ${workflowLayoutCSS}
     const logo = source(p.logoSrc);
     return `<div class="dbchat-home" data-part="home" data-motion="reveal">${p.showHomeLogo && logo ? `<img class="dbchat-home-logo" src="${h.esc(logo)}" alt="${h.esc(p.brand)}">` : ""}<h2>${h.esc(p.homeTitle)}</h2><div class="dbchat-home-switch"><span class="dbchat-switch-active">${chatIcon(16)}${h.esc(p.conversationModeLabel)}</span><span>${h.icon("monitor", 16)}${h.esc(p.workModeLabel)}</span></div></div>`;
   }
-  var components23 = [{
+  var components24 = [{
     id: "doubao-chat",
     name: "\u8C46\u5305 \xB7 \u666E\u901A\u5BF9\u8BDD",
     category: "\u8C46\u5305",
@@ -5364,7 +5659,7 @@ ${workflowLayoutCSS}
       const lines3 = draft.split(/\r?\n/).reduce((sum, line3) => sum + Math.max(1, Math.ceil(line3.length / 40)), 0);
       const height = Number.isFinite(requestedHeight) && requestedHeight > 0 ? Math.max(120, Math.min(240, requestedHeight)) : Math.min(240, Math.max(120, lines3 * 28 + 72));
       const messages2 = arr2(p.messages), isHome = p.showHome && !messages2.length;
-      return `<section class="dbchat-app${p.showSidebar === false ? " dbchat-no-sidebar" : ""}" data-simulation="true" data-state="${running ? "running" : draft ? "draft" : "idle"}" style="--dbchat-composer-height:${height}px">${p.showSidebar === false ? "" : sidebar3(p, h)}<main class="dbchat-main"><header class="dbchat-header"><div class="dbchat-header-left">${h.icon("panel", 18)}${isHome ? "" : h.icon("edit", 17)}</div>${isHome ? "" : `<div class="dbchat-thread-title"><strong>${h.esc(p.title)}</strong><small>${h.esc(p.notice)}</small></div>`}<div class="dbchat-header-right">${h.icon("volume", 17)}${h.icon("more", 18)}</div></header><div class="dbchat-simulation" data-part="disclosure">${h.esc(p.disclosure || p.simulationLabel || "\u754C\u9762\u590D\u523B \xB7 \u6848\u4F8B\u6F14\u793A")}</div><div class="dbchat-conversation" data-part="conversation"><div class="dbchat-viewport" data-part="viewport"><div class="dbchat-messages" data-part="message-list" data-motion="scroll">${isHome ? home(p, h) : messages2.map((m, i) => message2(m, i, h)).join("")}${running ? `<div class="dbchat-working" data-part="status" data-state="running" data-motion="reveal"><span>${h.esc(p.workingLabel)}</span><i>\xB7\xB7\xB7</i></div>` : ""}${!isHome && !running && arr2(p.suggestions).length ? `<div class="dbchat-suggestions" data-part="suggestions">${p.suggestions.map((text7, index) => `<span data-suggestion-index="${index}" data-motion="item">${h.esc(text7)}${h.icon("arrow-right", 13)}</span>`).join("")}</div>` : ""}</div></div></div><div class="dbchat-composer-anchor">${composer3(p, h)}</div></main></section>`;
+      return `<section class="dbchat-app${p.showSidebar === false ? " dbchat-no-sidebar" : ""}" data-simulation="true" data-state="${running ? "running" : draft ? "draft" : "idle"}" style="--dbchat-composer-height:${height}px">${p.showSidebar === false ? "" : sidebar3(p, h)}<main class="dbchat-main"><header class="dbchat-header"><div class="dbchat-header-left">${h.icon("panel", 18)}${isHome ? "" : h.icon("edit", 17)}</div>${isHome ? "" : `<div class="dbchat-thread-title"><strong>${h.esc(p.title)}</strong><small>${h.esc(p.notice)}</small></div>`}<div class="dbchat-header-right">${h.icon("volume", 17)}${h.icon("more", 18)}</div></header><div class="dbchat-simulation" data-part="disclosure">${h.esc(p.disclosure || p.simulationLabel || "\u754C\u9762\u590D\u523B \xB7 \u6848\u4F8B\u6F14\u793A")}</div><div class="dbchat-conversation" data-part="conversation"><div class="dbchat-viewport" data-part="viewport"><div class="dbchat-messages" data-part="message-list" data-motion="scroll">${isHome ? home(p, h) : messages2.map((m, i) => message2(m, i, h)).join("")}${running ? `<div class="dbchat-working" data-part="status" data-state="running" data-motion="reveal"><span>${h.esc(p.workingLabel)}</span><i>\xB7\xB7\xB7</i></div>` : ""}${!isHome && !running && arr2(p.suggestions).length ? `<div class="dbchat-suggestions" data-part="suggestions">${p.suggestions.map((text8, index) => `<span data-suggestion-index="${index}" data-motion="item">${h.esc(text8)}${h.icon("arrow-right", 13)}</span>`).join("")}</div>` : ""}</div></div></div><div class="dbchat-composer-anchor">${composer3(p, h)}</div></main></section>`;
     }
   }];
 
@@ -5419,10 +5714,10 @@ ${workflowLayoutCSS}
   </div>`;
   }
   function summaryPanel(p, h) {
-    const panel5 = p.summary || {};
-    return `<aside class="dbw-summary" data-motion="reveal"><header><span>${h.esc(panel5.title || p.summaryTitle)}</span>${h.icon("panel", 16)}</header><div class="dbw-summary-body"><div class="dbw-summary-section"><div class="dbw-summary-section-heading"><span>${h.esc(panel5.artifactsLabel || p.artifactsLabel)}</span>${h.icon("plus", 15)}</div>${list3(panel5.artifacts).map((item) => `<div class="dbw-summary-file" data-motion="item">${h.icon("file", 16)}<span>${h.esc(typeof item === "string" ? item : item.name)}</span></div>`).join("")}</div><div class="dbw-summary-section"><div class="dbw-summary-section-heading"><span>${h.esc(panel5.skillsLabel || p.skillsLabel)}</span>${h.icon("chevron-right", 12)}</div></div><div class="dbw-summary-section"><div class="dbw-summary-section-heading"><span>${h.esc(panel5.filesLabel || p.filesLabel)}</span>${h.icon("chevron-right", 12)}</div>${list3(panel5.files).map((item) => `<div class="dbw-summary-file" data-motion="item">${h.icon("file", 16)}<span>${h.esc(typeof item === "string" ? item : item.name)}</span></div>`).join("")}</div></div></aside>`;
+    const panel6 = p.summary || {};
+    return `<aside class="dbw-summary" data-motion="reveal"><header><span>${h.esc(panel6.title || p.summaryTitle)}</span>${h.icon("panel", 16)}</header><div class="dbw-summary-body"><div class="dbw-summary-section"><div class="dbw-summary-section-heading"><span>${h.esc(panel6.artifactsLabel || p.artifactsLabel)}</span>${h.icon("plus", 15)}</div>${list3(panel6.artifacts).map((item) => `<div class="dbw-summary-file" data-motion="item">${h.icon("file", 16)}<span>${h.esc(typeof item === "string" ? item : item.name)}</span></div>`).join("")}</div><div class="dbw-summary-section"><div class="dbw-summary-section-heading"><span>${h.esc(panel6.skillsLabel || p.skillsLabel)}</span>${h.icon("chevron-right", 12)}</div></div><div class="dbw-summary-section"><div class="dbw-summary-section-heading"><span>${h.esc(panel6.filesLabel || p.filesLabel)}</span>${h.icon("chevron-right", 12)}</div>${list3(panel6.files).map((item) => `<div class="dbw-summary-file" data-motion="item">${h.icon("file", 16)}<span>${h.esc(typeof item === "string" ? item : item.name)}</span></div>`).join("")}</div></div></aside>`;
   }
-  var components24 = [{
+  var components25 = [{
     id: "doubao-workflow",
     name: "\u8C46\u5305\u5DE5\u4F5C \xB7 \u591A\u8F6E\u5BF9\u8BDD",
     category: "\u8C46\u5305\u5DE5\u4F5C",
@@ -5550,7 +5845,7 @@ ${workflowLayoutCSS}
     return n4;
   };
   var svg = (body, view = "0 0 1120 460") => `<svg class="edx-svg" viewBox="${view}" xmlns="http://www.w3.org/2000/svg">${body}</svg>`;
-  var txt4 = (h, x, y, text7, size = 20, anchor = "middle", color5 = "#243247") => `<text x="${x}" y="${y}" font-size="${size}" text-anchor="${anchor}" fill="${color5}">${h.esc(text7)}</text>`;
+  var txt4 = (h, x, y, text8, size = 20, anchor = "middle", color5 = "#243247") => `<text x="${x}" y="${y}" font-size="${size}" text-anchor="${anchor}" fill="${color5}">${h.esc(text8)}</text>`;
   var line2 = (x1, y1, x2, y2, cls2 = "") => `<path ${cls2} d="M${x1} ${y1}L${x2} ${y2}" fill="none" stroke="#b6c9e7" stroke-width="2"/>`;
   var node3 = (h, x, y, w, label3, detail = "", fill = "#eff5ff") => `<g data-motion="item"><rect x="${x - w / 2}" y="${y - 33}" width="${w}" height="66" rx="14" fill="${fill}" stroke="#bed1ef"/>${txt4(h, x, y - 2, label3, 21)}${txt4(h, x, y + 23, detail, 14, "middle", "#60748c")}</g>`;
   function shell3(p, h, body, cls2 = "") {
@@ -5561,7 +5856,7 @@ ${workflowLayoutCSS}
       return render(p, h);
     } };
   }
-  var components25 = [
+  var components26 = [
     make6("donut-chart", "\u73AF\u5F62\u5360\u6BD4\u56FE", "\u628A\u6574\u4F53\u62C6\u6210\u51E0\u90E8\u5206\uFF0C\u540C\u65F6\u4FDD\u7559\u6570\u91CF\u4E0E\u767E\u5206\u6BD4\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
@@ -5744,8 +6039,8 @@ ${workflowLayoutCSS}
       const a2 = list4(p.stages, 2, 5), max = number8(a2[0].value);
       if (!max || a2.some((x, i) => number8(x.value) > (i ? a2[i - 1].value : max))) throw Error("\u6F0F\u6597\u6570\u503C\u987B\u6309\u975E\u589E\u987A\u5E8F\u6392\u5217");
       return shell3(p, h, svg(a2.map((x, i) => {
-        const width = 640 * x.value / max, x0 = 425 - width / 2, y = 30 + i * 96;
-        return `<g data-motion="item"><rect data-motion="bar" x="${x0}" y="${y}" width="${width}" height="72" rx="12" fill="${colors2[i]}"/>${txt4(h, 425, y + 45, `${x.label}  ${x.value}`, 23, "middle", "#fff")}${txt4(h, 880, y + 45, `${(x.value / max * 100).toFixed(0)}%`, 28)}${i ? txt4(h, 1030, y + 44, `\u4E0A\u6B65 ${(x.value / a2[i - 1].value * 100).toFixed(0)}%`, 16) : ""}</g>`;
+        const width2 = 640 * x.value / max, x0 = 425 - width2 / 2, y = 30 + i * 96;
+        return `<g data-motion="item"><rect data-motion="bar" x="${x0}" y="${y}" width="${width2}" height="72" rx="12" fill="${colors2[i]}"/>${txt4(h, 425, y + 45, `${x.label}  ${x.value}`, 23, "middle", "#fff")}${txt4(h, 880, y + 45, `${(x.value / max * 100).toFixed(0)}%`, 28)}${i ? txt4(h, 1030, y + 44, `\u4E0A\u6B65 ${(x.value / a2[i - 1].value * 100).toFixed(0)}%`, 16) : ""}</g>`;
       }).join("")));
     }),
     make6("radar-chart", "\u591A\u7EF4\u96F7\u8FBE\u56FE", "\u5728\u76F8\u540C\u91CF\u5C3A\u4E0A\u6BD4\u8F83\u591A\u4E2A\u80FD\u529B\u7EF4\u5EA6\uFF0C\u8F6E\u5ED3\u4E0E\u5206\u503C\u5BF9\u5E94\u3002", {
@@ -6297,7 +6592,7 @@ ${workflowLayoutCSS}
       if (tooLong(p.subjectTitle, 18) || tooLong(p.subjectSubtitle, 26) || p.fields.some((x) => tooLong(x.label, 3) || tooLong(x.value, 18)) || p.callouts.some((x) => tooLong(x.title, 9) || tooLong(x.detail, 16))) throw new Error("annotation-callout: text exceeds the measured anchor layout; shorten the copy or adjust the layout");
     }
   }
-  var create4 = (id, name, description, defaults3, render) => ({
+  var create5 = (id, name, description, defaults3, render) => ({
     id,
     name,
     category: "\u539F\u521B\u8BB2\u89E3\u56FE\u5F62",
@@ -6312,8 +6607,8 @@ ${workflowLayoutCSS}
       return render(p, helpers2);
     }
   });
-  var components26 = [
-    create4("before-after", "\u524D\u540E\u5BF9\u6BD4", "\u5728\u540C\u4E00\u7EC4\u4EFB\u52A1\u4E2D\u5BF9\u7167\u4E24\u79CD\u7EC4\u7EC7\u65B9\u5F0F\uFF1B\u4E24\u4FA7\u6587\u6848\u3001\u72B6\u6001\u548C\u7ED3\u8BBA\u5747\u53EF\u7F16\u8F91\u3002", {
+  var components27 = [
+    create5("before-after", "\u524D\u540E\u5BF9\u6BD4", "\u5728\u540C\u4E00\u7EC4\u4EFB\u52A1\u4E2D\u5BF9\u7167\u4E24\u79CD\u7EC4\u7EC7\u65B9\u5F0F\uFF1B\u4E24\u4FA7\u6587\u6848\u3001\u72B6\u6001\u548C\u7ED3\u8BBA\u5747\u53EF\u7F16\u8F91\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -6365,7 +6660,7 @@ ${workflowLayoutCSS}
       const after = columns.map((c) => '<div class="edu-kanban-column"><div class="edu-kanban-label"><i class="edu-state-' + e2(c.state) + '"></i>' + e2(c.label) + "<span>" + tasks.filter((t) => t.state === c.state).length + "</span></div>" + tasks.filter((t) => t.state === c.state).map((t) => '<div class="edu-kanban-task" data-motion="item"><strong>' + e2(t.title) + "</strong><p>" + e2(t.detail) + '</p><div class="edu-mini-progress"><i class="edu-state-' + e2(c.state) + '"></i></div></div>').join("") + "</div>").join("");
       return shell4(p, h, '<div class="edu-compare-layout"><section class="edu-panel edu-before"><div class="edu-panel-heading"><span class="edu-pill">' + e2(p.beforeLabel) + "</span><p>" + e2(p.beforeNote) + '</p></div><div class="edu-task-list">' + before + '</div></section><div class="edu-compare-arrow">' + arrow4 + '</div><section class="edu-panel edu-after" data-motion="reveal"><div class="edu-panel-heading"><span class="edu-pill edu-pill-blue">' + e2(p.afterLabel) + "</span><p>" + e2(p.afterNote) + '</p></div><div class="edu-kanban">' + after + '</div></section></div><div class="edu-takeaway"><span>' + e2(p.resultLabel) + "</span><strong>" + e2(p.result) + "</strong></div>");
     }),
-    create4("flowchart", "\u6D41\u7A0B\u4E0E\u539F\u7406\u56FE", "\u53EF\u7F16\u8F91\u7684\u4E94\u8282\u70B9\u5206\u652F\u6D41\u7A0B\uFF0C\u8282\u70B9\u4E0E SVG \u8FDE\u7EBF\u72EC\u7ACB\uFF0C\u53EF\u6309\u987A\u5E8F\u70B9\u4EAE\u3002", {
+    create5("flowchart", "\u6D41\u7A0B\u4E0E\u539F\u7406\u56FE", "\u53EF\u7F16\u8F91\u7684\u4E94\u8282\u70B9\u5206\u652F\u6D41\u7A0B\uFF0C\u8282\u70B9\u4E0E SVG \u8FDE\u7EBF\u72EC\u7ACB\uFF0C\u53EF\u6309\u987A\u5E8F\u70B9\u4EAE\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -6414,7 +6709,7 @@ ${workflowLayoutCSS}
       const cards = nodes.map((x, i) => '<div class="edu-flow-node ' + (i === 2 ? "edu-flow-node-active" : i === 3 ? "edu-flow-node-done" : "") + '" style="left:' + positions[i].x + "px;top:" + positions[i].y + 'px" data-motion="item"><span>' + e2(x.tag) + "</span><strong>" + e2(x.label) + "</strong><p>" + e2(x.detail) + "</p></div>").join("");
       return shell4(p, h, '<div class="edu-flow-stage">' + lines3 + cards + '<span class="edu-flow-label edu-flow-label-top">' + e2(arr3(p.branchLabels, 2)[0] || "") + '</span><span class="edu-flow-label edu-flow-label-bottom">' + e2(arr3(p.branchLabels, 2)[1] || "") + '</span></div><div class="edu-note"><strong>' + e2(p.noteTitle) + "</strong><span>" + e2(p.note) + "</span></div>");
     }),
-    create4("layer-stack", "\u5206\u5C42\u7ED3\u6784\u56FE", "\u7528\u7EDF\u4E00\u7B49\u8DDD\u51E0\u4F55\u548C\u72EC\u7ACB\u5F15\u7EBF\u89E3\u91CA\u4E09\u5C42\u7ED3\u6784\uFF1B\u5C42\u540D\u3001\u8BF4\u660E\u548C\u8981\u70B9\u53EF\u66FF\u6362\u3002", {
+    create5("layer-stack", "\u5206\u5C42\u7ED3\u6784\u56FE", "\u7528\u7EDF\u4E00\u7B49\u8DDD\u51E0\u4F55\u548C\u72EC\u7ACB\u5F15\u7EBF\u89E3\u91CA\u4E09\u5C42\u7ED3\u6784\uFF1B\u5C42\u540D\u3001\u8BF4\u660E\u548C\u8981\u70B9\u53EF\u66FF\u6362\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -6453,7 +6748,7 @@ ${workflowLayoutCSS}
       const leaders = layers.map((x, i) => '<g><path data-motion="line" d="M560 ' + (116 + i * 146) + 'H613" fill="none" stroke="#8ba8cb" stroke-width="1.5"/><circle cx="560" cy="' + (116 + i * 146) + '" r="4" fill="#2563eb"/><text x="586" y="' + (105 + i * 146) + '" fill="#71849d" font-size="14">' + e2(x.index) + "</text></g>").join("");
       return shell4(p, h, '<div class="edu-layers-layout"><svg class="edu-layer-art" viewBox="0 0 640 525" role="img" aria-label="' + e2(p.title) + '">' + slabs + leaders + '</svg><div class="edu-layer-descriptions">' + layers.map((x, i) => '<article data-motion="item"><span class="edu-layer-number">' + e2(x.index) + "</span><div><h2>" + e2(x.label) + "</h2><p>" + e2(x.detail) + "</p></div></article>").join("") + '<p class="edu-fine-note">' + e2(p.note) + "</p></div></div>");
     }),
-    create4("bar-chart", "\u67F1\u5F62\u6570\u636E\u56FE", "\u6309\u771F\u5B9E\u6570\u636E\u6620\u5C04\u9AD8\u5EA6\uFF0C\u652F\u6301\u53EF\u7F16\u8F91\u7C7B\u76EE\u3001\u6570\u503C\u3001\u8303\u56F4\u548C\u5355\u4F4D\uFF1B\u9ED8\u8BA4\u7528\u793A\u4F8B\u65F6\u957F\u6BD4\u8F83\u3002", {
+    create5("bar-chart", "\u67F1\u5F62\u6570\u636E\u56FE", "\u6309\u771F\u5B9E\u6570\u636E\u6620\u5C04\u9AD8\u5EA6\uFF0C\u652F\u6301\u53EF\u7F16\u8F91\u7C7B\u76EE\u3001\u6570\u503C\u3001\u8303\u56F4\u548C\u5355\u4F4D\uFF1B\u9ED8\u8BA4\u7528\u793A\u4F8B\u65F6\u957F\u6BD4\u8F83\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -6489,7 +6784,7 @@ ${workflowLayoutCSS}
       const e2 = h.esc;
       const values = arr3(p.values, 6);
       const max = Math.max(1, n2(p.max, 100), ...values.map((x) => n2(x.value)));
-      const left = 64, top = 58, bottom = 356, width = 1030, slot = width / Math.max(1, values.length), barWidth = Math.min(114, slot * 0.52);
+      const left = 64, top = 58, bottom = 356, width2 = 1030, slot = width2 / Math.max(1, values.length), barWidth = Math.min(114, slot * 0.52);
       const grid = Array.from({ length: 5 }, (_, i) => {
         const y = bottom - (bottom - top) * i / 4;
         return '<line x1="' + left + '" y1="' + y + '" x2="1110" y2="' + y + '" stroke="#e7ecf3"/><text x="44" y="' + (y + 6) + '" text-anchor="end" font-size="18" fill="#687387">' + e2(fmt(max * i / 4)) + "</text>";
@@ -6501,7 +6796,7 @@ ${workflowLayoutCSS}
       }).join("");
       return shell4(p, h, '<section class="edu-chart-panel"><div class="edu-chart-heading"><h2>' + e2(p.chartTitle) + "</h2><span>" + e2(p.unit) + '</span></div><svg class="edu-bar-svg" viewBox="0 0 1164 426" role="img" aria-label="' + e2(p.chartTitle) + '">' + grid + bars + '</svg><div class="edu-chart-source">' + e2(p.source) + '</div></section><div class="edu-takeaway edu-takeaway-compact"><span>' + e2(p.noteLabel) + "</span><strong>" + e2(p.note) + "</strong></div>");
     }),
-    create4("line-chart", "\u8D8B\u52BF\u6298\u7EBF\u56FE", "\u53EF\u7F16\u8F91\u8D8B\u52BF\u3001\u76EE\u6807\u7EBF\u4E0E\u9009\u4E2D\u70B9\uFF1B\u6570\u503C\u51B3\u5B9A\u5750\u6807\uFF0C\u6298\u7EBF\u4E0E\u9762\u79EF\u4F7F\u7528\u539F\u751F SVG\u3002", {
+    create5("line-chart", "\u8D8B\u52BF\u6298\u7EBF\u56FE", "\u53EF\u7F16\u8F91\u8D8B\u52BF\u3001\u76EE\u6807\u7EBF\u4E0E\u9009\u4E2D\u70B9\uFF1B\u6570\u503C\u51B3\u5B9A\u5750\u6807\uFF0C\u6298\u7EBF\u4E0E\u9762\u79EF\u4F7F\u7528\u539F\u751F SVG\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -6559,7 +6854,10 @@ ${workflowLayoutCSS}
       const chip = chosen ? '<g data-motion="focus"><rect x="' + clamp2(chosen.x - 82, 64, 931) + '" y="' + Math.max(4, chosen.y - 66) + '" width="164" height="43" rx="8" fill="#1f2329"/><text x="' + (clamp2(chosen.x - 82, 64, 931) + 82) + '" y="' + Math.max(31, chosen.y - 39) + '" text-anchor="middle" fill="white" font-size="20">' + e2(chosen.label) + " \xB7 " + e2(fmt(chosen.value)) + " " + e2(p.unit) + "</text></g>" : "";
       return shell4(p, h, '<section class="edu-chart-panel"><div class="edu-chart-heading"><h2>' + e2(p.chartTitle) + "</h2><span>" + e2(p.unit) + '</span></div><svg class="edu-line-svg" viewBox="0 0 1164 442" role="img" aria-label="' + e2(p.chartTitle) + '"><defs><linearGradient id="' + e2(grad2) + '" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#2563eb" stop-opacity=".18"/><stop offset="1" stop-color="#2563eb" stop-opacity=".01"/></linearGradient></defs>' + grid + '<line x1="' + left + '" y1="' + targetY + '" x2="' + right + '" y2="' + targetY + '" stroke="#4c9d83" stroke-width="1.7" stroke-dasharray="6 6"/><text x="' + (left + 16) + '" y="' + (targetY - 12) + '" text-anchor="start" font-size="18" fill="#28735d">' + e2(p.targetLabel) + " " + e2(fmt(p.target)) + '</text><path d="' + area + '" fill="url(#' + e2(grad2) + ')"/><path data-motion="line" d="' + line3 + '" fill="none" stroke="#2563eb" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>' + points.map((x) => '<circle cx="' + x.x + '" cy="' + x.y + '" r="5.5" fill="white" stroke="#2563eb" stroke-width="3"/><text x="' + x.x + '" y="415" text-anchor="middle" font-size="20" fill="#455064">' + e2(x.label) + "</text>").join("") + chip + '</svg><div class="edu-chart-source">' + e2(p.note) + "</div></section>");
     }),
-    create4("comparison-matrix", "\u65B9\u6848\u6BD4\u8F83\u77E9\u9635", "\u6309\u7EDF\u4E00\u7EF4\u5EA6\u6BD4\u8F83\u4E09\u79CD\u65B9\u6848\uFF0C\u4F7F\u7528\u6587\u5B57\u800C\u975E\u4E3B\u89C2\u6253\u5206\uFF1B\u5217\u3001\u884C\u4E0E\u63A8\u8350\u8BF4\u660E\u53EF\u7F16\u8F91\u3002", {
+    create5("comparison-matrix", "\u65B9\u6848\u6BD4\u8F83\u77E9\u9635", "\u8868\u683C\u6BD4\u8F83\u6216\u4E24\u5217\u9010\u9879\u5BF9\u5E94\uFF1Bcorrespondence \u5E03\u5C40\u590D\u7528\u672C\u5E93\u6954\u5F62/\u71D5\u5C3E\u7BAD\u5934\uFF0C\u6587\u5B57\u4E0E\u8FDE\u7EBF\u4FDD\u6301\u6C34\u5E73\u5BF9\u9F50\u3002", {
+      "layout": "matrix",
+      "correspondence": structuredClone(correspondenceDefaults),
+      "style": structuredClone(diagramStyleDefaults),
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -6617,11 +6915,13 @@ ${workflowLayoutCSS}
       "noteLabel": "\u8865\u5145\u6807\u7B7E",
       "note": "\u8865\u5145\u8BF4\u660E\u6587\u5B57"
     }, (p, h) => {
+      if (p.layout === "correspondence") return renderCorrespondence(p, h);
+      if (p.layout !== void 0 && p.layout !== "matrix") throw Error("comparison-matrix: layout must be matrix or correspondence");
       const e2 = h.esc;
       const columns = arr3(p.columns, 3), rows3 = arr3(p.rows, 5);
       return shell4(p, h, '<div class="edu-matrix-panel"><table class="edu-matrix"><thead><tr><th></th>' + columns.map((c) => "<th><strong>" + e2(c.name) + "</strong><span>" + e2(c.tag) + "</span></th>").join("") + "</tr></thead><tbody>" + rows3.map((r) => '<tr data-motion="item"><th>' + e2(r.criterion) + "</th>" + columns.map((_, i) => "<td>" + e2(arr3(r.values, 3)[i] || "") + "</td>").join("") + "</tr>").join("") + '</tbody></table></div><div class="edu-takeaway"><span>' + e2(p.noteLabel) + "</span><strong>" + e2(p.note) + "</strong></div>");
     }),
-    create4("event-timeline", "\u4E8B\u4EF6\u65F6\u95F4\u7EBF", "\u4E94\u4E2A\u9636\u6BB5\u6CBF\u6C34\u5E73\u65F6\u95F4\u8F74\u5C55\u793A\uFF0C\u533A\u5206\u5DF2\u5B8C\u6210\u3001\u5F53\u524D\u548C\u5F85\u5F00\u59CB\uFF1B\u652F\u6301\u66FF\u6362\u65F6\u95F4\u3001\u5185\u5BB9\u548C\u72B6\u6001\u3002", {
+    create5("event-timeline", "\u4E8B\u4EF6\u65F6\u95F4\u7EBF", "\u4E94\u4E2A\u9636\u6BB5\u6CBF\u6C34\u5E73\u65F6\u95F4\u8F74\u5C55\u793A\uFF0C\u533A\u5206\u5DF2\u5B8C\u6210\u3001\u5F53\u524D\u548C\u5F85\u5F00\u59CB\uFF1B\u652F\u6301\u66FF\u6362\u65F6\u95F4\u3001\u5185\u5BB9\u548C\u72B6\u6001\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -6667,7 +6967,7 @@ ${workflowLayoutCSS}
       const events = arr3(p.events, 5);
       return shell4(p, h, '<div class="edu-event-track"><div class="edu-event-baseline" data-motion="line"></div>' + events.map((x, i) => '<article class="edu-event edu-event-' + e2(x.status) + '" style="left:' + i * 100 / Math.max(1, events.length - 1) + '%" data-motion="item"><div class="edu-event-time">' + e2(x.time) + '</div><div class="edu-event-node">' + (x.status === "done" ? tick2 : "<i></i>") + '</div><div class="edu-event-card"><span class="edu-event-number">' + String(i + 1).padStart(2, "0") + "</span><h2>" + e2(x.title) + "</h2><p>" + e2(x.detail) + "</p>" + (x.status === "active" ? '<span class="edu-event-active">' + e2(p.activeLabel) + "</span>" : "") + "</div></article>").join("") + '</div><div class="edu-timeline-note">' + e2(p.note) + "</div>");
     }),
-    create4("metric-dashboard", "\u5173\u952E\u6307\u6807\u9762\u677F", "\u4EE5\u4E09\u4E2A\u6307\u6807\u3001\u8FDB\u5EA6\u548C\u9A8C\u6536\u6E05\u5355\u590D\u76D8\u5236\u4F5C\u72B6\u6001\uFF1B\u793A\u4F8B\u6570\u636E\u3001\u5355\u4F4D\u4E0E\u8BF4\u660E\u53EF\u7F16\u8F91\u3002", {
+    create5("metric-dashboard", "\u5173\u952E\u6307\u6807\u9762\u677F", "\u4EE5\u4E09\u4E2A\u6307\u6807\u3001\u8FDB\u5EA6\u548C\u9A8C\u6536\u6E05\u5355\u590D\u76D8\u5236\u4F5C\u72B6\u6001\uFF1B\u793A\u4F8B\u6570\u636E\u3001\u5355\u4F4D\u4E0E\u8BF4\u660E\u53EF\u7F16\u8F91\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -6741,7 +7041,7 @@ ${workflowLayoutCSS}
         return '<circle cx="' + x + '" cy="' + y + '" r="4" fill="#2563eb"/><text x="' + x + '" y="' + (y - 13) + '" text-anchor="middle" font-size="18" fill="#1f2329">' + e2(fmt(v)) + '%</text><text x="' + x + '" y="227" text-anchor="middle" font-size="16" fill="#687387">' + e2(labels[i] || "") + "</text>";
       }).join("") + '</svg></section><section class="edu-check-panel"><h2>' + e2(p.checklistTitle) + "</h2>" + arr3(p.checks, 5).map((x) => '<div class="edu-check-item" data-motion="item"><span class="' + (x.done ? "edu-check-done" : "edu-check-pending") + '">' + (x.done ? tick2 : "") + "</span><strong>" + e2(x.label) + "</strong></div>").join("") + '</section></div><div class="edu-dashboard-note">' + e2(p.note) + "</div>");
     }),
-    create4("definition-card", "\u6982\u5FF5\u89E3\u91CA\u5361", "\u7528\u5B9A\u4E49\u3001\u4E09\u4E2A\u5173\u952E\u8981\u7D20\u548C\u5177\u4F53\u4F8B\u5B50\u8BB2\u6E05\u4E00\u4E2A\u540D\u8BCD\uFF0C\u907F\u514D\u53EA\u5806\u6807\u9898\u548C\u6807\u7B7E\u3002", {
+    create5("definition-card", "\u6982\u5FF5\u89E3\u91CA\u5361", "\u7528\u5B9A\u4E49\u3001\u4E09\u4E2A\u5173\u952E\u8981\u7D20\u548C\u5177\u4F53\u4F8B\u5B50\u8BB2\u6E05\u4E00\u4E2A\u540D\u8BCD\uFF0C\u907F\u514D\u53EA\u5806\u6807\u9898\u548C\u6807\u7B7E\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -6773,7 +7073,7 @@ ${workflowLayoutCSS}
       const e2 = h.esc;
       return shell4(p, h, '<div class="edu-definition-layout"><section class="edu-definition-main"><span class="edu-definition-en">' + e2(p.english) + '</span><h2 data-motion="emphasis">' + e2(p.term) + '</h2><p class="edu-definition-sentence" data-motion="reveal">' + e2(p.definition) + '</p><div class="edu-factor-list">' + arr3(p.factors, 3).map((x, i) => '<div data-motion="item"><span>' + String(i + 1).padStart(2, "0") + "</span><strong>" + e2(x.label) + "</strong><p>" + e2(x.detail) + "</p></div>").join("") + '</div></section><aside class="edu-example-panel"><span class="edu-pill edu-pill-mint">' + e2(p.exampleLabel) + "</span><h2>" + e2(p.exampleTitle) + '</h2><blockquote data-motion="type">' + e2(p.example) + '</blockquote><div class="edu-example-note">' + tick2 + "<p>" + e2(p.note) + "</p></div></aside></div>");
     }),
-    create4("chapter-summary", "\u7AE0\u8282\u4E0E\u603B\u7ED3\u9875", "\u7AE0\u8282\u7F16\u53F7\u3001\u6838\u5FC3\u7ED3\u8BBA\u3001\u4E09\u9879\u603B\u7ED3\u4E0E\u4E0B\u4E00\u6B65\u7EC4\u6210\u5B8C\u6574\u6536\u675F\u753B\u9762\u3002", {
+    create5("chapter-summary", "\u7AE0\u8282\u4E0E\u603B\u7ED3\u9875", "\u7AE0\u8282\u7F16\u53F7\u3001\u6838\u5FC3\u7ED3\u8BBA\u3001\u4E09\u9879\u603B\u7ED3\u4E0E\u4E0B\u4E00\u6B65\u7EC4\u6210\u5B8C\u6574\u6536\u675F\u753B\u9762\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -6803,7 +7103,7 @@ ${workflowLayoutCSS}
       const e2 = h.esc;
       return shell4(p, h, '<div class="edu-chapter-layout"><div class="edu-chapter-index"><span data-motion="counter">' + e2(p.number) + "</span><div>" + e2(p.chapterLabel) + '</div><i></i></div><div class="edu-chapter-content"><h2>' + e2(p.headline) + "</h2>" + arr3(p.points, 3).map((x) => '<article data-motion="item"><span>' + tick2 + "</span><div><h3>" + e2(x.title) + "</h3><p>" + e2(x.detail) + "</p></div></article>").join("") + '</div></div><div class="edu-next-strip" data-motion="reveal"><span>' + e2(p.nextLabel) + "</span><strong>" + e2(p.next) + "</strong>" + arrow4 + "</div>");
     }),
-    create4("media-stage", "\u56FE\u7247\u4E0E\u89C6\u9891\u5C55\u793A\u53F0", "\u5A92\u4F53\u69FD\u4F4D\u4FDD\u7559\u539F\u59CB\u6BD4\u4F8B\uFF0C\u53F3\u4FA7\u8BF4\u660E\u4E0E\u7AE0\u8282\u6807\u7B7E\u53EF\u66F4\u6362\uFF1B\u9ED8\u8BA4\u793A\u4F8B\u4E3A\u539F\u751F SVG \u4FE1\u606F\u793A\u610F\u3002", {
+    create5("media-stage", "\u56FE\u7247\u4E0E\u89C6\u9891\u5C55\u793A\u53F0", "\u5A92\u4F53\u69FD\u4F4D\u4FDD\u7559\u539F\u59CB\u6BD4\u4F8B\uFF0C\u53F3\u4FA7\u8BF4\u660E\u4E0E\u7AE0\u8282\u6807\u7B7E\u53EF\u66F4\u6362\uFF1B\u9ED8\u8BA4\u793A\u4F8B\u4E3A\u539F\u751F SVG \u4FE1\u606F\u793A\u610F\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -6859,7 +7159,7 @@ ${workflowLayoutCSS}
       }
       return shell4(p, h, '<div class="edu-media-layout"><div class="edu-media-main"><div class="edu-media-canvas">' + media3 + '</div><div class="edu-media-caption"><span class="edu-pill">' + e2(p.mediaLabel) + "</span><p>" + e2(p.caption) + '</p></div></div><aside class="edu-media-notes"><h2>' + e2(p.noteTitle) + "</h2>" + arr3(p.notes, 3).map((x, i) => '<article data-motion="item"><span>' + String(i + 1).padStart(2, "0") + "</span><div><h3>" + e2(x.label) + "</h3><p>" + e2(x.detail) + "</p></div></article>").join("") + "</aside></div>");
     }),
-    create4("annotation-callout", "\u7BAD\u5934\u4E0E\u8BF4\u660E\u6807\u6CE8", "\u4E09\u4E2A\u7CBE\u786E\u951A\u70B9\u8FDE\u63A5\u793A\u610F\u4E3B\u4F53\u4E0E\u8BF4\u660E\u5361\uFF1B\u8BF4\u660E\u3001\u76EE\u6807\u6807\u7B7E\u548C\u5173\u7CFB\u5747\u53EF\u66FF\u6362\u3002", {
+    create5("annotation-callout", "\u7BAD\u5934\u4E0E\u8BF4\u660E\u6807\u6CE8", "\u4E09\u4E2A\u7CBE\u786E\u951A\u70B9\u8FDE\u63A5\u793A\u610F\u4E3B\u4F53\u4E0E\u8BF4\u660E\u5361\uFF1B\u8BF4\u660E\u3001\u76EE\u6807\u6807\u7B7E\u548C\u5173\u7CFB\u5747\u53EF\u66FF\u6362\u3002", {
       "eyebrow": "\u680F\u76EE / 01",
       "title": "\u4E3B\u6807\u9898",
       "subtitle": "\u526F\u6807\u9898\u4E0E\u8BF4\u660E\u6587\u5B57",
@@ -6903,7 +7203,7 @@ ${workflowLayoutCSS}
       return shell4(p, h, '<div class="edu-callout-stage"><section class="edu-callout-subject"><div class="edu-callout-subject-head"><span>' + e2(p.subjectSubtitle) + "</span><h2>" + e2(p.subjectTitle) + "</h2></div>" + arr3(p.fields, 3).map((x, i) => '<div class="edu-callout-field" data-motion="highlight"><span>' + e2(x.label) + "</span><strong>" + e2(x.value) + "</strong><i></i></div>").join("") + '</section><svg class="edu-callout-lines" viewBox="0 0 1164 470" aria-hidden="true"><defs><marker id="' + e2(marker) + '" markerWidth="8" markerHeight="8" refX="5" refY="4" orient="auto"><path d="M1 1 5 4 1 7" fill="none" stroke="#2563eb" stroke-width="1.5"/></marker></defs><path data-motion="line" d="M772 90C668 90 687 203 579 203" fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#' + e2(marker) + ')"/><path data-motion="line" d="M772 278C690 278 665 289 579 289" fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#' + e2(marker) + ')"/><path data-motion="line" d="M772 439C681 439 678 375 579 375" fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#' + e2(marker) + ')"/></svg><div class="edu-callout-notes">' + arr3(p.callouts, 3).map((x, i) => '<article style="top:' + [37, 225, 386][i] + 'px" data-motion="item"><span>' + String(i + 1).padStart(2, "0") + "</span><div><h3>" + e2(x.title) + "</h3><p>" + e2(x.detail) + "</p></div></article>").join("") + '</div></div><div class="edu-timeline-note">' + e2(p.note) + "</div>");
     })
   ];
-  var css4 = String.raw`
+  var css5 = String.raw`
   .edu-scene{box-sizing:border-box;width:100%;height:100%;padding:44px 58px 24px;background:#fff;color:#1f2329;font-family:"Segoe UI","Microsoft YaHei",sans-serif;display:flex;flex-direction:column;overflow:hidden}
   .edu-scene *{box-sizing:border-box}.edu-scene h1,.edu-scene h2,.edu-scene h3,.edu-scene p{margin:0}.edu-scene svg text{font-family:"Segoe UI","Microsoft YaHei",sans-serif}
   .edu-header{display:flex;align-items:flex-start;justify-content:space-between;gap:26px;height:137px;flex:none}.edu-eyebrow{font-size:15px;letter-spacing:1.3px;font-weight:650;color:#2563eb;margin-bottom:11px}.edu-header h1{font-size:36px;line-height:1.3;letter-spacing:-.8px;font-weight:670}.edu-header p{font-size:19px;line-height:1.5;color:#687387;margin-top:9px}.edu-edition{font-size:15px;color:#5f6f86;border:1px solid #dbe3ed;border-radius:6px;padding:7px 11px;white-space:nowrap;margin-top:4px}
@@ -6934,7 +7234,7 @@ ${workflowLayoutCSS}
     { id: "focus", name: "\u5C40\u90E8\u653E\u5927\u7A97", panels: 0, purpose: "\u4FDD\u7559\u540C\u6E90\u5168\u8C8C\u4E0E\u653E\u5927\u7A97\uFF0C\u84DD\u6846\u6807\u660E\u5B9E\u9645\u653E\u5927\u533A\u57DF\uFF1B\u624B\u5DE5\u7126\u70B9\uFF0C\u4E0D\u81EA\u52A8\u8DDF\u8E2A\u3002" }
   ]);
   var box = (x, y, w, h, extra2 = {}) => ({ x, y, width: w, height: h, ...extra2 });
-  function presentationBoxes(layout, width = 1280, height = 720) {
+  function presentationBoxes(layout, width2 = 1280, height = 720) {
     const layouts = {
       pip: [box(40, 112, 1200, 500), box(828, 362, 380, 214, { delay: 0.18 })],
       compare: [box(40, 132, 588, 444), box(652, 132, 588, 444, { delay: 0.14 })],
@@ -6944,7 +7244,7 @@ ${workflowLayoutCSS}
       focus: [box(40, 132, 770, 444), box(842, 238, 398, 260, { delay: 0.2 })]
     };
     if (!layouts[layout]) throw Error("Unknown media layout: " + layout);
-    return layouts[layout].map((b2) => ({ ...b2, x: b2.x * width / 1280, y: b2.y * height / 720, width: b2.width * width / 1280, height: b2.height * height / 720 }));
+    return layouts[layout].map((b2) => ({ ...b2, x: b2.x * width2 / 1280, y: b2.y * height / 720, width: b2.width * width2 / 1280, height: b2.height * height / 720 }));
   }
   function presentationSources(shot2) {
     return shot2.layout === "focus" ? [
@@ -7012,7 +7312,7 @@ ${workflowLayoutCSS}
   // mixed-media-motion.mjs
   var motionStrengths = Object.freeze({ still: 0, light: 0.6, standard: 1, emphasis: 1.3 });
   var mixedMediaEffect = { id: "media-sequence-motion", name: "\u6DF7\u526A \xB7 \u53D6\u666F\u4E0E\u7126\u70B9\u4EA4\u63A5", component: "mixed-media-sequence", exclusive: "mixed-media-sequence", category: "\u6DF7\u526A\u955C\u5934", description: "\u56FE\u7247\u3001\u5F55\u5C4F\u3001\u89C6\u9891\u6309\u65F6\u95F4\u7EC4\u63A5\uFF1B\u6E90\u5750\u6807\u805A\u7126\u548C\u6807\u6CE8\u3001\u9605\u8BFB\u505C\u7559\u3001\u5168\u5C4F/\u5206\u5C4F\u4EA4\u63A5\u3002\u53EF\u8C03\u5F3A\u5EA6\u4E0E\u65F6\u957F\uFF0C\u771F\u5B9E\u89C6\u9891\u4FDD\u6301\u539F\u901F\u3002", selector: ".mm-sequence", duration: 8, previewTime: 5.8, silent: true, cueHints: [], mediaClock: "source" };
-  var finite3 = (v, name, min, max) => {
+  var finite4 = (v, name, min, max) => {
     if (typeof v !== "number" || !Number.isFinite(v) || v < min || v > max) throw Error(`${name} must be in [${min}, ${max}]`);
     return v;
   };
@@ -7021,16 +7321,16 @@ ${workflowLayoutCSS}
     if (!(strength in motionStrengths)) throw Error("Unknown motion strength: " + strength);
     const base2 = (source2.fit === "contain" ? Math.min : Math.max)(view.width / source2.width, view.height / source2.height);
     const zoom = clamp3(1 + (frame2.zoom - 1) * motionStrengths[strength], 1, source2.maxZoom ?? 3);
-    const scale = base2 * zoom, width = source2.width * scale, height = source2.height * scale;
+    const scale = base2 * zoom, width2 = source2.width * scale, height = source2.height * scale;
     const x = view.width / 2 - source2.width * frame2.x * scale, y = view.height / 2 - source2.height * frame2.y * scale;
     return {
-      x: width <= view.width ? (view.width - width) / 2 : clamp3(x, view.width - width, 0),
+      x: width2 <= view.width ? (view.width - width2) / 2 : clamp3(x, view.width - width2, 0),
       y: height <= view.height ? (view.height - height) / 2 : clamp3(y, view.height - height, 0),
       scale
     };
   }
   function normalizeMediaSequence(props, duration = 8) {
-    finite3(duration, "duration", 0.1, 600);
+    finite4(duration, "duration", 0.1, 600);
     const strength = props.strength ?? "standard";
     if (!(strength in motionStrengths)) throw Error("Unknown motion strength: " + strength);
     const source2 = normalizeMediaProps(props).media;
@@ -7038,34 +7338,34 @@ ${workflowLayoutCSS}
     const shots = source2.map((m, i) => {
       if (!["image", "video"].includes(m.type)) throw Error("media.type must be image or video");
       if (typeof m.src !== "string" || !m.src || /^(?:[a-z][a-z0-9+.-]*:|\/)/i.test(m.src) || m.src.split(/[\\/]/).includes("..")) throw Error("Use local project-relative media.src");
-      const width = finite3(m.width, "media.width", 1, 32e3), height = finite3(m.height, "media.height", 1, 32e3);
-      const start = finite3(m.start, "shot.start", 0, 1), end = finite3(m.end, "shot.end", 0, 1);
+      const width2 = finite4(m.width, "media.width", 1, 32e3), height = finite4(m.height, "media.height", 1, 32e3);
+      const start = finite4(m.start, "shot.start", 0, 1), end = finite4(m.end, "shot.end", 0, 1);
       if (end <= start) throw Error("shot.end must be after start");
       const fit4 = m.fit ?? "cover";
       if (!["contain", "cover"].includes(fit4)) throw Error("fit must be contain or cover");
-      const offset = finite3(m.sourceStart ?? 0, "sourceStart", 0, 86400);
+      const offset = finite4(m.sourceStart ?? 0, "sourceStart", 0, 86400);
       const seconds = (end - start) * duration;
-      if (m.type === "video" && m.sourceDuration !== void 0 && offset + seconds > finite3(m.sourceDuration, "sourceDuration", 0.01, 86400) + 1e-3) throw Error(`Shot ${i + 1} exceeds source video; trim the shot or provide longer media`);
-      const maxZoom = finite3(m.maxZoom ?? 2.4, "maxZoom", 1, 4);
+      if (m.type === "video" && m.sourceDuration !== void 0 && offset + seconds > finite4(m.sourceDuration, "sourceDuration", 0.01, 86400) + 1e-3) throw Error(`Shot ${i + 1} exceeds source video; trim the shot or provide longer media`);
+      const maxZoom = finite4(m.maxZoom ?? 2.4, "maxZoom", 1, 4);
       const camera = (m.camera ?? [{ at: 0, x: 0.5, y: 0.5, zoom: 1 }, { at: 1, x: 0.5, y: 0.5, zoom: 1 }]).map((f) => ({
-        at: finite3(f.at, "camera.at", 0, 1),
-        x: finite3(f.x, "camera.x", 0, 1),
-        y: finite3(f.y, "camera.y", 0, 1),
-        zoom: finite3(f.zoom, "camera.zoom", 1, 4),
+        at: finite4(f.at, "camera.at", 0, 1),
+        x: finite4(f.x, "camera.x", 0, 1),
+        y: finite4(f.y, "camera.y", 0, 1),
+        zoom: finite4(f.zoom, "camera.zoom", 1, 4),
         ease: f.ease ?? "power2.inOut"
       }));
       if (camera.length < 2 || camera[0].at !== 0 || camera.at(-1).at !== 1) throw Error("camera must begin at 0 and end at 1");
       for (let j = 1; j < camera.length; j++) if (camera[j].at <= camera[j - 1].at) throw Error("Camera keyframes must be ordered");
       const regions = (m.regions ?? []).map((r) => {
         if (r.kind && !["frame", "spotlight", "arrow"].includes(r.kind)) throw Error("Unknown annotation kind");
-        const result = { ...r, x: finite3(r.x, "region.x", 0, 1), y: finite3(r.y, "region.y", 0, 1), width: finite3(r.width, "region.width", 1e-3, 1), height: finite3(r.height, "region.height", 1e-3, 1), start: finite3(r.start ?? 0, "region.start", 0, 1), end: finite3(r.end ?? 1, "region.end", 0, 1) };
+        const result = { ...r, x: finite4(r.x, "region.x", 0, 1), y: finite4(r.y, "region.y", 0, 1), width: finite4(r.width, "region.width", 1e-3, 1), height: finite4(r.height, "region.height", 1e-3, 1), start: finite4(r.start ?? 0, "region.start", 0, 1), end: finite4(r.end ?? 1, "region.end", 0, 1) };
         if (result.x + result.width > 1.000001 || result.y + result.height > 1.000001 || result.end <= result.start) throw Error("Region must fit source and have a positive time range");
         return result;
       });
       const transition = m.transition ?? (i ? "dissolve" : "cut");
       if (!["cut", "dissolve", "push"].includes(transition)) throw Error("Unknown media transition");
-      const transitionSeconds = transition === "cut" ? 0 : Math.min(finite3(m.transitionSeconds ?? 0.4, "transitionSeconds", 0.05, 2), seconds * 0.2);
-      const splitAt = m.splitAt === void 0 ? null : finite3(m.splitAt, "splitAt", 0, 0.9);
+      const transitionSeconds = transition === "cut" ? 0 : Math.min(finite4(m.transitionSeconds ?? 0.4, "transitionSeconds", 0.05, 2), seconds * 0.2);
+      const splitAt = m.splitAt === void 0 ? null : finite4(m.splitAt, "splitAt", 0, 0.9);
       const layout = m.layout ?? "full", recipe = mediaPresentations.find((p) => p.id === layout);
       if (layout !== "full" && !recipe) throw Error("Unknown media layout: " + layout);
       if (layout !== "full" && (splitAt !== null || m.splitFrom)) throw Error("Presentation layouts cannot also use explanation split");
@@ -7073,12 +7373,12 @@ ${workflowLayoutCSS}
       if (!Array.isArray(panels) || panels.length !== (recipe?.panels ?? 0)) throw Error(`${layout} requires ${recipe?.panels ?? 0} mediaPanels`);
       if (panels.some((p) => p.layout || p.mediaPanels || p.splitAt !== void 0 || p.splitFrom)) throw Error("Nested presentation layouts are not supported");
       const mediaPanels = panels.map((p) => normalizeMediaSequence({ strength, media: [{ ...p, start: 0, end: 1, transition: "cut" }] }, seconds).shots[0]);
-      const focus = layout === "focus" ? { x: finite3(m.focus?.x ?? 0.5, "focus.x", 0, 1), y: finite3(m.focus?.y ?? 0.5, "focus.y", 0, 1), zoom: Math.min(maxZoom, finite3(m.focus?.zoom ?? 2, "focus.zoom", 1, 4)), label: m.focus?.label ?? "\u5C40\u90E8\u7EC6\u8282" } : null;
-      const wipeAt = finite3(m.wipeAt ?? 0.2, "wipeAt", 0, 0.6), wipeRest = finite3(m.wipeRest ?? 0.5, "wipeRest", 0.05, 0.95);
+      const focus = layout === "focus" ? { x: finite4(m.focus?.x ?? 0.5, "focus.x", 0, 1), y: finite4(m.focus?.y ?? 0.5, "focus.y", 0, 1), zoom: Math.min(maxZoom, finite4(m.focus?.zoom ?? 2, "focus.zoom", 1, 4)), label: m.focus?.label ?? "\u5C40\u90E8\u7EC6\u8282" } : null;
+      const wipeAt = finite4(m.wipeAt ?? 0.2, "wipeAt", 0, 0.6), wipeRest = finite4(m.wipeRest ?? 0.5, "wipeRest", 0.05, 0.95);
       if (m.notes !== void 0 && (!Array.isArray(m.notes) || m.notes.length > 4)) throw Error("notes supports up to 4 short lines");
       return {
         ...m,
-        width,
+        width: width2,
         height,
         start,
         end,
@@ -7106,9 +7406,9 @@ ${workflowLayoutCSS}
       const shot2 = shots[i], extra2 = shots[i + 1]?.transitionSeconds ?? 0;
       shot2.mediaDuration = shot2.seconds + extra2;
       if (shot2.type === "video" && shot2.sourceDuration !== void 0 && shot2.sourceStart + shot2.mediaDuration > shot2.sourceDuration + 1e-3) throw Error(`Shot ${i + 1} lacks transition handles`);
-      for (const panel5 of shot2.mediaPanels) {
-        Object.assign(panel5, { at: shot2.at, until: shot2.until, mediaDuration: shot2.mediaDuration });
-        if (panel5.type === "video" && panel5.sourceDuration !== void 0 && panel5.sourceStart + panel5.mediaDuration > panel5.sourceDuration + 1e-3) throw Error(`Shot ${i + 1} panel lacks transition handles`);
+      for (const panel6 of shot2.mediaPanels) {
+        Object.assign(panel6, { at: shot2.at, until: shot2.until, mediaDuration: shot2.mediaDuration });
+        if (panel6.type === "video" && panel6.sourceDuration !== void 0 && panel6.sourceStart + panel6.mediaDuration > panel6.sourceDuration + 1e-3) throw Error(`Shot ${i + 1} panel lacks transition handles`);
       }
     }
     return { duration, strength, shots };
@@ -7152,11 +7452,11 @@ ${workflowLayoutCSS}
     const stage = root.querySelector(".mm-sequence");
     if (!stage) throw Error("media-sequence-motion requires a media-sequence component");
     const props = JSON.parse(stage.dataset.mmConfig), model = normalizeMediaSequence({ ...props, ...override ? { strength: override } : {} }, duration);
-    const width = Number(root.dataset.width) || 1280, height = Number(root.dataset.height) || 720;
+    const width2 = Number(root.dataset.width) || 1280, height = Number(root.dataset.height) || 720;
     const timeline = gsap.timeline({ paused: true });
     model.shots.forEach((shot2, i) => {
       const wrapper = stage.querySelector(`[data-mm-shot="${i}"]`), handoff = wrapper.querySelector(".mm-handoff"), view = wrapper.querySelector(".mm-viewport"), world = wrapper.querySelector(".mm-world");
-      const poses = shot2.camera.map((frame2) => cameraPose({ width, height }, shot2, model.strength === "still" ? shot2.camera[0] : frame2, model.strength));
+      const poses = shot2.camera.map((frame2) => cameraPose({ width: width2, height }, shot2, model.strength === "still" ? shot2.camera[0] : frame2, model.strength));
       if (i < model.shots.length - 1) {
         const next = model.shots[i + 1];
         timeline.set(wrapper, { autoAlpha: 0 }, shot2.until + next.transitionSeconds);
@@ -7175,7 +7475,7 @@ ${workflowLayoutCSS}
       else if (shot2.transition === "dissolve") timeline.fromTo(wrapper, { opacity: 0 }, { opacity: 1, duration: shot2.transitionSeconds, ease: "sine.inOut", immediateRender: false }, shot2.at);
       else {
         timeline.set(wrapper, { opacity: 1 }, shot2.at);
-        timeline.fromTo(wrapper, { x: width }, { x: 0, duration: shot2.transitionSeconds, ease: "power2.inOut", immediateRender: false }, shot2.at);
+        timeline.fromTo(wrapper, { x: width2 }, { x: 0, duration: shot2.transitionSeconds, ease: "power2.inOut", immediateRender: false }, shot2.at);
       }
       const media3 = shot2.layout === "full" ? wrapper.querySelector("video") : null;
       if (media3) {
@@ -7192,13 +7492,13 @@ ${workflowLayoutCSS}
         timeline.to(node4, { opacity: 0, duration: fade }, end - fade);
       });
       if (shot2.splitAt !== null) {
-        const at2 = shot2.at + shot2.splitAt * shot2.seconds, move = Math.min(0.8, shot2.seconds * (1 - shot2.splitAt) * 0.35), panel5 = wrapper.querySelector(".mm-explanation");
-        const full = { scale: 1, x: 0, y: 0 }, split = { scale: 0.57, x: width * 0.04, y: height * 0.215 };
+        const at2 = shot2.at + shot2.splitAt * shot2.seconds, move = Math.min(0.8, shot2.seconds * (1 - shot2.splitAt) * 0.35), panel6 = wrapper.querySelector(".mm-explanation");
+        const full = { scale: 1, x: 0, y: 0 }, split = { scale: 0.57, x: width2 * 0.04, y: height * 0.215 };
         timeline.fromTo(view, shot2.splitFrom ? split : full, { ...shot2.splitFrom ? full : split, duration: move, ease: "power2.inOut", immediateRender: false }, at2);
         if (shot2.splitFrom) timeline.set(view, split, 0);
-        timeline.fromTo(panel5, { opacity: shot2.splitFrom ? 1 : 0, x: shot2.splitFrom ? 0 : 24 }, { opacity: shot2.splitFrom ? 0 : 1, x: shot2.splitFrom ? 24 : 0, duration: move * 0.2, ease: "power2.out", immediateRender: false }, at2 + (shot2.splitFrom ? 0 : move * 0.8));
-        if (shot2.splitFrom) timeline.set(panel5, { opacity: 1, x: 0 }, 0);
-        const notes = panel5.querySelectorAll(".mm-note");
+        timeline.fromTo(panel6, { opacity: shot2.splitFrom ? 1 : 0, x: shot2.splitFrom ? 0 : 24 }, { opacity: shot2.splitFrom ? 0 : 1, x: shot2.splitFrom ? 24 : 0, duration: move * 0.2, ease: "power2.out", immediateRender: false }, at2 + (shot2.splitFrom ? 0 : move * 0.8));
+        if (shot2.splitFrom) timeline.set(panel6, { opacity: 1, x: 0 }, 0);
+        const notes = panel6.querySelectorAll(".mm-note");
         if (notes.length && !shot2.splitFrom) timeline.fromTo(notes, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: Math.min(0.32, move), stagger: Math.min(0.22, (shot2.until - at2 - move) / Math.max(1, notes.length)), immediateRender: false }, at2 + move);
       }
       timeline.addLabel("shot-" + (i + 1), shot2.at);
@@ -7211,7 +7511,7 @@ ${workflowLayoutCSS}
   }
 
   // families/mixed-media.mjs
-  var components27 = [{
+  var components28 = [{
     id: "mixed-media-sequence",
     name: "\u6DF7\u526A \xB7 \u987A\u5E8F\u955C\u5934\u7EC4",
     category: "B-roll \xB7 \u771F\u5B9E\u7D20\u6750",
@@ -7232,7 +7532,7 @@ ${workflowLayoutCSS}
   // families/systems.mjs
   var ref2 = (basis, source2) => ({ basis, source: source2, level: "documented" });
   var arr4 = (v) => Array.isArray(v) ? v : [];
-  var num6 = (v, fallback = 0) => Number.isFinite(Number(v)) ? Number(v) : fallback;
+  var num7 = (v, fallback = 0) => Number.isFinite(Number(v)) ? Number(v) : fallback;
   var safeSrc = (v) => {
     const s2 = String(v || "");
     if (/^(?:[a-z]+:|\/\/)/i.test(s2) || s2.includes("..")) return "";
@@ -7251,7 +7551,7 @@ ${workflowLayoutCSS}
   var winButtons = (h) => `<div class="os-window-buttons"><span>${cn(h, "minus", 12)}</span><span>${cn(h, "maximize", 12)}</span><span>${cn(h, "x", 14)}</span></div>`;
   var tool = (h, name, label3 = "") => `<span class="os-tool">${cn(h, name, 17)}${label3 ? `<span>${h.esc(label3)}</span>` : ""}</span>`;
   var fileIcon = (h, kind = "file", size = 18) => `<span class="os-file-icon os-kind-${["folder", "image", "video", "code", "file"].includes(kind) ? kind : "file"}">${cn(h, kind, size)}</span>`;
-  var status2 = (p, h) => `<div class="os-ios-status"><b>${h.esc(p.time)}</b><span class="os-island" aria-hidden="true"></span><span class="os-ios-status-right"><svg viewBox="0 0 20 14" width="18" height="14" fill="currentColor" aria-hidden="true"><rect x="0" y="9" width="3" height="5" rx="1"/><rect x="5" y="6" width="3" height="8" rx="1"/><rect x="10" y="3" width="3" height="11" rx="1"/><rect x="15" width="3" height="14" rx="1"/></svg>${cn(h, "wifi", 17)}<span class="os-ios-battery"><i style="width:${Math.max(0, Math.min(100, num6(p.battery, 100)))}%"></i></span></span></div>`;
+  var status2 = (p, h) => `<div class="os-ios-status"><b>${h.esc(p.time)}</b><span class="os-island" aria-hidden="true"></span><span class="os-ios-status-right"><svg viewBox="0 0 20 14" width="18" height="14" fill="currentColor" aria-hidden="true"><rect x="0" y="9" width="3" height="5" rx="1"/><rect x="5" y="6" width="3" height="8" rx="1"/><rect x="10" y="3" width="3" height="11" rx="1"/><rect x="15" width="3" height="14" rx="1"/></svg>${cn(h, "wifi", 17)}<span class="os-ios-battery"><i style="width:${Math.max(0, Math.min(100, num7(p.battery, 100)))}%"></i></span></span></div>`;
   var media2 = (p, h, fallback, klass = "") => {
     const src = safeSrc(p.media?.src);
     const kind = p.media?.kind;
@@ -7266,7 +7566,7 @@ ${workflowLayoutCSS}
     return `<div class="os-address-row">${tool(h, "chevron-left")}${tool(h, "chevron-right")}${tool(h, "arrow-up")}${tool(h, "refresh")}<div class="os-win-address">${cn(h, "folder", 17)}${arr4(p.path).map((x) => `<span>${h.esc(x)}</span>${cn(h, "chevron-right", 12)}`).join("")}<span class="os-flex"></span>${cn(h, "chevron-down", 13)}</div><div class="os-win-search"><span>${h.esc(p.search)}</span>${cn(h, "search", 16)}</div></div>`;
   }
   function winRows(p, h) {
-    return `<div class="os-files-table"><div class="os-file-row os-table-head">${arr4(p.columns).map((x) => `<span>${h.esc(x)}</span>`).join("")}</div><div class="os-files-body" data-motion="scroll">${arr4(p.files).map((x, i) => `<div data-motion="item" class="os-file-row ${i === num6(p.selected, -1) ? "os-row-selected" : ""}"><span>${fileIcon(h, x.kind, 18)}<span>${h.esc(x.name)}</span></span><span>${h.esc(x.date)}</span><span>${h.esc(x.type)}</span><span>${h.esc(x.size)}</span></div>`).join("")}</div></div>`;
+    return `<div class="os-files-table"><div class="os-file-row os-table-head">${arr4(p.columns).map((x) => `<span>${h.esc(x)}</span>`).join("")}</div><div class="os-files-body" data-motion="scroll">${arr4(p.files).map((x, i) => `<div data-motion="item" class="os-file-row ${i === num7(p.selected, -1) ? "os-row-selected" : ""}"><span>${fileIcon(h, x.kind, 18)}<span>${h.esc(x.name)}</span></span><span>${h.esc(x.date)}</span><span>${h.esc(x.type)}</span><span>${h.esc(x.size)}</span></div>`).join("")}</div></div>`;
   }
   function phoneFolderSvg(h, index) {
     const back = h.uid(`phone-folder-back-${index}`), front2 = h.uid(`phone-folder-front-${index}`);
@@ -7282,9 +7582,9 @@ ${workflowLayoutCSS}
     return '<svg viewBox="0 0 26 26" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="13" cy="13" r="10"/><g fill="currentColor" stroke="none"><circle cx="8" cy="13" r="1.3"/><circle cx="13" cy="13" r="1.3"/><circle cx="18" cy="13" r="1.3"/></g></svg>';
   }
   function iosFiles(p, h, tablet = false) {
-    return `<div class="os-ios-files ${tablet ? "os-ipad-files" : ""}">${tablet ? `<aside class="os-ipad-sidebar"><div class="os-ios-side-head">${cn(h, "menu", 19)}${cn(h, "more", 19)}</div><h2>${h.esc(p.appTitle)}</h2><div class="os-ios-search">${cn(h, "search", 17)}${h.esc(p.search)}</div>${arr4(p.sidebar).map((x, i) => `<div class="os-ios-sidebar-item ${i === num6(p.selectedSidebar) ? "os-ios-selected" : ""}" data-motion="item">${cn(h, x.icon, 21)}<span>${h.esc(x.label)}</span></div>`).join("")}<h4>${h.esc(p.tagsTitle)}</h4>${arr4(p.tags).map((x) => `<div class="os-ios-tag"><i style="background:${/^#[0-9a-f]{6}$/i.test(x.color) ? x.color : "#7d7d7d"}"></i>${h.esc(x.label)}</div>`).join("")}</aside>` : ""}<div class="os-ios-files-main"><div class="os-ios-nav">${tablet ? cn(h, "chevron-left", 21) : `<span>${cn(h, "chevron-left", 22)}${h.esc(p.backLabel)}</span>`}<b>${tablet ? h.esc(p.folderTitle) : ""}</b><span>${tablet ? cn(h, "more", 22) : phoneMoreIcon()}</span></div>${tablet ? "" : `<h2>${h.esc(p.folderTitle)}</h2><div class="os-ios-search">${cn(h, "search", 17)}${h.esc(p.search)}</div>`}<div class="os-ios-sort"><span>${h.esc(p.sortLabel)}</span>${cn(h, "chevron-down", 12)}<span class="os-flex"></span>${cn(h, "grid", 18)}</div><div class="os-ios-filegrid">${arr4(p.folders).map((x, index) => `<div data-motion="item" class="os-ios-gridfile">${tablet ? `<svg viewBox="0 0 104 78" width="104" height="78" aria-hidden="true"><path d="M3 12Q3 6 9 6H39L48 16H94Q101 16 101 23V65Q101 72 94 72H9Q3 72 3 65Z" fill="#55bdf8"/><path d="M3 25Q3 19 9 19H95Q101 19 101 25V66Q101 72 95 72H9Q3 72 3 66Z" fill="#77c9f9"/><path d="M4 25Q4 20 9 20H95Q100 20 100 25" fill="none" stroke="#a9e2ff"/></svg>` : phoneFolderSvg(h, index)}<span>${h.esc(x.name)}</span><small>${h.esc(x.count)}</small></div>`).join("")}</div><div class="os-ios-filecount">${h.esc(p.itemCount)}</div></div>${tablet ? "" : `<div class="os-ios-tabs">${arr4(p.tabs).map((x, i) => `<div class="${i === num6(p.activeTab) ? "os-ios-tab-active" : ""}">${phoneTabIcon(h, x.icon, i === num6(p.activeTab))}<small>${h.esc(x.label)}</small></div>`).join("")}</div>`}</div>`;
+    return `<div class="os-ios-files ${tablet ? "os-ipad-files" : ""}">${tablet ? `<aside class="os-ipad-sidebar"><div class="os-ios-side-head">${cn(h, "menu", 19)}${cn(h, "more", 19)}</div><h2>${h.esc(p.appTitle)}</h2><div class="os-ios-search">${cn(h, "search", 17)}${h.esc(p.search)}</div>${arr4(p.sidebar).map((x, i) => `<div class="os-ios-sidebar-item ${i === num7(p.selectedSidebar) ? "os-ios-selected" : ""}" data-motion="item">${cn(h, x.icon, 21)}<span>${h.esc(x.label)}</span></div>`).join("")}<h4>${h.esc(p.tagsTitle)}</h4>${arr4(p.tags).map((x) => `<div class="os-ios-tag"><i style="background:${/^#[0-9a-f]{6}$/i.test(x.color) ? x.color : "#7d7d7d"}"></i>${h.esc(x.label)}</div>`).join("")}</aside>` : ""}<div class="os-ios-files-main"><div class="os-ios-nav">${tablet ? cn(h, "chevron-left", 21) : `<span>${cn(h, "chevron-left", 22)}${h.esc(p.backLabel)}</span>`}<b>${tablet ? h.esc(p.folderTitle) : ""}</b><span>${tablet ? cn(h, "more", 22) : phoneMoreIcon()}</span></div>${tablet ? "" : `<h2>${h.esc(p.folderTitle)}</h2><div class="os-ios-search">${cn(h, "search", 17)}${h.esc(p.search)}</div>`}<div class="os-ios-sort"><span>${h.esc(p.sortLabel)}</span>${cn(h, "chevron-down", 12)}<span class="os-flex"></span>${cn(h, "grid", 18)}</div><div class="os-ios-filegrid">${arr4(p.folders).map((x, index) => `<div data-motion="item" class="os-ios-gridfile">${tablet ? `<svg viewBox="0 0 104 78" width="104" height="78" aria-hidden="true"><path d="M3 12Q3 6 9 6H39L48 16H94Q101 16 101 23V65Q101 72 94 72H9Q3 72 3 65Z" fill="#55bdf8"/><path d="M3 25Q3 19 9 19H95Q101 19 101 25V66Q101 72 95 72H9Q3 72 3 66Z" fill="#77c9f9"/><path d="M4 25Q4 20 9 20H95Q100 20 100 25" fill="none" stroke="#a9e2ff"/></svg>` : phoneFolderSvg(h, index)}<span>${h.esc(x.name)}</span><small>${h.esc(x.count)}</small></div>`).join("")}</div><div class="os-ios-filecount">${h.esc(p.itemCount)}</div></div>${tablet ? "" : `<div class="os-ios-tabs">${arr4(p.tabs).map((x, i) => `<div class="${i === num7(p.activeTab) ? "os-ios-tab-active" : ""}">${phoneTabIcon(h, x.icon, i === num7(p.activeTab))}<small>${h.esc(x.label)}</small></div>`).join("")}</div>`}</div>`;
   }
-  var components28 = [
+  var components29 = [
     {
       id: "chrome-browser",
       name: "Chrome \u6D4F\u89C8\u5668 \xB7 Windows",
@@ -7357,7 +7657,7 @@ ${workflowLayoutCSS}
         "button": "\u4E0B\u4E00\u6B65"
       },
       render(p, h) {
-        return `<div class="os-stage"><div class="os-window os-chrome" data-motion="reveal"><div class="os-chrome-tabs"><span class="os-tab-search">${cn(h, "chevron-down", 15)}</span>${arr4(p.tabs).map((t) => `<div class="os-chrome-tab ${t.active ? "os-chrome-tab-active" : ""}"><span class="os-favicon">${cn(h, "file", 13)}</span><span>${h.esc(t.title)}</span>${cn(h, "x", 13)}</div>`).join("")}<span class="os-new-tab">${cn(h, "plus", 17)}</span><span class="os-flex"></span>${winButtons(h)}</div><div class="os-chrome-toolbar">${tool(h, "chevron-left")}${tool(h, "chevron-right")}${tool(h, "refresh")}<div class="os-omnibox">${cn(h, "tune", 15)}<span>${h.esc(p.url)}</span><span class="os-flex"></span><span class="os-bookmark-star">\u2606</span></div>${tool(h, "download")}<span class="os-profile">${h.esc(p.profile)}</span>${tool(h, "vertical-more")}</div><div class="os-bookmarks">${arr4(p.bookmarks).map((x) => `<span>${cn(h, "folder", 14)}${h.esc(x)}</span>`).join("")}</div><div class="os-web-viewport">${media2(p, h, `<div class="os-docsite"><header><strong>${h.esc(p.brand)}</strong><nav>${arr4(p.nav).map((x) => `<span>${h.esc(x)}</span>`).join("")}</nav><button type="button" class="os-doc-action" data-motion="focus">${h.esc(p.actionButton)}</button>${cn(h, "search", 18)}</header><div class="os-doc-body"><aside><b>${h.esc(p.section)}</b>${arr4(p.sidebar).map((x, i) => `<span class="${i === num6(p.activePage) ? "os-doc-active" : ""}">${h.esc(x)}</span>`).join("")}</aside><article data-motion="scroll"><div class="os-doc-eyebrow">${h.esc(p.eyebrow)}</div><h1>${h.esc(p.title)}</h1><p>${h.esc(p.intro)}</p>${arr4(p.steps).map((x, i) => `<section data-motion="item"><h2>${h.esc(x.title)}</h2><p>${h.esc(x.body)}</p>${i === 0 ? `<pre data-motion="type">${h.esc(p.code)}</pre>` : ""}</section>`).join("")}<div class="os-doc-next">${h.esc(p.button)}${cn(h, "arrow-right", 16)}</div></article><div class="os-doc-toc"><b>${h.esc(p.tocTitle)}</b>${arr4(p.toc).map((x) => `<span>${h.esc(x)}</span>`).join("")}</div></div></div>`)}</div></div></div>`;
+        return `<div class="os-stage"><div class="os-window os-chrome" data-motion="reveal"><div class="os-chrome-tabs"><span class="os-tab-search">${cn(h, "chevron-down", 15)}</span>${arr4(p.tabs).map((t) => `<div class="os-chrome-tab ${t.active ? "os-chrome-tab-active" : ""}"><span class="os-favicon">${cn(h, "file", 13)}</span><span>${h.esc(t.title)}</span>${cn(h, "x", 13)}</div>`).join("")}<span class="os-new-tab">${cn(h, "plus", 17)}</span><span class="os-flex"></span>${winButtons(h)}</div><div class="os-chrome-toolbar">${tool(h, "chevron-left")}${tool(h, "chevron-right")}${tool(h, "refresh")}<div class="os-omnibox">${cn(h, "tune", 15)}<span>${h.esc(p.url)}</span><span class="os-flex"></span><span class="os-bookmark-star">\u2606</span></div>${tool(h, "download")}<span class="os-profile">${h.esc(p.profile)}</span>${tool(h, "vertical-more")}</div><div class="os-bookmarks">${arr4(p.bookmarks).map((x) => `<span>${cn(h, "folder", 14)}${h.esc(x)}</span>`).join("")}</div><div class="os-web-viewport">${media2(p, h, `<div class="os-docsite"><header><strong>${h.esc(p.brand)}</strong><nav>${arr4(p.nav).map((x) => `<span>${h.esc(x)}</span>`).join("")}</nav><button type="button" class="os-doc-action" data-motion="focus">${h.esc(p.actionButton)}</button>${cn(h, "search", 18)}</header><div class="os-doc-body"><aside><b>${h.esc(p.section)}</b>${arr4(p.sidebar).map((x, i) => `<span class="${i === num7(p.activePage) ? "os-doc-active" : ""}">${h.esc(x)}</span>`).join("")}</aside><article data-motion="scroll"><div class="os-doc-eyebrow">${h.esc(p.eyebrow)}</div><h1>${h.esc(p.title)}</h1><p>${h.esc(p.intro)}</p>${arr4(p.steps).map((x, i) => `<section data-motion="item"><h2>${h.esc(x.title)}</h2><p>${h.esc(x.body)}</p>${i === 0 ? `<pre data-motion="type">${h.esc(p.code)}</pre>` : ""}</section>`).join("")}<div class="os-doc-next">${h.esc(p.button)}${cn(h, "arrow-right", 16)}</div></article><div class="os-doc-toc"><b>${h.esc(p.tocTitle)}</b>${arr4(p.toc).map((x) => `<span>${h.esc(x)}</span>`).join("")}</div></div></div>`)}</div></div></div>`;
       }
     },
     {
@@ -7526,7 +7826,7 @@ ${workflowLayoutCSS}
         ]
       },
       render(p, h) {
-        return `<div class="os-stage os-device-stage"><div class="os-ipad" data-motion="reveal"><i class="os-ipad-camera"></i><div class="os-ipad-screen"><div class="os-ipad-logical"><div class="os-ipad-status"><span>${h.esc(p.time)}\u3000${h.esc(p.date)}</span><span>${cn(h, "wifi", 15)} ${h.esc(p.battery)}% <span class="os-ios-battery"><i style="width:${Math.max(0, Math.min(100, num6(p.battery, 100)))}%"></i></span></span></div><div class="os-ipad-content">${media2(p, h, iosFiles(p, h, true))}</div><div class="os-home-indicator"></div></div></div></div></div>`;
+        return `<div class="os-stage os-device-stage"><div class="os-ipad" data-motion="reveal"><i class="os-ipad-camera"></i><div class="os-ipad-screen"><div class="os-ipad-logical"><div class="os-ipad-status"><span>${h.esc(p.time)}\u3000${h.esc(p.date)}</span><span>${cn(h, "wifi", 15)} ${h.esc(p.battery)}% <span class="os-ios-battery"><i style="width:${Math.max(0, Math.min(100, num7(p.battery, 100)))}%"></i></span></span></div><div class="os-ipad-content">${media2(p, h, iosFiles(p, h, true))}</div><div class="os-home-indicator"></div></div></div></div></div>`;
       }
     },
     {
@@ -7846,7 +8146,7 @@ ${workflowLayoutCSS}
         "orientationValue": "\u6A2A\u5411"
       },
       render(p, h) {
-        return `<div class="os-stage"><div class="os-window os-settings" data-motion="reveal"><div class="os-settings-title">${cn(h, "chevron-left", 16)}<span>${h.esc(p.title)}</span><span class="os-flex"></span>${winButtons(h)}</div><div class="os-settings-layout"><aside class="os-settings-nav"><div class="os-account"><span>${h.esc(p.initial)}</span><div><b>${h.esc(p.user)}</b><small>${h.esc(p.email)}</small></div></div><div class="os-settings-search">${h.esc(p.search)}${cn(h, "search", 15)}</div>${arr4(p.nav).map((x, i) => `<div class="${i === num6(p.selectedNav) ? "os-setting-selected" : ""}" data-motion="item">${cn(h, ["home", "monitor", "phone", "globe", "image", "grid", "file", "calendar", "play", "check-circle", "lock", "refresh"][i] || "settings", 19)}${h.esc(x)}</div>`).join("")}</aside><main class="os-settings-main"><h1><span>${h.esc(p.breadcrumb)}</span>${cn(h, "chevron-right", 23)}${h.esc(p.pageTitle)}</h1><div class="os-display-preview"><div>${h.esc(p.displayNumber)}</div><span>${h.esc(p.displayNote)}</span></div><h2>${h.esc(p.sectionTitle)}</h2><div class="os-setting-row" data-motion="item">${cn(h, "monitor", 21)}<div><b>${h.esc(p.brightnessLabel)}</b><small>${h.esc(p.brightnessHelp)}</small></div><div class="os-slider" style="--os-value:${Math.max(0, Math.min(100, num6(p.brightness, 70)))}%"><i data-motion="bar"></i><em></em></div>${cn(h, "chevron-down", 13)}</div><div class="os-setting-row" data-motion="item">${cn(h, "monitor", 21)}<div><b>${h.esc(p.nightTitle)}</b><small>${h.esc(p.nightHelp)}</small></div><span class="os-flex"></span><span>${h.esc(p.nightOn ? p.onLabel : p.offLabel)}</span><span class="os-toggle ${p.nightOn ? "os-toggle-on" : ""}"><i></i></span>${cn(h, "chevron-right", 13)}</div><div class="os-setting-row" data-motion="item">${cn(h, "video", 21)}<div><b>${h.esc(p.hdrTitle)}</b><small>${h.esc(p.hdrHelp)}</small></div><span class="os-flex"></span>${cn(h, "chevron-right", 13)}</div><h2>${h.esc(p.layoutTitle)}</h2>${[[p.scaleTitle, p.scaleHelp, p.scaleValue], [p.resolutionTitle, "", p.resolutionValue], [p.orientationTitle, "", p.orientationValue]].map((x, i) => `<div class="os-setting-row" data-motion="item">${cn(h, i === 0 ? "search" : "monitor", 21)}<div><b>${h.esc(x[0])}</b>${x[1] ? `<small>${h.esc(x[1])}</small>` : ""}</div><span class="os-flex"></span><div class="os-select" ${i === 2 ? 'data-motion="focus"' : ""}>${h.esc(x[2])}${cn(h, "chevron-down", 13)}</div></div>`).join("")}</main></div></div></div>`;
+        return `<div class="os-stage"><div class="os-window os-settings" data-motion="reveal"><div class="os-settings-title">${cn(h, "chevron-left", 16)}<span>${h.esc(p.title)}</span><span class="os-flex"></span>${winButtons(h)}</div><div class="os-settings-layout"><aside class="os-settings-nav"><div class="os-account"><span>${h.esc(p.initial)}</span><div><b>${h.esc(p.user)}</b><small>${h.esc(p.email)}</small></div></div><div class="os-settings-search">${h.esc(p.search)}${cn(h, "search", 15)}</div>${arr4(p.nav).map((x, i) => `<div class="${i === num7(p.selectedNav) ? "os-setting-selected" : ""}" data-motion="item">${cn(h, ["home", "monitor", "phone", "globe", "image", "grid", "file", "calendar", "play", "check-circle", "lock", "refresh"][i] || "settings", 19)}${h.esc(x)}</div>`).join("")}</aside><main class="os-settings-main"><h1><span>${h.esc(p.breadcrumb)}</span>${cn(h, "chevron-right", 23)}${h.esc(p.pageTitle)}</h1><div class="os-display-preview"><div>${h.esc(p.displayNumber)}</div><span>${h.esc(p.displayNote)}</span></div><h2>${h.esc(p.sectionTitle)}</h2><div class="os-setting-row" data-motion="item">${cn(h, "monitor", 21)}<div><b>${h.esc(p.brightnessLabel)}</b><small>${h.esc(p.brightnessHelp)}</small></div><div class="os-slider" style="--os-value:${Math.max(0, Math.min(100, num7(p.brightness, 70)))}%"><i data-motion="bar"></i><em></em></div>${cn(h, "chevron-down", 13)}</div><div class="os-setting-row" data-motion="item">${cn(h, "monitor", 21)}<div><b>${h.esc(p.nightTitle)}</b><small>${h.esc(p.nightHelp)}</small></div><span class="os-flex"></span><span>${h.esc(p.nightOn ? p.onLabel : p.offLabel)}</span><span class="os-toggle ${p.nightOn ? "os-toggle-on" : ""}"><i></i></span>${cn(h, "chevron-right", 13)}</div><div class="os-setting-row" data-motion="item">${cn(h, "video", 21)}<div><b>${h.esc(p.hdrTitle)}</b><small>${h.esc(p.hdrHelp)}</small></div><span class="os-flex"></span>${cn(h, "chevron-right", 13)}</div><h2>${h.esc(p.layoutTitle)}</h2>${[[p.scaleTitle, p.scaleHelp, p.scaleValue], [p.resolutionTitle, "", p.resolutionValue], [p.orientationTitle, "", p.orientationValue]].map((x, i) => `<div class="os-setting-row" data-motion="item">${cn(h, i === 0 ? "search" : "monitor", 21)}<div><b>${h.esc(x[0])}</b>${x[1] ? `<small>${h.esc(x[1])}</small>` : ""}</div><span class="os-flex"></span><div class="os-select" ${i === 2 ? 'data-motion="focus"' : ""}>${h.esc(x[2])}${cn(h, "chevron-down", 13)}</div></div>`).join("")}</main></div></div></div>`;
       }
     },
     {
@@ -7912,7 +8212,7 @@ ${workflowLayoutCSS}
         "dismiss": "Esc \u5173\u95ED"
       },
       render(p, h) {
-        return `<div class="os-stage"><div class="os-window os-terminal-window"><div class="os-terminal-tabs"><div>${cn(h, "terminal", 16)}${h.esc(p.title)}${cn(h, "x", 12)}</div>${tool(h, "plus")}${tool(h, "chevron-down")}<span class="os-flex"></span>${winButtons(h)}</div><pre class="os-terminal-content">${h.esc(arr4(p.terminalLines).join("\n"))}</pre><div class="os-palette" data-motion="reveal"><div class="os-palette-input"><span data-motion="type">${h.esc(p.query)}</span><i class="os-text-caret" data-motion="cursor"></i></div><div class="os-palette-heading">${h.esc(p.heading)}</div>${arr4(p.commands).map((x, i) => `<div class="os-palette-command ${i === num6(p.selected) ? "os-palette-active" : ""}" data-motion="item">${cn(h, x.icon, 20)}<div><b>${h.esc(x.label)}</b><small>${h.esc(x.detail)}</small></div><kbd>${h.esc(x.shortcut)}</kbd></div>`).join("")}<div class="os-palette-footer"><span>${h.esc(p.hint)}</span><span>${h.esc(p.dismiss)}</span></div></div></div></div>`;
+        return `<div class="os-stage"><div class="os-window os-terminal-window"><div class="os-terminal-tabs"><div>${cn(h, "terminal", 16)}${h.esc(p.title)}${cn(h, "x", 12)}</div>${tool(h, "plus")}${tool(h, "chevron-down")}<span class="os-flex"></span>${winButtons(h)}</div><pre class="os-terminal-content">${h.esc(arr4(p.terminalLines).join("\n"))}</pre><div class="os-palette" data-motion="reveal"><div class="os-palette-input"><span data-motion="type">${h.esc(p.query)}</span><i class="os-text-caret" data-motion="cursor"></i></div><div class="os-palette-heading">${h.esc(p.heading)}</div>${arr4(p.commands).map((x, i) => `<div class="os-palette-command ${i === num7(p.selected) ? "os-palette-active" : ""}" data-motion="item">${cn(h, x.icon, 20)}<div><b>${h.esc(x.label)}</b><small>${h.esc(x.detail)}</small></div><kbd>${h.esc(x.shortcut)}</kbd></div>`).join("")}<div class="os-palette-footer"><span>${h.esc(p.hint)}</span><span>${h.esc(p.dismiss)}</span></div></div></div></div>`;
       }
     },
     {
@@ -7975,9 +8275,9 @@ ${workflowLayoutCSS}
         "focusTime": "30 \u5206\u949F"
       },
       render(p, h) {
-        const count2 = Math.max(28, Math.min(31, num6(p.monthDays, 30)));
-        const offset = Math.max(0, Math.min(6, num6(p.monthStartOffset, 0)));
-        return `<div class="os-stage os-notification-stage"><div class="os-notification-shell" data-motion="reveal"><section class="os-notification-panel"><header><b>${h.esc(p.title)}</b><span class="os-button">${h.esc(p.clear)}</span></header>${arr4(p.notifications).map((x) => `<article class="os-notification" data-motion="item"><div class="os-notification-source">${fileIcon(h, x.icon, 17)}<span>${h.esc(x.app)}</span><small>${h.esc(x.time)}</small>${cn(h, "more", 16)}${cn(h, "x", 13)}</div><h3>${h.esc(x.title)}</h3><p>${h.esc(x.body)}</p>${arr4(x.actions).length ? `<div class="os-notification-actions">${x.actions.map((a2) => `<span class="os-button">${h.esc(a2)}</span>`).join("")}</div>` : ""}</article>`).join("")}</section><section class="os-calendar-panel"><header><b>${h.esc(p.date)}</b>${cn(h, "chevron-down", 15)}</header><div class="os-month-label"><b>${h.esc(p.month)}</b><span>${cn(h, "chevron-left", 16)}${cn(h, "chevron-right", 16)}</span></div><div class="os-calendar-grid">${arr4(p.weekdayLabels).map((x) => `<span class="os-weekday">${h.esc(x)}</span>`).join("")}${Array.from({ length: offset }, () => "<span></span>").join("")}${Array.from({ length: count2 }, (_, i) => `<span class="${i + 1 === num6(p.selectedDay) ? "os-day-selected" : ""}">${i + 1}</span>`).join("")}</div><footer><span>${h.esc(p.focusTime)}</span><span class="os-button">${cn(h, "play", 14)}${h.esc(p.focus)}</span></footer></section></div></div>`;
+        const count2 = Math.max(28, Math.min(31, num7(p.monthDays, 30)));
+        const offset = Math.max(0, Math.min(6, num7(p.monthStartOffset, 0)));
+        return `<div class="os-stage os-notification-stage"><div class="os-notification-shell" data-motion="reveal"><section class="os-notification-panel"><header><b>${h.esc(p.title)}</b><span class="os-button">${h.esc(p.clear)}</span></header>${arr4(p.notifications).map((x) => `<article class="os-notification" data-motion="item"><div class="os-notification-source">${fileIcon(h, x.icon, 17)}<span>${h.esc(x.app)}</span><small>${h.esc(x.time)}</small>${cn(h, "more", 16)}${cn(h, "x", 13)}</div><h3>${h.esc(x.title)}</h3><p>${h.esc(x.body)}</p>${arr4(x.actions).length ? `<div class="os-notification-actions">${x.actions.map((a2) => `<span class="os-button">${h.esc(a2)}</span>`).join("")}</div>` : ""}</article>`).join("")}</section><section class="os-calendar-panel"><header><b>${h.esc(p.date)}</b>${cn(h, "chevron-down", 15)}</header><div class="os-month-label"><b>${h.esc(p.month)}</b><span>${cn(h, "chevron-left", 16)}${cn(h, "chevron-right", 16)}</span></div><div class="os-calendar-grid">${arr4(p.weekdayLabels).map((x) => `<span class="os-weekday">${h.esc(x)}</span>`).join("")}${Array.from({ length: offset }, () => "<span></span>").join("")}${Array.from({ length: count2 }, (_, i) => `<span class="${i + 1 === num7(p.selectedDay) ? "os-day-selected" : ""}">${i + 1}</span>`).join("")}</div><footer><span>${h.esc(p.focusTime)}</span><span class="os-button">${cn(h, "play", 14)}${h.esc(p.focus)}</span></footer></section></div></div>`;
       }
     },
     {
@@ -8078,7 +8378,7 @@ ${workflowLayoutCSS}
         "selectedSub": 0
       },
       render(p, h) {
-        return `<div class="os-stage"><div class="os-context-scene"><div class="os-context-file">${fileIcon(h, "file", 48)}<div><b>${h.esc(p.filename)}</b><small>${h.esc(p.filetype)}</small></div></div><div class="os-context-menu" data-motion="reveal"><div class="os-context-actions">${arr4(p.topActions).map((x) => `<span>${cn(h, x.icon, 18)}<small>${h.esc(x.label)}</small></span>`).join("")}</div>${arr4(p.items).map((x, i) => x.separator ? '<div class="os-menu-separator"></div>' : `<div class="os-menu-row ${i === num6(p.selected) ? "os-menu-hover" : ""}" data-motion="item">${cn(h, x.icon, 17)}<span>${h.esc(x.label)}</span><kbd>${h.esc(x.shortcut || "")}</kbd>${x.submenu ? cn(h, "chevron-right", 12) : ""}</div>`).join("")}</div><div class="os-context-submenu" data-motion="reveal">${arr4(p.submenu).map((x, i) => x.separator ? '<div class="os-menu-separator"></div>' : `<div class="os-menu-row ${i === num6(p.selectedSub) ? "os-menu-hover" : ""}" data-motion="item">${cn(h, x.icon, 18)}<span>${h.esc(x.label)}</span></div>`).join("")}</div></div></div>`;
+        return `<div class="os-stage"><div class="os-context-scene"><div class="os-context-file">${fileIcon(h, "file", 48)}<div><b>${h.esc(p.filename)}</b><small>${h.esc(p.filetype)}</small></div></div><div class="os-context-menu" data-motion="reveal"><div class="os-context-actions">${arr4(p.topActions).map((x) => `<span>${cn(h, x.icon, 18)}<small>${h.esc(x.label)}</small></span>`).join("")}</div>${arr4(p.items).map((x, i) => x.separator ? '<div class="os-menu-separator"></div>' : `<div class="os-menu-row ${i === num7(p.selected) ? "os-menu-hover" : ""}" data-motion="item">${cn(h, x.icon, 17)}<span>${h.esc(x.label)}</span><kbd>${h.esc(x.shortcut || "")}</kbd>${x.submenu ? cn(h, "chevron-right", 12) : ""}</div>`).join("")}</div><div class="os-context-submenu" data-motion="reveal">${arr4(p.submenu).map((x, i) => x.separator ? '<div class="os-menu-separator"></div>' : `<div class="os-menu-row ${i === num7(p.selectedSub) ? "os-menu-hover" : ""}" data-motion="item">${cn(h, x.icon, 18)}<span>${h.esc(x.label)}</span></div>`).join("")}</div></div></div>`;
       }
     },
     {
@@ -8155,7 +8455,7 @@ ${workflowLayoutCSS}
         "submit": "\u63D0\u4EA4"
       },
       render(p, h) {
-        return `<div class="os-stage"><div class="os-window os-form-window" data-motion="reveal"><div class="os-settings-title">${cn(h, "video", 17)}<span>${h.esc(p.appTitle)}</span><span class="os-flex"></span>${winButtons(h)}</div><div class="os-form-layout"><aside>${arr4(p.nav).map((x, i) => `<div class="${i === num6(p.activeNav) ? "os-setting-selected" : ""}">${cn(h, x.icon, 19)}${h.esc(x.label)}</div>`).join("")}</aside><main><h1>${h.esc(p.title)}</h1><p>${h.esc(p.description)}</p><div class="os-form-fields">${arr4(p.fields).map((x) => `<div class="os-form-field" data-motion="item"><label>${h.esc(x.label)}</label><div class="os-input ${x.focused ? "os-focused" : ""}"><span data-motion="${x.focused ? "type" : "reveal"}">${h.esc(x.value)}</span>${x.kind === "select" ? cn(h, "chevron-down", 13) : x.kind === "folder" ? cn(h, "folder", 17) : ""}</div>${x.help ? `<small>${h.esc(x.help)}</small>` : ""}</div>`).join("")}</div><h2>${h.esc(p.optionsTitle)}</h2><div class="os-form-options">${arr4(p.options).map((x) => `<div data-motion="item"><span class="os-checkbox ${x.checked ? "os-checkbox-checked" : ""}">${x.checked ? cn(h, "check", 14) : ""}</span>${h.esc(x.label)}</div>`).join("")}</div><div class="os-form-note">${cn(h, "info", 17)}${h.esc(p.note)}</div><footer><div class="os-button">${h.esc(p.cancel)}</div><div class="os-button os-primary">${h.esc(p.submit)}</div></footer></main></div></div></div>`;
+        return `<div class="os-stage"><div class="os-window os-form-window" data-motion="reveal"><div class="os-settings-title">${cn(h, "video", 17)}<span>${h.esc(p.appTitle)}</span><span class="os-flex"></span>${winButtons(h)}</div><div class="os-form-layout"><aside>${arr4(p.nav).map((x, i) => `<div class="${i === num7(p.activeNav) ? "os-setting-selected" : ""}">${cn(h, x.icon, 19)}${h.esc(x.label)}</div>`).join("")}</aside><main><h1>${h.esc(p.title)}</h1><p>${h.esc(p.description)}</p><div class="os-form-fields">${arr4(p.fields).map((x) => `<div class="os-form-field" data-motion="item"><label>${h.esc(x.label)}</label><div class="os-input ${x.focused ? "os-focused" : ""}"><span data-motion="${x.focused ? "type" : "reveal"}">${h.esc(x.value)}</span>${x.kind === "select" ? cn(h, "chevron-down", 13) : x.kind === "folder" ? cn(h, "folder", 17) : ""}</div>${x.help ? `<small>${h.esc(x.help)}</small>` : ""}</div>`).join("")}</div><h2>${h.esc(p.optionsTitle)}</h2><div class="os-form-options">${arr4(p.options).map((x) => `<div data-motion="item"><span class="os-checkbox ${x.checked ? "os-checkbox-checked" : ""}">${x.checked ? cn(h, "check", 14) : ""}</span>${h.esc(x.label)}</div>`).join("")}</div><div class="os-form-note">${cn(h, "info", 17)}${h.esc(p.note)}</div><footer><div class="os-button">${h.esc(p.cancel)}</div><div class="os-button os-primary">${h.esc(p.submit)}</div></footer></main></div></div></div>`;
       }
     }
   ];
@@ -8231,10 +8531,10 @@ ${workflowLayoutCSS}
     const candidates = options.media ?? audio?.parentElement?.querySelectorAll("video") ?? [];
     const videos = Array.from(candidates?.tagName ? [candidates] : candidates).filter((media3) => media3?.tagName?.toLowerCase() === "video");
     const mediaStates = videos.map((media3) => ({ media: media3, pending: false, token: 0, lastError: "" }));
-    const numeric = (value, fallback) => value === void 0 || value === null || value === "" || !Number.isFinite(Number(value)) ? fallback : Number(value);
+    const numeric2 = (value, fallback) => value === void 0 || value === null || value === "" || !Number.isFinite(Number(value)) ? fallback : Number(value);
     function mediaPosition(media3) {
-      const start = numeric(media3.dataset.start, 0), span = Math.max(0, numeric(media3.dataset.duration, duration - start));
-      const offset = Math.max(0, numeric(media3.dataset.mediaStart, 0)), elapsed = Math.max(0, tl.time() - start);
+      const start = numeric2(media3.dataset.start, 0), span = Math.max(0, numeric2(media3.dataset.duration, duration - start));
+      const offset = Math.max(0, numeric2(media3.dataset.mediaStart, 0)), elapsed = Math.max(0, tl.time() - start);
       const limit = Number.isFinite(media3.duration) ? Math.max(0, media3.duration - 1e-3) : Infinity;
       return { time: Math.min(limit, offset + Math.min(elapsed, Math.max(0, span - 1e-3))), playing: active && !destroyed && tl.time() >= start && tl.time() < start + span && offset + elapsed < limit };
     }
@@ -8525,10 +8825,10 @@ ${workflowLayoutCSS}
       const a2 = e2.getBoundingClientRect(), b2 = root.getBoundingClientRect();
       return { x: a2.x - b2.x, y: a2.y - b2.y, w: a2.width, h: a2.height };
     };
-    const make7 = (css5, html = "", parent = root) => {
+    const make7 = (css6, html = "", parent = root) => {
       const e2 = document.createElement("div");
       e2.dataset.generatedEffect = id;
-      e2.style.cssText = css5;
+      e2.style.cssText = css6;
       e2.innerHTML = html;
       parent.append(e2);
       return e2;
@@ -8622,8 +8922,8 @@ ${workflowLayoutCSS}
     if (id === "slider-drag") {
       targets = items(".ap-control-slider i").slice(0, 1);
       targets.forEach((e2) => {
-        const width = e2.style.width || "65%";
-        tl.fromTo(e2, { width: "12%" }, { width, duration: 1.05, ease: "power2.inOut" }, start);
+        const width2 = e2.style.width || "65%";
+        tl.fromTo(e2, { width: "12%" }, { width: width2, duration: 1.05, ease: "power2.inOut" }, start);
       });
     }
     if (id === "dashed-frame") {
@@ -9390,14 +9690,14 @@ ${workflowLayoutCSS}
       enter2("tag", 1.3, 0.8);
     } else if (effect.component === "broll-edit-timeline") {
       tl.fromTo(part2("clip"), { scaleX: 0, transformOrigin: "left center", opacity: 0 }, { scaleX: 1, opacity: 1, duration: 0.5, stagger: 0.24, ease: "power2.out" }, 0.2);
-      const width = root.querySelector(".brw-track-bed")?.clientWidth || 978;
-      tl.fromTo(part2("playhead"), { x: 0, opacity: 0 }, { opacity: 1, duration: 0.15 }, 2.1).to(part2("playhead"), { x: width - 2, duration: 3.7, ease: "none" }, 2.25);
+      const width2 = root.querySelector(".brw-track-bed")?.clientWidth || 978;
+      tl.fromTo(part2("playhead"), { x: 0, opacity: 0 }, { opacity: 1, duration: 0.15 }, 2.1).to(part2("playhead"), { x: width2 - 2, duration: 3.7, ease: "none" }, 2.25);
     } else if (effect.component === "broll-voice-transcript") {
       enter2("audio", 0.15);
       if (guided) tl.fromTo(part2("wave"), { opacity: 0.16 }, { opacity: 1, duration: 0.24, stagger: 0.065, ease: "none" }, 0.55);
       else tl.fromTo(part2("wave"), { scaleY: 0.2, transformOrigin: "center" }, { scaleY: 1, duration: 0.5, stagger: 0.025, ease: "sine.out" }, 0.55);
-      const width = root.querySelector(".brw-waveform")?.clientWidth || 458;
-      tl.fromTo(part2("cursor"), { x: 0 }, { x: width - 2, duration: 4.15, ease: "none" }, 0.75);
+      const width2 = root.querySelector(".brw-waveform")?.clientWidth || 458;
+      tl.fromTo(part2("cursor"), { x: 0 }, { x: width2 - 2, duration: 4.15, ease: "none" }, 0.75);
       enter2("transcript", 1.3, 1.1);
       enter2("done", 4.9);
     } else if (effect.component === "broll-focus-timer") {
@@ -9478,6 +9778,22 @@ ${workflowLayoutCSS}
     return tl;
   }
 
+  // cn-infographic-motion.mjs
+  var cnEffects = [{ id: "cn-information-reveal", name: "\u4FE1\u606F\u56FE\u6309\u8BB2\u89E3\u5C55\u5F00", component: "quadrant-map", category: "\u8BB2\u89E3", selector: "[data-cn-reveal]", internal: true, duration: 8, previewTime: 6.8, silent: true, description: "\u4F9D\u636E\u6570\u636E\u9879\u4E2D\u7684\u51FA\u73B0\u65F6\u70B9\u4F9D\u6B21\u63ED\u793A\uFF1B\u4FDD\u6301\u5BF9\u8C61\u3001\u6587\u5B57\u4E0E\u8FDE\u63A5\u7EBF\u7684\u4F4D\u7F6E\uFF0C\u53EF\u6765\u56DE\u5B9A\u4F4D\u3002" }];
+  function buildCNMotion(gsap, root, options = {}) {
+    const tl = gsap.timeline({ paused: true }), scale = (options.duration ?? 8) / 8;
+    const nodes = root.querySelectorAll("[data-cn-reveal]");
+    nodes.forEach((el) => {
+      const at2 = Number(el.dataset.cnReveal);
+      gsap.set(el, { opacity: at2 === 0 ? 1 : 0 });
+      tl.fromTo(el, { opacity: at2 === 0 ? 1 : 0 }, { opacity: 1, duration: 0.28 * scale, ease: "power1.out", immediateRender: false, lazy: false }, at2 * scale);
+    });
+    tl.to({}, { duration: 1e-3 }, 8 * scale - 1e-3);
+    root.dataset.effectId = "cn-information-reveal";
+    root.dataset.effectTargets = String(nodes.length);
+    return tl;
+  }
+
   // transfer-kit-motion.mjs
   var kitEffects = [{ id: "ani-hd-parts", name: "\u9AD8\u6E05\u90E8\u4EF6\u5206\u5C42\u52A8\u4F5C", component: "ani-module-hd-truck", category: "\u52A8\u753B\u98CE", selector: '[data-hd-kit="layout"]', duration: 8, previewTime: 7.4, silent: true, description: "\u6309\u6BCF\u4E2A layers \u5BF9\u8C61\u7684 enter/exit\u3001\u8D77\u70B9\u548C\u5206\u6BB5\u8DEF\u5F84\u72EC\u7ACB\u7F16\u6392\uFF1B\u53EF\u6B63\u53CD\u62D6\u52A8\uFF0C\u4E0D\u64AD\u653E\u6574\u5F20\u53C2\u8003\u56FE\u3002" }];
   function buildKitMotion(gsap, root, options = {}) {
@@ -9493,6 +9809,14 @@ ${workflowLayoutCSS}
         y = s2.y;
       }
       if (m.exit < 8) tl.fromTo(el, { opacity: 1 }, { opacity: 0, duration: Math.max(m.fade, 1e-3) * scale, ease: "none", immediateRender: false, lazy: false }, (m.exit - m.fade) * scale);
+    }
+    for (const group4 of root.querySelectorAll("[data-attachment-states]")) {
+      const states2 = [...group4.querySelectorAll("[data-attachment-state]")];
+      states2.forEach((state3, i) => {
+        gsap.set(state3, { opacity: i === 0 ? 1 : 0 });
+        if (i > 0) tl.set(state3, { opacity: 1 }, Number(state3.dataset.stateAt) * scale);
+        if (i < states2.length - 1) tl.set(state3, { opacity: 0 }, Number(state3.dataset.stateEnd) * scale);
+      });
     }
     tl.to({}, { duration: 1e-3 }, 8 * scale - 1e-3);
     return tl;
@@ -9562,8 +9886,9 @@ ${workflowLayoutCSS}
     "stamp-confirm": { category: "\u53CD\u9988", previewTime: 1.4, cueHints: [{ sound: "pop", at: 1, gain: 0.38 }, { sound: "chime", at: 1.1, gain: 0.27 }] },
     "error-shake": { category: "\u53CD\u9988", previewTime: 0.95, cueHints: [{ sound: "error", at: 0.6, gain: 0.29 }] }
   }[effect.id] }));
-  var effects = [...legacyEffects.map((e2) => e2.category === "\u8F6C\u573A" ? { ...e2, component: "lecture-stage", previewTime: 2.28, cueHints: [{ sound: "whoosh", at: 2.1, gain: 0.24, duration: 0.7 }], name: e2.id === "wipe-transition" ? "\u4E09\u5C42\u77ED\u906E\u5E45\u8F6C\u573A" : "\u5706\u5F62\u753B\u9762\u4EA4\u63A5", description: e2.id === "wipe-transition" ? "\u6D45\u84DD\u3001\u8584\u8377\u4E0E\u84DD\u8272\u77ED\u906E\u5E45\u63A5\u529B\uFF1B\u5B8C\u5168\u906E\u6321\u65F6\u5207\u6362\u5230\u72EC\u7ACB\u7684\u65B0\u753B\u9762\u3002" : "\u5706\u5F62\u906E\u7F69\u4ECE\u4E0A\u4E00\u5E45\u5185\u5BB9\u4E2D\u63ED\u5F00\u4E0B\u4E00\u5E45\u5185\u5BB9\u3002" } : e2), ...expandedEffects, ...animationStyleEffects, ...pendingAnimationStyleEffects, ...transferEffects, ...kitEffects, mixedMediaEffect, ...workflowEffects, ...brollGraphicEffects];
+  var effects = [...legacyEffects.map((e2) => e2.category === "\u8F6C\u573A" ? { ...e2, component: "lecture-stage", previewTime: 2.28, cueHints: [{ sound: "whoosh", at: 2.1, gain: 0.24, duration: 0.7 }], name: e2.id === "wipe-transition" ? "\u4E09\u5C42\u77ED\u906E\u5E45\u8F6C\u573A" : "\u5706\u5F62\u753B\u9762\u4EA4\u63A5", description: e2.id === "wipe-transition" ? "\u6D45\u84DD\u3001\u8584\u8377\u4E0E\u84DD\u8272\u77ED\u906E\u5E45\u63A5\u529B\uFF1B\u5B8C\u5168\u906E\u6321\u65F6\u5207\u6362\u5230\u72EC\u7ACB\u7684\u65B0\u753B\u9762\u3002" : "\u5706\u5F62\u906E\u7F69\u4ECE\u4E0A\u4E00\u5E45\u5185\u5BB9\u4E2D\u63ED\u5F00\u4E0B\u4E00\u5E45\u5185\u5BB9\u3002" } : e2), ...expandedEffects, ...animationStyleEffects, ...pendingAnimationStyleEffects, ...transferEffects, ...kitEffects, mixedMediaEffect, ...workflowEffects, ...brollGraphicEffects, ...cnEffects];
   function buildEffect(gsap, root, id, options = {}) {
+    if (id === "cn-information-reveal") return buildCNMotion(gsap, root, options);
     if (id === "ani-hd-parts") return buildKitMotion(gsap, root, options);
     if (workflowEffects.some((e2) => e2.id === id)) return buildWorkflowMotion(gsap, root, id, options);
     const broll = brollGraphicEffects.find((e2) => e2.id === id);
@@ -9861,8 +10186,8 @@ ${workflowLayoutCSS}
         const b2 = boxes[i];
         tl.fromTo(el, { y: middle - b2.y - b2.h / 2, opacity: i === targets.length - 1 ? 1 : 0 }, { y: 0, opacity: 1, duration: 1.2, ease: "power3.inOut" }, start);
       });
-      const text7 = [...root.querySelectorAll(".edu-layer-descriptions article")], lines3 = [...root.querySelectorAll('.edu-layer-art [data-motion="line"]')];
-      if (text7.length) tl.fromTo(text7, { opacity: 0, x: 12 }, { opacity: 1, x: 0, duration: 0.4, stagger: 0.12, ease: "power2.out" }, start + 0.85);
+      const text8 = [...root.querySelectorAll(".edu-layer-descriptions article")], lines3 = [...root.querySelectorAll('.edu-layer-art [data-motion="line"]')];
+      if (text8.length) tl.fromTo(text8, { opacity: 0, x: 12 }, { opacity: 1, x: 0, duration: 0.4, stagger: 0.12, ease: "power2.out" }, start + 0.85);
       if (lines3.length) tl.fromTo(lines3, { opacity: 0 }, { opacity: 1, duration: 0.35 }, start + 0.85);
     }
     if (id === "media-pan") {
@@ -9904,6 +10229,237 @@ ${workflowLayoutCSS}
     return tl;
   }
 
+  // tone-css.mjs
+  var tonePalettes = {
+    A: { bg: "#0b0f14", surface: "#121821", surface2: "#1a2330", ink: "#f5f7fa", muted: "#8b95a5", accent: "#3b82f6", accent2: "#22d3a6", warn: "#ff6b4a", onAccent: "#ffffff", line: "rgba(245,247,250,.14)", grid: "rgba(245,247,250,.08)", dark: true },
+    B: { bg: "#f4ebdd", surface: "#fff8ee", surface2: "#efe3d0", ink: "#3b2f2a", muted: "#7d6d60", accent: "#d9572b", accent2: "#2f6b4f", warn: "#c0392b", onAccent: "#fffaf2", line: "rgba(59,47,42,.18)", grid: "rgba(59,47,42,.1)", dark: false },
+    C: { bg: "#ffffff", surface: "#f3f5f9", surface2: "#e8edf5", ink: "#0f172a", muted: "#5b6b82", accent: "#2563eb", accent2: "#81c9b0", warn: "#f97316", onAccent: "#ffffff", line: "rgba(15,23,42,.14)", grid: "#e3eaf4", dark: false },
+    D: { bg: "#0e0e0f", surface: "#1a1a1c", surface2: "#242427", ink: "#f4f4f5", muted: "#9ca3af", accent: "#ff5a1f", accent2: "#ffb020", warn: "#ff3b30", onAccent: "#120a06", line: "rgba(244,244,245,.14)", grid: "rgba(244,244,245,.08)", dark: true }
+  };
+  var toneIds = ["original", ...Object.keys(tonePalettes)];
+  var modeIds = ["original", "video"];
+  var tokenVar = { bg: "--hf-bg", surface: "--hf-surface", surface2: "--hf-surface2", ink: "--hf-ink", muted: "--hf-muted", line: "--hf-line", accent: "--hf-accent", accentSoft: "--hf-accent-soft", accentTint: "--hf-accent-tint", accent2: "--hf-accent2", accent2Tint: "--hf-accent2-tint", warn: "--hf-warn", warnTint: "--hf-warn-tint", onAccent: "--hf-on-accent", grid: "--hf-grid" };
+  function parseHex(hex2) {
+    let h = hex2.slice(1);
+    if (h.length === 3 || h.length === 4) h = [...h].map((c) => c + c).join("");
+    const r = parseInt(h.slice(0, 2), 16), g2 = parseInt(h.slice(2, 4), 16), b2 = parseInt(h.slice(4, 6), 16);
+    const a2 = h.length === 8 ? parseInt(h.slice(6, 8), 16) / 255 : 1;
+    return { r, g: g2, b: b2, a: a2 };
+  }
+  function hsl2({ r, g: g2, b: b2 }) {
+    const R = r / 255, G = g2 / 255, B = b2 / 255, max = Math.max(R, G, B), min = Math.min(R, G, B), d = max - min, l = (max + min) / 2;
+    let h = 0, s2 = 0;
+    if (d) {
+      s2 = d / (1 - Math.abs(2 * l - 1));
+      h = max === R ? ((G - B) / d + 6) % 6 : max === G ? (B - R) / d + 2 : (R - G) / d + 4;
+      h *= 60;
+    }
+    return { h, s: s2, l };
+  }
+  function classify(hex2, ctx = "bg") {
+    const c = parseHex(hex2), { h, s: s2, l } = hsl2(c);
+    if (s2 < 0.13) {
+      if (ctx === "fg") return l >= 0.9 ? "onAccent" : l >= 0.62 ? "muted" : l >= 0.36 ? "muted" : "ink";
+      if (ctx === "line") return l >= 0.55 ? "line" : "muted";
+      return l >= 0.96 ? "bg" : l >= 0.86 ? "surface" : l >= 0.72 ? "surface2" : l >= 0.42 ? "muted" : "ink";
+    }
+    if (h >= 195 && h < 262) return l >= 0.93 ? "accentTint" : l >= 0.78 ? "accentSoft" : l >= 0.27 ? "accent" : "ink";
+    if (h >= 130 && h < 195) return l >= 0.85 ? "accent2Tint" : "accent2";
+    if (h < 70 || h >= 330) return l >= 0.88 ? "warnTint" : "warn";
+    if (h >= 262 && h < 330) return "accent";
+    return "accent2";
+  }
+  var propCtx = (prop) => {
+    const p = prop.toLowerCase();
+    if (p === "color" || p === "fill" || p === "stroke" || p === "stop-color" || p === "-webkit-text-stroke" || p === "caret-color") return "fg";
+    if (p.startsWith("border") || p === "outline" || p.startsWith("box-shadow") || p === "text-shadow" || p === "filter" || p === "outline-color") return "line";
+    return "bg";
+  };
+  var HEX = /#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})\b/g;
+  function replaceHex(value, ctx) {
+    return value.replace(HEX, (hex2) => {
+      const { a: a2 } = parseHex(hex2);
+      const base2 = hex2.length === 9 ? hex2.slice(0, 7) : hex2.length === 5 ? "#" + [...hex2.slice(1, 4)].map((c) => c + c).join("") : hex2;
+      const token = classify(base2, ctx);
+      if (a2 < 1) {
+        const { s: s2 } = hsl2(parseHex(base2));
+        if (s2 < 0.13) return hex2;
+        return `color-mix(in srgb,var(${tokenVar[token]},${base2}) ${Math.round(a2 * 100)}%,transparent)`;
+      }
+      return `var(${tokenVar[token]},${hex2})`;
+    }).replace(/(^|[\s,(])white(?=[\s,;)]|$)/g, (m, pre) => `${pre}var(${ctx === "fg" ? "--hf-on-accent" : "--hf-bg"},#fff)`);
+  }
+  function tonalizeCSS(css6) {
+    return css6.replace(/([a-zA-Z-]+)\s*:\s*([^;{}]+)/g, (m, prop, value) => {
+      if (!HEX.test(value) && !/\bwhite\b/.test(value)) {
+        HEX.lastIndex = 0;
+        return m;
+      }
+      HEX.lastIndex = 0;
+      if (/^--/.test(prop)) return m;
+      return `${prop}:${replaceHex(value, propCtx(prop))}`;
+    });
+  }
+  function mix(hexA, hexB, pct) {
+    const a2 = parseHex(hexA), b2 = parseHex(hexB);
+    const f = (x, y) => Math.round(x * pct + y * (1 - pct));
+    return "#" + [f(a2.r, b2.r), f(a2.g, b2.g), f(a2.b, b2.b)].map((v) => v.toString(16).padStart(2, "0")).join("");
+  }
+  function resolvedPalette(tone3) {
+    const p = tonePalettes[tone3];
+    if (!p) return null;
+    return { ...p, accentSoft: mix(p.accent, p.bg, 0.42), accentTint: mix(p.accent, p.bg, 0.12), accent2Tint: mix(p.accent2, p.bg, 0.16), warnTint: mix(p.warn, p.bg, 0.14) };
+  }
+  function toneVariablesCSS() {
+    return Object.keys(tonePalettes).map((t) => {
+      const p = resolvedPalette(t);
+      return `[data-appearance-tone="${t}"]{${Object.entries(tokenVar).map(([k, v]) => `${v}:${p[k]}`).join(";")};color-scheme:${p.dark ? "dark" : "light"}}`;
+    }).join("\n");
+  }
+  var ATTRS = ["fill", "stroke", "stop-color", "flood-color"];
+  var STYLE_PROPS = ["color", "background", "background-color", "border-color", "border", "border-top", "border-bottom", "border-left", "border-right", "fill", "stroke", "box-shadow", "outline"];
+  function toneElement(rootEl, tone3) {
+    const pal = resolvedPalette(tone3);
+    const els = [rootEl, ...rootEl.querySelectorAll("*")];
+    for (const el of els) {
+      if (el.tagName === "IMG" || el.tagName === "VIDEO" || el.tagName === "CANVAS") continue;
+      const store = el.__hfToneOrig || (el.__hfToneOrig = {});
+      for (const attr of ATTRS) {
+        const has = attr in store ? true : el.hasAttribute(attr);
+        if (!has) continue;
+        if (!(attr in store)) store[attr] = el.getAttribute(attr);
+        const orig = store[attr];
+        if (!pal) {
+          if (orig === null) el.removeAttribute(attr);
+          else el.setAttribute(attr, orig);
+          continue;
+        }
+        if (orig && /^#[0-9a-fA-F]{3,8}$/.test(orig)) {
+          const isText = el.tagName === "text" || el.tagName === "tspan";
+          const ctx = attr === "stroke" ? isText ? "fg" : "line" : isText ? "fg" : "bg";
+          el.setAttribute(attr, pal[classify(orig.length === 9 ? orig.slice(0, 7) : orig, ctx)]);
+        } else if (orig && /^white$/i.test(orig)) {
+          el.setAttribute(attr, el.tagName === "text" ? pal.onAccent : pal.bg);
+        }
+      }
+      if (el.getAttribute && ("style" in store || el.getAttribute("style"))) {
+        if (!("style" in store)) store.style = el.getAttribute("style");
+        const orig = store.style;
+        if (!pal) {
+          if (orig === null) el.removeAttribute("style");
+          else el.setAttribute("style", orig);
+          continue;
+        }
+        if (orig && (/#[0-9a-fA-F]{3,8}/.test(orig) || /\bwhite\b/.test(orig))) {
+          el.setAttribute("style", orig.replace(/([a-zA-Z-]+)\s*:\s*([^;]+)/g, (m, prop, value) => {
+            if (!STYLE_PROPS.includes(prop.toLowerCase()) && !prop.startsWith("border")) return m;
+            return `${prop}:${value.replace(HEX, (hex2) => {
+              const { a: a2 } = parseHex(hex2);
+              const base2 = hex2.length === 9 ? hex2.slice(0, 7) : hex2;
+              const { s: s2 } = hsl2(parseHex(base2));
+              if (a2 < 1 && s2 < 0.13) return hex2;
+              const col = pal[classify(base2, propCtx(prop))];
+              return a2 < 1 ? col : col;
+            }).replace(/\bwhite\b/g, propCtx(prop) === "fg" ? pal.onAccent : pal.bg)}`;
+          }));
+        }
+      }
+    }
+  }
+  var videoModeBaseCSS = `
+[data-appearance-mode="video"] .edu-eyebrow,[data-appearance-mode="video"] .edu-edition,[data-appearance-mode="video"] .edu-footer,[data-appearance-mode="video"] .edu-chart-source,[data-appearance-mode="video"] .edu-dashboard-note,[data-appearance-mode="video"] .edu-fine-note,[data-appearance-mode="video"] .cn-source,[data-appearance-mode="video"] .cn-eyebrow,[data-appearance-mode="video"] .cn-footer{display:none!important}
+[data-appearance-mode="video"] .edu-scene{padding:30px 44px 26px}
+[data-appearance-mode="video"] .edu-header{height:auto;margin-bottom:18px;align-items:center}
+[data-appearance-mode="video"] .edu-header h1{font-size:50px;line-height:1.2;font-weight:800;letter-spacing:-1px}
+[data-appearance-mode="video"] .edu-header p{font-size:28px;margin-top:6px}
+[data-appearance-mode="video"] .edu-takeaway{font-size:28px;padding:16px 0;margin-top:14px}
+[data-appearance-mode="video"] .edu-takeaway>span{font-size:24px}
+[data-appearance-mode="video"] .edu-note{font-size:27px}
+[data-appearance-mode="video"] .edu-note strong{font-size:27px}
+[data-appearance-mode="video"] .edu-pill{font-size:27px;padding:8px 16px}
+[data-appearance-tone]:not([data-appearance-tone="original"]) .component-stage,[data-appearance-tone]:not([data-appearance-tone="original"]) .component-stage svg text{font-family:"HF Sans SC","Microsoft YaHei",ComponentHan,sans-serif}
+[data-appearance-mode="video"] .component-stage h1,[data-appearance-mode="video"] .component-stage h2,[data-appearance-mode="video"] .component-stage h3,[data-appearance-mode="video"] .component-stage strong{font-weight:800}
+`;
+
+  // video-mode.mjs
+  var V = '[data-appearance-mode="video"] ';
+  var rules = [
+    // ---- 讲解图形（education.mjs，edu-*）----
+    ".edu-scene{padding:28px 44px 24px}",
+    ".edu-header{height:auto;margin-bottom:16px}",
+    ".edu-body{gap:0}",
+    // 对比（before-after）
+    ".edu-compare-layout{height:auto;min-height:520px;grid-template-columns:1fr 60px 1.13fr}",
+    ".edu-compare-arrow svg{width:44px;height:44px}",
+    ".edu-panel-heading{padding:20px 22px}.edu-panel-heading p{font-size:27px;margin-top:8px}",
+    ".edu-task-row{padding:16px 0;gap:14px}.edu-task-index{font-size:24px}.edu-task-row strong{font-size:32px}.edu-task-row p{font-size:27px;margin-top:4px}.edu-task-dot{display:none}",
+    ".edu-kanban{padding:18px 16px;gap:12px}.edu-kanban-label{font-size:27px;margin-bottom:12px}.edu-kanban-label>span{display:none}.edu-kanban-task{min-height:0;padding:14px 12px}.edu-kanban-task strong{font-size:30px;line-height:1.35}.edu-kanban-task p{display:none}.edu-mini-progress{margin-top:12px;height:6px}",
+    // 流程（flowchart）
+    ".edu-flow-node{width:250px;height:150px;padding:18px 20px}.edu-flow-node>span{display:none}.edu-flow-node>strong{font-size:32px;margin-top:0}.edu-flow-node>p{font-size:27px;margin-top:8px;line-height:1.35}.edu-flow-label{font-size:24px;padding:4px 10px}",
+    // 三层（layer-stack）
+    ".edu-layer-number{display:none}.edu-layer-descriptions h2{font-size:34px}.edu-layer-descriptions p{font-size:27px;line-height:1.5;margin-top:8px}.edu-layer-descriptions article{padding:16px 0}.edu-layer-art text{font-size:24px}",
+    // 图表（bar-chart / line-chart）
+    ".edu-chart-heading{padding:18px 26px 0}.edu-chart-heading h2{font-size:34px}.edu-chart-heading>span{font-size:27px}.edu-bar-svg text,.edu-line-svg text{font-size:26px;font-weight:600}",
+    // 矩阵（comparison-matrix）
+    ".edu-matrix th,.edu-matrix td{padding:16px 20px}.edu-matrix thead th{height:auto}.edu-matrix thead strong{font-size:32px}.edu-matrix thead span{display:none}.edu-matrix tbody th,.edu-matrix tbody td{font-size:27px;line-height:1.4}",
+    // 时间线（event-timeline）
+    ".edu-event-track{margin:24px 96px 0}.edu-event{width:220px;margin-left:-110px}.edu-event-number{display:none}.edu-event-time{font-size:30px}.edu-event-card{min-height:0;padding:16px 14px;margin-top:26px}.edu-event-card h2{font-size:30px;margin-top:0}.edu-event-card p{font-size:26px;line-height:1.4;margin-top:8px}.edu-event-card .edu-event-active{font-size:22px}.edu-timeline-note{display:none}",
+    // 指标面板（metric-dashboard）
+    ".edu-metric-card{padding:18px 22px}.edu-metric-label{font-size:28px}.edu-metric-value strong{font-size:64px}.edu-metric-value span{font-size:30px}.edu-metric-card p{display:none}.edu-progress-panel h2,.edu-check-panel h2{font-size:30px}.edu-check-item{margin-top:16px}.edu-check-item strong{font-size:27px}.edu-progress-panel svg text{font-size:24px}.edu-check-item>span{width:30px;height:30px}",
+    // 概念卡（definition-card）
+    ".edu-definition-layout{gap:30px;padding-top:0}.edu-definition-en{display:none}.edu-definition-main{padding:10px 20px 0 0}.edu-definition-main h2{font-size:76px;margin-top:0}.edu-definition-sentence{font-size:36px;max-width:560px;margin-top:18px!important;line-height:1.5}.edu-factor-list{margin-top:30px;gap:16px}.edu-factor-list span{display:none}.edu-factor-list strong{font-size:32px;margin-top:0}.edu-factor-list p{font-size:26px;line-height:1.45;margin-top:6px}.edu-example-panel{padding:28px 30px}.edu-example-panel h2{font-size:34px;margin-top:14px}.edu-example-panel blockquote{font-size:30px;line-height:1.7;margin:14px 0 20px}.edu-example-note p{font-size:27px;line-height:1.5}.edu-example-note svg{width:30px;height:30px}",
+    // 章节收束（chapter-summary）
+    ".edu-chapter-layout{gap:48px}.edu-chapter-index>div{font-size:32px}.edu-chapter-content h2{font-size:44px;margin-bottom:18px}.edu-chapter-content article{margin-top:18px;gap:18px}.edu-chapter-content article>span{width:40px;height:40px}.edu-chapter-content article svg{width:28px;height:28px}.edu-chapter-content h3{font-size:32px}.edu-chapter-content p{font-size:27px;line-height:1.5;margin-top:4px}.edu-next-strip{padding:18px 24px;margin-top:18px}.edu-next-strip span{font-size:24px}.edu-next-strip strong{font-size:30px}.edu-next-strip svg{width:30px;height:30px}",
+    // 媒体舞台（media-stage）
+    ".edu-media-layout{padding-top:0;grid-template-columns:760px 1fr}.edu-media-caption p{font-size:26px;line-height:1.5}.edu-media-notes h2{font-size:34px;margin-bottom:18px}.edu-media-notes article{margin-bottom:18px;padding-bottom:16px}.edu-media-notes article>span{display:none}.edu-media-notes h3{font-size:30px}.edu-media-notes p{font-size:26px;line-height:1.5;margin-top:6px}",
+    // 标注（annotation-callout）
+    ".edu-callout-subject-head{height:auto;padding-bottom:16px}.edu-callout-subject-head>span{display:none}.edu-callout-subject h2{font-size:34px;margin-top:0}.edu-callout-field{height:auto;min-height:72px;padding:12px 16px;gap:14px}.edu-callout-field>span{font-size:24px}.edu-callout-field>strong{font-size:30px}.edu-callout-notes article{padding:16px 18px}.edu-callout-notes article>span{display:none}.edu-callout-notes h3{font-size:30px}.edu-callout-notes p{font-size:27px;line-height:1.4;margin-top:4px}",
+    // ---- 扩展讲解图形（education-expanded.mjs，edx-*）----
+    ".edx-scene{padding:28px 48px 24px}.edx-scene header{height:auto;margin-bottom:12px;align-items:center}.edx-eyebrow{display:none}.edx-scene h1{font-size:50px;margin:0 0 6px;font-weight:800;letter-spacing:-1px}.edx-scene header p{font-size:28px;max-width:1000px}.edx-scene header>b{display:none}.edx-scene footer{display:none}",
+    ".edx-svg{max-height:640px}.edx-svg text{font-size:20px;font-weight:600}",
+    // 公式（formula-breakdown）
+    ".edx-formula{gap:20px}.edx-formula article{padding:30px 14px}.edx-formula article>b{font-size:52px}.edx-formula-rule{margin:18px 16px}.edx-formula p{font-size:27px;margin-bottom:16px;line-height:1.4}.edx-formula strong{font-size:32px}.edx-formula>span{font-size:56px}",
+    // 步骤（process-steps）
+    ".edx-steps{gap:26px}.edx-steps article{padding:24px 20px;min-height:0}.edx-step-number{font-size:54px}.edx-steps h2{font-size:34px;margin:16px 0 10px}.edx-steps p{font-size:27px;line-height:1.4}.edx-step-result{font-size:27px;margin-top:22px;padding:12px}.edx-step-arrow{font-size:34px;top:120px}",
+    // 看板（kanban-board）
+    ".edx-board{height:auto;gap:18px}.edx-board>section{padding:16px}.edx-board h2{font-size:30px;margin-bottom:14px}.edx-board small{display:none}.edx-board article{padding:14px 16px;margin-bottom:12px}.edx-task-tag{display:none}.edx-board h3{font-size:30px;margin:0 0 4px}.edx-board p{font-size:24px}.edx-task-bottom{display:none}",
+    // 讲解舞台（lecture-stage）
+    ".edx-lesson-native{padding:44px 56px}.edx-lesson-native>span{display:none}.edx-lesson-native h1{font-size:44px;margin:0 0 10px}.edx-lesson-native>p{font-size:27px}.edx-lesson-native>div{margin-top:40px}.edx-lesson-native article>b{font-size:36px}.edx-lesson-native h2{font-size:32px;margin:12px 0 8px}.edx-lesson-native article p{font-size:27px;line-height:1.5}.edx-lesson-caption{font-size:30px;font-weight:600}",
+    // ---- B-roll 动画插镜：纸面（broll-graphics.mjs，brg-*）----
+    ".brg-paper-meta,.brg-checklist-title,.brg-document-note,.brg-tray-label,.brg-slip-meta,.brg-green-tab,.brg-clear-note,.brg-revision-bottom,.brg-sticky p,.brg-sticky-top small,.brg-revision-paper small,.brg-clear-fields>div>span,.brg-revision-checks small{display:none!important}",
+    ".brg-paper h2{font-size:36px}.brg-brief-paper h2{margin-top:0}.brg-original p{font-size:27px;line-height:1.5}.brg-margin-note{font-size:26px}.brg-paper-checks{margin-top:18px;gap:16px}.brg-paper-checks p{font-size:27px}.brg-paper-checks span{width:30px;height:30px}.brg-paper-checks svg{width:22px;height:22px}",
+    ".brg-sticky{height:auto;min-height:160px;padding:22px}.brg-sticky-top span{font-size:24px}.brg-sticky strong{font-size:30px;margin-top:12px}",
+    ".brg-message-slip{padding:18px 22px 30px}.brg-message-slip p{font-size:28px;margin-top:6px;line-height:1.45}.brg-question{font-size:24px}.brg-clear-paper h2{font-size:32px;margin-top:0}.brg-clear-fields>div{min-height:66px;padding:10px 0}.brg-clear-fields strong{font-size:27px}.brg-clear-fields i,.brg-clear-fields svg{width:26px;height:26px}",
+    ".brg-version{font-size:36px}.brg-revision-paper h2{font-size:30px;margin-top:8px}.brg-draft-lines p{font-size:26px;min-height:44px}.brg-red-gap{font-size:26px}.brg-red-note{font-size:24px}.brg-revision-checks strong{font-size:27px}.brg-stamp{font-size:24px}.brg-latest-revision h2{font-size:30px;margin-top:0;padding-bottom:12px}",
+    // ---- B-roll 动画插镜：流程（broll-workflows.mjs，brw-*）----
+    ".brw-scene{padding:28px 56px}.brw-heading{height:auto;margin-bottom:16px}.brw-heading>span{display:none}.brw-heading h2{font-size:48px;margin-top:0;font-weight:800}.brw-heading p{font-size:28px;margin-top:6px}.brw-footer,.brw-source-note,.brw-edit-note,.brw-ruler{display:none!important}",
+    ".brw-scene small{font-size:22px;letter-spacing:0}.brw-scene h3{font-size:32px}",
+    ".brw-query{height:78px}.brw-query strong{font-size:30px}.brw-search-row{height:auto;min-height:92px;padding:12px 20px}.brw-search-row h3{font-size:30px}.brw-search-row small{font-size:22px}.brw-excerpt p{font-size:28px;line-height:1.6;margin-top:12px}",
+    ".brw-calendar-title{font-size:28px}.brw-weekdays{font-size:22px;margin:18px 0 8px}.brw-day{font-size:28px}.brw-event h3{font-size:36px;margin:10px 0 18px}.brw-event>strong{font-size:28px}.brw-time-chip{font-size:26px}.brw-event>p{font-size:27px;line-height:1.6}",
+    ".brw-archive-paper h3{font-size:30px}.brw-archive-paper p{display:none}.brw-folder strong{font-size:28px}.brw-archive-status{font-size:22px}",
+    ".brw-track-name strong{font-size:26px}.brw-edit-clip>span{font-size:24px}",
+    ".brw-transcript-line>span{font-size:22px}.brw-transcript-line p{font-size:28px;line-height:1.6}",
+    ".brw-time-face>small{font-size:22px}.brw-time-face strong{font-size:56px}.brw-focus-tasks strong{font-size:28px}.brw-focus-tasks p{font-size:26px}",
+    ".brw-field span{font-size:22px}.brw-lines p{font-size:27px}.brw-field strong{font-size:28px}.brw-status{font-size:24px}",
+    // ---- 真实素材版式（broll-media.mjs，brm-*）----
+    ".brm-cutaway-top{font-size:24px}.brm-caption{padding:22px 28px 24px}.brm-caption h2{font-size:48px}.brm-caption p{font-size:28px}",
+    ".brm-editorial-head{display:none}.brm-three{top:48px;height:560px}.brm-panel-media{height:430px}.brm-frame figcaption{height:auto;padding:16px 20px}.brm-shot-no{display:none}.brm-frame strong{font-size:30px}.brm-frame p{display:none}.brm-sequence-footer{padding-top:18px}.brm-sequence-footer h2{font-size:40px}.brm-sequence-footer p{display:none}",
+    ".brm-detail-layout{top:48px;grid-template-columns:minmax(0,1fr) 360px}.brm-focus-label{font-size:26px}.brm-observation h2{font-size:40px;margin-bottom:18px}.brm-note{padding:16px 0}.brm-note span{display:none}.brm-note p{font-size:28px;margin-top:0}.brm-observation small{display:none}",
+    // ---- r2：下限补齐、居中、字体 ----
+    ".edu-body{justify-content:center}.edu-scene{justify-content:center}",
+    ".edx-scene main{align-items:center;justify-content:center}.edx-svg{max-height:660px}.edx-svg text{font-size:25px}",
+    ".edu-task-index,.edu-flow-label,.edu-callout-field>span,.edu-next-strip span,.edu-event-card .edu-event-active,.brm-cutaway-top,.brm-tag{font-size:27px}",
+    ".edu-matrix thead span,.edu-chart-heading>span{font-size:27px}.edu-bar-svg text,.edu-line-svg text{font-size:28px}",
+    ".edu-factor-list p,.edu-event-card p,.edu-media-caption p,.edu-media-notes p,.edx-board p,.brg-margin-note,.brg-draft-lines p,.brg-red-gap p,.brg-red-note,.brg-stamp,.brg-question,.brw-scene small,.brw-weekdays,.brw-archive-status,.brw-search-row small,.brw-transcript-line>span,.brw-time-face>small,.brw-edit-clip>span,.brw-status,.brm-focus-label{font-size:27px}",
+    ".brg-sticky-top span,.brw-time-chip{font-size:27px}",
+    ".edx-svg text.edx-small,.edx-svg text[font-size]{font-size:25px}.edu-layer-art text,.edu-progress-panel svg text,.edu-media-diagram text{font-size:27px}",
+    ".mm-label,.mm-title{font-size:27px}"
+  ];
+  function prefix(rule) {
+    return rule.replace(/([^{}]+)\{([^{}]*)\}/g, (m, sel, decl) => sel.split(",").map((x) => V + x.trim()).join(",") + "{" + decl + "}");
+  }
+  var videoModeCSS = rules.map(prefix).join("\n");
+
   // stage-appearance.mjs
   var frameStyles = [
     { id: "none", name: "\u4E0D\u52A0\u5916\u6846", description: "\u4FDD\u7559\u7EC4\u4EF6\u81EA\u8EAB\u7684\u8FB9\u6846\u3002" },
@@ -9942,10 +10498,15 @@ ${workflowLayoutCSS}
     const input = value && typeof value === "object" ? value : {};
     return {
       frame: frameIds.has(input.frame) ? input.frame : "none",
-      background: backgroundIds.has(input.background) ? input.background : "original"
+      background: backgroundIds.has(input.background) ? input.background : "original",
+      // 2026-09-28：调性跟品牌包 A–D；mode=video 是成片模式（去栏目眉/页脚，字放大）。见 tone-css.mjs / video-mode.mjs。
+      tone: toneIds.includes(input.tone) ? input.tone : "original",
+      mode: modeIds.includes(input.mode) ? input.mode : "original"
     };
   }
-  var stageAppearanceCSS = `
+  var toneOptions = toneIds.map((id) => ({ id, name: { original: "\u7EC4\u4EF6\u539F\u8272", A: "A \u6DF1\u8272\u79D1\u6280", B: "B \u6696\u8272\u624B\u7ED8", C: "C \u767D\u5E95\u9AD8\u5BF9\u6BD4", D: "D \u6A59\u9ED1\u4EA7\u54C1" }[id] }));
+  var modeOptions = modeIds.map((id) => ({ id, name: { original: "\u753B\u5ECA\u539F\u6837", video: "\u6210\u7247\u6A21\u5F0F" }[id] }));
+  var rawStageCSS = `
 [data-appearance-stage]{position:absolute;inset:0;isolation:isolate;pointer-events:none;overflow:visible}
 [data-appearance-stage]>.sap-background{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
 [data-appearance-stage]>.sap-background>svg{position:absolute;inset:0;width:100%;height:100%;display:block}
@@ -9969,7 +10530,10 @@ ${workflowLayoutCSS}
 .sap-active[data-appearance-frame]:not([data-appearance-frame="none"]) [data-appearance-content] .edx-corner{display:none}
 .sap-active[data-appearance-background]:not([data-appearance-background="original"]) [data-appearance-content] .edx-ambient{visibility:hidden}
 .sap-active[data-appearance-background]:not([data-appearance-background="original"]) [data-appearance-content] .edx-lecture{background:transparent}
+[data-appearance-tone]:not([data-appearance-tone="original"]){background:var(--hf-bg)}
+[data-appearance-tone]:not([data-appearance-tone="original"]) .component-stage{background:var(--hf-bg);color:var(--hf-ink)}
 `;
+  var stageAppearanceCSS = tonalizeCSS(rawStageCSS) + "\n" + toneVariablesCSS() + "\n" + videoModeBaseCSS + "\n" + videoModeCSS;
   var applied = /* @__PURE__ */ new WeakMap();
   function removeAppearance(root) {
     const prior = applied.get(root);
@@ -9996,23 +10560,24 @@ ${workflowLayoutCSS}
   }
   function backgroundMarkup(id, w, h) {
     if (id === "perspective-grid") {
-      const vertical = Array.from({ length: 13 }, (_, i) => {
-        const bottom = (i - 1) * w / 10, top = w / 2 + (bottom - w / 2) * 0.4;
-        return `<path d="M${top} 0L${bottom} ${h}"/>`;
-      }).join("");
-      const horizontal = [0.035, 0.12, 0.23, 0.37, 0.55, 0.77, 0.97].map((y) => `<path d="M0 ${h * y}H${w}"/>`).join("");
-      return svg2(`<g fill="none" stroke="#afcaed" stroke-width="1" opacity=".72">${vertical}${horizontal}</g>`, w, h);
+      const cols = 12, step = w / cols, horizon = Math.round(h * 0.52);
+      const wall = [...Array.from({ length: cols + 1 }, (_, i) => `<path d="M${i * step} 0V${horizon}"/>`), ...Array.from({ length: Math.floor(horizon / step) + 1 }, (_, i) => `<path d="M0 ${i * step}H${w}"/>`)].join("");
+      const floor = [...Array.from({ length: cols + 1 }, (_, i) => {
+        const x = i * step, bottom = w / 2 + (x - w / 2) * 3.2;
+        return `<path d="M${x} ${horizon}L${bottom} ${h}"/>`;
+      }), ...[0.074, 0.148, 0.241, 0.361].map((f) => `<path d="M0 ${horizon + Math.round(h * f)}H${w}"/>`)].join("");
+      return svg2(`<g fill="none" style="stroke:var(--hf-grid,#afcaed)" stroke-width="1.2" opacity=".85">${wall}${floor}</g>`, w, h);
     }
     if (id === "blue-waves") {
       const paths2 = Array.from({ length: 7 }, (_, i) => {
         const shift = i * 16;
         return `<path d="M${-w * 0.2 + shift} ${-h * 0.15}C${w * 0.18 + shift} ${h * 0.22} ${-w * 0.16 + shift} ${h * 0.7} ${w * 0.3 + shift} ${h * 1.1}"/><path d="M${w * 0.73 + shift} ${-h * 0.1}C${w * 1.16 + shift} ${h * 0.35} ${w * 0.7 + shift} ${h * 0.58} ${w * 1.1 + shift} ${h * 1.08}"/>`;
       }).join("");
-      return svg2(`<g fill="none" stroke="#bad3ef" stroke-width="1.6" opacity=".65">${paths2}</g>`, w, h);
+      return svg2(`<g fill="none" style="stroke:var(--hf-grid,#bad3ef)" stroke-width="1.6" opacity=".8">${paths2}</g>`, w, h);
     }
     if (id === "blueprint") {
       const ticks = Array.from({ length: Math.floor(w / 100) }, (_, i) => `<path d="M${i * 100} 0V9M${i * 100} ${h}v-9"/>`).join("") + Array.from({ length: Math.floor(h / 100) }, (_, i) => `<path d="M0 ${i * 100}h9M${w} ${i * 100}h-9"/>`).join("");
-      return svg2(`<g fill="none" stroke="#709bc7" stroke-width="1.5" opacity=".6">${ticks}</g>`, w, h);
+      return svg2(`<g fill="none" style="stroke:var(--hf-grid,#709bc7)" stroke-width="1.5" opacity=".8">${ticks}</g>`, w, h);
     }
     return "";
   }
@@ -10051,12 +10616,106 @@ ${workflowLayoutCSS}
       back.style.cssText += "box-shadow:0 10px 25px #183b6621;";
     }
   }
+  var FIT_SVG = "svg.edx-svg,svg.edu-bar-svg,svg.edu-line-svg,svg.edu-layer-art,svg.edu-media-diagram,.edu-progress-panel svg,svg.cn-diagram,svg[data-video-fit]";
+  function fitVideoMode(stageNode, video, timeline) {
+    const svgs = [...stageNode.querySelectorAll(FIT_SVG)];
+    let progress = null;
+    if (timeline && typeof timeline.progress === "function") {
+      progress = timeline.progress();
+      timeline.progress(1, true);
+    }
+    for (const svg3 of svgs) {
+      if (!svg3.__hfViewBox) svg3.__hfViewBox = svg3.getAttribute("viewBox");
+      if (!video) {
+        if (svg3.__hfViewBox) svg3.setAttribute("viewBox", svg3.__hfViewBox);
+        else svg3.removeAttribute("viewBox");
+        delete svg3.dataset.videoFitted;
+        continue;
+      }
+      let bb;
+      try {
+        bb = svg3.getBBox();
+      } catch {
+        continue;
+      }
+      if (!bb || bb.width < 40 || bb.height < 20) continue;
+      const vb = (svg3.__hfViewBox || "").split(/[\s,]+/).map(Number);
+      if (vb.length === 4 && bb.width * bb.height > vb[2] * vb[3] * 0.82) continue;
+      const pad2 = Math.max(6, Math.min(bb.width, bb.height) * 0.05);
+      svg3.setAttribute("viewBox", `${bb.x - pad2} ${bb.y - pad2} ${bb.width + pad2 * 2} ${bb.height + pad2 * 2}`);
+      svg3.setAttribute("preserveAspectRatio", "xMidYMid meet");
+      svg3.dataset.videoFitted = "1";
+    }
+    fitStageZoom(stageNode, video);
+    if (progress !== null) timeline.progress(progress, true);
+  }
+  var ZOOM_BODY = ".edu-body,.edx-scene main,.brw-body,.brg-desk,.brm-scene,.cn-scene";
+  var ZOOM_SKIP = ".edu-header,.edx-scene header,.brw-heading,.brm-editorial-head,.edu-footer,.edx-scene footer,.brw-footer";
+  function fitStageZoom(stageNode, video) {
+    const wrap3 = stageNode.querySelector(".motion-wrap");
+    if (!wrap3) return;
+    const body = wrap3.querySelector(ZOOM_BODY) || wrap3;
+    for (const el of [wrap3, body]) {
+      if (el.__hfZoom === void 0) el.__hfZoom = el.style.transform || "";
+      el.style.transform = el.__hfZoom;
+      el.style.transformOrigin = "";
+      delete el.dataset.videoZoom;
+    }
+    if (!video) return;
+    const stage = stageNode.getBoundingClientRect();
+    if (stage.width < 10 || stage.height < 10) return;
+    const doc = stageNode.ownerDocument, win = doc.defaultView;
+    const bodyRect = body === wrap3 ? stage : body.getBoundingClientRect();
+    const pad2 = Math.min(stage.width, stage.height) * 0.035;
+    const avail = { left: stage.left + pad2, top: Math.max(stage.top, bodyRect.top) + pad2 * 0.5, right: stage.right - pad2, bottom: stage.bottom - pad2 };
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, count2 = 0;
+    for (const el of body.querySelectorAll("*")) {
+      if (["SCRIPT", "STYLE", "AUDIO", "defs", "clipPath", "mask", "pattern", "filter", "svg"].includes(el.tagName)) continue;
+      if (el.closest(ZOOM_SKIP)) continue;
+      const cs = win.getComputedStyle(el);
+      if (cs.display === "none" || cs.visibility === "hidden") continue;
+      const r = el.getBoundingClientRect();
+      if (r.width < 2 || r.height < 2) continue;
+      if (r.width >= stage.width * 0.9 && r.height >= stage.height * 0.85) continue;
+      const ownText = [...el.childNodes].some((n4) => n4.nodeType === 3 && n4.textContent.trim());
+      const graphic = ["IMG", "VIDEO", "CANVAS", "path", "rect", "circle", "ellipse", "line", "polyline", "polygon", "text", "tspan", "use", "image"].includes(el.tagName);
+      const painted = cs.backgroundColor !== "rgba(0, 0, 0, 0)" || cs.borderTopWidth !== "0px" && cs.borderTopStyle !== "none" || cs.boxShadow !== "none";
+      if (!ownText && !graphic && !painted) continue;
+      x0 = Math.min(x0, r.left);
+      y0 = Math.min(y0, r.top);
+      x1 = Math.max(x1, r.right);
+      y1 = Math.max(y1, r.bottom);
+      count2++;
+    }
+    if (!count2 || !isFinite(x0)) return;
+    x0 = Math.max(x0, stage.left);
+    y0 = Math.max(y0, stage.top);
+    x1 = Math.min(x1, stage.right);
+    y1 = Math.min(y1, stage.bottom);
+    const bw = x1 - x0, bh = y1 - y0;
+    if (bw < 40 || bh < 40) return;
+    const scale = Math.min((avail.right - avail.left) / bw, (avail.bottom - avail.top) / bh, 1.5);
+    if (scale < 1.04) return;
+    const target = body;
+    const tr = target.getBoundingClientRect();
+    const cx = (x0 + x1) / 2 - tr.left, cy = (y0 + y1) / 2 - tr.top;
+    const ax = (avail.left + avail.right) / 2 - tr.left, ay = (avail.top + avail.bottom) / 2 - tr.top;
+    target.style.transformOrigin = "0 0";
+    target.style.transform = `translate(${(ax - cx * scale).toFixed(2)}px,${(ay - cy * scale).toFixed(2)}px) scale(${scale.toFixed(4)})`;
+    target.dataset.videoZoom = scale.toFixed(3);
+  }
   function applyStageAppearance(root, value, options = {}) {
     const appearance = normalizeAppearance(value);
     if (!root?.ownerDocument) return appearance;
     removeAppearance(root);
     root.dataset.appearanceFrame = appearance.frame;
     root.dataset.appearanceBackground = appearance.background;
+    root.dataset.appearanceTone = appearance.tone;
+    root.dataset.appearanceMode = appearance.mode;
+    ensureCSS(root.ownerDocument);
+    const stageNode = root.querySelector(".component-stage");
+    if (stageNode && options.toneable) toneElement(stageNode, appearance.tone === "original" ? null : appearance.tone);
+    if (stageNode && options.toneable) fitVideoMode(stageNode, appearance.mode === "video", options.timeline);
     if (appearance.frame === "none" && appearance.background === "original") return appearance;
     const nodes = [...root.children].filter((node4) => node4.matches(".component-stage") || node4.matches(".fx-layer") && node4.dataset.effectSpace !== "canvas");
     if (!nodes.some((node4) => node4.matches(".component-stage"))) return appearance;
@@ -10116,10 +10775,10 @@ ${workflowLayoutCSS}
 
   // component-props-overrides.mjs
   var propsRules = {};
-  var add = (ids, source2, entries) => {
+  var add = (ids, source2, entries2) => {
     for (const id of ids.split(" ")) {
       const target = propsRules[id] ??= [];
-      for (const [path2, rule] of Object.entries(entries)) target.push({ path: path2, ...rule, "x-evidence": { kind: "renderer", source: source2 } });
+      for (const [path2, rule] of Object.entries(entries2)) target.push({ path: path2, ...rule, "x-evidence": { kind: "renderer", source: source2 } });
     }
   };
   var a = (min, max) => ({ type: "array", ...min === void 0 ? {} : { minItems: min }, ...max === void 0 ? {} : { maxItems: max } });
@@ -10249,6 +10908,13 @@ ${workflowLayoutCSS}
   add("bar-chart", edu, { values: a(2, 6), "values.*.value": n3(0), max: { ...n3(0), exclusiveMinimum: 0 }, highlight: n3(0, 5, true) });
   add("line-chart", edu, { values: a(2, 10), "values.*.value": n3(0), max: { ...n3(0), exclusiveMinimum: 0 }, target: n3(0), selected: n3(0, 9, true) });
   add("comparison-matrix", edu, { columns: a(2, 3), rows: a(0, 5), "rows.*.values": a(0, 3) });
+  var cn2 = "families/cn-information.mjs / cn-infographic.mjs";
+  var cnNum = (minimum, maximum, type2 = "number") => ({ type: type2, minimum, maximum });
+  add("quadrant-map pictorial-ratio source-citations comparison-matrix", cn2, { style: diagramStyleSchema });
+  add("comparison-matrix", cn2, { layout: e("matrix", "correspondence"), "correspondence.gap": cnNum(120, 300), "correspondence.rowHeight": cnNum(58, 100), "correspondence.rowGap": cnNum(6, 28), "correspondence.highlightRow": cnNum(-1, 4, "integer"), "correspondence.arrow": e("auto", "tapered", "swallowtail"), "correspondence.revealAt": { ...a(1, 5), items: cnNum(0, 7.2) } });
+  add("quadrant-map", cn2, { focus: e("none", "top-left", "top-right", "bottom-left", "bottom-right"), dashedAxis: b, gapX: cnNum(24, 72), gapY: cnNum(24, 72), quadrants: { ...a(4, 4), items: { type: "object", additionalProperties: false, required: ["id", "label", "detail", "at"], properties: { id: e("top-left", "top-right", "bottom-left", "bottom-right"), label: s, detail: s, at: cnNum(0, 7.2) } } } });
+  add("pictorial-ratio", cn2, { total: cnNum(1, 50, "integer"), value: cnNum(0, 50), columns: cnNum(1, 10, "integer"), gap: cnNum(8, 28), icon: e("file", "person", "circle"), at: cnNum(0, 6), step: cnNum(0, 0.5) });
+  add("source-citations", cn2, { sources: { ...a(1, 4), items: { type: "object", additionalProperties: false, required: ["id", "title", "locator", "quote", "kind", "at"], properties: { id: { type: "string", pattern: "^source-[a-z0-9-]+$" }, title: s, locator: s, quote: s, kind: e("file", "web"), at: cnNum(0, 7.2) } } }, citedIds: { ...a(1, 4), items: s }, activeId: s });
   add("event-timeline", edu, { events: a(2, 5), "events.*.status": e("done", "active", "todo") });
   add("metric-dashboard", edu, { metrics: a(3, 3), "metrics.*.progress": n3(0, 1), progress: { ...a(2, 8), items: n3(0, 100) }, progressLabels: a(0, 8), checks: a(0, 5) });
   add("definition-card", edu, { factors: a(0, 3) });
@@ -10299,12 +10965,17 @@ ${workflowLayoutCSS}
   var keyframe = obj({ at: strictNum(0, 1), x: strictNum(0, 1), y: strictNum(0, 1), zoom: strictNum(1, 4), ease: s });
   keyframe.required = ["at", "x", "y", "zoom"];
   var mediaProperties = { type: e("image", "video"), src: { type: "string", minLength: 1 }, alt: s, width: strictNum(1, 32e3), height: strictNum(1, 32e3), fit: e("contain", "cover"), maxZoom: strictNum(1, 4), sourceStart: strictNum(0, 86400), sourceDuration: strictNum(0.01, 86400), label: s, title: s, caption: s, camera: { type: "array", minItems: 2, items: keyframe }, regions: list5(region) };
-  var panel4 = obj(mediaProperties);
-  panel4.required = ["type", "src", "width", "height"];
-  var shot = obj({ ...mediaProperties, start: strictNum(0, 1), end: strictNum(0, 1), transition: e("cut", "dissolve", "push"), transitionSeconds: strictNum(0.05, 2), splitAt: strictNum(0, 0.9), splitFrom: b, noteLabel: s, noteTitle: s, notes: { ...a(0, 4), items: s }, layout: e("full", "pip", "compare", "wipe", "triptych", "collage", "focus"), mediaPanels: list5(panel4), focus: obj({ ...point2.properties, zoom: strictNum(1, 4), label: s }), wipeAt: strictNum(0, 0.6), wipeRest: strictNum(0.05, 0.95) });
+  var panel5 = obj(mediaProperties);
+  panel5.required = ["type", "src", "width", "height"];
+  var shot = obj({ ...mediaProperties, start: strictNum(0, 1), end: strictNum(0, 1), transition: e("cut", "dissolve", "push"), transitionSeconds: strictNum(0.05, 2), splitAt: strictNum(0, 0.9), splitFrom: b, noteLabel: s, noteTitle: s, notes: { ...a(0, 4), items: s }, layout: e("full", "pip", "compare", "wipe", "triptych", "collage", "focus"), mediaPanels: list5(panel5), focus: obj({ ...point2.properties, zoom: strictNum(1, 4), label: s }), wipeAt: strictNum(0, 0.6), wipeRest: strictNum(0.05, 0.95) });
   shot.required = ["type", "src", "width", "height", "start", "end"];
   add("mixed-media-sequence", "mixed-media-motion.mjs:24", { strength: e("still", "light", "standard", "emphasis"), previewDuration: strictNum(0.1, 600), media: { ...a(1, 12), items: shot } });
   var schemaConditions = {
+    "comparison-matrix": [{ when: "layout is matrix", hidden: ["correspondence", "style"], reason: "Legacy table keeps its original layout; these controls apply only to correspondence" }, { when: "layout is correspondence", hidden: ["eyebrow", "badge", "series", "footer", "columns[].tag"], reason: "Correspondence uses title, subtitle, note, column names and row values; exactly two columns, 1\u20135 rows, total row height \u2264435px" }],
+    "quadrant-map": [{ when: "always", reason: "Exactly four unique position IDs; text must fit the visible width at the chosen font sizes; gapX/gapY change inner spacing while axis centers remain fixed" }],
+    "pictorial-ratio": [{ when: "always", reason: "0 \u2264 value \u2264 total; each full icon is one unit, partial icon is fractional; total/columns/gap must keep icon size \u226530px and at+(total-1)*step \u22647.2" }],
+    "source-citations": [{ when: "always", reason: "IDs are unique; citedIds and activeId refer to existing sources; supply verified source text and location, not template placeholders" }],
+    "ani-atom-hd-attachment-card": [{ when: "layers[].props.display is legacy", hidden: ["layers[].props.fileName", "layers[].props.fileBytes", "layers[].props.fileType", "layers[].props.status", "layers[].props.progress"], reason: "Original attachment appearance retained; states must be empty" }, { when: "layers[].props.display is file", hidden: ["layers[].props.title", "layers[].props.kind", "layers[].props.lineCount"], reason: "File metadata mode; states require ani-hd-parts to animate. With effect none, the last state is displayed." }, { when: "layers[].props.states is non-empty", hidden: ["layers[].props.status", "layers[].props.progress"], reason: "Explicit states control native 0\u20138s status; first at=0, strictly increasing; idle progress=0, success progress=100" }],
     "ani-atom-browser": [{ when: "imageSrc is non-empty", hidden: ["heading", "body", "items"], reason: "imageSrc replaces the native page body" }],
     "ani-atom-folder": [{ when: "open is false", hidden: ["fileLabels"], reason: "closed folders conceal files" }],
     "ani-atom-input": [{ when: "state is empty", hidden: ["value", "errorText"], reason: "placeholder is displayed" }, { when: "state is input", hidden: ["placeholder", "errorText"], reason: "value is displayed" }],
@@ -10398,14 +11069,14 @@ ${workflowLayoutCSS}
       return;
     }
     const actual = type(value), expected = schema.type;
-    const numeric = (expected === "number" || expected === "integer") && schema["x-numericString"] && actual === "string" && value.trim() !== "" && Number.isFinite(Number(value));
-    if (expected && (expected === "integer" ? actual !== "number" && !numeric || !Number.isInteger(Number(value)) : actual !== expected && !numeric)) {
+    const numeric2 = (expected === "number" || expected === "integer") && schema["x-numericString"] && actual === "string" && value.trim() !== "" && Number.isFinite(Number(value));
+    if (expected && (expected === "integer" ? actual !== "number" && !numeric2 || !Number.isInteger(Number(value)) : actual !== expected && !numeric2)) {
       issue("type", `Expected ${expected}, received ${actual}`);
       return;
     }
-    if (numeric) warnings.push({ path: path2, code: "numeric-string", message: "Legacy numeric string accepted; use a JSON number for new configurations." });
+    if (numeric2) warnings.push({ path: path2, code: "numeric-string", message: "Legacy numeric string accepted; use a JSON number for new configurations." });
     if (schema.enum && !schema.enum.some((x) => same(x, value))) issue("enum", "Use one of: " + schema.enum.map(String).join(", "));
-    if (actual === "number" || numeric) {
+    if (actual === "number" || numeric2) {
       const number9 = Number(value);
       if (!Number.isFinite(number9)) issue("finite", "Number must be finite");
       if (schema.minimum !== void 0 && number9 < schema.minimum) issue("minimum", `Must be >= ${schema.minimum}`);
@@ -10635,10 +11306,10 @@ ${workflowLayoutCSS}
   };
   function describeEffect(effect) {
     if (!effect || effect.id === "none") return { role: "still", family: "still", controls: [], optionsSchema: { type: "object", properties: {}, additionalProperties: false }, requiresNextScene: false };
-    const role = effect.category === "\u80CC\u666F" ? "background" : effect.category === "\u8F6C\u573A" ? "transition" : effect.exclusive || effect.id.startsWith("ani-") ? "internal" : effect.selector === ".motion-wrap" ? "wrapper" : "target";
+    const role = effect.category === "\u80CC\u666F" ? "background" : effect.category === "\u8F6C\u573A" ? "transition" : effect.internal || effect.exclusive || effect.id.startsWith("ani-") ? "internal" : effect.selector === ".motion-wrap" ? "wrapper" : "target";
     const properties = {};
     if (!["internal"].includes(role) && effect.id !== "media-sequence-motion") properties.background = { type: "string", description: "\u80CC\u666F\u6548\u679C ID\uFF1B\u4EC5\u4F5C\u7528\u4E8E\u58F0\u660E background \u76EE\u6807\u7684\u7EC4\u4EF6" };
-    if (!effect.exclusive && !effect.id.startsWith("ani-")) properties.selector = { type: "string", description: "\u663E\u5F0F\u76EE\u6807\uFF1B\u5FC5\u987B\u5339\u914D\u5B9E\u9645\u5185\u5BB9\uFF0C\u4E0D\u80FD\u8986\u76D6\u6DF7\u526A\u5A92\u4F53\u4E16\u754C" };
+    if (!effect.internal && !effect.exclusive && !effect.id.startsWith("ani-")) properties.selector = { type: "string", description: "\u663E\u5F0F\u76EE\u6807\uFF1B\u5FC5\u987B\u5339\u914D\u5B9E\u9645\u5185\u5BB9\uFF0C\u4E0D\u80FD\u8986\u76D6\u6DF7\u526A\u5A92\u4F53\u4E16\u754C" };
     if (effect.id === "zoom-focus") properties.scale = { type: "number", minimum: 1, maximum: 3, default: 1.32 };
     if (effect.id === "scroll-panel") properties.distance = { type: "number", minimum: 0 };
     if (effect.id === "ani-machine-process") properties.travelDistance = { type: "number", description: "\u8F93\u5165\u6750\u6599\u5230\u5904\u7406\u88C5\u7F6E\u7684\u79FB\u52A8\u8DDD\u79BB\uFF1B\u4EC5\u5728\u7EC4\u4EF6\u5E03\u5C40\u4ECD\u4FDD\u7559\u771F\u5B9E\u76EE\u6807\u65F6\u8C03\u6574" };
@@ -10677,15 +11348,15 @@ ${workflowLayoutCSS}
   }
 
   // component-renderers-entry.mjs
-  var components29 = [...components, ...components2, ...components3, ...components4, ...components6, ...components5, ...components7, ...components8, ...components9, ...components10, ...components11, ...components12, ...components13, ...components14, ...components15, ...components16, ...components17, ...components18, ...components19, ...components20, ...components21, ...components22, ...components23, ...components24, ...components25, ...components26, ...components27, ...components28];
+  var components30 = [...components, ...components2, ...components3, ...components4, ...components6, ...components5, ...components7, ...components8, ...components9, ...components10, ...components11, ...components12, ...components13, ...components14, ...components15, ...components16, ...components17, ...components18, ...components19, ...components20, ...components21, ...components22, ...components23, ...components24, ...components25, ...components26, ...components27, ...components28, ...components29];
   function mountNext(root, id, props, instance, effect, options = {}, mediaBase = assetBaseURL) {
-    const current = components29.find((c) => c.id === id), definition = effects.find((e2) => e2.id === effect) || { id: effect };
+    const current = components30.find((c) => c.id === id), definition = effects.find((e2) => e2.id === effect) || { id: effect };
     const compatible = effectCompatibility(current, definition, props, { selector: options.selector });
     if (!compatible.compatible) throw Error(compatible.reason);
     root.querySelector(".motion-next")?.remove();
     if (!effects.some((e2) => e2.id === effect && e2.category === "\u8F6C\u573A")) return;
     const next = options.nextScene || props.transitionNext || (effect === "shared-slide" ? { component: "lecture-stage", props: { title: "\u4E0B\u4E00\u573A\u666F\u6807\u9898", subtitle: "\u4E0B\u4E00\u573A\u666F\u8BF4\u660E", chapter: "\u7AE0\u8282 / 02" } } : { component: "chapter-summary", props: { title: "\u4E0B\u4E00\u573A\u666F\u6807\u9898", subtitle: "\u4E0B\u4E00\u573A\u666F\u8BF4\u660E" } });
-    const target = components29.find((c) => c.id === next.component);
+    const target = components30.find((c) => c.id === next.component);
     if (!target) throw Error("\u4E0B\u4E00\u5E45\u753B\u9762\u7684\u7EC4\u4EF6\u4E0D\u5B58\u5728\uFF1A" + next.component);
     assertComponentProps(target, { ...target.defaults, ...next.props }, { render: true });
     const node4 = document.createElement("div");
@@ -10707,7 +11378,7 @@ ${workflowLayoutCSS}
   }
   var assetBaseURL = new URL("../", document.currentScript?.src || new URL("vendor/component-renderers.js", document.baseURI).href).href;
   function mount(root, id, props, instance, mediaBase = assetBaseURL) {
-    const component2 = components29.find((c) => c.id === id);
+    const component2 = components30.find((c) => c.id === id);
     if (!component2) throw Error("Unknown component " + id);
     assertComponentProps(component2, { ...component2.defaults, ...props }, { render: true });
     const html = component2.render(normalizeMediaProps({ ...component2.defaults, ...props, ...id === "mixed-media-sequence" ? { previewDuration: Number(root.dataset.duration || 8) } : {} }), helpers(instance));
@@ -10725,3 +11396,26 @@ ${workflowLayoutCSS}
   }
   return __toCommonJS(component_renderers_entry_exports);
 })();
+/*!
+MIT License
+
+Copyright (c) 2025 AntV
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/

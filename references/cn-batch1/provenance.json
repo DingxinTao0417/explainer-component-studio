@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "checkedAt": "2026-09-21",
+  "runtime": "Native HTML/SVG/GSAP; no upstream runtime embedded",
+  "licenses": [
+    {
+      "repository": "antvis/Infographic",
+      "commit": "2ea1894255e4002c7735586778be86d13ec30346",
+      "licensePath": "LICENSE",
+      "licenseBlob": "d52dc4b1325f6fef156f544eff1d12cf5cd863bc",
+      "licenseSha256": "cacec99fa5f02241b33906689924718962f4991cd6eada3624f56c6bd4f3ff28",
+      "localLicense": "licenses/antv-infographic-MIT.txt",
+      "source": "https://github.com/antvis/Infographic/tree/2ea1894255e4002c7735586778be86d13ec30346"
+    },
+    {
+      "repository": "ant-design/x",
+      "commit": "8b76d6a22067945c5d224c02ee1448dfb30144ff",
+      "licensePath": "packages/x/LICENSE",
+      "licenseBlob": "9b563deb0073e49fbbba1067fb2cbdd5ad3453a4",
+      "licenseSha256": "3c82654bb472ebbcacc4c1ff00f94aa8c60c4b7ee011b16bafcbacecc3703458",
+      "localLicense": "licenses/ant-design-x-MIT.txt",
+      "source": "https://github.com/ant-design/x/tree/8b76d6a22067945c5d224c02ee1448dfb30144ff"
+    },
+    {
+      "repository": "apache/echarts",
+      "commit": "984bf46b2f905dd0ad909a2d5e6e9d66a1b6568c",
+      "licensePath": "LICENSE",
+      "licenseBlob": "c633765305b658c2b42837d2b72071d73c0379c5",
+      "licenseSha256": "634293835b43a6dd2094fa39182a3d9a6b9ca43b7fdb9ac354e8037af2a3093a",
+      "localLicense": "licenses/echarts-Apache-2.0.txt",
+      "source": "https://github.com/apache/echarts/tree/984bf46b2f905dd0ad909a2d5e6e9d66a1b6568c"
+    }
+  ],
+  "adaptations": [
+    {
+      "component": "quadrant-map",
+      "kind": "code-adaptation",
+      "upstream": "antvis/Infographic",
+      "sourcePath": "src/designs/structures/compare-quadrant.tsx",
+      "function": "calculateQuadrantPositions",
+      "local": "families/cn-information.mjs#quadrantPositions",
+      "changes": "Port four center positions to plain JavaScript. Native SVG rendering, explicit IDs, validation, typography, style and seekable animation are implemented locally."
+    },
+    {
+      "component": "comparison-matrix",
+      "kind": "design-reference",
+      "upstream": "antvis/Infographic",
+      "officialPage": "https://infographic.antv.vision/reference/built-in-structures",
+      "changes": "Add correspondence layout to existing local matrix. Native row geometry reuses existing tapered/swallowtail arrow parts; no copied renderer."
+    },
+    {
+      "component": "pictorial-ratio",
+      "kind": "concept-reference",
+      "upstream": "apache/echarts",
+      "officialPage": "https://echarts.apache.org/en/option.html#series-pictorialBar",
+      "changes": "Native icon array, proportional fractional fill and derived labels; no ECharts code or runtime copied. Each complete icon equals one unit."
+    },
+    {
+      "component": "ani-atom-hd-attachment-card",
+      "kind": "design-reference",
+      "upstream": "ant-design/x",
+      "officialPage": "https://x.ant.design/components/file-card-cn",
+      "changes": "Extend existing local file shape with filename, byte size, type and time-indexed states. Native rendering; no upload/network operation or copied upstream code."
+    },
+    {
+      "component": "source-citations",
+      "kind": "design-reference",
+      "upstream": "ant-design/x",
+      "officialPage": "https://x.ant.design/components/sources-cn",
+      "changes": "Native claim-to-source references with explicit stable IDs, visible locator/quote and selected source. No automatic verification or network retrieval; no upstream code copied."
+    }
+  ]
+}

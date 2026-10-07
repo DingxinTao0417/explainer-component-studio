@@ -4,7 +4,8 @@ import {pathToFileURL,fileURLToPath} from 'node:url';
 import {components,css} from '../registry.mjs';
 import {baseCSS,helpers,esc} from '../shared.mjs';
 import {normalizeMediaProps,rewriteRenderedMediaMarkup} from '../content-runtime.mjs';
-import {frameStyles,backgroundStyles} from '../stage-appearance.mjs';
+import {frameStyles,backgroundStyles,normalizeAppearance} from '../stage-appearance.mjs';
+import {toneableFamilies} from '../tone-css.mjs';
 import {normalizeTiming,mapTime,actionCues,retimeTimeline} from '../scene-timing.mjs';
 import {mixSceneSoundtrack} from './mix-soundtracks.mjs';
 import {root,hash,buildDirectorIndex} from './director-index.mjs';
@@ -67,8 +68,11 @@ export async function exportDirectorScene(configPath,bundlePath,{mountBase:mount
  if(effectMeta?.exclusive&&effectMeta.exclusive!==component.id)throw Error('Effect is exclusive to '+effectMeta.exclusive);
  const timing=normalizeTiming(effect,config.timing),options=config.effectOptions||{};
  for(const k of ['duration','start','transitionAt','transitionDuration'])if(k in options)throw Error('Use timing and action anchors instead of effectOptions.'+k);
- const appearance=config.appearance||{frame:'none',background:'original'};
+ const appearance=normalizeAppearance(config.appearance||{frame:'none',background:'original'});
  if(!frameStyles.some(f=>f.id===(appearance.frame??'none'))||!backgroundStyles.some(b=>b.id===(appearance.background??'original')))throw Error('Unknown frame or background');
+ if(config.appearance?.tone!==undefined&&config.appearance.tone!==appearance.tone)throw Error('Unknown tone: '+config.appearance.tone);
+ if(config.appearance?.mode!==undefined&&config.appearance.mode!==appearance.mode)throw Error('Unknown mode: '+config.appearance.mode);
+ const toneable=toneableFamilies.some(f=>(index.components.find(c=>c.id===component.id)?.source||'').endsWith('/'+f));
  const stored=JSON.parse(await readFile(resolve(root,'content',component.id+'.json'),'utf8'));
  const props={...stored,...contract.resolvedProps,...(mediaClock?{previewDuration:timing.duration}:{})},markup=component.render(normalizeMediaProps(props),helpers('director-scene'));
  let nextMarkup='';
@@ -90,6 +94,8 @@ export async function exportDirectorScene(configPath,bundlePath,{mountBase:mount
   const data=await readFile(file);if(dependencyData.has(key)&&!dependencyData.get(key).equals(data))throw Error('Conflicting asset: '+key);dependencyData.set(key,data);
  };
  for(const file of ['vendor/gsap.min.js','vendor/hyperframe-runtime.js','vendor/component-renderers.js','scene-timing.mjs'])await add(file,resolve(root,file));
+ // The shared renderer includes the adapted AntV quadrant position function.
+ for(const file of ['provenance.json','licenses/antv-infographic-MIT.txt','licenses/ant-design-x-MIT.txt','licenses/echarts-Apache-2.0.txt'])await add('references/cn-batch1/'+file,resolve(root,'references/cn-batch1',file));
  const markupAndStyles=markup+nextMarkup+css+baseCSS;
  const references=[...markupAndStyles.matchAll(/(?:src|href)\s*=\s*["']([^"']+)["']|url\(\s*["']?([^)'"\s]+)["']?\s*\)/gi)].map(m=>(m[1]||m[2]).replaceAll('&amp;','&'));
  for(const raw of new Set(references)){
@@ -120,7 +126,7 @@ const config=${inline(normalized)},timing=${inline(timing)},root=document.getEle
 if(!${mediaClock})lib.mount(root,config.component,config.props,'director-scene');
 lib.mountNext(root,config.component,config.props,'director-scene',config.effect,config.effectOptions||{});
 const native=lib.buildEffect(gsap,root,config.effect,{...(config.effectOptions||{}),duration:${mediaClock?'timing.duration':'8'}});
-lib.applyStageAppearance(root,config.appearance,{width:${component.width},height:${component.height},componentId:config.component});
+lib.applyStageAppearance(root,config.appearance,{width:${component.width},height:${component.height},componentId:config.component,toneable:${toneable},timeline:native});
 // Timed media stay framework owned. Identity-time media are supported; the
 // exporter rejects nonlinear media retiming rather than faking synchronization.
 if(!${mediaClock})for(const media of root.querySelectorAll('video,audio:not([data-component-sfx])')){const start=Number(media.dataset.start||0),end=start+Number(media.dataset.duration||8);media.dataset.start=String(mapTime(start,timing.points));media.dataset.duration=String(mapTime(end,timing.points)-mapTime(start,timing.points));}
@@ -137,9 +143,9 @@ await import('./vendor/hyperframe-runtime.js');
  // instance. mountBase is relative to that parent's HyperFrames root.
  // Static names must be unique before HyperFrames CLI compilation, not only at runtime.
  const subId="director-"+hash(Buffer.from(JSON.stringify(normalized))).slice(0,16),subRoot=subId+"-root";
- const subScript=`${mapTime.toString()}\n${retimeTimeline.toString()}\nconst root=document.getElementById(${inline(subRoot)});const host=root.closest('[data-composition-src]')||root;const instance=host.getAttribute('data-composition-id')||'director-scene';root.id=(host.id||instance)+'-root';const config=${inline(normalized)},timing=${inline(timing)},lib=ComponentLibraryRuntime,mediaBase=new URL(${inline(mountBase)},document.baseURI).href;if(!${mediaClock})lib.mount(root,config.component,config.props,instance,mediaBase);else root.querySelectorAll('video').forEach((media,i)=>media.id=instance+'-media-'+i);lib.mountNext(root,config.component,config.props,instance,config.effect,config.effectOptions||{},mediaBase);const native=lib.buildEffect(gsap,root,config.effect,{...(config.effectOptions||{}),duration:${mediaClock?'timing.duration':'8'}});lib.applyStageAppearance(root,config.appearance,{width:${component.width},height:${component.height},componentId:config.component});window.__timelines=window.__timelines||{};window.__timelines[${inline(subId)}]=${mediaClock?'native':'retimeTimeline(gsap,native,timing)'};root.dataset.componentReady='true';host.dataset.componentReady='true';root.querySelector('[data-component-sfx]').id=instance+'-sfx';`;
+ const subScript=`${mapTime.toString()}\n${retimeTimeline.toString()}\nconst root=document.getElementById(${inline(subRoot)});const host=root.closest('[data-composition-src]')||root;const instance=host.getAttribute('data-composition-id')||'director-scene';root.id=(host.id||instance)+'-root';const config=${inline(normalized)},timing=${inline(timing)},lib=ComponentLibraryRuntime,mediaBase=new URL(${inline(mountBase)},document.baseURI).href;if(!${mediaClock})lib.mount(root,config.component,config.props,instance,mediaBase);else root.querySelectorAll('video').forEach((media,i)=>media.id=instance+'-media-'+i);lib.mountNext(root,config.component,config.props,instance,config.effect,config.effectOptions||{},mediaBase);const native=lib.buildEffect(gsap,root,config.effect,{...(config.effectOptions||{}),duration:${mediaClock?'timing.duration':'8'}});lib.applyStageAppearance(root,config.appearance,{width:${component.width},height:${component.height},componentId:config.component,toneable:${toneable},timeline:native});window.__timelines=window.__timelines||{};window.__timelines[${inline(subId)}]=${mediaClock?'native':'retimeTimeline(gsap,native,timing)'};root.dataset.componentReady='true';host.dataset.componentReady='true';root.querySelector('[data-component-sfx]').id=instance+'-sfx';`;
  const sub=`<!doctype html><html><head><meta charset="utf-8"></head><body><template><style>${fontFaces}${baseCSS.replace(/#root\{[^}]*\}/,'')}\n${css}</style><div id="${subRoot}" class="director-scene-root" style="position:relative;width:100%;height:100%;overflow:hidden" data-composition-id="${subId}" data-width="${component.width}" data-height="${component.height}" data-duration="${timing.duration}"><div class="component-stage"><div class="motion-wrap"></div></div><audio id="${subId}-sfx" data-component-sfx class="clip" src="${esc(mountBase)}assets/scene-sfx.wav" data-start="0" data-duration="${timing.duration}" data-track-index="90" data-volume="${gain}"></audio></div><script src="${esc(mountBase)}vendor/component-renderers.js"></script><script>${subScript}</script></template></body></html>`;
- const lightweightHd=component.id.includes('-hd-')&&['ani-hd-parts','none'].includes(effect)&&(appearance.frame??'none')==='none'&&(appearance.background??'original')==='original';
+ const lightweightHd=component.id.includes('-hd-')&&['ani-hd-parts','none'].includes(effect)&&(appearance.frame??'none')==='none'&&(appearance.background??'original')==='original'&&appearance.tone==='original'&&appearance.mode==='original';
  let compositionHTML=mediaClock?sub.replace('<div class="motion-wrap"></div>',`<div class="motion-wrap">${rewriteRenderedMediaMarkup(markup,mountBase)}</div>`):sub;
  if(lightweightHd){
   // Freeze only the rendered objects, not an image. Config + original sources
