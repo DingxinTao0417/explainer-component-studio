@@ -2,7 +2,7 @@
 
 这 13 个本地 WAV 是已安装 `media-use` 技能中音效文件的处理版本，未调用付费服务、未生成音乐或配音。技能 `audio/assets/sfx/CREDITS.md` 将这些文件的来源声明为 Pixabay，许可声明为 Pixabay Content License。本工程保留了该原始声明，以及原始文件和 SHA-256；没有添加缺失的作者或单项下载链接。
 
-来源目录：`C:/Users/20825/.agents/skills/media-use/audio/assets/sfx/`
+来源目录：`~/.agents/skills/media-use/audio/assets/sfx/`
 
 - 官方许可摘要：<https://pixabay.com/service/license-summary/>（核对日期 2026-09-17）
 - 原始许可声明副本：`.media/sfx-source/CREDITS.md`
