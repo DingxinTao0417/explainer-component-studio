@@ -1,42 +1,114 @@
-# 科普视频组件与动画库 V3
+# Explainer Component Studio
 
-**组件包含软件界面、原创讲解图形、动画风场景与独立基础部件。当前数量以自动生成的 [编导索引](DIRECTOR_INDEX.md) 为准。**
+面向科普、AI 与软件讲解视频的可编辑组件库，使用 HTML、CSS 和 SVG 绘制界面与图解，支持动画预览、内容替换及 HyperFrames 场景导出。
 
-2026-09-28 起：每个组件在 [component-semantics.json](component-semantics.json) 里有分级（core 默认参与挑选；episode / legacy / hidden-platform 默认隐藏，`prepare --include hidden` 打开）和语义元数据（意图、主题词、槽位上限、什么时候别用）。讲解图形、图表和 B-roll 支持品牌包调性 `appearance.tone`（A–D）和成片模式 `appearance.mode: "video"`（去小字、正文 ≥27px、主体推近）；界面复刻保持软件原色。改前改后对比见 `reports/tone-sheets/`。
+- 239 个注册组件（含 4 个旧版兼容部件）：动画风场景与基础部件、完整车辆模块、语义箭头与文字框、软件界面和混剪框架。
+- 126 种动画、13 种音效、423 个图标条目。
+- 7 种边框、8 种背景、7 套外观组合，可分别替换并随场景配置保存。
+- 全屏遮幅转场覆盖整个画布，包括边框与背景。
 
-与视频编导 Skill 配套的检索、旁白动作节点、音效同步和独立组件包，见 [编导接入指南](DIRECTOR_GUIDE.md)。画廊可下载 v5 编导配置，旧场景配置继续兼容。
+目录中的缩略图是组件截图，打开后的预览运行实际组件代码。软件界面为教学模拟，示例操作与数据不代表真实执行记录；复刻造型不等于逐像素还原。
 
-新增独立的[图标库](http://127.0.0.1:3031/catalog.html?tab=icons)：253 个通用图标、170 个 AI 公司／模型／产品标记，支持搜索、透明 SVG／PNG 下载、配色与线宽调整。[使用说明与来源](ICON_LIBRARY_GUIDE.md)。
+所有组件、动画演示和组合示例使用可替换的模板占位内容。每期视频的具体案例保存在独立场景配置中；共享组件保留结构、样式、功能标识和有效的数据类型。字段与状态的使用方式见 [模板内容约定](TEMPLATE_GUIDE.md)。
 
-新增的 [迁移模板与运输部件](TRANSFER_GUIDE.md) 包含 6 个基础部件、9 个场景与专属动画，支持模板内容、透明 SVG、边框背景切换。
+新增一批可调组件：对应关系、四象限、象形比例、附件状态与来源引用。可在 [交互示例](demos/cn-information/index.html) 中拖动时间和调参，或阅读 [参数与调用说明](CN_INFORMATION_GUIDE.md)。
 
-全库默认内容、动画演示与组合示例均使用通用模板占位。具体视频的案例保存在项目场景配置中，产品与控件的功能标识保留。[模板内容约定](TEMPLATE_GUIDE.md)。
+## 视频编排 Skill
 
-[B-roll 动态选片](http://127.0.0.1:3031/demos/broll/index.html) · [B-roll 使用说明](BROLL_GUIDE.md) · [打开本地画廊](http://localhost:3031/catalog.html) · [播放参考舞台](http://localhost:3031/catalog.html?scene=reference-stage) · [V3 使用说明](V3_GUIDE.md) · [完整目录](CATALOG.md) · [质量与原型边界](QUALITY.md)
+仓库包含作者使用的三套技能：[编导与整期制作](skills/science-video-director/SKILL.md)、[前期写稿与分镜](skills/science-video-preproduction/SKILL.md)、[H3 单镜头制作](skills/h3-science-video/SKILL.md)。配套脚本通过当前组件索引检索、校验、调参，并把冻结的组件包绑定到本期时间轴；调色、文字、位置、尺寸、投影和动作均在实例配置中修改。
 
-[动画风展示页](http://127.0.0.1:3031/demos/animation-style/index.html) · [动画风使用说明](ANIMATION_STYLE_GUIDE.md) · [本次视觉与功能复查](reports/animation-style/REVIEW.md)。动画风依据用户提供的三组材料，以独立分类保留蓝色立体插画造型，支持原图对照。
-
-[动画风基础部件](http://127.0.0.1:3031/demos/animation-atoms/index.html) 提供独立表格、文件、浏览器、文档、文件夹和连线，可改内容、位置与尺寸，下载透明 SVG 或组合使用。目录切换分类会清除旧搜索，避免 `ani-` 等筛选条件把其他分类筛空。
-
-画廊里可以换 JSON 内容、播放动画、选择边框与背景、试听和调节声音，再下载场景配置。配色保留白底、Codex 风格蓝色与薄荷绿。真实 PPT、录屏或 AI 视频可以放入课件舞台的媒体槽位。
-
-所有组件新增“边框与背景”面板：7 种边框、8 种背景可独立组合，也可使用 7 套预设或恢复原样。选择会随场景配置保存，HTML 导出后保持一致。[使用说明](STAGE_APPEARANCE_GUIDE.md) · [预览新舞台样式](http://127.0.0.1:3031/catalog.html?scene=reference-stage&appearance=reference)。
-
-本轮参考片里的透视网格、分层弧带、斜向转场、圆形装饰和虚线边框已做成可复用实现。[参考舞台配置](examples/reference-stage-scene.json) 展示两段内容和动态背景的组合。
-
-修改 `content/*.json` 后运行 `npm run build`，再刷新页面；需要刷新缩略图时运行 `npm run snapshot`。画廊试改不自动保存到磁盘。
-
-```powershell
-npm run build
-node scripts/export-scene.mjs examples/reference-stage-scene.json --out examples/reference-stage.html
+```bash
+npm ci
+python scripts/install-skills.py --dry-run
+python scripts/install-skills.py
+python scripts/verify-skills.py
 ```
 
-上述命令生成 HTML，不导出视频。迁移到没有依赖的新目录时先运行 `npm ci`。Windows 浏览器检查脚本使用本机 Chrome 路径。
+安装默认写入 Codex 技能目录，并拒绝覆盖已有同名技能。技能要用的品牌包和手法库需要自己准备，照 [工作区初始化指引](WORKSPACE_SETUP.md) 一步一步做。也可直接读取仓库内的技能，不安装。详见 [安装、依赖与调用示例](skills/README.md) 和 [编导组件接口](DIRECTOR_GUIDE.md)。模型、HyperFrames 官方技能和本期素材按需另行配置；不自动安装模型或写入凭据。
 
-当前验证请查看 [功能检查](reports/verification.json)、[音效检查](reports/audio-verification.json) 和 [逐项动态视觉检查](reports/dynamic-v3/FINAL_VISUAL_REVIEW.md)。Apple 界面按 macOS Sequoia 15 / iOS 18 / iPadOS 18 重建，字体、图标与真机仍有差异；不声称全部组件逐像素 1:1。没有重新渲染视频，最终配音混音需在成片时试听。
+## 快速预览
 
-本地服务监听 `127.0.0.1:3031`，保留供查看。用 `scripts/start-preview.ps1` 启动或复用，`scripts/stop-preview.ps1` 停止。没有提交、推送、部署或公开发布。旧版说明保留在 [README-v2.md](README-v2.md)，旧版压缩包也保留。
+先安装 Node.js，然后运行：
 
-## 信息图与附件扩展
+```bash
+git clone https://github.com/DingxinTao0417/explainer-component-studio.git
+cd explainer-component-studio
+node scripts/server.mjs --port 3031
+```
 
-新增四象限、象形比例和来源引用，并增强对应关系与附件状态。参数、时序与来源说明见 [信息图调用说明](CN_INFORMATION_GUIDE.md)，可直接打开 [可调预览](demos/cn-information/index.html)。
+打开 [本地组件库](http://127.0.0.1:3031/catalog.html)。仓库包含预构建页面和运行文件，仅预览不需要安装 npm 依赖。若端口已被占用，换一个空闲端口并打开对应地址。
+
+在组件详情页可以修改 JSON 内容、选择动画、切换边框与背景、调整声音，再下载场景配置。页面试改不会自动写回源码。
+
+## 修改与构建
+
+```bash
+npm ci
+npm run build
+```
+
+修改 `content/*.json` 或组件源码后重新构建，再刷新浏览器。需要更新缩略图时运行 `npm run snapshot`；截图脚本默认使用 Windows Chrome 路径，其他环境需调整浏览器路径。界面字体使用本机字体回退，不同系统可能存在显示差异。
+
+导出可复用的 HyperFrames HTML：
+
+```bash
+node scripts/export-scene.mjs examples/reference-stage-scene.json --out examples/my-scene.html
+```
+
+此命令生成 HTML，不渲染 MP4。
+
+## 部署到 Vercel
+
+在 Vercel 导入此 GitHub 仓库，Root Directory 使用仓库根目录（留空或 `.`）。仓库中的 `vercel.json` 已配置：
+
+| 设置 | 值 |
+| --- | --- |
+| Framework Preset | Other |
+| Install Command | `npm ci` |
+| Build Command | `npm run build:site` |
+| Output Directory | `public` |
+
+不需要环境变量或常驻 Node 服务。关联 Git 后，推送到生产分支会触发 Vercel 构建。若之前部署提示找不到 `public`，使用包含此配置的新提交重新部署。
+
+`npm run build:site` 先重新构建组件，再将网页、浏览器模块、素材、缩略图和示例复制到 `public/`。部署首页直接打开组件目录；原有 `catalog.html?component=...`、`?scene=reference-stage` 等链接继续可用。此目录不包含 npm 依赖、审查记录、本地脚本或运行日志，也不提交到 Git。
+
+本地验证静态产物：
+
+```bash
+npm ci
+npm run build:site
+```
+
+随后用任意静态 HTTP 服务以 `public/` 为网站根目录预览。不要直接双击 HTML，浏览器模块需要通过 HTTP 加载。素材依赖保持原目录关系，不要只上传 `catalog.html`。
+
+## 目录与说明
+
+| 路径 | 用途 |
+| --- | --- |
+| `catalog.html` | 组件、动画和音效目录 |
+| `families/`、`registry.mjs` | 组件实现与注册 |
+| `content/` | 默认可编辑内容 |
+| `assets/`、`.media/` | 使用素材、来源与音效原件 |
+| `previews/`、`effects/`、`demos/` | 预构建预览与示例 |
+| `compositions/` | 可复用 HyperFrames 组件 |
+| `snapshots/` | 目录展示所需缩略图 |
+| `vendor/` | 页面必须加载的浏览器运行文件 |
+| `scripts/` | 构建、预览、导出、技能安装和验证工具 |
+| `skills/` | 三套编排技能、分主题指南、配套脚本与模板 |
+| `workspace-starter/` | 视频工作区的空骨架：品牌包占位、手法库模板；准备步骤见 [工作区初始化指引](WORKSPACE_SETUP.md) |
+| `director-index.json` | 从当前源码生成的能力、参数、动效和版本索引 |
+
+- [完整组件目录](CATALOG.md)
+- [动画风组件](ANIMATION_STYLE_GUIDE.md)
+- [边框与背景](STAGE_APPEARANCE_GUIDE.md)
+- [B-roll](BROLL_GUIDE.md)
+- [音效](SOUND_GUIDE.md)
+- [场景使用说明](V3_GUIDE.md)
+- [编导 API 与组件绑定](DIRECTOR_GUIDE.md)
+- [整车、细分部件与高清素材组件](TRANSFER_KIT_GUIDE.md)
+- [语义箭头与文字框](SEMANTIC_ANNOTATIONS_GUIDE.md)
+- [混剪配置](MIXED_MEDIA_GUIDE.md)
+
+本仓库排除 `node_modules/`、审查报告、测试截图留档和运行日志；保留验证脚本，便于后续自行检查。部分历史指南中的审查报告链接因此不可用。
+
+第三方素材的来源说明保留在素材目录与 `.media/` 台账中，各素材适用其原有许可；本仓库未另行指定统一开源许可证。

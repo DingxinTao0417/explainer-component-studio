@@ -18,8 +18,7 @@
   - `VoiceDesign`：按文字描述造声音；
   - `CustomVoice`：预设音色，可以加语气指令。
 - 旁白音色：
-  - `voice-20260918`（用户本人，2026-09 录）：默认音色。它另有一份冻结的 **A 版**（整句生成、原始停顿），只在用户点名要 A 版时用。
-  - `Astral`（用户本人，2026-10-06 录，在 `<Qwen3-TTS>/voices/Astral`）：Astral 新星实验室这个号用。用 `--voice Astral`，或在 PROJECT.settings.tts.profile 里写 `Astral`。
+  - `voice-20260918`（用户本人）：默认音色。它另有一份冻结的 **A 版**（整句生成、原始停顿），只在用户点名要 A 版时用。
   - 新音色放进 `<Qwen3-TTS>/voices/<名字>/voice-new.pt` 就能用 `--voice <名字>` 调用。
 - 显卡一次只跑一个任务，靠 `runtime.lock` 控制。Qwen 网页或别的任务正在占用时，告诉用户，不要关掉用户的进程。
 

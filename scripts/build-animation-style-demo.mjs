@@ -10,9 +10,9 @@ if(!components.length)throw Error('Build the animation-style family first.');
 const out=resolve(root,'demos/animation-style');
 await fs.mkdir(out,{recursive:true});
 await fs.mkdir(resolve(root,'references/animation-style'),{recursive:true});
-const v8=process.env.ANIMATION_STYLE_V8_DIR||'reference-v8'; // 作者本机的参考素材包，不随仓库发布
+const v8='D:/workspace/视频制作/projects/20260918_图式归纳/图式归纳V8-分镜动画素材包-20260918(1)';
 const wechat=resolve(root,'reports/animation-style/reference-review-wechat');
-const desktop=process.env.ANIMATION_STYLE_REF_DIR||'reference-desktop'; // 同上
+const desktop=process.env.ANIMATION_STYLE_REFERENCE_DIR||resolve(root,'reports/animation-style/reference-desktop');
 const references={
  'ani-notice-check':[resolve(v8,'03-参考与素材/通知-独立母版.png'),'V8 · 通知独立母版'],
  'ani-tool-workbench':[resolve(wechat,'07_输入检查再修改.png'),'19 场参考 · 输入、检查、修改'],

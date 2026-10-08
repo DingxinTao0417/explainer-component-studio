@@ -2,11 +2,11 @@
 
 本库为 `science-video-director` 的默认组件来源。编导先按表达目的检索实际能力，再选模板、组合基础组件或补充生成素材。正文内容、时长和声音来自本期项目，不回写库默认值。
 
+配套技能随仓库放在 [skills/](skills/README.md)，包含安装脚本与可运行示例。以下命令以仓库根目录为当前目录；已安装技能使用实际安装路径或 `--library` 指定本库。
+
 ## 同一份能力目录
 
 需要指向、标题、对象标签、动作提示、结论或疑问框时，另读 [方向箭头与语义文字框](SEMANTIC_ANNOTATIONS_GUIDE.md)。每款独立ID进入同一索引；`scripts/select-semantic.mjs` 只负责本期确定性风格选择，不代替 compose / tune / validate / bind。
-
-配套技能随仓库放在 [skills/](skills/README.md)，包含安装脚本与可运行示例。以下命令以仓库根目录为当前目录；已安装技能使用实际安装路径或 `--library` 指定本库。
 
 `npm run build` 生成 `director-index.json`、`DIRECTOR_INDEX.md` 及运行时版本记录。索引包含组件、基础部件、场景模板、背景、边框、动画、音效和图标，每个组件条目带 `status`（core / episode / legacy / hidden-platform）和 `semantics`（intents、subjects、role、slots、avoid），来源是手改维护的 `component-semantics.json`；build 时缺元数据会报错。组件数量以该索引和 manifest 为准，旧版本说明不作为当前清单。
 

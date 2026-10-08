@@ -5,6 +5,10 @@
   "adaptation": "Repository distribution: portable runtime paths (scripts/runtime_paths.py), placeholder paths in guides, deprecated placeholder files omitted. Installed source skills are unchanged.",
   "files": [
     {
+      "path": "h3-science-video/SKILL.md",
+      "source_sha256": "d74f0a13f75c55b056016b25bc1829adf40ac5b81d1201173b1885a873322f55"
+    },
+    {
       "path": "h3-science-video/agents/openai.yaml",
       "source_sha256": "2408ce187ee9b76ba95cb41a4a4e741c7f63e7467e1ea2d4cedb23dff8c72663"
     },
@@ -13,8 +17,8 @@
       "source_sha256": "3dd0fb2b1193354ffd6a076dfa8e09eede761fda35ef548d4e2a016dfb6c948e"
     },
     {
-      "path": "h3-science-video/SKILL.md",
-      "source_sha256": "d74f0a13f75c55b056016b25bc1829adf40ac5b81d1201173b1885a873322f55"
+      "path": "science-video-director/SKILL.md",
+      "source_sha256": "02053f58d5ec4d712cebd9dbfcb77164a1fd903f1ea13fa55fe1dc8c3f38056e"
     },
     {
       "path": "science-video-director/agents/openai.yaml",
@@ -125,10 +129,6 @@
       "source_sha256": "516549c887d3eb0345cf0d60db20d6929ec51cc0378b23f941a3ccc4256b0a6e"
     },
     {
-      "path": "science-video-director/SKILL.md",
-      "source_sha256": "02053f58d5ec4d712cebd9dbfcb77164a1fd903f1ea13fa55fe1dc8c3f38056e"
-    },
-    {
       "path": "science-video-director/templates/brief-template.md",
       "source_sha256": "2b8cb151fe0be12b4133d550b6cb5641612745d17c32a38381928d0706a08be0"
     },
@@ -149,6 +149,10 @@
       "source_sha256": "0b1f1d4d139671d0c8a7c6def2da018a495627089869e38c0ceb8f9802dd5acb"
     },
     {
+      "path": "science-video-preproduction/SKILL.md",
+      "source_sha256": "91c6d050eaed5fdb4e3f1219b18fff0cf321894aabf460c4913618847efcdb9d"
+    },
+    {
       "path": "science-video-preproduction/agents/openai.yaml",
       "source_sha256": "af277e53a4c6885232bc5796aefe1966cd26efa5810aa1e664112383760b6dec"
     },
@@ -163,10 +167,6 @@
     {
       "path": "science-video-preproduction/guide/writing.md",
       "source_sha256": "b98487bced0ed3dfcaec6e9d3a1d262daa27af09bedddc439e7a8cd071ff2af9"
-    },
-    {
-      "path": "science-video-preproduction/SKILL.md",
-      "source_sha256": "91c6d050eaed5fdb4e3f1219b18fff0cf321894aabf460c4913618847efcdb9d"
     }
   ]
 }

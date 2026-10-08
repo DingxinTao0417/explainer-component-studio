@@ -21,7 +21,7 @@
 
 - **多用真实素材**：能用录屏、真实结果、Pexels 实拍、用户视频表达的，优先用；插画和组件负责解释。某期确实全用插画时，在 BRIEF 里写明原因，并用主持人和结构卡把节奏撑起来。
 - **AI 视频由用户自己生成**（`settings.ai_video_mode: user_handoff`）：skill 出参考图、逐镜视频提示词和回传清单，用户生成后放回项目。用户明确说“你来生成”才自己调用视频模型。
-- **配音**：用户给了本期录音就用原声、原速；需要生成时用本地 Qwen3-TTS（见 voice.md）。**按气口分段生成**：每个气口一个文件，停顿是可调的数字，改一句或改一处停顿都不动其余部分（用户 2026-10-06 定为默认）。音色默认 `voice-20260918`；Astral 新星实验室这个号用 `Astral`。不擅自改口播原话；觉得某句该改，写成补录建议。
+- **配音**：用户给了本期录音就用原声、原速；需要生成时用本地 Qwen3-TTS（见 voice.md）。**按气口分段生成**：每个气口一个文件，停顿是可调的数字，改一句或改一处停顿都不动其余部分（用户 2026-10-06 定为默认）。音色默认 `voice-20260918`，其他音色用 `--voice` 指定。不擅自改口播原话；觉得某句该改，写成补录建议。
 - **字幕**：默认烧录进画面，同时交 SRT/VTT。
 - **沟通**：需要用户决定时，用选项框给 2–3 个选项，推荐项放第一个；一次问完，不要逐项来回问。
 - **子代理**：工作区 AGENTS.md 已授权，做探索样片和请外人审片时可以直接派子代理（一次最多 3 个），不用每次再问。
@@ -46,7 +46,7 @@
 | 参考视频 | 用户喜欢的视频放 `<工作区>/待拆解视频/`，拆完移到 `已拆解视频/`（frames.py --compare 从这里取参考片） |
 | 频道复盘 | `<工作区>/频道复盘.md`（每期一行，规律升级记录） |
 | FFmpeg / FFprobe | 脚本自动找，优先用 `<Qwen3-TTS>/tools/ffmpeg-9.0.1-essentials_build/bin/`（ffmpeg 9，中文路径没问题）。手动调用或别的工具要用时，设 `$env:FFMPEG_PATH` / `$env:FFPROBE_PATH` 指向它。系统自带的旧版处理中文路径不可靠 |
-| 本地配音 | `<Qwen3-TTS>`（解释器 `.venv/Scripts/python.exe`；旁白音色在 `voices/` 下，`voice-20260918` 和 `Astral`；按气口分段生成；角色声音用 `scripts/voices.py`） |
+| 本地配音 | `<Qwen3-TTS>`（解释器 `.venv/Scripts/python.exe`；旁白音色在 `voices/` 下，默认 `voice-20260918`；按气口分段生成；角色声音用 `scripts/voices.py`） |
 | 本地语音识别 | `<Qwen3-TTS>/.venv-asr/Scripts/python.exe` + `models/faster-whisper-large-v3-turbo`，由 `scripts/align.py` 调用 |
 | Pexels | `scripts/pexels.ps1`，凭据由 Windows DPAPI 加密存在本机（见 assets.md） |
 | 生图 | 当前 `imagegen` skill（用户偏好 image2 路线） |

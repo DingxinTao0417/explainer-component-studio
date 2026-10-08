@@ -1,4 +1,4 @@
-"""Use the existing D-drive Qwen3-TTS voice locally without a web service.
+"""Use a local Qwen3-TTS voice setup without a web service.
 
 Narration is generated breath group by breath group (variant B, the default): every group is its own audio file and
 every pause between groups is a number in the plan, so one phrase can be regenerated or one pause changed without
@@ -25,9 +25,8 @@ from datetime import datetime
 from importlib.metadata import version
 from pathlib import Path
 
-from runtime_paths import default_qwen
-
 from episode import load, save, sha, within
+from runtime_paths import default_qwen
 
 MODEL = 'Qwen3-TTS-12Hz-1.7B-Base'
 DEFAULT_VOICE = 'voice-20260918'
