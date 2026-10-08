@@ -1,7 +1,7 @@
 [
   {
     "component": "ani-order-filter",
-    "original_file": "D:\\workspace\\视频制作\\projects\\20260918_图式归纳\\图式归纳V8-分镜动画素材包-20260918(1)\\01-分镜\\S08.png",
+    "original_file": "S08.png",
     "file": "references/animation-style/ani-order-filter.png",
     "sha256": "2b862dd7a4b83a6e42666004ca2b4e5ba5fd53209a91e99f75d155a08e89917b",
     "basis": "V8 · 五条样本与筛选",
@@ -12,7 +12,7 @@
   },
   {
     "component": "ani-compare-extract",
-    "original_file": "D:\\workspace\\视频制作\\projects\\20260918_图式归纳\\图式归纳V8-分镜动画素材包-20260918(1)\\01-分镜\\S10.png",
+    "original_file": "S10.png",
     "file": "references/animation-style/ani-compare-extract.png",
     "sha256": "0da4518d345153abaf8f997b86be6a7638118de6a80ed9eb15e7b6b57dbd4c90",
     "basis": "V8 · 两例比较与提炼",
@@ -23,7 +23,7 @@
   },
   {
     "component": "ani-tool-workbench",
-    "original_file": "D:\\workspace\\视频制作\\hyperframes-explainer-template\\component-library\\reports\\animation-style\\reference-review-wechat\\07_输入检查再修改.png",
+    "original_file": "07_输入检查再修改.png",
     "original_archive": "D:/wechat/xwechat_files/wxid_m4cxd9mbbbkg22_7f8b/msg/file/2026-09/图生视频对照参考图_19场_20260917.zip",
     "archive_member": "图生视频对照参考图/images/07_输入检查再修改.png",
     "file": "references/animation-style/ani-tool-workbench.png",
@@ -36,7 +36,7 @@
   },
   {
     "component": "ani-file-collection",
-    "original_file": "D:\\workspace\\视频制作\\hyperframes-explainer-template\\component-library\\reports\\animation-style\\reference-review-wechat\\02_收藏不等于会.png",
+    "original_file": "02_收藏不等于会.png",
     "original_archive": "D:/wechat/xwechat_files/wxid_m4cxd9mbbbkg22_7f8b/msg/file/2026-09/图生视频对照参考图_19场_20260917.zip",
     "archive_member": "图生视频对照参考图/images/02_收藏不等于会.png",
     "file": "references/animation-style/ani-file-collection.png",
@@ -49,7 +49,7 @@
   },
   {
     "component": "ani-method-transfer",
-    "original_file": "C:\\Users\\20825\\OneDrive\\桌面\\新建文件夹 (2)\\exec-78c560de-efd8-4aa3-9564-9e5ac471562e.png",
+    "original_file": "exec-78c560de-efd8-4aa3-9564-9e5ac471562e.png",
     "file": "references/animation-style/ani-method-transfer.png",
     "sha256": "8d4a20bd1e9fbc2b651b62151906a1ad155cebbe6fa1e1b00d6ac701ed8dab28",
     "basis": "桌面参考 · 熟悉部分可复用",
@@ -60,7 +60,7 @@
   },
   {
     "component": "ani-knowledge-network",
-    "original_file": "D:\\workspace\\视频制作\\hyperframes-explainer-template\\component-library\\reports\\animation-style\\reference-review-wechat\\16_把新旧连起来.png",
+    "original_file": "16_把新旧连起来.png",
     "original_archive": "D:/wechat/xwechat_files/wxid_m4cxd9mbbbkg22_7f8b/msg/file/2026-09/图生视频对照参考图_19场_20260917.zip",
     "archive_member": "图生视频对照参考图/images/16_把新旧连起来.png",
     "file": "references/animation-style/ani-knowledge-network.png",
@@ -73,7 +73,7 @@
   },
   {
     "component": "ani-capability-tiles",
-    "original_file": "D:\\workspace\\视频制作\\hyperframes-explainer-template\\component-library\\reports\\animation-style\\reference-review-wechat\\10_散落的知识砖.png",
+    "original_file": "10_散落的知识砖.png",
     "original_archive": "D:/wechat/xwechat_files/wxid_m4cxd9mbbbkg22_7f8b/msg/file/2026-09/图生视频对照参考图_19场_20260917.zip",
     "archive_member": "图生视频对照参考图/images/10_散落的知识砖.png",
     "file": "references/animation-style/ani-capability-tiles.png",
@@ -86,7 +86,7 @@
   },
   {
     "component": "ani-processing-machine",
-    "original_file": "D:\\workspace\\视频制作\\projects\\20260918_图式归纳\\图式归纳V8-分镜动画素材包-20260918(1)\\03-参考与素材\\当前风格母版.png",
+    "original_file": "当前风格母版.png",
     "file": "references/animation-style/ani-processing-machine.png",
     "sha256": "db488964f6cccc32114684fd039278da9c343e99b7427f2b99b59744eea7fbbb",
     "basis": "V8 · 输入、处理、结果",
@@ -97,7 +97,7 @@
   },
   {
     "component": "ani-question-outro",
-    "original_file": "D:\\workspace\\视频制作\\projects\\20260918_图式归纳\\图式归纳V8-分镜动画素材包-20260918(1)\\01-分镜\\S12.png",
+    "original_file": "S12.png",
     "file": "references/animation-style/ani-question-outro.png",
     "sha256": "da2a358ed2766ecbc64d21a55fef58bfa62796afca094c51ee8bb4c0545d6dd1",
     "basis": "V8 · 问题收尾",
@@ -108,7 +108,7 @@
   },
   {
     "component": "ani-notice-check",
-    "original_file": "D:\\workspace\\视频制作\\projects\\20260918_图式归纳\\图式归纳V8-分镜动画素材包-20260918(1)\\03-参考与素材\\通知-独立母版.png",
+    "original_file": "通知-独立母版.png",
     "file": "references/animation-style/ani-notice-check.png",
     "sha256": "590e28e8c491dac39e84f3ea946999b752e776dd7da6702ec7a8be8ac75f86fc",
     "basis": "V8 · 通知独立母版",

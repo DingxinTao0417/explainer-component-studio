@@ -30,7 +30,7 @@
 打开对应 JSON，保留已有字段结构，仅替换本次内容。例如 Codex 对话可以修改 title、userMessage、reply、details、file、added、removed 等字段；模型名、权限名和命令在这里是演示文字，不会发起真实模型调用或执行命令。
 
 ~~~powershell
-Set-Location -LiteralPath 'D:\workspace\视频制作\hyperframes-explainer-template\component-library'
+Set-Location -LiteralPath '<组件库目录>'
 npm run build
 ~~~
 
