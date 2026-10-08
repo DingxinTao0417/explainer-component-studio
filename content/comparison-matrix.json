@@ -5,6 +5,35 @@
   "badge": "示例标签",
   "footer": "页脚说明",
   "series": "示例系列",
+  "layout": "matrix",
+  "correspondence": {
+    "gap": 180,
+    "rowHeight": 82,
+    "rowGap": 16,
+    "highlightRow": -1,
+    "arrow": "auto",
+    "revealAt": [
+      0.45,
+      1.35,
+      2.25,
+      3.15,
+      4.05
+    ]
+  },
+  "style": {
+    "accent": "#0879ff",
+    "secondary": "#009e7a",
+    "ink": "#142f67",
+    "muted": "#58718c",
+    "surface": "#eff8ff",
+    "background": "#ffffff",
+    "border": "#bedbf3",
+    "fontSize": 28,
+    "labelSize": 21,
+    "strokeWidth": 2,
+    "cornerRadius": 14,
+    "shadowOpacity": 0.1
+  },
   "columns": [
     {
       "name": "项目 A",

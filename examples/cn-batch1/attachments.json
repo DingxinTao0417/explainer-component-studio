@@ -1,0 +1,164 @@
+{
+  "version": 5,
+  "title": "附件状态 · 可调示例",
+  "component": "ani-atom-hd-attachment-card",
+  "props": {
+    "label": "高清 · 附件与处理状态卡",
+    "background": "transparent",
+    "style": {
+      "palette": {
+        "accent": "",
+        "ink": "",
+        "surface": "",
+        "mint": "",
+        "orange": ""
+      },
+      "fontScale": 1,
+      "fontFamily": "original",
+      "strokeScale": 1,
+      "shadowOpacity": 1,
+      "shadowBlur": 0,
+      "opacity": 1
+    },
+    "layers": [
+      {
+        "id": "file-1",
+        "part": "attachment-card",
+        "x": 84,
+        "y": 277,
+        "width": 344,
+        "height": 166,
+        "props": {
+          "title": "附件",
+          "kind": "document",
+          "lineCount": 3,
+          "display": "file",
+          "fileName": "材料汇总.pdf",
+          "fileBytes": 2097152,
+          "fileType": "pdf",
+          "status": "idle",
+          "progress": 0,
+          "states": [
+            {
+              "at": 0,
+              "status": "idle",
+              "progress": 0
+            },
+            {
+              "at": 0.6,
+              "status": "reading",
+              "progress": 25
+            },
+            {
+              "at": 2.3,
+              "status": "reading",
+              "progress": 70
+            },
+            {
+              "at": 4.6,
+              "status": "success",
+              "progress": 100
+            }
+          ]
+        },
+        "enter": 0,
+        "exit": 8,
+        "fade": 0.18,
+        "fromX": 0,
+        "fromY": 0,
+        "steps": []
+      },
+      {
+        "id": "file-2",
+        "part": "attachment-card",
+        "x": 468,
+        "y": 277,
+        "width": 344,
+        "height": 166,
+        "props": {
+          "title": "附件",
+          "kind": "document",
+          "lineCount": 3,
+          "display": "file",
+          "fileName": "会议记录.docx",
+          "fileBytes": 86016,
+          "fileType": "doc",
+          "status": "idle",
+          "progress": 0,
+          "states": [
+            {
+              "at": 0,
+              "status": "idle",
+              "progress": 0
+            },
+            {
+              "at": 1,
+              "status": "reading",
+              "progress": 40
+            },
+            {
+              "at": 3.2,
+              "status": "success",
+              "progress": 100
+            }
+          ]
+        },
+        "enter": 0,
+        "exit": 8,
+        "fade": 0.18,
+        "fromX": 0,
+        "fromY": 0,
+        "steps": []
+      },
+      {
+        "id": "file-3",
+        "part": "attachment-card",
+        "x": 852,
+        "y": 277,
+        "width": 344,
+        "height": 166,
+        "props": {
+          "title": "附件",
+          "kind": "document",
+          "lineCount": 3,
+          "display": "file",
+          "fileName": "待补充的图片说明与来源清单.xlsx",
+          "fileBytes": 364544,
+          "fileType": "sheet",
+          "status": "idle",
+          "progress": 0,
+          "states": [
+            {
+              "at": 0,
+              "status": "idle",
+              "progress": 0
+            },
+            {
+              "at": 1.4,
+              "status": "reading",
+              "progress": 30
+            },
+            {
+              "at": 3.8,
+              "status": "error",
+              "progress": 30
+            }
+          ]
+        },
+        "enter": 0,
+        "exit": 8,
+        "fade": 0.18,
+        "fromX": 0,
+        "fromY": 0,
+        "steps": []
+      }
+    ]
+  },
+  "effect": "ani-hd-parts",
+  "effectOptions": {},
+  "timing": {
+    "duration": 8
+  },
+  "soundEnabled": false,
+  "soundGain": 0
+}

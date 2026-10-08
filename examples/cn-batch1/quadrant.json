@@ -1,0 +1,67 @@
+{
+  "version": 5,
+  "title": "四象限 · 可调示例",
+  "component": "quadrant-map",
+  "props": {
+    "title": "先看两个维度，再安排任务",
+    "subtitle": "分类位置由两个维度共同决定",
+    "note": "任务分类示例，不代表实际测评结果。",
+    "style": {
+      "accent": "#0879ff",
+      "secondary": "#009e7a",
+      "ink": "#142f67",
+      "muted": "#58718c",
+      "surface": "#eff8ff",
+      "background": "#ffffff",
+      "border": "#bedbf3",
+      "fontSize": 28,
+      "labelSize": 21,
+      "strokeWidth": 2,
+      "cornerRadius": 14,
+      "shadowOpacity": 0.1
+    },
+    "xLabel": "影响范围",
+    "yLabel": "时间紧迫度",
+    "xLow": "小",
+    "xHigh": "大",
+    "yLow": "低",
+    "yHigh": "高",
+    "focus": "top-right",
+    "dashedAxis": true,
+    "gapX": 48,
+    "gapY": 44,
+    "quadrants": [
+      {
+        "id": "top-left",
+        "label": "尽快处理",
+        "detail": "时间紧，但影响范围有限。",
+        "at": 0.5
+      },
+      {
+        "id": "top-right",
+        "label": "优先行动",
+        "detail": "时间紧，而且影响面大。",
+        "at": 1.4
+      },
+      {
+        "id": "bottom-left",
+        "label": "集中安排",
+        "detail": "合并处理，减少来回切换。",
+        "at": 2.3
+      },
+      {
+        "id": "bottom-right",
+        "label": "提前规划",
+        "detail": "预留时间，拆出关键节点。",
+        "at": 3.2
+      }
+    ]
+  },
+  "effect": "cn-information-reveal",
+  "effectOptions": {},
+  "timing": {
+    "duration": 8
+  },
+  "soundEnabled": false,
+  "soundGain": 0
+}

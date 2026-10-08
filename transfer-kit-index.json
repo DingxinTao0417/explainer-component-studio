@@ -780,13 +780,20 @@
     {
       "id": "ani-atom-hd-attachment-card",
       "key": "attachment-card",
-      "name": "报错或代码附件卡",
+      "name": "附件与处理状态卡",
       "nativeWidth": 280,
       "nativeHeight": 135,
       "defaults": {
         "title": "附件",
         "kind": "document",
-        "lineCount": 3
+        "lineCount": 3,
+        "display": "legacy",
+        "fileName": "文件.pdf",
+        "fileBytes": 1024,
+        "fileType": "pdf",
+        "status": "idle",
+        "progress": 0,
+        "states": []
       },
       "propsRules": {
         "title": {
@@ -806,6 +813,83 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 3
+        },
+        "display": {
+          "type": "string",
+          "enum": [
+            "legacy",
+            "file"
+          ]
+        },
+        "fileName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "fileBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1099511627776
+        },
+        "fileType": {
+          "type": "string",
+          "enum": [
+            "pdf",
+            "doc",
+            "sheet",
+            "image",
+            "code",
+            "file"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "idle",
+            "reading",
+            "success",
+            "error"
+          ]
+        },
+        "progress": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "states": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "at",
+              "status",
+              "progress"
+            ],
+            "properties": {
+              "at": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 7.99
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "idle",
+                  "reading",
+                  "success",
+                  "error"
+                ]
+              },
+              "progress": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              }
+            }
+          }
         }
       }
     },
@@ -1568,11 +1652,12 @@
     },
     {
       "id": "ani-atom-hd-attachment-card",
-      "name": "高清 · 报错或代码附件卡",
+      "name": "高清 · 附件与处理状态卡",
       "layer": "primitive",
       "intentIds": [
-        "messages",
-        "file"
+        "attachmentState",
+        "file",
+        "messages"
       ],
       "sourceStates": [],
       "preview": "previews/ani-atom-hd-attachment-card.html",

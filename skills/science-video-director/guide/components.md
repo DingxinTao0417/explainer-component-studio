@@ -47,6 +47,8 @@ python -X utf8 "$skill/shot_semantics.py" scaffold --project <项目> --scene S0
 
 它把品牌包的 `custom-shot` 骨架复制成 `hyperframes/components/S07-routes-table.html`（只新建不覆盖），改好 id 和时间轴键，把本镜简报写进文件头，返回挂载片段。骨架自带品牌 token、HFK 小工具、根节点和时间轴约定、入场动画和 seek 安全的写法；你只在 `.cs-stage` 里画这一镜的内容（HTML 或 SVG），把 `HFK.cues` 的时间换成 suggest 给的词时间。规矩不变：主体 ≥60%、标签 ≥40px、一个主色、只用 fromTo / set、重要内容在字幕带上方。画完 `npx --yes hyperframes@0.8.57 check`。
 
+画之前先查有没有现成的动法：`python -X utf8 "$skill/vocab.py" find --intent <这一镜的意图> --source <素材来源>`。它在参考库的 108 张动效配方卡里找，给出每张卡的时序、已知坑和 demo 路径；照着卡的动法、用品牌包的皮重写，比从零设计稳。怎么查、怎么搬、哪些地方不照它的做，见 `guide/motion-vocabulary.md`。
+
 同一种定制镜头在两期以上出现，就把它做成品牌包或组件库的正式组件并补 semantics 元数据，别每期再画一遍。
 
 ## 什么时候不用组件

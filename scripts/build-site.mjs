@@ -29,7 +29,7 @@ const modules = (await readdir(root, {withFileTypes: true}))
   .map(entry => entry.name);
 const files = [
   ...modules, 'catalog.html', 'transfer-kit.html', 'manifest.json', 'meta.json',
-  'transfer-kit-index.json', 'TRANSFER_KIT_GUIDE.md', 'SEMANTIC_ANNOTATIONS_GUIDE.md',
+  'transfer-kit-index.json', 'TRANSFER_KIT_GUIDE.md', 'SEMANTIC_ANNOTATIONS_GUIDE.md', 'CN_INFORMATION_GUIDE.md',
 ];
 const directories = [
   'assets', 'compositions', 'content', 'demos', 'effects', 'examples',

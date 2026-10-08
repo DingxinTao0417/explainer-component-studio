@@ -1,3 +1,4 @@
+import {renderCorrespondence,correspondenceDefaults,diagramStyleDefaults} from '../cn-infographic.mjs';
 const ref = {
   basis: '原创科普讲解组件，按成片可读性和数据准确性验收；不是软件截图。',
   source: 'component-reference/high-fidelity/质量标准.md',
@@ -271,7 +272,10 @@ export const components = [
     return shell(p,h,'<section class="edu-chart-panel"><div class="edu-chart-heading"><h2>'+e(p.chartTitle)+'</h2><span>'+e(p.unit)+'</span></div><svg class="edu-line-svg" viewBox="0 0 1164 442" role="img" aria-label="'+e(p.chartTitle)+'"><defs><linearGradient id="'+e(grad)+'" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#2563eb" stop-opacity=".18"/><stop offset="1" stop-color="#2563eb" stop-opacity=".01"/></linearGradient></defs>'+grid+'<line x1="'+left+'" y1="'+targetY+'" x2="'+right+'" y2="'+targetY+'" stroke="#4c9d83" stroke-width="1.7" stroke-dasharray="6 6"/><text x="'+(left+16)+'" y="'+(targetY-12)+'" text-anchor="start" font-size="18" fill="#28735d">'+e(p.targetLabel)+' '+e(fmt(p.target))+'</text><path d="'+area+'" fill="url(#'+e(grad)+')"/><path data-motion="line" d="'+line+'" fill="none" stroke="#2563eb" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>'+points.map(x=>'<circle cx="'+x.x+'" cy="'+x.y+'" r="5.5" fill="white" stroke="#2563eb" stroke-width="3"/><text x="'+x.x+'" y="415" text-anchor="middle" font-size="20" fill="#455064">'+e(x.label)+'</text>').join('')+chip+'</svg><div class="edu-chart-source">'+e(p.note)+'</div></section>');
   }),
 
-  create('comparison-matrix','方案比较矩阵','按统一维度比较三种方案，使用文字而非主观打分；列、行与推荐说明可编辑。',{
+  create('comparison-matrix','方案比较矩阵','表格比较或两列逐项对应；correspondence 布局复用本库楔形/燕尾箭头，文字与连线保持水平对齐。',{
+  "layout": "matrix",
+  "correspondence": structuredClone(correspondenceDefaults),
+  "style": structuredClone(diagramStyleDefaults),
   "eyebrow": "栏目 / 01",
   "title": "主标题",
   "subtitle": "副标题与说明文字",
@@ -329,6 +333,8 @@ export const components = [
   "noteLabel": "补充标签",
   "note": "补充说明文字"
 },(p,h)=>{
+    if(p.layout==='correspondence')return renderCorrespondence(p,h);
+    if(p.layout!==undefined&&p.layout!=='matrix')throw Error('comparison-matrix: layout must be matrix or correspondence');
     const e=h.esc;const columns=arr(p.columns,3),rows=arr(p.rows,5);
     return shell(p,h,'<div class="edu-matrix-panel"><table class="edu-matrix"><thead><tr><th></th>'+columns.map(c=>'<th><strong>'+e(c.name)+'</strong><span>'+e(c.tag)+'</span></th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr data-motion="item"><th>'+e(r.criterion)+'</th>'+columns.map((_,i)=>'<td>'+e(arr(r.values,3)[i]||'')+'</td>').join('')+'</tr>').join('')+'</tbody></table></div><div class="edu-takeaway"><span>'+e(p.noteLabel)+'</span><strong>'+e(p.note)+'</strong></div>');
   }),

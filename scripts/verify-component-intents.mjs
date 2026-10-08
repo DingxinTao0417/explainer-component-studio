@@ -31,8 +31,11 @@ const queries=[
   ['保留图片全貌，再加局部放大窗','mixed-media-focus'],
   ['用两张图片做擦除对比','mixed-media-wipe'],
 ];
+// 2026-09-28：分级后 episode / hidden-platform 组件默认不参与，测试里显式打开
+const hiddenExpected=new Set(['ani-transfer-batch-cycle','mac-alert']);
 for(const [query,expected] of queries)check('rank: '+query,()=>{
-  const result=rankLibraryIntent(index,query);
+  const result=rankLibraryIntent(index,query,{includeHidden:hiddenExpected.has(expected)});
+  if(hiddenExpected.has(expected))assert.notEqual(rankLibraryIntent(index,query).matches[0]?.id,expected,'hidden component must not surface by default');
   assert.equal(result.matches[0]?.id,expected,JSON.stringify(result.matches.map(x=>[x.id,x.score])));
   assert(result.matches[0].reasons.length);
   assert(result.matches[0].evidenceNotes.length);

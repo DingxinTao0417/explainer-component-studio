@@ -2,13 +2,15 @@
 
 本库为 `science-video-director` 的默认组件来源。编导先按表达目的检索实际能力，再选模板、组合基础组件或补充生成素材。正文内容、时长和声音来自本期项目，不回写库默认值。
 
-配套技能随仓库放在 [skills/](skills/README.md)，包含安装脚本与可运行示例。以下命令以仓库根目录为当前目录；已安装技能使用实际安装路径或 `--library` 指定本库。
-
 ## 同一份能力目录
 
 需要指向、标题、对象标签、动作提示、结论或疑问框时，另读 [方向箭头与语义文字框](SEMANTIC_ANNOTATIONS_GUIDE.md)。每款独立ID进入同一索引；`scripts/select-semantic.mjs` 只负责本期确定性风格选择，不代替 compose / tune / validate / bind。
 
-`npm run build` 生成 `director-index.json`、`DIRECTOR_INDEX.md` 及运行时版本记录。索引包含组件、基础部件、场景模板、背景、边框、动画、音效和图标。组件数量以该索引和 manifest 为准，旧版本说明不作为当前清单。
+配套技能随仓库放在 [skills/](skills/README.md)，包含安装脚本与可运行示例。以下命令以仓库根目录为当前目录；已安装技能使用实际安装路径或 `--library` 指定本库。
+
+`npm run build` 生成 `director-index.json`、`DIRECTOR_INDEX.md` 及运行时版本记录。索引包含组件、基础部件、场景模板、背景、边框、动画、音效和图标，每个组件条目带 `status`（core / episode / legacy / hidden-platform）和 `semantics`（intents、subjects、role、slots、avoid），来源是手改维护的 `component-semantics.json`；build 时缺元数据会报错。组件数量以该索引和 manifest 为准，旧版本说明不作为当前清单。
+
+编导 skill 的入口是 `science-video-director/scripts/shot_semantics.py suggest`（旁白 → 意图 → 两套库的候选或“不用组件”）；本库的 `prepare` 仍可直接用，默认只返回 core，`--include hidden` 连隐藏组件一起找，点名 ID 时隐藏组件也能命中。
 
 ```powershell
 node scripts/director.mjs prepare "批量处理后逐步释放内存" --limit 5
@@ -45,7 +47,7 @@ node scripts/director.mjs validate scene.json --strict
     "outputLabel": "结果名称"
   },
   "effect": "ani-transfer-batch-cycle",
-  "appearance": {"frame": "dashed-round", "background": "perspective-grid"},
+  "appearance": {"frame": "none", "background": "original", "tone": "C", "mode": "video"},
   "timing": {
     "duration": 12,
     "anchors": {"read": 0.5, "process": 3, "save": 4.5, "saved": 5.5, "release": 7, "next": 9}
@@ -56,7 +58,7 @@ node scripts/director.mjs validate scene.json --strict
 }
 ```
 
-示例只解释接口；本期使用时还要替换其余相关默认文案。`timing.duration` 为本镜秒数（0–600 秒，不含 0）；anchors 的值是镜头内部时间，不是全片时间。动作节点名单来自索引，不能随便起名；节点必须保持原有因果顺序。没有填写的节点按相邻锚点间的比例映射。所有组件可以调整整体演示时长；目前九个迁移模板另提供具名语义节点，其他效果不冒称有这些节点。
+示例只解释接口；本期使用时还要替换其余相关默认文案。`appearance.tone` 取 A / B / C / D 让讲解图形跟品牌包配色（界面复刻不受影响），`appearance.mode: "video"` 是成片模式：去掉栏目眉、示例标签、页脚，正文最小 27px（挂进 1080p ≈ 40px），正文块自动推近撑满（上限 1.5 倍），SVG 图解按实际绘制内容收紧。做片一律用它；画廊预览仍是 original。透视网格背景已按《迁移》的改法重做（墙面方格 + 地面透视线，上端对齐）。`timing.duration` 为本镜秒数（0–600 秒，不含 0）；anchors 的值是镜头内部时间，不是全片时间。动作节点名单来自索引，不能随便起名；节点必须保持原有因果顺序。没有填写的节点按相邻锚点间的比例映射。所有组件可以调整整体演示时长；目前九个迁移模板另提供具名语义节点，其他效果不冒称有这些节点。
 
 v5 不再同时接受 effectOptions 中的 start/duration/transitionAt/transitionDuration，避免两个时钟冲突。转场必须显式提供下一画面，不允许库示例的 B 画面混入成片。改变时长或语义锚点不改变原配音；配音在父时间轴。
 
@@ -82,7 +84,7 @@ node scripts/export-director-scene.mjs "本期场景.json" "本期项目/hyperfr
 python -X utf8 skills/science-video-director/scripts/component_library.py bind "本期项目" --scene S01 --config "本期场景.json" --node "Node可执行文件"
 ```
 
-新版 Skill 取消了开场策划案确认这道门槛：全片开工前唯一的确认点是 15–20 秒动态样片，组件库是加速工具，不是必经关卡。`bind` 只要求 EDIT 里有对应镜头，并在导出前校验场景配置，配置无效会失败。该命令导出新版本并绑定，同时返回可放入本镜的 mount_in_scene HTML，不生成已通过的审片记录，也不自动改写整个主时间轴。制作方按原生尺寸等比摆放，指定轨道与位置；若直接放主时间轴，data-start 要加上 EDIT 镜头起点。
+（2026-09-25 起）编导 skill 不再有 PROPOSAL/PLAN 确认和方案指纹门槛，全片开工前唯一的确认点是动态样片，见 `science-video-director/SKILL.md`。`bind` 在导出前只校验场景配置，配置无效会失败并给出字段路径。该命令导出新版本并绑定，同时返回可放入本镜的 mount_in_scene HTML，不生成审片记录，也不自动改写整个主时间轴。频道通用的版式（章节卡、关键词、大数字、录屏聚焦、字幕等）优先用 `<工作区>/brand-kit` 的品牌组件，本库负责界面复刻、信息图和标注。制作方按原生尺寸等比摆放，指定轨道与位置；若直接放主时间轴，data-start 要加上 EDIT 镜头起点。
 
 手动导出用于父合成时，用 `export-director-scene.mjs scene.json <新目录> --mount-base components/S01-main-r1/` 明确包相对父 HyperFrames 根的位置。父页面加载自己的 GSAP 和 HyperFrames 运行时，使用 `data-composition-src="components/S01-main-r1/composition.html"` 加载；子合成不启动第二个播放器。多个实例必须使用不同宿主 ID。
 
@@ -90,7 +92,7 @@ python -X utf8 skills/science-video-director/scripts/component_library.py bind "
 
 索引反映源库当前能力，项目保存规划时的索引副本；每个包的 lock 单独记录实际采用内容版本和文件哈希。后续升级共享库不修改已导出包。修改包内画面、配置或运行文件后应重新导出新版本，并复查受影响镜头。
 
-Skill 的 `episode.py check` 会核对组件包身份、文件哈希、时长、主入口实际引用；结果都是提示，不阻止制作，手动微调过的包会提示“文件已改动”。宿主必须显式写 data-start 与 data-duration；检查会累计嵌套合成起点，与 EDIT 镜头及实例偏移核对。只下载或导出、没有接入的包不能算已采用。另行检查模板残留、字体、叠字、连线先后、对象守恒、背景和转场覆盖；文件检查不替代视觉审片。
+`episode.py check` 会提示组件包文件是否被改动、时长和主入口引用是否对得上（提示，不拦截；有意手改的确认即可）。宿主必须显式写 data-start 与 data-duration；检查会累计嵌套合成起点，与 EDIT 镜头及实例偏移核对。只下载或导出、没有接入的包不能算已采用。另行检查模板残留、字体、叠字、连线先后、对象守恒、背景和转场覆盖；文件检查不替代视觉审片。
 
 ```powershell
 node scripts/verify-director.mjs

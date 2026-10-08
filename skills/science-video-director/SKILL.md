@@ -20,9 +20,10 @@ description: 把用户的稿件或 SRT、配音和素材做成完整的中文科
 3. **四类画面轮流出现。** 四类是：主持人（带情绪）、证据（录屏、真实结果、原始资料）、结构（章节卡、关键词卡、大数字）、比喻 / 情境（插画、示意动画、组件、Pexels 情境实拍）。
    - 讲解段每 2–5 秒要有一次看得见的变化：换画面、换景别，或明显的状态变化。
    - 同类画面连续不超过约 20 秒。同一素材或同一个比喻，全片出现 3–4 次以内。
-   - 旁白每出现一个新名词、数字、对比或步骤，画面上都要有对应的变化，而且卡在这个词被说出的那一刻（用 `align.py find` 查时间）。
+   - 旁白每出现一个新名词、数字、对比或步骤，画面上都要有对应的变化，而且卡在这个词被说出的那一刻（用 `align.py find` 查时间）。变化不等于加东西：新元素只在一个意思单位的开头进场，说完就让位，同屏最多 3 组。
+   - 类型换了，版式也要换：同一种构图不连用 3 镜。
 4. **字要大。** 章节卡标题 120px 以上，关键词卡 90px 以上，画面里的标签至少 40px，字幕约 56–64px、加粗、带描边。主体宽度至少占画面 60%，默认不套装饰外框。简单检验：接触表（每格 480 宽）里看不清的字，手机上也看不清。
-5. **录屏铺满，并告诉观众看哪里。** 录屏和真实界面铺满画面，操作区推近到字看得清。用主色框圈出重点，框外压暗。结果出现后至少停 1 秒。
+5. **录屏铺满，并告诉观众看哪里。** 录屏和真实界面铺满画面，操作区推近到字看得清。用主色框圈出重点，框外压暗。结果出现后至少停 1 秒。网页和长文档用滚动、停靠、放大“拍”出来，不贴一张静止截图；框和下划线的位置读实测坐标，不目测。
 6. **一个主色，高对比。** 每期按调性配方定底色和一个主色，全片统一。质感来自强对比、光影和大块深色或留白，不是多种浅色叠在一起。
 7. **进度看得见。** 用“01 / 第一步”这样的章节卡，让观众知道讲到哪、还剩多少。
 
@@ -42,8 +43,10 @@ description: 把用户的稿件或 SRT、配音和素材做成完整的中文科
 | 手法库 | `<工作区>/手法库` | 从参考片拆出来的 30 张手法卡：具体用什么招、哪个组件、停多久 |
 | 组件库 | `<工作区>/hyperframes-explainer-template/component-library` | 界面复刻、信息图、箭头标注、B-roll（品牌包没有的画面）；按 core / episode / legacy / hidden-platform 分级，默认只挑 core；跟品牌包调性，有成片模式 |
 | 选组件 | `shot_semantics.py`（旁白 → 意图 → 候选或“不用组件” → 槽位草稿 → 卡词时间） | 两套库的唯一入口，见 guide/components.md |
-| 眼睛 | `frames.py`（接触表、节奏、`--compare` 和参考片并排）、`npx --yes hyperframes@0.8.57 snapshot` / `compare`、`brand-kit/tools/tone-stills.mjs`（调性静帧） | 看片、比较 |
-| 耳朵 | `align.py`（逐字对齐、关键词时间、字幕变量）、`audio.py`（响度报告、拍点、BGM 闪避曲线） | 对齐、混音 |
+| 动效词汇 | `vocab.py` + 参考库 `<工作区>/参考库/video-talkcraft`（108 张动效配方卡，每张带时序、已知坑和可运行的 demo） | 现场做一镜、多图同屏、拍网页时，找现成的动法照着搬；见 guide/motion-vocabulary.md |
+| 网页证据 | `pageshot.mjs`（网页 → 全页长图 + 目标的实测坐标） | 官网、文档、榜单这类证据画面，见 guide/assets.md |
+| 眼睛 | `frames.py`（接触表、节奏、`--cues` 卡词帧、`--compare` 和参考片并排）、`npx --yes hyperframes@0.8.57 snapshot` / `compare`、`brand-kit/tools/tone-stills.mjs`（调性静帧） | 看片、比较 |
+| 耳朵 | `align.py`（逐字对齐、关键词时间、字幕变量）、`audio.py`（响度报告、音效听不听得到、响度归一、拍点、BGM 闪避曲线） | 对齐、混音 |
 | 声音 | `qwen_voiceover.py`（旁白，用户本人音色）、`voices.py`（角色声音库、对白） | 配音 |
 | 复盘 | `retention.py`、`dissect.py` | 留存曲线对镜头、拆解参考视频 |
 
@@ -97,9 +100,10 @@ description: 把用户的稿件或 SRT、配音和素材做成完整的中文科
 ### 4. 全片制作
 
 - **分镜**：写进 `planning/EDIT.json`，这是唯一的时间轴。
-  - 每个镜头写明 `type`（host / evidence / structure / metaphor）、画面、素材、画面文字、动作、音效。用到品牌组件的写 `component`，用到手法卡的写 `technique`，要卡在词上的写 `cue_words`。
+  - 每个镜头写明 `type`（host / evidence / structure / metaphor）、画面、素材、画面文字、动作、音效。用到品牌组件的写 `component`，用到手法卡的写 `technique`，要卡在词上的写 `cue_words`，版式写 `layout`，借了动效卡的写 `motion`。
   - 每一镜先定 type，再运行 `shot_semantics.py suggest --edit planning/EDIT.json --scene <镜号> --captions subtitles/CAPTIONS.json --transcript subtitles/transcript.json`：它给出意图、候选或“不用组件”、按旁白填好的槽位草稿和卡词时间。章节起点加 `--chapter-start`。候选写进镜头的 `intent` / `component` / `slots`，超字数按它的 strategy 缩写或拆屏，不缩字号。
-  - 先按旁白节拍排，再对照第 3 条标准查节奏。`episode.py check` 会统计四类画面的占比，以及同类画面连续了多久。规划阶段它报“素材未登记”是正常的，素材到位后用 `episode.py add` 登记输入、在 ASSETS.json 登记素材即可。
+  - 先排版式节奏：把全片每一镜的 `layout`（人在哪 / 素材装在哪）填一遍，摊开看有没有连着几镜一个样，再写逐镜细节。
+  - 先按旁白节拍排，再对照第 3 条标准查节奏。`episode.py check` 会统计四类画面的占比、同类画面连续了多久、同一版式或组件有没有连用 3 镜，并核对每个卡词在旁白里的时间。规划阶段它报“素材未登记”是正常的，素材到位后用 `episode.py add` 登记输入、在 ASSETS.json 登记素材即可。
 - **声音和字幕**：
   - `align.py run` 生成逐字时间和字幕；
   - 对白段用 `voices.py speak`；
@@ -107,27 +111,27 @@ description: 把用户的稿件或 SRT、配音和素材做成完整的中文科
   - 音效按 `sfx-map.json` 放。
   
   细节见 `guide/production.md` 和 `brand-kit/SOUND.md`。
-- **素材**：按 `guide/assets.md` 准备：录屏任务卡、真人口播任务卡、Pexels、image2 透明元素、AI 视频交接（由用户自己生成）。需要用户动手的，一次写进 `planning/TASKS.md` 交出去，然后继续做不依赖它的部分。
+- **素材**：按 `guide/assets.md` 准备：录屏任务卡、真人口播任务卡、Pexels、网页证据（`pageshot.mjs`）、image2 透明元素、AI 视频交接（由用户自己生成）。需要用户动手的，一次写进 `planning/TASKS.md` 交出去，然后继续做不依赖它的部分。
 - **合成**：
   - 按 `guide/production.md` 搭 HyperFrames 工程。先运行 `brand-kit/build.mjs --project <项目>/hyperframes` 装品牌包。
-  - suggest 给 `custom` 时现场做一镜：`shot_semantics.py scaffold` 起品牌风骨架，在里面画这一镜要画的东西（见 `guide/components.md`“现场做一镜”）。
+  - suggest 给 `custom` 时现场做一镜：先用 `vocab.py find` 查有没有现成的动法，再用 `shot_semantics.py scaffold` 起品牌风骨架，照着卡的动法、用品牌包的皮画这一镜（见 `guide/components.md`“现场做一镜”和 `guide/motion-vocabulary.md`）。
   - 章节卡、字幕、录屏聚焦、取景框、主持人头像都用品牌组件，全片复用。界面复刻、图解这类画面，用组件库（场景配置 `appearance` 写本期 `tone` 和 `mode: "video"`）或定制镜头，见 `guide/components.md`。
   - 组件的默认样式只是起点，放大、改色、去外框都是正常操作。
-- **边做边看**：每做完一章就抽几帧看看，不要等全片做完才发现方向偏了。
+- **边做边看**：每做完一章就抽几帧看看，不要等全片做完才发现方向偏了。能用静帧回答的问题（位置、遮挡、文案、层级）不渲视频。
 
 ### 5. 自查 → 用户预览 → 导出
 
 1. **自查**：
-   - 渲染全片低清预览，运行 `frames.py <预览.mp4>`。`已拆解视频/`（或还没挪走的 `待拆解视频/`）里有参考片时，再运行一次 `frames.py <预览.mp4> --compare <参考片>`；还没有参考片时跳过这一步，并提醒用户把喜欢的视频放进 `待拆解视频/`。
-   - 用看图工具打开 `hook_01.jpg`、每张 `sheet_*.jpg` 和对比图，真的看。
-   - 运行 `audio.py report` 查响度和 BGM 大小。
-   - 按 visual-grammar.md 的自查清单（12 条）逐条写下结论和时间点，然后修改。
+   - 渲染全片低清预览，运行 `frames.py <预览.mp4> --cues planning/EDIT.json`。`已拆解视频/`（或还没挪走的 `待拆解视频/`）里有参考片时，再运行一次 `frames.py <预览.mp4> --compare <参考片>`；还没有参考片时跳过这一步，并提醒用户把喜欢的视频放进 `待拆解视频/`。
+   - 用看图工具打开 `hook_01.jpg`、每张 `sheet_*.jpg`、每张 `cues_*.jpg` 和对比图，真的看。卡词帧专门用来核对两件接触表看不出的事：画面有没有卡在词上，框和箭头有没有套住目标。
+   - 运行 `audio.py report` 查响度和 BGM 大小，`audio.py sfx` 查每个音效听不听得到。
+   - 按 visual-grammar.md 的自查清单（15 条）逐条写下结论和时间点，然后修改。
    - 通常一到两轮。两轮后还解决不了的，写清原因告诉用户。
-2. **可选：请外人看**：有子代理工具时，可以请一个没参与制作的子代理。只给它 BRIEF、七条标准、接触表和参考片对比图，让它挑出最影响观看的三个问题。新的眼睛能看到做的人看不到的问题。这是加分项，不是必过的关卡。
+2. **可选：请外人看**：有子代理工具时，可以请一个没参与制作的子代理，提示词按 `templates/review-agent.md` 写。只给它 BRIEF、画面标准、接触表、卡词帧和参考片对比图，不给你自己的结论，让它挑出最影响观看的三个问题。改完想再看一轮，另开一个新的。新的眼睛能看到做的人看不到的问题。这是加分项，不是必过的关卡。
 3. **声音**：你听不到的部分，比如语气和混音平衡，如实告诉用户，请他试听判断。
 4. **用户预览**：请用户看预览，用两三句话说这版改了什么、还有什么已知问题，然后按反馈修改。
 5. **导出**：用户明确说“导出”才渲染成片 `exports/<主题>_v<N>_1080p.mp4`。
-   - 导出后对成片再跑一次 `frames.py` 和 `audio.py report`，确认没有黑帧、字幕首尾完整、音轨都在。
+   - 导出后对成片再跑一次 `frames.py` 和 `audio.py report`，确认没有黑帧、字幕首尾完整、音轨都在。响度离 -14 LUFS 超过 1 dB 时，用 `audio.py normalize` 另存一个新版本号的文件。
    - 最后运行 `episode.py stage <项目> delivered`，并提醒用户：发布 3 天和 7 天后，把作品数据截图发过来复盘。
 
 ### 6. 发布后复盘
@@ -190,23 +194,28 @@ description: 把用户的稿件或 SRT、配音和素材做成完整的中文科
 | `guide/voice.md` | 生成旁白、做角色对白、逐字对齐和关键词卡点时读 |
 | `guide/assets.md` | 找素材，写录屏或口播任务卡，生图，做 AI 视频交接时读 |
 | `guide/components.md` | 选用品牌组件或组件库时读 |
+| `guide/motion-vocabulary.md` | 现场做一镜、多图同屏、拍网页、挑章节转场时读。内容是 108 张动效配方卡怎么查、怎么搬进 HyperFrames、哪些地方不照它的做 |
 | `guide/retro.md` | 用户发来发布数据时读 |
 | `templates/brief-template.md` | 写导演阐述时用 |
 | `templates/explore-agent.md` | 派子代理做探索样片时用 |
+| `templates/review-agent.md` | 请没参与制作的子代理看片时用 |
+| `templates/page-tour.md` | 把 `pageshot.mjs` 采的网页长图做成“滚到 → 停 → 推近 + 框”的证据镜头时用 |
 | `templates/retro-template.md` | 写复盘时用 |
 | `<工作区>/brand-kit/README.md`、`SOUND.md` | 挂品牌组件、切调性、放音效和配乐时读 |
 | `<工作区>/手法库/INDEX.md` | 构思和排分镜时查 |
 
 | 脚本 | 用途 |
 | --- | --- |
-| `episode.py` | `init` 建项目；`add` 登记新输入（配音、稿子、素材）；`status` 看进度；`stage` 记阶段和用户原话；`check` 查时间轴、字幕和画面类型分布；`captions` 导出字幕 |
-| `frames.py` | 把视频变成开头逐秒图、全片接触表和节奏报告；`--compare` 和参考片或另一版样片并排比较 |
+| `episode.py` | `init` 建项目；`add` 登记新输入（配音、稿子、素材）；`status` 看进度；`stage` 记阶段和用户原话；`check` 查时间轴、字幕、画面类型分布、版式连用和卡词时间；`captions` 导出字幕 |
+| `frames.py` | 把视频变成开头逐秒图、全片接触表和节奏报告；`--cues` 按卡词抽“说之前 / 说之后”两帧；`--compare` 和参考片或另一版样片并排比较 |
 | `align.py` | `run` 逐字对齐稿子，产出 transcript / captions；`find` 查关键词被说出的时间；`cues` 生成品牌字幕组件的变量 |
-| `audio.py` | `report` 查响度、峰值、削波、BGM 差距；`snap` 切点对拍；`envelope` 生成 BGM 闪避曲线 |
-| `qwen_voiceover.py` | 用户本人音色的旁白 |
+| `audio.py` | `report` 查响度、峰值、削波、BGM 差距；`sfx` 逐个音效查听不听得到；`normalize` 两遍响度归一、另存新文件；`snap` 切点对拍；`envelope` 生成 BGM 闪避曲线 |
+| `qwen_voiceover.py` | 用户本人音色的旁白：按气口分段生成；`check` 逐段回听，`redo` 重配某一段，`pause` 改某处停顿 |
 | `voices.py` | 角色声音库：design / pick / lock / import / preset / plan / speak |
 | `retention.py` | 留存曲线对镜头，找掉人的地方 |
 | `dissect.py` | 拆解参考视频，写进手法库 |
 | `shot_semantics.py` | `suggest` 旁白 → 候选 / 不用组件 / 槽位草稿 / 卡词时间；`check` 校验意图表和两套元数据；`dataset` / `replay` 用已交付的期回放测命中率 |
 | `library_prepare.py` / `component_library.py` | 组件库检索（`--include-hidden` 才带隐藏组件）、校验、调参、导出挂载 |
 | `pexels.ps1` | Pexels 检索与下载 |
+| `pageshot.mjs` | 网页 → 全页长图 + 目标的实测坐标（`node` 运行，用本机 Chrome 或 Edge） |
+| `vocab.py` | 动效词汇：`find` 按意图、素材、能量找配方卡；`show` 看一张卡的时序和已知坑；`intents` 意图对照；`status` 参考库在不在 |

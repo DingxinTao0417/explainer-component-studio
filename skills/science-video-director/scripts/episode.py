@@ -136,7 +136,7 @@ def init(args):
         'inputs': inputs,
         'output': {'width': 1920, 'height': 1080, 'fps': 24, 'sample_rate': 48000},
         'settings': {'ai_video_mode': 'user_handoff', 'narration_policy': 'preserve', 'burn_captions': True,
-                     'tts': {'provider': 'qwen3-tts-local', 'root': default_qwen().as_posix(), 'profile': 'voice-20260918', 'variant': 'A'}},
+                     'tts': {'provider': 'qwen3-tts-local', 'root': default_qwen().as_posix(), 'profile': 'voice-20260918', 'variant': 'B'}},
         'paths': {'design': 'design.md' if args.design else None, 'brief': 'planning/BRIEF.md', 'edit': 'planning/EDIT.json',
                   'assets': 'planning/ASSETS.json', 'notes': 'planning/NOTES.md', 'captions': 'subtitles/CAPTIONS.json',
                   'hyperframes': 'hyperframes'},
@@ -366,6 +366,49 @@ def check(args):
                 hints.append('字幕还没对照实际声音校对（CAPTIONS.reviewed 不是 true）。')
         else:
             hints.append('还没有对齐后的字幕。')
+
+    # 版式轮换：同一个组件或同一种版式连着用，是“每一镜都对、整片一个样”的来源
+    timed = [s for s in scenes if number(s.get('start')) and number(s.get('end')) and s['end'] > s['start']]
+    for field, label in (('component', '组件'), ('layout', '版式')):
+        streak = []
+        for scene in [*timed, {}]:
+            value = scene.get(field)
+            if isinstance(value, dict):  # layout 也可以写成 {"host": "角标右下", "container": "窗口"}
+                value = ' / '.join(str(value[k]) for k in sorted(value))
+            elif isinstance(value, list):
+                value = ' / '.join(str(v) for v in value)
+            if streak and value == streak[0][1] and value not in (None, '', 'custom'):
+                streak.append((scene.get('id'), value))
+                continue
+            if len(streak) >= 3:
+                hints.append(f'{streak[0][0]}–{streak[-1][0]} 连续 {len(streak)} 镜都是同一个{label}（{streak[0][1]}），换一种构图。')
+            streak = [(scene.get('id'), value)]
+    used = Counter(s['component'] for s in timed if isinstance(s.get('component'), str) and s['component'] not in ('', 'custom'))
+    for name, count in used.items():
+        if len(timed) >= 6 and count > len(timed) / 3:
+            hints.append(f'{name} 用在了 {count}/{len(timed)} 个镜头里，超过三分之一；同一种画面太多，换掉几处。')
+
+    # 卡词：cue_words 在旁白里找得到吗、是不是在这一镜里说的、离镜尾够不够远
+    transcript_path = within(root, paths.get('transcript', 'subtitles/transcript.json'))
+    if transcript_path.is_file() and any(s.get('cue_words') for s in scenes):
+        try:
+            from align import narration_offset, scene_cues  # 只用到查词的部分，不会加载语音识别
+            offset = narration_offset(edit)
+            if offset is None:
+                hints.append('有多段旁白，卡词时间没法自动核对；用 frames.py --cues --cue-offset 看卡词帧。')
+            else:
+                for cue in scene_cues(edit, load(transcript_path), offset):
+                    where = f'{cue["scene"]} 的卡词「{cue["word"]}」'
+                    if cue['status'] == 'missing':
+                        hints.append(f'{where}在旁白里没找到；改过稿的话更新 cue_words。')
+                    elif cue['status'] == 'outside':
+                        hints.append(f'{where}在 {cue["said"]:.2f} 秒才说到，不在这一镜'
+                                     f'（{cue["scene_start"]:.2f}–{cue["scene_end"]:.2f}）里。')
+                    elif cue['scene_end'] - cue['said'] < 0.5:
+                        hints.append(f'{where}离镜尾只有 {cue["scene_end"] - cue["said"]:.2f} 秒，'
+                                     '动作刚出现就会被切走：提前，或挪到下一镜。')
+        except Exception as exc:  # 卡词检查失败不影响其他结果
+            hints.append(f'卡词检查没跑成：{exc}')
 
     # 组件库挂载（只在用了组件时检查，结果都是提示）
     if any(scene.get('component_bindings') for scene in scenes):

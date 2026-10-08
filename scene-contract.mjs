@@ -4,12 +4,14 @@ import {getPropsSchema,validateComponentProps} from './component-props.mjs';
 import {compatibleEffects,effectCompatibility,markupMatches} from './effect-contracts.mjs';
 import {describeIntent} from './component-intents.mjs';
 import {frameStyles,backgroundStyles,normalizeAppearance} from './stage-appearance.mjs';
+import {toneIds,modeIds} from './tone-css.mjs';
 import {normalizeTiming,mapTime,actionCues} from './scene-timing.mjs';
 import {mediaSlots} from './media-slots.mjs';
 import {normalizeMediaSequence,mediaActionCues,resolveMediaSounds} from './mixed-media-motion.mjs';
 import {soundById} from './sound-assets.mjs';
 import {normalizeMediaProps} from './content-runtime.mjs';
 import {helpers} from './shared.mjs';
+import {diagramStyleControls} from './cn-infographic.mjs';
 
 const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
 const finite=value=>typeof value==='number'&&Number.isFinite(value);
@@ -26,7 +28,7 @@ export function sceneCapabilities(component,props=component.defaults){
   propsSchema:getPropsSchema(component),mediaSlots:slots,
   effects:candidates.map(item=>({id:item.id,name:item.name,reason:item.reason,role:item.role,family:item.family,warnings:item.warnings||[],requiresNextScene:item.requiresNextScene,optionsSchema:item.optionsSchema,excludes:item.excludes||[],controls:item.controls,replacesDefault:item.replacesDefault})),
   appearance:{frames:frameStyles,backgrounds:backgroundStyles},
-  tuning:{command:'director.mjs tune scene.json adjustments.json --out new-scene.json',props:'Read propsSchema; only renderer-supported fields are allowed.',instanceOnly:true,layerById:component.id.includes('-hd-'),styleControls:component.id.includes('-hd-')?['palette','fontScale','fontFamily','strokeScale','shadowOpacity','shadowBlur','opacity']:[],review:'Preview and compare key frames after every visual change; validation does not establish visual quality.'},
+  tuning:{command:'director.mjs tune scene.json adjustments.json --out new-scene.json',props:'Read propsSchema; only renderer-supported fields are allowed.',instanceOnly:true,layerById:component.id.includes('-hd-'),styleControls:component.styleControls??(component.id==='comparison-matrix'&&props.layout==='correspondence'?diagramStyleControls:component.id.includes('-hd-')?['palette','fontScale','fontFamily','strokeScale','shadowOpacity','shadowBlur','opacity']:[]),review:'Preview and compare key frames after every visual change; validation does not establish visual quality.'},
   timing:{defaultDuration:8,sourceClock:mediaClock?'source':'graphics',actionCues:mediaClock?{}:actionCues[component.defaultEffect]||{},...(mediaClock?{actionNodePattern:'shotN.enter / cameraN / regionN / panelN / wipe / split / exit'}:{})},
   composition:component.id.includes('-hd-')?{mode:'editable-part-layers',arbitraryChildren:false,note:'props.layers is an ordered flat list of typed SVG parts, each with native 0–8s enter/exit and optional motion steps; it is not arbitrary component nesting. Exported instances can also be placed in the parent timeline.'}:{mode:'independent-instances',arbitraryChildren:false,note:'Combine exported instances in the parent timeline; no arbitrary nested props.children.'}
  };
@@ -90,6 +92,8 @@ export function validateSceneConfig(config,{resolvedProps,strictUnknown=false,le
   appearance=normalizeAppearance(config.appearance);
   if(!frameStyles.some(v=>v.id===(config.appearance?.frame??'none')))fail('appearance.frame','unknown','Unknown frame');
   if(!backgroundStyles.some(v=>v.id===(config.appearance?.background??'original')))fail('appearance.background','unknown','Unknown background');
+  if(config.appearance?.tone!==undefined&&!toneIds.includes(config.appearance.tone))fail('appearance.tone','unknown','Unknown tone; use original, A, B, C or D');
+  if(config.appearance?.mode!==undefined&&!modeIds.includes(config.appearance.mode))fail('appearance.mode','unknown','Unknown mode; use original or video');
  }
  const next=options.nextScene??props.transitionNext;
  if(compatibility?.requiresNextScene&&!next&&!legacy)fail('effectOptions.nextScene','required','转场效果必须显式提供下一画面 component 和 props。');

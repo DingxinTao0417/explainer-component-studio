@@ -8,6 +8,8 @@ export function prepareCandidates(index,query,options={}){
   const component=components.find(c=>c.id===(match.collection==='presentations'?'mixed-media-sequence':match.id));
   if(!component)continue;
   const capability=sceneCapabilities(component);
+  const record=index.components.find(c=>c.id===component.id);
+  if(record?.presets)Object.assign(match,{presets:record.presets,guide:record.guide});
   Object.assign(match,{baseComponent:component.id,propsSchema:capability.propsSchema,mediaSlots:capability.mediaSlots,compatibleEffects:capability.effects,timing:capability.timing,composition:capability.composition});
  }
  return {...result,library:index.library,protocol:index.protocol,noComponentReason:result.matches.length?null:result.guidance.join(' '),next:'核对预览、真实素材和参数后生成配置；候选不等于用户已确认。'};

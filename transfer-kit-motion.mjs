@@ -9,5 +9,13 @@ export function buildKitMotion(gsap,root,options={}){
   for(const s of m.steps){tl.fromTo(el,{x,y},{x:s.x,y:s.y,duration:s.duration*scale,ease:s.ease,immediateRender:false,lazy:false},s.at*scale);x=s.x;y=s.y;}
   if(m.exit<8)tl.fromTo(el,{opacity:1},{opacity:0,duration:Math.max(m.fade,.001)*scale,ease:'none',immediateRender:false,lazy:false},(m.exit-m.fade)*scale);
  }
+ for(const group of root.querySelectorAll('[data-attachment-states]')){
+  const states=[...group.querySelectorAll('[data-attachment-state]')];
+  states.forEach((state,i)=>{
+   gsap.set(state,{opacity:i===0?1:0});
+   if(i>0)tl.set(state,{opacity:1},Number(state.dataset.stateAt)*scale);
+   if(i<states.length-1)tl.set(state,{opacity:0},Number(state.dataset.stateEnd)*scale);
+  });
+ }
  tl.to({}, {duration:.001},8*scale-.001);return tl;
 }

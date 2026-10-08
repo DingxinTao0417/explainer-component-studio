@@ -1,6 +1,11 @@
 // Explicit editorial vocabulary, shared by the generated index and local search.
 // This is a deterministic dictionary matcher, not an embedding/LLM semantic model.
 const vocabulary = {
+  correspondence: ['两组内容的逐项对应', '对应关系|逐项对应|字段对应|一一对应|correspondence'],
+  quadrant: ['用两个维度组织四类情境', '四象限|象限定位|二维分类|quadrant'],
+  pictorial: ['用重复图形表达真实数量与比例', '象形比例|象形图|图标比例|数量阵列|pictorial'],
+  citation: ['把判断连接到可核实来源', '来源引用|来源卡|引用出处|证据来源|citation'],
+  attachmentState: ['文件元数据与处理状态', '附件状态|文件大小|读取中|读取失败|附件处理|attachment status'],
   direction: ['明确方向与流程去向', '指向|箭头|箭头头部|直箭头|曲线箭头|回转箭头|渐宽楔形|渐宽|燕尾|空V口|短距离指向|长距离指向|direction|arrow'],
   semanticLabel: ['按语义等级区分标题与标注', '文字框|文本框|语义标注|对象标签|动作标签|结论卡|注意框|疑问框|semantic label'],
   noticeWriting: ['业务通知的原因、影响与处理办法', '写通知|通知字段|通知内容|发货通知|缺货通知|原因|影响|处理办法|客气点'],
@@ -158,7 +163,7 @@ const profiles = {
   'kanban-board':'kanban status', 'roadmap':'roadmap schedule', 'formula-breakdown':'formula',
   'spectrum-scale':'spectrum', 'process-steps':'process', 'lecture-stage':'lecture media',
   'before-after':'compare', 'flowchart':'process branch', 'layer-stack':'hierarchy',
-  'bar-chart':'bar compare', 'line-chart':'trend', 'comparison-matrix':'matrix compare',
+  'bar-chart':'bar compare', 'line-chart':'trend', 'comparison-matrix':'correspondence matrix compare',
   'event-timeline':'event', 'metric-dashboard':'metric progress', 'definition-card':'definition',
   'chapter-summary':'outro', 'media-stage':'media', 'annotation-callout':'annotation',
   'mixed-media-sequence':'sequence media', 'chrome-browser':'browser',
@@ -238,7 +243,7 @@ function matchesKind(item, collection, intent, kind) {
 
 /** Match explicit editorial vocabulary, IDs and names. It does not infer facts,
  * source assets, or guarantee that an arbitrary sentence has been understood. */
-export function rankLibraryIntent(index, query, {limit=5, kind, mediaType}={}) {
+export function rankLibraryIntent(index, query, {limit=5, kind, mediaType, includeHidden=false}={}) {
   if (!index || typeof index !== 'object') throw Error('rankLibraryIntent requires a director index');
   if (typeof query !== 'string' || !query.trim()) throw Error('query must be non-empty text');
   if (!Number.isInteger(limit) || limit < 1 || limit > 100) throw Error('limit must be an integer from 1 to 100');
@@ -246,7 +251,7 @@ export function rankLibraryIntent(index, query, {limit=5, kind, mediaType}={}) {
   if (kind && ![...collections,'atom','primitive','module','layout','component','scene-template','template','presentation','effect','frame','background','sound','icon'].includes(kind)) throw Error('unknown kind: '+kind);
   const q = normalize(query.trim());
   const detected = Object.entries(vocabulary).map(([id,[label,words]]) => ({id,label,terms:split(words).filter(word=>includesTerm(q,word))})).filter(x=>x.terms.length);
-  const result = {query:query.trim(), method:'explicit-editorial-vocabulary-v1', detectedIntents:detected, total:0, matches:[], guidance:[]};
+  const result = {query:query.trim(), method:'explicit-editorial-vocabulary-v1', scope:includeHidden?'all-status':'core-only', detectedIntents:detected, total:0, matches:[], guidance:[]};
   if (/(不用|不需要|不要).{0,6}(组件|图解|包装)/u.test(q) && /(录屏|实拍|原素材|原始素材|真实画面)/u.test(q)) {
     result.guidance.push('保留原始素材即可；这段明确不需要组件。素材仍需正常剪辑、记录来源与校验时长。');
     return result;
@@ -254,6 +259,8 @@ export function rankLibraryIntent(index, query, {limit=5, kind, mediaType}={}) {
   const ranked = [];
   for (const collection of collections) for (const item of index[collection] ?? []) {
     if(item.compatibilityOnly && q!==normalize(item.id))continue;
+    // 2026-09-28：分级后只有 core 默认参与；直接点名 ID 仍可命中隐藏组件。
+    if(item.status && item.status!=='core' && !includeHidden && q!==normalize(item.id))continue;
     const hasEditorialProfile = collection==='components' || collection==='presentations';
     const intent = hasEditorialProfile ? describeIntent(item) : {layer:collection,intentIds:[],inputs:[],keywords:[],avoidWhen:[],evidenceNotes:[],suitableFor:[],purposes:[]};
     if (!matchesKind(item,collection,intent,kind) || mediaType && !intent.inputs.includes(mediaType)) continue;

@@ -543,11 +543,11 @@ def cmd_run(args):
     return 0
 
 
-def cmd_find(args):
-    tokens = load_json(args.transcript)
+def spoken_stream(tokens):
+    """transcript.json 的词表 → 逐字流 [(规范化字, 开始, 结束, 原词序号)]。frames.py 和 episode.py 也用它查卡词。"""
     if not isinstance(tokens, list):
         raise MediaError('transcript.json 应该是 [{text,start,end}] 列表。')
-    stream = []  # (规范化字, 开始, 结束, 原词序号)
+    stream = []
     for ti, t in enumerate(tokens):
         letters = norm_char(str(t.get('text', '')))
         if not letters:
@@ -555,22 +555,67 @@ def cmd_find(args):
         step = (float(t['end']) - float(t['start'])) / len(letters)
         for k, c in enumerate(letters):
             stream.append((c, float(t['start']) + k * step, float(t['start']) + (k + 1) * step, ti))
+    return stream
+
+
+def word_hits(tokens, stream, word):
+    """一个词在旁白里每次被说出的起止时间（按配音自己的时间，从 0 算）和前后文。"""
+    key = norm_char(word)
     joined = ''.join(s[0] for s in stream)
+    hits = []
+    at = joined.find(key) if key else -1
+    while at >= 0:
+        first, last = stream[at], stream[at + len(key) - 1]
+        ctx_from, ctx_to = max(0, first[3] - 3), min(len(tokens), last[3] + 4)
+        context = ''.join(str(tokens[i]['text']) for i in range(ctx_from, ctx_to))
+        hits.append({'start': round(first[1], 3), 'end': round(last[2], 3), 'context': context})
+        at = joined.find(key, at + 1)
+    return hits
+
+
+def narration_offset(edit):
+    """旁白在成片里从第几秒开始放。transcript.json 的时间从配音的 0 秒算，要加上它才是成片时间。
+    只有一段旁白时才推得出；多段旁白返回 None，由调用方另给偏移。"""
+    clips = edit.get('narration') or []
+    if len(clips) != 1:
+        return None
+    try:
+        return float(clips[0].get('start') or 0) - float(clips[0].get('source_in') or 0)
+    except (TypeError, ValueError):
+        return None
+
+
+def scene_cues(edit, tokens, offset=0.0):
+    """EDIT.json 每个镜头的 cue_words → 这个词在成片时间里第几秒说出。
+    status：ok 在这一镜里说到；outside 旁白里有但不在这一镜的时间里；missing 旁白里没有。"""
+    stream = spoken_stream(tokens)
+    cues = []
+    for scene in edit.get('scenes', []):
+        a, b = scene.get('start'), scene.get('end')
+        if not isinstance(a, (int, float)) or not isinstance(b, (int, float)) or b <= a:
+            continue
+        for word in scene.get('cue_words') or []:
+            times = [h['start'] + offset for h in word_hits(tokens, stream, str(word))]
+            inside = [t for t in times if a - 0.5 <= t <= b + 0.2]
+            if inside:
+                said, status = inside[0], 'ok'
+            elif times:
+                said, status = min(times, key=lambda t: abs(t - (a + b) / 2)), 'outside'
+            else:
+                said, status = None, 'missing'
+            cues.append({'scene': scene.get('id'), 'word': str(word), 'status': status,
+                         'said': None if said is None else round(said, 3),
+                         'scene_start': float(a), 'scene_end': float(b)})
+    return cues
+
+
+def cmd_find(args):
+    tokens = load_json(args.transcript)
+    stream = spoken_stream(tokens)
     keywords = [k.strip() for k in re.split(r'[,，、;；]', args.words) if k.strip()]
     if not keywords:
         raise MediaError('--words 里没有关键词。')
-    result = {}
-    for word in keywords:
-        key = norm_char(word)
-        hits = []
-        at = joined.find(key) if key else -1
-        while at >= 0:
-            first, last = stream[at], stream[at + len(key) - 1]
-            ctx_from, ctx_to = max(0, first[3] - 3), min(len(tokens), last[3] + 4)
-            context = ''.join(str(tokens[i]['text']) for i in range(ctx_from, ctx_to))
-            hits.append({'start': round(first[1], 3), 'end': round(last[2], 3), 'context': context})
-            at = joined.find(key, at + 1)
-        result[word] = hits
+    result = {word: word_hits(tokens, stream, word) for word in keywords}
     for word, hits in result.items():
         if not hits:
             log(f'{word}：没找到')

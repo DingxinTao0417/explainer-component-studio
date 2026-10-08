@@ -41,3 +41,7 @@ HyperFrames 模板中的 audio 由框架负责播放；关闭音效或零音量�
 转场通过 `props.transitionNext` 或 `effectOptions.nextScene` 挂载独立 B 画面。背景选项为 `effectOptions.background`，只作用于声明 background 目标的组件。B 视频在首次揭示时开始，A 视频在交接结束后退出；媒体由 HyperFrames 控制。
 
 混剪镜头组 `mixed-media-sequence` 的独立规则见 [MIXED_MEDIA_GUIDE.md](MIXED_MEDIA_GUIDE.md)：按最终镜头时长直接构建，真实媒体原速；不套普通图解的非线性 8 秒重定时。相机、源坐标标注、分屏视口和交接使用分开的图层；字幕固定于屏幕。预览与导出共用声音混合器。`still` 仅停止取景运动，不冻结源视频。新类别 CSS 前缀为 `mm-`。
+
+## 信息图与附件扩展
+
+`cn-` 前缀用于原生信息图，沿用白底、蓝色、薄荷绿与深蓝文字。三个新组件及两项增强的字段、时序、来源与限制见 [信息图调用说明](CN_INFORMATION_GUIDE.md)。候选的 `presets` 与 `guide` 由同一配置源生成；已有矩阵和附件默认保留原样，不能只改动效而遗漏模式参数。

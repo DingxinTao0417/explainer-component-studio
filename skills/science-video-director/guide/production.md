@@ -67,8 +67,11 @@ projects/YYYYMMDD_主题/
   - `slots`：按旁白填好的组件变量（就是 suggest 输出的 slots，改过后的终稿）；
   - `cues`：卡词结果，`{"data-start": 12.3, "cues": [0.6, 1.5]}` 这类；
   - `technique`：用到的手法卡；
-  - `cue_words`：这个镜头要卡在哪个词上出现，时间用 `align.py find` 或 suggest 的 timing 查。
-  旧项目没有 `intent` / `slots` / `cues` 也能用。
+  - `cue_words`：这个镜头要卡在哪个词上出现，时间用 `align.py find` 或 suggest 的 timing 查。`episode.py check` 会核对每个词在旁白里找不找得到、是不是在这一镜里说的、离镜尾够不够远；`frames.py --cues` 按它抽卡词帧；
+  - `layout`：这一镜的版式，一句短话写“人在哪 / 素材装在哪”，如 `"角标右下 / 录屏铺满"`、`"不在场 / 左图右清单"`、`"全屏口播"`。排逐镜之前先把全片的 `layout` 填一遍，就是版式节奏表：连续 3 镜一样、或同一个组件连用 3 镜，`episode.py check` 会提示；
+  - `motion`：从动效词汇里借了动法时，写卡名，如 `"evidence-scroll-tour"`；
+  - `notes`：这一镜做完要核对的事，比如手法卡的“别这样用”、动效卡的“已知坑”和“落位自检”。
+  旧项目没有 `intent` / `slots` / `cues` / `layout` 也能用。
 - `status`：`planned` → `draft`（还有占位）→ `ready`。
 - `narration` 默认原速、完整、按顺序。用户同意删改时才跳段，并在 NOTES.md 记一句。
 - 镜头之间不留空白；转场可以重叠。
@@ -140,12 +143,16 @@ projects/YYYYMMDD_主题/
   - 有拍点需求时，运行 `npx --yes hyperframes@0.8.57 beats` 取拍点，再用 `audio.py snap` 看哪些切点可以对到拍上。
 - **闪避**：运行 `audio.py envelope <旁白> --bgm <曲子> --bgm-start <秒> --length <秒> --out planning/bgm_duck.json`，把它输出的 `data-automation` 属性贴到 BGM 的 `<audio>` 上。
 - **检查**：渲染预览后，运行 `audio.py report <预览.mp4> --voice <旁白> --bgm <曲子>`，看整体响度、峰值、削波、冷场，以及人声和 BGM 的差距。数字达标只说明没有明显错误，好不好听要交给用户试听。
+- **音效听不听得到**：`audio.py sfx <预览.mp4> --voice <旁白> --html hyperframes/index.html`。它从成片里减掉人声，逐个看音效落点有没有冒出来，列出“听不清”的（压在人声下面，或者太轻）和每分钟的个数。听不清的音效等于没放：挪到句间的气口、换更亮的音色、提高音量，或者删掉。《认知灵活性》成片实测 56 个音效里 25 个听不清，多数是压在人声下的轻点击声。这也只是线索，最后请用户试听。
+- **响度不达标**：`audio.py normalize <成片> --out <新版本文件名>`，两遍归一到 -14 LUFS，画面不重编码。它写新文件，不覆盖。提示“只能用动态模式”时，音效的冲击感可能被压，按提示把目标调低一点，或回混音降峰值。
 
 ## 预览、看片与导出
 
 1. **预览**：按 hyperframes-cli 的方式启动本地预览（`npx --yes hyperframes@0.8.57 preview --background`），或者渲染低清 mp4，样片也一样。预览端口选空闲的，不要占用或关掉 3031 画廊等别的服务。
 2. **看片**：
-   - 运行 `python -X utf8 <skill>/scripts/frames.py <预览.mp4>`，打开 hook_01.jpg 和每张 sheet，对照 visual-grammar.md 的自查清单，逐条写进 REPORT.md，然后修改。
+   - **先看静帧，再渲视频。** 位置、遮挡、文案、配色、层级、取景这些问题，`snapshot --at <秒>` 抽一帧就能回答，十几秒的事；渲视频留给静帧看不出的问题：节奏、闪烁、声画同步。改了哪一章就只看那一章，几处小改攒成一批再渲。
+   - 运行 `python -X utf8 <skill>/scripts/frames.py <预览.mp4> --cues planning/EDIT.json`，打开 hook_01.jpg、每张 sheet 和每张 cues 图，对照 visual-grammar.md 的自查清单，逐条写进 REPORT.md，然后修改。
+   - **卡词帧**（cues 图）：EDIT.json 里每个 `cue_words` 一行，左边是这个词说出口之前，右边是说出口之后。左边不该已经亮出答案，右边该已经在回应；框和箭头这类只出现一两秒的标注，按固定间隔抽的接触表多半抽不到，要在这里核对有没有套住目标。图上的编号对应 REPORT.md 里的“编号 → 镜头、词、时刻”表。样片只截了全片的一段时，加 `--cue-offset <旁白起点 − 样片起点>`。
    - frames.py 给出的数字（平均镜头长度、超过 6 秒不换的段落、静止段）只是线索，最终靠看图判断。
    - **和参考片并排比**：`frames.py <预览.mp4> --compare <工作区>/已拆解视频/<参考片>.mp4`（还没挪走的在 `待拆解视频/`）。每行左边是本片、右边是参考片，外加一张节奏对照表。每期至少跟一条参考片比一次，差距一眼就能看出来。
    - **单帧细看**：`npx --yes hyperframes@0.8.57 snapshot --at 3,12.5 --zoom <x,y,w,h>` 放大检查小字和边缘。

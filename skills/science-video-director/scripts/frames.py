@@ -4,6 +4,7 @@
   python -X utf8 frames.py <视频> [--every 2] [--from 0] [--to 结束] [--out 目录]
                            [--cut 0.10] [--max-shot 6] [--max-still 2.5] [--ffmpeg 路径]
                            [--compare 参考视频 [--compare-rows 24]]
+                           [--cues planning/EDIT.json [--transcript subtitles/transcript.json] [--cue-offset 秒]]
 
 产出（默认写到 <视频所在项目>/qa/frames/<视频名>/，已存在则加序号，不覆盖）：
   hook_01.jpg       前 10 秒逐秒抽帧，检查开头 8 秒有没有看点
@@ -13,6 +14,10 @@
   compare_01.jpg …  （加 --compare 时）左边本片、右边参考片，同一相对位置并排；
                     前 8 行是两边开头 0–7 秒逐秒，之后按全片百分比均匀取点；
                     REPORT.md 里多一张两片节奏对比表
+  cues_01.jpg …     （加 --cues 时）卡词帧：EDIT.json 里每个 cue_words 一行，左边是这个词说出口之前，
+                    右边是说出口之后。左边不该已经亮出答案，右边该已经在回应这个词；
+                    框、箭头、下划线这类只出现一两秒的标注，也在右边这一格核对有没有套住目标。
+                    REPORT.md 里多一张“编号 → 镜头、词、时刻”的对照表
 
 它只提供看片材料和节奏数字，不判断好坏；画面是否达标由编导对照 visual-grammar.md 看图决定。
 """
@@ -24,11 +29,13 @@ import tempfile
 from pathlib import Path
 
 from _media import (CliParser, MediaError, drawtext_escape_path, find_ffmpeg, find_project, fmt, font_path, guarded,
-                    print_summary, probe_duration, probe_size, run_ffmpeg, save_json, unique_dir)
+                    load_json, print_summary, probe_duration, probe_size, run_ffmpeg, save_json, unique_dir)
 
 TILE_COLS, TILE_ROWS, TILE_WIDTH = 4, 4, 480
 COMPARE_MAX_ROWS = 12
 HOOK_SECONDS = 8
+CUE_MAX_ROWS = 8
+CUE_TAIL_GUARD = 0.7  # 卡词动作离镜尾不到这么多秒，刚出现就会被切走
 
 
 def stamp_filter(fontsize=22):
@@ -203,6 +210,57 @@ def pace_table(ours, ref, max_shot, max_still):
     return lines
 
 
+# ---------------------------------------------------------------- 卡词帧
+
+def cue_sheets(ffmpeg, video, span, edit_path, transcript_path, offset, lead, lag, out):
+    """每个 cue_words 一行：词说出口之前 | 之后。返回 (图片列表, 逐条记录, 偏移, 每张几行)。"""
+    from align import narration_offset, scene_cues  # 只用到查词的部分，不会加载语音识别
+    edit, tokens = load_json(edit_path), load_json(transcript_path)
+    if offset is None:
+        offset = narration_offset(edit)
+        if offset is None:
+            raise MediaError('EDIT.json 里有多段旁白，推不出旁白起点；用 --cue-offset 给出配音在这条视频里从第几秒开始。')
+    start, end = span
+    rows = []
+    for cue in scene_cues(edit, tokens, offset):
+        note = []
+        if cue['status'] == 'missing':
+            note.append('旁白里没找到这个词')
+        elif cue['status'] == 'outside':
+            note.append('说到这个词时不在这一镜里')
+        if cue['said'] is not None and cue['status'] == 'ok' and cue['scene_end'] - cue['said'] < CUE_TAIL_GUARD:
+            note.append(f'离镜尾只有 {cue["scene_end"] - cue["said"]:.2f} 秒')
+        visible = cue['said'] is not None and start <= cue['said'] - lead and cue['said'] + lag <= end
+        rows.append({**cue, 'note': '；'.join(note), 'shown': visible})
+    shown = [r for r in rows if r['shown']]
+    for n, row in enumerate(shown, 1):
+        row['n'] = n
+    sheets, per_sheet = [], 0
+    if shown:
+        font = font_path()
+        sheet_count = math.ceil(len(shown) / CUE_MAX_ROWS)
+        per_sheet = math.ceil(len(shown) / sheet_count)
+        work = Path(tempfile.mkdtemp(prefix='cue_', dir=out))
+        try:
+            for i, row in enumerate(shown):
+                # 标签只用 ASCII；词是什么看 REPORT.md 的对照表
+                scene = re.sub(r'[^A-Za-z0-9_-]', '', str(row['scene'] or '')) or 'shot'
+                before, after = row['said'] - lead, row['said'] + lag
+                grab_tile(ffmpeg, video, before, f'C{row["n"]:02d} {scene} {seconds_label(before)} before',
+                          work / f't_{2 * i:04d}.jpg', font, (640, 360))
+                grab_tile(ffmpeg, video, after, f'C{row["n"]:02d} {scene} {seconds_label(after)} after',
+                          work / f't_{2 * i + 1:04d}.jpg', font, (640, 360))
+            result = run_ffmpeg(ffmpeg, ['-y', '-framerate', '1', '-i', str(work / 't_%04d.jpg'),
+                                         '-vf', f'tile=2x{per_sheet}:padding=6:margin=6:color=black',
+                                         *vfr_args(ffmpeg), '-q:v', '3', str(out / 'cues_%02d.jpg')])
+            if result.returncode:
+                raise MediaError('拼卡词帧失败：' + result.stderr[-400:])
+        finally:
+            shutil.rmtree(work, ignore_errors=True)
+        sheets = sorted(out.glob('cues_*.jpg'))
+    return sheets, rows, offset, per_sheet
+
+
 # ---------------------------------------------------------------- 主流程
 
 def build_parser():
@@ -218,6 +276,12 @@ def build_parser():
     parser.add_argument('--ffmpeg', help='ffmpeg.exe 路径；默认自动找')
     parser.add_argument('--compare', metavar='参考视频', help='和一条参考视频并排对比画面和节奏')
     parser.add_argument('--compare-rows', type=int, default=24, help='对比图按相对位置取多少行（不含开头 8 行），默认 24')
+    parser.add_argument('--cues', metavar='EDIT.json', help='按 EDIT.json 的 cue_words 抽卡词帧：每个词说出口前后各一帧')
+    parser.add_argument('--transcript', help='逐词时间 transcript.json；默认用项目里的 subtitles/transcript.json')
+    parser.add_argument('--cue-offset', type=float, help='配音在这条视频里从第几秒开始；默认按 EDIT.json 的旁白起点。'
+                                                         '样片只截了全片一段时，填“旁白起点 − 样片起点”')
+    parser.add_argument('--cue-lead', type=float, default=0.2, help='左边那帧取在词说出口之前多少秒，默认 0.2')
+    parser.add_argument('--cue-lag', type=float, default=0.4, help='右边那帧取在词说出口之后多少秒，默认 0.4')
     return parser
 
 
@@ -272,6 +336,23 @@ def main(argv=None):
         compare = {'ref_video': str(ref), 'ref_pace': ref_pace, 'sheets': [p.name for p in cmp_sheets],
                    'points': points, 'rows_per_sheet': rows_per_sheet, 'timestamps_drawn': cmp_stamped}
         summary['compare'] = compare
+
+    cues = None
+    if args.cues:
+        edit_path = Path(args.cues).resolve()
+        if not edit_path.is_file():
+            raise MediaError(f'分镜文件不存在：{edit_path}')
+        project = find_project(edit_path) or find_project(video)
+        transcript = Path(args.transcript).resolve() if args.transcript else (
+            project / 'subtitles' / 'transcript.json' if project else None)
+        if not transcript or not transcript.is_file():
+            raise MediaError('找不到 transcript.json；用 --transcript 指定（align.py run 的产物）。')
+        cue_files, cue_rows, cue_offset, cue_per_sheet = cue_sheets(
+            ffmpeg, video, (start, end), edit_path, transcript, args.cue_offset, args.cue_lead, args.cue_lag, out)
+        cues = {'edit': str(edit_path), 'transcript': str(transcript), 'offset': cue_offset,
+                'lead': args.cue_lead, 'lag': args.cue_lag, 'sheets': [p.name for p in cue_files],
+                'rows_per_sheet': cue_per_sheet, 'cues': cue_rows}
+        summary['cues'] = cues
     save_json(out / 'pace.json', summary)
 
     lines = [
@@ -291,6 +372,25 @@ def main(argv=None):
                   f'前 {HOOK_SECONDS} 行是开头逐秒，之后按全片百分比对齐）', '']
         lines += pace_table(ours, compare['ref_pace'], args.max_shot, args.max_still)
         lines += ['', '看法提示：先比“前 8 秒换画面次数”和“超长镜头占时”，差距最大的那一项通常就是观感差距的来源。']
+    if cues:
+        shown = [r for r in cues['cues'] if r['shown']]
+        flagged = [r for r in cues['cues'] if r['note']]
+        listed = [r for r in cues['cues'] if r['shown'] or r['note']]
+        skipped = len(cues['cues']) - len(listed)
+        lines += ['', '## 卡词帧', '',
+                  f'- 图：{", ".join(cues["sheets"]) or "（没有可抽的卡词）"}；每行左边是词说出口前 {args.cue_lead:g} 秒，'
+                  f'右边是说出口后 {args.cue_lag:g} 秒',
+                  f'- 旁白起点按 {cues["offset"]:.2f} 秒算；共 {len(cues["cues"])} 个卡词，抽了 {len(shown)} 个'
+                  + (f'，另有 {skipped} 个不在这次看的时间范围里' if skipped else ''),
+                  '- 逐行看三件事：左边有没有抢先亮出答案；右边是不是已经在回应这个词；框、箭头、下划线有没有套住目标',
+                  '', '| 编号 | 镜头 | 卡词 | 说出时刻 | 提示 | 看到的 |', '| --- | --- | --- | --- | --- | --- |']
+        for r in listed:
+            tag = f'C{r["n"]:02d}' if r['shown'] else '—'
+            said = '—' if r['said'] is None else f'{fmt(r["said"])}（{r["said"]:.2f}s）'
+            lines.append(f'| {tag} | {r["scene"]} | {r["word"]} | {said} | {r["note"]} |  |')
+        if flagged:
+            lines += ['', f'有 {len(flagged)} 个卡词带提示：没找到的多半是改过稿，回去改 cue_words；'
+                          '离镜尾太近的，把动作提前或挪到下一镜。']
     if long_shots:
         lines += ['', f'## 超过 {args.max_shot:g} 秒的画面段', '']
         lines += [f'- {fmt(a)}–{fmt(b)}（{b - a:.1f} 秒）' for a, b in long_shots]
@@ -301,7 +401,9 @@ def main(argv=None):
               '| 标准 | 结论 | 证据 / 时间点 | 要改什么 |', '| --- | --- | --- | --- |']
     for item in ['前 8 秒有结果/反差/问题画面', '主持人在开头、换章和结尾出现', '四类画面轮换，无长段单一类型',
                  '字号达标（缩到手机宽度仍可读）', '录屏铺满且标出看哪里', '主色统一、对比够强',
-                 '章节进度可见', '画面信息与旁白对得上、没抢先', '声音：人声清楚、BGM 不抢、音效落在关键点']:
+                 '章节进度可见', '画面信息与旁白对得上、没抢先（看卡词帧）', '框、箭头、下划线套住了目标（看卡词帧）',
+                 '同屏不超过 3 组、留有空象限、画面文字不抄字幕', '版式在轮换，没有连着三镜一个样',
+                 '声音：人声清楚、BGM 不抢、音效听得到']:
         lines.append(f'| {item} |  |  |  |')
     (out / 'REPORT.md').write_text('\n'.join(lines) + '\n', encoding='utf-8')
 
@@ -312,6 +414,10 @@ def main(argv=None):
         result['compare_sheets'] = len(compare['sheets'])
         result['ref_shots'] = compare['ref_pace']['shot_count']
         result['ref_avg_shot'] = compare['ref_pace']['avg_shot']
+    if cues:
+        result['cue_sheets'] = len(cues['sheets'])
+        result['cues'] = len(cues['cues'])
+        result['cues_flagged'] = len([r for r in cues['cues'] if r['note']])
     print_summary(result)
     return 0
 

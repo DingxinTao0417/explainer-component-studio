@@ -1,0 +1,41 @@
+{
+  "version": 5,
+  "title": "象形比例 · 可调示例",
+  "component": "pictorial-ratio",
+  "props": {
+    "title": "处理进度，一眼看清",
+    "subtitle": "数量与百分比使用同一份数据",
+    "note": "数据为演示；也支持不足一个单位的部分填充。",
+    "style": {
+      "accent": "#0879ff",
+      "secondary": "#009e7a",
+      "ink": "#142f67",
+      "muted": "#58718c",
+      "surface": "#eff8ff",
+      "background": "#ffffff",
+      "border": "#bedbf3",
+      "fontSize": 28,
+      "labelSize": 21,
+      "strokeWidth": 2,
+      "cornerRadius": 14,
+      "shadowOpacity": 0.1
+    },
+    "total": 10,
+    "value": 3,
+    "columns": 5,
+    "gap": 16,
+    "icon": "file",
+    "unit": "份",
+    "valueLabel": "已处理",
+    "restLabel": "待处理",
+    "at": 0.45,
+    "step": 0.12
+  },
+  "effect": "cn-information-reveal",
+  "effectOptions": {},
+  "timing": {
+    "duration": 8
+  },
+  "soundEnabled": false,
+  "soundGain": 0
+}

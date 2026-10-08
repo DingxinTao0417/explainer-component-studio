@@ -1,6 +1,7 @@
 // Editable SVG parts traced by observation of delivery HD reference geometry.
 // No screenshot fills. All text and optional official brand artwork are props.
 import {semanticParts,semanticRules} from './semantic-primitives.mjs';
+import {attachmentDefaults,attachmentRules,attachmentPhases,renderAttachmentFile} from './attachment-metadata.mjs';
 const C={ink:'#10275f',blue:'#0879ff',light:'#dff2ff',edge:'#86c6ff',shadow:'#b4dafe',mint:'#009e7a',orange:'#ff8709',gray:'#bbc9d5'};
 export const kitCSS='.ani-kit text{font-family:ComponentHan,ComponentUI,"Microsoft YaHei",sans-serif;font-weight:700}.ani-kit [data-kit-node]{transform-box:fill-box;transform-origin:center}.ani-kit path,.ani-kit rect,.ani-kit circle,.ani-kit ellipse{stroke-linecap:round;stroke-linejoin:round}';
 const safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -93,7 +94,7 @@ node('heading',txt(h,236,136,p.title,39,395,'#ff620c','middle')+txt(h,236,171,p.
 part('notice-field','标签与本次事实字段',400,86,{label:'字段',value:'',tone:'blue',lineCount:2},'原生400×86；label≤6字，value≤12字；空值用1–3灰色行。',(p,h)=>{
 const c={blue:'#087cff',orange:'#ff850a',mint:'#009976'}[p.tone]||'#087cff';return node('label',rect(3,6,140,70,15,c)+txt(h,73,51,p.label,29,124,'white','middle'))+node('value',p.value?txt(h,163,49,p.value,23,230):Array.from({length:bounded(p.lineCount,1,3,2)},(_,i)=>rect(164,15+i*22,i?184:226,13,6,C.gray)).join(''));
 }),
-part('attachment-card','报错或代码附件卡',280,135,{title:'附件',kind:'document',lineCount:3},'原生280×135；kind document/code/error/image；title≤8字，灰行0–3。',(p,h)=>node('card',rect(4,4,270,124,15,'white','#9dccff',2))+
+part('attachment-card','附件与处理状态卡',280,135,{title:'附件',kind:'document',lineCount:3,...attachmentDefaults},'原生280×135；display legacy保留原卡，file显示文件名、字节大小、类型和处理状态。states从0开始按at递增，在ani-hd-parts时间轴上可回放；静态显示最后一态。',(p,h)=>p.display==='file'?renderAttachmentFile(p,h):node('card',rect(4,4,270,124,15,'white','#9dccff',2))+
 node('file',path('M29 27H68L86 46V105H29Z','#e5f4ff','#8ac1f2',2)+path('M68 27V46H86','none','#8ac1f2',2)+(p.kind==='code'?path('M47 56L35 69L47 81M70 56L82 69L70 81M63 53L54 86','none','#185adb',3.8):p.kind==='image'?path('M37 85L48 67L58 77L66 59L78 85Z','#087cfc','none'):path('M39 57H60M39 69H73M39 81H62','none','#8eacd3',4))+(p.kind==='error'?`<circle cx="77" cy="94" r="15" fill="#ff6923" stroke="white" stroke-width="2"/>`+path('M77 84V96M77 102V103','none','white',3):''))+
 node('details',txt(h,104,46,p.title,26,158)+Array.from({length:bounded(p.lineCount,0,3,3)},(_,i)=>rect(105,62+i*18,i===2?103:146,10,5,C.gray)).join(''))),
 part('reply-lines','可逐行揭示的占位回复',450,120,{count:4,color:'#becbd6',lengths:[1,.87,.95,.7],lineHeight:13,gap:17},'原生450×120；count0–4，lengths为0–1；每行独立data-kit-node。',p=>Array.from({length:bounded(p.count,0,4,4)},(_,i)=>node('line-'+i,rect(5,7+i*(num(p.lineHeight,13)+num(p.gap,17)),435*bounded(p.lengths?.[i],.08,1,1),bounded(p.lineHeight,3,18,13),7,safe(p.color)),'data-motion="line"')).join('')),
@@ -163,7 +164,7 @@ export const partRules={
  'photo-stack':{kinds:array(enumeration('cup','lamp','bag','shoe','chair','plant'),1,3),count:integer(1,3),spread:number(60,96),labels:array(str(8),0,3),tilt:bool},
  'notice-paper':{title:str(14),subtitle:str(18),foldTone:enumeration('gold','blue'),showShadow:bool},
  'notice-field':{label:str(6),value:str(12),tone:enumeration('blue','orange','mint'),lineCount:integer(1,3)},
- 'attachment-card':{title:str(8),kind:enumeration('document','code','error','image'),lineCount:integer(0,3)},
+ 'attachment-card':{title:str(8),kind:enumeration('document','code','error','image'),lineCount:integer(0,3),...attachmentRules},
  'reply-lines':{count:integer(0,4),color,lengths:array(number(.08,1),0,4),lineHeight:number(3,18),gap:number(0,17)},
  'send-icon':{tone:enumeration('blue','mint')},
  'checklist-row':{text:str(20),state:enumeration('unchecked','checked','failed'),highlight:bool},
@@ -179,6 +180,12 @@ export const partRules={
  'focus-ring':{tone:enumeration('blue','orange'),dashed:bool}
 };
 function validateValue(v,r,label){
+ if(r.type==='object'){
+  if(!v||typeof v!=='object'||Array.isArray(v))throw Error(label+': expected object');
+  for(const key of r.required??[])if(!(key in v))throw Error(label+'.'+key+': required');
+  for(const [key,value]of Object.entries(v)){const rule=r.properties?.[key];if(rule)validateValue(value,rule,label+'.'+key);else if(r.additionalProperties===false)throw Error(label+'.'+key+': unknown property');}
+  return;
+ }
  if(r.type==='array'){
   if(!Array.isArray(v))throw Error(label+': expected array');
   if(v.length<r.minItems||v.length>r.maxItems)throw Error(label+`: requires ${r.minItems}–${r.maxItems} items`);
@@ -202,6 +209,7 @@ function validatePart(key,p){
   validateValue(v,rules[name],key+'.'+name);
  }
  if(key==='photo-stack'&&p.kinds.length<p.count)throw Error(key+'.kinds: provide an explicit product identity for each photo');
+ if(key==='attachment-card')attachmentPhases(p);
  if(key==='reply-lines'&&p.lengths.length<p.count)throw Error(key+'.lengths: provide one length per line');
  if(key==='reply-lines'&&p.count>0&&7+(p.count-1)*(p.lineHeight+p.gap)+p.lineHeight>120)throw Error(key+': lines exceed native height');
 }
@@ -228,7 +236,6 @@ export function partAt(key,props={},h={},options={}){
  const scoped={...h,uid:s=>h.uid?h.uid(`${suffix}-${s}`):`${suffix}-${s}`};
  return `<g data-kit-placement="${safe(key)}" transform="translate(${num(x)} ${num(y)}) scale(${scale})" opacity="${bounded(opacity,0,1,1)}">${drawPart(key,props,scoped)}</g>`;
 }
-
 
 
 

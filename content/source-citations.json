@@ -1,0 +1,52 @@
+{
+  "title": "主标题",
+  "subtitle": "副标题与说明文字",
+  "note": "补充说明文字",
+  "style": {
+    "accent": "#0879ff",
+    "secondary": "#009e7a",
+    "ink": "#142f67",
+    "muted": "#58718c",
+    "surface": "#eff8ff",
+    "background": "#ffffff",
+    "border": "#bedbf3",
+    "fontSize": 28,
+    "labelSize": 21,
+    "strokeWidth": 2,
+    "cornerRadius": 14,
+    "shadowOpacity": 0.1
+  },
+  "claim": "这里放需要说明依据的判断。",
+  "claimLabel": "当前判断",
+  "citedIds": [
+    "source-a",
+    "source-b"
+  ],
+  "activeId": "source-a",
+  "sources": [
+    {
+      "id": "source-a",
+      "title": "参考材料 A",
+      "locator": "第 1 页",
+      "quote": "来源内容摘要 A",
+      "kind": "file",
+      "at": 0.55
+    },
+    {
+      "id": "source-b",
+      "title": "参考材料 B",
+      "locator": "第 2 节",
+      "quote": "来源内容摘要 B",
+      "kind": "file",
+      "at": 1.65
+    },
+    {
+      "id": "source-c",
+      "title": "参考材料 C",
+      "locator": "来源位置",
+      "quote": "来源内容摘要 C",
+      "kind": "web",
+      "at": 2.75
+    }
+  ]
+}

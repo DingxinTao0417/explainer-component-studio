@@ -1,0 +1,4579 @@
+{
+ "$comment": "组件库的语义元数据（手改维护）。status：core 默认参与挑选 / episode 单期专用 / legacy 旧版 / hidden-platform 频道用不上的平台界面；非 core 默认隐藏，shot_semantics.py suggest --include-hidden 或 director.mjs prepare --include hidden 可打开。intents 见 skill scripts/semantics/intents.json；subjects 是旁白必须命中的主题词；slots 是字数上限（0 = 数值）；overflow 一律缩写或拆分，不缩字号。",
+ "library": "science-video-component-library",
+ "tones": [
+  "A",
+  "B",
+  "C",
+  "D"
+ ],
+ "overlays_by_intent": {
+  "point": [
+   "ani-atom-hd-arrow-*",
+   "ani-atom-hd-label-*",
+   "ani-atom-highlight",
+   "ani-atom-callout",
+   "ani-atom-hd-focus-ring",
+   "ani-atom-hd-magnifier"
+  ],
+  "keyword": [
+   "ani-atom-hd-semantic-label",
+   "ani-atom-hd-title"
+  ],
+  "question": [
+   "ani-atom-hd-question-bubble"
+  ],
+  "conclusion": [
+   "ani-atom-hd-semantic-label"
+  ],
+  "caution": [
+   "ani-atom-hd-semantic-label",
+   "ani-atom-hd-status-pill"
+  ],
+  "grouping": [
+   "ani-atom-hd-brace",
+   "ani-atom-connector"
+  ],
+  "process": [
+   "ani-atom-hd-flow-arrow",
+   "ani-atom-connector",
+   "ani-atom-node"
+  ],
+  "steps": [
+   "ani-atom-progress",
+   "ani-atom-hd-checklist-row"
+  ],
+  "software": [
+   "ani-atom-window",
+   "ani-atom-browser",
+   "ani-atom-input",
+   "ani-atom-button",
+   "ani-atom-cursor",
+   "ani-atom-hd-window-shell",
+   "ani-atom-hd-chat-shell",
+   "ani-atom-hd-chat-message",
+   "ani-atom-hd-code-lines"
+  ]
+ },
+ "components": {
+  "ani-order-filter": {
+   "status": "episode",
+   "why": "《图式归纳》V8 分镜重建的整场景",
+   "shot_candidate": false
+  },
+  "ani-compare-extract": {
+   "status": "episode",
+   "why": "《图式归纳》V8 分镜重建的整场景",
+   "shot_candidate": false
+  },
+  "ani-atom-window": {
+   "status": "core",
+   "why": "动画风基础部件（拼装用，不作整镜候选）",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-tabs": {
+   "status": "core",
+   "why": "动画风基础部件（拼装用，不作整镜候选）",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [],
+   "shot_candidate": false
+  },
+  "ani-atom-address": {
+   "status": "core",
+   "why": "动画风基础部件（拼装用，不作整镜候选）",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [],
+   "shot_candidate": false
+  },
+  "ani-atom-button": {
+   "status": "core",
+   "why": "动画风基础部件（拼装用，不作整镜候选）",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-input": {
+   "status": "core",
+   "why": "动画风基础部件（拼装用，不作整镜候选）",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-status": {
+   "status": "core",
+   "why": "动画风基础部件（拼装用，不作整镜候选）",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [],
+   "shot_candidate": false
+  },
+  "ani-atom-checkbox": {
+   "status": "core",
+   "why": "动画风基础部件（拼装用，不作整镜候选）",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [],
+   "shot_candidate": false
+  },
+  "ani-atom-cursor": {
+   "status": "core",
+   "why": "动画风基础部件（拼装用，不作整镜候选）",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-cell": {
+   "status": "core",
+   "why": "动画风基础部件（拼装用，不作整镜候选）",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [],
+   "shot_candidate": false
+  },
+  "ani-atom-table-row": {
+   "status": "core",
+   "why": "动画风基础部件（拼装用，不作整镜候选）",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [],
+   "shot_candidate": false
+  },
+  "ani-atom-node": {
+   "status": "core",
+   "why": "动画风基础部件（拼装用，不作整镜候选）",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "process"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-callout": {
+   "status": "core",
+   "why": "动画风基础部件（拼装用，不作整镜候选）",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "point"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-highlight": {
+   "status": "core",
+   "why": "动画风基础部件（拼装用，不作整镜候选）",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "point"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-progress": {
+   "status": "core",
+   "why": "动画风基础部件（拼装用，不作整镜候选）",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "steps"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-symbol": {
+   "status": "core",
+   "why": "动画风基础部件（拼装用，不作整镜候选）",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [],
+   "shot_candidate": false
+  },
+  "ani-atom-paper": {
+   "status": "core",
+   "why": "动画风基础部件（拼装用，不作整镜候选）",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [],
+   "shot_candidate": false
+  },
+  "ani-atom-text": {
+   "status": "core",
+   "why": "动画风基础部件（拼装用，不作整镜候选）",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [],
+   "shot_candidate": false
+  },
+  "ani-atom-document-row": {
+   "status": "core",
+   "why": "动画风基础部件（拼装用，不作整镜候选）",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [],
+   "shot_candidate": false
+  },
+  "ani-atom-file-stack": {
+   "status": "core",
+   "why": "动画风基础部件（拼装用，不作整镜候选）",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [],
+   "shot_candidate": false
+  },
+  "ani-atom-title-label": {
+   "status": "core",
+   "why": "动画风基础部件（拼装用，不作整镜候选）",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [],
+   "shot_candidate": false
+  },
+  "ani-atom-file": {
+   "status": "core",
+   "why": "动画风基础部件（拼装用，不作整镜候选）",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [],
+   "shot_candidate": false
+  },
+  "ani-atom-document": {
+   "status": "core",
+   "why": "动画风基础部件（拼装用，不作整镜候选）",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [],
+   "shot_candidate": false
+  },
+  "ani-atom-folder": {
+   "status": "core",
+   "why": "动画风基础部件（拼装用，不作整镜候选）",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [],
+   "shot_candidate": false
+  },
+  "ani-atom-table": {
+   "status": "core",
+   "why": "动画风基础部件（拼装用，不作整镜候选）",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [],
+   "shot_candidate": false
+  },
+  "ani-atom-browser": {
+   "status": "core",
+   "why": "动画风基础部件（拼装用，不作整镜候选）",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-connector": {
+   "status": "core",
+   "why": "动画风基础部件（拼装用，不作整镜候选）",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "grouping",
+    "process"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-truck-body": {
+   "status": "legacy",
+   "why": "已被 hd 整车 / 新部件替代，或标着旧版兼容",
+   "shot_candidate": false
+  },
+  "ani-atom-hd-truck-cab": {
+   "status": "legacy",
+   "why": "已被 hd 整车 / 新部件替代，或标着旧版兼容",
+   "shot_candidate": false
+  },
+  "ani-atom-hd-wheel": {
+   "status": "legacy",
+   "why": "已被 hd 整车 / 新部件替代，或标着旧版兼容",
+   "shot_candidate": false
+  },
+  "ani-atom-hd-cargo-box": {
+   "status": "episode",
+   "why": "《迁移》(20260918 图式归纳 / 20260925 迁移) 素材重建的部件：货车、货箱、仓库、通知单、照片、暂存区",
+   "shot_candidate": false
+  },
+  "ani-atom-hd-ground-shadow": {
+   "status": "legacy",
+   "why": "已被 hd 整车 / 新部件替代，或标着旧版兼容",
+   "shot_candidate": false
+  },
+  "ani-atom-hd-photo-card": {
+   "status": "episode",
+   "why": "《迁移》(20260918 图式归纳 / 20260925 迁移) 素材重建的部件：货车、货箱、仓库、通知单、照片、暂存区",
+   "shot_candidate": false
+  },
+  "ani-atom-hd-window-shell": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-buffer-area": {
+   "status": "episode",
+   "why": "《迁移》(20260918 图式归纳 / 20260925 迁移) 素材重建的部件：货车、货箱、仓库、通知单、照片、暂存区",
+   "shot_candidate": false
+  },
+  "ani-atom-hd-chat-shell": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-chat-message": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-cargo-stack": {
+   "status": "episode",
+   "why": "《迁移》(20260918 图式归纳 / 20260925 迁移) 素材重建的部件：货车、货箱、仓库、通知单、照片、暂存区",
+   "shot_candidate": false
+  },
+  "ani-atom-hd-warehouse": {
+   "status": "episode",
+   "why": "《迁移》(20260918 图式归纳 / 20260925 迁移) 素材重建的部件：货车、货箱、仓库、通知单、照片、暂存区",
+   "shot_candidate": false
+  },
+  "ani-atom-hd-folder-shell": {
+   "status": "episode",
+   "why": "《迁移》(20260918 图式归纳 / 20260925 迁移) 素材重建的部件：货车、货箱、仓库、通知单、照片、暂存区",
+   "shot_candidate": false
+  },
+  "ani-atom-hd-photo-stack": {
+   "status": "episode",
+   "why": "《迁移》(20260918 图式归纳 / 20260925 迁移) 素材重建的部件：货车、货箱、仓库、通知单、照片、暂存区",
+   "shot_candidate": false
+  },
+  "ani-atom-hd-notice-paper": {
+   "status": "episode",
+   "why": "《迁移》(20260918 图式归纳 / 20260925 迁移) 素材重建的部件：货车、货箱、仓库、通知单、照片、暂存区",
+   "shot_candidate": false
+  },
+  "ani-atom-hd-notice-field": {
+   "status": "episode",
+   "why": "《迁移》(20260918 图式归纳 / 20260925 迁移) 素材重建的部件：货车、货箱、仓库、通知单、照片、暂存区",
+   "shot_candidate": false
+  },
+  "ani-atom-hd-attachment-card": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-reply-lines": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-send-icon": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-checklist-row": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "steps"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-magnifier": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "point"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-brace": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "grouping"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-flow-arrow": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "process"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-status-pill": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "caution"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-title": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "keyword"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-question-bubble": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "question"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-brand-badge": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-code-lines": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-destination-pad": {
+   "status": "episode",
+   "why": "《迁移》(20260918 图式归纳 / 20260925 迁移) 素材重建的部件：货车、货箱、仓库、通知单、照片、暂存区",
+   "shot_candidate": false
+  },
+  "ani-atom-hd-focus-ring": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "point"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-truck": {
+   "status": "episode",
+   "why": "《迁移》(20260918 图式归纳 / 20260925 迁移) 素材重建的部件：货车、货箱、仓库、通知单、照片、暂存区",
+   "shot_candidate": false
+  },
+  "ani-atom-hd-direction-arrow": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-semantic-label": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "keyword",
+    "conclusion",
+    "caution"
+   ],
+   "shot_candidate": false
+  },
+  "ani-module-hd-truck": {
+   "status": "episode",
+   "why": "《迁移》素材的组合模块",
+   "shot_candidate": false
+  },
+  "ani-module-hd-photo-folder": {
+   "status": "episode",
+   "why": "《迁移》素材的组合模块",
+   "shot_candidate": false
+  },
+  "ani-module-hd-notice-fields": {
+   "status": "episode",
+   "why": "《迁移》素材的组合模块",
+   "shot_candidate": false
+  },
+  "ani-module-hd-processing-window": {
+   "status": "episode",
+   "why": "《迁移》素材的组合模块",
+   "shot_candidate": false
+  },
+  "ani-module-hd-chat": {
+   "status": "core",
+   "why": "通用界面模块",
+   "type": "evidence",
+   "role": "replica",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "聊天",
+    "对话",
+    "消息",
+    "问它",
+    "回答"
+   ],
+   "phrases": [
+    "一问一答的聊天示意"
+   ],
+   "avoid": [
+    "有真实截图时"
+   ],
+   "slots": {
+    "messages": {
+     "max": 20,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "label",
+    "background"
+   ],
+   "tone_support": "tokens"
+  },
+  "ani-module-hd-checklist": {
+   "status": "core",
+   "why": "通用界面模块",
+   "type": "structure",
+   "role": "overlay",
+   "intents": [
+    "steps"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "清单",
+    "核对",
+    "勾",
+    "检查"
+   ],
+   "phrases": [
+    "逐项核对"
+   ],
+   "avoid": [
+    "没验证就打勾"
+   ],
+   "slots": {
+    "items": {
+     "max": 20,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "label",
+    "background"
+   ],
+   "tone_support": "tokens"
+  },
+  "ani-module-hd-warehouse": {
+   "status": "episode",
+   "why": "《迁移》素材的组合模块",
+   "shot_candidate": false
+  },
+  "ani-module-hd-attachments": {
+   "status": "episode",
+   "why": "《迁移》素材的组合模块",
+   "shot_candidate": false
+  },
+  "ani-module-hd-comparison": {
+   "status": "core",
+   "why": "通用界面模块",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "grouping"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "对应",
+    "关联",
+    "共同"
+   ],
+   "phrases": [
+    "两对象用括线对应"
+   ],
+   "avoid": [
+    "表达数据流（用箭头）"
+   ],
+   "slots": {
+    "labels": {
+     "max": 10,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "label",
+    "background"
+   ],
+   "tone_support": "tokens"
+  },
+  "ani-module-hd-product-gallery": {
+   "status": "episode",
+   "why": "《迁移》素材的组合模块",
+   "shot_candidate": false
+  },
+  "ani-transfer-hd-experience": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-hd-experience-problem": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-hd-notice-draft": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-hd-notice-complete": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-hd-notice-reuse": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-hd-before-read": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-hd-capacity": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-hd-error-explanation": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-hd-truck-loaded": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-hd-truck-empty": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-hd-batch-read": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-hd-batch-saved": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-hd-batch-released": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-hd-batch-next": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-hd-near-far": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-hd-ask-direction": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-hd-propose-direction": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-hd-check-cause": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-hd-copy-verify": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-hd-two-purposes": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-hd-experience-to-action": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-hd-question-outro": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-hd-next-topic": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-hd-unload-motion": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-hd-batch-motion": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-hd-field-motion": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-atom-hd-arrow-solid": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "point"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-arrow-open": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "point"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-arrow-double-line": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "point"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-arrow-curve": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "point"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-arrow-elbow": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "point"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-arrow-dashed": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "point"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-arrow-handdrawn": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "point"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-arrow-ribbon": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "point"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-arrow-block3d": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "point"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-arrow-return": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "point"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-arrow-chevrons": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "point"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-arrow-tapered": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "point"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-arrow-swallowtail": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "point"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-label-heading-underline": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "point"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-label-object-tab": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "point"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-label-action-ribbon": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "point"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-label-conclusion-bracket": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "point"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-label-conclusion-card": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "point"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-label-caution-notched": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "point"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-label-question-speech": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "point"
+   ],
+   "shot_candidate": false
+  },
+  "ani-atom-hd-label-note-outline": {
+   "status": "core",
+   "why": "通用标注 / 界面部件",
+   "type": "metaphor",
+   "role": "overlay",
+   "intents": [
+    "point"
+   ],
+   "shot_candidate": false
+  },
+  "ani-tool-workbench": {
+   "status": "episode",
+   "why": "《图式归纳》V8 分镜重建的整场景",
+   "shot_candidate": false
+  },
+  "ani-file-collection": {
+   "status": "episode",
+   "why": "《图式归纳》V8 分镜重建的整场景",
+   "shot_candidate": false
+  },
+  "ani-method-transfer": {
+   "status": "episode",
+   "why": "《图式归纳》V8 分镜重建的整场景",
+   "shot_candidate": false
+  },
+  "ani-knowledge-network": {
+   "status": "episode",
+   "why": "《图式归纳》V8 分镜重建的整场景",
+   "shot_candidate": false
+  },
+  "ani-capability-tiles": {
+   "status": "episode",
+   "why": "《图式归纳》V8 分镜重建的整场景",
+   "shot_candidate": false
+  },
+  "ani-processing-machine": {
+   "status": "episode",
+   "why": "《图式归纳》V8 分镜重建的整场景",
+   "shot_candidate": false
+  },
+  "ani-question-outro": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "structure",
+   "role": "fullscreen",
+   "intents": [
+    "outro",
+    "question"
+   ],
+   "shot_candidate": true,
+   "phrases": [
+    "留一个问题引出下一期"
+   ],
+   "avoid": [
+    "中段用"
+   ],
+   "slots": {
+    "question": {
+     "max": 16,
+     "overflow": "split"
+    },
+    "nextLabel": {
+     "max": 10,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "title",
+    "subtitle",
+    "footer"
+   ],
+   "tone_support": "tokens"
+  },
+  "ani-atom-truck": {
+   "status": "legacy",
+   "why": "已被 hd 整车 / 新部件替代，或标着旧版兼容",
+   "shot_candidate": false
+  },
+  "ani-atom-cargo": {
+   "status": "legacy",
+   "why": "已被 hd 整车 / 新部件替代，或标着旧版兼容",
+   "shot_candidate": false
+  },
+  "ani-atom-warehouse": {
+   "status": "legacy",
+   "why": "已被 hd 整车 / 新部件替代，或标着旧版兼容",
+   "shot_candidate": false
+  },
+  "ani-atom-buffer": {
+   "status": "legacy",
+   "why": "已被 hd 整车 / 新部件替代，或标着旧版兼容",
+   "shot_candidate": false
+  },
+  "ani-atom-resource": {
+   "status": "legacy",
+   "why": "已被 hd 整车 / 新部件替代，或标着旧版兼容",
+   "shot_candidate": false
+  },
+  "ani-atom-relation-bridge": {
+   "status": "legacy",
+   "why": "已被 hd 整车 / 新部件替代，或标着旧版兼容",
+   "shot_candidate": false
+  },
+  "ani-transfer-purpose-fork": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-context-bridge": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-field-reuse": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-capacity-limit": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-batch-delivery": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-batch-cycle": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-relationship-map": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-copy-verify": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-transfer-guided-steps": {
+   "status": "episode",
+   "why": "《迁移》系列的逐镜重建与迁移模板（S01–S14、批处理、运输）",
+   "shot_candidate": false
+  },
+  "ani-notice-check": {
+   "status": "episode",
+   "why": "《图式归纳》V8 分镜重建的整场景",
+   "shot_candidate": false
+  },
+  "mac-calendar": {
+   "status": "hidden-platform",
+   "why": "频道用 Windows、豆包、Codex；苹果平台界面某期需要时显式打开",
+   "shot_candidate": false
+  },
+  "mac-mail": {
+   "status": "hidden-platform",
+   "why": "频道用 Windows、豆包、Codex；苹果平台界面某期需要时显式打开",
+   "shot_candidate": false
+  },
+  "mac-preview": {
+   "status": "hidden-platform",
+   "why": "频道用 Windows、豆包、Codex；苹果平台界面某期需要时显式打开",
+   "shot_candidate": false
+  },
+  "mac-activity-monitor": {
+   "status": "hidden-platform",
+   "why": "频道用 Windows、豆包、Codex；苹果平台界面某期需要时显式打开",
+   "shot_candidate": false
+  },
+  "mac-file-dialog": {
+   "status": "hidden-platform",
+   "why": "频道用 Windows、豆包、Codex；苹果平台界面某期需要时显式打开",
+   "shot_candidate": false
+  },
+  "mac-alert": {
+   "status": "hidden-platform",
+   "why": "频道用 Windows、豆包、Codex；苹果平台界面某期需要时显式打开",
+   "shot_candidate": false
+  },
+  "mac-context-menu": {
+   "status": "hidden-platform",
+   "why": "频道用 Windows、豆包、Codex；苹果平台界面某期需要时显式打开",
+   "shot_candidate": false
+  },
+  "mac-dock": {
+   "status": "hidden-platform",
+   "why": "频道用 Windows、豆包、Codex；苹果平台界面某期需要时显式打开",
+   "shot_candidate": false
+  },
+  "mac-finder": {
+   "status": "hidden-platform",
+   "why": "频道用 Windows、豆包、Codex；苹果平台界面某期需要时显式打开",
+   "shot_candidate": false
+  },
+  "mac-safari": {
+   "status": "hidden-platform",
+   "why": "频道用 Windows、豆包、Codex；苹果平台界面某期需要时显式打开",
+   "shot_candidate": false
+  },
+  "mac-terminal": {
+   "status": "hidden-platform",
+   "why": "频道用 Windows、豆包、Codex；苹果平台界面某期需要时显式打开",
+   "shot_candidate": false
+  },
+  "mac-system-settings": {
+   "status": "hidden-platform",
+   "why": "频道用 Windows、豆包、Codex；苹果平台界面某期需要时显式打开",
+   "shot_candidate": false
+  },
+  "mac-spotlight": {
+   "status": "hidden-platform",
+   "why": "频道用 Windows、豆包、Codex；苹果平台界面某期需要时显式打开",
+   "shot_candidate": false
+  },
+  "mac-control-center": {
+   "status": "hidden-platform",
+   "why": "频道用 Windows、豆包、Codex；苹果平台界面某期需要时显式打开",
+   "shot_candidate": false
+  },
+  "mac-notification-center": {
+   "status": "hidden-platform",
+   "why": "频道用 Windows、豆包、Codex；苹果平台界面某期需要时显式打开",
+   "shot_candidate": false
+  },
+  "mac-notes": {
+   "status": "hidden-platform",
+   "why": "频道用 Windows、豆包、Codex；苹果平台界面某期需要时显式打开",
+   "shot_candidate": false
+  },
+  "ios-settings": {
+   "status": "hidden-platform",
+   "why": "频道用 Windows、豆包、Codex；苹果平台界面某期需要时显式打开",
+   "shot_candidate": false
+  },
+  "ios-messages": {
+   "status": "hidden-platform",
+   "why": "频道用 Windows、豆包、Codex；苹果平台界面某期需要时显式打开",
+   "shot_candidate": false
+  },
+  "ios-safari": {
+   "status": "hidden-platform",
+   "why": "频道用 Windows、豆包、Codex；苹果平台界面某期需要时显式打开",
+   "shot_candidate": false
+  },
+  "ios-notes": {
+   "status": "hidden-platform",
+   "why": "频道用 Windows、豆包、Codex；苹果平台界面某期需要时显式打开",
+   "shot_candidate": false
+  },
+  "ios-control-center": {
+   "status": "hidden-platform",
+   "why": "频道用 Windows、豆包、Codex；苹果平台界面某期需要时显式打开",
+   "shot_candidate": false
+  },
+  "ios-share-sheet": {
+   "status": "hidden-platform",
+   "why": "频道用 Windows、豆包、Codex；苹果平台界面某期需要时显式打开",
+   "shot_candidate": false
+  },
+  "ipad-split-view": {
+   "status": "hidden-platform",
+   "why": "频道用 Windows、豆包、Codex；苹果平台界面某期需要时显式打开",
+   "shot_candidate": false
+  },
+  "ipad-files": {
+   "status": "hidden-platform",
+   "why": "频道用 Windows、豆包、Codex；苹果平台界面某期需要时显式打开",
+   "shot_candidate": false
+  },
+  "broll-brief-desk": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "metaphor",
+   "role": "fullscreen",
+   "intents": [
+    "metaphor"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "任务",
+    "要求",
+    "模糊",
+    "说清楚",
+    "需求",
+    "便签"
+   ],
+   "phrases": [
+    "把模糊任务补成四张便签"
+   ],
+   "avoid": [
+    "有实拍能表达时"
+   ],
+   "slots": {
+    "notes": {
+     "max": 10,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "documentLabel",
+    "title",
+    "originalLabel",
+    "original",
+    "marginNote",
+    "checklistLabel",
+    "documentNote"
+   ],
+   "tone_support": "tokens"
+  },
+  "broll-message-pile": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "metaphor",
+   "role": "fullscreen",
+   "intents": [
+    "metaphor"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "消息",
+    "群里",
+    "一堆",
+    "沟通",
+    "通知"
+   ],
+   "phrases": [
+    "消息堆成一堆"
+   ],
+   "avoid": [
+    "有实拍能表达时"
+   ],
+   "slots": {
+    "labels": {
+     "max": 10,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "trayLabel",
+    "clearLabel",
+    "clearTitle",
+    "resultNote",
+    "indexLabel"
+   ],
+   "tone_support": "tokens"
+  },
+  "broll-revision-stack": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "metaphor",
+   "role": "fullscreen",
+   "intents": [
+    "metaphor",
+    "process"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "改稿",
+    "修订",
+    "第几版",
+    "返工",
+    "一遍遍改"
+   ],
+   "phrases": [
+    "稿子改了三版"
+   ],
+   "avoid": [
+    "有实拍能表达时"
+   ],
+   "slots": {
+    "versions": {
+     "max": 10,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "latestVersion",
+    "latestLabel",
+    "latestTitle",
+    "stamp",
+    "bottomNote"
+   ],
+   "tone_support": "tokens"
+  },
+  "broll-cutaway": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "carrier",
+   "intents": [
+    "metaphor",
+    "result"
+   ],
+   "shot_candidate": true,
+   "phrases": [
+    "全屏切一段素材"
+   ],
+   "avoid": [
+    "直接放素材更简单时"
+   ],
+   "slots": {
+    "caption": {
+     "max": 16,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "caption",
+    "mediaSrc",
+    "mediaType",
+    "mediaAlt",
+    "mediaX",
+    "mediaY",
+    "mediaStart",
+    "showCaption",
+    "tag"
+   ],
+   "tone_support": "tokens"
+  },
+  "broll-sequence": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "carrier",
+   "intents": [
+    "compare",
+    "categories",
+    "metaphor"
+   ],
+   "shot_candidate": true,
+   "phrases": [
+    "三段素材并排"
+   ],
+   "avoid": [
+    "三段不是同一维度"
+   ],
+   "slots": {
+    "labels": {
+     "max": 8,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "caption"
+   ],
+   "tone_support": "tokens"
+  },
+  "broll-detail": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "carrier",
+   "intents": [
+    "point"
+   ],
+   "shot_candidate": true,
+   "phrases": [
+    "照片上标一个观察区"
+   ],
+   "avoid": [
+    "标注冒充照片里的真实文字"
+   ],
+   "slots": {
+    "notes": {
+     "max": 12,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "mediaSrc",
+    "mediaType",
+    "mediaAlt",
+    "mediaX",
+    "mediaY",
+    "focusX",
+    "focusY",
+    "focusWidth",
+    "focusHeight",
+    "focusLabel",
+    "footer"
+   ],
+   "tone_support": "tokens"
+  },
+  "broll-document-scan": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "metaphor",
+   "role": "fullscreen",
+   "intents": [
+    "metaphor",
+    "process"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "识别",
+    "扫描",
+    "提取",
+    "摘录",
+    "OCR",
+    "读出来"
+   ],
+   "phrases": [
+    "扫描线读过原稿"
+   ],
+   "avoid": [
+    "冒充真实 OCR"
+   ],
+   "slots": {
+    "fields": {
+     "max": 12,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "subtitle",
+    "footer",
+    "title",
+    "sourceSide",
+    "resultLayout",
+    "documentLabel",
+    "documentTitle",
+    "resultLabel",
+    "status"
+   ],
+   "tone_support": "tokens"
+  },
+  "broll-search-focus": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "metaphor",
+   "role": "fullscreen",
+   "intents": [
+    "metaphor"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "搜索",
+    "检索",
+    "查资料",
+    "找到一条"
+   ],
+   "phrases": [
+    "搜索结果里选中一条"
+   ],
+   "avoid": [
+    "冒充真实检索"
+   ],
+   "slots": {
+    "query": {
+     "max": 16,
+     "overflow": "split"
+    },
+    "results": {
+     "max": 14,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "subtitle",
+    "footer",
+    "title",
+    "sourceSide",
+    "query",
+    "selected",
+    "excerptLabel",
+    "excerptTitle",
+    "excerpt",
+    "sourceNote"
+   ],
+   "tone_support": "tokens"
+  },
+  "broll-calendar-pin": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "metaphor",
+   "role": "fullscreen",
+   "intents": [
+    "metaphor"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "截止",
+    "预约",
+    "日期",
+    "排期",
+    "日历",
+    "那天"
+   ],
+   "phrases": [
+    "日期钉在日历上"
+   ],
+   "avoid": [
+    "当真实日历"
+   ],
+   "slots": {
+    "task": {
+     "max": 12,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "subtitle",
+    "footer",
+    "title",
+    "calendarLabel",
+    "selectedDay",
+    "eventLabel",
+    "eventTitle",
+    "dateLabel",
+    "timeLabel",
+    "note",
+    "status"
+   ],
+   "tone_support": "tokens"
+  },
+  "broll-folder-sort": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "metaphor",
+   "role": "fullscreen",
+   "intents": [
+    "metaphor",
+    "categories"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "归档",
+    "分类",
+    "整理",
+    "归到",
+    "放进文件夹"
+   ],
+   "phrases": [
+    "文件各归各的目录"
+   ],
+   "avoid": [],
+   "slots": {
+    "folders": {
+     "max": 8,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "subtitle",
+    "footer",
+    "title"
+   ],
+   "tone_support": "tokens"
+  },
+  "broll-edit-timeline": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "metaphor",
+   "role": "fullscreen",
+   "intents": [
+    "metaphor"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "剪辑",
+    "轨道",
+    "混剪",
+    "时间轴",
+    "播放头"
+   ],
+   "phrases": [
+    "多轨剪辑示意"
+   ],
+   "avoid": [
+    "冒充真实剪辑软件"
+   ],
+   "slots": {
+    "tracks": {
+     "max": 8,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "subtitle",
+    "footer",
+    "title",
+    "note"
+   ],
+   "tone_support": "tokens"
+  },
+  "broll-voice-transcript": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "metaphor",
+   "role": "fullscreen",
+   "intents": [
+    "metaphor"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "转写",
+    "录音",
+    "转文字",
+    "采访",
+    "字幕"
+   ],
+   "phrases": [
+    "录音转成文字"
+   ],
+   "avoid": [
+    "冒充真实转写"
+   ],
+   "slots": {
+    "lines": {
+     "max": 16,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "subtitle",
+    "footer",
+    "title",
+    "sourceSide",
+    "resultLayout",
+    "audioLabel",
+    "audioTitle",
+    "transcriptLabel",
+    "status"
+   ],
+   "tone_support": "tokens"
+  },
+  "broll-focus-timer": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "metaphor",
+   "role": "fullscreen",
+   "intents": [
+    "metaphor"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "专注",
+    "计时",
+    "番茄",
+    "倒计时",
+    "等"
+   ],
+   "phrases": [
+    "环形计时走完"
+   ],
+   "avoid": [
+    "当真实计时"
+   ],
+   "slots": {
+    "task": {
+     "max": 12,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "subtitle",
+    "footer",
+    "title",
+    "timerLabel",
+    "startLabel",
+    "endLabel",
+    "taskLabel",
+    "status"
+   ],
+   "tone_support": "tokens"
+  },
+  "quadrant-map": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "structure",
+   "role": "fullscreen",
+   "intents": [
+    "categories"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "象限",
+    "两个维度",
+    "高低",
+    "四类",
+    "四种"
+   ],
+   "phrases": [
+    "按两个维度分四类"
+   ],
+   "avoid": [
+    "只有一个维度（用 spectrum-scale）"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "axisX": {
+     "max": 6,
+     "overflow": "abbreviate"
+    },
+    "axisY": {
+     "max": 6,
+     "overflow": "abbreviate"
+    },
+    "quadrants": {
+     "max": 8,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "title",
+    "subtitle",
+    "note",
+    "xLabel",
+    "yLabel",
+    "xLow",
+    "xHigh",
+    "yLow",
+    "yHigh",
+    "focus",
+    "dashedAxis",
+    "gapX",
+    "gapY"
+   ],
+   "tone_support": "tokens"
+  },
+  "pictorial-ratio": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "structure",
+   "role": "fullscreen",
+   "intents": [
+    "number"
+   ],
+   "shot_candidate": true,
+   "chart": "quantity",
+   "phrases": [
+    "10 单里碎了 3 单",
+    "每 10 个有 3 个"
+   ],
+   "avoid": [
+    "数量超过 30 个图形"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "unitLabel": {
+     "max": 6,
+     "overflow": "abbreviate"
+    },
+    "total": {
+     "type": "number"
+    },
+    "part": {
+     "type": "number"
+    }
+   },
+   "fields": [
+    "title",
+    "subtitle",
+    "note",
+    "total",
+    "value",
+    "columns",
+    "gap",
+    "icon",
+    "unit",
+    "valueLabel",
+    "restLabel",
+    "at",
+    "step"
+   ],
+   "tone_support": "tokens"
+  },
+  "source-citations": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "fullscreen",
+   "intents": [
+    "conclusion"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "依据",
+    "来源",
+    "出处",
+    "引用",
+    "论文",
+    "报告",
+    "数据来自",
+    "查到"
+   ],
+   "phrases": [
+    "这个判断的依据是…"
+   ],
+   "avoid": [
+    "没有可核实来源"
+   ],
+   "slots": {
+    "claim": {
+     "max": 20,
+     "overflow": "split"
+    },
+    "sources": {
+     "max": 16,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "title",
+    "subtitle",
+    "note",
+    "claim",
+    "claimLabel",
+    "activeId"
+   ],
+   "tone_support": "tokens"
+  },
+  "codex-workflow": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "replica",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "codex",
+    "Codex",
+    "写个小程序",
+    "写代码",
+    "让它跑"
+   ],
+   "phrases": [
+    "让 Codex 写个小程序"
+   ],
+   "avoid": [
+    "有真实录屏时",
+    "把示例运行结果当真实结果"
+   ],
+   "slots": {
+    "messages": {
+     "max": 60,
+     "overflow": "split"
+    },
+    "attachments": {
+     "max": 12,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "title",
+    "project",
+    "disclosure",
+    "showSidebar",
+    "panelWidth"
+   ],
+   "tone_support": "tokens"
+  },
+  "codex-chat": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "replica",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "codex",
+    "Codex"
+   ],
+   "phrases": [
+    "Codex 回复和执行记录"
+   ],
+   "avoid": [
+    "有真实录屏时"
+   ],
+   "slots": {
+    "messages": {
+     "max": 60,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "title",
+    "userMessage",
+    "status",
+    "reply",
+    "command",
+    "commandResult",
+    "file",
+    "added",
+    "removed",
+    "placeholder",
+    "draft",
+    "model",
+    "effort",
+    "permission",
+    "running"
+   ],
+   "tone_support": "tokens"
+  },
+  "codex-composer": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "overlay",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "codex",
+    "Codex",
+    "输入框",
+    "提示词"
+   ],
+   "phrases": [
+    "在 Codex 输入框逐字打出"
+   ],
+   "avoid": [],
+   "slots": {
+    "text": {
+     "max": 40,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "placeholder",
+    "draft",
+    "permission",
+    "model",
+    "effort",
+    "running"
+   ],
+   "tone_support": "tokens"
+  },
+  "codex-tool-result": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "overlay",
+   "intents": [
+    "software",
+    "result"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "codex",
+    "Codex",
+    "改了",
+    "增删",
+    "文件"
+   ],
+   "phrases": [
+    "改了哪个文件、增删几行"
+   ],
+   "avoid": [],
+   "slots": {
+    "file": {
+     "max": 16,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "verb",
+    "file",
+    "added",
+    "removed",
+    "undoLabel",
+    "reviewLabel"
+   ],
+   "tone_support": "tokens"
+  },
+  "codex-plan": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "overlay",
+   "intents": [
+    "software",
+    "steps"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "codex",
+    "Codex",
+    "计划",
+    "清单"
+   ],
+   "phrases": [
+    "Codex 的执行计划"
+   ],
+   "avoid": [],
+   "slots": {
+    "items": {
+     "max": 14,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "title",
+    "summary",
+    "footer"
+   ],
+   "tone_support": "tokens"
+  },
+  "terminal-session": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "replica",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "终端",
+    "命令行",
+    "PowerShell",
+    "命令",
+    "日志",
+    "跑一下",
+    "运行"
+   ],
+   "phrases": [
+    "在终端跑命令"
+   ],
+   "avoid": [
+    "有真实录屏时",
+    "输出冒充真实运行"
+   ],
+   "slots": {
+    "lines": {
+     "max": 40,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "title",
+    "path",
+    "greeting",
+    "command",
+    "nextCommand"
+   ],
+   "tone_support": "tokens"
+  },
+  "code-editor": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "replica",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "代码",
+    "编辑器",
+    "VS Code",
+    "vscode",
+    "脚本"
+   ],
+   "phrases": [
+    "看这段代码"
+   ],
+   "avoid": [
+    "有真实录屏时"
+   ],
+   "slots": {
+    "code": {
+     "type": "number"
+    },
+    "file": {
+     "max": 16,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "project",
+    "filename",
+    "branch",
+    "language",
+    "position",
+    "highlightLine",
+    "secondaryTab",
+    "symbol"
+   ],
+   "tone_support": "tokens"
+  },
+  "code-diff": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "replica",
+   "intents": [
+    "software",
+    "compare"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "代码",
+    "改前",
+    "改后",
+    "修复",
+    "差异",
+    "增删"
+   ],
+   "phrases": [
+    "改之前 / 改之后的代码"
+   ],
+   "avoid": [
+    "不是代码"
+   ],
+   "slots": {
+    "file": {
+     "max": 16,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "project",
+    "filename",
+    "branch",
+    "language",
+    "position",
+    "beforeLabel",
+    "afterLabel"
+   ],
+   "tone_support": "tokens"
+  },
+  "file-tree": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "replica",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "目录",
+    "文件夹",
+    "文件结构",
+    "项目结构"
+   ],
+   "phrases": [
+    "项目里有哪些文件"
+   ],
+   "avoid": [
+    "有真实录屏时"
+   ],
+   "slots": {
+    "files": {
+     "max": 16,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "project",
+    "filename",
+    "language",
+    "position",
+    "branch"
+   ],
+   "tone_support": "tokens"
+  },
+  "http-request": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "replica",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "接口",
+    "API",
+    "请求",
+    "响应"
+   ],
+   "phrases": [
+    "发一个请求看响应"
+   ],
+   "avoid": [
+    "冒充真实接口"
+   ],
+   "slots": {
+    "url": {
+     "max": 30,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "appName",
+    "workspace",
+    "appIcon",
+    "requestName",
+    "method",
+    "url",
+    "status",
+    "latency",
+    "responseSize",
+    "collectionTitle"
+   ],
+   "tone_support": "tokens"
+  },
+  "json-inspector": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "replica",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "JSON",
+    "json",
+    "字段",
+    "配置"
+   ],
+   "phrases": [
+    "这个配置里有哪些字段"
+   ],
+   "avoid": [],
+   "slots": {
+    "json": {
+     "type": "number"
+    }
+   },
+   "fields": [
+    "appName",
+    "workspace",
+    "appIcon",
+    "title",
+    "path",
+    "selected"
+   ],
+   "tone_support": "tokens"
+  },
+  "markdown-document": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "replica",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "Markdown",
+    "markdown",
+    "md",
+    "文档"
+   ],
+   "phrases": [
+    "文档长这样"
+   ],
+   "avoid": [],
+   "slots": {
+    "source": {
+     "type": "number"
+    }
+   },
+   "fields": [
+    "project",
+    "filename",
+    "branch",
+    "language",
+    "position",
+    "title",
+    "intro",
+    "sectionTitle",
+    "note",
+    "command"
+   ],
+   "tone_support": "tokens"
+  },
+  "git-history": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "replica",
+   "intents": [
+    "software",
+    "process"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "git",
+    "Git",
+    "提交",
+    "版本",
+    "分支"
+   ],
+   "phrases": [
+    "提交记录和分支"
+   ],
+   "avoid": [],
+   "slots": {
+    "commits": {
+     "max": 16,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "project",
+    "branch",
+    "language",
+    "position",
+    "selectedHash",
+    "detail"
+   ],
+   "tone_support": "tokens"
+  },
+  "test-results": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "replica",
+   "intents": [
+    "software",
+    "result"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "测试",
+    "通过",
+    "失败",
+    "用例"
+   ],
+   "phrases": [
+    "测试跑完几个通过"
+   ],
+   "avoid": [
+    "冒充真实测试结果"
+   ],
+   "slots": {
+    "cases": {
+     "max": 16,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "appName",
+    "workspace",
+    "appIcon",
+    "suite",
+    "duration",
+    "runLabel"
+   ],
+   "tone_support": "tokens"
+  },
+  "data-table": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "replica",
+   "intents": [
+    "compare",
+    "number",
+    "software"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "表",
+    "记录",
+    "数据库",
+    "订单",
+    "对账",
+    "统计",
+    "多少",
+    "对账",
+    "各"
+   ],
+   "phrases": [
+    "三张表按订单号对起来"
+   ],
+   "avoid": [
+    "数字冒充真实数据（画面内写“示例数据”）"
+   ],
+   "slots": {
+    "columns": {
+     "max": 6,
+     "overflow": "abbreviate"
+    },
+    "rows": {
+     "max": 10,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "appName",
+    "workspace",
+    "appIcon",
+    "table",
+    "selectedId",
+    "filter",
+    "recordTitle",
+    "footer"
+   ],
+   "tone_support": "tokens"
+  },
+  "doubao-chat": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "replica",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "豆包"
+   ],
+   "phrases": [
+    "问豆包…",
+    "豆包回答说…"
+   ],
+   "avoid": [
+    "有真实截图或录屏时",
+    "把示例回答包装成真实结果"
+   ],
+   "slots": {
+    "userMessage": {
+     "max": 40,
+     "overflow": "split"
+    },
+    "assistantMessage": {
+     "max": 80,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "brand",
+    "logoSrc",
+    "showHomeLogo",
+    "title",
+    "notice",
+    "simulationLabel",
+    "showSidebar",
+    "showHome",
+    "homeTitle",
+    "conversationModeLabel",
+    "workModeLabel",
+    "pinnedLabel",
+    "pinnedTitle",
+    "projectsLabel",
+    "newProjectLabel",
+    "recentLabel",
+    "accountLabel",
+    "planLabel",
+    "draft",
+    "running",
+    "focused",
+    "placeholder",
+    "modeLabel",
+    "modelLabel"
+   ],
+   "tone_support": "tokens"
+  },
+  "doubao-workflow": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "replica",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "豆包"
+   ],
+   "phrases": [
+    "豆包工作台多轮对话"
+   ],
+   "avoid": [
+    "有真实录屏时"
+   ],
+   "slots": {
+    "messages": {
+     "max": 60,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "title",
+    "notice",
+    "simulationLabel",
+    "brand",
+    "brandSuffix",
+    "logoSrc",
+    "pinnedLabel",
+    "pinnedTitle",
+    "projectsLabel",
+    "newProjectLabel",
+    "recentLabel",
+    "accountLabel",
+    "planLabel",
+    "showSidebar",
+    "showSummary",
+    "summaryTitle",
+    "artifactsLabel",
+    "skillsLabel",
+    "filesLabel",
+    "draft",
+    "running",
+    "focused",
+    "placeholder",
+    "environmentLabel"
+   ],
+   "tone_support": "tokens"
+  },
+  "donut-chart": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "structure",
+   "role": "fullscreen",
+   "intents": [
+    "number"
+   ],
+   "shot_candidate": true,
+   "chart": "proportion",
+   "phrases": [
+    "占了三成",
+    "一半以上"
+   ],
+   "avoid": [
+    "部分之和不是整体"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "labels": {
+     "max": 8,
+     "overflow": "abbreviate"
+    },
+    "values": {
+     "type": "number"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "note",
+    "code",
+    "unit"
+   ],
+   "tone_support": "tokens"
+  },
+  "scatter-plot": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "structure",
+   "role": "fullscreen",
+   "intents": [
+    "number"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "散点",
+    "相关",
+    "两个变量",
+    "越…越"
+   ],
+   "chart": "relation",
+   "phrases": [
+    "两个变量的关系"
+   ],
+   "avoid": [
+    "少于 5 个点"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "axisX": {
+     "max": 6,
+     "overflow": "abbreviate"
+    },
+    "axisY": {
+     "max": 6,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "note",
+    "code",
+    "xLabel",
+    "yLabel",
+    "xMax",
+    "yMax"
+   ],
+   "tone_support": "tokens"
+  },
+  "heatmap": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "structure",
+   "role": "fullscreen",
+   "intents": [
+    "number"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "热力",
+    "时段",
+    "哪天最",
+    "分布"
+   ],
+   "chart": "heat",
+   "phrases": [
+    "哪个时段最高"
+   ],
+   "avoid": [
+    "只有一维"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "rows": {
+     "max": 6,
+     "overflow": "abbreviate"
+    },
+    "cols": {
+     "max": 6,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "note",
+    "code",
+    "max"
+   ],
+   "tone_support": "tokens"
+  },
+  "funnel-chart": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "structure",
+   "role": "fullscreen",
+   "intents": [
+    "number",
+    "process"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "漏斗",
+    "转化",
+    "递减",
+    "筛掉",
+    "剩下"
+   ],
+   "phrases": [
+    "每一步剩多少"
+   ],
+   "avoid": [
+    "数量不递减"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "stages": {
+     "max": 8,
+     "overflow": "abbreviate"
+    },
+    "values": {
+     "type": "number"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "note",
+    "code",
+    "unit"
+   ],
+   "tone_support": "tokens"
+  },
+  "radar-chart": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "structure",
+   "role": "fullscreen",
+   "intents": [
+    "number",
+    "compare"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "雷达",
+    "几个维度",
+    "能力",
+    "打分"
+   ],
+   "chart": "multi",
+   "phrases": [
+    "同一量尺比多个维度"
+   ],
+   "avoid": [
+    "维度少于 3"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "axes": {
+     "max": 6,
+     "overflow": "abbreviate"
+    },
+    "series": {
+     "max": 6,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "note",
+    "code",
+    "max",
+    "caption"
+   ],
+   "tone_support": "tokens"
+  },
+  "pyramid-diagram": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "structure",
+   "role": "fullscreen",
+   "intents": [
+    "categories"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "金字塔",
+    "层级",
+    "基础",
+    "顶层",
+    "塔尖"
+   ],
+   "phrases": [
+    "从基础到应用"
+   ],
+   "avoid": [
+    "层级无高低之分"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "levels": {
+     "max": 8,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "note",
+    "code"
+   ],
+   "tone_support": "tokens"
+  },
+  "venn-diagram": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "metaphor",
+   "role": "fullscreen",
+   "intents": [
+    "grouping"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "交集",
+    "共同",
+    "重叠",
+    "既",
+    "又",
+    "都有"
+   ],
+   "phrases": [
+    "两者的共同部分"
+   ],
+   "avoid": [
+    "三个以上集合"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "setA": {
+     "max": 8,
+     "overflow": "abbreviate"
+    },
+    "setB": {
+     "max": 8,
+     "overflow": "abbreviate"
+    },
+    "overlap": {
+     "max": 10,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "note",
+    "code",
+    "left",
+    "right",
+    "overlap",
+    "leftDetail",
+    "rightDetail"
+   ],
+   "tone_support": "tokens"
+  },
+  "mind-map": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "structure",
+   "role": "fullscreen",
+   "intents": [
+    "categories",
+    "grouping"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "拆",
+    "分支",
+    "展开",
+    "围绕",
+    "几个方向"
+   ],
+   "phrases": [
+    "围绕一个主题拆出分支"
+   ],
+   "avoid": [
+    "分支超过 6 个或有第三层"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "center": {
+     "max": 8,
+     "overflow": "abbreviate"
+    },
+    "branches": {
+     "max": 8,
+     "overflow": "abbreviate"
+    },
+    "leaves": {
+     "max": 8,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "note",
+    "code",
+    "center",
+    "centerCaption"
+   ],
+   "tone_support": "tokens"
+  },
+  "cycle-diagram": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "metaphor",
+   "role": "fullscreen",
+   "intents": [
+    "process"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "循环",
+    "反复",
+    "再来一遍",
+    "一遍遍",
+    "反馈",
+    "修正",
+    "回到"
+   ],
+   "phrases": [
+    "执行 → 观察 → 修正再来"
+   ],
+   "avoid": [
+    "不是闭环"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "stages": {
+     "max": 8,
+     "overflow": "abbreviate"
+    },
+    "center": {
+     "max": 8,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "note",
+    "code",
+    "center"
+   ],
+   "tone_support": "tokens"
+  },
+  "decision-tree": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "metaphor",
+   "role": "fullscreen",
+   "intents": [
+    "branch"
+   ],
+   "shot_candidate": true,
+   "phrases": [
+    "如果…就…；要是…那…"
+   ],
+   "avoid": [
+    "没有条件只有结果"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "condition": {
+     "max": 10,
+     "overflow": "abbreviate"
+    },
+    "branches": {
+     "max": 8,
+     "overflow": "abbreviate"
+    },
+    "outcome": {
+     "max": 10,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "note",
+    "code",
+    "question",
+    "yes",
+    "no",
+    "yes2",
+    "no2",
+    "yesLabel",
+    "noLabel",
+    "yesDetail"
+   ],
+   "tone_support": "tokens"
+  },
+  "architecture-map": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "metaphor",
+   "role": "fullscreen",
+   "intents": [
+    "process",
+    "categories"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "架构",
+    "服务",
+    "存储",
+    "数据流",
+    "入口",
+    "后端",
+    "前端"
+   ],
+   "phrases": [
+    "入口 → 服务 → 存储"
+   ],
+   "avoid": [
+    "非软件系统"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "nodes": {
+     "max": 8,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "note",
+    "code"
+   ],
+   "tone_support": "tokens"
+  },
+  "swimlane-flow": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "metaphor",
+   "role": "fullscreen",
+   "intents": [
+    "process"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "职责",
+    "谁负责",
+    "交接",
+    "角色",
+    "泳道",
+    "客服",
+    "仓库",
+    "协调"
+   ],
+   "phrases": [
+    "谁做什么、在哪交接"
+   ],
+   "avoid": [
+    "只有一个角色"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "lanes": {
+     "max": 6,
+     "overflow": "abbreviate"
+    },
+    "steps": {
+     "max": 10,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "note",
+    "code"
+   ],
+   "tone_support": "tokens"
+  },
+  "kanban-board": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "structure",
+   "role": "fullscreen",
+   "intents": [
+    "categories",
+    "process"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "看板",
+    "待办",
+    "进行中",
+    "已完成",
+    "状态"
+   ],
+   "phrases": [
+    "任务按状态排"
+   ],
+   "avoid": [
+    "不是任务状态"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "columns": {
+     "max": 6,
+     "overflow": "abbreviate"
+    },
+    "cards": {
+     "max": 12,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "note",
+    "code"
+   ],
+   "tone_support": "tokens"
+  },
+  "roadmap": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "structure",
+   "role": "fullscreen",
+   "intents": [
+    "steps",
+    "process"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "路线图",
+    "里程碑",
+    "计划",
+    "并行",
+    "排期",
+    "这周",
+    "下月"
+   ],
+   "phrases": [
+    "时间区间上的并行任务"
+   ],
+   "avoid": [
+    "没有时间区间"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "tracks": {
+     "max": 8,
+     "overflow": "abbreviate"
+    },
+    "milestones": {
+     "max": 8,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "note",
+    "code",
+    "unit"
+   ],
+   "tone_support": "tokens"
+  },
+  "formula-breakdown": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "structure",
+   "role": "fullscreen",
+   "intents": [
+    "definition",
+    "number"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "公式",
+    "等于",
+    "乘",
+    "除",
+    "算一下",
+    "演算"
+   ],
+   "phrases": [
+    "公式每一项什么意思，算一遍"
+   ],
+   "avoid": [
+    "没有可演算的公式"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "terms": {
+     "max": 8,
+     "overflow": "abbreviate"
+    },
+    "meaning": {
+     "max": 14,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "note",
+    "code"
+   ],
+   "tone_support": "tokens"
+  },
+  "spectrum-scale": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "structure",
+   "role": "fullscreen",
+   "intents": [
+    "categories"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "之间",
+    "程度",
+    "连续",
+    "光谱",
+    "偏向",
+    "从",
+    "到"
+   ],
+   "phrases": [
+    "不是非黑即白，在这条线的哪个位置"
+   ],
+   "avoid": [
+    "离散类别"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "leftLabel": {
+     "max": 6,
+     "overflow": "abbreviate"
+    },
+    "rightLabel": {
+     "max": 6,
+     "overflow": "abbreviate"
+    },
+    "items": {
+     "max": 8,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "note",
+    "code",
+    "left",
+    "right"
+   ],
+   "tone_support": "tokens"
+  },
+  "process-steps": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "structure",
+   "role": "fullscreen",
+   "intents": [
+    "steps",
+    "process"
+   ],
+   "shot_candidate": true,
+   "phrases": [
+    "第一步做什么得到什么",
+    "操作教学四步"
+   ],
+   "avoid": [
+    "要点没有动作和结果（用 step-list）"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "steps": {
+     "max": 4,
+     "overflow": "abbreviate"
+    },
+    "action": {
+     "max": 10,
+     "overflow": "abbreviate"
+    },
+    "result": {
+     "max": 10,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "note",
+    "code"
+   ],
+   "tone_support": "tokens"
+  },
+  "lecture-stage": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "carrier",
+   "intents": [
+    "software",
+    "result",
+    "metaphor"
+   ],
+   "shot_candidate": true,
+   "phrases": [
+    "把 PPT / 录屏 / 图放进讲解舞台"
+   ],
+   "avoid": [
+    "素材本身够大时别再套舞台（直接铺满）"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "caption": {
+     "max": 16,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "note",
+    "code",
+    "chapter",
+    "caption"
+   ],
+   "tone_support": "tokens"
+  },
+  "before-after": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "structure",
+   "role": "fullscreen",
+   "intents": [
+    "compare"
+   ],
+   "shot_candidate": true,
+   "phrases": [
+    "以前…现在…",
+    "改之前 / 改之后"
+   ],
+   "avoid": [
+    "两边不是同一维度",
+    "每侧超过 4 条"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "subtitle": {
+     "max": 20,
+     "overflow": "split"
+    },
+    "beforeTitle": {
+     "max": 8,
+     "overflow": "abbreviate"
+    },
+    "afterTitle": {
+     "max": 8,
+     "overflow": "abbreviate"
+    },
+    "items": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "conclusion": {
+     "max": 16,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "footer",
+    "series",
+    "beforeLabel",
+    "beforeNote",
+    "afterLabel",
+    "afterNote",
+    "resultLabel",
+    "result"
+   ],
+   "tone_support": "tokens"
+  },
+  "flowchart": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "metaphor",
+   "role": "fullscreen",
+   "intents": [
+    "process",
+    "branch"
+   ],
+   "shot_candidate": true,
+   "phrases": [
+    "输入 → 处理 → 两个出口",
+    "条件成立走 A，否则走 B"
+   ],
+   "avoid": [
+    "节点超过 5 个",
+    "只是并列要点"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "nodes": {
+     "max": 8,
+     "overflow": "abbreviate"
+    },
+    "nodeNote": {
+     "max": 10,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "footer",
+    "series",
+    "noteTitle",
+    "note"
+   ],
+   "tone_support": "tokens"
+  },
+  "layer-stack": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "structure",
+   "role": "fullscreen",
+   "intents": [
+    "categories"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "三层",
+    "分层",
+    "底层",
+    "上层",
+    "表面",
+    "骨架",
+    "结构"
+   ],
+   "phrases": [
+    "表面 / 中间 / 底层三层"
+   ],
+   "avoid": [
+    "不是层级关系"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "layers": {
+     "max": 8,
+     "overflow": "abbreviate"
+    },
+    "layerNote": {
+     "max": 16,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "footer",
+    "series",
+    "note"
+   ],
+   "tone_support": "tokens"
+  },
+  "bar-chart": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "structure",
+   "role": "fullscreen",
+   "intents": [
+    "number"
+   ],
+   "shot_candidate": true,
+   "chart": "ranking",
+   "phrases": [
+    "A 12 秒，B 40 秒",
+    "哪个最多"
+   ],
+   "avoid": [
+    "只有一个数字（用 big-number）",
+    "超过 6 组"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "unit": {
+     "max": 4,
+     "overflow": "abbreviate"
+    },
+    "categories": {
+     "max": 6,
+     "overflow": "abbreviate"
+    },
+    "values": {
+     "type": "number"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "footer",
+    "series",
+    "chartTitle",
+    "unit",
+    "max",
+    "highlight",
+    "noteLabel",
+    "note",
+    "source"
+   ],
+   "tone_support": "tokens"
+  },
+  "line-chart": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "structure",
+   "role": "fullscreen",
+   "intents": [
+    "number"
+   ],
+   "shot_candidate": true,
+   "chart": "trend",
+   "phrases": [
+    "越来越…",
+    "逐月上升"
+   ],
+   "avoid": [
+    "没有时间或顺序维度"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "labels": {
+     "max": 6,
+     "overflow": "abbreviate"
+    },
+    "values": {
+     "type": "number"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "footer",
+    "series",
+    "chartTitle",
+    "unit",
+    "max",
+    "target",
+    "targetLabel",
+    "selected",
+    "note"
+   ],
+   "tone_support": "tokens"
+  },
+  "comparison-matrix": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "structure",
+   "role": "fullscreen",
+   "intents": [
+    "compare",
+    "categories"
+   ],
+   "shot_candidate": true,
+   "phrases": [
+    "三种方案按同一维度比",
+    "A 对应 B 逐项对应"
+   ],
+   "avoid": [
+    "只有两方一维（用 compare-split）"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "columns": {
+     "max": 6,
+     "overflow": "abbreviate"
+    },
+    "rows": {
+     "max": 8,
+     "overflow": "abbreviate"
+    },
+    "cells": {
+     "max": 10,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "footer",
+    "series",
+    "layout",
+    "noteLabel",
+    "note"
+   ],
+   "tone_support": "tokens"
+  },
+  "event-timeline": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "structure",
+   "role": "fullscreen",
+   "intents": [
+    "process"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "时间线",
+    "先后",
+    "那天",
+    "几点",
+    "年",
+    "月",
+    "阶段"
+   ],
+   "phrases": [
+    "五个阶段先后"
+   ],
+   "avoid": [
+    "事件没有时间点"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "events": {
+     "max": 8,
+     "overflow": "abbreviate"
+    },
+    "times": {
+     "max": 6,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "footer",
+    "series",
+    "activeLabel",
+    "note"
+   ],
+   "tone_support": "tokens"
+  },
+  "metric-dashboard": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "structure",
+   "role": "fullscreen",
+   "intents": [
+    "number"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "指标",
+    "面板",
+    "仪表盘",
+    "完成率",
+    "三个数"
+   ],
+   "chart": "kpi",
+   "phrases": [
+    "三个指标 + 进度"
+   ],
+   "avoid": [
+    "指标少于 2"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "metrics": {
+     "max": 8,
+     "overflow": "abbreviate"
+    },
+    "values": {
+     "type": "number"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "footer",
+    "series",
+    "progressTitle",
+    "checklistTitle",
+    "note"
+   ],
+   "tone_support": "tokens"
+  },
+  "definition-card": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "structure",
+   "role": "fullscreen",
+   "intents": [
+    "definition",
+    "keyword"
+   ],
+   "shot_candidate": true,
+   "phrases": [
+    "X 是指…，三个要素，比如…"
+   ],
+   "avoid": [
+    "只有名词没有定义（用 keyword-punch）",
+    "要素超过 3 个"
+   ],
+   "slots": {
+    "term": {
+     "max": 8,
+     "overflow": "abbreviate"
+    },
+    "definition": {
+     "max": 24,
+     "overflow": "split"
+    },
+    "points": {
+     "max": 8,
+     "overflow": "abbreviate"
+    },
+    "example": {
+     "max": 24,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "footer",
+    "series",
+    "term",
+    "english",
+    "definition",
+    "exampleLabel",
+    "exampleTitle",
+    "example",
+    "note"
+   ],
+   "tone_support": "tokens"
+  },
+  "chapter-summary": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "structure",
+   "role": "fullscreen",
+   "intents": [
+    "outro",
+    "chapter"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "总结",
+    "回顾",
+    "小结",
+    "这一章",
+    "三点",
+    "记住"
+   ],
+   "phrases": [
+    "本章三点回顾 + 下一步"
+   ],
+   "avoid": [
+    "开章时用（用 chapter-card）"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "points": {
+     "max": 14,
+     "overflow": "split"
+    },
+    "next": {
+     "max": 12,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "footer",
+    "series",
+    "number",
+    "chapterLabel",
+    "headline",
+    "nextLabel",
+    "next"
+   ],
+   "tone_support": "tokens"
+  },
+  "media-stage": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "carrier",
+   "intents": [
+    "software",
+    "result",
+    "metaphor"
+   ],
+   "shot_candidate": true,
+   "phrases": [
+    "左媒体右说明"
+   ],
+   "avoid": [
+    "说明超过 3 条"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "notes": {
+     "max": 14,
+     "overflow": "split"
+    },
+    "tag": {
+     "max": 8,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "footer",
+    "series",
+    "mediaSrc",
+    "mediaKind",
+    "mediaAlt",
+    "mediaLabel",
+    "noteTitle",
+    "caption"
+   ],
+   "tone_support": "tokens"
+  },
+  "annotation-callout": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "overlay",
+   "intents": [
+    "point"
+   ],
+   "shot_candidate": true,
+   "phrases": [
+    "这一处是…",
+    "三个位置各说一句"
+   ],
+   "avoid": [
+    "锚点不落在实物上"
+   ],
+   "slots": {
+    "title": {
+     "max": 12,
+     "overflow": "abbreviate"
+    },
+    "fields": {
+     "max": 14,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "eyebrow",
+    "title",
+    "subtitle",
+    "badge",
+    "footer",
+    "series",
+    "subjectTitle",
+    "subjectSubtitle",
+    "note"
+   ],
+   "tone_support": "tokens"
+  },
+  "mixed-media-sequence": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "carrier",
+   "intents": [
+    "result",
+    "software",
+    "metaphor",
+    "compare",
+    "point"
+   ],
+   "shot_candidate": true,
+   "phrases": [
+    "几段实拍 / 录屏按原速组接"
+   ],
+   "avoid": [
+    "素材只有一段且已铺满时"
+   ],
+   "slots": {
+    "media": {
+     "type": "number"
+    }
+   },
+   "fields": [
+    "strength",
+    "previewDuration"
+   ],
+   "tone_support": "tokens"
+  },
+  "chrome-browser": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "replica",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "浏览器",
+    "网页",
+    "网站",
+    "网址",
+    "Chrome",
+    "打开"
+   ],
+   "phrases": [
+    "打开这个网页"
+   ],
+   "avoid": [
+    "有真实录屏时"
+   ],
+   "slots": {
+    "url": {
+     "max": 30,
+     "overflow": "split"
+    },
+    "title": {
+     "max": 16,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "url",
+    "profile",
+    "brand",
+    "actionButton",
+    "section",
+    "title",
+    "intro",
+    "activePage",
+    "eyebrow",
+    "code",
+    "tocTitle",
+    "button"
+   ],
+   "tone_support": "tokens"
+  },
+  "iphone-screen": {
+   "status": "hidden-platform",
+   "why": "频道用 Windows、豆包、Codex；苹果平台界面某期需要时显式打开",
+   "shot_candidate": false
+  },
+  "ipad-screen": {
+   "status": "hidden-platform",
+   "why": "频道用 Windows、豆包、Codex；苹果平台界面某期需要时显式打开",
+   "shot_candidate": false
+  },
+  "windows-file-dialog": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "replica",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "打开文件",
+    "选文件",
+    "另存",
+    "保存到",
+    "对话框"
+   ],
+   "phrases": [
+    "选这个文件"
+   ],
+   "avoid": [],
+   "slots": {
+    "files": {
+     "max": 16,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "title",
+    "search",
+    "activeLocation",
+    "selected",
+    "organize",
+    "newFolder",
+    "fileNameLabel",
+    "fileName",
+    "typeLabel",
+    "fileType",
+    "open",
+    "cancel"
+   ],
+   "tone_support": "tokens"
+  },
+  "file-explorer": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "replica",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "文件夹",
+    "资源管理器",
+    "目录",
+    "放在哪"
+   ],
+   "phrases": [
+    "文件放在这个文件夹"
+   ],
+   "avoid": [],
+   "slots": {
+    "files": {
+     "max": 16,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "title",
+    "search",
+    "activeLocation",
+    "selected",
+    "status"
+   ],
+   "tone_support": "tokens"
+  },
+  "settings-panel": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "replica",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "设置",
+    "开关",
+    "选项"
+   ],
+   "phrases": [
+    "到设置里打开这个开关"
+   ],
+   "avoid": [],
+   "slots": {
+    "items": {
+     "max": 12,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "title",
+    "user",
+    "email",
+    "initial",
+    "search",
+    "selectedNav",
+    "breadcrumb",
+    "pageTitle",
+    "displayNumber",
+    "displayNote",
+    "sectionTitle",
+    "brightness",
+    "brightnessLabel",
+    "brightnessHelp",
+    "nightTitle",
+    "nightHelp",
+    "nightOn",
+    "onLabel",
+    "offLabel",
+    "hdrTitle",
+    "hdrHelp",
+    "layoutTitle",
+    "scaleTitle",
+    "scaleHelp"
+   ],
+   "tone_support": "tokens"
+  },
+  "command-palette": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "replica",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "命令面板",
+    "快捷键",
+    "搜命令"
+   ],
+   "phrases": [
+    "按快捷键搜命令"
+   ],
+   "avoid": [],
+   "slots": {
+    "items": {
+     "max": 14,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "title",
+    "query",
+    "heading",
+    "selected",
+    "hint",
+    "dismiss"
+   ],
+   "tone_support": "tokens"
+  },
+  "notification-stack": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "replica",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "通知",
+    "弹出",
+    "提醒"
+   ],
+   "phrases": [
+    "右下角弹出通知"
+   ],
+   "avoid": [],
+   "slots": {
+    "items": {
+     "max": 14,
+     "overflow": "split"
+    }
+   },
+   "fields": [
+    "title",
+    "clear",
+    "date",
+    "month",
+    "monthStartOffset",
+    "monthDays",
+    "selectedDay",
+    "focus",
+    "focusTime"
+   ],
+   "tone_support": "tokens"
+  },
+  "context-menu": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "replica",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "右键",
+    "菜单"
+   ],
+   "phrases": [
+    "右键选这一项"
+   ],
+   "avoid": [],
+   "slots": {
+    "items": {
+     "max": 10,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "filename",
+    "filetype",
+    "selected",
+    "selectedSub"
+   ],
+   "tone_support": "tokens"
+  },
+  "form-panel": {
+   "status": "core",
+   "why": "通用讲解图形 / Windows·豆包·Codex 界面 / 真实素材版式",
+   "type": "evidence",
+   "role": "replica",
+   "intents": [
+    "software"
+   ],
+   "shot_candidate": true,
+   "subjects": [
+    "表单",
+    "填写",
+    "提交",
+    "校验"
+   ],
+   "phrases": [
+    "把表单填完提交"
+   ],
+   "avoid": [],
+   "slots": {
+    "fields": {
+     "max": 12,
+     "overflow": "abbreviate"
+    }
+   },
+   "fields": [
+    "appTitle",
+    "title",
+    "description",
+    "activeNav",
+    "optionsTitle",
+    "note",
+    "cancel",
+    "submit"
+   ],
+   "tone_support": "tokens"
+  },
+  "mixed-media-pip": {
+   "status": "core",
+   "why": "mixed-media-sequence 的布局配方",
+   "type": "evidence",
+   "role": "carrier",
+   "intents": [
+    "software",
+    "result"
+   ],
+   "shot_candidate": true,
+   "base": "mixed-media-sequence",
+   "phrases": [],
+   "avoid": [
+    "素材不是同一对象却做成前后变化证据"
+   ],
+   "slots": {
+    "media": {
+     "type": "number"
+    }
+   },
+   "tone_support": "n/a"
+  },
+  "mixed-media-compare": {
+   "status": "core",
+   "why": "mixed-media-sequence 的布局配方",
+   "type": "evidence",
+   "role": "carrier",
+   "intents": [
+    "compare"
+   ],
+   "shot_candidate": true,
+   "base": "mixed-media-sequence",
+   "phrases": [],
+   "avoid": [
+    "素材不是同一对象却做成前后变化证据"
+   ],
+   "slots": {
+    "media": {
+     "type": "number"
+    }
+   },
+   "tone_support": "n/a"
+  },
+  "mixed-media-wipe": {
+   "status": "core",
+   "why": "mixed-media-sequence 的布局配方",
+   "type": "evidence",
+   "role": "carrier",
+   "intents": [
+    "compare"
+   ],
+   "shot_candidate": true,
+   "base": "mixed-media-sequence",
+   "phrases": [],
+   "avoid": [
+    "素材不是同一对象却做成前后变化证据"
+   ],
+   "slots": {
+    "media": {
+     "type": "number"
+    }
+   },
+   "tone_support": "n/a"
+  },
+  "mixed-media-triptych": {
+   "status": "core",
+   "why": "mixed-media-sequence 的布局配方",
+   "type": "evidence",
+   "role": "carrier",
+   "intents": [
+    "categories",
+    "compare"
+   ],
+   "shot_candidate": true,
+   "base": "mixed-media-sequence",
+   "phrases": [],
+   "avoid": [
+    "素材不是同一对象却做成前后变化证据"
+   ],
+   "slots": {
+    "media": {
+     "type": "number"
+    }
+   },
+   "tone_support": "n/a"
+  },
+  "mixed-media-collage": {
+   "status": "core",
+   "why": "mixed-media-sequence 的布局配方",
+   "type": "evidence",
+   "role": "carrier",
+   "intents": [
+    "metaphor"
+   ],
+   "shot_candidate": true,
+   "base": "mixed-media-sequence",
+   "phrases": [],
+   "avoid": [
+    "素材不是同一对象却做成前后变化证据"
+   ],
+   "slots": {
+    "media": {
+     "type": "number"
+    }
+   },
+   "tone_support": "n/a"
+  },
+  "mixed-media-focus": {
+   "status": "core",
+   "why": "mixed-media-sequence 的布局配方",
+   "type": "evidence",
+   "role": "carrier",
+   "intents": [
+    "point"
+   ],
+   "shot_candidate": true,
+   "base": "mixed-media-sequence",
+   "phrases": [],
+   "avoid": [
+    "素材不是同一对象却做成前后变化证据"
+   ],
+   "slots": {
+    "media": {
+     "type": "number"
+    }
+   },
+   "tone_support": "n/a"
+  }
+ }
+}
