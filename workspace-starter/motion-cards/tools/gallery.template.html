@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>动效卡库</title>
+    <style>
+      :root { --bg: #0b0d11; --panel: #14181f; --line: #232a35; --ink: #e9ecf1; --muted: #8791a3; --accent: #ffcf33; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.6 "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; }
+      header { position: sticky; top: 0; z-index: 5; background: rgba(11, 13, 17, 0.94); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); padding: 14px 24px 10px; }
+      h1 { margin: 0 0 10px; font-size: 20px; }
+      h1 small { color: var(--muted); font-weight: 400; font-size: 14px; margin-left: 10px; }
+      .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+      input[type="search"] { flex: 1 1 260px; min-width: 200px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; color: var(--ink); padding: 8px 12px; font: inherit; }
+      .chip { border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 999px; padding: 4px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+      .chip.on { background: var(--accent); border-color: var(--accent); color: #14161a; font-weight: 700; }
+      main { padding: 20px 24px 80px; }
+      h2 { font-size: 16px; margin: 26px 0 12px; color: var(--muted); font-weight: 700; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+      .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; cursor: pointer; }
+      .card:hover { border-color: #3a4556; }
+      .stage { position: relative; aspect-ratio: 16 / 9; background: #000 center/cover no-repeat; }
+      .stage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; pointer-events: none; }
+      .meta { padding: 10px 12px 12px; }
+      .name { font-weight: 700; }
+      .name code { color: var(--muted); font: 12px ui-monospace, Consolas, monospace; margin-left: 8px; }
+      .one { color: var(--muted); font-size: 13px; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+      .tags { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+      .tag { font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 6px; }
+      .tag.e高 { color: #ff8a65; border-color: #5a3327; } .tag.e中 { color: #ffd76a; border-color: #5a4a1e; } .tag.e低 { color: #7fd3a8; border-color: #244a3a; }
+      dialog { width: min(1180px, 94vw); max-height: 92vh; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; padding: 0; }
+      dialog::backdrop { background: rgba(0, 0, 0, 0.7); }
+      .dl-head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+      .dl-head b { font-size: 17px; } .dl-head span { flex: 1; color: var(--muted); font: 13px ui-monospace, Consolas, monospace; }
+      .dl-body { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 0; }
+      .dl-stage { position: relative; aspect-ratio: 16 / 9.6; background: #000; align-self: start; }
+      .dl-stage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+      .dl-doc { padding: 6px 20px 20px; overflow: auto; max-height: 78vh; font-size: 14px; }
+      .dl-doc h3 { font-size: 15px; margin: 18px 0 6px; color: var(--accent); }
+      .dl-doc table { border-collapse: collapse; width: 100%; font-size: 13px; } .dl-doc td, .dl-doc th { border: 1px solid var(--line); padding: 4px 8px; text-align: left; vertical-align: top; }
+      .dl-doc code { background: #0d1016; padding: 0 4px; border-radius: 3px; font: 12.5px ui-monospace, Consolas, monospace; }
+      .dl-doc pre { white-space: pre-wrap; background: #0d1016; padding: 10px; border-radius: 6px; font: 12.5px/1.5 ui-monospace, Consolas, monospace; user-select: all; }
+      @media (max-width: 860px) { .dl-body { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>动效卡库<small id="count"></small></h1>
+      <div class="row">
+        <input id="q" type="search" placeholder="搜名字、用途、素材类型，比如：数字 / 对比 / 录屏 / 转场" />
+        <button class="chip" data-skin="dark">深色</button><button class="chip" data-skin="light">浅色</button>
+      </div>
+      <div class="row" id="groups" style="margin-top: 8px"></div>
+    </header>
+    <main id="main"></main>
+    <dialog id="dl">
+      <div class="dl-head"><b id="dl-name"></b><span id="dl-id"></span><button class="chip" id="dl-close">关闭</button></div>
+      <div class="dl-body"><div class="dl-stage" id="dl-stage"></div><div class="dl-doc" id="dl-doc"></div></div>
+    </dialog>
+    <script>
+      /*@DATA@*/
+    </script>
+    <script>
+      (function () {
+        var cards = MC.cards, groups = MC.groups, state = { q: "", group: "", skin: "dark" };
+        var $ = function (s) { return document.querySelector(s); };
+        var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+        var demo = function (c, extra) { return "../cards/" + c.id + "/demo.html?skin=" + state.skin + (extra || ""); };
+
+        var io = new IntersectionObserver(function (es) {
+          es.forEach(function (e) {
+            var st = e.target, f = st.querySelector("iframe");
+            if (e.isIntersecting && !f) { f = document.createElement("iframe"); f.loading = "lazy"; f.src = st.dataset.src; st.appendChild(f); }
+            else if (!e.isIntersecting && f) f.remove(); // only the cards on screen keep playing
+          });
+        }, { rootMargin: "120px" });
+
+        function render() {
+          var q = state.q.trim().toLowerCase();
+          var list = cards.filter(function (c) {
+            if (state.group && c.group !== state.group) return false;
+            if (!q) return true;
+            return [c.id, c.name, c.one_line, c.use_when, c.group, c.energy, (c.needs || []).join(" ")].join(" ").toLowerCase().indexOf(q) >= 0;
+          });
+          $("#count").textContent = list.length + " / " + cards.length + " 张";
+          io.disconnect();
+          var html = "";
+          groups.forEach(function (g) {
+            var sub = list.filter(function (c) { return c.group === g.name; });
+            if (!sub.length) return;
+            html += "<h2>" + esc(g.name) + " · " + sub.length + '</h2><div class="grid">';
+            sub.forEach(function (c) {
+              html += '<div class="card" data-id="' + c.id + '"><div class="stage" data-src="' + demo(c, "&bare=1") + '" style="background-image:url(../cards/' + c.id + '/thumb.jpg)"></div><div class="meta"><div class="name">' + esc(c.name) + "<code>" + c.id + '</code></div><div class="one">' + esc(c.one_line) + '</div><div class="tags"><span class="tag e' + esc(c.energy) + '">能量 ' + esc(c.energy) + "</span>" + (c.needs || []).map(function (n) { return '<span class="tag">' + esc(n) + "</span>"; }).join("") + (c.overlay ? '<span class="tag">可叠加</span>' : "") + "</div></div></div>";
+            });
+            html += "</div>";
+          });
+          $("#main").innerHTML = html || '<p style="color:var(--muted)">没有匹配的卡。</p>';
+          document.querySelectorAll(".stage").forEach(function (s) { io.observe(s); });
+        }
+
+        function md(src) { // just enough markdown for a card
+          var out = "", lines = src.replace(/^---[\s\S]*?---\s*/, "").split(/\r?\n/), i = 0;
+          var inline = function (s) { return esc(s).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>"); };
+          while (i < lines.length) {
+            var l = lines[i];
+            if (/^## /.test(l)) out += "<h3>" + inline(l.slice(3)) + "</h3>";
+            else if (/^\|/.test(l)) {
+              out += "<table>";
+              var first = true;
+              while (i < lines.length && /^\|/.test(lines[i])) {
+                if (!/^\|\s*-/.test(lines[i])) { var cells = lines[i].replace(/^\||\|$/g, "").split("|"); out += "<tr>" + cells.map(function (c) { return (first ? "<th>" : "<td>") + inline(c.trim()) + (first ? "</th>" : "</td>"); }).join("") + "</tr>"; first = false; }
+                i++;
+              }
+              out += "</table>"; continue;
+            } else if (/^\s*(\d+\.|-)\s+/.test(l)) out += "<div>• " + inline(l.replace(/^\s*(\d+\.|-)\s+/, "")) + "</div>";
+            else if (l.trim()) out += "<p>" + inline(l) + "</p>";
+            i++;
+          }
+          return out;
+        }
+
+        function open(id) {
+          var c = cards.filter(function (x) { return x.id === id; })[0];
+          if (!c) return;
+          $("#dl-name").textContent = c.name; $("#dl-id").textContent = c.id + " · " + c.group + " · 建议 " + c.slot + " 秒";
+          $("#dl-stage").innerHTML = '<iframe src="' + demo(c) + '"></iframe>';
+          var clip = '<div id="' + c.id + '-1" class="clip" data-composition-id="' + c.id + '" data-composition-src="motion-cards/cards/' + c.id + '/demo.html" data-variable-values=\'' + JSON.stringify(Object.fromEntries((c.vars || []).map(function (v) { return [v.id, v.default]; }))) + '\' data-start="0" data-duration="' + c.slot + '" data-track-index="2" data-width="1920" data-height="1080"></div>';
+          $("#dl-doc").innerHTML = "<p>" + esc(c.use_when) + "</p><h3>挂进项目</h3><pre>" + esc(clip) + "</pre><p style='color:var(--muted)'>正在读取卡片…</p>";
+          fetch("../cards/" + c.id + "/card.md").then(function (r) { return r.text(); }).then(function (t) { $("#dl-doc").lastChild.outerHTML = md(t); }).catch(function () { $("#dl-doc").lastChild.textContent = "直接用文件方式打开时浏览器不让读 card.md，请看 cards/" + c.id + "/card.md，或用 npx serve 起一个本地服务。"; });
+          $("#dl").showModal();
+        }
+
+        $("#groups").innerHTML = '<button class="chip on" data-g="">全部</button>' + groups.map(function (g) { return '<button class="chip" data-g="' + esc(g.name) + '">' + esc(g.name) + " " + g.count + "</button>"; }).join("");
+        $("#groups").onclick = function (e) { var b = e.target.closest("[data-g]"); if (!b) return; state.group = b.dataset.g; document.querySelectorAll("[data-g]").forEach(function (x) { x.classList.toggle("on", x === b); }); render(); };
+        document.querySelectorAll("[data-skin]").forEach(function (b) { b.classList.toggle("on", b.dataset.skin === state.skin); b.onclick = function () { state.skin = b.dataset.skin; document.querySelectorAll("[data-skin]").forEach(function (x) { x.classList.toggle("on", x === b); }); render(); }; });
+        $("#q").oninput = function (e) { state.q = e.target.value; render(); };
+        $("#main").onclick = function (e) { var c = e.target.closest(".card"); if (c) open(c.dataset.id); };
+        $("#dl-close").onclick = function () { $("#dl").close(); $("#dl-stage").innerHTML = ""; };
+        render();
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,96 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"from","type":"string","label":"上一镜的画面（从项目根目录写起）","default":"motion-cards/lib/samples/p1.jpg"},
+    {"id":"to","type":"string","label":"下一镜的画面（从项目根目录写起）","default":"motion-cards/lib/samples/p2.jpg"},
+    {"id":"dir","type":"enum","label":"线往哪边走","default":"right","options":[{"value":"right","label":"向右"},{"value":"left","label":"向左"}]},
+    {"id":"thick","type":"number","label":"线宽（px）","default":14,"min":4,"max":40,"step":2},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>line-carry · 一条线带走</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="line-carry-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .lc { position: absolute; inset: 0; overflow: hidden; }
+        .lc-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .lc-stage { position: absolute; inset: 0; }
+        .lc-stage[data-dir="left"], .lc-stage[data-dir="left"] img { transform: scaleX(-1); }
+        .lc-under { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+        .lc-win { position: absolute; left: 0; top: 0; width: 2200px; height: 1080px; overflow: hidden; opacity: 0; }
+        .lc-hold { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+        .lc-from, .lc-to { position: absolute; left: 0; top: 0; display: block; width: 1920px; height: 1080px; object-fit: cover; }
+        .lc-line { position: absolute; left: 0; top: 0; width: 14px; height: 1080px; background: var(--k-accent); box-shadow: 0 0 46px 6px var(--k-accent); opacity: 0; }
+      </style>
+
+      <div id="root" data-composition-id="line-carry" data-width="1920" data-height="1080">
+        <div class="lc" data-layout-allow-overflow>
+          <div class="lc-bg"></div>
+          <div class="lc-stage" data-dir="right">
+            <div class="lc-under"><img class="lc-to" src="motion-cards/lib/samples/p2.jpg" data-var-src="to" alt="" /></div>
+            <div class="lc-win"><div class="lc-hold"><img class="lc-from" src="motion-cards/lib/samples/p1.jpg" data-var-src="from" alt="" /></div></div>
+            <div class="lc-line"></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { cut: 1.0, cross: 0.6, drag: 180, drift: 60 };
+          var v = { "from": "motion-cards/lib/samples/p1.jpg", "to": "motion-cards/lib/samples/p2.jpg", "dir": "right", "thick": 14, "backdrop": "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".lc");
+          var q = function (s) { return root.querySelector(s); };
+          var num = function (x, d) { x = parseFloat(x); return isFinite(x) ? x : d; };
+          var clamp = function (x, a, b) { return Math.max(a, Math.min(b, x)); };
+          var W = 1920, H = 1080, F = 1 / 30, cut = CFG.cut;
+          if (String(v.backdrop) === "off") q(".lc-bg").style.display = "none";
+          var tl = gsap.timeline({ paused: true });
+          var win = q(".lc-win"), hold = q(".lc-hold"), line = q(".lc-line"), under = q(".lc-under");
+          q(".lc-from").setAttribute("src", String(v.from)); q(".lc-to").setAttribute("src", String(v.to));
+          q(".lc-stage").setAttribute("data-dir", String(v.dir) === "left" ? "left" : "right");
+          var th = clamp(num(v.thick, 14), 2, 60), h = th / 2, glow = 60;
+          line.style.width = th + "px";
+          // everything rides one move: x = centre of the line, from just outside one edge to just outside the other
+          var x0 = -h - glow, x1 = W + h + glow, mv = function (to) { to.duration = CFG.cross; to.ease = "power2.inOut"; return to; };
+          var t0 = cut - CFG.cross / 2;
+          tl.fromTo(line, { x: x0 - h }, mv({ x: x1 - h }), t0);
+          // the old shot only exists ahead of the line (a window whose near edge is the line) …
+          tl.fromTo(win, { x: x0 }, mv({ x: x1 }), t0);
+          // … and inside that window it is dragged along a little, like cloth caught on the line
+          tl.fromTo(hold, { x: -x0 }, mv({ x: -x1 + CFG.drag }), t0);
+          // the new shot slides the last few px into place behind the line
+          tl.fromTo(under, { x: -CFG.drift }, mv({ x: 0 }), t0);
+          win.style.opacity = line.style.opacity = "1";
+          window.__timelines["line-carry"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

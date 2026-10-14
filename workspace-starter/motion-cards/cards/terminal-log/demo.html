@@ -1,0 +1,135 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"cmd","type":"string","label":"命令","default":"build --target demo"},
+    {"id":"out","type":"string","label":"输出行（用 | 分开，最多 5 行）","default":"读取配置 demo.config|编译 12 个模块|打包资源 3.2 MB|写入 dist/"},
+    {"id":"done","type":"string","label":"最后一行成功状态","default":"完成 · 用时 1.8 秒（示例）"},
+    {"id":"title","type":"string","label":"窗口标题","default":"终端 · 示例"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>terminal-log · 终端日志</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="terminal-log-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        @font-face { font-family: "Consolas"; src: local("Consolas"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .tm { position: absolute; inset: 0; }
+        .tm-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .tm-win { position: absolute; left: 80px; top: 60px; width: 1760px; height: 960px; border-radius: 28px; background: var(--k-panel); border: 2px solid rgba(139, 147, 163, 0.28); box-shadow: 0 50px 120px rgba(0, 0, 0, 0.5); overflow: hidden; }
+        .tm-bar { position: absolute; left: 0; right: 0; top: 0; height: 100px; display: flex; align-items: center; gap: 18px; padding: 0 40px; border-bottom: 2px solid rgba(139, 147, 163, 0.22); }
+        .tm-led { display: block; width: 26px; height: 26px; border-radius: 50%; background: var(--k-muted); opacity: 0.55; }
+        .tm-title { display: block; margin-left: 24px; font-size: 44px; line-height: 1.2; color: var(--k-muted); white-space: nowrap; }
+        .tm-body { position: absolute; left: 72px; right: 72px; top: 132px; font-family: Consolas, "Courier New", "Microsoft YaHei", monospace; font-size: 56px; }
+        .tm-line { position: relative; display: flex; align-items: center; height: 100px; white-space: pre; }
+        .tm-ps { display: block; color: var(--k-accent-2); font-weight: 700; margin-right: 30px; }
+        .tm-cmd { display: block; font-weight: 700; }
+        .tm-caret { display: block; width: 30px; height: 66px; margin-left: 8px; background: var(--k-ink); }
+        .tm-out { color: var(--k-muted); }
+        .tm-wash { position: absolute; left: -26px; right: 0; top: 8px; bottom: 8px; border-radius: 14px; background: var(--k-accent); opacity: 0.14; }
+        .tm-tick { position: relative; display: block; width: 60px; height: 60px; margin-right: 26px; }
+        .tm-ok { display: block; font-weight: 700; color: var(--k-muted); }
+      </style>
+
+      <div id="root" data-composition-id="terminal-log" data-width="1920" data-height="1080">
+        <div class="tm">
+          <div class="tm-bg"></div>
+          <div class="tm-win">
+            <div class="tm-bar"><span class="tm-led"></span><span class="tm-led"></span><span class="tm-led"></span><span class="tm-title">终端 · 示例</span></div>
+            <div class="tm-body">
+              <div class="tm-line"><span class="tm-ps">$</span><span class="tm-cmd">build --target demo</span><span class="tm-caret tm-c1"></span></div>
+              <div class="tm-line tm-out">读取配置 demo.config</div>
+              <div class="tm-line tm-out">编译 12 个模块</div>
+              <div class="tm-line tm-out">打包资源 3.2 MB</div>
+              <div class="tm-line tm-out">写入 dist/</div>
+              <div class="tm-line tm-out"></div>
+              <div class="tm-line tm-last">
+                <div class="tm-wash"></div>
+                <svg class="tm-tick" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path class="tm-tickp" d="M8 26 L20 37 L41 12" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" pathLength="1" /></svg>
+                <span class="tm-ok">完成 · 用时 1.8 秒（示例）</span>
+              </div>
+              <div class="tm-line"><span class="tm-ps">$</span><span class="tm-caret tm-c2"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // cps: typing speed · beat: the pause between the last character and Enter · gaps: uneven delays between output lines · turn: how long the last line waits before it changes colour
+          var CFG = { start: 0.35, cps: 20, beat: 0.28, gaps: [0.12, 0.07, 0.16, 0.06, 0.1], lastGap: 0.22, turn: 0.32, wash: 0.36 };
+          var v = { cmd: "build --target demo", out: "读取配置 demo.config|编译 12 个模块|打包资源 3.2 MB|写入 dist/", done: "完成 · 用时 1.8 秒（示例）", title: "终端 · 示例", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".tm");
+          var q = function (s) { return root.querySelector(s); };
+          if (String(v.backdrop) === "off") q(".tm-bg").style.display = "none";
+          q(".tm-title").textContent = String(v.title);
+          var cmd = String(v.cmd), outs = String(v.out).split("|").slice(0, 5);
+          var outEls = Array.prototype.slice.call(root.querySelectorAll(".tm-out"));
+          outEls.forEach(function (el, i) { el.textContent = outs[i] || ""; el.style.display = i < outs.length ? "" : "none"; });
+          q(".tm-ok").textContent = String(v.done);
+          // GSAP cannot tween to a var(), so read the two palette colours as plain values
+          var css = getComputedStyle(root), cMuted = css.getPropertyValue("--k-muted").trim() || "#8b93a3", cAccent = css.getPropertyValue("--k-accent").trim() || "#ffcf33";
+          q(".tm-tick").style.color = "var(--k-accent)";
+
+          var cmdEl = q(".tm-cmd"), typed = { n: 0 }, shown = -1;
+          var render = function () {
+            var n = Math.floor(typed.n + 0.001);
+            if (n !== shown) { shown = n; cmdEl.textContent = cmd.slice(0, n); }
+          };
+          var tl = gsap.timeline({ paused: true, onUpdate: render });
+          var tEnd = CFG.start + cmd.length / CFG.cps, enter = tEnd + CFG.beat;
+          tl.fromTo(typed, { n: 0 }, { n: cmd.length, duration: cmd.length / CFG.cps, ease: "none" }, CFG.start);
+          // Enter: the caret leaves the command line, then output arrives whole lines at a time, never letter by letter
+          tl.fromTo(q(".tm-c1"), { opacity: 1 }, { opacity: 0, duration: 0.02, ease: "none" }, enter);
+          var t = enter;
+          outEls.slice(0, outs.length).forEach(function (el, i) {
+            t += CFG.gaps[i];
+            tl.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.02, ease: "none" }, t);
+          });
+          t += CFG.lastGap;
+          var last = q(".tm-last"), wash = q(".tm-wash");
+          tl.fromTo(last, { opacity: 0 }, { opacity: 1, duration: 0.02, ease: "none" }, t);
+          // the result line lands grey like the rest, and only then turns: the delay is what makes the eye catch the change
+          var turn = t + CFG.turn;
+          tl.set(wash, { transformOrigin: "0 50%" }, 0);
+          tl.fromTo(wash, { scaleX: 0 }, { scaleX: 1, duration: CFG.wash, ease: "power3.out" }, turn);
+          tl.fromTo(q(".tm-ok"), { color: cMuted }, { color: cAccent, duration: 0.14, ease: "none" }, turn);
+          tl.fromTo(q(".tm-tickp"), { strokeDasharray: 1, strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.26, ease: "power2.out" }, turn + 0.04);
+          // a fresh prompt with a blinking caret says "finished, your turn"
+          var c2 = q(".tm-c2").parentNode;
+          tl.fromTo(c2, { opacity: 0 }, { opacity: 1, duration: 0.02, ease: "none" }, turn + 0.4);
+          tl.fromTo(q(".tm-c2"), { opacity: 1 }, { opacity: 0, duration: 0.02, ease: "none", repeat: 5, yoyo: true, repeatDelay: 0.4 }, turn + 0.85);
+          render();
+          window.__timelines["terminal-log"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,94 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"src","type":"string","label":"远层：铺满的底图地址","default":"motion-cards/lib/samples/p5.jpg"},
+    {"id":"mid","type":"string","label":"中层：第一张图片地址","default":"motion-cards/lib/samples/p2.jpg"},
+    {"id":"mid2","type":"string","label":"中层：第二张图片地址","default":"motion-cards/lib/samples/p3.jpg"},
+    {"id":"near","type":"string","label":"近层：透明底前景图地址","default":"motion-cards/lib/samples/host.png"},
+    {"id":"dist","type":"number","label":"近层整镜一共漂多少像素（负数向左）","default":-300,"min":-600,"max":600,"step":10},
+    {"id":"dur","type":"number","label":"这一镜多长（秒）","default":5,"min":1,"max":30,"step":0.5},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>parallax-drift · 视差漂移</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="parallax-drift-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .pd { position: absolute; inset: 0; overflow: hidden; }
+        .pd-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .pd-far { position: absolute; left: -120px; top: -68px; width: 2160px; height: 1216px; will-change: transform; }
+        .pd-far-img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; filter: blur(5px) brightness(0.5) saturate(0.85); }
+        .pd-mid { position: absolute; inset: 0; will-change: transform; }
+        .pd-tile { position: absolute; display: block; padding: 14px; border-radius: 18px; background: #fff; box-shadow: 0 40px 90px rgba(0, 0, 0, 0.5); }
+        .pd-tile-a { left: 250px; top: 150px; width: 700px; height: 440px; }
+        .pd-tile-b { left: 930px; top: 500px; width: 600px; height: 380px; }
+        .pd-pic { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+        .pd-near { position: absolute; left: 1290px; top: 250px; display: block; width: 860px; height: 1075px; object-fit: contain; filter: blur(9px) brightness(0.42); will-change: transform; }
+      </style>
+
+      <div id="root" data-composition-id="parallax-drift" data-width="1920" data-height="1080">
+        <div class="pd" data-layout-allow-overflow>
+          <div class="pd-bg"></div>
+          <div class="pd-far"><img class="pd-far-img" src="motion-cards/lib/samples/p5.jpg" data-var-src="src" alt="" /></div>
+          <div class="pd-mid">
+            <div class="pd-tile pd-tile-a"><img class="pd-pic pd-pic-a" src="motion-cards/lib/samples/p2.jpg" data-var-src="mid" alt="" /></div>
+            <div class="pd-tile pd-tile-b"><img class="pd-pic pd-pic-b" src="motion-cards/lib/samples/p3.jpg" data-var-src="mid2" alt="" /></div>
+          </div>
+          <img class="pd-near" src="motion-cards/lib/samples/host.png" data-var-src="near" alt="" />
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { farRate: 0.14, midRate: 0.45, nearRate: 1, ease: "none" };
+          var v = { dist: -300, dur: 5, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".pd");
+          var q = function (s) { return root.querySelector(s); };
+          var num = function (x, d) { x = parseFloat(x); return isFinite(x) ? x : d; };
+          if (v.src) q(".pd-far-img").setAttribute("src", String(v.src));
+          if (v.mid) q(".pd-pic-a").setAttribute("src", String(v.mid));
+          if (v.mid2) q(".pd-pic-b").setAttribute("src", String(v.mid2));
+          if (v.near) q(".pd-near").setAttribute("src", String(v.near));
+          if (String(v.backdrop) === "off") q(".pd-bg").style.display = "none";
+          // the far layer has 120px of spare picture on each side; cap the drift so 0.14 × dist can never use it up
+          var dist = Math.max(-700, Math.min(700, num(v.dist, -300))), dur = Math.max(0.5, num(v.dur, 5));
+
+          var tl = gsap.timeline({ paused: true });
+          // one clock, one direction, three distances: each layer is centred on its resting place at the middle of the shot
+          [[".pd-far", CFG.farRate], [".pd-mid", CFG.midRate], [".pd-near", CFG.nearRate]].forEach(function (p) {
+            var d = dist * p[1];
+            tl.fromTo(q(p[0]), { x: -d / 2 }, { x: d / 2, duration: dur, ease: CFG.ease, force3D: true }, 0);
+          });
+          window.__timelines["parallax-drift"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

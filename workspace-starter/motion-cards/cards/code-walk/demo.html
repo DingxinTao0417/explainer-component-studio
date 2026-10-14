@@ -1,0 +1,123 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"code","type":"string","label":"代码（用 \\n 换行，最多 9 行）","default":"// 示例：把长文档切成小段\nfunction splitDoc(text, size) {\n  const parts = [];\n  for (let i = 0; i < text.length; i += size) {\n    parts.push(text.slice(i, i + size));\n  }\n  return parts;\n}\nconst chunks = splitDoc(doc, 800);"},
+    {"id":"steps","type":"string","label":"依次讲哪几行（起-止，逗号分开）","default":"2-3,4-6,9"},
+    {"id":"hold","type":"number","label":"每段停多久（秒）","default":1.3,"min":0.6,"max":10,"step":0.05},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>code-walk · 代码逐行讲</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="code-walk-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        @font-face { font-family: "Consolas"; src: local("Consolas"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .cw { position: absolute; inset: 0; }
+        .cw-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .cw-win { position: absolute; left: 96px; top: 60px; width: 1728px; height: 960px; border-radius: 28px; background: var(--k-panel); border: 2px solid rgba(139, 147, 163, 0.25); box-shadow: 0 50px 120px rgba(0, 0, 0, 0.45); overflow: hidden; }
+        .cw-code { position: absolute; left: 0; right: 0; top: 28px; font-family: Consolas, "Courier New", "Microsoft YaHei", monospace; font-size: 54px; }
+        .cw-band { position: absolute; left: 0; right: 0; top: 0; height: 200px; background: rgba(79, 140, 255, 0.2); border-left: 12px solid var(--k-accent); opacity: 0; }
+        .cw-ln { position: relative; display: flex; align-items: center; height: 100px; white-space: pre; }
+        .cw-no { display: block; width: 110px; padding-right: 40px; text-align: right; color: var(--k-muted); opacity: 0.6; font-size: 42px; }
+        .cw-tx { display: block; font-weight: 700; }
+        .cw-rem .cw-tx { color: var(--k-muted); font-weight: 400; }
+      </style>
+
+      <div id="root" data-composition-id="code-walk" data-width="1920" data-height="1080">
+        <div class="cw">
+          <div class="cw-bg"></div>
+          <div class="cw-win">
+            <div class="cw-code">
+              <div class="cw-band"></div>
+              <div class="cw-list">
+                <div class="cw-ln cw-rem"><span class="cw-no">1</span><span class="cw-tx">// 示例：把长文档切成小段</span></div>
+                <div class="cw-ln"><span class="cw-no">2</span><span class="cw-tx">function splitDoc(text, size) {</span></div>
+                <div class="cw-ln"><span class="cw-no">3</span><span class="cw-tx">  const parts = [];</span></div>
+                <div class="cw-ln"><span class="cw-no">4</span><span class="cw-tx">  for (let i = 0; i &lt; text.length; i += size) {</span></div>
+                <div class="cw-ln"><span class="cw-no">5</span><span class="cw-tx">    parts.push(text.slice(i, i + size));</span></div>
+                <div class="cw-ln"><span class="cw-no">6</span><span class="cw-tx">  }</span></div>
+                <div class="cw-ln"><span class="cw-no">7</span><span class="cw-tx">  return parts;</span></div>
+                <div class="cw-ln"><span class="cw-no">8</span><span class="cw-tx">}</span></div>
+                <div class="cw-ln"><span class="cw-no">9</span><span class="cw-tx">const chunks = splitDoc(doc, 800);</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // rest: brightness of lines not being discussed · grow: how much the active lines enlarge · slide: band travel time · lag: lines light up this long after the band starts moving
+          var CFG = { dimAt: 0.3, first: 0.6, rest: 0.3, grow: 1.05, slide: 0.5, lag: 0.2, lineH: 100 };
+          var v = { code: "", steps: "2-3,4-6,9", hold: 1.3, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".cw");
+          var q = function (s) { return root.querySelector(s); };
+          if (String(v.backdrop) === "off") q(".cw-bg").style.display = "none";
+          var list = q(".cw-list");
+          if (v.code) {
+            // rebuild the listing from the variable (the HTML above is the same default, so the file also reads without scripts)
+            while (list.firstChild) list.removeChild(list.firstChild);
+            String(v.code).replace(/\\n/g, "\n").split("\n").slice(0, 9).forEach(function (src, i) {
+              var ln = document.createElement("div"), no = document.createElement("span"), tx = document.createElement("span");
+              ln.className = "cw-ln" + (/^\s*(\/\/|#)/.test(src) ? " cw-rem" : "");
+              no.className = "cw-no"; no.textContent = i + 1;
+              tx.className = "cw-tx"; tx.textContent = src || " ";
+              ln.appendChild(no); ln.appendChild(tx); list.appendChild(ln);
+            });
+          }
+          var txs = Array.prototype.slice.call(list.querySelectorAll(".cw-tx"));
+          var steps = String(v.steps).split(/[,，]/).map(function (s) {
+            var m = s.split("-"), a = parseInt(m[0], 10), b = parseInt(m[1] || m[0], 10);
+            return [Math.max(1, a), Math.min(txs.length, Math.max(a, b))];
+          }).filter(function (r) { return r[0] <= txs.length; });
+          var hold = Math.max(CFG.slide + 0.1, parseFloat(v.hold) || 1.3), band = q(".cw-band"), H = CFG.lineH;
+          var pick = function (r) { return txs.slice(r[0] - 1, r[1]); };
+
+          var tl = gsap.timeline({ paused: true });
+          tl.set(txs, { transformOrigin: "0% 50%" }, 0);
+          // everything steps back first, so that brightness alone can do the pointing
+          tl.fromTo(txs, { opacity: 1, scale: 1 }, { opacity: CFG.rest, scale: 1, duration: 0.35, ease: "power1.out" }, CFG.dimAt);
+          steps.forEach(function (r, i) {
+            var t = CFG.first + i * hold, top = (r[0] - 1) * H, h = (r[1] - r[0] + 1) * H;
+            if (i === 0) tl.fromTo(band, { opacity: 0, y: top, height: h }, { opacity: 1, y: top, height: h, duration: 0.3, ease: "power1.out" }, t);
+            else {
+              // the band travels as one piece; the old lines let go as it leaves, the new ones wake as it arrives
+              tl.to(band, { y: top, height: h, duration: CFG.slide, ease: "power3.inOut" }, t);
+              tl.to(pick(steps[i - 1]), { opacity: CFG.rest, scale: 1, duration: 0.3, ease: "power1.out" }, t);
+            }
+            tl.to(pick(r), { opacity: 1, scale: CFG.grow, duration: 0.3, ease: "power2.out" }, t + (i === 0 ? 0.05 : CFG.lag));
+          });
+          window.__timelines["code-walk"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

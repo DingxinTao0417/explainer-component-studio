@@ -1,0 +1,97 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"claim","type":"string","label":"被下结论的那句话","default":"提示词越长，效果越好"},
+    {"id":"verdict","type":"string","label":"章上的字（1–4 个字）","default":"不成立"},
+    {"id":"hit","type":"number","label":"章盖下来的时间（秒）","default":1.1,"min":0,"max":10,"step":0.05},
+    {"id":"tilt","type":"number","label":"章的倾角（度）","default":-9,"min":-20,"max":20,"step":1},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>stamp-verdict · 盖章定论</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="stamp-verdict-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .sv { position: absolute; inset: 0; }
+        .sv-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .sv-shake { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+        .sv-claim { display: block; margin: 0 0 150px; font-size: 104px; font-weight: 800; line-height: 1.5; letter-spacing: 0.01em; white-space: nowrap; }
+        .sv-pos { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 290px 0 0 600px; }
+        .sv-stamp { position: relative; display: block; padding: 0.02em 0.3em 0.06em; border: 16px solid var(--k-accent); border-radius: 26px; background: color-mix(in srgb, var(--k-bg) 82%, transparent); color: var(--k-accent); font-size: 176px; font-weight: 900; line-height: 1.3; letter-spacing: 0.06em; white-space: nowrap; }
+        .sv-word { display: block; margin-right: -0.06em; }
+        .sv-ring { position: absolute; inset: -16px; display: block; border: 8px solid var(--k-accent); border-radius: 26px; opacity: 0; }
+      </style>
+
+      <div id="root" data-composition-id="stamp-verdict" data-width="1920" data-height="1080">
+        <div class="sv">
+          <div class="sv-bg"></div>
+          <div class="sv-shake">
+            <p class="sv-claim" data-layout-allow-occlusion data-layout-allow-overlap>提示词越长，效果越好</p>
+            <div class="sv-pos"><div class="sv-stamp" data-layout-allow-occlusion><span class="sv-ring"></span><span class="sv-word" data-layout-allow-overlap>不成立</span></div></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { claimIn: 0.35, from: 2.6, twist: 12, slam: 0.15, dent: 0.93, dentDur: 0.06, rebound: 0.32, ringTo: 1.5, ringDur: 0.55, ringFrom: 0.75, shakePx: 12, dim: 0.42 };
+          var v = { claim: "提示词越长，效果越好", verdict: "不成立", hit: 1.1, tilt: -9, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".sv");
+          var q = function (s) { return root.querySelector(s); };
+          q(".sv-claim").textContent = String(v.claim);
+          q(".sv-word").textContent = String(v.verdict);
+          if (String(v.backdrop) === "off") q(".sv-bg").style.display = "none";
+          var hit = Math.max(CFG.claimIn + 0.1, parseFloat(v.hit) || 1.1);
+          var tilt = parseFloat(v.tilt);
+          if (!isFinite(tilt)) tilt = -9;
+          var stamp = q(".sv-stamp"), ring = q(".sv-ring"), shake = q(".sv-shake"), land = hit + CFG.slam;
+
+          var tl = gsap.timeline({ paused: true });
+          tl.fromTo(q(".sv-claim"), { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: CFG.claimIn, ease: "power3.out" }, 0);
+          // the stamp comes down from the viewer's side: big, over-rotated, accelerating all the way to contact
+          tl.fromTo(stamp, { opacity: 0, scale: CFG.from, rotation: tilt - CFG.twist }, { opacity: 1, scale: 1, rotation: tilt, duration: CFG.slam, ease: "power3.in" }, hit);
+          // contact: it digs in a little, the frame takes the blow, the claim loses its standing
+          tl.to(stamp, { scale: CFG.dent, duration: CFG.dentDur, ease: "power1.out" }, land);
+          tl.to(stamp, { scale: 1, duration: CFG.rebound, ease: "back.out(2.6)" }, land + CFG.dentDur);
+          var s = CFG.shakePx;
+          tl.fromTo(shake, { y: 0 }, { y: s, duration: 0.04, ease: "none" }, land);
+          tl.to(shake, { y: -s * 0.6, duration: 0.05, ease: "none" });
+          tl.to(shake, { y: s * 0.3, duration: 0.05, ease: "none" });
+          tl.to(shake, { y: 0, duration: 0.06, ease: "none" });
+          tl.to(q(".sv-claim"), { opacity: CFG.dim, duration: 0.25, ease: "power1.out" }, land);
+          // the mark it leaves: one ring the shape of the stamp spreads and fades
+          tl.fromTo(ring, { opacity: CFG.ringFrom, scale: 1 }, { opacity: 0, scale: CFG.ringTo, duration: CFG.ringDur, ease: "power2.out" }, land);
+          window.__timelines["stamp-verdict"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

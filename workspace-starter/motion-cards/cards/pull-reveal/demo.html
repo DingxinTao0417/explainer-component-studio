@@ -1,0 +1,98 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"src","type":"string","label":"画面地址（从项目根目录写起）","default":"motion-cards/lib/samples/ui.png"},
+    {"id":"fx","type":"number","label":"开场特写对着哪一点：横向 0–1","default":0.31,"min":0,"max":1,"step":0.01},
+    {"id":"fy","type":"number","label":"开场特写对着哪一点：纵向 0–1","default":0.4,"min":0,"max":1,"step":0.01},
+    {"id":"zoom","type":"number","label":"开场特写的倍数","default":3.2,"min":1.5,"max":6,"step":0.1},
+    {"id":"hold","type":"number","label":"特写停多久再拉（秒）","default":0.8,"min":0.2,"max":6,"step":0.05},
+    {"id":"mark","type":"enum","label":"拉开后框出刚才看的那一块","default":"on","options":[{"value":"on","label":"框出"},{"value":"off","label":"不框"}]},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>pull-reveal · 拉出全貌</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="pull-reveal-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .pr { position: absolute; inset: 0; overflow: hidden; }
+        .pr-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .pr-cam { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; will-change: transform; }
+        .pr-shot { position: absolute; left: 0; top: 0; display: block; width: 1920px; height: 1080px; object-fit: cover; }
+        .pr-mark { position: absolute; left: 295px; top: 263px; width: 600px; height: 338px; border-radius: 14px; box-shadow: 0 0 0 6px var(--k-accent), 0 0 0 12px rgba(255, 207, 51, 0.22); }
+      </style>
+
+      <div id="root" data-composition-id="pull-reveal" data-width="1920" data-height="1080">
+        <div class="pr" data-layout-allow-overflow>
+          <div class="pr-bg"></div>
+          <div class="pr-cam">
+            <img class="pr-shot" src="motion-cards/lib/samples/ui.png" data-var-src="src" alt="" />
+            <div class="pr-mark"></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { creep: 0.03, pull: 1.5, ease: "power3.inOut", markAt: 0.62, markIn: 0.45 };
+          var v = { fx: 0.31, fy: 0.4, zoom: 3.2, hold: 0.8, mark: "on", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".pr");
+          var q = function (s) { return root.querySelector(s); };
+          var num = function (x, d) { x = parseFloat(x); return isFinite(x) ? x : d; };
+          var clamp = function (x, a, b) { return Math.max(a, Math.min(b, x)); };
+          if (v.src) q(".pr-shot").setAttribute("src", String(v.src));
+          if (String(v.backdrop) === "off") q(".pr-bg").style.display = "none";
+          var W = 1920, H = 1080;
+          var fx = clamp(num(v.fx, 0.5), 0, 1), fy = clamp(num(v.fy, 0.5), 0, 1);
+          var z0 = clamp(num(v.zoom, 3.2), 1.2, 8), hold = Math.max(0.1, num(v.hold, 0.8));
+          // camera at zoom z looking at the target: put the target at frame centre, then clamp so the layer still covers the frame
+          var at = function (z) { return { scale: z, x: clamp(W / 2 - z * fx * W, W - z * W, 0), y: clamp(H / 2 - z * fy * H, H - z * H, 0) }; };
+          var a = at(z0), b = at(z0 * (1 - CFG.creep));
+          var cam = q(".pr-cam"), mark = q(".pr-mark");
+          // the mark is the opening viewport drawn on the content itself, so it shrinks with the picture
+          mark.style.left = -a.x / z0 + "px";
+          mark.style.top = -a.y / z0 + "px";
+          mark.style.width = W / z0 + "px";
+          mark.style.height = H / z0 + "px";
+          if (String(v.mark) === "off") mark.style.display = "none";
+
+          var tl = gsap.timeline({ paused: true });
+          tl.set(cam, { transformOrigin: "0 0" }, 0);
+          // 1 · hold on the detail, breathing out a hair so the close-up is not a freeze frame
+          tl.fromTo(cam, { scale: a.scale, x: a.x, y: a.y }, { scale: b.scale, x: b.x, y: b.y, duration: hold, ease: "none" }, 0);
+          // 2 · pull back to the whole picture; x, y and scale share one ease so the layer edge never crosses the frame edge
+          tl.to(cam, { scale: 1, x: 0, y: 0, duration: CFG.pull, ease: CFG.ease }, hold);
+          // 3 · as the move lands, mark where we were
+          tl.fromTo(mark, { opacity: 0 }, { opacity: 1, duration: CFG.markIn, ease: "power2.out" }, hold + CFG.pull * CFG.markAt);
+          window.__timelines["pull-reveal"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

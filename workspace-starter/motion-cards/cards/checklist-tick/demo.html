@@ -1,0 +1,142 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"items","type":"string","label":"清单项（用 | 分隔，2–5 条）","default":"目标写清楚了|给了参考示例|限定了输出格式"},
+    {"id":"cues","type":"string","label":"每一条打勾的秒数（逗号分隔，不够就均匀排开）","default":"0.9,1.9,2.9"},
+        {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>checklist-tick · 清单逐条勾</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="checklist-tick-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .ct { position: absolute; inset: 0; }
+        .ct-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .ct-list { position: absolute; left: 474px; top: 100px; width: 1400px; height: 880px; display: flex; flex-direction: column; justify-content: center; gap: 56px; }
+        .ct-row { flex: none; display: flex; align-items: center; gap: 56px; color: var(--k-ink); font-size: 112px; font-weight: 800; }
+        .ct-box { position: relative; flex: none; display: block; width: 132px; height: 132px; box-sizing: border-box; border: 7px solid var(--k-muted); border-radius: 28px; }
+        .ct-fill { position: absolute; inset: -7px; border-radius: 28px; background: var(--k-accent); }
+        .ct-tick { position: absolute; left: -7px; top: -7px; width: 132px; height: 132px; }
+        .ct-tick path { fill: none; stroke: var(--k-on-accent); stroke-width: 13; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1 1.2; }
+        .ct-txt { display: block; line-height: 1.3; white-space: nowrap; }
+    
+      </style>
+
+      <div id="root" data-composition-id="checklist-tick" data-width="1920" data-height="1080">
+        <div class="ct">
+          <div class="ct-bg"></div>
+          <div class="ct-list">
+            <div class="ct-row"><span class="ct-box"><span class="ct-fill"></span><svg class="ct-tick" viewBox="0 0 100 100"><path d="M24 52 L43 70 L77 32" pathLength="1"></path></svg></span><span class="ct-txt">目标写清楚了</span></div>
+            <div class="ct-row"><span class="ct-box"><span class="ct-fill"></span><svg class="ct-tick" viewBox="0 0 100 100"><path d="M24 52 L43 70 L77 32" pathLength="1"></path></svg></span><span class="ct-txt">给了参考示例</span></div>
+            <div class="ct-row"><span class="ct-box"><span class="ct-fill"></span><svg class="ct-tick" viewBox="0 0 100 100"><path d="M24 52 L43 70 L77 32" pathLength="1"></path></svg></span><span class="ct-txt">限定了输出格式</span></div>
+          </div>
+    
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { first: 0.9, gap: 1.0, minGap: 0.5, floor: 0.6, deal: 0.08, stroke: 0.26, now: 1.05, beat: 0.45, nudge: 1.03, fonts: [0, 120, 120, 112, 96, 80], gaps: [0, 64, 64, 56, 40, 28] };
+          var v = { items: "目标写清楚了|给了参考示例|限定了输出格式", cues: "0.9,1.9,2.9", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".ct");
+          var q = function (s) { return root.querySelector(s); };
+          var cs = getComputedStyle(root);
+          var tok = function (name, d) { return (cs.getPropertyValue("--k-" + name) || "").trim() || d; };
+          var INK = tok("ink", "#f3f5f8"), MUTED = tok("muted", "#8b93a3"), ACCENT = tok("accent", "#ffcf33"), ONACC = tok("on-accent", "#14161a");
+          if (String(v.backdrop) === "off") q(".ct-bg").style.display = "none";
+          var split = function (s, max) { return String(s).split("|").map(function (x) { return x.trim(); }).filter(Boolean).slice(0, max); };
+          // rough text width in em: CJK counts 1, latin and digits 0.6
+          var em = function (s) { var w = 0; for (var c = 0; c < s.length; c++) w += s.charCodeAt(c) > 255 ? 1 : 0.6; return Math.max(w, 1); };
+          // cue times: take what was given, continue at the same spacing, keep a floor and a minimum distance
+          var cueList = function (raw, count) {
+            var c = String(raw).split(/[,，\s]+/).map(parseFloat).filter(function (x) { return isFinite(x); }).slice(0, count);
+            var gap = c.length > 1 ? (c[c.length - 1] - c[0]) / (c.length - 1) : CFG.gap;
+            if (!c.length) c.push(CFG.first);
+            while (c.length < count) c.push(c[c.length - 1] + gap);
+            c[0] = Math.max(c[0], CFG.floor);
+            for (var i = 1; i < count; i++) c[i] = Math.max(c[i], c[i - 1] + CFG.minGap);
+            return c;
+          };
+          var items = split(v.items, 5), n = items.length, cues = cueList(v.cues, n);
+          var HALF = gsap.utils.interpolate(MUTED, INK, 0.5);
+          var list = q(".ct-list");
+          list.innerHTML = "";
+          list.style.gap = CFG.gaps[n] + "px";
+          var widest = 0;
+          var rows = items.map(function (t) {
+            var r = document.createElement("div");
+            r.className = "ct-row";
+            r.innerHTML = '<span class="ct-box"><span class="ct-fill"></span><svg class="ct-tick" viewBox="0 0 100 100"><path d="M24 52 L43 70 L77 32" pathLength="1"></path></svg></span><span class="ct-txt"></span>';
+            var g = function (s) { return r.querySelector(s); };
+            g(".ct-txt").textContent = t;
+            var fs = Math.floor(Math.min(CFG.fonts[n], 1300 / em(t)));
+            r.style.fontSize = fs + "px";
+            widest = Math.max(widest, 188 + em(t) * fs);
+            list.appendChild(r);
+            return { el: r, box: g(".ct-box"), fill: g(".ct-fill"), tick: g(".ct-tick"), path: g("path"), txt: g(".ct-txt") };
+          });
+
+          list.style.left = Math.round((1920 - widest) / 2) + "px"; // centre the column on its widest row
+
+          var tl = gsap.timeline({ paused: true });
+          rows.forEach(function (r, i) {
+            var t = cues[i];
+            tl.set(r.el, { transformOrigin: "0% 50%" }, 0);
+            // the whole list is dealt out unticked and grey first
+            tl.fromTo(r.el, { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: 0.32, ease: "power3.out" }, 0.05 + i * CFG.deal);
+            tl.fromTo(r.txt, { color: MUTED }, { color: INK, duration: 0.2, ease: "power2.out" }, t);
+            // on the cue: box fills, the tick is drawn in one stroke, the row steps forward
+            tl.fromTo(r.fill, { opacity: 0 }, { opacity: 1, duration: 0.1, ease: "none" }, t);
+            tl.fromTo(r.box, { scale: 1 }, { scale: 1.2, duration: 0.12, ease: "power2.out" }, t);
+            tl.to(r.box, { scale: 1, duration: 0.25, ease: "back.out(3)" }, t + 0.12);
+            tl.fromTo(r.tick, { opacity: 0 }, { opacity: 1, duration: 0.001, ease: "none" }, t + 0.04);
+            tl.fromTo(r.path, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: CFG.stroke, ease: "power2.out" }, t + 0.04);
+            tl.fromTo(r.el, { scale: 1 }, { scale: CFG.now, duration: 0.25, ease: "back.out(2)" }, t);
+            if (i < n - 1) {
+              tl.to(r.el, { scale: 1, duration: 0.3, ease: "power2.out" }, cues[i + 1]);
+              tl.to(r.txt, { color: HALF, duration: 0.3, ease: "power2.out" }, cues[i + 1]);
+            }
+          });
+          // closing beat: everything is done, so every line comes back to full white and the column lands once
+          var end = cues[n - 1] + CFG.beat;
+          rows.forEach(function (r, i) {
+            if (i < n - 1) tl.to(r.txt, { color: INK, duration: 0.2, ease: "power2.out" }, end);
+            else tl.to(r.el, { scale: 1, duration: 0.2, ease: "power2.out" }, end);
+          });
+          tl.fromTo(list, { scale: 1 }, { scale: CFG.nudge, duration: 0.12, ease: "power2.out" }, end);
+          tl.to(list, { scale: 1, duration: 0.3, ease: "back.out(3)" }, end + 0.12);
+    
+          window.__timelines["checklist-tick"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

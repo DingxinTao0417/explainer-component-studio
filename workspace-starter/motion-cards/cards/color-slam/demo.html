@@ -1,0 +1,88 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"dir","type":"enum","label":"色块从哪一侧进","default":"left","options":[{"value":"left","label":"左"},{"value":"right","label":"右"},{"value":"up","label":"上"},{"value":"down","label":"下"}]},
+    {"id":"hold","type":"number","label":"停几帧（1–4）","default":1,"min":1,"max":4,"step":1},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"预览：垫两张占位画面"},{"value":"off","label":"透明（压在两镜交界上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>color-slam · 色块砸切</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="color-slam-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .cs { position: absolute; inset: 0; overflow: hidden; }
+        .cs-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .cs-a, .cs-b { position: absolute; left: 0; top: 0; display: block; width: 1920px; height: 1080px; object-fit: cover; }
+        .cs-back, .cs-main { position: absolute; inset: 0; opacity: 0; }
+        .cs-back { background: var(--k-accent-2); }
+        .cs-main { background: var(--k-accent); }
+      </style>
+
+      <div id="root" data-composition-id="color-slam" data-width="1920" data-height="1080">
+        <div class="cs" data-layout-allow-overflow>
+          <div class="cs-bg"></div>
+          <img class="cs-a" src="motion-cards/lib/samples/p1.jpg" alt="" />
+          <img class="cs-b" src="motion-cards/lib/samples/p2.jpg" alt="" />
+          <div class="cs-back"></div>
+          <div class="cs-main"></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { cut: 1.0, slam: 0.167, leave: 0.2, lag: 0.033, swap: 0.02 };
+          var v = { "dir": "left", "hold": 1, "backdrop": "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".cs");
+          var q = function (s) { return root.querySelector(s); };
+          var num = function (x, d) { x = parseFloat(x); return isFinite(x) ? x : d; };
+          var clamp = function (x, a, b) { return Math.max(a, Math.min(b, x)); };
+          var W = 1920, H = 1080, F = 1 / 30, cut = CFG.cut;
+          var demo = String(v.backdrop) !== "off";
+          if (!demo) ["bg", "a", "b"].forEach(function (n) { q(".cs-" + n).style.display = "none"; });
+          var tl = gsap.timeline({ paused: true });
+          // preview only: the placeholder shots change under full cover, one frame after `cut`
+          if (demo) tl.fromTo(q(".cs-b"), { opacity: 0 }, { opacity: 1, duration: 0.01, ease: "none" }, cut + CFG.swap);
+          var hold = clamp(Math.round(num(v.hold, 1)), 1, 4) * F;
+          var d = String(v.dir), prop = d === "up" || d === "down" ? "yPercent" : "xPercent", s = d === "right" || d === "down" ? -1 : 1;
+          var main = q(".cs-main"), backp = q(".cs-back");
+          var off = function (k) { var o = {}; o[prop] = k * s * 100; return o; };
+          var mv = function (k, dur) { var o = off(k); o.duration = dur; o.ease = "power2.in"; return o; };
+          // 1 · slam: both slabs accelerate in and are fastest on the frame they close the picture
+          tl.fromTo([backp, main], off(-1), mv(0, CFG.slam), cut - CFG.slam);
+          // 2 · hold, then keep going the same way; the second colour trails one frame behind
+          tl.to(main, mv(1, CFG.leave), cut + hold);
+          tl.to(backp, mv(1, CFG.leave), cut + hold + CFG.lag);
+          main.style.opacity = backp.style.opacity = "1";
+          window.__timelines["color-slam"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

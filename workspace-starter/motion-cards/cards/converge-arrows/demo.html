@@ -1,0 +1,166 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"items","type":"string","label":"来源（用 | 分隔，2–5 个）","default":"用户反馈|销售数据|竞品动态"},
+    {"id":"result","type":"string","label":"中心的结论","default":"下一步做什么"},
+    {"id":"cues","type":"string","label":"每个来源出现的秒数，最后可多写一个给结论（逗号分隔）","default":"0.4,1.4,2.4"},
+        {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>converge-arrows · 多源汇聚</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="converge-arrows-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .ca { position: absolute; inset: 0; }
+        .ca-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .ca-svg { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+        .ca-line { fill: none; stroke: var(--k-accent); stroke-width: 10; }
+        .ca-head { fill: var(--k-accent); }
+        .ca-slot { position: absolute; box-sizing: border-box; border: 6px dashed var(--k-muted); border-radius: 36px; opacity: 0; }
+        .ca-src { position: absolute; display: flex; align-items: center; justify-content: center; height: 150px; border-radius: 28px; background: var(--k-panel); color: var(--k-muted); font-size: 72px; font-weight: 800; white-space: nowrap; }
+        .ca-rim { position: absolute; inset: 0; box-sizing: border-box; border: 6px solid var(--k-accent); border-radius: 28px; opacity: 0; }
+        .ca-t { position: relative; display: block; }
+        .ca-core { position: absolute; display: flex; align-items: center; justify-content: center; border-radius: 36px; background: var(--k-accent); color: var(--k-on-accent); font-size: 116px; font-weight: 900; white-space: nowrap; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4); }
+        .ca-rt { display: block; }
+    
+      </style>
+
+      <div id="root" data-composition-id="converge-arrows" data-width="1920" data-height="1080">
+        <div class="ca">
+          <div class="ca-bg"></div>
+          <svg class="ca-svg" viewBox="0 0 1920 1080"></svg>
+          <div class="ca-slot" style="left:552px;top:415px;width:816px;height:250px"></div>
+          <div class="ca-src" style="left:106px;top:125px;width:388px"><span class="ca-rim"></span><span class="ca-t">用户反馈</span></div>
+          <div class="ca-src" style="left:1426px;top:125px;width:388px"><span class="ca-rim"></span><span class="ca-t">销售数据</span></div>
+          <div class="ca-src" style="left:766px;top:890px;width:388px"><span class="ca-rim"></span><span class="ca-t">竞品动态</span></div>
+          <div class="ca-core" style="left:552px;top:415px;width:816px;height:250px"><span class="ca-rt">下一步做什么</span></div>
+    
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { first: 0.4, gap: 1.0, minGap: 0.7, floor: 0.3, chip: 0.32, lag: 0.18, draw: 0.4, dimTo: 0.35, peak: 1.12,
+            spots: { 1: [[960, 190]], 2: [[400, 190], [1520, 190]], 3: [[300, 200], [1620, 200], [960, 965]], 4: [[300, 200], [1620, 200], [300, 880], [1620, 880]], 5: [[250, 250], [1670, 250], [250, 930], [1670, 930], [960, 110]] },
+            core: { 1: [960, 620], 2: [960, 620], 3: [960, 540], 4: [960, 540], 5: [960, 590] } };
+          var v = { items: "用户反馈|销售数据|竞品动态", result: "下一步做什么", cues: "0.4,1.4,2.4", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".ca");
+          var q = function (s) { return root.querySelector(s); };
+          var cs = getComputedStyle(root);
+          var tok = function (name, d) { return (cs.getPropertyValue("--k-" + name) || "").trim() || d; };
+          var INK = tok("ink", "#f3f5f8"), MUTED = tok("muted", "#8b93a3"), ACCENT = tok("accent", "#ffcf33"), ONACC = tok("on-accent", "#14161a");
+          if (String(v.backdrop) === "off") q(".ca-bg").style.display = "none";
+          var split = function (s, max) { return String(s).split("|").map(function (x) { return x.trim(); }).filter(Boolean).slice(0, max); };
+          // rough text width in em: CJK counts 1, latin and digits 0.6
+          var em = function (s) { var w = 0; for (var c = 0; c < s.length; c++) w += s.charCodeAt(c) > 255 ? 1 : 0.6; return Math.max(w, 1); };
+          // cue times: take what was given, continue at the same spacing, keep a floor and a minimum distance
+          var cueList = function (raw, count) {
+            var c = String(raw).split(/[,，\s]+/).map(parseFloat).filter(function (x) { return isFinite(x); }).slice(0, count);
+            var gap = c.length > 1 ? (c[c.length - 1] - c[0]) / (c.length - 1) : CFG.gap;
+            if (!c.length) c.push(CFG.first);
+            while (c.length < count) c.push(c[c.length - 1] + gap);
+            c[0] = Math.max(c[0], CFG.floor);
+            for (var i = 1; i < count; i++) c[i] = Math.max(c[i], c[i - 1] + CFG.minGap);
+            return c;
+          };
+          var items = split(v.items, 5), n = items.length, cues = cueList(v.cues, n + 1);
+          var result = String(v.result);
+          // the conclusion never fires before the last arrow has landed
+          var land = cues[n - 1] + CFG.lag + CFG.draw;
+          var hit = String(v.cues).split(/[,，\s]+/).filter(Boolean).length > n ? Math.max(cues[n], land) : land;
+
+          // every box gets an explicit size, so arrow geometry needs no measuring
+          var C = CFG.core[n], fsR = Math.floor(Math.min(116, 700 / em(result)));
+          var CW = Math.min(820, Math.max(480, em(result) * fsR + 120)), CH = 250;
+          var place = function (el, cx, cy, w, h) { el.style.left = cx - w / 2 + "px"; el.style.top = cy - h / 2 + "px"; el.style.width = w + "px"; el.style.height = h + "px"; };
+          var core = q(".ca-core"), slot = q(".ca-slot"), svg = q(".ca-svg");
+          place(core, C[0], C[1], CW, CH);
+          place(slot, C[0], C[1], CW, CH);
+          core.style.fontSize = fsR + "px";
+          q(".ca-rt").textContent = result;
+          Array.prototype.forEach.call(root.querySelectorAll(".ca-src"), function (el) { el.parentNode.removeChild(el); });
+          var edge = function (dx, dy, hw, hh) { return Math.min(dx ? hw / Math.abs(dx) : 1e9, dy ? hh / Math.abs(dy) : 1e9); };
+          var marks = "";
+          var srcs = items.map(function (t, i) {
+            var S = CFG.spots[n][i], fs = Math.floor(Math.min(72, 480 / em(t))), w = em(t) * fs + 100, h = 150;
+            var el = document.createElement("div");
+            el.className = "ca-src";
+            el.innerHTML = '<span class="ca-rim"></span><span class="ca-t"></span>';
+            el.querySelector(".ca-t").textContent = t;
+            el.style.fontSize = fs + "px";
+            place(el, S[0], S[1], w, h);
+            root.insertBefore(el, core);
+            // arrow: leaves the chip 26px outside its edge, stops 34px short of the centre box
+            var dx = C[0] - S[0], dy = C[1] - S[1], len = Math.sqrt(dx * dx + dy * dy), ux = dx / len, uy = dy / len;
+            var a = edge(ux, uy, w / 2 + 26, h / 2 + 26), b = edge(ux, uy, CW / 2 + 34, CH / 2 + 34);
+            var x1 = S[0] + ux * a, y1 = S[1] + uy * a, tx = C[0] - ux * b, ty = C[1] - uy * b;
+            var x2 = tx - ux * 28, y2 = ty - uy * 28, bx = tx - ux * 50, by = ty - uy * 50;
+            var r = function (x) { return Math.round(x * 10) / 10; };
+            marks += '<g class="ca-arrow"><line class="ca-line" x1="' + r(x1) + '" y1="' + r(y1) + '" x2="' + r(x2) + '" y2="' + r(y2) + '"/><polygon class="ca-head" points="' + r(tx) + "," + r(ty) + " " + r(bx - uy * 26) + "," + r(by + ux * 26) + " " + r(bx + uy * 26) + "," + r(by - ux * 26) + '"/></g>';
+            return { el: el, rim: el.querySelector(".ca-rim"), ox: -ux * 44, oy: -uy * 44, span: Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)) };
+          });
+          svg.innerHTML = marks;
+          var arrows = svg.querySelectorAll(".ca-arrow");
+
+          var tl = gsap.timeline({ paused: true });
+          // an empty dashed slot in the middle says "something will land here"
+          tl.fromTo(slot, { opacity: 0 }, { opacity: 0.45, duration: 0.3, ease: "power1.out" }, 0.03);
+          tl.fromTo(core, { opacity: 0 }, { opacity: 1, duration: 0.08, ease: "none" }, hit);
+          tl.fromTo(q(".ca-rt"), { opacity: 0 }, { opacity: 1, duration: 0.001, ease: "none" }, hit + 0.04);
+          tl.fromTo(core, { scale: 0.5 }, { scale: CFG.peak, duration: 0.16, ease: "power3.out" }, hit);
+          tl.to(core, { scale: 1, duration: 0.3, ease: "back.out(2.2)" }, hit + 0.16);
+          tl.to(slot, { opacity: 0, duration: 0.1, ease: "none" }, hit);
+          srcs.forEach(function (s, i) {
+            var t = cues[i], g = arrows[i], line = g.querySelector(".ca-line"), head = g.querySelector(".ca-head");
+            line.style.strokeDasharray = s.span + " " + (s.span + 20);
+            // the source steps in from the outside, lit…
+            tl.fromTo(s.el, { opacity: 0, x: s.ox, y: s.oy, scale: 0.8 }, { opacity: 1, x: 0, y: 0, scale: 1, duration: CFG.chip, ease: "back.out(1.8)" }, t);
+            tl.fromTo(s.rim, { opacity: 0 }, { opacity: 1, duration: 0.15, ease: "none" }, t);
+            tl.fromTo(s.el, { color: INK }, { color: INK, duration: 0.01 }, t);
+            // …then its arrow is drawn toward the centre
+            tl.fromTo(g, { opacity: 0 }, { opacity: 1, duration: 0.001, ease: "none" }, t + CFG.lag);
+            tl.fromTo(line, { strokeDashoffset: s.span }, { strokeDashoffset: 0, duration: CFG.draw, ease: "power2.inOut" }, t + CFG.lag);
+            tl.fromTo(head, { opacity: 0 }, { opacity: 1, duration: 0.08, ease: "none" }, t + CFG.lag + CFG.draw - 0.1);
+            // it steps back when the next source (or the conclusion) takes over
+            var tn = i < n - 1 ? cues[i + 1] : hit;
+            tl.to(s.el, { color: MUTED, duration: 0.3, ease: "power2.out" }, tn);
+            tl.to(s.rim, { opacity: 0, duration: 0.3, ease: "power2.out" }, tn);
+            if (i < n - 1) tl.to(g, { opacity: CFG.dimTo, duration: 0.3, ease: "power2.out" }, tn);
+            // on the hit every arrow is bright again: they all feed the conclusion
+            if (i < n - 1) tl.to(g, { opacity: 1, duration: 0.15, ease: "power2.out" }, hit - 0.05);
+          });
+    
+          window.__timelines["converge-arrows"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,174 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"sideA","type":"string","label":"左边标题","default":"凭感觉写"},
+    {"id":"sideB","type":"string","label":"右边标题","default":"按结构写"},
+    {"id":"itemsA","type":"string","label":"左边要点（用 | 分隔，1–4 条）","default":"想到哪写到哪|结果忽好忽坏|出错难排查"},
+    {"id":"itemsB","type":"string","label":"右边要点（用 | 分隔，1–4 条）","default":"先定目标格式|结果稳定可复现|哪步错改哪步"},
+    {"id":"mark","type":"string","label":"中间的对比符号","default":"VS"},
+    {"id":"cues","type":"string","label":"每一行要点出现的秒数（逗号分隔；写满左右总条数时按先左后右逐条对）","default":"1.4,2.3,3.2"},
+        {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>versus-split · 对决分屏</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="versus-split-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .vs { position: absolute; inset: 0; }
+        .vs-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .vs-shake { position: absolute; inset: 0; }
+        .vs-tint { position: absolute; inset: 0; background: var(--k-panel); clip-path: polygon(0 0, 1060px 0, 860px 100%, 0 100%); }
+        .vs-svg { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+        .vs-cut { stroke: var(--k-accent); stroke-width: 10; stroke-dasharray: 1100 1200; }
+        .vs-head { position: absolute; top: 150px; display: block; height: 200px; line-height: 200px; font-size: 150px; font-weight: 900; white-space: nowrap; }
+        .vs-ha { right: 1051px; text-align: right; }
+        .vs-hb { left: 1159px; }
+        .vs-badge { position: absolute; left: 909px; top: 145px; display: flex; align-items: center; justify-content: center; width: 210px; height: 210px; border-radius: 50%; background: var(--k-accent); color: var(--k-on-accent); font-size: 90px; font-weight: 900; box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45); }
+        .vs-bt { display: block; }
+        .vs-row { position: absolute; display: flex; align-items: center; gap: 30px; height: 104px; font-size: 76px; font-weight: 700; white-space: nowrap; color: var(--k-ink); }
+        .vs-b { flex: none; display: block; width: 22px; height: 22px; border-radius: 5px; background: var(--k-accent); }
+        .vs-t { display: block; }
+        .vs-old { color: var(--k-muted); }
+    
+      </style>
+
+      <div id="root" data-composition-id="versus-split" data-width="1920" data-height="1080">
+        <div class="vs">
+          <div class="vs-bg"></div>
+          <div class="vs-shake">
+            <div class="vs-tint"></div>
+            <svg class="vs-svg" viewBox="0 0 1920 1080"><line class="vs-cut" x1="1060" y1="0" x2="860" y2="1080"></line></svg>
+            <div class="vs-head vs-ha" data-layout-allow-overflow>凭感觉写</div>
+            <div class="vs-head vs-hb" data-layout-allow-overflow>按结构写</div>
+            <div class="vs-rows">
+              <div class="vs-row vs-a vs-old" style="right:1041px;top:438px"><span class="vs-t">想到哪写到哪</span><span class="vs-b"></span></div>
+              <div class="vs-row vs-a vs-old" style="right:1064px;top:566px"><span class="vs-t">结果忽好忽坏</span><span class="vs-b"></span></div>
+              <div class="vs-row vs-a" style="right:1088px;top:694px"><span class="vs-t">出错难排查</span><span class="vs-b"></span></div>
+              <div class="vs-row vs-old" style="left:1059px;top:438px"><span class="vs-b"></span><span class="vs-t">先定目标格式</span></div>
+              <div class="vs-row vs-old" style="left:1036px;top:566px"><span class="vs-b"></span><span class="vs-t">结果稳定可复现</span></div>
+              <div class="vs-row" style="left:1012px;top:694px"><span class="vs-b"></span><span class="vs-t">哪步错改哪步</span></div>
+            </div>
+            <div class="vs-badge"><span class="vs-bt">VS</span></div>
+          </div>
+    
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { first: 1.4, gap: 0.9, minGap: 0.4, floor: 1.15, cut: 0.32, fly: 0.3, hit: 0.8, far: 760, recoil: 22, peak: 1.35, shakePx: 10, lag: 0.3, rowY: 490, rowStep: 128, rowIn: 0.35 };
+          var v = { sideA: "凭感觉写", sideB: "按结构写", itemsA: "想到哪写到哪|结果忽好忽坏|出错难排查", itemsB: "先定目标格式|结果稳定可复现|哪步错改哪步", mark: "VS", cues: "1.4,2.3,3.2", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".vs");
+          var q = function (s) { return root.querySelector(s); };
+          var cs = getComputedStyle(root);
+          var tok = function (name, d) { return (cs.getPropertyValue("--k-" + name) || "").trim() || d; };
+          var INK = tok("ink", "#f3f5f8"), MUTED = tok("muted", "#8b93a3"), ACCENT = tok("accent", "#ffcf33"), ONACC = tok("on-accent", "#14161a");
+          if (String(v.backdrop) === "off") q(".vs-bg").style.display = "none";
+          var split = function (s, max) { return String(s).split("|").map(function (x) { return x.trim(); }).filter(Boolean).slice(0, max); };
+          // rough text width in em: CJK counts 1, latin and digits 0.6
+          var em = function (s) { var w = 0; for (var c = 0; c < s.length; c++) w += s.charCodeAt(c) > 255 ? 1 : 0.6; return Math.max(w, 1); };
+          // cue times: take what was given, continue at the same spacing, keep a floor and a minimum distance
+          var cueList = function (raw, count) {
+            var c = String(raw).split(/[,，\s]+/).map(parseFloat).filter(function (x) { return isFinite(x); }).slice(0, count);
+            var gap = c.length > 1 ? (c[c.length - 1] - c[0]) / (c.length - 1) : CFG.gap;
+            if (!c.length) c.push(CFG.first);
+            while (c.length < count) c.push(c[c.length - 1] + gap);
+            c[0] = Math.max(c[0], CFG.floor);
+            for (var i = 1; i < count; i++) c[i] = Math.max(c[i], c[i - 1] + CFG.minGap);
+            return c;
+          };
+          var A = split(v.itemsA, 4), B = split(v.itemsB, 4), depth = Math.max(A.length, B.length);
+          var given = String(v.cues).split(/[,，\s]+/).filter(Boolean).length;
+          // either one cue per ROW (right side follows the left by CFG.lag), or one cue per ITEM: all left ones, then all right ones
+          var perItem = given >= A.length + B.length, cues = cueList(v.cues, perItem ? A.length + B.length : depth);
+          var when = function (side, k) { return perItem ? cues[side ? A.length + k : k] : cues[k] + (side ? CFG.lag : 0); };
+
+          var lineX = function (y) { return 1060 - (200 * y) / 1080; };
+          var ha = q(".vs-ha"), hb = q(".vs-hb"), badge = q(".vs-badge"), bt = q(".vs-bt"), shake = q(".vs-shake"), cut = q(".vs-cut");
+          ha.textContent = String(v.sideA);
+          hb.textContent = String(v.sideB);
+          ha.style.fontSize = Math.floor(Math.min(150, 720 / em(String(v.sideA)))) + "px";
+          hb.style.fontSize = Math.floor(Math.min(150, 720 / em(String(v.sideB)))) + "px";
+          bt.textContent = String(v.mark);
+          badge.style.fontSize = Math.floor(Math.min(90, 154 / em(String(v.mark)))) + "px";
+          var box = q(".vs-rows");
+          box.innerHTML = "";
+          var mk = function (t, k, side) {
+            var y = CFG.rowY + k * CFG.rowStep, el = document.createElement("div");
+            el.className = "vs-row";
+            el.innerHTML = side ? '<span class="vs-b"></span><span class="vs-t"></span>' : '<span class="vs-t"></span><span class="vs-b"></span>';
+            el.querySelector(".vs-t").textContent = t;
+            el.style.fontSize = Math.floor(Math.min(76, 720 / em(t))) + "px";
+            el.style.top = y - 52 + "px";
+            // both columns hug the slanted cut, 90px away from it
+            if (side) el.style.left = lineX(y) + 90 + "px"; else el.style.right = 1920 - (lineX(y) - 90) + "px";
+            box.appendChild(el);
+            return el;
+          };
+          var rowsA = A.map(function (t, k) { return mk(t, k, 0); }), rowsB = B.map(function (t, k) { return mk(t, k, 1); });
+
+          var tl = gsap.timeline({ paused: true });
+          var H = CFG.hit;
+          // 1) the cut comes down, the left half takes its tint
+          tl.fromTo(cut, { strokeDashoffset: 1100 }, { strokeDashoffset: 0, duration: CFG.cut, ease: "power2.in" }, 0.1);
+          tl.fromTo(cut, { opacity: 0 }, { opacity: 1, duration: 0.001, ease: "none" }, 0.1);
+          tl.fromTo(q(".vs-tint"), { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power1.out" }, 0.1 + CFG.cut - 0.05);
+          // 2) both titles accelerate in from the sides and stop dead at the cut
+          tl.fromTo(ha, { x: -CFG.far }, { x: 0, duration: CFG.fly, ease: "power3.in" }, H - CFG.fly);
+          tl.fromTo(hb, { x: CFG.far }, { x: 0, duration: CFG.fly, ease: "power3.in" }, H - CFG.fly);
+          tl.fromTo([ha, hb], { opacity: 0 }, { opacity: 1, duration: 0.1, ease: "none" }, H - CFG.fly);
+          tl.to(ha, { x: -CFG.recoil, duration: 0.08, ease: "power2.out" }, H);
+          tl.to(hb, { x: CFG.recoil, duration: 0.08, ease: "power2.out" }, H);
+          tl.to([ha, hb], { x: 0, duration: 0.3, ease: "back.out(3)" }, H + 0.08);
+          // 3) the mark pops out of the collision, the frame takes the hit
+          tl.fromTo(badge, { opacity: 0 }, { opacity: 1, duration: 0.001, ease: "none" }, H);
+          tl.fromTo(badge, { scale: 0.2, rotation: -18 }, { scale: CFG.peak, rotation: 4, duration: 0.14, ease: "power3.out" }, H);
+          tl.to(badge, { scale: 1, rotation: 0, duration: 0.28, ease: "back.out(2.5)" }, H + 0.14);
+          var s = CFG.shakePx;
+          tl.fromTo(shake, { x: 0 }, { x: s, duration: 0.035, ease: "none" }, H);
+          tl.to(shake, { x: -s * 0.8, duration: 0.05, ease: "none" }, H + 0.035);
+          tl.to(shake, { x: s * 0.5, duration: 0.05, ease: "none" }, H + 0.085);
+          tl.to(shake, { x: -s * 0.25, duration: 0.05, ease: "none" }, H + 0.135);
+          tl.to(shake, { x: 0, duration: 0.05, ease: "none" }, H + 0.185);
+          // 4) points are listed outward from the cut; on each side only the newest one is white
+          [rowsA, rowsB].forEach(function (rows, side) {
+            rows.forEach(function (el, k) {
+              tl.fromTo(el, { opacity: 0, x: side ? -50 : 50 }, { opacity: 1, x: 0, duration: CFG.rowIn, ease: "power3.out" }, when(side, k));
+              if (k < rows.length - 1) tl.to(el, { color: MUTED, duration: 0.3, ease: "power2.out" }, when(side, k + 1));
+            });
+          });
+    
+          window.__timelines["versus-split"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

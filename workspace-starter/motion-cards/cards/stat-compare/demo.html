@@ -1,0 +1,127 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"pair","type":"string","label":"两个数值，用 | 分隔（先左后右）","default":"52|4"},
+    {"id":"unit","type":"string","label":"单位","default":"分钟"},
+    {"id":"names","type":"string","label":"两边的名字，用 | 分隔","default":"从零手写一份周报|给够背景让 AI 起草"},
+    {"id":"verdict","type":"string","label":"压在中间的结论（填 auto 自动算倍数）","default":"快 13 倍"},
+    {"id":"note","type":"string","label":"来源小注（可空）","default":"示例数据"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>stat-compare · 两数对比</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="stat-compare-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .sc { position: absolute; inset: 0; }
+        .sc-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .sc-side { position: absolute; top: 150px; width: 660px; display: flex; flex-direction: column; align-items: center; }
+        .sc-a { left: 110px; }
+        .sc-b { left: 1150px; }
+        .sc-fig { display: flex; align-items: baseline; justify-content: center; }
+        .sc-num { display: block; font-size: 230px; font-weight: 800; line-height: 1.32; letter-spacing: -0.02em; white-space: nowrap; }
+        .sc-unit { display: block; margin-left: 14px; font-size: 64px; font-weight: 800; white-space: nowrap; }
+        .sc-name { display: block; font-size: 48px; font-weight: 700; white-space: nowrap; color: var(--k-muted); }
+        .sc-b .sc-num, .sc-b .sc-unit { color: var(--k-accent); }
+        .sc-b .sc-name { color: var(--k-ink); }
+        .sc-bars { position: absolute; left: 160px; top: 650px; width: 1600px; }
+        .sc-bar { display: block; height: 76px; border-radius: 10px; }
+        .sc-bar-a { width: 1600px; background: color-mix(in srgb, var(--k-muted) 62%, var(--k-bg)); }
+        .sc-bar-b { width: 123px; margin-top: 30px; background: var(--k-accent); }
+        .sc-stamp { position: absolute; left: 710px; top: 250px; width: 500px; height: 170px; display: flex; align-items: center; justify-content: center; }
+        .sc-chip { display: block; padding: 14px 44px 18px; border-radius: 18px; background: var(--k-accent); color: var(--k-on-accent); font-size: 96px; font-weight: 800; line-height: 1.2; white-space: nowrap; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45); }
+        .sc-note { position: absolute; left: 160px; top: 880px; font-size: 40px; font-weight: 500; color: var(--k-muted); white-space: nowrap; }
+      </style>
+
+      <div id="root" data-composition-id="stat-compare" data-width="1920" data-height="1080">
+        <div class="sc">
+          <div class="sc-bg"></div>
+          <div class="sc-side sc-a">
+            <div class="sc-fig"><span class="sc-num">52</span><span class="sc-unit">分钟</span></div>
+            <span class="sc-name">从零手写一份周报</span>
+          </div>
+          <div class="sc-side sc-b">
+            <div class="sc-fig"><span class="sc-num">4</span><span class="sc-unit">分钟</span></div>
+            <span class="sc-name">给够背景让 AI 起草</span>
+          </div>
+          <div class="sc-bars">
+            <span class="sc-bar sc-bar-a"></span>
+            <span class="sc-bar sc-bar-b"></span>
+          </div>
+          <div class="sc-stamp"><span class="sc-chip">快 13 倍</span></div>
+          <span class="sc-note">示例数据</span>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { atA: 0.25, atB: 1.35, sideIn: 0.35, barLag: 0.15, full: 1600, pxPerSec: 2000, minBar: 0.12, stampLag: 0.55, stampFrom: 1.8, stampIn: 0.15, tilt: -4 };
+          var v = { pair: "52|4", unit: "分钟", names: "从零手写一份周报|给够背景让 AI 起草", verdict: "快 13 倍", note: "示例数据", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".sc");
+          var q = function (s) { return root.querySelector(s); };
+          var raw = String(v.pair).split("|"), names = String(v.names).split("|");
+          var a = parseFloat(raw[0]) || 0, b = parseFloat(raw[1]) || 0;
+          var hi = Math.max(a, b) || 1, lo = Math.min(a, b);
+          var verdict = String(v.verdict);
+          if (verdict === "auto") verdict = lo > 0 && hi / lo >= 2 ? Math.round(hi / lo) + " 倍" : "差 " + +(hi - lo).toFixed(1) + " " + String(v.unit);
+          q(".sc-a .sc-num").textContent = raw[0] || "";
+          q(".sc-b .sc-num").textContent = raw[1] || "";
+          q(".sc-a .sc-unit").textContent = String(v.unit);
+          q(".sc-b .sc-unit").textContent = String(v.unit);
+          q(".sc-a .sc-name").textContent = names[0] || "";
+          q(".sc-b .sc-name").textContent = names[1] || "";
+          q(".sc-chip").textContent = verdict;
+          q(".sc-note").textContent = String(v.note);
+          if (!String(v.note)) q(".sc-note").style.display = "none";
+          if (!verdict) q(".sc-stamp").style.display = "none";
+          if (String(v.backdrop) === "off") q(".sc-bg").style.display = "none";
+
+          // both bars share one origin, one scale and one speed: the long one simply takes longer
+          var wA = Math.max(10, (a / hi) * CFG.full), wB = Math.max(10, (b / hi) * CFG.full);
+          var dA = Math.max(CFG.minBar, wA / CFG.pxPerSec), dB = Math.max(CFG.minBar, wB / CFG.pxPerSec);
+          var endB = CFG.atB + CFG.barLag + dB, stampAt = endB + CFG.stampLag, chip = q(".sc-chip");
+
+          var tl = gsap.timeline({ paused: true });
+          tl.fromTo(q(".sc-a"), { opacity: 0, y: 36 }, { opacity: 1, y: 0, duration: CFG.sideIn, ease: "power3.out" }, CFG.atA);
+          tl.fromTo(q(".sc-bar-a"), { width: 0 }, { width: wA, duration: dA, ease: "power1.out" }, CFG.atA + CFG.barLag);
+          tl.fromTo(q(".sc-b"), { opacity: 0, y: 36 }, { opacity: 1, y: 0, duration: CFG.sideIn, ease: "power3.out" }, CFG.atB);
+          tl.fromTo(q(".sc-bar-b"), { width: 0 }, { width: wB, duration: dB, ease: "power1.out" }, CFG.atB + CFG.barLag);
+          // the verdict is stamped last, after the eye has measured the two bars
+          tl.fromTo(chip, { opacity: 0, scale: CFG.stampFrom, rotation: CFG.tilt - 8 }, { opacity: 1, scale: 1, rotation: CFG.tilt, duration: CFG.stampIn, ease: "power3.in" }, stampAt - CFG.stampIn);
+          tl.to(chip, { scale: 0.94, duration: 0.05, ease: "power1.out" }, stampAt);
+          tl.to(chip, { scale: 1, duration: 0.26, ease: "back.out(3)" }, stampAt + 0.05);
+          tl.fromTo(q(".sc-note"), { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "none" }, stampAt + 0.2);
+          window.__timelines["stat-compare"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,116 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"q1","type":"string","label":"第一问","default":"怎么让回答更稳定？"},
+    {"id":"a1","type":"string","label":"第一答","default":"先给一个例子，再说清输出格式。"},
+    {"id":"q2","type":"string","label":"第二问","default":"格式要写多细？"},
+    {"id":"a2","type":"string","label":"第二答","default":"列出字段名，每个字段配一行示例。"},
+    {"id":"tag","type":"string","label":"角标（编出来的对话要标明）","default":"示例对话"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>chat-bubbles · 对话气泡流</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="chat-bubbles-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .cb { position: absolute; inset: 0; }
+        .cb-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .cb-tag { position: absolute; left: 120px; top: 56px; font-size: 44px; line-height: 1.2; color: var(--k-muted); white-space: nowrap; }
+        .cb-col { position: absolute; left: 120px; right: 120px; bottom: 110px; display: flex; flex-direction: column; gap: 34px; }
+        .cb-row { position: relative; display: flex; }
+        .cb-q { justify-content: flex-end; }
+        .cb-a { justify-content: flex-start; }
+        .cb-bub { display: block; max-width: 1160px; padding: 36px 56px; border-radius: 54px; font-size: 64px; font-weight: 600; line-height: 90px; }
+        .cb-q .cb-bub { background: var(--k-accent); color: var(--k-on-accent); border-bottom-right-radius: 12px; }
+        .cb-a .cb-bub { background: var(--k-panel); color: var(--k-ink); border-bottom-left-radius: 12px; }
+        .cb-dots { position: absolute; left: 0; top: 0; width: 240px; height: 162px; border-radius: 54px; border-bottom-left-radius: 12px; background: var(--k-panel); display: flex; align-items: center; justify-content: center; gap: 20px; opacity: 0; }
+        .cb-dot { display: block; width: 30px; height: 30px; border-radius: 50%; background: var(--k-muted); }
+      </style>
+
+      <div id="root" data-composition-id="chat-bubbles" data-width="1920" data-height="1080">
+        <div class="cb">
+          <div class="cb-bg"></div>
+          <div class="cb-tag">示例对话</div>
+          <div class="cb-col" data-layout-allow-overflow>
+            <div class="cb-row cb-q"><div class="cb-bub">怎么让回答更稳定？</div></div>
+            <div class="cb-row cb-a"><div class="cb-dots"><span class="cb-dot"></span><span class="cb-dot"></span><span class="cb-dot"></span></div><div class="cb-bub">先给一个例子，再说清输出格式。</div></div>
+            <div class="cb-row cb-q"><div class="cb-bub">格式要写多细？</div></div>
+            <div class="cb-row cb-a"><div class="cb-dots"><span class="cb-dot"></span><span class="cb-dot"></span><span class="cb-dot"></span></div><div class="cb-bub">列出字段名，每个字段配一行示例。</div></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // beats: when each message arrives · think: how long the three dots hold before the answer replaces them
+          var CFG = { beats: [0.3, 0.95, 2.9, 3.55], think: 0.95, push: 0.42, rise: 80, gap: 34, dotsH: 162, dotHop: 16, old: 0.5 };
+          var v = { q1: "", a1: "", q2: "", a2: "", tag: "示例对话", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".cb");
+          var q = function (s) { return root.querySelector(s); };
+          if (String(v.backdrop) === "off") q(".cb-bg").style.display = "none";
+          q(".cb-tag").textContent = String(v.tag || "");
+          var rows = Array.prototype.slice.call(root.querySelectorAll(".cb-row"));
+          ["q1", "a1", "q2", "a2"].forEach(function (key, i) { if (v[key]) rows[i].querySelector(".cb-bub").textContent = String(v[key]); });
+
+          var col = q(".cb-col");
+          var hs = rows.map(function (r) { return r.offsetHeight; });
+          // the column is laid out in its final state; "below(i)" is how far it must sit lower while rows after i have not arrived yet
+          var below = function (i) { var s = 0; for (var j = i + 1; j < rows.length; j++) s += hs[j] + CFG.gap; return s; };
+
+          var tl = gsap.timeline({ paused: true });
+          var ease = "power3.out";
+          rows.forEach(function (row, i) {
+            var t = CFG.beats[i], bub = row.querySelector(".cb-bub"), isA = i % 2 === 1;
+            tl.set(bub, { transformOrigin: isA ? "0% 100%" : "100% 100%" }, 0);
+            if (!isA) {
+              // a question: older bubbles and the new one travel up together with the same ease, so the new one reads as pushing them
+              if (i === 0) tl.fromTo(col, { y: below(0) }, { y: below(0), duration: 0.01 }, 0);
+              else tl.to(col, { y: below(i), duration: CFG.push, ease: ease }, t);
+              tl.fromTo(bub, { opacity: 0, y: CFG.rise, scale: 0.86 }, { opacity: 1, y: 0, scale: 1, duration: CFG.push, ease: ease }, t);
+              if (i >= 2) tl.to(rows.slice(0, i), { opacity: CFG.old, duration: CFG.push, ease: "power1.out" }, t);
+              return;
+            }
+            // an answer: first a one-line "typing" bubble takes the slot, then the real text grows out of it
+            var dots = row.querySelector(".cb-dots"), extra = hs[i] - CFG.dotsH, tText = t + CFG.think;
+            tl.set(dots, { transformOrigin: "0% 100%" }, 0);
+            tl.to(col, { y: below(i) + extra, duration: CFG.push, ease: ease }, t);
+            tl.fromTo(dots, { opacity: 0, y: CFG.rise, scale: 0.86 }, { opacity: 1, y: 0, scale: 1, duration: CFG.push, ease: ease }, t);
+            tl.fromTo(dots.querySelectorAll(".cb-dot"), { y: 0 }, { y: -CFG.dotHop, duration: 0.16, ease: "sine.inOut", yoyo: true, repeat: 3, stagger: 0.11 }, t + 0.26);
+            tl.to(dots, { opacity: 0, duration: 0.1, ease: "none" }, tText);
+            if (extra > 0) tl.to(col, { y: below(i), duration: 0.3, ease: ease }, tText);
+            tl.fromTo(bub, { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.34, ease: "back.out(1.5)" }, tText);
+          });
+          window.__timelines["chat-bubbles"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

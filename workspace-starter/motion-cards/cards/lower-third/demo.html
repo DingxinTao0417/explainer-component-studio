@@ -1,0 +1,105 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"name","type":"string","label":"名字或称呼","default":"本期嘉宾"},
+    {"id":"desc","type":"string","label":"一行说明","default":"交互设计师 · 做了八年工具类产品"},
+    {"id":"leave","type":"number","label":"开始收回的时间（秒）","default":3.7,"min":1.5,"max":30,"step":0.1},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"示例图垫底（演示用）"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>lower-third · 下三分之一名条</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="lower-third-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .lth { position: absolute; inset: 0; }
+        .lth-bg { position: absolute; inset: 0; overflow: hidden; background: var(--k-bg); }
+        .lth-shot { position: absolute; left: 0; top: 0; display: block; width: 1920px; height: 1080px; object-fit: cover; filter: brightness(0.62) saturate(0.85); }
+        .lth-wrap { position: absolute; left: 120px; bottom: 118px; display: flex; align-items: stretch; }
+        .lth-bar { flex: none; display: block; width: 16px; background: var(--k-ink); }
+        .lth-body { position: relative; display: block; }
+        .lth-block { position: absolute; inset: 0; display: block; background: var(--k-accent); }
+        .lth-text { position: relative; display: block; padding: 22px 72px 26px 44px; color: var(--k-on-accent); }
+        .lth-mask { display: block; clip-path: inset(0); }
+        .lth-name { display: block; font-size: 80px; font-weight: 900; line-height: 1.3; letter-spacing: 0.03em; white-space: nowrap; }
+        .lth-desc { display: block; font-size: 44px; font-weight: 700; line-height: 1.45; white-space: nowrap; }
+      </style>
+
+      <div id="root" data-composition-id="lower-third" data-width="1920" data-height="1080">
+        <div class="lth">
+          <div class="lth-bg"><img class="lth-shot" src="motion-cards/lib/samples/p4.jpg" alt="" /></div>
+          <div class="lth-wrap">
+            <span class="lth-bar"></span>
+            <div class="lth-body">
+              <span class="lth-block"></span>
+              <div class="lth-text">
+                <span class="lth-mask"><span class="lth-name">本期嘉宾</span></span>
+                <span class="lth-mask"><span class="lth-desc">交互设计师 · 做了八年工具类产品</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { at: 0.3, barDur: 0.18, blockLag: 0.12, blockDur: 0.42, nameLag: 0.3, lineStep: 0.14, lineDur: 0.4, nameRise: 80, descRise: 22, outStep: 0.07, outLine: 0.24, outBlock: 0.3 };
+          var v = { name: "本期嘉宾", desc: "交互设计师 · 做了八年工具类产品", leave: 3.7, backdrop: "on" };
+          try {
+                      var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+                      for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+                    } catch (e) {}
+          var root = document.querySelector(".lth");
+          var q = function (s) { return root.querySelector(s); };
+          q(".lth-name").textContent = String(v.name);
+          q(".lth-desc").textContent = String(v.desc);
+          if (String(v.backdrop) === "off") q(".lth-bg").style.display = "none";
+          var bar = q(".lth-bar"), block = q(".lth-block"), name = q(".lth-name"), desc = q(".lth-desc");
+          var settled = CFG.at + CFG.nameLag + CFG.lineStep + CFG.lineDur;
+          var leave = Math.max(settled + 0.4, parseFloat(v.leave) || 3.7);
+
+          var tl = gsap.timeline({ paused: true });
+          // stand-in for footage: a slow push so the demo does not look like a still
+          tl.fromTo(q(".lth-shot"), { scale: 1 }, { scale: 1.05, duration: leave + 1, ease: "none" }, 0);
+          tl.set(bar, { transformOrigin: "50% 100%" }, 0);
+          tl.set(block, { transformOrigin: "0% 50%" }, 0);
+          // in: bar stands up, the block shoots out of it, then name and description come up out of their own lines
+          tl.fromTo(bar, { scaleY: 0 }, { scaleY: 1, duration: CFG.barDur, ease: "power3.out" }, CFG.at);
+          tl.fromTo(block, { scaleX: 0 }, { scaleX: 1, duration: CFG.blockDur, ease: "expo.out" }, CFG.at + CFG.blockLag);
+          tl.fromTo(name, { yPercent: CFG.nameRise }, { yPercent: 0, duration: CFG.lineDur, ease: "power3.out" }, CFG.at + CFG.nameLag);
+          tl.fromTo(name, { opacity: 0 }, { opacity: 1, duration: 0.06, ease: "none" }, CFG.at + CFG.nameLag);
+          tl.fromTo(desc, { opacity: 0, y: CFG.descRise }, { opacity: 1, y: 0, duration: CFG.lineDur, ease: "power3.out" }, CFG.at + CFG.nameLag + CFG.lineStep);
+          // out: the same road backwards, and quicker
+          tl.to(desc, { opacity: 0, y: CFG.descRise, duration: CFG.outLine, ease: "power2.in" }, leave);
+          tl.to(name, { yPercent: CFG.nameRise, duration: CFG.outLine, ease: "power2.in" }, leave + CFG.outStep);
+          tl.to(name, { opacity: 0, duration: 0.06, ease: "none" }, leave + CFG.outStep + CFG.outLine - 0.06);
+          tl.to(block, { scaleX: 0, duration: CFG.outBlock, ease: "power3.in" }, leave + CFG.outStep + 0.14);
+          tl.to(bar, { scaleY: 0, duration: 0.14, ease: "power2.in" }, leave + CFG.outStep + 0.14 + CFG.outBlock);
+          window.__timelines["lower-third"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

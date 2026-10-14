@@ -1,0 +1,82 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"from","type":"string","label":"上一镜的画面（从项目根目录写起）","default":"motion-cards/lib/samples/p1.jpg"},
+    {"id":"to","type":"string","label":"下一镜的画面（从项目根目录写起）","default":"motion-cards/lib/samples/p2.jpg"},
+    {"id":"ox","type":"number","label":"从哪一点穿过去：横向 0–1","default":0.5,"min":0,"max":1,"step":0.01},
+    {"id":"oy","type":"number","label":"从哪一点穿过去：纵向 0–1","default":0.5,"min":0,"max":1,"step":0.01},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>push-through · 穿过去</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="push-through-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .pt { position: absolute; inset: 0; overflow: hidden; }
+        .pt-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .pt-from, .pt-to { position: absolute; left: 0; top: 0; display: block; width: 1920px; height: 1080px; object-fit: cover; }
+        .pt-to { box-shadow: 0 0 140px 20px rgba(0, 0, 0, 0.5); }
+      </style>
+
+      <div id="root" data-composition-id="push-through" data-width="1920" data-height="1080">
+        <div class="pt" data-layout-allow-overflow>
+          <div class="pt-bg"></div>
+          <img class="pt-from" src="motion-cards/lib/samples/p1.jpg" data-var-src="from" alt="" />
+          <img class="pt-to" src="motion-cards/lib/samples/p2.jpg" data-var-src="to" alt="" />
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { cut: 1.0, rush: 0.267, peak: 6, haze: 14, mix: 0.067, deep: 0.3, arrive: 0.4 };
+          var v = { "from": "motion-cards/lib/samples/p1.jpg", "to": "motion-cards/lib/samples/p2.jpg", "ox": 0.5, "oy": 0.5, "backdrop": "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".pt");
+          var q = function (s) { return root.querySelector(s); };
+          var num = function (x, d) { x = parseFloat(x); return isFinite(x) ? x : d; };
+          var clamp = function (x, a, b) { return Math.max(a, Math.min(b, x)); };
+          var W = 1920, H = 1080, F = 1 / 30, cut = CFG.cut;
+          if (String(v.backdrop) === "off") q(".pt-bg").style.display = "none";
+          var tl = gsap.timeline({ paused: true });
+          var a = q(".pt-from"), b = q(".pt-to");
+          a.setAttribute("src", String(v.from)); b.setAttribute("src", String(v.to));
+          var org = clamp(num(v.ox, 0.5), 0, 1) * 100 + "% " + clamp(num(v.oy, 0.5), 0, 1) * 100 + "%";
+          tl.set([a, b], { transformOrigin: org }, 0);
+          // 1 · the old shot rushes at the camera, faster and faster, and smears into a wash of its own colours
+          tl.fromTo(a, { scale: 1, filter: "blur(0px)" }, { scale: CFG.peak, filter: "blur(" + CFG.haze + "px)", duration: CFG.rush, ease: "power3.in" }, cut + F - CFG.rush);
+          // 2 · one frame before `cut` the new shot appears small and far away at the same point, inside that wash …
+          tl.fromTo(b, { opacity: 0 }, { opacity: 1, duration: CFG.mix, ease: "none" }, cut - F);
+          // 3 · … and comes at us, braking hard into place; the wash stays around it until it fills the frame
+          tl.fromTo(b, { scale: CFG.deep }, { scale: 1, duration: CFG.arrive, ease: "expo.out" }, cut - F);
+          window.__timelines["push-through"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

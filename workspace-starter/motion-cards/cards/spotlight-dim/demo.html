@@ -1,0 +1,94 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"src","type":"string","label":"截图地址（1920×1080；底设为透明时不显示）","default":"motion-cards/lib/samples/ui.png"},
+    {"id":"x","type":"number","label":"第一处：左","default":380,"min":0,"max":1920,"step":1},
+    {"id":"y","type":"number","label":"第一处：上","default":370,"min":0,"max":1080,"step":1},
+    {"id":"w","type":"number","label":"第一处：宽","default":1460,"min":20,"max":1920,"step":1},
+    {"id":"h","type":"number","label":"第一处：高","default":122,"min":20,"max":1080,"step":1},
+    {"id":"x2","type":"number","label":"第二处：左（宽填 0 就不移动）","default":1600,"min":0,"max":1920,"step":1},
+    {"id":"y2","type":"number","label":"第二处：上","default":540,"min":0,"max":1080,"step":1},
+    {"id":"w2","type":"number","label":"第二处：宽","default":222,"min":0,"max":1920,"step":1},
+    {"id":"h2","type":"number","label":"第二处：高","default":86,"min":0,"max":1080,"step":1},
+    {"id":"move","type":"number","label":"移到第二处的时间（秒）","default":2.1,"min":1,"max":20,"step":0.05},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"示例截图"},{"value":"off","label":"透明（压在录屏上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>spotlight-dim · 聚光压暗</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="spotlight-dim-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .sd { position: absolute; inset: 0; overflow: hidden; }
+        .sd-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .sd-img { position: absolute; left: 0; top: 0; display: block; width: 1920px; height: 1080px; object-fit: cover; }
+        .sd-win { position: absolute; left: 1600px; top: 540px; width: 222px; height: 86px; border-radius: 18px; box-shadow: 0 0 0 2400px rgba(5, 7, 11, 0.74); }
+        .sd-edge { position: absolute; inset: -3px; border-radius: 21px; border: 6px solid var(--k-accent); }
+      </style>
+
+      <div id="root" data-composition-id="spotlight-dim" data-width="1920" data-height="1080">
+        <div class="sd">
+          <div class="sd-bg"></div>
+          <img class="sd-img" src="motion-cards/lib/samples/ui.png" data-var-src="src" alt="" />
+          <div class="sd-win"><div class="sd-edge"></div></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // close: the bright window shrinks from the whole frame down to the first target · hop: travel to the second target
+          var CFG = { at: 0.4, close: 0.7, edgeIn: 0.25, hop: 0.6, radius: 18 };
+          var v = { src: "", x: 380, y: 370, w: 1460, h: 122, x2: 1600, y2: 540, w2: 222, h2: 86, move: 2.1, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+          var num = function (key, d) { var n = parseFloat(v[key]); return isFinite(n) ? n : d; };
+
+          var root = document.querySelector(".sd");
+          var q = function (s) { return root.querySelector(s); };
+          if (String(v.backdrop) === "off") { q(".sd-bg").style.display = "none"; q(".sd-img").style.display = "none"; }
+          else if (v.src) q(".sd-img").setAttribute("src", String(v.src));
+
+          var A = { left: num("x", 380), top: num("y", 370), width: num("w", 1460), height: num("h", 122) };
+          var B = { left: num("x2", 1600), top: num("y2", 540), width: num("w2", 0), height: num("h2", 0) };
+          var win = q(".sd-win"), edge = q(".sd-edge");
+          var move = Math.max(CFG.at + CFG.close + 0.4, num("move", 2.1));
+
+          var tl = gsap.timeline({ paused: true });
+          // starts as a window the size of the frame (nothing is dimmed yet), so the dark closes in from the edges and walks the eye to the target
+          tl.fromTo(win, { left: -30, top: -30, width: 1980, height: 1140, borderRadius: 0 },
+            { left: A.left, top: A.top, width: A.width, height: A.height, borderRadius: CFG.radius, duration: CFG.close, ease: "power3.inOut" }, CFG.at);
+          tl.fromTo(edge, { opacity: 0 }, { opacity: 1, duration: CFG.edgeIn, ease: "power1.out" }, CFG.at + CFG.close - 0.1);
+          if (B.width > 0 && B.height > 0) {
+            // one tween for all four sides: the rectangle interpolates in a straight line, so it can never bulge past either target
+            tl.to(win, { left: B.left, top: B.top, width: B.width, height: B.height, duration: CFG.hop, ease: "power3.inOut" }, move);
+          }
+          window.__timelines["spotlight-dim"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

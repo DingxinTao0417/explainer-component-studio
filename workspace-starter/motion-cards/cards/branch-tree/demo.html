@@ -1,0 +1,158 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"question","type":"string","label":"顶上的问题","default":"结果不理想？"},
+    {"id":"items","type":"string","label":"选项（用 | 分隔，2–5 个）","default":"换个问法|补充背景|从头重来"},
+    {"id":"pick","type":"number","label":"被选中的是第几个（0 = 都不选）","default":2,"min":0,"max":5,"step":1},
+    {"id":"cues","type":"string","label":"每个选项出现的秒数，最后可多写一个给“选中”（逗号分隔）","default":"0.9,1.7,2.5,3.5"},
+        {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>branch-tree · 分叉树</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="branch-tree-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .bt { position: absolute; inset: 0; }
+        .bt-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .bt-svg { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+        .bt-line { fill: none; stroke: var(--k-accent); stroke-width: 9; stroke-dasharray: 1 1.2; }
+        .bt-q { position: absolute; left: 0; top: 100px; width: 1920px; display: flex; justify-content: center; }
+        .bt-qb { display: block; height: 200px; padding: 0 80px; box-sizing: border-box; border: 6px solid var(--k-muted); border-radius: 34px; background: var(--k-panel); font-size: 104px; font-weight: 800; line-height: 188px; white-space: nowrap; }
+        .bt-opts { position: absolute; left: 60px; top: 740px; width: 1800px; display: flex; }
+        .bt-col { flex: 1; min-width: 0; display: flex; justify-content: center; }
+        .bt-opt { position: relative; flex: none; display: flex; align-items: center; height: 200px; padding: 0 0.5em; border-radius: 32px; background: var(--k-panel); color: var(--k-muted); font-size: 96px; font-weight: 800; white-space: nowrap; }
+        .bt-on { position: absolute; inset: 0; border-radius: 32px; background: var(--k-accent); opacity: 0; }
+        .bt-rim { position: absolute; inset: 0; box-sizing: border-box; border: 6px solid var(--k-accent); border-radius: 32px; opacity: 0; }
+        .bt-t { position: relative; display: block; }
+        .bt-win { color: var(--k-on-accent); }
+        .bt-win .bt-on { opacity: 1; }
+    
+      </style>
+
+      <div id="root" data-composition-id="branch-tree" data-width="1920" data-height="1080">
+        <div class="bt">
+          <div class="bt-bg"></div>
+          <svg class="bt-svg" viewBox="0 0 1920 1080"></svg>
+          <div class="bt-q"><div class="bt-qb">结果不理想？</div></div>
+          <div class="bt-opts">
+            <div class="bt-col"><div class="bt-opt"><span class="bt-on"></span><span class="bt-rim"></span><span class="bt-t">换个问法</span></div></div>
+            <div class="bt-col"><div class="bt-opt bt-win"><span class="bt-on"></span><span class="bt-rim"></span><span class="bt-t">补充背景</span></div></div>
+            <div class="bt-col"><div class="bt-opt"><span class="bt-on"></span><span class="bt-rim"></span><span class="bt-t">从头重来</span></div></div>
+          </div>
+    
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { first: 0.9, gap: 0.8, minGap: 0.5, floor: 0.7, qAt: 0.12, draw: 0.45, optIn: 0.32, fill: 0.12, win: 1.1, lose: 0.3, fonts: [0, 104, 104, 96, 80, 64] };
+          var v = { question: "结果不理想？", items: "换个问法|补充背景|从头重来", pick: 2, cues: "0.9,1.7,2.5,3.5", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".bt");
+          var q = function (s) { return root.querySelector(s); };
+          var cs = getComputedStyle(root);
+          var tok = function (name, d) { return (cs.getPropertyValue("--k-" + name) || "").trim() || d; };
+          var INK = tok("ink", "#f3f5f8"), MUTED = tok("muted", "#8b93a3"), ACCENT = tok("accent", "#ffcf33"), ONACC = tok("on-accent", "#14161a");
+          if (String(v.backdrop) === "off") q(".bt-bg").style.display = "none";
+          var split = function (s, max) { return String(s).split("|").map(function (x) { return x.trim(); }).filter(Boolean).slice(0, max); };
+          // rough text width in em: CJK counts 1, latin and digits 0.6
+          var em = function (s) { var w = 0; for (var c = 0; c < s.length; c++) w += s.charCodeAt(c) > 255 ? 1 : 0.6; return Math.max(w, 1); };
+          // cue times: take what was given, continue at the same spacing, keep a floor and a minimum distance
+          var cueList = function (raw, count) {
+            var c = String(raw).split(/[,，\s]+/).map(parseFloat).filter(function (x) { return isFinite(x); }).slice(0, count);
+            var gap = c.length > 1 ? (c[c.length - 1] - c[0]) / (c.length - 1) : CFG.gap;
+            if (!c.length) c.push(CFG.first);
+            while (c.length < count) c.push(c[c.length - 1] + gap);
+            c[0] = Math.max(c[0], CFG.floor);
+            for (var i = 1; i < count; i++) c[i] = Math.max(c[i], c[i - 1] + CFG.minGap);
+            return c;
+          };
+          var items = split(v.items, 5), n = items.length, cues = cueList(v.cues, n + 1), hit = cues[n];
+          var pick = Math.round(parseFloat(v.pick)) - 1;
+          if (!(pick >= 0 && pick < n)) pick = -1;
+          var qb = q(".bt-qb"), svg = q(".bt-svg"), row = q(".bt-opts");
+          qb.textContent = String(v.question);
+          qb.style.fontSize = Math.floor(Math.min(104, 1500 / em(String(v.question)))) + "px";
+
+          // equal columns: each branch runs from under the question to the top centre of its column
+          var W = 1800, xOf = function (i) { return 60 + ((i + 0.5) * W) / n; };
+          var paths = "";
+          row.innerHTML = "";
+          var opts = items.map(function (t, i) {
+            var c = document.createElement("div");
+            c.className = "bt-col";
+            c.innerHTML = '<div class="bt-opt"><span class="bt-on"></span><span class="bt-rim"></span><span class="bt-t"></span></div>';
+            var el = c.querySelector(".bt-opt");
+            el.querySelector(".bt-t").textContent = t;
+            el.style.fontSize = Math.floor(Math.min(CFG.fonts[n], (W / n - 30) / ((em(t) + 1) * (CFG.win + 0.06)))) + "px";
+            row.appendChild(c);
+            var x = Math.round(xOf(i));
+            paths += '<path class="bt-line" pathLength="1" d="M960 314 C960 530 ' + x + " 500 " + x + ' 720"/>';
+            return { el: el, on: el.querySelector(".bt-on"), rim: el.querySelector(".bt-rim") };
+          });
+          svg.innerHTML = paths;
+          var lines = svg.querySelectorAll(".bt-line");
+
+          var tl = gsap.timeline({ paused: true });
+          tl.fromTo(qb, { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.35, ease: "back.out(2)" }, CFG.qAt);
+          opts.forEach(function (o, i) {
+            var t = cues[i], line = lines[i], seg = Math.min(CFG.draw, i ? (t - cues[i - 1]) * 0.7 : t - CFG.qAt - 0.3);
+            // the branch is drawn first and reaches the bottom on the cue; only then the option exists
+            tl.fromTo(line, { opacity: 0 }, { opacity: 1, duration: 0.001, ease: "none" }, t - seg);
+            tl.fromTo(line, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: seg, ease: "power2.inOut" }, t - seg);
+            tl.fromTo(o.el, { opacity: 0, y: -30, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: CFG.optIn, ease: "back.out(1.7)" }, t);
+            tl.fromTo(o.el, { color: INK }, { color: INK, duration: 0.01 }, t);
+            tl.fromTo(o.rim, { opacity: 0 }, { opacity: 1, duration: 0.15, ease: "none" }, t);
+            var last = i === n - 1, won = i === pick, tn = last ? hit : cues[i + 1];
+            // an option goes grey when the next one arrives (the last one only if a pick follows and it lost)
+            if (!last || (pick >= 0 && !won)) {
+              tl.to(o.el, { color: MUTED, duration: 0.3, ease: "power2.out" }, tn);
+              tl.to(o.rim, { opacity: 0, duration: 0.3, ease: "power2.out" }, tn);
+            }
+            if (!last) tl.to(line, { opacity: 0.45, duration: 0.3, ease: "power2.out" }, tn);
+            if (won) {
+              // the chosen one: fills with the accent, grows, its branch thickens
+              tl.to(o.el, { color: INK, duration: 0.001, ease: "none" }, hit);
+              tl.to(o.on, { opacity: 1, duration: CFG.fill, ease: "none" }, hit);
+              tl.to(o.el, { color: ONACC, duration: 0.001, ease: "none" }, hit + CFG.fill / 2);
+              tl.to(o.el, { scale: CFG.win + 0.06, duration: 0.16, ease: "power3.out" }, hit);
+              tl.to(o.el, { scale: CFG.win, duration: 0.3, ease: "back.out(2.2)" }, hit + 0.16);
+              tl.to(line, { opacity: 1, strokeWidth: 16, duration: 0.25, ease: "power2.out" }, hit);
+            } else if (pick >= 0) {
+              tl.to(line, { opacity: CFG.lose, duration: 0.3, ease: "power2.out" }, hit);
+            }
+          });
+    
+          window.__timelines["branch-tree"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

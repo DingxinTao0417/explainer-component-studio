@@ -1,0 +1,107 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"srcs","type":"string","label":"五张图的地址，用 | 分隔；最后一张是压在最上面的主图","default":"motion-cards/lib/samples/p2.jpg|motion-cards/lib/samples/p6.jpg|motion-cards/lib/samples/p4.jpg|motion-cards/lib/samples/p7.jpg|motion-cards/lib/samples/p1.jpg"},
+    {"id":"spread","type":"number","label":"最外侧一张扇开的角度（度）","default":16,"min":8,"max":18,"step":1},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>stack-fan · 卡堆扇开</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="stack-fan-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .sf { position: absolute; inset: 0; }
+        .sf-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        /* zero-size anchor at the visual centre of the pile; cards hang off it */
+        .sf-pile { position: absolute; left: 960px; top: 530px; width: 0; height: 0; }
+        .sf-card { position: absolute; left: -380px; top: -238px; width: 760px; height: 476px; box-sizing: border-box; padding: 12px; border-radius: 14px; background: #fff; box-shadow: 0 26px 60px rgba(0, 0, 0, 0.42), 0 4px 14px rgba(0, 0, 0, 0.3); }
+        .sf-img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
+        /* each back card hangs from a zero-size arm whose own centre IS the shared pivot, 1600px below the pile */
+        .sf-arm { position: absolute; left: 0; top: 1600px; width: 0; height: 0; }
+        .sf-arm .sf-card { top: -1838px; }
+        .sf-dim { position: absolute; inset: 0; border-radius: 14px; background: #05070b; opacity: 0; }
+      </style>
+
+      <div id="root" data-composition-id="stack-fan" data-width="1920" data-height="1080">
+        <div class="sf">
+          <div class="sf-bg"></div>
+          <div class="sf-pile">
+            <div class="sf-arm"><div class="sf-card sf-back"><img class="sf-img" src="motion-cards/lib/samples/p2.jpg" alt="" /><div class="sf-dim"></div></div></div>
+            <div class="sf-arm"><div class="sf-card sf-back"><img class="sf-img" src="motion-cards/lib/samples/p6.jpg" alt="" /><div class="sf-dim"></div></div></div>
+            <div class="sf-arm"><div class="sf-card sf-back"><img class="sf-img" src="motion-cards/lib/samples/p4.jpg" alt="" /><div class="sf-dim"></div></div></div>
+            <div class="sf-arm"><div class="sf-card sf-back"><img class="sf-img" src="motion-cards/lib/samples/p7.jpg" alt="" /><div class="sf-dim"></div></div></div>
+            <div class="sf-card sf-top"><img class="sf-img" src="motion-cards/lib/samples/p1.jpg" alt="" /></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = {
+            at: 0.15, fall: 0.3, drop: 760,      // the whole pile falls in as one object
+            fanAt: 0.85, fanDur: 0.5, innerLag: 0.07, // outer pair leaves first, inner pair 0.07s later
+            lift: 28,                            // the top card rises out of the way while the others slide out
+            topAt: 1.3, topDur: 0.34, topScale: 1.12,
+            dim: 0.3,
+          };
+          var v = { spread: 16, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".sf");
+          var q = function (s) { return root.querySelector(s); };
+          var all = function (s) { return Array.prototype.slice.call(root.querySelectorAll(s)); };
+          if (String(v.backdrop) === "off") q(".sf-bg").style.display = "none";
+          var list = String(v.srcs || "").split("|").map(function (s) { return s.trim(); }).filter(Boolean);
+          all(".sf-img").forEach(function (im, i) { if (list[i]) im.setAttribute("src", list[i]); });
+
+          var sp = Math.max(0, Math.min(18, parseFloat(v.spread) || 0)); // past 18° the outer corners leave the canvas
+          var pile = q(".sf-pile"), top = q(".sf-top"), back = all(".sf-arm");
+          // DOM order is bottom → top: outer-left, outer-right, inner-left, inner-right
+          var fanTo = [-sp, sp, -sp / 2, sp / 2];
+          var stackAt = [-1.3, 1.0, -0.5, 0.7]; // a slightly untidy pile, so it reads as several sheets
+
+          var tl = gsap.timeline({ paused: true });
+          // 1) the pile drops as one thing: accelerating fall, a short sink, then it sits
+          tl.fromTo(pile, { y: -CFG.drop, rotation: -5, opacity: 0 }, { y: 0, rotation: 0, opacity: 1, duration: CFG.fall, ease: "power2.in" }, CFG.at);
+          tl.to(pile, { y: 16, duration: 0.07, ease: "power1.out" }, CFG.at + CFG.fall);
+          tl.to(pile, { y: 0, duration: 0.24, ease: "back.out(3)" }, CFG.at + CFG.fall + 0.07);
+          // 2) fan: every arm turns around the same point far below the pile, like cards held at the wrist
+          tl.fromTo(top, { y: 0, scale: 1 }, { y: -CFG.lift, scale: 1.03, duration: 0.22, ease: "power2.out" }, CFG.fanAt);
+          back.forEach(function (c, i) {
+            var lag = i < 2 ? 0 : CFG.innerLag;
+            tl.fromTo(c, { rotation: stackAt[i] }, { rotation: fanTo[i], duration: CFG.fanDur, ease: "back.out(1.5)" }, CFG.fanAt + lag);
+            tl.fromTo(c.querySelector(".sf-dim"), { opacity: 0 }, { opacity: CFG.dim, duration: CFG.fanDur, ease: "power1.out" }, CFG.fanAt + lag);
+          });
+          // 3) the top card comes back down last, and ends bigger than the rest
+          tl.to(top, { y: 0, scale: CFG.topScale, duration: CFG.topDur, ease: "back.out(2.2)" }, CFG.topAt);
+          window.__timelines["stack-fan"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

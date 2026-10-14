@@ -1,0 +1,107 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"src","type":"string","label":"截图地址（1920×1080，从项目根目录写起）","default":"motion-cards/lib/samples/ui.png"},
+    {"id":"x","type":"number","label":"目标区域左边（截图像素）","default":478,"min":0,"max":1920,"step":1},
+    {"id":"y","type":"number","label":"目标区域上边（截图像素）","default":538,"min":0,"max":1080,"step":1},
+    {"id":"w","type":"number","label":"目标区域宽","default":270,"min":20,"max":1920,"step":1},
+    {"id":"h","type":"number","label":"目标区域高","default":96,"min":20,"max":1080,"step":1},
+    {"id":"zoom","type":"number","label":"最大推近倍数","default":2.4,"min":1,"max":4,"step":0.1},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>screen-push-focus · 录屏推近圈框</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="screen-push-focus-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .sp { position: absolute; inset: 0; overflow: hidden; }
+        .sp-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .sp-cam { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+        .sp-img { display: block; width: 1920px; height: 1080px; object-fit: cover; }
+        .sp-dim { position: absolute; left: 466px; top: 526px; width: 294px; height: 120px; border-radius: 10px; box-shadow: 0 0 0 4000px rgba(5, 7, 11, 0.62); opacity: 0; }
+        .sp-box { position: absolute; left: 466px; top: 526px; width: 294px; height: 120px; overflow: visible; }
+        .sp-rect { fill: none; stroke: var(--k-accent); stroke-width: 2.5; stroke-dasharray: 1; stroke-dashoffset: 0; }
+      </style>
+
+      <div id="root" data-composition-id="screen-push-focus" data-width="1920" data-height="1080">
+        <div class="sp">
+          <div class="sp-bg"></div>
+          <div class="sp-cam" data-layout-allow-overflow>
+            <img class="sp-img" src="motion-cards/lib/samples/ui.png" data-var-src="src" alt="" />
+            <div class="sp-dim"></div>
+            <svg class="sp-box" xmlns="http://www.w3.org/2000/svg"><rect class="sp-rect" x="0" y="0" width="294" height="120" rx="10" pathLength="1" /></svg>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // hold: wide shot before anything moves · push: camera move · lead: how long before the camera lands the frame starts drawing
+          var CFG = { hold: 0.5, push: 0.9, lead: 0.25, draw: 0.45, dimIn: 0.4, pad: 12, strokePx: 6, fillW: 0.6, fillH: 0.46 };
+          var v = { src: "", x: 478, y: 538, w: 270, h: 96, zoom: 2.4, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+          var num = function (key, d) { var n = parseFloat(v[key]); return isFinite(n) ? n : d; };
+          var clamp = function (n, lo, hi) { return Math.max(lo, Math.min(hi, n)); };
+
+          var root = document.querySelector(".sp");
+          var q = function (s) { return root.querySelector(s); };
+          if (v.src) q(".sp-img").setAttribute("src", String(v.src));
+          if (String(v.backdrop) === "off") q(".sp-bg").style.display = "none";
+
+          var x = num("x", 478), y = num("y", 538), w = num("w", 270), h = num("h", 96), p = CFG.pad;
+          // zoom until the target fills ~60% of the width or ~46% of the height, whichever comes first
+          var s = clamp(Math.min(1920 * CFG.fillW / w, 1080 * CFG.fillH / h), 1, num("zoom", 2.4));
+          // centre the target, but never show past the edge of the screenshot
+          var tx = clamp(960 - (x + w / 2) * s, 1920 - 1920 * s, 0);
+          var ty = clamp(540 - (y + h / 2) * s, 1080 - 1080 * s, 0);
+
+          var dim = q(".sp-dim"), box = q(".sp-box"), rect = q(".sp-rect");
+          [dim, box].forEach(function (el) {
+            el.style.left = x - p + "px"; el.style.top = y - p + "px";
+            el.style.width = w + p * 2 + "px"; el.style.height = h + p * 2 + "px";
+          });
+          rect.setAttribute("width", w + p * 2);
+          rect.setAttribute("height", h + p * 2);
+          rect.style.strokeWidth = CFG.strokePx / s; // stays 6px on screen whatever the zoom
+
+          var cam = q(".sp-cam");
+          var tl = gsap.timeline({ paused: true });
+          tl.set(cam, { transformOrigin: "0 0" }, 0);
+          // wide shot first so the viewer knows where they are, then one push
+          tl.fromTo(cam, { x: 0, y: 0, scale: 1 }, { x: tx, y: ty, scale: s, duration: CFG.push, ease: "power3.inOut" }, CFG.hold);
+          // the frame starts while the camera is still braking, so both land together
+          var at = CFG.hold + CFG.push - CFG.lead;
+          tl.fromTo(rect, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: CFG.draw, ease: "power2.out" }, at);
+          tl.fromTo(dim, { opacity: 0 }, { opacity: 1, duration: CFG.dimIn, ease: "power2.out" }, at);
+          window.__timelines["screen-push-focus"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

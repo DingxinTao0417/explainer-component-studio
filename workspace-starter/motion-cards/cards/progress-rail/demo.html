@@ -1,0 +1,111 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"steps","type":"string","label":"各段的名字，用 | 分开（3–5 段）","default":"明确目标|拆解任务|给出示例|检查结果"},
+    {"id":"current","type":"number","label":"现在走到第几段（从 1 数）","default":2,"min":1,"max":5,"step":1},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>progress-rail · 章节进度轨</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="progress-rail-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .prl { position: absolute; inset: 0; }
+        .prl-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .prl-rail { position: absolute; left: 80px; right: 80px; top: 80px; display: flex; gap: 24px; }
+        .prl-seg { position: relative; display: block; flex: 1 1 0; min-width: 0; }
+        .prl-track { position: relative; display: block; height: 28px; border-radius: 14px; overflow: hidden; background: var(--k-panel); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.07); }
+        .prl-fill { position: absolute; inset: 0; display: block; border-radius: 14px; background: var(--k-accent); }
+        .prl-label { display: flex; align-items: center; height: 72px; margin-top: 28px; font-size: 48px; font-weight: 700; white-space: nowrap; color: var(--k-muted); }
+        .prl-no { display: block; margin-right: 16px; font-weight: 900; }
+        .prl-on { color: var(--k-ink); }
+        .prl-on .prl-no { color: var(--k-accent); }
+        .prl-name { display: block; }
+      </style>
+
+      <div id="root" data-composition-id="progress-rail" data-width="1920" data-height="1080">
+        <div class="prl">
+          <div class="prl-bg"></div>
+          <div class="prl-rail">
+            <div class="prl-seg"><span class="prl-track"><span class="prl-fill" style="opacity:0.32"></span></span><div class="prl-label"><span class="prl-no">01</span><span class="prl-name">明确目标</span></div></div>
+            <div class="prl-seg"><span class="prl-track"><span class="prl-fill"></span></span><div class="prl-label prl-on"><span class="prl-no">02</span><span class="prl-name">拆解任务</span></div></div>
+            <div class="prl-seg"><span class="prl-track"></span><div class="prl-label"><span class="prl-no">03</span><span class="prl-name">给出示例</span></div></div>
+            <div class="prl-seg"><span class="prl-track"></span><div class="prl-label"><span class="prl-no">04</span><span class="prl-name">检查结果</span></div></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { at: 0.4, handOff: 0.3, fillLag: 0.12, fillDur: 0.7, labelLag: 0.3, grow: 1.3, dimFill: 0.32 };
+          var v = { steps: "明确目标|拆解任务|给出示例|检查结果", current: 2, backdrop: "on" };
+          try {
+                      var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+                      for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+                    } catch (e) {}
+          var root = document.querySelector(".prl");
+          var q = function (s) { return root.querySelector(s); };
+          var names = String(v.steps).split("|");
+          var cur = Math.min(names.length, Math.max(1, Math.round(parseFloat(v.current)) || 1)) - 1;
+          var rail = q(".prl-rail");
+          rail.textContent = "";
+          var fills = [], labels = [], nos = [];
+          names.forEach(function (name, i) {
+            var seg = document.createElement("div"), track = document.createElement("span"), fill = document.createElement("span");
+            var label = document.createElement("div"), no = document.createElement("span"), nm = document.createElement("span");
+            seg.className = "prl-seg"; track.className = "prl-track"; fill.className = "prl-fill"; label.className = "prl-label"; no.className = "prl-no"; nm.className = "prl-name";
+            no.textContent = (i < 9 ? "0" : "") + (i + 1); nm.textContent = name;
+            track.appendChild(fill); label.appendChild(no); label.appendChild(nm); seg.appendChild(track); seg.appendChild(label); rail.appendChild(seg);
+            fills.push(fill); labels.push(label); nos.push(no);
+          });
+          if (String(v.backdrop) === "off") q(".prl-bg").style.display = "none";
+
+          var cs = getComputedStyle(root);
+          var INK = cs.getPropertyValue("--k-ink").trim(), MUTED = cs.getPropertyValue("--k-muted").trim(), ACC = cs.getPropertyValue("--k-accent").trim();
+          var tl = gsap.timeline({ paused: true });
+          // static states (not motion): segments already passed keep a dim fill, segments ahead are empty; their labels sit in the muted text colour
+          gsap.set(fills, { transformOrigin: "0% 50%" });
+          gsap.set(labels, { transformOrigin: "0% 50%" });
+          names.forEach(function (name, i) {
+            if (i < cur - 1) gsap.set(fills[i], { scaleX: 1, opacity: CFG.dimFill });
+            if (i > cur) gsap.set(fills[i], { scaleX: 0 });
+          });
+          // hand-off: the segment we just left lets go first...
+          if (cur > 0) {
+            tl.fromTo(fills[cur - 1], { scaleX: 1, opacity: 1 }, { scaleX: 1, opacity: CFG.dimFill, duration: CFG.handOff, ease: "power2.out" }, CFG.at);
+            tl.fromTo(labels[cur - 1], { color: INK, scale: CFG.grow }, { color: MUTED, scale: 1, duration: CFG.handOff, ease: "power2.inOut" }, CFG.at);
+            tl.fromTo(nos[cur - 1], { color: ACC }, { color: MUTED, duration: CFG.handOff, ease: "power2.inOut" }, CFG.at);
+          }
+          // ...then the current one fills left to right, and its label steps forward once the fill is clearly under way
+          tl.fromTo(fills[cur], { scaleX: 0 }, { scaleX: 1, duration: CFG.fillDur, ease: "power2.inOut" }, CFG.at + CFG.fillLag);
+          tl.fromTo(labels[cur], { color: MUTED, scale: 1 }, { color: INK, scale: CFG.grow, duration: 0.42, ease: "back.out(2)" }, CFG.at + CFG.labelLag);
+          tl.fromTo(nos[cur], { color: MUTED }, { color: ACC, duration: 0.42, ease: "power2.out" }, CFG.at + CFG.labelLag);
+          window.__timelines["progress-rail"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

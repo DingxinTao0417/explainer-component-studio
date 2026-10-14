@@ -1,0 +1,89 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"from","type":"string","label":"上一镜的画面（从项目根目录写起）","default":"motion-cards/lib/samples/p1.jpg"},
+    {"id":"to","type":"string","label":"下一镜的画面（从项目根目录写起）","default":"motion-cards/lib/samples/p2.jpg"},
+    {"id":"axis","type":"enum","label":"条的方向","default":"rows","options":[{"value":"rows","label":"横条"},{"value":"cols","label":"竖条"}]},
+    {"id":"count","type":"number","label":"条数（3–12）","default":6,"min":3,"max":12,"step":1},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>slice-shutter · 百叶切</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="slice-shutter-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .ss { position: absolute; inset: 0; overflow: hidden; }
+        .ss-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .ss-to { position: absolute; left: 0; top: 0; display: block; width: 1920px; height: 1080px; object-fit: cover; }
+        .ss-blinds { position: absolute; inset: 0; }
+        .ss-slat { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; background-position: center; background-size: cover; background-repeat: no-repeat; }
+      </style>
+
+      <div id="root" data-composition-id="slice-shutter" data-width="1920" data-height="1080">
+        <div class="ss" data-layout-allow-overflow>
+          <div class="ss-bg"></div>
+          <img class="ss-to" src="motion-cards/lib/samples/p2.jpg" data-var-src="to" alt="" />
+          <div class="ss-blinds"></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { cut: 1.0, flip: 0.233, span: 0.167, dim: 0.45, depth: 1500 };
+          var v = { "from": "motion-cards/lib/samples/p1.jpg", "to": "motion-cards/lib/samples/p2.jpg", "axis": "rows", "count": 6, "backdrop": "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".ss");
+          var q = function (s) { return root.querySelector(s); };
+          var num = function (x, d) { x = parseFloat(x); return isFinite(x) ? x : d; };
+          var clamp = function (x, a, b) { return Math.max(a, Math.min(b, x)); };
+          var W = 1920, H = 1080, F = 1 / 30, cut = CFG.cut;
+          if (String(v.backdrop) === "off") q(".ss-bg").style.display = "none";
+          var tl = gsap.timeline({ paused: true });
+          q(".ss-to").setAttribute("src", String(v.to));
+          var n = clamp(Math.round(num(v.count, 6)), 3, 12), rows = String(v.axis) !== "cols", box = q(".ss-blinds");
+          var step = n > 1 ? CFG.span / (n - 1) : 0, t0 = cut - (CFG.flip + CFG.span) / 2;
+          for (var i = 0; i < n; i++) {
+            // each slat is the whole old shot clipped to one band; it turns about the middle of its own band
+            var s = document.createElement("div"), L = rows ? H : W, lo = Math.floor((i * L) / n), hi = L - Math.ceil(((i + 1) * L) / n), mid = ((i + 0.5) / n) * 100;
+            s.className = "ss-slat";
+            s.style.backgroundImage = 'url("' + String(v.from) + '")';
+            s.style.clipPath = rows ? "inset(" + lo + "px 0 " + hi + "px 0)" : "inset(0 " + hi + "px 0 " + lo + "px)";
+            box.appendChild(s);
+            tl.set(s, { transformPerspective: CFG.depth, transformOrigin: rows ? "50% " + mid + "%" : mid + "% 50%" }, 0);
+            var turn = rows ? { rotationX: 90 } : { rotationY: -90 };
+            turn.filter = "brightness(" + CFG.dim + ")"; turn.duration = CFG.flip; turn.ease = "power2.in";
+            tl.fromTo(s, { rotationX: 0, rotationY: 0, filter: "brightness(1)" }, turn, t0 + i * step);
+            tl.set(s, { opacity: 0 }, t0 + i * step + CFG.flip);
+          }
+          window.__timelines["slice-shutter"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

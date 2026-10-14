@@ -1,0 +1,97 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"from","type":"string","label":"上一镜的画面（从项目根目录写起）","default":"motion-cards/lib/samples/p1.jpg"},
+    {"id":"to","type":"string","label":"下一镜的画面（从项目根目录写起）","default":"motion-cards/lib/samples/p2.jpg"},
+    {"id":"dir","type":"enum","label":"画面往哪边甩走","default":"left","options":[{"value":"left","label":"向左"},{"value":"right","label":"向右"}]},
+    {"id":"smear","type":"number","label":"最快那一帧的拖影（px）","default":90,"min":0,"max":140,"step":5},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>whip-pan · 甩镜</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="whip-pan-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .wh { position: absolute; inset: 0; overflow: hidden; }
+        .wh-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .wh-svg { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+        .wh-track { position: absolute; left: -1920px; top: 0; width: 3840px; height: 1080px; }
+        .wh-from, .wh-to { position: absolute; top: 0; display: block; width: 1920px; height: 1080px; object-fit: cover; }
+        .wh-from { left: 0; }
+        .wh-to { left: 1920px; }
+      </style>
+
+      <div id="root" data-composition-id="whip-pan" data-width="1920" data-height="1080">
+        <div class="wh" data-layout-allow-overflow>
+          <div class="wh-bg"></div>
+          <svg class="wh-svg" aria-hidden="true"><filter id="wh-smear" x="-8%" y="0" width="116%" height="100%"><feGaussianBlur class="wh-fe" in="SourceGraphic" stdDeviation="0 0" /></filter></svg>
+          <div class="wh-track">
+            <img class="wh-from" src="motion-cards/lib/samples/p1.jpg" data-var-src="from" alt="" />
+            <img class="wh-to" src="motion-cards/lib/samples/p2.jpg" data-var-src="to" alt="" />
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { cut: 1.0, whip: 0.4 };
+          var v = { "from": "motion-cards/lib/samples/p1.jpg", "to": "motion-cards/lib/samples/p2.jpg", "dir": "left", "smear": 90, "backdrop": "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".wh");
+          var q = function (s) { return root.querySelector(s); };
+          var num = function (x, d) { x = parseFloat(x); return isFinite(x) ? x : d; };
+          var clamp = function (x, a, b) { return Math.max(a, Math.min(b, x)); };
+          var W = 1920, H = 1080, F = 1 / 30, cut = CFG.cut;
+          if (String(v.backdrop) === "off") q(".wh-bg").style.display = "none";
+          var tl = gsap.timeline({ paused: true });
+          var track = q(".wh-track"), fe = q(".wh-fe"), a = q(".wh-from"), b = q(".wh-to");
+          a.setAttribute("src", String(v.from)); b.setAttribute("src", String(v.to));
+          // the two shots sit side by side on one strip; the strip is what moves, so both always travel together
+          var left = String(v.dir) !== "right";
+          if (!left) { track.style.left = "0px"; b.style.left = "0px"; a.style.left = "1920px"; }
+          var x0 = left ? 1920 : -1920;
+          var st = { s: 0 }, peak = clamp(num(v.smear, 90), 0, 160), half = CFG.whip / 2;
+          var paint = function () {
+            var s = Math.round(st.s * 10) / 10;
+            fe.setAttribute("stdDeviation", s + " 0");
+            track.style.filter = s < 0.6 ? "none" : "url(#wh-smear)";
+          };
+          // one move, slow–fast–slow: the seam between the shots crosses the middle of the frame at top speed
+          tl.fromTo(track, { x: x0 }, { x: 0, duration: CFG.whip, ease: "power3.inOut" }, cut - half);
+          // sideways-only smear that follows the speed: nothing at rest, strongest on the `cut` frame
+          tl.fromTo(st, { s: 0 }, { s: peak, duration: half, ease: "power2.in" }, cut - half);
+          tl.to(st, { s: 0, duration: half, ease: "power2.out" }, cut);
+          tl.eventCallback("onUpdate", paint);
+          paint();
+          window.__timelines["whip-pan"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

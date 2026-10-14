@@ -1,0 +1,126 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"x","type":"number","label":"目标左上角 x（1920×1080 坐标）","default":300,"min":0,"max":1920,"step":1},
+    {"id":"y","type":"number","label":"目标左上角 y","default":576,"min":0,"max":1080,"step":1},
+    {"id":"w","type":"number","label":"目标宽","default":416,"min":10,"max":1200,"step":1},
+    {"id":"h","type":"number","label":"目标高","default":88,"min":10,"max":900,"step":1},
+    {"id":"readout","type":"string","label":"锁定后弹出的读数","default":"已锁定 · 进行中"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"垫示例截图（放大 2 倍）"},{"value":"off","label":"透明，只留准星"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>reticle-lock · 准星锁定</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="reticle-lock-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .rl { position: absolute; inset: 0; }
+        .rl-shot { position: absolute; left: 0; top: 0; display: block; width: 1920px; height: 1080px; background-repeat: no-repeat; background-size: 3840px 2160px; background-position: -680px -220px; }
+        .rl-ret { position: absolute; left: 220px; top: 332px; display: block; width: 576px; height: 576px; }
+        .rl-svg { display: block; width: 100%; height: 100%; overflow: visible; }
+        .rl-svg * { fill: none; stroke-linecap: butt; }
+        .rl-under { stroke: rgba(13, 16, 22, 0.8); stroke-width: 20; }
+        .rl-top { stroke: var(--k-accent); stroke-width: 12; }
+        .rl-flash { position: absolute; left: 280px; top: 392px; display: block; width: 456px; height: 456px; border-radius: 50%; background: var(--k-accent); opacity: 0; }
+        .rl-read { position: absolute; left: 796px; top: 576px; display: block; height: 88px; padding: 0 30px; box-sizing: border-box; border: 4px solid var(--k-accent); border-radius: 8px; background: rgba(13, 16, 22, 0.92); color: var(--k-accent); font-size: 48px; font-weight: 700; line-height: 80px; white-space: nowrap; }
+      </style>
+
+      <div id="root" data-composition-id="reticle-lock" data-width="1920" data-height="1080">
+        <div class="rl">
+          <div class="rl-shot" style="background-image: url(motion-cards/lib/samples/ui.png)"></div>
+          <div class="rl-ret"><svg class="rl-svg" viewBox="0 0 576 576" xmlns="http://www.w3.org/2000/svg"></svg></div>
+          <div class="rl-flash"></div>
+          <div class="rl-read">已锁定 · 进行中</div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // hops: where the reticle looks before it finds the target, as offsets from the target centre (px), x measured towards the middle of the frame
+          // move: one hop · hold: the stop between hops · big: reticle scale while searching · spin: its rotation while searching (deg)
+          var CFG = { at: 0.15, fade: 0.12, hops: [[860, -280], [380, 150], [600, -40]], move: 0.24, hold: 0.11, lockMove: 0.22, big: 1.3, spin: 45, grip: 0.18, flash: 0.32, flashTo: 0.6, read: 0.16, pad: 20 };
+          var v = { x: 300, y: 576, w: 416, h: 88, readout: "已锁定 · 进行中", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".rl");
+          var q = function (s) { return root.querySelector(s); };
+          if (String(v.backdrop) === "off") q(".rl-shot").style.display = "none";
+          var num = function (a, d) { a = parseFloat(a); return isFinite(a) ? a : d; };
+          var W = num(v.w, 416), H = num(v.h, 88), cx = num(v.x, 300) + W / 2, cy = num(v.y, 576) + H / 2;
+          var R = Math.max(W, H) / 2 + CFG.pad, S = 2 * R + 120, c = S / 2;
+          var ret = q(".rl-ret"), svg = q(".rl-svg"), flash = q(".rl-flash"), read = q(".rl-read");
+          ret.style.left = cx - c + "px";
+          ret.style.top = cy - c + "px";
+          ret.style.width = ret.style.height = S + "px";
+          svg.setAttribute("viewBox", "0 0 " + S + " " + S);
+          // ring + four ticks across it + a small centre cross, drawn twice: dark underlay, then the accent line
+          var shape = '<circle cx="' + c + '" cy="' + c + '" r="' + R + '"/>';
+          [[1, 0], [0, 1], [-1, 0], [0, -1]].forEach(function (d) {
+            shape += '<path d="M' + (c + d[0] * (R - 30)) + " " + (c + d[1] * (R - 30)) + "L" + (c + d[0] * (R + 36)) + " " + (c + d[1] * (R + 36)) + '"/>';
+          });
+          // the centre cross only exists while searching: it would sit on top of the thing being pointed at
+          var mid = '<path d="M' + (c - 22) + " " + c + "L" + (c + 22) + " " + c + "M" + c + " " + (c - 22) + "L" + c + " " + (c + 22) + '"/>';
+          svg.innerHTML = '<g class="rl-under">' + shape + '</g><g class="rl-top">' + shape + '</g><g class="rl-mid"><g class="rl-under">' + mid + '</g><g class="rl-top">' + mid + "</g></g>";
+          flash.style.left = cx - R + "px";
+          flash.style.top = cy - R + "px";
+          flash.style.width = flash.style.height = 2 * R + "px";
+          // the readout goes on whichever side of the target has more room
+          var left = cx > 960;
+          read.textContent = String(v.readout || "");
+          read.style.top = cy - 44 + "px";
+          if (left) { read.style.right = 1920 - (cx - R - 60) + "px"; read.style.left = "auto"; }
+          else { read.style.left = cx + R + 60 + "px"; read.style.right = "auto"; }
+          if (!v.readout) read.style.display = "none";
+
+          // the search path is written for a target on the right half; mirror it when the target is on the left, so the hops stay on screen
+          var flip = left ? -1 : 1, h = CFG.hops.map(function (p) { return [p[0] * flip, p[1]]; });
+          var tl = gsap.timeline({ paused: true }), t = CFG.at;
+          tl.fromTo(ret, { opacity: 0 }, { opacity: 1, duration: CFG.fade, ease: "none" }, t);
+          tl.fromTo(ret, { x: h[0][0], y: h[0][1], scale: CFG.big, rotation: CFG.spin }, { x: h[0][0], y: h[0][1], scale: CFG.big, rotation: CFG.spin, duration: CFG.fade }, t);
+          t += CFG.fade + CFG.hold;
+          // searching: straight hops with dead stops in between
+          for (var i = 1; i < h.length; i++) {
+            tl.to(ret, { x: h[i][0], y: h[i][1], duration: CFG.move, ease: "power2.inOut" }, t);
+            t += CFG.move + CFG.hold;
+          }
+          tl.to(ret, { x: 0, y: 0, duration: CFG.lockMove, ease: "power3.inOut" }, t);
+          t += CFG.lockMove;
+          // lock: the ring snaps down onto the target and squares up, with a flash of the accent colour as it lands
+          tl.to(ret, { scale: 1, rotation: 0, duration: CFG.grip, ease: "power4.out" }, t);
+          tl.fromTo(q(".rl-mid"), { opacity: 1 }, { opacity: 0, duration: 0.08, ease: "none" }, t);
+          tl.fromTo(flash, { opacity: 0 }, { opacity: CFG.flashTo, duration: 0.03, ease: "none" }, t + 0.1);
+          tl.fromTo(flash, { scale: 1 }, { scale: 1.3, duration: CFG.flash, ease: "power2.out" }, t + 0.1);
+          tl.to(flash, { opacity: 0, duration: CFG.flash - 0.03, ease: "power1.out" }, t + 0.13);
+          var tr = t + CFG.grip + 0.04;
+          tl.fromTo(read, { opacity: 0 }, { opacity: 1, duration: 0.05, ease: "none" }, tr);
+          tl.fromTo(read, { x: left ? 36 : -36 }, { x: 0, duration: CFG.read, ease: "power3.out" }, tr);
+          window.__timelines["reticle-lock"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

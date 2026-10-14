@@ -1,0 +1,120 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"x","type":"number","label":"目标左上角 x（1920×1080 坐标）","default":300,"min":0,"max":1920,"step":1},
+    {"id":"y","type":"number","label":"目标左上角 y","default":576,"min":0,"max":1080,"step":1},
+    {"id":"w","type":"number","label":"目标宽","default":416,"min":10,"max":1800,"step":1},
+    {"id":"h","type":"number","label":"目标高","default":88,"min":10,"max":1000,"step":1},
+    {"id":"side","type":"enum","label":"箭头从目标的哪个方向来","default":"rb","options":[{"value":"lb","label":"左下"},{"value":"lt","label":"左上"},{"value":"rb","label":"右下"},{"value":"rt","label":"右上"}]},
+    {"id":"reach","type":"number","label":"箭头长短（像素）","default":420,"min":140,"max":700,"step":10},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"垫示例截图（放大 2 倍）"},{"value":"off","label":"透明，只留箭头"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>arrow-point · 箭头指</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="arrow-point-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .ap { position: absolute; inset: 0; }
+        .ap-shot { position: absolute; left: 0; top: 0; display: block; width: 1920px; height: 1080px; background-repeat: no-repeat; background-size: 3840px 2160px; background-position: -680px -220px; }
+        .ap-svg { position: absolute; left: 0; top: 0; display: block; width: 1920px; height: 1080px; }
+        .ap-ink { fill: var(--k-accent); stroke: rgba(13, 16, 22, 0.78); stroke-width: 6; stroke-linejoin: round; paint-order: stroke; }
+        .ap-rev { fill: none; stroke: #fff; stroke-linecap: butt; }
+      </style>
+
+      <div id="root" data-composition-id="arrow-point" data-width="1920" data-height="1080">
+        <div class="ap">
+          <div class="ap-shot" style="background-image: url(motion-cards/lib/samples/ui.png)"></div>
+          <svg class="ap-svg" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg"><defs></defs></svg>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // shaft: the long stroke · barb: each of the two head strokes · beat: pause between strokes (pen lifts)
+          // gap: px the tip stops short of the target · bow: sideways bulge as a share of the chord · jab/back: the nudge after the last stroke
+          var CFG = { at: 0.2, shaft: 0.42, beat: 0.05, barb: 0.09, barbLen: 90, barbAngle: 0.52, gap: 20, bow: 0.22, jabPx: 16, jab: 0.08, back: 0.32 };
+          var v = { x: 300, y: 576, w: 416, h: 88, side: "rb", reach: 420, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".ap");
+          var q = function (s) { return root.querySelector(s); };
+          if (String(v.backdrop) === "off") q(".ap-shot").style.display = "none";
+          var num = function (a, d) { a = parseFloat(a); return isFinite(a) ? a : d; };
+          var NS = "http://www.w3.org/2000/svg", svg = q(".ap-svg"), defs = q("defs"), sn = 0;
+          function el(tag, attrs, parent) { var e = document.createElementNS(NS, tag); for (var key in attrs) e.setAttribute(key, attrs[key]); parent.appendChild(e); return e; }
+          // one pen stroke = a filled ribbon (w0 at landing, w1 mid-stroke, w2 at lift-off) uncovered by a mask stroke along its centre line
+          function stroke(d, w0, w1, w2) {
+            var id = "ap-m" + sn++;
+            var rev = el("path", { d: d, class: "ap-rev" }, el("mask", { id: id, maskUnits: "userSpaceOnUse", x: 0, y: 0, width: 1920, height: 1080 }, defs));
+            var len = rev.getTotalLength(), m = Math.max(10, Math.round(len / 9)), a = [], b = [];
+            for (var j = 0; j <= m; j++) {
+              var t = j / m, p = rev.getPointAtLength(len * t), p0 = rev.getPointAtLength(Math.max(0, len * t - 1)), p1 = rev.getPointAtLength(Math.min(len, len * t + 1));
+              var dx = p1.x - p0.x, dy = p1.y - p0.y, dl = Math.sqrt(dx * dx + dy * dy) || 1, end = t < 0.5 ? w0 : w2;
+              var half = (end + (w1 - end) * Math.pow(Math.sin(Math.PI * t), 0.6)) / 2;
+              a.push((p.x - (dy / dl) * half).toFixed(1) + " " + (p.y + (dx / dl) * half).toFixed(1));
+              b.unshift((p.x + (dy / dl) * half).toFixed(1) + " " + (p.y - (dx / dl) * half).toFixed(1));
+            }
+            el("path", { d: "M" + a.concat(b).join("L") + "Z", class: "ap-ink", mask: "url(#" + id + ")" }, svg);
+            rev.style.strokeWidth = w1 + 12 + "px";
+            rev.style.strokeDasharray = len + 2 + "px " + (len + 40) + "px"; // the gap is longer than the path, and the start offset sits inside it: no hairline at the pen-down point
+            return { rev: rev, len: len + 8 };
+          }
+
+          var W = num(v.w, 416), H = num(v.h, 88), cx = num(v.x, 300) + W / 2, cy = num(v.y, 576) + H / 2, reach = num(v.reach, 420);
+          var side = String(v.side), sx = side.charAt(0) === "r" ? 1 : -1, sy = side.charAt(1) === "t" ? -1 : 1;
+          // tail sits out in the open; the tip stops `gap` px outside the target box, on the line from its centre to the tail
+          var tx = cx + sx * (W / 2 + reach * 0.88), ty = cy + sy * (H / 2 + reach * 0.4);
+          var k2 = Math.min((W / 2 + CFG.gap) / Math.abs(tx - cx), (H / 2 + CFG.gap) / Math.abs(ty - cy));
+          var px = cx + (tx - cx) * k2, py = cy + (ty - cy) * k2;
+          var chx = px - tx, chy = py - ty, chord = Math.sqrt(chx * chx + chy * chy) || 1, sgn = -sx * sy;
+          var qx = (tx + px) / 2 + (-chy / chord) * chord * CFG.bow * sgn, qy = (ty + py) / 2 + (chx / chord) * chord * CFG.bow * sgn;
+          var f = function (n) { return n.toFixed(1); };
+          var shaft = stroke("M" + f(tx) + " " + f(ty) + "Q" + f(qx) + " " + f(qy) + " " + f(px) + " " + f(py), 8, 20, 14);
+          // the two head strokes leave the tip backwards, either side of the direction the shaft arrives in
+          var ux = px - qx, uy = py - qy, ul = Math.sqrt(ux * ux + uy * uy) || 1;
+          ux /= ul; uy /= ul;
+          function barb(ang) {
+            var c = Math.cos(ang), s = Math.sin(ang), bx = -(ux * c - uy * s), by = -(ux * s + uy * c);
+            return stroke("M" + f(px) + " " + f(py) + "L" + f(px + bx * CFG.barbLen) + " " + f(py + by * CFG.barbLen), 14, 18, 8);
+          }
+          var b1 = barb(CFG.barbAngle), b2 = barb(-CFG.barbAngle);
+
+          var tl = gsap.timeline({ paused: true });
+          var t1 = CFG.at + CFG.shaft + CFG.beat, t2 = t1 + CFG.barb + CFG.beat, t3 = t2 + CFG.barb;
+          tl.fromTo(shaft.rev, { strokeDashoffset: shaft.len }, { strokeDashoffset: 0, duration: CFG.shaft, ease: "power2.out" }, CFG.at);
+          tl.fromTo(b1.rev, { strokeDashoffset: b1.len }, { strokeDashoffset: 0, duration: CFG.barb, ease: "power2.out" }, t1);
+          tl.fromTo(b2.rev, { strokeDashoffset: b2.len }, { strokeDashoffset: 0, duration: CFG.barb, ease: "power2.out" }, t2);
+          // the whole arrow pokes towards the target and springs back
+          tl.fromTo(svg, { x: 0, y: 0 }, { x: ux * CFG.jabPx, y: uy * CFG.jabPx, duration: CFG.jab, ease: "power2.out" }, t3);
+          tl.to(svg, { x: 0, y: 0, duration: CFG.back, ease: "back.out(3)" }, t3 + CFG.jab);
+          window.__timelines["arrow-point"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

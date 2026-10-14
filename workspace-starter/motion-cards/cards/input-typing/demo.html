@@ -1,0 +1,116 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"text","type":"string","label":"提示词（用 | 按意群分段，总长两行以内）","default":"帮我把这份会议记录|整理成三条要点，|每条不超过二十个字，|最后列出待办事项。"},
+    {"id":"hint","type":"string","label":"空输入框里的占位字","default":"在这里描述你想要的结果…"},
+    {"id":"cap","type":"string","label":"输入框上方的小字（可空）","default":"提示词 · 示例"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>input-typing · 输入框打字</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="input-typing-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .it { position: absolute; inset: 0; }
+        .it-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .it-cap { position: absolute; left: 116px; top: 214px; font-size: 44px; line-height: 1.2; color: var(--k-muted); white-space: nowrap; }
+        .it-box { position: absolute; left: 100px; top: 300px; width: 1720px; height: 520px; border-radius: 56px; background: var(--k-panel); border: 4px solid rgba(139, 147, 163, 0.4); box-shadow: 0 40px 100px rgba(0, 0, 0, 0.4); }
+        .it-focus { position: absolute; inset: -4px; border-radius: 56px; border: 4px solid var(--k-accent); opacity: 0; }
+        .it-text { position: absolute; left: 72px; right: 72px; top: 56px; font-size: 72px; font-weight: 600; line-height: 1.5; }
+        .it-ph { color: var(--k-muted); font-weight: 400; }
+        .it-caret { display: inline-block; width: 7px; height: 82px; margin-left: 7px; vertical-align: -14px; background: var(--k-accent); }
+        .it-send { position: absolute; right: 40px; bottom: 40px; width: 132px; height: 132px; border-radius: 50%; background: rgba(139, 147, 163, 0.28); }
+        .it-on { position: absolute; inset: 0; border-radius: 50%; background: var(--k-accent); opacity: 0; }
+        .it-arrow { position: absolute; left: 32px; top: 32px; width: 68px; height: 68px; color: var(--k-muted); }
+        .it-arrow2 { color: var(--k-on-accent); opacity: 0; }
+      </style>
+
+      <div id="root" data-composition-id="input-typing" data-width="1920" data-height="1080">
+        <div class="it">
+          <div class="it-bg"></div>
+          <div class="it-cap">提示词 · 示例</div>
+          <div class="it-box">
+            <div class="it-focus"></div>
+            <div class="it-text"><span class="it-ph" style="display: none">在这里描述你想要的结果…</span><span class="it-typed">帮我把这份会议记录整理成三条要点，每条不超过二十个字，最后列出待办事项。</span><span class="it-caret"></span></div>
+            <div class="it-send">
+              <div class="it-on"></div>
+              <svg class="it-arrow" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><path d="M30 50 V12 M13 28 L30 11 L47 28" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              <svg class="it-arrow it-arrow2" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><path d="M30 50 V12 M13 28 L30 11 L47 28" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // cps: speed inside one phrase · pause: the breath between phrases · arm: wait after the last character before the send button lights
+          var CFG = { start: 0.5, cps: 18, pause: 0.3, arm: 0.3, pop: 1.16 };
+          var v = { text: "帮我把这份会议记录|整理成三条要点，|每条不超过二十个字，|最后列出待办事项。", hint: "在这里描述你想要的结果…", cap: "提示词 · 示例", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".it");
+          var q = function (s) { return root.querySelector(s); };
+          if (String(v.backdrop) === "off") q(".it-bg").style.display = "none";
+          q(".it-cap").textContent = String(v.cap || "");
+          var ph = q(".it-ph"), typedEl = q(".it-typed");
+          ph.textContent = String(v.hint || "");
+          var chunks = String(v.text).split("|").filter(function (c) { return c.length; });
+          var full = chunks.join(""), typed = { n: 0 }, shown = -1;
+          var render = function () {
+            var n = Math.floor(typed.n + 0.001);
+            if (n === shown) return;
+            shown = n;
+            typedEl.textContent = full.slice(0, n);
+            ph.style.display = n === 0 ? "" : "none";
+          };
+
+          var tl = gsap.timeline({ paused: true, onUpdate: render });
+          tl.fromTo(q(".it-focus"), { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "none" }, CFG.start - 0.25);
+          // each phrase goes down in one run, then a breath: it reads as someone thinking in phrases, not a machine printing
+          var t = CFG.start, at = 0;
+          chunks.forEach(function (c, i) {
+            var d = c.length / CFG.cps;
+            tl.fromTo(typed, { n: at }, { n: at + c.length, duration: d, ease: "none", immediateRender: i === 0 }, t);
+            at += c.length;
+            t += d + CFG.pause;
+          });
+          var done = t - CFG.pause, arm = done + CFG.arm, send = q(".it-send");
+          // the button only wakes after the text has stopped
+          tl.fromTo(q(".it-on"), { opacity: 0 }, { opacity: 1, duration: 0.14, ease: "none" }, arm);
+          tl.fromTo(q(".it-arrow2"), { opacity: 0 }, { opacity: 1, duration: 0.14, ease: "none" }, arm);
+          tl.fromTo(send, { scale: 1 }, { scale: CFG.pop, duration: 0.12, ease: "power2.out" }, arm);
+          tl.to(send, { scale: 1, duration: 0.3, ease: "back.out(2.4)" }, arm + 0.12);
+          tl.fromTo(q(".it-caret"), { opacity: 1 }, { opacity: 0, duration: 0.02, ease: "none", repeat: 5, yoyo: true, repeatDelay: 0.42 }, arm + 0.5);
+          render();
+          window.__timelines["input-typing"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

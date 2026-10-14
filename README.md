@@ -26,6 +26,19 @@ python scripts/verify-skills.py
 
 安装默认写入 Codex 技能目录，并拒绝覆盖已有同名技能。技能要用的品牌包和手法库需要自己准备，照 [工作区初始化指引](WORKSPACE_SETUP.md) 一步一步做。也可直接读取仓库内的技能，不安装。详见 [安装、依赖与调用示例](skills/README.md) 和 [编导组件接口](DIRECTOR_GUIDE.md)。模型、HyperFrames 官方技能和本期素材按需另行配置；不自动安装模型或写入凭据。
 
+## 动效卡库
+
+[workspace-starter/motion-cards](workspace-starter/motion-cards/README.md) 是 108 张通用动效卡，分 11 组：字与强调、标题与章节、数据与图表、证据与界面、图片与多素材、镜头运动、转场、标注与手绘、人物与口播、结构与流程、幕底与氛围。每张卡是一个动法：`card.md` 写命门、动作拆解、参数手感和已知坑，`demo.html` 是单文件 HyperFrames 子合成，双击能预览，挂进项目就能用；颜色和字体通过 `--mc-*` 变量换皮。
+
+```bash
+cd workspace-starter/motion-cards
+node tools/cards.mjs serve                     # 画廊：http://localhost:3040/motion-cards/gallery/
+node tools/cards.mjs find --text 对比 --needs 图
+node tools/cards.mjs use <你的项目>/hyperframes before-after-wipe,number-roll
+```
+
+![108 张动效卡总览](workspace-starter/motion-cards/gallery/overview.jpg)
+
 ## 快速预览
 
 先安装 Node.js，然后运行：

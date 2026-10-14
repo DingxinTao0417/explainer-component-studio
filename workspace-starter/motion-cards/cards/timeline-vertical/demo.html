@@ -1,0 +1,161 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"items","type":"string","label":"节点文字（用 | 分隔，2–5 条）","default":"跑通一个例子|做成固定流程|交给别人也能用"},
+    {"id":"tags","type":"string","label":"线左边的时间标签（用 | 分隔，可留空）","default":"第一天|第一周|第一个月"},
+    {"id":"cues","type":"string","label":"每个节点亮起的秒数（逗号分隔，不够就均匀排开）","default":"0.5,1.7,2.9"},
+        {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>timeline-vertical · 竖时间线</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="timeline-vertical-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .tv { position: absolute; inset: 0; }
+        .tv-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .tv-track, .tv-fill { position: absolute; left: 698px; top: 113px; width: 8px; height: 713px; border-radius: 4px; }
+        .tv-track { background: var(--k-muted); opacity: 0.3; }
+        .tv-fill { background: var(--k-accent); }
+        .tv-list { position: absolute; left: 367px; top: 110px; width: 1400px; height: 860px; display: flex; flex-direction: column; }
+        .tv-row { flex: 1; min-height: 0; display: flex; align-items: center; }
+        .tv-tag { flex: none; display: block; width: 240px; text-align: right; font-size: 60px; font-weight: 700; color: var(--k-accent); white-space: nowrap; }
+        .tv-node { position: relative; flex: none; display: block; width: 190px; height: 80px; }
+        .tv-hole, .tv-halo, .tv-dot { position: absolute; left: 65px; top: 10px; width: 60px; height: 60px; border-radius: 50%; box-sizing: border-box; }
+        .tv-hole { border: 6px solid var(--k-muted); background: var(--k-bg); opacity: 0; }
+        .tv-halo { background: var(--k-accent); opacity: 0.3; }
+        .tv-dot { background: var(--k-accent); }
+        .tv-label { flex: none; display: block; }
+        .tv-txt { display: block; font-size: 108px; font-weight: 800; line-height: 1.3; white-space: nowrap; }
+        .tv-old .tv-txt, .tv-old .tv-tag { color: var(--k-muted); }
+        .tv-old .tv-halo { opacity: 0; }
+    
+      </style>
+
+      <div id="root" data-composition-id="timeline-vertical" data-width="1920" data-height="1080">
+        <div class="tv">
+          <div class="tv-bg"></div>
+          <div class="tv-track"></div>
+          <div class="tv-fill"></div>
+          <div class="tv-list">
+            <div class="tv-row tv-old"><span class="tv-tag">第一天</span><span class="tv-node"><span class="tv-hole"></span><span class="tv-halo"></span><span class="tv-dot"></span></span><span class="tv-label"><span class="tv-txt">跑通一个例子</span></span></div>
+            <div class="tv-row tv-old"><span class="tv-tag">第一周</span><span class="tv-node"><span class="tv-hole"></span><span class="tv-halo"></span><span class="tv-dot"></span></span><span class="tv-label"><span class="tv-txt">做成固定流程</span></span></div>
+            <div class="tv-row"><span class="tv-tag">第一个月</span><span class="tv-node"><span class="tv-hole"></span><span class="tv-halo"></span><span class="tv-dot"></span></span><span class="tv-label"><span class="tv-txt">交给别人也能用</span></span></div>
+          </div>
+    
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { first: 0.5, gap: 1.2, minGap: 0.6, floor: 0.4, grow: 0.5, pop: 0.2, push: 0.4, dim: 0.35, past: 0.8, fonts: [0, 120, 120, 108, 92, 76] };
+          var v = { items: "跑通一个例子|做成固定流程|交给别人也能用", tags: "第一天|第一周|第一个月", cues: "0.5,1.7,2.9", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && (got[k] !== "" || k === "tags")) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".tv");
+          var q = function (s) { return root.querySelector(s); };
+          var cs = getComputedStyle(root);
+          var tok = function (name, d) { return (cs.getPropertyValue("--k-" + name) || "").trim() || d; };
+          var INK = tok("ink", "#f3f5f8"), MUTED = tok("muted", "#8b93a3"), ACCENT = tok("accent", "#ffcf33"), ONACC = tok("on-accent", "#14161a");
+          if (String(v.backdrop) === "off") q(".tv-bg").style.display = "none";
+          var split = function (s, max) { return String(s).split("|").map(function (x) { return x.trim(); }).filter(Boolean).slice(0, max); };
+          // rough text width in em: CJK counts 1, latin and digits 0.6
+          var em = function (s) { var w = 0; for (var c = 0; c < s.length; c++) w += s.charCodeAt(c) > 255 ? 1 : 0.6; return Math.max(w, 1); };
+          // cue times: take what was given, continue at the same spacing, keep a floor and a minimum distance
+          var cueList = function (raw, count) {
+            var c = String(raw).split(/[,，\s]+/).map(parseFloat).filter(function (x) { return isFinite(x); }).slice(0, count);
+            var gap = c.length > 1 ? (c[c.length - 1] - c[0]) / (c.length - 1) : CFG.gap;
+            if (!c.length) c.push(CFG.first);
+            while (c.length < count) c.push(c[c.length - 1] + gap);
+            c[0] = Math.max(c[0], CFG.floor);
+            for (var i = 1; i < count; i++) c[i] = Math.max(c[i], c[i - 1] + CFG.minGap);
+            return c;
+          };
+          var items = split(v.items, 5), n = items.length, cues = cueList(v.cues, n);
+          var tags = String(v.tags).split("|").map(function (x) { return x.trim(); });
+          var hasTags = tags.join("") !== "";
+
+          // rows are equal slices of an 860px column, so node positions are plain arithmetic
+          var TOP = 110, HGT = 860;
+          var yOf = function (i) { return TOP + ((i + 0.5) * HGT) / n; };
+          var trackTop = yOf(0) - Math.min(140, HGT / n / 2 + 20), trackLen = yOf(n - 1) - trackTop;
+          var list = q(".tv-list"), track = q(".tv-track"), fill = q(".tv-fill");
+          // centre the whole figure (tag column + node + widest label) on the canvas
+          var sizes = items.map(function (t) { return Math.floor(Math.min(CFG.fonts[n], 1180 / em(t))); });
+          var widest = 0, tagW = 0;
+          items.forEach(function (t, i) { widest = Math.max(widest, em(t) * sizes[i]); if (hasTags && tags[i]) tagW = Math.max(tagW, em(tags[i]) * 60); });
+          var left = Math.round((1920 - (tagW + 190 + widest)) / 2);
+          list.style.left = left + "px";
+          list.innerHTML = "";
+          [track, fill].forEach(function (el) { el.style.left = left + tagW + 91 + "px"; el.style.top = trackTop + "px"; el.style.height = trackLen + "px"; });
+          var rows = items.map(function (t, i) {
+            var r = document.createElement("div");
+            r.className = "tv-row";
+            r.innerHTML = '<span class="tv-tag"></span><span class="tv-node"><span class="tv-hole"></span><span class="tv-halo"></span><span class="tv-dot"></span></span><span class="tv-label"><span class="tv-txt"></span></span>';
+            var g = function (s) { return r.querySelector(s); };
+            g(".tv-tag").textContent = tags[i] || "";
+            g(".tv-tag").style.width = tagW + "px";
+            g(".tv-txt").textContent = t;
+            g(".tv-txt").style.fontSize = sizes[i] + "px";
+            list.appendChild(r);
+            return { tag: g(".tv-tag"), hole: g(".tv-hole"), halo: g(".tv-halo"), dot: g(".tv-dot"), label: g(".tv-label"), txt: g(".tv-txt") };
+          });
+
+          var tl = gsap.timeline({ paused: true });
+          tl.set(fill, { transformOrigin: "50% 0%" }, 0);
+          // faint rail and empty sockets first: the viewer sees how many stops are coming
+          tl.fromTo(track, { opacity: 0 }, { opacity: 0.3, duration: 0.3, ease: "power1.out" }, 0.03);
+          rows.forEach(function (r, i) {
+            var t = cues[i], seg = i ? Math.min(CFG.grow, (t - cues[i - 1]) * 0.7) : Math.min(CFG.grow, t - 0.1);
+            var frac = (yOf(i) - trackTop) / trackLen;
+            tl.set(r.txt, { transformOrigin: "0% 50%" }, 0);
+            tl.fromTo(r.hole, { opacity: 0 }, { opacity: 0.45, duration: 0.3, ease: "power1.out" }, 0.03);
+            // the line grows so that it ARRIVES on the cue; the dot fires on arrival
+            if (i === 0) tl.fromTo(fill, { scaleY: 0 }, { scaleY: frac, duration: seg, ease: "power2.inOut" }, t - seg);
+            else tl.to(fill, { scaleY: frac, duration: seg, ease: "power2.inOut" }, t - seg);
+            tl.to(r.hole, { opacity: 0, duration: 0.12, ease: "none" }, t);
+            tl.fromTo(r.dot, { scale: 0 }, { scale: 1.3, duration: CFG.pop, ease: "back.out(3)" }, t);
+            tl.fromTo(r.halo, { scale: 0, opacity: 0 }, { scale: 2.4, opacity: 0.3, duration: 0.3, ease: "power2.out" }, t);
+            // the label is pushed out of the line: clipped at the line side, sliding right
+            tl.fromTo(r.label, { opacity: 0, x: -70, clipPath: "inset(0% 100% 0% 0%)" }, { opacity: 1, x: 0, clipPath: "inset(0% 0% 0% 0%)", duration: CFG.push, ease: "power3.out" }, t + 0.04);
+            tl.fromTo(r.tag, { opacity: 0, x: 24 }, { opacity: 1, x: 0, duration: 0.3, ease: "power3.out" }, t + 0.04);
+            if (i < n - 1) {
+              var tn = cues[i + 1];
+              tl.to(r.txt, { scale: CFG.past, color: MUTED, duration: CFG.dim, ease: "power2.out" }, tn);
+              tl.to(r.tag, { color: MUTED, duration: CFG.dim, ease: "power2.out" }, tn);
+              tl.to(r.dot, { scale: 0.8, duration: CFG.dim, ease: "power2.out" }, tn);
+              tl.to(r.halo, { scale: 0, opacity: 0, duration: CFG.dim, ease: "power2.out" }, tn);
+            }
+          });
+    
+          window.__timelines["timeline-vertical"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

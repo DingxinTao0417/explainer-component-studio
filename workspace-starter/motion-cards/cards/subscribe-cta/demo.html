@@ -1,0 +1,139 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"icon","type":"enum","label":"图标","default":"bell","options":[{"value":"bell","label":"铃铛"},{"value":"heart","label":"心"},{"value":"star","label":"星"}]},
+    {"id":"line","type":"string","label":"一句话（12 字以内）","default":"觉得有用，就点个关注"},
+    {"id":"btn","type":"string","label":"按钮文字（4 字以内）","default":"关注"},
+    {"id":"rowY","type":"number","label":"这一行的顶边位置（px）","default":430,"min":40,"max":840,"step":10},
+    {"id":"again","type":"number","label":"第二次提示的时间（秒）","default":2.7,"min":2,"max":10,"step":0.1},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>subscribe-cta · 行动号召</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="subscribe-cta-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .sc { position: absolute; inset: 0; }
+        .sc-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .sc-row { position: absolute; left: 0; top: 430px; width: 1920px; height: 220px; display: flex; align-items: center; justify-content: center; }
+        .sc-icon { position: relative; display: block; flex: none; width: 170px; height: 170px; border-radius: 50%; background: var(--k-panel); color: var(--k-accent); }
+        .sc-swing { position: absolute; left: 85px; top: 46px; width: 0; height: 0; }
+        .sc-glyph { position: absolute; left: -50px; top: -11px; display: none; width: 100px; height: 100px; }
+        .sc-glyph.sc-on { display: block; }
+        .sc-text { display: block; margin: 0 48px 0 44px; font-size: 80px; line-height: 110px; font-weight: 800; white-space: nowrap; }
+        .sc-point { display: block; flex: none; width: 192px; height: 72px; color: var(--k-accent); }
+        .sc-btnwrap { position: relative; display: block; flex: none; margin-left: 40px; }
+        .sc-btn { display: block; min-width: 290px; height: 140px; padding: 0 60px; border-radius: 70px; background: var(--k-accent); color: var(--k-on-accent); font-size: 68px; line-height: 140px; font-weight: 800; text-align: center; white-space: nowrap; }
+        .sc-ring { position: absolute; inset: 0; border: 7px solid var(--k-accent); border-radius: 70px; opacity: 0; }
+      </style>
+
+      <div id="root" data-composition-id="subscribe-cta" data-width="1920" data-height="1080">
+        <div class="sc">
+          <div class="sc-bg"></div>
+          <div class="sc-row">
+            <div class="sc-icon"><div class="sc-swing">
+              <svg class="sc-glyph sc-on" data-icon="bell" viewBox="0 0 64 64" fill="currentColor"><path d="M32 7c-9.4 0-16 7-16 16.500V35l-5.500 8.500V47h43v-3.500L48 35V23.500C48 14 41.400 7 32 7z" /><path d="M25 51a7 7 0 0 0 14 0z" /></svg>
+              <svg class="sc-glyph" data-icon="heart" viewBox="0 0 64 64" fill="currentColor"><path d="M32 56 9.500 33.500a14 14 0 0 1 19.800-19.800L32 16.400l2.700-2.700a14 14 0 0 1 19.800 19.800z" /></svg>
+              <svg class="sc-glyph" data-icon="star" viewBox="0 0 64 64" fill="currentColor"><path d="M32 5l8 17.500 19 2.200-14 13 3.800 18.800L32 47.200 15.200 56.500 19 37.700l-14-13 19-2.200z" /></svg>
+            </div></div>
+            <span class="sc-text">觉得有用，就点个关注</span>
+            <svg class="sc-point" viewBox="0 0 170 64" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"><path class="sc-stem" d="M8 32 H154" /><path class="sc-tip" d="M126 8 L156 32 L126 56" /></svg>
+            <div class="sc-btnwrap"><span class="sc-btn">关注</span><div class="sc-ring"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = {
+            at: 0.3,          // icon
+            hop: 40,          // px the icon jumps
+            textLag: 0.3,     // sentence, after the icon
+            arrowLag: 0.75,   // pointer, after the icon
+            btnLag: 1.0,      // button, after the icon — the pointer has already arrived and points at it
+            step: 0.18,       // second pass: icon → pointer → button, this far apart
+            swing: [16, -12, 8, -4, 0], // glyph wiggle, degrees, decaying
+          };
+          var v = { icon: "bell", line: "觉得有用，就点个关注", btn: "关注", rowY: 430, again: 2.7, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".sc");
+          var q = function (s) { return root.querySelector(s); };
+          var all = function (s) { return Array.prototype.slice.call(root.querySelectorAll(s)); };
+          if (String(v.backdrop) === "off") q(".sc-bg").style.display = "none";
+          q(".sc-row").style.top = (parseFloat(v.rowY) || 0) + "px";
+          var glyph = null;
+          all(".sc-glyph").forEach(function (g) {
+            var on = g.getAttribute("data-icon") === String(v.icon);
+            g.setAttribute("class", "sc-glyph" + (on ? " sc-on" : ""));
+            if (on) glyph = g;
+          });
+          if (!glyph) { glyph = q(".sc-glyph"); glyph.setAttribute("class", "sc-glyph sc-on"); }
+          q(".sc-text").textContent = String(v.line || "");
+          q(".sc-btn").textContent = String(v.btn || "");
+          var icon = q(".sc-icon"), text = q(".sc-text"), pointer = q(".sc-point"), stem = q(".sc-stem"), tip = q(".sc-tip"), btn = q(".sc-btn"), ring = q(".sc-ring");
+          var swing = q(".sc-swing"), go = CFG.at, again = Math.max(go + CFG.btnLag + 0.9, parseFloat(v.again) || 2.7);
+
+          var tl = gsap.timeline({ paused: true });
+          var wiggle = function (t) {
+            CFG.swing.forEach(function (a, i) { tl.to(swing, { rotation: a, duration: 0.09, ease: "sine.inOut" }, t + i * 0.09); });
+          };
+          var hop = function (t, h) {
+            tl.to(icon, { y: -h, duration: 0.16, ease: "power2.out" }, t);
+            tl.to(icon, { y: 0, duration: 0.42, ease: "bounce.out" }, t + 0.16);
+          };
+          // 1) icon: pops in already jumping, lands with a bounce, glyph rings
+          tl.fromTo(icon, { scale: 0, opacity: 0, y: 30 }, { scale: 1, opacity: 1, y: -CFG.hop, duration: 0.18, ease: "power3.out" }, go);
+          tl.to(icon, { y: 0, duration: 0.45, ease: "bounce.out" }, go + 0.18);
+          wiggle(go + 0.14);
+          // 2) the sentence
+          tl.fromTo(text, { opacity: 0, x: -36 }, { opacity: 1, x: 0, duration: 0.4, ease: "power3.out" }, go + CFG.textLag);
+          // 3) the pointer draws itself toward the button, then the button answers
+          tl.set([stem, tip], { strokeDasharray: 150, strokeDashoffset: 150, opacity: 0 }, 0);
+          tl.set(stem, { opacity: 1 }, go + CFG.arrowLag);
+          tl.to(stem, { strokeDashoffset: 0, duration: 0.24, ease: "power2.out" }, go + CFG.arrowLag);
+          tl.set(tip, { opacity: 1 }, go + CFG.arrowLag + 0.16);
+          tl.to(tip, { strokeDashoffset: 0, duration: 0.2, ease: "power2.out" }, go + CFG.arrowLag + 0.16);
+          tl.set(btn, { opacity: 0 }, 0);
+          tl.set(btn, { opacity: 1 }, go + CFG.btnLag);
+          tl.fromTo(btn, { scale: 0 }, { scale: 1.1, duration: 0.16, ease: "power3.out" }, go + CFG.btnLag);
+          tl.to(btn, { scale: 1, duration: 0.34, ease: "back.out(2.8)" }, go + CFG.btnLag + 0.16);
+          // 4) one reminder pass, same order, smaller
+          hop(again, CFG.hop * 0.75);
+          wiggle(again + 0.1);
+          tl.to(pointer, { x: 20, duration: 0.14, ease: "power2.out" }, again + CFG.step);
+          tl.to(pointer, { x: 0, duration: 0.34, ease: "back.out(3)" }, again + CFG.step + 0.14);
+          tl.to(btn, { scale: 1.09, duration: 0.12, ease: "power2.out" }, again + CFG.step * 2);
+          tl.to(btn, { scale: 1, duration: 0.4, ease: "back.out(3)" }, again + CFG.step * 2 + 0.12);
+          tl.fromTo(ring, { scaleX: 1, scaleY: 1, opacity: 0.9 }, { scaleX: 1.2, scaleY: 1.5, opacity: 0, duration: 0.55, ease: "power2.out", immediateRender: false }, again + CFG.step * 2);
+          window.__timelines["subscribe-cta"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

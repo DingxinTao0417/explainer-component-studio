@@ -1,0 +1,104 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"x","type":"number","label":"目标左上角 x（1920×1080 坐标）","default":140,"min":0,"max":1920,"step":1},
+    {"id":"y","type":"number","label":"目标左上角 y","default":572,"min":0,"max":1080,"step":1},
+    {"id":"w","type":"number","label":"目标宽","default":580,"min":20,"max":1800,"step":1},
+    {"id":"h","type":"number","label":"目标高","default":158,"min":20,"max":1000,"step":1},
+    {"id":"pad","type":"number","label":"扣住后离目标的余量（像素）","default":16,"min":0,"max":80,"step":1},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"垫示例截图（放大 2 倍）"},{"value":"off","label":"透明，只留角标"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>bracket-frame · 角标取景框</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="bracket-frame-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .bf { position: absolute; inset: 0; }
+        .bf-shot { position: absolute; left: 0; top: 0; display: block; width: 1920px; height: 1080px; background-repeat: no-repeat; background-size: 3840px 2160px; background-position: -680px -220px; }
+        .bf-c { position: absolute; display: block; box-sizing: border-box; width: 79px; height: 79px; border: 0 solid var(--k-accent); filter: drop-shadow(0 0 2px rgba(13, 16, 22, 0.95)) drop-shadow(0 0 2px rgba(13, 16, 22, 0.95)); }
+        .bf-tl { left: 110px; top: 542px; border-left-width: 14px; border-top-width: 14px; }
+        .bf-tr { left: 671px; top: 542px; border-right-width: 14px; border-top-width: 14px; }
+        .bf-bl { left: 110px; top: 681px; border-left-width: 14px; border-bottom-width: 14px; }
+        .bf-br { left: 671px; top: 681px; border-right-width: 14px; border-bottom-width: 14px; }
+      </style>
+
+      <div id="root" data-composition-id="bracket-frame" data-width="1920" data-height="1080">
+        <div class="bf">
+          <div class="bf-shot" style="background-image: url(motion-cards/lib/samples/ui.png)"></div>
+          <div class="bf-c bf-tl"></div>
+          <div class="bf-c bf-tr"></div>
+          <div class="bf-c bf-bl"></div>
+          <div class="bf-c bf-br"></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // loose: how far outside the final position the corners first appear · over: how far they close in past it
+          // close: the pull-in · ease: the breathe back out to the final position · blink: one half-cycle of the focus-confirm flicker
+          var CFG = { at: 0.2, fade: 0.1, loose: 90, over: 10, close: 0.26, easeBack: 0.16, blink: 0.067, line: 14 };
+          var v = { x: 140, y: 572, w: 580, h: 158, pad: 16, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".bf");
+          var q = function (s) { return root.querySelector(s); };
+          if (String(v.backdrop) === "off") q(".bf-shot").style.display = "none";
+          var num = function (a, d) { a = parseFloat(a); return isFinite(a) ? a : d; };
+          var W = num(v.w, 580), H = num(v.h, 158), pad = num(v.pad, 16), b = CFG.line;
+          var x0 = num(v.x, 140) - pad - b, y0 = num(v.y, 572) - pad - b, x1 = x0 + W + 2 * (pad + b), y1 = y0 + H + 2 * (pad + b);
+          // arm length follows the short side of the target, so the corners never meet
+          var arm = Math.max(48, Math.min(140, Math.min(W, H) * 0.5));
+          var corners = [
+            { el: q(".bf-tl"), l: x0, t: y0, sx: -1, sy: -1 },
+            { el: q(".bf-tr"), l: x1 - arm, t: y0, sx: 1, sy: -1 },
+            { el: q(".bf-bl"), l: x0, t: y1 - arm, sx: -1, sy: 1 },
+            { el: q(".bf-br"), l: x1 - arm, t: y1 - arm, sx: 1, sy: 1 }
+          ];
+
+          var tl = gsap.timeline({ paused: true });
+          var tClose = CFG.at + CFG.fade, tEase = tClose + CFG.close, tLock = tEase + CFG.easeBack + 0.02;
+          corners.forEach(function (c) {
+            c.el.style.left = c.l + "px";
+            c.el.style.top = c.t + "px";
+            c.el.style.width = c.el.style.height = arm + "px";
+            tl.fromTo(c.el, { opacity: 0 }, { opacity: 1, duration: CFG.fade, ease: "none" }, CFG.at);
+            // all four move together, same distance, same curve: that sameness is what reads as a machine
+            tl.fromTo(c.el, { x: c.sx * CFG.loose, y: c.sy * CFG.loose }, { x: -c.sx * CFG.over, y: -c.sy * CFG.over, duration: CFG.close, ease: "power3.out" }, tClose);
+            tl.to(c.el, { x: 0, y: 0, duration: CFG.easeBack, ease: "sine.inOut" }, tEase);
+            // focus confirmed: two quick flickers
+            for (var i = 0; i < 2; i++) {
+              tl.to(c.el, { opacity: 0.2, duration: CFG.blink, ease: "none" }, tLock + i * CFG.blink * 2);
+              tl.to(c.el, { opacity: 1, duration: CFG.blink, ease: "none" }, tLock + i * CFG.blink * 2 + CFG.blink);
+            }
+          });
+          window.__timelines["bracket-frame"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

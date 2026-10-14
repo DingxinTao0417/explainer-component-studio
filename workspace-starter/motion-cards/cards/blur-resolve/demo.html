@@ -1,0 +1,91 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"text","type":"string","label":"一句话，按对焦顺序用 | 分段","default":"把模糊的想法|变成|清楚的步骤"},
+    {"id":"step","type":"number","label":"相邻两段的间隔（秒）","default":0.3,"min":0.1,"max":1,"step":0.05},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>blur-resolve · 虚焦变实</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="blur-resolve-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .br { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 0 140px; }
+        .br-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .br-line { position: relative; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; font-size: 124px; font-weight: 800; line-height: 1.5; letter-spacing: 0.01em; }
+        .br-seg { display: block; white-space: pre; }
+        .br-seg:last-child { color: var(--k-accent); }
+      </style>
+
+      <div id="root" data-composition-id="blur-resolve" data-width="1920" data-height="1080">
+        <div class="br">
+          <div class="br-bg"></div>
+          <div class="br-line"><span class="br-seg">把模糊的想法</span><span class="br-seg">变成</span><span class="br-seg">清楚的步骤</span></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { fogIn: 0.3, at: 0.5, step: 0.3, pull: 0.38, soft: 24, haze: 0.55, swell: 1.07, hunt: 5, huntOut: 0.1, huntBack: 0.2 };
+          var v = { text: "把模糊的想法|变成|清楚的步骤", step: CFG.step, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".br");
+          var line = root.querySelector(".br-line");
+          var parts = String(v.text).split("|");
+          line.textContent = "";
+          var segs = [];
+          for (var i = 0; i < parts.length; i++) {
+            if (!parts[i]) continue;
+            var s = document.createElement("span");
+            s.className = "br-seg";
+            s.textContent = parts[i];
+            line.appendChild(s);
+            segs.push(s);
+          }
+          if (String(v.backdrop) === "off") root.querySelector(".br-bg").style.display = "none";
+          var step = parseFloat(v.step) || CFG.step;
+          var fog = "blur(" + CFG.soft + "px)";
+
+          var tl = gsap.timeline({ paused: true });
+          // the whole sentence is on screen from the start, as out-of-focus blobs
+          tl.fromTo(line, { opacity: 0 }, { opacity: 1, duration: CFG.fogIn, ease: "none" }, 0);
+          for (var j = 0; j < segs.length; j++) {
+            var t = CFG.at + j * step;
+            // focus pull: in, slightly past, back, the way a lens hunts before it locks
+            tl.fromTo(segs[j], { filter: fog, opacity: CFG.haze, scale: CFG.swell }, { filter: "blur(0px)", opacity: 1, scale: 1, duration: CFG.pull, ease: "power2.out" }, t);
+            tl.to(segs[j], { filter: "blur(" + CFG.hunt + "px)", duration: CFG.huntOut, ease: "sine.inOut" }, t + CFG.pull);
+            tl.to(segs[j], { filter: "blur(0px)", duration: CFG.huntBack, ease: "sine.out" }, t + CFG.pull + CFG.huntOut);
+          }
+          window.__timelines["blur-resolve"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

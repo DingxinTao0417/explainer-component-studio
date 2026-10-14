@@ -1,0 +1,138 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"percent","type":"number","label":"切出来的那块占多少（1–60）","default":28,"min":1,"max":60,"step":1},
+    {"id":"caption","type":"string","label":"数字下面的一行说明","default":"的时间在等别人回复"},
+    {"id":"note","type":"string","label":"来源小注（可空）","default":"示例数据"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>pie-wedge · 扇形切出</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="pie-wedge-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .pw { position: absolute; inset: 0; }
+        .pw-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .pw-svg { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; display: block; }
+        .pw-track { fill: none; stroke: color-mix(in srgb, var(--k-muted) 30%, var(--k-bg)); stroke-width: 6; }
+        .pw-sweep { fill: none; stroke: color-mix(in srgb, var(--k-muted) 58%, var(--k-bg)); stroke-width: 310; }
+        .pw-rest, .pw-cold { fill: color-mix(in srgb, var(--k-muted) 58%, var(--k-bg)); }
+        .pw-hot { fill: var(--k-accent); }
+        .pw-lead { fill: none; stroke: var(--k-ink); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+        .pw-pin { fill: var(--k-ink); }
+        .pw-label { position: absolute; left: 1124px; top: 196px; display: flex; flex-direction: column; align-items: flex-start; }
+        .pw-num { display: block; font-size: 190px; font-weight: 800; line-height: 1.32; letter-spacing: -0.02em; color: var(--k-accent); white-space: nowrap; }
+        .pw-cap { display: block; font-size: 60px; font-weight: 700; white-space: nowrap; }
+        .pw-note { display: block; margin-top: 20px; font-size: 40px; font-weight: 500; color: var(--k-muted); white-space: nowrap; }
+      </style>
+
+      <div id="root" data-composition-id="pie-wedge" data-width="1920" data-height="1080">
+        <div class="pw">
+          <div class="pw-bg"></div>
+          <svg class="pw-svg" viewBox="0 0 1920 1080">
+            <circle class="pw-track" cx="620" cy="590" r="307" />
+            <circle class="pw-sweep" cx="620" cy="590" r="155" transform="rotate(-90 620 590)" opacity="0" />
+            <path class="pw-rest" d="" />
+            <g class="pw-wedge"><path class="pw-cold" d="" /><path class="pw-hot" d="" /></g>
+            <path class="pw-lead" d="" />
+            <circle class="pw-pin" cx="0" cy="0" r="10" />
+          </svg>
+          <div class="pw-label">
+            <span class="pw-num">28%</span>
+            <span class="pw-cap">的时间在等别人回复</span>
+            <span class="pw-note">示例数据</span>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { at: 0.3, sweep: 0.8, beat: 0.15, cx: 620, cy: 590, r: 310, aim: -38, step: 48, slide: 0.42, leadGap: 22, leadOut: 74, leadRun: 120, leadDraw: 0.28 };
+          var v = { percent: 28, caption: "的时间在等别人回复", note: "示例数据", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".pw");
+          var q = function (s) { return root.querySelector(s); };
+          var pct = Math.max(1, Math.min(60, parseFloat(v.percent) || 28));
+          q(".pw-num").textContent = +pct.toFixed(1) + "%";
+          q(".pw-cap").textContent = String(v.caption);
+          q(".pw-note").textContent = String(v.note);
+          if (!String(v.note)) q(".pw-note").style.display = "none";
+          if (String(v.backdrop) === "off") q(".pw-bg").style.display = "none";
+
+          // the wedge is centred on the `aim` direction (up-right), so it slides toward its own label
+          var rad = Math.PI / 180, half = (pct * 3.6) / 2, cx = CFG.cx, cy = CFG.cy, R = CFG.r;
+          var at = function (deg, r) { return (cx + Math.cos(deg * rad) * r).toFixed(1) + " " + (cy + Math.sin(deg * rad) * r).toFixed(1); };
+          var a0 = CFG.aim - half, a1 = CFG.aim + half, big = pct > 50 ? 1 : 0;
+          var wedgeD = "M" + cx + " " + cy + "L" + at(a0, R) + "A" + R + " " + R + " 0 " + big + " 1 " + at(a1, R) + "Z";
+          q(".pw-cold").setAttribute("d", wedgeD);
+          q(".pw-hot").setAttribute("d", wedgeD);
+          q(".pw-rest").setAttribute("d", "M" + cx + " " + cy + "L" + at(a1, R) + "A" + R + " " + R + " 0 " + (1 - big) + " 1 " + at(a0, R) + "Z");
+          var ux = Math.cos(CFG.aim * rad), uy = Math.sin(CFG.aim * rad);
+          var r0 = R + CFG.step + CFG.leadGap, r1 = r0 + CFG.leadOut;
+          var ex = cx + ux * r1 + CFG.leadRun, ey = cy + uy * r1;
+          var lead = q(".pw-lead"), pin = q(".pw-pin"), label = q(".pw-label");
+          lead.setAttribute("d", "M" + at(CFG.aim, r0) + "L" + at(CFG.aim, r1) + "L" + ex.toFixed(1) + " " + ey.toFixed(1));
+          var leadLen = CFG.leadOut + CFG.leadRun;
+          lead.setAttribute("stroke-dasharray", leadLen + " " + (leadLen + 30));
+          pin.setAttribute("cx", (cx + ux * r0).toFixed(1));
+          pin.setAttribute("cy", (cy + uy * r0).toFixed(1));
+          label.style.left = Math.round(ex + 28) + "px";
+          label.style.top = Math.round(ey - 125) + "px";
+
+          var sweep = q(".pw-sweep"), C = 2 * Math.PI * 155;
+          var state = { s: 0 };
+          var render = function () { sweep.setAttribute("stroke-dasharray", (C * state.s).toFixed(1) + " " + (C + 10).toFixed(1)); };
+          var full = CFG.at + CFG.sweep, cut = full + CFG.beat, wedge = q(".pw-wedge");
+
+          var tl = gsap.timeline({ paused: true, onUpdate: render });
+          // 1 the whole: the disc fills clockwise from 12 o'clock
+          tl.fromTo(sweep, { opacity: 0 }, { opacity: 1, duration: 0.01, ease: "none" }, CFG.at);
+          tl.fromTo(state, { s: 0 }, { s: 1, duration: CFG.sweep, ease: "power2.inOut" }, CFG.at);
+          // swap the swept disc for two real pieces on the frame it completes (same colour, nothing visible changes)
+          tl.fromTo([q(".pw-rest"), q(".pw-cold")], { opacity: 0 }, { opacity: 1, duration: 0.01, ease: "none" }, full);
+          tl.to(sweep, { opacity: 0, duration: 0.01, ease: "none" }, full + 0.01);
+          // 2 the part: half a step out along its own bisector, colouring as it leaves
+          tl.fromTo(wedge, { x: 0, y: 0 }, { x: ux * CFG.step, y: uy * CFG.step, duration: CFG.slide, ease: "back.out(2.4)" }, cut);
+          tl.fromTo(q(".pw-hot"), { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "none" }, cut);
+          // 3 the name: a leader grows out of the wedge and pulls the label in
+          var la = cut + CFG.slide - 0.12;
+          tl.fromTo(pin, { attr: { r: 0 } }, { attr: { r: 10 }, duration: 0.15, ease: "back.out(3)" }, la);
+          tl.fromTo(lead, { strokeDashoffset: leadLen, opacity: 0 }, { strokeDashoffset: 0, opacity: 1, duration: CFG.leadDraw, ease: "power2.out" }, la);
+          tl.set(q(".pw-num"), { transformOrigin: "0% 60%" }, 0);
+          tl.fromTo(q(".pw-num"), { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2.4)" }, la + CFG.leadDraw - 0.08);
+          tl.fromTo(q(".pw-cap"), { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.35, ease: "power3.out" }, la + CFG.leadDraw + 0.12);
+          tl.fromTo(q(".pw-note"), { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "none" }, la + CFG.leadDraw + 0.4);
+          render();
+          window.__timelines["pie-wedge"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

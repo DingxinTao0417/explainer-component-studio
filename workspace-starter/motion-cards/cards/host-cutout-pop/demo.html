@@ -1,0 +1,113 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"host","type":"string","label":"抠像人物图地址（透明底，从项目根目录写起）","default":"motion-cards/lib/samples/host.png"},
+    {"id":"side","type":"enum","label":"人站在哪","default":"left","options":[{"value":"left","label":"左"},{"value":"center","label":"中（不带字）"},{"value":"right","label":"右"}]},
+    {"id":"shape","type":"enum","label":"身后的底形","default":"circle","options":[{"value":"circle","label":"圆"},{"value":"block","label":"圆角块"}]},
+    {"id":"kicker","type":"string","label":"旁边的小标题（可空）","default":"这一期"},
+    {"id":"title","type":"string","label":"旁边的标题（可空，7 字以内）","default":"我来带你做"},
+    {"id":"note","type":"string","label":"旁边的说明（可空）","default":"从零开始，一步一步来"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>host-cutout-pop · 人物弹入</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="host-cutout-pop-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .cp { position: absolute; inset: 0; }
+        .cp-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .cp-stage { position: absolute; left: 220px; top: 0; width: 800px; height: 1080px; }
+        .cp-shape { position: absolute; left: 50px; top: 190px; width: 700px; height: 700px; border-radius: 50%; background: var(--k-accent); }
+        .cp-fig { position: absolute; left: 20px; top: 200px; width: 760px; height: 950px; background: center top / contain no-repeat; }
+        .cp-main { position: absolute; left: 1090px; top: 380px; width: 760px; }
+        .cp-kicker { display: block; font-size: 44px; line-height: 60px; font-weight: 700; color: var(--k-accent); }
+        .cp-title { display: block; margin-top: 8px; font-size: 104px; line-height: 136px; font-weight: 800; white-space: nowrap; }
+        .cp-note { display: block; margin-top: 16px; font-size: 44px; line-height: 60px; color: var(--k-muted); white-space: nowrap; }
+      </style>
+
+      <div id="root" data-composition-id="host-cutout-pop" data-width="1920" data-height="1080">
+        <div class="cp" data-layout-allow-overflow>
+          <div class="cp-bg"></div>
+          <div class="cp-stage">
+            <div class="cp-shape"></div>
+            <div class="cp-fig" style="background-image: url(motion-cards/lib/samples/host.png)"></div>
+          </div>
+          <div class="cp-main">
+            <span class="cp-kicker">这一期</span>
+            <span class="cp-title">我来带你做</span>
+            <span class="cp-note">从零开始，一步一步来</span>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = {
+            at: 0.25,        // shape starts opening
+            shapeIn: 0.3,    // shape 0 → a touch too big
+            lead: 0.12,      // the host launches this long AFTER the shape
+            up: 0.28,        // bottom edge → above its seat
+            over: 46,        // px above the seat at the top of the jump (the figure hangs 70px below the canvas, so this must stay under 70)
+            settle: 0.38,    // drop back into the seat
+            textLag: 0.1,    // text waits this long after the top of the jump
+          };
+          var v = { side: "left", shape: "circle", kicker: "这一期", title: "我来带你做", note: "从零开始，一步一步来", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".cp");
+          var q = function (s) { return root.querySelector(s); };
+          if (String(v.backdrop) === "off") q(".cp-bg").style.display = "none";
+          var fig = q(".cp-fig"), shape = q(".cp-shape"), stage = q(".cp-stage"), main = q(".cp-main");
+          if (v.host) fig.style.backgroundImage = 'url("' + String(v.host) + '")';
+          if (String(v.shape) === "block") { shape.style.borderRadius = "90px"; shape.style.top = "250px"; shape.style.height = "830px"; }
+          var side = String(v.side || "left"), texts = [];
+          [["kicker", ".cp-kicker"], ["title", ".cp-title"], ["note", ".cp-note"]].forEach(function (p) {
+            var el = q(p[1]);
+            el.textContent = String(v[p[0]] || "");
+            if (v[p[0]] && side !== "center") texts.push(el); else el.style.display = "none";
+          });
+          if (side === "center") stage.style.left = "560px";
+          if (side === "right") { stage.style.left = "900px"; main.style.left = "150px"; }
+          var go = CFG.at, jump = go + CFG.lead, top = jump + CFG.up;
+
+          var tl = gsap.timeline({ paused: true });
+          tl.set(fig, { transformOrigin: "50% 100%" }, 0);
+          // 1) the shape opens first: it is the stage the host jumps onto
+          tl.fromTo(shape, { scale: 0, opacity: 0 }, { scale: 1.07, opacity: 1, duration: CFG.shapeIn, ease: "power3.out" }, go);
+          tl.to(shape, { scale: 1, duration: 0.34, ease: "back.out(2.2)" }, go + CFG.shapeIn);
+          // 2) the host launches from under the bottom edge, stretched, overshoots its seat, then drops in
+          tl.fromTo(fig, { y: 930, scaleX: 0.93, scaleY: 1.1 }, { y: -CFG.over, scaleX: 0.97, scaleY: 1.04, duration: CFG.up, ease: "power3.out" }, jump);
+          tl.to(fig, { y: 0, scaleX: 1, scaleY: 1, duration: CFG.settle, ease: "back.out(2.6)" }, top);
+          // 3) words only after the host is up
+          if (texts.length) tl.fromTo(texts, { opacity: 0, x: side === "right" ? 40 : -40 }, { opacity: 1, x: 0, duration: 0.4, ease: "power3.out", stagger: 0.09 }, top + CFG.textLag);
+          window.__timelines["host-cutout-pop"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

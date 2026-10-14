@@ -1,0 +1,112 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"titles","type":"string","label":"四页的标题（用 | 分开，从底到顶）","default":"访谈记录|提纲初稿|数据附表|终版脚本"},
+    {"id":"pick","type":"number","label":"抽第几页（1 是最底下那页）","default":2,"min":1,"max":4,"step":1},
+    {"id":"note","type":"string","label":"每页角上的小字","default":"示例文档"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>doc-stack-pick · 文档堆里抽一张</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="doc-stack-pick-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .dp { position: absolute; inset: 0; }
+        .dp-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .dp-pg { position: absolute; left: 400px; top: 150px; width: 600px; height: 780px; border-radius: 14px; background: var(--k-ink); color: var(--k-bg); box-shadow: 0 14px 34px rgba(0, 0, 0, 0.4); }
+        .dp-lift { position: absolute; inset: 0; border-radius: 14px; box-shadow: 0 70px 140px rgba(0, 0, 0, 0.6); opacity: 0; }
+        .dp-bar { position: absolute; left: 0; right: 0; top: 0; height: 22px; border-radius: 14px 14px 0 0; background: var(--k-muted); }
+        .dp-bar2 { position: absolute; left: 0; right: 0; top: 0; height: 22px; border-radius: 14px 14px 0 0; background: var(--k-accent); opacity: 0; }
+        .dp-note { position: absolute; left: 56px; top: 64px; font-size: 40px; line-height: 1.2; opacity: 0.55; white-space: nowrap; }
+        .dp-t { position: absolute; left: 56px; top: 124px; font-size: 64px; font-weight: 800; line-height: 1.25; white-space: nowrap; }
+        .dp-l { position: absolute; left: 56px; height: 22px; border-radius: 11px; background: var(--k-bg); opacity: 0.14; }
+        .dp-l1 { top: 260px; width: 488px; }
+        .dp-l2 { top: 314px; width: 430px; }
+        .dp-l3 { top: 368px; width: 470px; }
+        .dp-l4 { top: 422px; width: 300px; }
+        .dp-blk { position: absolute; left: 56px; top: 500px; width: 488px; height: 200px; border-radius: 12px; background: var(--k-bg); opacity: 0.1; }
+        .dp-shade { position: absolute; inset: 0; border-radius: 14px; background: var(--k-bg); opacity: 0; }
+      </style>
+
+      <div id="root" data-composition-id="doc-stack-pick" data-width="1920" data-height="1080">
+        <div class="dp">
+          <div class="dp-bg"></div>
+          <div class="dp-pg"><div class="dp-lift"></div><div class="dp-bar"></div><div class="dp-bar2"></div><div class="dp-note" data-layout-allow-occlusion data-layout-allow-overlap>示例文档</div><div class="dp-t" data-layout-allow-occlusion data-layout-allow-overlap>访谈记录</div><div class="dp-l dp-l1"></div><div class="dp-l dp-l2"></div><div class="dp-l dp-l3"></div><div class="dp-l dp-l4"></div><div class="dp-blk"></div><div class="dp-shade"></div></div>
+          <div class="dp-pg"><div class="dp-lift"></div><div class="dp-bar"></div><div class="dp-bar2"></div><div class="dp-note" data-layout-allow-occlusion data-layout-allow-overlap>示例文档</div><div class="dp-t" data-layout-allow-occlusion data-layout-allow-overlap>提纲初稿</div><div class="dp-l dp-l1"></div><div class="dp-l dp-l2"></div><div class="dp-l dp-l3"></div><div class="dp-l dp-l4"></div><div class="dp-blk"></div><div class="dp-shade"></div></div>
+          <div class="dp-pg"><div class="dp-lift"></div><div class="dp-bar"></div><div class="dp-bar2"></div><div class="dp-note" data-layout-allow-occlusion data-layout-allow-overlap>示例文档</div><div class="dp-t" data-layout-allow-occlusion data-layout-allow-overlap>数据附表</div><div class="dp-l dp-l1"></div><div class="dp-l dp-l2"></div><div class="dp-l dp-l3"></div><div class="dp-l dp-l4"></div><div class="dp-blk"></div><div class="dp-shade"></div></div>
+          <div class="dp-pg"><div class="dp-lift"></div><div class="dp-bar"></div><div class="dp-bar2"></div><div class="dp-note" data-layout-allow-occlusion data-layout-allow-overlap>示例文档</div><div class="dp-t" data-layout-allow-occlusion data-layout-allow-overlap>终版脚本</div><div class="dp-l dp-l1"></div><div class="dp-l dp-l2"></div><div class="dp-l dp-l3"></div><div class="dp-l dp-l4"></div><div class="dp-blk"></div><div class="dp-shade"></div></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // fan: resting offsets of the pile · out: how far the page is drawn sideways before it changes layer · front: final size of the picked page
+          var CFG = { at: 0.45, draw: 0.42, out: 790, lift: 26, come: 0.56, front: 1.22, fanX: 56, fanY: 14, rot: [-8, -3, 3, 7], backX: -250, backScale: 0.88, shade: 0.58, drag: 16 };
+          var v = { titles: "访谈记录|提纲初稿|数据附表|终版脚本", pick: 2, note: "示例文档", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".dp");
+          var q = function (s) { return root.querySelector(s); };
+          if (String(v.backdrop) === "off") q(".dp-bg").style.display = "none";
+          var pages = Array.prototype.slice.call(root.querySelectorAll(".dp-pg"));
+          var titles = String(v.titles).split("|");
+          pages.forEach(function (pg, i) {
+            if (titles[i]) pg.querySelector(".dp-t").textContent = titles[i];
+            pg.querySelector(".dp-note").textContent = String(v.note);
+          });
+          var p = Math.max(0, Math.min(pages.length - 1, (parseInt(v.pick, 10) || 2) - 1));
+          var rest = function (i) { return { x: (i - 1.5) * CFG.fanX, y: (1.5 - i) * CFG.fanY, rotation: CFG.rot[i], scale: 1 }; };
+
+          var tl = gsap.timeline({ paused: true });
+          var t1 = CFG.at + CFG.draw, pg = pages[p], r = rest(p);
+          pages.forEach(function (el, i) {
+            var s = rest(i);
+            if (i === p) return;
+            // pages lying on top of the picked one get dragged a little by it, then spring back
+            if (i > p) {
+              tl.fromTo(el, s, { x: s.x + CFG.drag, y: s.y, rotation: s.rotation + 1.4, scale: 1, duration: CFG.draw * 0.6, ease: "power2.out" }, CFG.at);
+              tl.to(el, { x: s.x, rotation: s.rotation, duration: CFG.draw * 0.4, ease: "power1.inOut" }, CFG.at + CFG.draw * 0.6);
+            } else tl.fromTo(el, s, { x: s.x, y: s.y, rotation: s.rotation, scale: 1, duration: 0.01 }, 0);
+            // the rest of the pile steps back and goes dark
+            tl.to(el, { x: s.x + CFG.backX, scale: CFG.backScale, rotation: s.rotation * 0.6, duration: CFG.come, ease: "power2.out" }, t1);
+            tl.fromTo(el.querySelector(".dp-shade"), { opacity: 0 }, { opacity: CFG.shade, duration: CFG.come, ease: "power1.out" }, t1);
+          });
+          // 1) sideways, still in its own layer, still under the pages above it
+          tl.fromTo(pg, { x: r.x, y: r.y, rotation: r.rotation, scale: 1, zIndex: 0 }, { x: r.x + CFG.out, y: r.y - CFG.lift, rotation: r.rotation + 5, scale: 1, zIndex: 0, duration: CFG.draw, ease: "power2.inOut" }, CFG.at);
+          // 2) only once it is clear of the pile does it change layer, then it comes forward and straightens
+          tl.set(pg, { zIndex: 5 }, t1);
+          tl.to(pg, { x: 260, y: 0, rotation: 0, scale: CFG.front, duration: CFG.come, ease: "back.out(1.3)" }, t1);
+          tl.fromTo(pg.querySelector(".dp-lift"), { opacity: 0 }, { opacity: 1, duration: CFG.come, ease: "power1.out" }, t1);
+          tl.fromTo(pg.querySelector(".dp-bar2"), { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "none" }, t1 + CFG.come - 0.15);
+          window.__timelines["doc-stack-pick"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,154 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"items","type":"string","label":"等号左边的词块（用 | 分隔，2–5 个）","default":"清晰目标|具体示例|明确格式"},
+    {"id":"result","type":"string","label":"等号右边的结果","default":"稳定输出"},
+    {"id":"cues","type":"string","label":"每个词块落位的秒数，最后可多写一个给结果（逗号分隔）","default":"0.4,1.3,2.2,3.2"},
+        {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>formula-assemble · 公式拼装</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="formula-assemble-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .fa { position: absolute; inset: 0; }
+        .fa-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .fa-wrap { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 90px; }
+        .fa-terms, .fa-out { display: flex; align-items: center; justify-content: center; white-space: nowrap; }
+        .fa-terms { gap: 30px; font-size: 88px; font-weight: 800; }
+        .fa-chip { position: relative; flex: none; display: flex; align-items: center; height: 2.2em; padding: 0 0.5em; border-radius: 0.28em; background: var(--k-panel); color: var(--k-muted); }
+        .fa-bar { position: absolute; left: 0.3em; right: 0.3em; bottom: 0; height: 10px; border-radius: 5px; background: var(--k-accent); opacity: 0; }
+        .fa-t { position: relative; display: block; }
+        .fa-op { flex: none; display: block; width: 0.8em; text-align: center; font-weight: 900; line-height: 1; color: var(--k-accent); }
+        .fa-out { gap: 56px; font-size: 180px; }
+        .fa-res { flex: none; display: flex; align-items: center; height: 300px; padding: 0 90px; border-radius: 42px; background: var(--k-accent); color: var(--k-on-accent); font-size: 160px; font-weight: 900; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4); }
+        .fa-rt { display: block; }
+    
+      </style>
+
+      <div id="root" data-composition-id="formula-assemble" data-width="1920" data-height="1080">
+        <div class="fa">
+          <div class="fa-bg"></div>
+          <div class="fa-wrap">
+            <div class="fa-terms">
+              <span class="fa-chip"><span class="fa-bar"></span><span class="fa-t">清晰目标</span></span>
+              <span class="fa-op">+</span>
+              <span class="fa-chip"><span class="fa-bar"></span><span class="fa-t">具体示例</span></span>
+              <span class="fa-op">+</span>
+              <span class="fa-chip"><span class="fa-bar"></span><span class="fa-t">明确格式</span></span>
+            </div>
+            <div class="fa-out"><span class="fa-op fa-eq">=</span><span class="fa-res"><span class="fa-rt">稳定输出</span></span></div>
+          </div>
+    
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { first: 0.4, gap: 0.9, minGap: 0.5, floor: 0.3, drop: 110, land: 0.34, opLead: 0.16, eqLead: 0.24, peak: 1.14 };
+          var v = { items: "清晰目标|具体示例|明确格式", result: "稳定输出", cues: "0.4,1.3,2.2,3.2", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".fa");
+          var q = function (s) { return root.querySelector(s); };
+          var cs = getComputedStyle(root);
+          var tok = function (name, d) { return (cs.getPropertyValue("--k-" + name) || "").trim() || d; };
+          var INK = tok("ink", "#f3f5f8"), MUTED = tok("muted", "#8b93a3"), ACCENT = tok("accent", "#ffcf33"), ONACC = tok("on-accent", "#14161a");
+          if (String(v.backdrop) === "off") q(".fa-bg").style.display = "none";
+          var split = function (s, max) { return String(s).split("|").map(function (x) { return x.trim(); }).filter(Boolean).slice(0, max); };
+          // rough text width in em: CJK counts 1, latin and digits 0.6
+          var em = function (s) { var w = 0; for (var c = 0; c < s.length; c++) w += s.charCodeAt(c) > 255 ? 1 : 0.6; return Math.max(w, 1); };
+          // cue times: take what was given, continue at the same spacing, keep a floor and a minimum distance
+          var cueList = function (raw, count) {
+            var c = String(raw).split(/[,，\s]+/).map(parseFloat).filter(function (x) { return isFinite(x); }).slice(0, count);
+            var gap = c.length > 1 ? (c[c.length - 1] - c[0]) / (c.length - 1) : CFG.gap;
+            if (!c.length) c.push(CFG.first);
+            while (c.length < count) c.push(c[c.length - 1] + gap);
+            c[0] = Math.max(c[0], CFG.floor);
+            for (var i = 1; i < count; i++) c[i] = Math.max(c[i], c[i - 1] + CFG.minGap);
+            return c;
+          };
+          var items = split(v.items, 5), n = items.length, cues = cueList(v.cues, n + 1), result = String(v.result), hit = cues[n];
+
+          // one row has to hold every term: size the type from the estimated total width (floor 40px)
+          var total = 0;
+          items.forEach(function (t) { total += em(t) + 1; });
+          var terms = q(".fa-terms"), fs = Math.max(40, Math.floor(Math.min(88, (1740 - (n - 1) * 60) / (total + (n - 1) * 0.8))));
+          terms.style.fontSize = fs + "px";
+          terms.innerHTML = "";
+          var chips = [], ops = [];
+          items.forEach(function (t, i) {
+            if (i) {
+              var op = document.createElement("span");
+              op.className = "fa-op";
+              op.textContent = "+";
+              terms.appendChild(op);
+              ops.push(op);
+            }
+            var c = document.createElement("span");
+            c.className = "fa-chip";
+            c.innerHTML = '<span class="fa-bar"></span><span class="fa-t"></span>';
+            c.querySelector(".fa-t").textContent = t;
+            terms.appendChild(c);
+            chips.push(c);
+          });
+          var res = q(".fa-res"), rt = q(".fa-rt"), eq = q(".fa-eq");
+          rt.textContent = result;
+          res.style.fontSize = Math.floor(Math.min(160, 1300 / em(result))) + "px";
+
+          var tl = gsap.timeline({ paused: true });
+          chips.forEach(function (c, i) {
+            var t = cues[i], bar = c.querySelector(".fa-bar");
+            // the operator pops a beat BEFORE its term: "plus…" then the word lands
+            if (i) {
+              tl.fromTo(ops[i - 1], { opacity: 0 }, { opacity: 1, duration: 0.001, ease: "none" }, t - CFG.opLead);
+              tl.fromTo(ops[i - 1], { scale: 0 }, { scale: 1, duration: 0.24, ease: "back.out(3.5)" }, t - CFG.opLead);
+            }
+            tl.fromTo(c, { opacity: 0, y: -CFG.drop, rotation: i % 2 ? 4 : -4 }, { opacity: 1, y: 0, rotation: 0, duration: CFG.land, ease: "back.out(1.6)" }, t);
+            tl.fromTo(c, { color: INK }, { color: INK, duration: 0.01 }, t);
+            tl.fromTo(bar, { opacity: 0 }, { opacity: 1, duration: 0.15, ease: "none" }, t);
+            // steps back when the next term (or the result) takes the stage
+            tl.to(c, { color: MUTED, duration: 0.3, ease: "power2.out" }, cues[i + 1]);
+            tl.to(bar, { opacity: 0, duration: 0.3, ease: "power2.out" }, cues[i + 1]);
+          });
+          tl.fromTo(eq, { opacity: 0 }, { opacity: 1, duration: 0.001, ease: "none" }, hit - CFG.eqLead);
+          tl.fromTo(eq, { scale: 0 }, { scale: 1, duration: 0.24, ease: "back.out(3.5)" }, hit - CFG.eqLead);
+          // the result is the only thing that scales up: bigger than any term, in the accent colour
+          tl.set(res, { transformOrigin: "0% 50%" }, 0);
+          tl.fromTo(res, { opacity: 0 }, { opacity: 1, duration: 0.08, ease: "none" }, hit);
+          tl.fromTo(rt, { opacity: 0 }, { opacity: 1, duration: 0.001, ease: "none" }, hit + 0.04);
+          tl.fromTo(res, { scale: 0.3 }, { scale: CFG.peak, duration: 0.18, ease: "power3.out" }, hit);
+          tl.to(res, { scale: 1, duration: 0.3, ease: "back.out(2.2)" }, hit + 0.18);
+    
+          window.__timelines["formula-assemble"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

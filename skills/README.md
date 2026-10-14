@@ -37,6 +37,10 @@ python scripts/install-skills.py
 | `QWEN_TTS_ROOT` | 本地 Qwen3-TTS | `~/Qwen3-TTS` |
 | `FFMPEG_PATH` / `FFPROBE_PATH` | ffmpeg / ffprobe | Qwen 目录里的 ffmpeg 9，再找 PATH |
 
+## 动效卡库
+
+2026-10-14 起，`science-video-director` 现场做一镜时先查动效卡库 `<工作区>/motion-cards`（仓库里在 [workspace-starter/motion-cards](../workspace-starter/motion-cards/README.md)，`init-workspace.py` 会把它复制进你的工作区）：108 张通用动效卡，有合适的就用 `cards.mjs use` 装进项目直接挂载，换皮不换动作。做法见 [motion-vocabulary.md](science-video-director/guide/motion-vocabulary.md)。
+
 ## 品牌包和手法库要自己准备
 
 技能要用的品牌包 `brand-kit`（组件、调性、字体、音效映射、主持人、角色声音库）、`手法库`（从参考片拆出来的手法卡）和 `频道复盘.md` 是作者自己频道的东西，没有随仓库发布。仓库提供的是空骨架 [workspace-starter/](../workspace-starter/README.md) 和一份 [工作区初始化指引](../WORKSPACE_SETUP.md)：先运行 `python scripts/init-workspace.py --workspace <你的工作区>` 建好目录，再照指引一步一步准备自己的品牌包和手法库，同一条命令加 `--check` 会列出还剩哪几步。

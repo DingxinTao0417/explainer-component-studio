@@ -1,0 +1,132 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"items","type":"string","label":"步骤（用 | 分隔，2–5 条）","default":"明确目标|拆解任务|给出示例|检查结果"},
+    {"id":"cues","type":"string","label":"每一步亮起的秒数（逗号分隔，不够就均匀排开）","default":"0.9,1.9,2.9,3.9"},
+        {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>roadmap-light · 路线图点亮</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="roadmap-light-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .rl { position: absolute; inset: 0; }
+        .rl-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .rl-row { position: absolute; left: 80px; top: 260px; width: 1760px; height: 560px; display: flex; gap: 28px; }
+        .rl-card { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 36px; padding: 0 36px; box-sizing: border-box; border-radius: 30px; background: var(--k-panel); }
+        .rl-lit { position: absolute; inset: 0; box-sizing: border-box; border: 8px solid var(--k-accent); border-radius: 30px; opacity: 0; }
+        .rl-no { position: relative; display: block; font-size: 64px; font-weight: 800; line-height: 1; color: var(--k-muted); }
+        .rl-txt { position: relative; display: block; font-size: 84px; font-weight: 800; line-height: 1.25; color: var(--k-muted); }
+        .rl-done .rl-lit { opacity: 0.4; }
+        .rl-now .rl-lit { opacity: 1; }
+        .rl-now .rl-txt { color: var(--k-ink); }
+        .rl-now .rl-no { color: var(--k-accent); }
+    
+      </style>
+
+      <div id="root" data-composition-id="roadmap-light" data-width="1920" data-height="1080">
+        <div class="rl">
+          <div class="rl-bg"></div>
+          <div class="rl-row">
+            <div class="rl-card rl-done"><span class="rl-lit"></span><span class="rl-no">01</span><span class="rl-txt">明确目标</span></div>
+            <div class="rl-card rl-done"><span class="rl-lit"></span><span class="rl-no">02</span><span class="rl-txt">拆解任务</span></div>
+            <div class="rl-card rl-done"><span class="rl-lit"></span><span class="rl-no">03</span><span class="rl-txt">给出示例</span></div>
+            <div class="rl-card rl-now"><span class="rl-lit"></span><span class="rl-no">04</span><span class="rl-txt">检查结果</span></div>
+          </div>
+    
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { first: 0.9, gap: 1.0, minGap: 0.5, floor: 0.6, spread: 0.07, lift: 32, grow: 1.05, up: 0.36, down: 0.4, half: 0.4, fonts: [0, 120, 112, 96, 84, 64] };
+          var v = { items: "明确目标|拆解任务|给出示例|检查结果", cues: "0.9,1.9,2.9,3.9", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".rl");
+          var q = function (s) { return root.querySelector(s); };
+          var cs = getComputedStyle(root);
+          var tok = function (name, d) { return (cs.getPropertyValue("--k-" + name) || "").trim() || d; };
+          var INK = tok("ink", "#f3f5f8"), MUTED = tok("muted", "#8b93a3"), ACCENT = tok("accent", "#ffcf33"), ONACC = tok("on-accent", "#14161a");
+          if (String(v.backdrop) === "off") q(".rl-bg").style.display = "none";
+          var split = function (s, max) { return String(s).split("|").map(function (x) { return x.trim(); }).filter(Boolean).slice(0, max); };
+          // rough text width in em: CJK counts 1, latin and digits 0.6
+          var em = function (s) { var w = 0; for (var c = 0; c < s.length; c++) w += s.charCodeAt(c) > 255 ? 1 : 0.6; return Math.max(w, 1); };
+          // cue times: take what was given, continue at the same spacing, keep a floor and a minimum distance
+          var cueList = function (raw, count) {
+            var c = String(raw).split(/[,，\s]+/).map(parseFloat).filter(function (x) { return isFinite(x); }).slice(0, count);
+            var gap = c.length > 1 ? (c[c.length - 1] - c[0]) / (c.length - 1) : CFG.gap;
+            if (!c.length) c.push(CFG.first);
+            while (c.length < count) c.push(c[c.length - 1] + gap);
+            c[0] = Math.max(c[0], CFG.floor);
+            for (var i = 1; i < count; i++) c[i] = Math.max(c[i], c[i - 1] + CFG.minGap);
+            return c;
+          };
+          var items = split(v.items, 5), n = items.length, cues = cueList(v.cues, n);
+          var HALF = gsap.utils.interpolate(MUTED, INK, 0.55);
+          // the lit card may grow at most 10px per side, or wide cards would touch their neighbours
+          var grow = Math.min(CFG.grow, 1 + 20 / ((1760 - 28 * (n - 1)) / n));
+          var row = q(".rl-row");
+          row.innerHTML = "";
+          var cards = items.map(function (t, i) {
+            var c = document.createElement("div");
+            c.className = "rl-card";
+            c.innerHTML = '<span class="rl-lit"></span><span class="rl-no">' + (i < 9 ? "0" : "") + (i + 1) + '</span><span class="rl-txt"></span>';
+            c.querySelector(".rl-txt").textContent = t;
+            c.querySelector(".rl-txt").style.fontSize = CFG.fonts[n] + "px";
+            row.appendChild(c);
+            return { el: c, lit: c.querySelector(".rl-lit"), no: c.querySelector(".rl-no"), txt: c.querySelector(".rl-txt") };
+          });
+
+          var tl = gsap.timeline({ paused: true });
+          cards.forEach(function (c, i) {
+            var t = cues[i];
+            // 1) the whole map is dealt out dark, before the first cue
+            tl.fromTo(c.el, { opacity: 0, y: 36 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 0.05 + i * CFG.spread);
+            // 2) on its cue the card lights and lifts
+            tl.to(c.el, { y: -CFG.lift, scale: grow, duration: CFG.up, ease: "back.out(2)" }, t);
+            tl.fromTo(c.lit, { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power2.out" }, t);
+            tl.to(c.txt, { color: INK, duration: 0.25, ease: "power2.out" }, t);
+            tl.to(c.no, { color: ACCENT, duration: 0.25, ease: "power2.out" }, t);
+            // 3) when the next one lights it settles back, but stays half lit
+            if (i < n - 1) {
+              var tn = cues[i + 1];
+              tl.to(c.el, { y: 0, scale: 1, duration: CFG.down, ease: "power2.inOut" }, tn);
+              tl.to(c.lit, { opacity: CFG.half, duration: CFG.down, ease: "power2.inOut" }, tn);
+              tl.to(c.txt, { color: HALF, duration: CFG.down, ease: "power2.inOut" }, tn);
+              tl.to(c.no, { color: HALF, duration: CFG.down, ease: "power2.inOut" }, tn);
+            }
+          });
+    
+          window.__timelines["roadmap-light"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,111 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"x","type":"number","label":"目标左上角 x（1920×1080 坐标）","default":300,"min":0,"max":1920,"step":1},
+    {"id":"y","type":"number","label":"目标左上角 y","default":276,"min":0,"max":1080,"step":1},
+    {"id":"w","type":"number","label":"目标宽","default":440,"min":0,"max":1800,"step":1},
+    {"id":"h","type":"number","label":"目标高","default":88,"min":0,"max":1000,"step":1},
+    {"id":"label","type":"string","label":"标签文字","default":"第一项：已完成"},
+    {"id":"dx","type":"number","label":"折点相对圆点的横向偏移（负数向左）","default":170,"min":-900,"max":900,"step":10},
+    {"id":"dy","type":"number","label":"折点相对圆点的纵向偏移（负数向上）","default":-170,"min":-600,"max":600,"step":10},
+    {"id":"run","type":"number","label":"折点之后水平段的长度","default":70,"min":0,"max":600,"step":10},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"垫示例截图（放大 2 倍）"},{"value":"off","label":"透明，只留标注"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>label-callout · 引线标签</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="label-callout-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .lc { position: absolute; inset: 0; }
+        .lc-shot { position: absolute; left: 0; top: 0; display: block; width: 1920px; height: 1080px; background-repeat: no-repeat; background-size: 3840px 2160px; background-position: -680px -220px; }
+        .lc-svg { position: absolute; left: 0; top: 0; display: block; width: 1920px; height: 1080px; }
+        .lc-under { fill: none; stroke: rgba(13, 16, 22, 0.8); stroke-width: 20; stroke-linejoin: round; }
+        .lc-line { fill: none; stroke: var(--k-accent); stroke-width: 12; stroke-linejoin: round; }
+        .lc-dot, .lc-ping { position: absolute; left: 718px; top: 298px; display: block; width: 44px; height: 44px; border-radius: 50%; box-sizing: border-box; }
+        .lc-dot { background: var(--k-accent); border: 6px solid rgba(13, 16, 22, 0.85); }
+        .lc-ping { border: 8px solid var(--k-accent); opacity: 0; }
+        .lc-tag { position: absolute; left: 980px; top: 94px; height: 112px; overflow: hidden; }
+        .lc-plate { display: block; height: 112px; padding: 0 38px; box-sizing: border-box; border: 4px solid rgba(13, 16, 22, 0.85); border-radius: 14px; background: var(--k-accent); color: var(--k-on-accent); font-size: 52px; font-weight: 700; line-height: 104px; white-space: nowrap; }
+      </style>
+
+      <div id="root" data-composition-id="label-callout" data-width="1920" data-height="1080">
+        <div class="lc">
+          <div class="lc-shot" style="background-image: url(motion-cards/lib/samples/ui.png)"></div>
+          <svg class="lc-svg" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+            <path class="lc-under" d="M740 320L910 150L980 150" />
+            <path class="lc-line" d="M740 320L910 150L980 150" />
+          </svg>
+          <div class="lc-ping"></div>
+          <div class="lc-dot"></div>
+          <div class="lc-tag"><div class="lc-plate">第一项：已完成</div></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // dot: the pin drops first · line: the leader runs out of it · plate: the label is pushed out of the end of the line
+          var CFG = { at: 0.2, dot: 0.22, lineAt: 0.38, line: 0.3, plateAt: 0.64, plate: 0.3, ping: 0.4 };
+          var v = { x: 300, y: 276, w: 440, h: 88, label: "第一项：已完成", dx: 170, dy: -170, run: 70, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".lc");
+          var q = function (s) { return root.querySelector(s); };
+          if (String(v.backdrop) === "off") q(".lc-shot").style.display = "none";
+          var num = function (a, d) { a = parseFloat(a); return isFinite(a) ? a : d; };
+          var dx = num(v.dx, 170), dy = num(v.dy, -170), dir = dx < 0 ? -1 : 1;
+          // the pin sits on the edge of the target that faces the label, so it never covers what is inside the box
+          var px = num(v.x, 300) + (dir < 0 ? 0 : num(v.w, 440)), py = num(v.y, 276) + num(v.h, 88) / 2;
+          var ex = px + dx, ey = py + dy, fx = ex + dir * num(v.run, 70);
+          var d = "M" + px + " " + py + "L" + ex + " " + ey + "L" + fx + " " + ey;
+          var line = q(".lc-line"), under = q(".lc-under"), dot = q(".lc-dot"), ping = q(".lc-ping"), tag = q(".lc-tag"), plate = q(".lc-plate");
+          line.setAttribute("d", d);
+          under.setAttribute("d", d);
+          var len = line.getTotalLength() + 6;
+          line.style.strokeDasharray = under.style.strokeDasharray = len - 4 + "px " + (len + 40) + "px";
+          dot.style.left = ping.style.left = px - 22 + "px";
+          dot.style.top = ping.style.top = py - 22 + "px";
+          tag.style.top = ey - 56 + "px";
+          if (dir < 0) { tag.style.right = 1920 - fx + "px"; tag.style.left = "auto"; }
+          else { tag.style.left = fx + "px"; tag.style.right = "auto"; }
+          plate.textContent = String(v.label || "");
+
+          var tl = gsap.timeline({ paused: true });
+          tl.fromTo(dot, { scale: 0 }, { scale: 1, duration: CFG.dot, ease: "back.out(3)" }, CFG.at);
+          tl.fromTo(ping, { scale: 1 }, { scale: 3.2, duration: CFG.ping, ease: "power2.out" }, CFG.at + 0.06);
+          tl.fromTo(ping, { opacity: 0 }, { opacity: 0.85, duration: 0.03, ease: "none" }, CFG.at + 0.06);
+          tl.to(ping, { opacity: 0, duration: CFG.ping - 0.03, ease: "power1.in" }, CFG.at + 0.09);
+          tl.fromTo([under, line], { strokeDashoffset: len }, { strokeDashoffset: 0, duration: CFG.line, ease: "power2.out" }, CFG.lineAt);
+          // the plate slides out from behind the end of the line; hidden until then
+          tl.fromTo(plate, { opacity: 0 }, { opacity: 1, duration: 0.04, ease: "none" }, CFG.plateAt);
+          tl.fromTo(plate, { xPercent: -dir * 100 }, { xPercent: 0, duration: CFG.plate, ease: "power3.out" }, CFG.plateAt);
+          window.__timelines["label-callout"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

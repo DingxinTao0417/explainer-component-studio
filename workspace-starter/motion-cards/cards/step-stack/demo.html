@@ -1,0 +1,137 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"items","type":"string","label":"步骤（用 | 分隔，2–5 条）","default":"明确目标|拆解任务|给出示例"},
+    {"id":"cues","type":"string","label":"每一步出现的秒数（逗号分隔，不够就均匀排开）","default":"0.4,1.6,2.8"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>step-stack · 步骤叠出</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="step-stack-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .ss { position: absolute; inset: 0; }
+        .ss-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .ss-col { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; }
+        .ss-card { position: relative; flex: none; display: flex; align-items: center; gap: 48px; width: 1500px; height: 220px; padding: 0 60px; box-sizing: border-box; border-radius: 32px; background: var(--k-panel); box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35); color: var(--k-ink); font-size: 88px; font-weight: 800; }
+        .ss-edge { position: absolute; inset: 0; box-sizing: border-box; border: 6px solid var(--k-accent); border-radius: 32px; }
+        .ss-num { position: relative; flex: none; display: flex; align-items: center; justify-content: center; width: 124px; height: 124px; font-size: 68px; color: var(--k-on-accent); }
+        .ss-dot { position: absolute; inset: 0; border-radius: 50%; background: var(--k-accent); }
+        .ss-ring { position: absolute; inset: 0; box-sizing: border-box; border: 6px solid var(--k-muted); border-radius: 50%; opacity: 0; }
+        .ss-n { position: relative; display: block; }
+        .ss-txt { display: block; white-space: nowrap; }
+        .ss-old { color: var(--k-muted); }
+        .ss-old .ss-edge, .ss-old .ss-dot { opacity: 0; }
+        .ss-old .ss-ring { opacity: 1; }
+        .ss-old .ss-num { color: var(--k-muted); }
+      </style>
+
+      <div id="root" data-composition-id="step-stack" data-width="1920" data-height="1080">
+        <div class="ss">
+          <div class="ss-bg"></div>
+          <div class="ss-col">
+            <div class="ss-card ss-old"><span class="ss-edge"></span><span class="ss-num"><span class="ss-dot"></span><span class="ss-ring"></span><span class="ss-n">1</span></span><span class="ss-txt">明确目标</span></div>
+            <div class="ss-card ss-old"><span class="ss-edge"></span><span class="ss-num"><span class="ss-dot"></span><span class="ss-ring"></span><span class="ss-n">2</span></span><span class="ss-txt">拆解任务</span></div>
+            <div class="ss-card"><span class="ss-edge"></span><span class="ss-num"><span class="ss-dot"></span><span class="ss-ring"></span><span class="ss-n">3</span></span><span class="ss-txt">给出示例</span></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { levels: [1, 0.8, 0.7, 0.7, 0.7], rise: 260, move: 0.5, fade: 0.14, dim: 0.35, cardH: 220, gapPx: 18, first: 0.4, gap: 1.2, minGap: 0.55 };
+          var v = { items: "明确目标|拆解任务|给出示例", cues: "0.4,1.6,2.8", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".ss");
+          var q = function (s) { return root.querySelector(s); };
+          var cs = getComputedStyle(root);
+          var MUTED = (cs.getPropertyValue("--k-muted") || "").trim() || "#8b93a3";
+          if (String(v.backdrop) === "off") q(".ss-bg").style.display = "none";
+
+          var items = String(v.items).split("|").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 5);
+          var n = items.length;
+          var cues = String(v.cues).split(/[,，\s]+/).map(parseFloat).filter(function (x) { return isFinite(x); }).slice(0, n);
+          var gap = cues.length > 1 ? (cues[cues.length - 1] - cues[0]) / (cues.length - 1) : CFG.gap;
+          if (!cues.length) cues.push(CFG.first);
+          while (cues.length < n) cues.push(cues[cues.length - 1] + gap);
+          for (var i = 1; i < n; i++) cues[i] = Math.max(cues[i], cues[i - 1] + CFG.minGap);
+
+          // rebuild the cards from the variable; every card starts in the "current" look
+          var em = function (s) { var w = 0; for (var c = 0; c < s.length; c++) w += s.charCodeAt(c) > 255 ? 1 : 0.6; return w; };
+          var col = q(".ss-col"), cards = [];
+          col.innerHTML = "";
+          items.forEach(function (t, j) {
+            var el = document.createElement("div");
+            el.className = "ss-card";
+            el.innerHTML = '<span class="ss-edge"></span><span class="ss-num"><span class="ss-dot"></span><span class="ss-ring"></span><span class="ss-n">' + (j + 1) + '</span></span><span class="ss-txt"></span>';
+            var txt = el.querySelector(".ss-txt");
+            txt.textContent = t;
+            txt.style.fontSize = Math.floor(Math.min(88, 1200 / em(t))) + "px";
+            col.appendChild(el);
+            cards.push(el);
+          });
+
+          // where each level sits when m cards are on screen (the stack stays centred as it grows)
+          var H = CFG.cardH, G = CFG.gapPx, S = CFG.levels;
+          var centre = function (m, level) {
+            var total = 0, a;
+            for (a = 0; a < m; a++) total += H * S[a] + (a ? G : 0);
+            var y = 540 + total / 2 - H / 2;
+            for (a = 1; a <= level; a++) y -= (H * S[a - 1]) / 2 + G + (H * S[a]) / 2;
+            return y;
+          };
+          var natural = function (j) { return 540 + (j - (n - 1) / 2) * (H + G); };
+
+          var tl = gsap.timeline({ paused: true });
+          for (var m = 1; m <= n; m++) {
+            var t = cues[m - 1], cur = cards[m - 1];
+            // the new step rises into the front slot…
+            tl.fromTo(cur, { y: centre(m, 0) + CFG.rise - natural(m - 1), scale: 0.94 }, { y: centre(m, 0) - natural(m - 1), scale: 1, duration: CFG.move, ease: "power3.out" }, t);
+            tl.fromTo(cur, { opacity: 0 }, { opacity: 1, duration: CFG.fade, ease: "none" }, t);
+            // the dark number only switches on once its yellow disc is mostly opaque (a half-faded dark-on-accent glyph fails contrast)
+            tl.fromTo(cur.querySelector(".ss-n"), { opacity: 0 }, { opacity: 1, duration: 0.01, ease: "none" }, t + CFG.fade * 0.6);
+            // …and on the same curve every earlier step is pushed one level up, smaller
+            for (var j = 0; j < m - 1; j++) {
+              var level = m - 1 - j, old = cards[j];
+              tl.to(old, { y: centre(m, level) - natural(j), scale: S[level], duration: CFG.move, ease: "power3.out" }, t);
+              if (level === 1) {
+                tl.to(old, { color: MUTED, duration: CFG.dim, ease: "power1.out" }, t);
+                tl.to(old.querySelector(".ss-num"), { color: MUTED, duration: CFG.dim, ease: "power1.out" }, t);
+                tl.to([old.querySelector(".ss-edge"), old.querySelector(".ss-dot")], { opacity: 0, duration: CFG.dim, ease: "power1.out" }, t);
+                tl.to(old.querySelector(".ss-ring"), { opacity: 1, duration: CFG.dim, ease: "power1.out" }, t);
+              }
+            }
+          }
+          window.__timelines["step-stack"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

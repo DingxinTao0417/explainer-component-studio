@@ -1,0 +1,122 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"n","type":"number","label":"第几个（1–9 最好）","default":3,"min":1,"max":99,"step":1},
+    {"id":"unit","type":"string","label":"量词","default":"个"},
+    {"id":"title","type":"string","label":"标题（建议 4–7 个字）","default":"检查输出格式"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>count-badge · 计数徽章标题</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="count-badge-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .cbg { position: absolute; inset: 0; }
+        .cbg-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .cbg-stage { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+        .cbg-badge { position: relative; z-index: 2; flex: none; display: flex; align-items: center; justify-content: center; width: 330px; height: 330px; border-radius: 50%; background: var(--k-accent); color: var(--k-on-accent); box-shadow: 0 0 0 14px var(--k-bg); }
+        .cbg-small { display: block; font-size: 52px; font-weight: 800; line-height: 1; }
+        .cbg-win { display: block; height: 200px; margin: 0 8px; clip-path: inset(0); }
+        .cbg-strip { display: block; }
+        .cbg-digit { display: block; height: 200px; line-height: 192px; font-size: 190px; font-weight: 900; text-align: center; }
+        .cbg-digit::before, .cbg-small::before { content: attr(data-d); }
+        .cbg-ch { display: inline-block; }
+        .cbg-mask { position: relative; z-index: 1; flex: none; display: block; height: 330px; margin-left: -165px; overflow: hidden; }
+        .cbg-title { display: block; padding-left: 221px; line-height: 322px; font-size: 136px; font-weight: 900; letter-spacing: 0.02em; white-space: nowrap; }
+      </style>
+
+      <div id="root" data-composition-id="count-badge" data-width="1920" data-height="1080">
+        <div class="cbg">
+          <div class="cbg-bg"></div>
+          <div class="cbg-stage">
+            <div class="cbg-badge">
+              <span class="cbg-small cbg-pre" data-d="第"></span>
+              <span class="cbg-win"><span class="cbg-strip"><span class="cbg-digit" data-d="3"></span></span></span>
+              <span class="cbg-small cbg-unit" data-d="个"></span>
+            </div>
+            <div class="cbg-mask"><span class="cbg-title" data-layout-allow-occlusion>检查输出格式</span></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { at: 0.2, popUp: 0.18, popPeak: 1.16, popSettle: 0.26, rollLag: 0.06, rollDur: 0.5, steps: 2, pushLag: 0.52, pushDur: 0.55 };
+          var v = { n: 3, unit: "个", title: "检查输出格式", backdrop: "on" };
+          try {
+                      var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+                      for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+                    } catch (e) {}
+          var root = document.querySelector(".cbg");
+          var q = function (s) { return root.querySelector(s); };
+          var n = Math.max(1, Math.round(parseFloat(v.n)) || 1);
+          q(".cbg-unit").setAttribute("data-d", String(v.unit));
+          q(".cbg-title").textContent = String(v.title);
+          if (String(v.backdrop) === "off") { q(".cbg-bg").style.display = "none"; q(".cbg-badge").style.boxShadow = "none"; }
+          // the badge lettering is drawn through ::before (see card.md 已知坑); the strip holds the numbers the roll passes on its way to n
+          var strip = q(".cbg-strip"), first = Math.max(0, n - CFG.steps);
+          strip.textContent = "";
+          for (var i = first; i <= n; i++) {
+            var dg = document.createElement("span");
+            dg.className = "cbg-digit";
+            if (n > 9) dg.style.fontSize = "132px";
+            dg.setAttribute("data-d", String(i));
+            strip.appendChild(dg);
+          }
+          var badge = q(".cbg-badge"), mask = q(".cbg-mask"), title = q(".cbg-title");
+          // one span per character, so a character can stay switched off while it is still underneath the badge
+          title.textContent = "";
+          var chars = String(v.title).split("").map(function (c) {
+            var s = document.createElement("span");
+            s.className = "cbg-ch"; s.textContent = c; title.appendChild(s);
+            return s;
+          });
+          var w = title.offsetWidth || 221 + chars.length * 139;
+          var push = CFG.at + CFG.pushLag;
+
+          var tl = gsap.timeline({ paused: true });
+          // the badge pops alone in the centre of the frame
+          tl.fromTo(badge, { scale: 0 }, { scale: CFG.popPeak, duration: CFG.popUp, ease: "power3.out" }, CFG.at);
+          tl.to(badge, { scale: 1, duration: CFG.popSettle, ease: "back.out(2.6)" }, CFG.at + CFG.popUp);
+          // the number is still rolling while the badge settles, and lands with a small overshoot
+          tl.fromTo(strip, { y: 0 }, { y: -200 * (n - first), duration: CFG.rollDur, ease: "back.out(1.5)" }, CFG.at + CFG.rollLag);
+          // the title slides out from behind the badge; the row stays centred, so the badge is shoved left by it
+          tl.fromTo(mask, { width: 0 }, { width: w, duration: CFG.pushDur, ease: "power3.out" }, push);
+          tl.fromTo(title, { x: -w }, { x: 0, duration: CFG.pushDur, ease: "power3.out" }, push);
+          // each character stays switched off until its leading edge reaches the rim of the badge (x = -w·(1-t)^3 under power3.out)
+          chars.forEach(function (ch, k) {
+            var right = (ch.offsetLeft || 221 + k * 139) + (ch.offsetWidth || 139);
+            var t = 1 - Math.pow(Math.max(0, Math.min(1, (right - 165) / w)), 1 / 3);
+            tl.fromTo(ch, { opacity: 0 }, { opacity: 1, duration: 0.01, ease: "none" }, push + CFG.pushDur * t);
+          });
+          tl.fromTo(badge, { rotation: 0 }, { rotation: -7, duration: 0.12, ease: "power2.out" }, push);
+          tl.to(badge, { rotation: 0, duration: 0.4, ease: "back.out(2.4)" }, push + 0.12);
+          window.__timelines["count-badge"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

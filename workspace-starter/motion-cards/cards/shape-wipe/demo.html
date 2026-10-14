@@ -1,0 +1,97 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"shape","type":"enum","label":"形状","default":"slant","options":[{"value":"slant","label":"斜切色块"},{"value":"circle","label":"圆"}]},
+    {"id":"dir","type":"enum","label":"斜块往哪边扫","default":"right","options":[{"value":"right","label":"向右"},{"value":"left","label":"向左"}]},
+    {"id":"ox","type":"number","label":"圆心横向 0–1（圆形时）","default":0.5,"min":0,"max":1,"step":0.01},
+    {"id":"oy","type":"number","label":"圆心纵向 0–1（圆形时）","default":0.5,"min":0,"max":1,"step":0.01},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"预览：垫两张占位画面"},{"value":"off","label":"透明（压在两镜交界上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>shape-wipe · 形状擦除</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="shape-wipe-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .sw { position: absolute; inset: 0; overflow: hidden; }
+        .sw-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .sw-a, .sw-b { position: absolute; left: 0; top: 0; display: block; width: 1920px; height: 1080px; object-fit: cover; }
+        .sw-ink { position: absolute; inset: 0; opacity: 0; --sw-a: 0; --sw-b: 0; }
+      </style>
+
+      <div id="root" data-composition-id="shape-wipe" data-width="1920" data-height="1080">
+        <div class="sw" data-layout-allow-overflow>
+          <div class="sw-bg"></div>
+          <img class="sw-a" src="motion-cards/lib/samples/p1.jpg" alt="" />
+          <img class="sw-b" src="motion-cards/lib/samples/p2.jpg" alt="" />
+          <div class="sw-ink"></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { cut: 1.0, lead: 0.233, tail: 0.267, cover: 2, slant: 18, rim: 4, rimPx: 44, swap: 0.02 };
+          var v = { "shape": "slant", "dir": "right", "ox": 0.5, "oy": 0.5, "backdrop": "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".sw");
+          var q = function (s) { return root.querySelector(s); };
+          var num = function (x, d) { x = parseFloat(x); return isFinite(x) ? x : d; };
+          var clamp = function (x, a, b) { return Math.max(a, Math.min(b, x)); };
+          var W = 1920, H = 1080, F = 1 / 30, cut = CFG.cut;
+          var demo = String(v.backdrop) !== "off";
+          if (!demo) ["bg", "a", "b"].forEach(function (n) { q(".sw-" + n).style.display = "none"; });
+          var tl = gsap.timeline({ paused: true });
+          // preview only: the placeholder shots change under full cover, one frame after `cut`
+          if (demo) tl.fromTo(q(".sw-b"), { opacity: 0 }, { opacity: 1, duration: 0.01, ease: "none" }, cut + CFG.swap);
+          var ink = q(".sw-ink"), round = String(v.shape) === "circle";
+          var c1 = "var(--k-accent)", c2 = "var(--k-accent-2)", a0, a1, b0, b1;
+          // the shape is one gradient: --sw-b is its front edge, --sw-a its back edge; a thin second colour rides on both
+          if (round) {
+            var ox = clamp(num(v.ox, 0.5), 0, 1), oy = clamp(num(v.oy, 0.5), 0, 1), r = CFG.rimPx;
+            var far = Math.ceil(Math.sqrt(Math.pow(Math.max(ox, 1 - ox) * W, 2) + Math.pow(Math.max(oy, 1 - oy) * H, 2))) + 2;
+            var A = "calc(var(--sw-a) * 1px)", B = "calc(var(--sw-b) * 1px)", A0 = "calc(var(--sw-a) * 1px - " + r + "px)", B1 = "calc(var(--sw-b) * 1px + " + r + "px)";
+            ink.style.background = "radial-gradient(circle at " + ox * 100 + "% " + oy * 100 + "%, transparent " + A0 + ", " + c2 + " " + A0 + ", " + c2 + " " + A + ", " + c1 + " " + A + ", " + c1 + " " + B + ", " + c2 + " " + B + ", " + c2 + " " + B1 + ", transparent " + B1 + ")";
+            b0 = -r; b1 = far; a0 = 0; a1 = far + r;
+          } else {
+            var ang = String(v.dir) === "left" ? -(90 + CFG.slant) : 90 + CFG.slant, m = CFG.rim;
+            var P = "calc(var(--sw-a) * 1%)", Q = "calc(var(--sw-b) * 1%)", P0 = "calc(var(--sw-a) * 1% - " + m + "%)", Q1 = "calc(var(--sw-b) * 1% + " + m + "%)";
+            ink.style.background = "linear-gradient(" + ang + "deg, transparent " + P0 + ", " + c2 + " " + P0 + ", " + c2 + " " + P + ", " + c1 + " " + P + ", " + c1 + " " + Q + ", " + c2 + " " + Q + ", " + c2 + " " + Q1 + ", transparent " + Q1 + ")";
+            b0 = -m; b1 = 100; a0 = 0; a1 = 100 + m;
+          }
+          var half = (CFG.cover * F) / 2;
+          // front edge accelerates across and closes the picture just before `cut` …
+          tl.fromTo(ink, { "--sw-b": b0 }, { "--sw-b": b1, duration: CFG.lead, ease: "power2.in" }, cut - half - CFG.lead);
+          // … the back edge leaves at that same speed and slows down, so it reads as one long shape passing
+          tl.fromTo(ink, { "--sw-a": a0 }, { "--sw-a": a1, duration: CFG.tail, ease: "power2.out" }, cut + half);
+          ink.style.opacity = "1";
+          window.__timelines["shape-wipe"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

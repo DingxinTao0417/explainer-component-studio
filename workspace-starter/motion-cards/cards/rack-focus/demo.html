@@ -1,0 +1,88 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"src","type":"string","label":"后层画面地址（从项目根目录写起）","default":"motion-cards/lib/samples/ui.png"},
+    {"id":"front","type":"string","label":"前层图片地址（透明底）","default":"motion-cards/lib/samples/host.png"},
+    {"id":"fx","type":"number","label":"前层放在哪：横向 0–1","default":0.16,"min":0,"max":1,"step":0.01},
+    {"id":"to","type":"enum","label":"焦点最后落在","default":"back","options":[{"value":"back","label":"后层"},{"value":"front","label":"前层"}]},
+    {"id":"at","type":"number","label":"开始转焦的时间（秒）","default":1,"min":0,"max":10,"step":0.05},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>rack-focus · 焦点转移</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="rack-focus-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .rf { position: absolute; inset: 0; overflow: hidden; }
+        .rf-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .rf-back { position: absolute; left: -96px; top: -54px; display: block; width: 2112px; height: 1188px; object-fit: cover; will-change: transform, filter; }
+        .rf-front { position: absolute; left: -153px; top: 270px; display: block; width: 920px; height: 1150px; object-fit: contain; will-change: transform, filter; }
+      </style>
+
+      <div id="root" data-composition-id="rack-focus" data-width="1920" data-height="1080">
+        <div class="rf" data-layout-allow-overflow>
+          <div class="rf-bg"></div>
+          <img class="rf-back" src="motion-cards/lib/samples/ui.png" data-var-src="src" alt="" />
+          <img class="rf-front" src="motion-cards/lib/samples/host.png" data-var-src="front" alt="" />
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { dur: 0.7, ease: "power2.inOut", blurBack: 16, blurFront: 20, shiftBack: 12, shiftFront: -24, breathe: 0.025 };
+          var v = { fx: 0.16, to: "back", at: 1, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".rf");
+          var q = function (s) { return root.querySelector(s); };
+          var num = function (x, d) { x = parseFloat(x); return isFinite(x) ? x : d; };
+          var back = q(".rf-back"), front = q(".rf-front");
+          if (v.src) back.setAttribute("src", String(v.src));
+          if (v.front) front.setAttribute("src", String(v.front));
+          if (String(v.backdrop) === "off") q(".rf-bg").style.display = "none";
+          var fx = Math.max(0, Math.min(1, num(v.fx, 0.16)));
+          front.style.left = Math.round(fx * 1920 - 460) + "px";
+          var t0 = Math.max(0, num(v.at, 1));
+          // the two ends of the rack: [front in focus] and [back in focus]; "to" picks which one is the last frame
+          var nearSharp = { fb: 0, bb: CFG.blurBack, fxs: 0, bxs: 0, bs: 1 + CFG.breathe };
+          var farSharp = { fb: CFG.blurFront, bb: 0, fxs: CFG.shiftFront, bxs: CFG.shiftBack, bs: 1 };
+          var a = String(v.to) === "front" ? farSharp : nearSharp, b = String(v.to) === "front" ? nearSharp : farSharp;
+          var bl = function (px) { return "blur(" + px + "px)"; };
+
+          var tl = gsap.timeline({ paused: true });
+          tl.set(back, { transformOrigin: "50% 50%" }, 0);
+          // both layers change focus on the same clock, in opposite directions
+          tl.fromTo(front, { filter: bl(a.fb), x: a.fxs }, { filter: bl(b.fb), x: b.fxs, duration: CFG.dur, ease: CFG.ease }, t0);
+          // the back layer also "breathes": a real lens changes its field of view slightly while racking
+          tl.fromTo(back, { filter: bl(a.bb), x: a.bxs, scale: a.bs }, { filter: bl(b.bb), x: b.bxs, scale: b.bs, duration: CFG.dur, ease: CFG.ease }, t0);
+          window.__timelines["rack-focus"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

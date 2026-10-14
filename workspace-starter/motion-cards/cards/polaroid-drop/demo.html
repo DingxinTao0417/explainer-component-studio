@@ -1,0 +1,110 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"srcs","type":"string","label":"三到四张图的地址，用 | 分隔，按落下的先后排","default":"motion-cards/lib/samples/p3.jpg|motion-cards/lib/samples/p1.jpg|motion-cards/lib/samples/p6.jpg|motion-cards/lib/samples/p8.jpg"},
+    {"id":"captions","type":"string","label":"每张照片白边上的字，用 | 分隔（可空）","default":"准备素材|写下要求|对比结果|挑出最好"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>polaroid-drop · 拍立得连落</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="polaroid-drop-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .pd { position: absolute; inset: 0; }
+        .pd-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .pd-card { position: absolute; width: 500px; height: 600px; box-sizing: border-box; padding: 20px 20px 0; background: #fff; border-radius: 6px; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45), 0 4px 12px rgba(0, 0, 0, 0.32); }
+        .pd-img { display: block; width: 460px; height: 450px; object-fit: cover; }
+        .pd-cap { display: block; height: 130px; line-height: 124px; font-size: 44px; font-weight: 700; color: #15171c; text-align: center; white-space: nowrap; }
+        .pd-c1 { left: 87px; top: 210px; }
+        .pd-c2 { left: 502px; top: 276px; }
+        .pd-c3 { left: 917px; top: 222px; }
+        .pd-c4 { left: 1332px; top: 270px; }
+      </style>
+
+      <div id="root" data-composition-id="polaroid-drop" data-width="1920" data-height="1080">
+        <div class="pd">
+          <div class="pd-bg"></div>
+          <div class="pd-card pd-c1"><img class="pd-img" src="motion-cards/lib/samples/p3.jpg" alt="" /><span class="pd-cap">准备素材</span></div>
+          <div class="pd-card pd-c2"><img class="pd-img" src="motion-cards/lib/samples/p1.jpg" alt="" /><span class="pd-cap">写下要求</span></div>
+          <div class="pd-card pd-c3"><img class="pd-img" src="motion-cards/lib/samples/p6.jpg" alt="" /><span class="pd-cap">对比结果</span></div>
+          <div class="pd-card pd-c4"><img class="pd-img" src="motion-cards/lib/samples/p8.jpg" alt="" /><span class="pd-cap">挑出最好</span></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = {
+            starts: [0.2, 0.56, 0.9, 1.34],   // uneven on purpose: the last one waits a beat longer
+            fall: 0.34,                        // accelerating fall (power2.in) = it has weight
+            fromScale: 1.16,                   // starts closer to the lens, shrinks onto the table
+            spin: 9,                           // extra degrees it is still turning through while falling
+            over: 1.6, settle: 0.32,           // rotates slightly past its resting angle, then comes back
+            nudge: 1.1, nudgeX: 7,             // the photo underneath gets knocked by the one landing on its edge
+            angles: [-7, 4.5, -3, 6.5],
+            tops: [210, 276, 222, 270],
+          };
+          var v = { captions: "准备素材|写下要求|对比结果|挑出最好", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".pd");
+          var q = function (s) { return root.querySelector(s); };
+          var all = function (s) { return Array.prototype.slice.call(root.querySelectorAll(s)); };
+          if (String(v.backdrop) === "off") q(".pd-bg").style.display = "none";
+          var list = String(v.srcs || "").split("|").map(function (s) { return s.trim(); }).filter(Boolean);
+          var cards = all(".pd-card");
+          var n = Math.max(3, Math.min(4, list.length || 4));
+          if (n === 3) { cards[3].style.display = "none"; cards.pop(); }
+          var pitch = n === 3 ? 560 : 415;
+          var left0 = (1920 - (pitch * (n - 1) + 500)) / 2;
+          var caps = String(v.captions || "").split("|");
+          cards.forEach(function (c, i) {
+            c.style.left = Math.round(left0 + pitch * i) + "px";
+            if (list[i]) c.querySelector(".pd-img").setAttribute("src", list[i]);
+            var cap = c.querySelector(".pd-cap");
+            cap.textContent = (caps[i] || "").trim();
+          });
+
+          var tl = gsap.timeline({ paused: true });
+          cards.forEach(function (c, i) {
+            var a = CFG.angles[i], dir = a < 0 ? -1 : 1, t0 = CFG.starts[i], land = t0 + CFG.fall;
+            // off the top of the canvas → resting spot; ease-in so it speeds up all the way down
+            tl.fromTo(c, { y: -(CFG.tops[i] + 720), rotation: a - dir * CFG.spin, scale: CFG.fromScale }, { y: 0, rotation: a + dir * CFG.over, scale: 1, duration: CFG.fall, ease: "power2.in" }, t0);
+            tl.to(c, { rotation: a, duration: CFG.settle, ease: "back.out(2.6)" }, land);
+            if (i > 0) {
+              // the neighbour it lands on flinches away and comes back
+              var prev = cards[i - 1], pa = CFG.angles[i - 1];
+              tl.to(prev, { rotation: pa - CFG.nudge, x: -CFG.nudgeX, duration: 0.06, ease: "power1.out" }, land);
+              tl.to(prev, { rotation: pa, x: 0, duration: 0.26, ease: "power2.out" }, land + 0.06);
+            }
+          });
+          window.__timelines["polaroid-drop"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

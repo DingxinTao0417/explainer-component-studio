@@ -1,0 +1,131 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"指标名","default":"本周处理完的工单（示例数据）"},
+    {"id":"value","type":"string","label":"大数字","default":"1,284"},
+    {"id":"delta","type":"string","label":"涨跌幅（以 - 开头算下跌）","default":"+24%"},
+    {"id":"trend","type":"string","label":"迷你线的数值，用 | 分隔","default":"40|46|42|55|51|66|60|79|98|128"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（只留指标卡）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>spark-metric · 指标带迷你线</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="spark-metric-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .sm { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+        .sm-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .sm-card { position: relative; width: 1640px; padding: 72px 96px 80px; border-radius: 48px; background: var(--k-panel); box-shadow: 0 40px 100px rgba(0, 0, 0, 0.4); }
+        .sm-title { display: block; font-size: 60px; font-weight: 600; color: var(--k-muted); white-space: nowrap; }
+        .sm-row { display: flex; align-items: center; margin-top: 4px; }
+        .sm-num { display: block; font-size: 320px; font-weight: 800; line-height: 1.25; letter-spacing: -0.02em; white-space: nowrap; }
+        .sm-delta { display: flex; align-items: center; margin-left: 72px; color: var(--k-accent); }
+        .sm-delta.is-down { color: var(--k-accent-2); }
+        .sm-arrow { display: block; width: 110px; height: 110px; }
+        .sm-arrow path { fill: currentColor; }
+        .sm-pct { display: block; margin-left: 18px; font-size: 120px; font-weight: 800; white-space: nowrap; }
+        .sm-spark { display: block; width: 1448px; height: 230px; margin-top: 10px; overflow: visible; }
+        .sm-line { fill: none; stroke: currentColor; stroke-width: 14; stroke-linecap: round; stroke-linejoin: round; }
+        .sm-dot { fill: currentColor; }
+        .sm-spark { color: var(--k-accent); }
+        .sm-spark.is-down { color: var(--k-accent-2); }
+      </style>
+
+      <div id="root" data-composition-id="spark-metric" data-width="1920" data-height="1080">
+        <div class="sm">
+          <div class="sm-bg"></div>
+          <div class="sm-card">
+            <span class="sm-title">本周处理完的工单（示例数据）</span>
+            <div class="sm-row">
+              <span class="sm-num">1,284</span>
+              <div class="sm-delta">
+                <svg class="sm-arrow" viewBox="0 0 56 56"><path d="M28 4L52 30H37V52H19V30H4Z" /></svg>
+                <span class="sm-pct">+24%</span>
+              </div>
+            </div>
+            <svg class="sm-spark" viewBox="0 0 1448 230">
+              <path class="sm-line" d="M12 218L170.2 204L328.4 213.3L486.7 182.9L644.9 192.2L803.1 157.1L961.3 171.2L1119.6 126.7L1277.8 82.2L1436 12" />
+              <circle class="sm-dot" cx="1436" cy="12" r="22" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { cardAt: 0.1, numAt: 0.4, deltaAt: 0.8, sparkAt: 1.15, numIn: 0.32, arrowTravel: 70, arrowIn: 0.34, draw: 0.75, dotR: 22 };
+          var v = { title: "本周处理完的工单（示例数据）", value: "1,284", delta: "+24%", trend: "40|46|42|55|51|66|60|79|98|128", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".sm");
+          var q = function (s) { return root.querySelector(s); };
+          q(".sm-title").textContent = String(v.title);
+          q(".sm-num").textContent = String(v.value);
+          q(".sm-pct").textContent = String(v.delta);
+          if (String(v.backdrop) === "off") q(".sm-bg").style.display = "none";
+          var down = /^\s*[-−]/.test(String(v.delta));
+          if (down) {
+            q(".sm-delta").classList.add("is-down");
+            q(".sm-spark").classList.add("is-down");
+            q(".sm-arrow path").setAttribute("d", "M28 52L52 26H37V4H19V26H4Z");
+          }
+          if (!String(v.delta)) q(".sm-delta").style.display = "none";
+
+          // sparkline: shape only, scaled between its own min and max
+          var vals = String(v.trend).split("|").map(parseFloat).filter(isFinite);
+          if (vals.length < 2) vals = [0, 1];
+          var n = vals.length, lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals), d = "", len = 0, px = 0, py = 0;
+          for (var i = 0; i < n; i++) {
+            var x = 12 + (1424 * i) / (n - 1), y = 218 - ((vals[i] - lo) / (hi - lo || 1)) * 206;
+            d += (i ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(1);
+            if (i) len += Math.sqrt((x - px) * (x - px) + (y - py) * (y - py));
+            px = x; py = y;
+          }
+          var line = q(".sm-line"), dot = q(".sm-dot");
+          line.setAttribute("d", d);
+          line.setAttribute("stroke-dasharray", len.toFixed(1) + " " + (len + 40).toFixed(1));
+          dot.setAttribute("cx", px.toFixed(1));
+          dot.setAttribute("cy", py.toFixed(1));
+
+          var tl = gsap.timeline({ paused: true });
+          tl.fromTo(q(".sm-card"), { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, CFG.cardAt);
+          // 1 the number: what it is
+          tl.fromTo(q(".sm-num"), { opacity: 0, y: 44 }, { opacity: 1, y: 0, duration: CFG.numIn, ease: "power3.out" }, CFG.numAt);
+          // 2 the arrow: which way. It travels in its own direction and overshoots
+          tl.fromTo(q(".sm-arrow"), { opacity: 0, y: down ? -CFG.arrowTravel : CFG.arrowTravel }, { opacity: 1, y: 0, duration: CFG.arrowIn, ease: "back.out(2.6)" }, CFG.deltaAt);
+          tl.fromTo(q(".sm-pct"), { opacity: 0, x: -16 }, { opacity: 1, x: 0, duration: 0.25, ease: "power2.out" }, CFG.deltaAt + 0.12);
+          // 3 the line: how it got there, ending on a dot
+          tl.fromTo(line, { strokeDashoffset: len }, { strokeDashoffset: 0, duration: CFG.draw, ease: "power2.inOut" }, CFG.sparkAt);
+          tl.fromTo(line, { opacity: 0 }, { opacity: 1, duration: 0.01, ease: "none" }, CFG.sparkAt);
+          tl.fromTo(dot, { attr: { r: 0 } }, { attr: { r: CFG.dotR }, duration: 0.3, ease: "back.out(3.5)" }, CFG.sparkAt + CFG.draw - 0.06);
+          window.__timelines["spark-metric"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,94 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"示例标题（留空不显示）","default":"点阵在标题后面慢慢起伏"},
+    {"id":"speed","type":"number","label":"速度倍数","default":1,"min":0.2,"max":3,"step":0.1},
+    {"id":"strength","type":"number","label":"波纹亮度（0–1）","default":0.7,"min":0,"max":1,"step":0.05}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>dot-field · 点阵波</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="dot-field-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .df { position: absolute; inset: 0; overflow: hidden; }
+        .df-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .df-fx { position: absolute; inset: 0; opacity: 0.7; }
+        .df-hold { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 0 160px; }
+        .df-title { display: block; font-size: 92px; font-weight: 800; line-height: 1.3; letter-spacing: 0.02em; text-align: center; }
+        .df-fx { --df-p: 10; }
+        .df-l { position: absolute; inset: 0; background-size: 64px 64px; background-position: 32px 28px; }
+        .df-base { background-image: radial-gradient(circle, color-mix(in srgb, var(--k-muted) 55%, transparent) 0 3px, transparent 4.2px); }
+        .df-w { -webkit-mask-image: linear-gradient(104deg, transparent calc(var(--df-p) * 1% - var(--df-o) - var(--df-h)), #000 calc(var(--df-p) * 1% - var(--df-o)), transparent calc(var(--df-p) * 1% - var(--df-o) + var(--df-h))); mask-image: linear-gradient(104deg, transparent calc(var(--df-p) * 1% - var(--df-o) - var(--df-h)), #000 calc(var(--df-p) * 1% - var(--df-o)), transparent calc(var(--df-p) * 1% - var(--df-o) + var(--df-h))); }
+        .df-a1 { --df-o: 0%; --df-h: 20%; background-image: radial-gradient(circle, var(--k-accent) 0 5px, transparent 6.2px); }
+        .df-a2 { --df-o: 0%; --df-h: 9%; background-image: radial-gradient(circle, var(--k-accent) 0 8px, transparent 9.2px); }
+        .df-b1 { --df-o: 48%; --df-h: 20%; background-image: radial-gradient(circle, var(--k-accent-2) 0 5px, transparent 6.2px); }
+        .df-b2 { --df-o: 48%; --df-h: 9%; background-image: radial-gradient(circle, var(--k-accent-2) 0 8px, transparent 9.2px); }
+      </style>
+
+      <div id="root" data-composition-id="dot-field" data-width="1920" data-height="1080">
+        <div class="df" data-layout-allow-overflow>
+          <div class="df-bg"></div>
+          <div class="df-fx">
+            <div class="df-l df-base"></div>
+            <div class="df-l df-w df-a1"></div>
+            <div class="df-l df-w df-a2"></div>
+            <div class="df-l df-w df-b1"></div>
+            <div class="df-l df-w df-b2"></div>
+          </div>
+          <div class="df-hold"><span class="df-title">点阵在标题后面慢慢起伏</span></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { dur: 6, from: 10, travel: 64 };
+          var v = { title: "点阵在标题后面慢慢起伏", speed: 1, strength: 0.7 };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".df");
+          var q = function (s) { return root.querySelector(s); };
+          var all = function (s) { return Array.prototype.slice.call(root.querySelectorAll(s)); };
+          var ttl = q(".df-title");
+          ttl.textContent = String(v.title || "");
+          if (!v.title) q(".df-hold").style.display = "none";
+          var sp = Math.min(3, Math.max(0.2, parseFloat(v.speed) || 1));
+          var st = parseFloat(v.strength);
+          if (isNaN(st)) st = 0.7;
+          var fx = q(".df-fx");
+          fx.style.opacity = String(Math.min(1, Math.max(0, st)));
+          var D = CFG.dur;
+
+          var tl = gsap.timeline({ paused: true });
+          // one number drives both wave fronts: it is the front's position across the frame, in percent
+          tl.fromTo(fx, { "--df-p": CFG.from }, { "--df-p": CFG.from + CFG.travel * sp, duration: D, ease: "none" }, 0);
+          window.__timelines["dot-field"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

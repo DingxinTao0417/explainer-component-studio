@@ -1,0 +1,113 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"lead","type":"string","label":"不变的前半句","default":"学 AI，最重要的是"},
+    {"id":"wrong","type":"string","label":"先打出来的错说法","default":"背提示词"},
+    {"id":"right","type":"string","label":"改成的对说法","default":"学会提问"},
+    {"id":"at","type":"number","label":"开始打字的时间（秒）","default":0.4,"min":0,"max":10,"step":0.05},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>retype-fix · 打错重打</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="retype-fix-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .rf { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+        .rf-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .rf-box { position: relative; display: block; font-size: 108px; font-weight: 700; line-height: 1.5; letter-spacing: 0.02em; }
+        .rf-sizer { display: block; visibility: hidden; white-space: pre; }
+        .rf-row { position: absolute; left: 0; top: 0; display: block; white-space: nowrap; }
+        .rf-ch { display: inline-block; white-space: pre; }
+        .rf-good { color: var(--k-accent); }
+        .rf-cur { display: inline-block; width: 0.09em; height: 1.02em; margin-left: 0.05em; vertical-align: -0.14em; border-radius: 0.02em; background: var(--k-accent); }
+      </style>
+
+      <div id="root" data-composition-id="retype-fix" data-width="1920" data-height="1080">
+        <div class="rf">
+          <div class="rf-bg"></div>
+          <div class="rf-box">
+            <span class="rf-sizer" data-layout-allow-occlusion>学 AI，最重要的是学会提问</span>
+            <span class="rf-row"><span class="rf-ch">学 AI，最重要的是</span><span class="rf-ch rf-good">学会提问</span><i class="rf-cur"></i></span>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { at: 0.4, typeBad: 0.085, hold: 0.55, erase: 0.05, breath: 0.18, typeGood: 0.095, blink: 0.45, blinks: 1 };
+          var v = { lead: "学 AI，最重要的是", wrong: "背提示词", right: "学会提问", at: CFG.at, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".rf");
+          var q = function (s) { return root.querySelector(s); };
+          if (String(v.backdrop) === "off") q(".rf-bg").style.display = "none";
+          // the invisible sizer holds the FINAL sentence, so the box is centred for where the line ends up;
+          // the live row is pinned to its left edge and simply grows and shrinks to the right
+          q(".rf-sizer").textContent = String(v.lead) + String(v.right);
+          var row = q(".rf-row"), cur = q(".rf-cur");
+          row.textContent = "";
+          function add(text, cls) {
+            var out = [], chars = String(text).split("");
+            for (var i = 0; i < chars.length; i++) {
+              var s = document.createElement("span");
+              s.className = "rf-ch" + cls;
+              s.textContent = chars[i];
+              row.appendChild(s);
+              out.push(s);
+            }
+            return out;
+          }
+          add(v.lead, "");
+          var bad = add(v.wrong, ""), good = add(v.right, " rf-good");
+          row.appendChild(cur);
+
+          var tl = gsap.timeline({ paused: true });
+          tl.set(bad.concat(good), { display: "none" }, 0);
+          var t = Math.max(0.05, parseFloat(v.at) || CFG.at), i;
+          // 1. the wrong wording, typed with full confidence
+          for (i = 0; i < bad.length; i++) { tl.set(bad[i], { display: "inline-block" }, t); t += CFG.typeBad; }
+          // 2. the hands stop; a single blink is the whole moment of doubt
+          tl.set(cur, { opacity: 0 }, t + CFG.hold * 0.35);
+          tl.set(cur, { opacity: 1 }, t + CFG.hold * 0.7);
+          t += CFG.hold;
+          // 3. backspace held down: faster than typing and perfectly even
+          for (i = bad.length - 1; i >= 0; i--) { tl.set(bad[i], { display: "none" }, t); t += CFG.erase; }
+          t += CFG.breath;
+          // 4. the right wording, a little slower, in the accent colour
+          for (i = 0; i < good.length; i++) { tl.set(good[i], { display: "inline-block" }, t); t += CFG.typeGood; }
+          for (i = 0; i < CFG.blinks; i++) {
+            tl.set(cur, { opacity: 0 }, t + CFG.blink * (2 * i + 1));
+            tl.set(cur, { opacity: 1 }, t + CFG.blink * (2 * i + 2));
+          }
+          window.__timelines["retype-fix"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

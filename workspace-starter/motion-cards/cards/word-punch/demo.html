@@ -1,0 +1,101 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"text","type":"string","label":"整句","default":"提示词越具体，结果越稳"},
+    {"id":"key","type":"string","label":"重音词（整句的子串）","default":"越具体"},
+    {"id":"hit","type":"number","label":"重音词砸下的时间（秒）","default":0.9,"min":0,"max":10,"step":0.05},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>word-punch · 重音词砸字</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="word-punch-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .wp { position: absolute; inset: 0; }
+        .wp-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .wp-shake { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 0 140px; }
+        .wp-line { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; font-size: 104px; font-weight: 800; line-height: 1.5; letter-spacing: 0.01em; }
+        .wp-rest { display: block; white-space: pre; }
+        .wp-key { position: relative; display: block; margin: 0 0.42em; white-space: pre; }
+        .wp-chip { position: absolute; left: -0.22em; right: -0.22em; top: 0.1em; bottom: 0.06em; border-radius: 0.1em; background: var(--k-accent); }
+        .wp-word { position: relative; display: block; color: var(--k-on-accent); }
+      </style>
+
+      <div id="root" data-composition-id="word-punch" data-width="1920" data-height="1080">
+        <div class="wp">
+        <div class="wp-bg"></div>
+        <div class="wp-shake">
+          <div class="wp-line">
+            <span class="wp-rest wp-pre">提示词</span>
+            <span class="wp-key" data-layout-allow-occlusion><span class="wp-chip"></span><span class="wp-word">越具体</span></span>
+            <span class="wp-rest wp-post">，结果越稳</span>
+          </div>
+        </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { peak: 1.5, rest: 1.12, popIn: 0.16, settle: 0.24, shakePx: 8, lineIn: 0.35 };
+          var v = { text: "提示词越具体，结果越稳", key: "越具体", hit: 0.9, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".wp");
+          var q = function (s) { return root.querySelector(s); };
+          var text = String(v.text), key = String(v.key), at = text.indexOf(key);
+          if (at < 0) { key = ""; at = text.length; }
+          q(".wp-pre").textContent = text.slice(0, at);
+          q(".wp-word").textContent = key;
+          q(".wp-post").textContent = text.slice(at + key.length);
+          if (!key) q(".wp-key").style.display = "none";
+          if (String(v.backdrop) === "off") q(".wp-bg").style.display = "none";
+          var hit = Math.max(CFG.lineIn, parseFloat(v.hit) || 0.9);
+
+          var tl = gsap.timeline({ paused: true });
+          // the sentence arrives plain; the key word is held back until it is spoken
+          tl.fromTo([q(".wp-pre"), q(".wp-post")], { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: CFG.lineIn, ease: "power3.out" }, 0);
+          if (key) {
+            var keyEl = q(".wp-key");
+            tl.set(keyEl, { transformOrigin: "50% 85%" }, 0);
+            tl.fromTo(keyEl, { opacity: 0, scale: 0.2, rotation: -7 }, { opacity: 1, scale: CFG.peak, rotation: 2, duration: CFG.popIn, ease: "power4.out" }, hit);
+            tl.to(keyEl, { scale: CFG.rest, rotation: 0, duration: CFG.settle, ease: "back.out(2.4)" }, hit + CFG.popIn);
+            // impact: the whole frame takes the hit, decaying
+            var sh = q(".wp-shake"), s = CFG.shakePx;
+            tl.fromTo(sh, { x: 0 }, { x: s, duration: 0.035, ease: "none" }, hit + CFG.popIn - 0.02);
+            tl.to(sh, { x: -s * 0.8, duration: 0.05, ease: "none" });
+            tl.to(sh, { x: s * 0.5, duration: 0.05, ease: "none" });
+            tl.to(sh, { x: -s * 0.25, duration: 0.05, ease: "none" });
+            tl.to(sh, { x: 0, duration: 0.05, ease: "none" });
+          }
+          window.__timelines["word-punch"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

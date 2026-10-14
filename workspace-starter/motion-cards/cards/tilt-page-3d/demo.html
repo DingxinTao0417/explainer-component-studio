@@ -1,0 +1,90 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"src","type":"string","label":"长页面图片地址（从项目根目录写起）","default":"motion-cards/lib/samples/page.png"},
+    {"id":"ratio","type":"number","label":"页面的高宽比（高 ÷ 宽）","default":2.625,"min":0.6,"max":12,"step":0.005},
+    {"id":"fy","type":"number","label":"最后停在页面的哪里：纵向 0–1","default":0.41,"min":0,"max":1,"step":0.01},
+    {"id":"travel","type":"number","label":"滑行多远（页面上的像素，正数向页首方向飞）","default":1100,"min":-3000,"max":3000,"step":50},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>tilt-page-3d · 三维倾斜页</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="tilt-page-3d-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .tp { position: absolute; inset: 0; overflow: hidden; perspective: 2000px; perspective-origin: 50% 50%; }
+        .tp-bg { position: absolute; inset: 0; background: radial-gradient(1300px 800px at 50% 42%, var(--k-panel), var(--k-bg)); }
+        .tp-rig { position: absolute; inset: 0; transform-style: preserve-3d; will-change: transform; }
+        .tp-page { position: absolute; left: 310px; top: 0; width: 1300px; height: 3412px; border-radius: 10px; overflow: hidden; background: #fff; box-shadow: 0 60px 140px rgba(0, 0, 0, 0.55), 0 0 0 2px rgba(255, 255, 255, 0.08); will-change: transform; }
+        .tp-img { position: absolute; left: 0; top: 0; display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; }
+      </style>
+
+      <div id="root" data-composition-id="tilt-page-3d" data-width="1920" data-height="1080">
+        <div class="tp" data-layout-allow-overflow>
+          <div class="tp-bg"></div>
+          <div class="tp-rig">
+            <div class="tp-page">
+              <img class="tp-img" src="motion-cards/lib/samples/page.png" data-var-src="src" alt="" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { pageW: 1300, tiltX: 54, tiltZ: -20, zoom: 1.3, glide: 2.6, glideEase: "power2.out", turnAt: 1.2, turn: 1.4, turnEase: "power3.inOut" };
+          var v = { ratio: 2.625, fy: 0.41, travel: 1100, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".tp");
+          var q = function (s) { return root.querySelector(s); };
+          var num = function (x, d) { x = parseFloat(x); return isFinite(x) ? x : d; };
+          var clamp = function (x, a, b) { return Math.max(a, Math.min(b, x)); };
+          if (v.src) q(".tp-img").setAttribute("src", String(v.src));
+          if (String(v.backdrop) === "off") q(".tp-bg").style.display = "none";
+          var H = 1080, pageH = Math.round(CFG.pageW * Math.max(0.3, num(v.ratio, 2.625)));
+          var page = q(".tp-page"), rig = q(".tp-rig");
+          page.style.height = pageH + "px";
+          // parked: the target row sits at frame centre, but never so far that the page's own top or bottom edge comes into frame
+          var lo = Math.min(0, H - pageH);
+          var y1 = clamp(H / 2 - clamp(num(v.fy, 0.4), 0, 1) * pageH, lo, 0);
+          // start further along the page; the slide happens in the page's own plane, so it reads as travelling over it
+          var y0 = clamp(y1 - num(v.travel, 1100), lo, 0);
+
+          var tl = gsap.timeline({ paused: true });
+          tl.set(rig, { transformOrigin: "50% 50%" }, 0);
+          // 1 · already moving on the first frame, slowing all the way into the parked position
+          tl.fromTo(page, { y: y0 }, { y: y1, duration: CFG.glide, ease: CFG.glideEase }, 0);
+          // 2 · while it is still sliding, the page swings up to face the viewer; both land on the same frame
+          tl.fromTo(rig, { rotationX: CFG.tiltX, rotationZ: CFG.tiltZ, scale: CFG.zoom }, { rotationX: 0, rotationZ: 0, scale: 1, duration: CFG.turn, ease: CFG.turnEase }, CFG.turnAt);
+          window.__timelines["tilt-page-3d"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

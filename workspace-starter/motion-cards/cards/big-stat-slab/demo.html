@@ -1,0 +1,103 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"value","type":"string","label":"大数字","default":"73"},
+    {"id":"unit","type":"string","label":"单位","default":"%"},
+    {"id":"caption","type":"string","label":"数字下面的一行说明","default":"的返工，来自第一句话没说清"},
+    {"id":"note","type":"string","label":"来源小注（可空）","default":"示例数据"},
+    {"id":"hit","type":"number","label":"数字砸到位的时间（秒）","default":0.5,"min":0.2,"max":10,"step":0.05},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>big-stat-slab · 大数字压屏</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="big-stat-slab-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .bs { position: absolute; inset: 0; }
+        .bs-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .bs-shake { position: absolute; inset: -60px 0 0 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .bs-slab { display: flex; align-items: baseline; justify-content: center; height: 540px; }
+        .bs-num { display: block; font-size: 560px; font-weight: 800; line-height: 540px; letter-spacing: -0.03em; white-space: nowrap; }
+        .bs-unit { display: block; margin-left: 20px; font-size: 150px; font-weight: 800; line-height: 1; color: var(--k-accent); white-space: nowrap; }
+        .bs-cap { display: block; margin-top: 106px; font-size: 76px; font-weight: 700; white-space: nowrap; }
+        .bs-note { display: block; margin-top: 26px; font-size: 40px; font-weight: 500; color: var(--k-muted); white-space: nowrap; }
+      </style>
+
+      <div id="root" data-composition-id="big-stat-slab" data-width="1920" data-height="1080">
+        <div class="bs">
+          <div class="bs-bg"></div>
+          <div class="bs-shake">
+            <div class="bs-slab">
+              <span class="bs-num">73</span>
+              <span class="bs-unit">%</span>
+            </div>
+            <span class="bs-cap">的返工，来自第一句话没说清</span>
+            <span class="bs-note">示例数据</span>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { from: 2.3, fall: 0.17, squash: 0.92, squashIn: 0.05, settle: 0.26, shakePx: 16, capLag: 0.32, capIn: 0.4 };
+          var v = { value: "73", unit: "%", caption: "的返工，来自第一句话没说清", note: "示例数据", hit: 0.5, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".bs");
+          var q = function (s) { return root.querySelector(s); };
+          q(".bs-num").textContent = String(v.value);
+          q(".bs-unit").textContent = String(v.unit);
+          q(".bs-cap").textContent = String(v.caption);
+          q(".bs-note").textContent = String(v.note);
+          if (!String(v.note)) q(".bs-note").style.display = "none";
+          if (String(v.backdrop) === "off") q(".bs-bg").style.display = "none";
+          var hit = Math.max(CFG.fall + 0.03, parseFloat(v.hit) || 0.5);
+          var slab = q(".bs-slab"), sh = q(".bs-shake"), s = CFG.shakePx;
+
+          var tl = gsap.timeline({ paused: true });
+          tl.set(slab, { transformOrigin: "50% 78%" }, 0);
+          // falls toward the screen: starts oversized, accelerates, lands exactly on `hit`
+          tl.fromTo(slab, { opacity: 0, scale: CFG.from }, { opacity: 1, scale: 1, duration: CFG.fall, ease: "power3.in" }, hit - CFG.fall);
+          // landing: the slab flattens for one beat, the frame takes the weight
+          tl.to(slab, { scaleY: CFG.squash, scaleX: 1.03, duration: CFG.squashIn, ease: "power1.out" }, hit);
+          tl.to(slab, { scaleY: 1, scaleX: 1, duration: CFG.settle, ease: "back.out(3)" }, hit + CFG.squashIn);
+          tl.fromTo(sh, { y: 0 }, { y: s, duration: 0.04, ease: "none" }, hit);
+          tl.to(sh, { y: -s * 0.6, duration: 0.06, ease: "none" });
+          tl.to(sh, { y: s * 0.35, duration: 0.06, ease: "none" });
+          tl.to(sh, { y: -s * 0.15, duration: 0.06, ease: "none" });
+          tl.to(sh, { y: 0, duration: 0.06, ease: "none" });
+          // the explanation waits until the number has been read
+          tl.fromTo(q(".bs-cap"), { opacity: 0, y: 36 }, { opacity: 1, y: 0, duration: CFG.capIn, ease: "power3.out" }, hit + CFG.capLag);
+          tl.fromTo(q(".bs-note"), { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "none" }, hit + CFG.capLag + 0.25);
+          window.__timelines["big-stat-slab"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

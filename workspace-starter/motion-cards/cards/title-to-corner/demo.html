@@ -1,0 +1,103 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"标题（建议 4–8 个字）","default":"提示词三件套"},
+    {"id":"points","type":"string","label":"腾出画面后进来的正文，用 | 分行（可空）","default":"目标：说清要什么|例子：给一个样板|检查：让它自己核对"},
+    {"id":"park","type":"number","label":"标题开始退到角上的时间（秒）","default":1.2,"min":0.5,"max":10,"step":0.05},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>title-to-corner · 标题退成角标</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="title-to-corner-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .ttc { position: absolute; inset: 0; }
+        .ttc-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .ttc-bar { position: absolute; left: 96px; top: 70px; display: block; width: 12px; height: 68px; border-radius: 4px; background: var(--k-accent); }
+        .ttc-title { position: absolute; left: 132px; top: 70px; display: block; height: 68px; line-height: 66px; font-size: 52px; font-weight: 900; letter-spacing: 0.02em; white-space: nowrap; }
+        .ttc-list { position: absolute; left: 80px; right: 80px; top: 150px; bottom: 90px; display: grid; justify-content: center; align-content: center; }
+        .ttc-item { display: flex; align-items: center; height: 190px; font-size: 104px; font-weight: 700; white-space: nowrap; }
+        .ttc-dot { display: block; width: 28px; height: 28px; margin-right: 48px; border-radius: 50%; background: var(--k-accent); }
+        .ttc-text { display: block; }
+      </style>
+
+      <div id="root" data-composition-id="title-to-corner" data-width="1920" data-height="1080">
+        <div class="ttc">
+          <div class="ttc-bg"></div>
+          <span class="ttc-bar"></span>
+          <span class="ttc-title">提示词三件套</span>
+          <div class="ttc-list">
+            <div class="ttc-item"><span class="ttc-dot"></span><span class="ttc-text">目标：说清要什么</span></div>
+            <div class="ttc-item"><span class="ttc-dot"></span><span class="ttc-text">例子：给一个样板</span></div>
+            <div class="ttc-item"><span class="ttc-dot"></span><span class="ttc-text">检查：让它自己核对</span></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { big: 3.1, inAt: 0.15, inDur: 0.4, move: 0.62, barLag: 0.5, bodyLag: 0.42, bodyStep: 0.12 };
+          var v = { title: "提示词三件套", points: "目标：说清要什么|例子：给一个样板|检查：让它自己核对", park: 1.2, backdrop: "on" };
+          try {
+                      var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+                      for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+                    } catch (e) {}
+          var root = document.querySelector(".ttc");
+          var q = function (s) { return root.querySelector(s); };
+          var title = q(".ttc-title"), list = q(".ttc-list");
+          title.textContent = String(v.title);
+          var rows = got && got.points === "" ? [] : String(v.points).split("|");
+          list.textContent = "";
+          rows.forEach(function (t) {
+            var item = document.createElement("div"), dot = document.createElement("span"), tx = document.createElement("span");
+            item.className = "ttc-item"; dot.className = "ttc-dot"; tx.className = "ttc-text";
+            tx.textContent = t; item.appendChild(dot); item.appendChild(tx); list.appendChild(item);
+          });
+          if (String(v.backdrop) === "off") q(".ttc-bg").style.display = "none";
+          // where the label has to start so that, at CFG.big, it sits dead centre (layout px, so preview scaling does not matter)
+          var w = title.offsetWidth || String(v.title).length * 53, h = title.offsetHeight || 68;
+          var x0 = (1920 - w * CFG.big) / 2 - 132, y0 = (1080 - h * CFG.big) / 2 - 70;
+          var park = Math.max(CFG.inAt + CFG.inDur, parseFloat(v.park) || 1.2);
+
+          var tl = gsap.timeline({ paused: true });
+          tl.set(title, { transformOrigin: "0% 0%" }, 0);
+          // act 1: a normal centred title
+          tl.fromTo(title, { opacity: 0, x: x0, y: y0 + 46, scale: CFG.big }, { opacity: 1, x: x0, y: y0, scale: CFG.big, duration: CFG.inDur, ease: "power3.out", force3D: false }, CFG.inAt);
+          // act 2: the same node travels to the corner. x and y use different curves so the path bends instead of sliding on a ruler
+          tl.to(title, { x: 0, duration: CFG.move, ease: "power2.inOut", force3D: false }, park);
+          tl.to(title, { y: 0, scale: 1, duration: CFG.move, ease: "power4.inOut", force3D: false }, park);
+          // the accent bar is what turns "a small title" into "a standing label"; it clicks on as the title docks
+          tl.set(q(".ttc-bar"), { transformOrigin: "50% 50%" }, 0);
+          tl.fromTo(q(".ttc-bar"), { scaleY: 0 }, { scaleY: 1, duration: 0.26, ease: "back.out(2.6)" }, park + CFG.barLag);
+          // body takes the space only after the title is clearly on its way out
+          var items = root.querySelectorAll(".ttc-item");
+          if (items.length) tl.fromTo(items, { opacity: 0, y: 34 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out", stagger: CFG.bodyStep }, park + CFG.bodyLag);
+          window.__timelines["title-to-corner"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

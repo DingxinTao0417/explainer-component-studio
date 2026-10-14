@@ -1,0 +1,106 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"标题（建议 4–8 个字）","default":"换一个思路试试"},
+    {"id":"sub","type":"string","label":"两半退场后出现的一行（可空）","default":"同样的问题，倒过来问"},
+    {"id":"src","type":"string","label":"被裂开的那张画面（从项目根目录写起）","default":"motion-cards/lib/samples/p5.jpg"},
+    {"id":"gap","type":"number","label":"第一下裂开的缝高（px）","default":340,"min":200,"max":520,"step":10},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>split-title-reveal · 裂开露标题</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="split-title-reveal-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .spl { position: absolute; inset: 0; }
+        .spl-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .spl-under { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .spl-title { display: block; height: 240px; line-height: 236px; font-size: 172px; font-weight: 900; letter-spacing: 0.03em; white-space: nowrap; }
+        .spl-sub { position: absolute; left: 0; right: 0; top: 700px; display: block; text-align: center; font-size: 54px; font-weight: 600; letter-spacing: 0.08em; white-space: nowrap; color: var(--k-muted); }
+        .spl-half { position: absolute; left: 0; display: block; width: 1920px; height: 1080px; }
+        .spl-top { top: -540px; clip-path: inset(0 0 540px 0); }
+        .spl-bot { top: 540px; clip-path: inset(540px 0 0 0); }
+        .spl-img { position: absolute; left: 0; top: 0; display: block; width: 1920px; height: 1080px; object-fit: cover; }
+        .spl-edge { position: absolute; left: 0; display: block; width: 1920px; height: 8px; background: var(--k-accent); }
+        .spl-top .spl-edge { top: 532px; }
+        .spl-bot .spl-edge { top: 540px; }
+      </style>
+
+      <div id="root" data-composition-id="split-title-reveal" data-width="1920" data-height="1080">
+        <div class="spl">
+          <div class="spl-bg"></div>
+          <div class="spl-under">
+            <span class="spl-title" data-layout-allow-occlusion>换一个思路试试</span>
+          </div>
+          <span class="spl-sub" data-layout-allow-occlusion>同样的问题，倒过来问</span>
+          <div class="spl-half spl-top"><img class="spl-img" src="motion-cards/lib/samples/p5.jpg" alt="" /><span class="spl-edge"></span></div>
+          <div class="spl-half spl-bot"><img class="spl-img" src="motion-cards/lib/samples/p5.jpg" alt="" /><span class="spl-edge"></span></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { at: 0.5, score: 0.24, burst: 0.45, creep: 0.75, creepPx: 26, exit: 0.45, titleFrom: 0.86, titleEnd: 1.06, subLag: 0.3 };
+          var v = { title: "换一个思路试试", sub: "同样的问题，倒过来问", src: "motion-cards/lib/samples/p5.jpg", gap: 340, backdrop: "on" };
+          try {
+                      var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+                      for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+                    } catch (e) {}
+          var root = document.querySelector(".spl");
+          var q = function (s) { return root.querySelector(s); };
+          var title = q(".spl-title"), sub = q(".spl-sub"), top = q(".spl-top"), bot = q(".spl-bot");
+          title.textContent = String(v.title);
+          if (got && got.sub === "") { sub.style.display = "none"; } else { sub.textContent = String(v.sub); }
+          var imgs = root.querySelectorAll(".spl-img");
+          for (var i = 0; i < imgs.length; i++) imgs[i].setAttribute("src", String(v.src));
+          if (String(v.backdrop) === "off") q(".spl-bg").style.display = "none";
+          var half = (parseFloat(v.gap) || 340) / 2;
+          var open = CFG.at + CFG.burst, go = open + CFG.creep, gone = go + CFG.exit;
+
+          var tl = gsap.timeline({ paused: true });
+          // each half is a full-frame copy of the picture clipped to its own 540px; they rest off-screen in CSS, y = ±540 is the closed picture
+          // 0) a bright score line runs out from the centre: the picture is cut before it is pulled apart
+          var edges = root.querySelectorAll(".spl-edge");
+          tl.fromTo(edges, { scaleX: 0 }, { scaleX: 1, duration: CFG.score, ease: "power2.in" }, CFG.at - CFG.score);
+          // 1) the crack bursts open and brakes hard
+          tl.fromTo(top, { y: 540 }, { y: 540 - half, duration: CFG.burst, ease: "expo.out" }, CFG.at);
+          tl.fromTo(bot, { y: -540 }, { y: -540 + half, duration: CFG.burst, ease: "expo.out" }, CFG.at);
+          // 2) while the title is being read the gap keeps widening slowly, so the pause is not a freeze
+          tl.to(top, { y: 540 - half - CFG.creepPx, duration: CFG.creep, ease: "none" }, open);
+          tl.to(bot, { y: -540 + half + CFG.creepPx, duration: CFG.creep, ease: "none" }, open);
+          // 3) then both halves accelerate out of frame
+          tl.to(top, { y: 0, duration: CFG.exit, ease: "power3.in" }, go);
+          tl.to(bot, { y: 0, duration: CFG.exit, ease: "power3.in" }, go);
+          // the title swells toward the viewer through all three phases: fast with the burst, slow afterwards
+          tl.fromTo(title, { scale: CFG.titleFrom }, { scale: 1, duration: CFG.burst, ease: "expo.out" }, CFG.at);
+          tl.to(title, { scale: CFG.titleEnd, duration: CFG.creep + CFG.exit, ease: "power1.inOut" }, open);
+          tl.fromTo(sub, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, gone - 0.1 + CFG.subLag);
+          window.__timelines["split-title-reveal"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

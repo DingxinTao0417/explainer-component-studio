@@ -1,0 +1,137 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"host","type":"string","label":"人物图地址（透明底，从项目根目录写起）","default":"motion-cards/lib/samples/host.png"},
+    {"id":"side","type":"enum","label":"人在哪一边","default":"left","options":[{"value":"left","label":"左"},{"value":"right","label":"右"}]},
+    {"id":"share","type":"number","label":"人那一块占画面宽度（%）","default":40,"min":30,"max":50,"step":1},
+    {"id":"kicker","type":"string","label":"小标题（可空）","default":"第二步"},
+    {"id":"title","type":"string","label":"标题（10 字以内）","default":"先搭框架，再填细节"},
+    {"id":"points","type":"string","label":"要点，用 | 分开（最多 3 条）","default":"列出三个小标题|每个标题下写一句话"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>split-host-content · 六四分屏</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="split-host-content-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .sp { position: absolute; inset: 0; }
+        .sp-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .sp-hostpane { position: absolute; left: 0; top: 0; width: 768px; height: 1080px; background: var(--k-panel); }
+        .sp-hostin { position: absolute; left: 50%; bottom: 0; width: 0; height: 0; }
+        .sp-disc { position: absolute; left: -315px; top: -900px; width: 630px; height: 630px; border-radius: 50%; background: var(--k-accent); }
+        .sp-fig { position: absolute; left: -360px; top: -900px; width: 720px; height: 900px; background: center bottom / contain no-repeat; }
+        .sp-textpane { position: absolute; left: 768px; top: 0; width: 1152px; height: 1080px; display: flex; flex-direction: column; justify-content: center; padding: 0 60px 0 90px; }
+        .sp-kicker { display: block; font-size: 56px; line-height: 76px; font-weight: 700; color: var(--k-accent); }
+        .sp-title { display: block; margin: 8px 0 40px; font-size: 110px; line-height: 1.34; font-weight: 800; white-space: nowrap; }
+        .sp-point { display: flex; align-items: center; height: 112px; }
+        .sp-dot { display: block; flex: none; width: 24px; height: 24px; margin-right: 28px; border-radius: 6px; background: var(--k-accent); }
+        .sp-ptxt { display: block; font-size: 64px; line-height: 88px; font-weight: 600; white-space: nowrap; }
+        .sp-line { position: absolute; left: 764px; top: 0; width: 8px; height: 1080px; background: var(--k-accent); }
+      </style>
+
+      <div id="root" data-composition-id="split-host-content" data-width="1920" data-height="1080">
+        <div class="sp">
+          <div class="sp-bg"></div>
+          <div class="sp-hostpane">
+            <div class="sp-hostin">
+              <div class="sp-disc"></div>
+              <div class="sp-fig" style="background-image: url(motion-cards/lib/samples/host.png)"></div>
+            </div>
+          </div>
+          <div class="sp-textpane">
+            <span class="sp-kicker">第二步</span>
+            <span class="sp-title">先搭框架，再填细节</span>
+            <div class="sp-list">
+              <div class="sp-point"><span class="sp-dot"></span><span class="sp-ptxt">列出三个小标题</span></div>
+              <div class="sp-point"><span class="sp-dot"></span><span class="sp-ptxt">每个标题下写一句话</span></div>
+            </div>
+          </div>
+          <div class="sp-line"></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = {
+            at: 0.2,         // line starts drawing
+            draw: 0.36,      // line top → bottom
+            openAt: 0.32,    // panes start opening this long after `at` (just before the line finishes)
+            open: 0.6,       // host pane wipe
+            textLag: 0.14,   // the content side opens this long after the host side
+            hostPush: 200,   // px the host travels away from the line
+            textPush: 110,   // px the text travels away from the line
+            step: 0.1,       // between text lines
+          };
+          var v = { side: "left", share: 40, kicker: "第二步", title: "先搭框架，再填细节", points: "列出三个小标题|每个标题下写一句话", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".sp");
+          var q = function (s) { return root.querySelector(s); };
+          var all = function (s) { return Array.prototype.slice.call(root.querySelectorAll(s)); };
+          if (String(v.backdrop) === "off") q(".sp-bg").style.display = "none";
+          if (v.host) q(".sp-fig").style.backgroundImage = 'url("' + String(v.host) + '")';
+          var lines = [];
+          [["kicker", ".sp-kicker"], ["title", ".sp-title"]].forEach(function (p) {
+            var el = q(p[1]);
+            el.textContent = String(v[p[0]] || "");
+            if (v[p[0]]) lines.push(el); else el.style.display = "none";
+          });
+          var box = q(".sp-list");
+          box.textContent = "";
+          String(v.points || "").split("|").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 3).forEach(function (t) {
+            var row = document.createElement("div"), d = document.createElement("span"), x = document.createElement("span");
+            row.className = "sp-point"; d.className = "sp-dot"; x.className = "sp-ptxt"; x.textContent = t;
+            row.appendChild(d); row.appendChild(x); box.appendChild(row); lines.push(row);
+          });
+          var share = Math.max(30, Math.min(50, parseFloat(v.share) || 40)), hw = Math.round(1920 * share / 100);
+          var right = String(v.side) === "right", dir = right ? 1 : -1; // dir: which way the HOST side lies from the line
+          var hp = q(".sp-hostpane"), tp = q(".sp-textpane"), line = q(".sp-line"), hin = q(".sp-hostin");
+          var cut = right ? 1920 - hw : hw;
+          hp.style.width = hw + "px"; hp.style.left = (right ? cut : 0) + "px";
+          tp.style.width = 1920 - hw + "px"; tp.style.left = (right ? 0 : cut) + "px";
+          line.style.left = cut - 4 + "px";
+          // narrow host pane: the figure shrinks with it; narrow text pane: the title shrinks to stay on one line
+          var fw = Math.min(720, hw - 48), fig = q(".sp-fig"), disc = q(".sp-disc");
+          fig.style.width = fw + "px"; fig.style.height = fw * 1.25 + "px"; fig.style.left = -fw / 2 + "px"; fig.style.top = -fw * 1.25 + "px";
+          disc.style.width = disc.style.height = fw * 0.875 + "px"; disc.style.left = -fw * 0.4375 + "px"; disc.style.top = -fw * 1.25 + "px";
+          q(".sp-title").style.fontSize = Math.max(64, Math.min(112, Math.floor((1920 - hw - 160) / Math.max(1, String(v.title || "").length)))) + "px";
+          // each pane is wiped open starting at the edge that touches the line
+          var hostShut = right ? "inset(0% 100% 0% 0%)" : "inset(0% 0% 0% 100%)";
+          var go = CFG.at, open = go + CFG.openAt;
+
+          var tl = gsap.timeline({ paused: true });
+          tl.fromTo(line, { scaleY: 0, transformOrigin: "50% 0%" }, { scaleY: 1, duration: CFG.draw, ease: "power2.inOut" }, go);
+          tl.fromTo(hp, { clipPath: hostShut }, { clipPath: "inset(0% 0% 0% 0%)", duration: CFG.open, ease: "power3.out" }, open);
+          tl.fromTo(hin, { x: -dir * CFG.hostPush }, { x: 0, duration: CFG.open + 0.1, ease: "power3.out" }, open);
+          tl.fromTo(lines, { opacity: 0, x: dir * CFG.textPush }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out", stagger: CFG.step }, open + CFG.textLag);
+          window.__timelines["split-host-content"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

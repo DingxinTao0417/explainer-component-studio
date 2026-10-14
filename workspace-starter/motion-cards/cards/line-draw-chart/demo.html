@@ -1,0 +1,165 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"values","type":"string","label":"数值，用 | 分隔（按时间顺序）","default":"12|15|14|22|21|38|64"},
+    {"id":"unit","type":"string","label":"数值后的单位（可空）","default":"%"},
+    {"id":"span","type":"string","label":"起点和终点的时间标签，用 | 分隔","default":"第 1 周|第 7 周"},
+    {"id":"turn","type":"number","label":"在第几个点停一下（0 = 不停）","default":5,"min":0,"max":20,"step":1},
+    {"id":"turnNote","type":"string","label":"停顿处的一句标注","default":"开始给示例"},
+    {"id":"headline","type":"string","label":"结论（一句）","default":"通过率从这一周开始抬头（示例数据）"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>line-draw-chart · 折线画出</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="line-draw-chart-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .ld { position: absolute; inset: 0; }
+        .ld-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .ld-head { position: absolute; left: 120px; top: 56px; font-size: 68px; font-weight: 800; white-space: nowrap; }
+        .ld-svg { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; display: block; }
+        .ld-axis { stroke: var(--k-muted); stroke-width: 6; stroke-linecap: round; }
+        .ld-line { fill: none; stroke: var(--k-accent); stroke-width: 14; stroke-linecap: round; stroke-linejoin: round; }
+        .ld-dot { fill: var(--k-accent); stroke: var(--k-bg); stroke-width: 8; }
+        .ld-ring { fill: none; stroke: var(--k-accent); stroke-width: 8; }
+        .ld-tick { stroke: var(--k-muted); stroke-width: 6; stroke-linecap: round; }
+        .ld-tag { position: absolute; width: 480px; height: 150px; display: flex; align-items: flex-end; justify-content: center; }
+        .ld-val { display: block; font-size: 110px; font-weight: 800; line-height: 150px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .ld-note { position: absolute; font-size: 56px; font-weight: 700; white-space: nowrap; }
+        .ld-end { position: absolute; top: 936px; font-size: 52px; font-weight: 600; color: var(--k-muted); white-space: nowrap; }
+        .ld-end-a { left: 120px; }
+        .ld-end-b { right: 120px; }
+      </style>
+
+      <div id="root" data-composition-id="line-draw-chart" data-width="1920" data-height="1080">
+        <div class="ld">
+          <div class="ld-bg"></div>
+          <span class="ld-head">通过率从这一周开始抬头（示例数据）</span>
+          <svg class="ld-svg" viewBox="0 0 1920 1080">
+            <line class="ld-axis" x1="120" y1="910" x2="1800" y2="910" />
+            <line class="ld-tick" x1="1186.7" y1="759.8" x2="1186.7" y2="855.8" />
+            <path class="ld-line" d="M160 781.9L416.7 759.8L673.3 767.2L930 708.4L1186.7 715.8L1443.3 590.9L1700 400" />
+            <circle class="ld-ring" cx="1700" cy="400" r="26" opacity="0" />
+            <circle class="ld-dot" cx="1700" cy="400" r="26" />
+          </svg>
+          <div class="ld-tag" style="left: 1460px; top: 198px"><span class="ld-val">64%</span></div>
+          <span class="ld-note" style="left: 1216.7px; top: 791.8px">开始给示例</span>
+          <span class="ld-end ld-end-a">第 1 周</span>
+          <span class="ld-end ld-end-b">第 7 周</span>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { at: 0.3, draw: 1.7, hold: 0.5, x0: 160, x1: 1700, yBase: 870, yTop: 400, tagLift: 52, endKick: 1.18 };
+          var v = { values: "12|15|14|22|21|38|64", unit: "%", span: "第 1 周|第 7 周", turn: 5, turnNote: "开始给示例", headline: "通过率从这一周开始抬头（示例数据）", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".ld");
+          var q = function (s) { return root.querySelector(s); };
+          var vals = String(v.values).split("|").map(parseFloat).filter(isFinite);
+          if (vals.length < 2) vals = [0, 1];
+          var n = vals.length, max = Math.max.apply(null, vals) || 1;
+          var dec = /\.\d/.test(String(v.values)) ? 1 : 0;
+          var ends = String(v.span).split("|");
+          q(".ld-head").textContent = String(v.headline);
+          q(".ld-end-a").textContent = ends[0] || "";
+          q(".ld-end-b").textContent = ends[1] || "";
+          if (String(v.backdrop) === "off") q(".ld-bg").style.display = "none";
+
+          // geometry: x is time (even steps), y starts at zero so the slope is honest
+          var pts = [], cum = [0], d = "";
+          for (var i = 0; i < n; i++) {
+            var x = CFG.x0 + ((CFG.x1 - CFG.x0) * i) / (n - 1);
+            var y = CFG.yBase - (Math.max(0, vals[i]) / max) * (CFG.yBase - CFG.yTop);
+            pts.push([x, y]);
+            d += (i ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(1);
+            if (i) cum.push(cum[i - 1] + Math.sqrt(Math.pow(x - pts[i - 1][0], 2) + Math.pow(y - pts[i - 1][1], 2)));
+          }
+          var total = cum[n - 1];
+          var line = q(".ld-line"), dot = q(".ld-dot"), ring = q(".ld-ring"), tag = q(".ld-tag"), val = q(".ld-val");
+          line.setAttribute("d", d);
+          line.setAttribute("stroke-dasharray", total.toFixed(1) + " " + (total + 40).toFixed(1));
+
+          var ti = Math.round(parseFloat(v.turn) || 0) - 1;
+          var hasTurn = ti > 0 && ti < n - 1;
+          var note = q(".ld-note"), tick = q(".ld-tick");
+          if (hasTurn) {
+            var tp = pts[ti];
+            note.textContent = String(v.turnNote);
+            note.style.left = tp[0] + 30 + "px";
+            note.style.top = tp[1] + 76 + "px";
+            tick.setAttribute("x1", tp[0]); tick.setAttribute("x2", tp[0]);
+            tick.setAttribute("y1", tp[1] + 44); tick.setAttribute("y2", tp[1] + 140);
+          } else { note.style.display = "none"; tick.style.display = "none"; }
+
+          // one number (0..1 along the time axis) drives the stroke, the dot and the live value together
+          var state = { p: 0 };
+          var render = function () {
+            var f = Math.max(0, Math.min(1, state.p)) * (n - 1);
+            var k = Math.min(n - 2, Math.floor(f)), t = f - k;
+            var x = pts[k][0] + (pts[k + 1][0] - pts[k][0]) * t, y = pts[k][1] + (pts[k + 1][1] - pts[k][1]) * t;
+            line.setAttribute("stroke-dashoffset", (total - (cum[k] + (cum[k + 1] - cum[k]) * t)).toFixed(1));
+            dot.setAttribute("cx", x.toFixed(1)); dot.setAttribute("cy", y.toFixed(1));
+            ring.setAttribute("cx", x.toFixed(1)); ring.setAttribute("cy", y.toFixed(1));
+            tag.style.left = (x - 240).toFixed(1) + "px";
+            tag.style.top = (y - CFG.tagLift - 150).toFixed(1) + "px";
+            val.textContent = (vals[k] + (vals[k + 1] - vals[k]) * t).toFixed(dec) + String(v.unit);
+          };
+
+          var tl = gsap.timeline({ paused: true, onUpdate: render });
+          tl.fromTo(q(".ld-head"), { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" }, 0);
+          var pulse = function (at) {
+            tl.fromTo(ring, { attr: { r: 26 }, opacity: 0.8 }, { attr: { r: 100 }, opacity: 0, duration: 0.5, ease: "power2.out" }, at);
+          };
+          var end = CFG.at + CFG.draw;
+          if (hasTurn) {
+            var pk = ti / (n - 1), d1 = CFG.draw * pk, t1 = CFG.at + d1;
+            end = t1 + CFG.hold + CFG.draw * (1 - pk);
+            // runs into the turning point and brakes, waits, then pulls away again
+            tl.fromTo(state, { p: 0 }, { p: pk, duration: d1, ease: "power2.out" }, CFG.at);
+            pulse(t1 - 0.06);
+            tl.fromTo(tick, { opacity: 0 }, { opacity: 1, duration: 0.15, ease: "none" }, t1);
+            tl.fromTo(note, { opacity: 0, y: -18 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out" }, t1 + 0.06);
+            tl.to(state, { p: 1, duration: CFG.draw * (1 - pk), ease: "power2.in" }, t1 + CFG.hold);
+          } else {
+            tl.fromTo(state, { p: 0 }, { p: 1, duration: CFG.draw, ease: "power1.inOut" }, CFG.at);
+          }
+          // arrival: the live value becomes the headline number
+          pulse(end - 0.02);
+          tl.set(val, { transformOrigin: "50% 100%" }, 0);
+          tl.fromTo(val, { scale: 1 }, { scale: CFG.endKick + 0.12, duration: 0.09, ease: "power2.out" }, end);
+          tl.to(val, { scale: CFG.endKick, duration: 0.3, ease: "back.out(2.5)" }, end + 0.09);
+          render();
+          window.__timelines["line-draw-chart"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

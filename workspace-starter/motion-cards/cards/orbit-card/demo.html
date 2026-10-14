@@ -1,0 +1,99 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"src","type":"string","label":"卡片上的图片地址（从项目根目录写起）","default":"motion-cards/lib/samples/p4.jpg"},
+    {"id":"label","type":"string","label":"卡片下方的一行字（可空）","default":"示例卡片 · 一句说明"},
+    {"id":"from","type":"number","label":"从哪个角度开始绕（度，负数从左侧）","default":-52,"min":-75,"max":75,"step":1},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>orbit-card · 环绕</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="orbit-card-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .oc { position: absolute; inset: 0; overflow: hidden; perspective: 1700px; perspective-origin: 50% 46%; }
+        .oc-bg { position: absolute; inset: 0; background: radial-gradient(1200px 760px at 50% 44%, var(--k-panel), var(--k-bg)); }
+        .oc-floor { position: absolute; left: 440px; top: 912px; width: 1040px; height: 70px; border-radius: 50%; background: rgba(0, 0, 0, 0.6); filter: blur(26px); }
+        .oc-card { position: absolute; left: 380px; top: 140px; width: 1160px; height: 764px; border-radius: 22px; overflow: hidden; background: var(--k-panel); box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1); will-change: transform; }
+        .oc-img { position: absolute; left: 18px; top: 18px; display: block; width: 1124px; height: 632px; object-fit: cover; border-radius: 10px; }
+        .oc-label { position: absolute; left: 18px; right: 18px; top: 662px; display: block; height: 92px; line-height: 88px; font-size: 42px; font-weight: 700; color: var(--k-ink); text-align: center; white-space: nowrap; overflow: hidden; }
+        .oc-sheen { position: absolute; left: 0; top: -20%; width: 46%; height: 140%; background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.42) 50%, rgba(255, 255, 255, 0) 100%); opacity: 0; }
+        .oc-shade { position: absolute; inset: 0; background: #000; opacity: 0; }
+      </style>
+
+      <div id="root" data-composition-id="orbit-card" data-width="1920" data-height="1080">
+        <div class="oc" data-layout-allow-overflow>
+          <div class="oc-bg"></div>
+          <div class="oc-floor"></div>
+          <div class="oc-card">
+            <img class="oc-img" src="motion-cards/lib/samples/p4.jpg" data-var-src="src" alt="" />
+            <span class="oc-label">示例卡片 · 一句说明</span>
+            <div class="oc-shade"></div>
+            <div class="oc-sheen"></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { at: 0.2, dur: 2, ease: "power2.out", lift: 7, far: 0.9, shade: 0.42, sheenFrom: -110, sheenTo: 230, sheenPeak: 0.9 };
+          var v = { label: "示例卡片 · 一句说明", from: -52, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".oc");
+          var q = function (s) { return root.querySelector(s); };
+          if (v.src) q(".oc-img").setAttribute("src", String(v.src));
+          var lab = q(".oc-label");
+          lab.textContent = String(v.label || "");
+          if (!v.label) { lab.style.display = "none"; q(".oc-card").style.height = "668px"; }
+          if (String(v.backdrop) === "off") q(".oc-bg").style.display = "none";
+          var from = parseFloat(v.from);
+          if (!isFinite(from)) from = -52;
+          from = Math.max(-80, Math.min(80, from));
+          var side = from < 0 ? -1 : 1;
+          var card = q(".oc-card"), sheen = q(".oc-sheen"), shade = q(".oc-shade"), floor = q(".oc-floor");
+
+          var tl = gsap.timeline({ paused: true });
+          tl.set(card, { transformOrigin: "50% 50%" }, 0);
+          tl.set(sheen, { skewX: -14 }, 0);
+          // 1 · the camera walks an arc around the card: seen from the side first, face-on at the end
+          tl.fromTo(card, { rotationY: from, rotationX: CFG.lift, scale: CFG.far }, { rotationY: 0, rotationX: 0, scale: 1, duration: CFG.dur, ease: CFG.ease }, CFG.at);
+          // 2 · the face is in shadow while turned away from the light, and clears as it squares up
+          tl.fromTo(shade, { opacity: CFG.shade }, { opacity: 0, duration: CFG.dur, ease: CFG.ease }, CFG.at);
+          // 3 · the highlight is tied to the angle: same clock and ease as the turn, so it crosses the face once and is gone at 0 degrees
+          tl.fromTo(sheen, { xPercent: side < 0 ? CFG.sheenFrom : CFG.sheenTo }, { xPercent: side < 0 ? CFG.sheenTo : CFG.sheenFrom, duration: CFG.dur, ease: CFG.ease }, CFG.at);
+          tl.fromTo(sheen, { opacity: 0 }, { opacity: CFG.sheenPeak, duration: CFG.dur * 0.2, ease: "power1.out" }, CFG.at);
+          tl.to(sheen, { opacity: 0, duration: CFG.dur * 0.3, ease: "power1.in" }, CFG.at + CFG.dur * 0.55);
+          // 4 · the contact shadow is narrow while the card is edge-on and widens with it
+          tl.fromTo(floor, { scaleX: Math.max(0.3, Math.cos((from * Math.PI) / 180)) * CFG.far, x: side * 40 }, { scaleX: 1, x: 0, duration: CFG.dur, ease: CFG.ease }, CFG.at);
+          window.__timelines["orbit-card"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

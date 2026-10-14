@@ -1,0 +1,133 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"label","type":"string","label":"按钮上的字","default":"开始导出"},
+    {"id":"x","type":"number","label":"点击位置 x（画面像素）","default":1185,"min":0,"max":1920,"step":1},
+    {"id":"y","type":"number","label":"点击位置 y（画面像素）","default":803,"min":0,"max":1080,"step":1},
+    {"id":"click","type":"number","label":"按下的时间（秒）","default":1.2,"min":0.6,"max":20,"step":0.05},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"示例界面"},{"value":"off","label":"透明（只留光标和波纹，压在录屏上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>cursor-click · 光标点击</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="cursor-click-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .cc { position: absolute; inset: 0; }
+        .cc-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .cc-ui { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+        .cc-card { position: absolute; left: 170px; top: 90px; width: 1580px; height: 900px; border-radius: 44px; background: var(--k-panel); box-shadow: 0 40px 100px rgba(0, 0, 0, 0.4); }
+        .cc-title { position: absolute; left: 100px; top: 72px; font-size: 80px; font-weight: 800; line-height: 1.2; white-space: nowrap; }
+        .cc-tag { position: absolute; right: 100px; top: 96px; font-size: 48px; line-height: 1.2; color: var(--k-muted); white-space: nowrap; }
+        .cc-row { position: absolute; left: 100px; right: 100px; height: 124px; display: flex; align-items: center; justify-content: space-between; border-top: 2px solid rgba(139, 147, 163, 0.25); font-size: 58px; line-height: 1.2; white-space: nowrap; }
+        .cc-row1 { top: 228px; }
+        .cc-row2 { top: 354px; border-bottom: 2px solid rgba(139, 147, 163, 0.25); }
+        .cc-key { display: block; color: var(--k-muted); }
+        .cc-val { display: block; font-weight: 700; }
+        .cc-slab { position: absolute; left: 440px; top: 615px; width: 700px; height: 170px; border-radius: 38px; background: var(--k-accent); filter: brightness(0.55); }
+        .cc-btn { position: absolute; left: 440px; top: 600px; width: 700px; height: 170px; border-radius: 38px; background: var(--k-accent); color: var(--k-on-accent); display: flex; align-items: center; justify-content: center; font-size: 70px; font-weight: 800; white-space: nowrap; }
+        .cc-lit { position: absolute; inset: 0; border-radius: 38px; background: #fff; opacity: 0; }
+        .cc-pt { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+        .cc-ring { position: absolute; left: -190px; top: -190px; width: 380px; height: 380px; border-radius: 50%; border: 10px solid var(--k-ink); opacity: 0; }
+        .cc-cur { position: absolute; left: 0; top: 0; width: 120px; height: 165px; overflow: visible; filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.45)); }
+      </style>
+
+      <div id="root" data-composition-id="cursor-click" data-width="1920" data-height="1080">
+        <div class="cc">
+          <div class="cc-bg"></div>
+          <div class="cc-ui">
+            <div class="cc-card">
+              <div class="cc-title">导出设置</div>
+              <div class="cc-tag">示例界面</div>
+              <div class="cc-row cc-row1"><span class="cc-key">格式</span><span class="cc-val">视频文件</span></div>
+              <div class="cc-row cc-row2"><span class="cc-key">清晰度</span><span class="cc-val">1080p</span></div>
+              <div class="cc-slab"></div>
+              <div class="cc-btn" data-layout-allow-occlusion><span class="cc-label" data-layout-allow-occlusion>开始导出</span><div class="cc-lit"></div></div>
+            </div>
+          </div>
+          <div class="cc-pt">
+            <div class="cc-ring cc-ring1"></div>
+            <div class="cc-ring cc-ring2"></div>
+          </div>
+          <svg class="cc-cur" viewBox="0 0 96 132" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 4 L4 104 L30 80 L50 126 L70 117 L50 72 L86 72 Z" fill="#ffffff" stroke="#14161a" stroke-width="7" stroke-linejoin="round" />
+          </svg>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // aimX/aimY: the click lands this far right of and below the button centre, so the arrow never covers the label · travel: how long the cursor takes · fromX/fromY: where it starts, relative to the click point · sink: how far the button face drops
+          var CFG = { aimX: 225, aimY: 28, travel: 0.7, fromX: 620, fromY: 150, settle: 0.1, down: 0.07, sink: 15, held: 0.09, up: 0.28, ripple: 0.6, rippleGap: 0.12 };
+          var v = { label: "开始导出", x: 1185, y: 803, click: 1.2, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+          var num = function (key, d) { var n = parseFloat(v[key]); return isFinite(n) ? n : d; };
+
+          var root = document.querySelector(".cc");
+          var q = function (s) { return root.querySelector(s); };
+          var x = num("x", 1185), y = num("y", 803), off = String(v.backdrop) === "off";
+          q(".cc-label").textContent = String(v.label);
+          var ui = q(".cc-ui");
+          if (off) { q(".cc-bg").style.display = "none"; ui.style.display = "none"; }
+          // the sample button's centre sits at (960, 775) in the layout; slide the whole sample so the click point lands on its lower right
+          ui.style.left = x - 960 - CFG.aimX + "px"; ui.style.top = y - 775 - CFG.aimY + "px";
+          q(".cc-pt").style.left = x + "px"; q(".cc-pt").style.top = y + "px";
+
+          var click = Math.max(CFG.travel + CFG.settle + 0.2, num("click", 1.2));
+          var go = click - CFG.settle - CFG.travel;
+          var x0 = Math.min(1790, x + CFG.fromX), y0 = Math.min(905, y + CFG.fromY);
+          var cur = q(".cc-cur"), btn = q(".cc-btn"), lit = q(".cc-lit");
+
+          var tl = gsap.timeline({ paused: true });
+          tl.set(cur, { transformOrigin: "4% 3%" }, 0);
+          // x brakes hard, y eases both ways: the cursor swings in on a curve instead of a ruler line
+          tl.fromTo(cur, { x: x0 }, { x: x - 5, duration: CFG.travel, ease: "power3.out" }, go);
+          tl.fromTo(cur, { y: y0 }, { y: y - 5, duration: CFG.travel, ease: "power2.inOut" }, go);
+          // press: cursor and button go down together, fast
+          tl.fromTo(cur, { scale: 1 }, { scale: 0.84, duration: CFG.down, ease: "power2.in" }, click);
+          tl.fromTo(btn, { y: 0 }, { y: CFG.sink, duration: CFG.down, ease: "power2.in" }, click);
+          tl.fromTo(lit, { opacity: 0 }, { opacity: 0.35, duration: CFG.down, ease: "none" }, click);
+          // ripples leave from the bottom of the press
+          var hit = click + CFG.down;
+          // (opacity is keyed 0 → on → 0 so the rings are invisible before the click however the timeline is scrubbed)
+          [[".cc-ring1", 0.9, 1, hit], [".cc-ring2", 0.6, 1.5, hit + CFG.rippleGap]].forEach(function (r) {
+            tl.fromTo(q(r[0]), { scale: 0.12 }, { scale: r[2], duration: CFG.ripple, ease: "power2.out" }, r[3]);
+            tl.fromTo(q(r[0]), { opacity: 0 }, { opacity: r[1], duration: 0.02, ease: "none" }, r[3]);
+            tl.to(q(r[0]), { opacity: 0, duration: CFG.ripple - 0.02, ease: "power2.out" }, r[3] + 0.02);
+          });
+          // release: slower than the press, with a small bounce
+          var rel = hit + CFG.held;
+          tl.to(cur, { scale: 1, duration: CFG.up, ease: "back.out(2.2)" }, rel);
+          tl.to(btn, { y: 0, duration: CFG.up, ease: "back.out(2.6)" }, rel);
+          tl.to(lit, { opacity: 0, duration: CFG.up, ease: "power1.out" }, rel);
+          window.__timelines["cursor-click"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

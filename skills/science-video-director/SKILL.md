@@ -43,7 +43,7 @@ description: 把用户的稿件或 SRT、配音和素材做成完整的中文科
 | 手法库 | `<工作区>/手法库` | 从参考片拆出来的 30 张手法卡：具体用什么招、哪个组件、停多久 |
 | 组件库 | `<工作区>/hyperframes-explainer-template/component-library` | 界面复刻、信息图、箭头标注、B-roll（品牌包没有的画面）；按 core / episode / legacy / hidden-platform 分级，默认只挑 core；跟品牌包调性，有成片模式 |
 | 选组件 | `shot_semantics.py`（旁白 → 意图 → 候选或“不用组件” → 槽位草稿 → 卡词时间） | 两套库的唯一入口，见 guide/components.md |
-| 动效词汇 | `vocab.py` + 参考库 `<工作区>/参考库/video-talkcraft`（108 张动效配方卡，每张带时序、已知坑和可运行的 demo） | 现场做一镜、多图同屏、拍网页时，找现成的动法照着搬；见 guide/motion-vocabulary.md |
+| 动效卡库 | `<工作区>/motion-cards`（108 张动效卡，11 个分组；每张是一份说明加一个可直接挂载的单文件子合成），用 `node …/tools/cards.mjs find / show / use / serve` | 字的强调、数据、证据、多图、镜头、转场、标注、人物、结构、幕底这些镜头怎么动；装进项目直接用，换皮不换动作；见 guide/motion-vocabulary.md |
 | 网页证据 | `pageshot.mjs`（网页 → 全页长图 + 目标的实测坐标） | 官网、文档、榜单这类证据画面，见 guide/assets.md |
 | 眼睛 | `frames.py`（接触表、节奏、`--cues` 卡词帧、`--compare` 和参考片并排）、`npx --yes hyperframes@0.8.57 snapshot` / `compare`、`brand-kit/tools/tone-stills.mjs`（调性静帧） | 看片、比较 |
 | 耳朵 | `align.py`（逐字对齐、关键词时间、字幕变量）、`audio.py`（响度报告、音效听不听得到、响度归一、拍点、BGM 闪避曲线） | 对齐、混音 |
@@ -100,7 +100,7 @@ description: 把用户的稿件或 SRT、配音和素材做成完整的中文科
 ### 4. 全片制作
 
 - **分镜**：写进 `planning/EDIT.json`，这是唯一的时间轴。
-  - 每个镜头写明 `type`（host / evidence / structure / metaphor）、画面、素材、画面文字、动作、音效。用到品牌组件的写 `component`，用到手法卡的写 `technique`，要卡在词上的写 `cue_words`，版式写 `layout`，借了动效卡的写 `motion`。
+  - 每个镜头写明 `type`（host / evidence / structure / metaphor）、画面、素材、画面文字、动作、音效。用到品牌组件的写 `component`，用到手法卡的写 `technique`，要卡在词上的写 `cue_words`，版式写 `layout`，用了动效卡的在 `motion` 写卡的 id。
   - 每一镜先定 type，再运行 `shot_semantics.py suggest --edit planning/EDIT.json --scene <镜号> --captions subtitles/CAPTIONS.json --transcript subtitles/transcript.json`：它给出意图、候选或“不用组件”、按旁白填好的槽位草稿和卡词时间。章节起点加 `--chapter-start`。候选写进镜头的 `intent` / `component` / `slots`，超字数按它的 strategy 缩写或拆屏，不缩字号。
   - 先排版式节奏：把全片每一镜的 `layout`（人在哪 / 素材装在哪）填一遍，摊开看有没有连着几镜一个样，再写逐镜细节。
   - 先按旁白节拍排，再对照第 3 条标准查节奏。`episode.py check` 会统计四类画面的占比、同类画面连续了多久、同一版式或组件有没有连用 3 镜，并核对每个卡词在旁白里的时间。规划阶段它报“素材未登记”是正常的，素材到位后用 `episode.py add` 登记输入、在 ASSETS.json 登记素材即可。
@@ -114,7 +114,7 @@ description: 把用户的稿件或 SRT、配音和素材做成完整的中文科
 - **素材**：按 `guide/assets.md` 准备：录屏任务卡、真人口播任务卡、Pexels、网页证据（`pageshot.mjs`）、image2 透明元素、AI 视频交接（由用户自己生成）。需要用户动手的，一次写进 `planning/TASKS.md` 交出去，然后继续做不依赖它的部分。
 - **合成**：
   - 按 `guide/production.md` 搭 HyperFrames 工程。先运行 `brand-kit/build.mjs --project <项目>/hyperframes` 装品牌包。
-  - suggest 给 `custom` 时现场做一镜：先用 `vocab.py find` 查有没有现成的动法，再用 `shot_semantics.py scaffold` 起品牌风骨架，照着卡的动法、用品牌包的皮画这一镜（见 `guide/components.md`“现场做一镜”和 `guide/motion-vocabulary.md`）。
+  - suggest 给 `custom` 时：先在动效卡库里找（`cards.mjs find`），有合适的就 `cards.mjs use` 装进项目直接挂载，用本期调性的 token 换皮。库里没有再用 `shot_semantics.py scaffold` 起品牌风骨架现场做（见 `guide/motion-vocabulary.md` 和 `guide/components.md`“现场做一镜”）。
   - 章节卡、字幕、录屏聚焦、取景框、主持人头像都用品牌组件，全片复用。界面复刻、图解这类画面，用组件库（场景配置 `appearance` 写本期 `tone` 和 `mode: "video"`）或定制镜头，见 `guide/components.md`。
   - 组件的默认样式只是起点，放大、改色、去外框都是正常操作。
 - **边做边看**：每做完一章就抽几帧看看，不要等全片做完才发现方向偏了。能用静帧回答的问题（位置、遮挡、文案、层级）不渲视频。
@@ -194,7 +194,7 @@ description: 把用户的稿件或 SRT、配音和素材做成完整的中文科
 | `guide/voice.md` | 生成旁白、做角色对白、逐字对齐和关键词卡点时读 |
 | `guide/assets.md` | 找素材，写录屏或口播任务卡，生图，做 AI 视频交接时读 |
 | `guide/components.md` | 选用品牌组件或组件库时读 |
-| `guide/motion-vocabulary.md` | 现场做一镜、多图同屏、拍网页、挑章节转场时读。内容是 108 张动效配方卡怎么查、怎么搬进 HyperFrames、哪些地方不照它的做 |
+| `guide/motion-vocabulary.md` | 现场做一镜、多图同屏、拍网页、加标注、挑章节转场时读。内容是动效卡库怎么查、怎么装进项目、怎么对时间和换皮 |
 | `guide/retro.md` | 用户发来发布数据时读 |
 | `templates/brief-template.md` | 写导演阐述时用 |
 | `templates/explore-agent.md` | 派子代理做探索样片时用 |
@@ -218,4 +218,5 @@ description: 把用户的稿件或 SRT、配音和素材做成完整的中文科
 | `library_prepare.py` / `component_library.py` | 组件库检索（`--include-hidden` 才带隐藏组件）、校验、调参、导出挂载 |
 | `pexels.ps1` | Pexels 检索与下载 |
 | `pageshot.mjs` | 网页 → 全页长图 + 目标的实测坐标（`node` 运行，用本机 Chrome 或 Edge） |
-| `vocab.py` | 动效词汇：`find` 按意图、素材、能量找配方卡；`show` 看一张卡的时序和已知坑；`intents` 意图对照；`status` 参考库在不在 |
+| `motion-cards/tools/cards.mjs`（`node` 运行，在工作区，不在本目录） | 动效卡库：`find` 按关键词、分组、素材类型、能量找卡；`show` 看一张卡；`use` 把卡装进项目并打印挂载片段；`serve` 开画廊；`lint` / `verify` 给新卡验收 |
+| `vocab.py` | 另一个只读参考库 video-talkcraft 的查询：`find` / `show` / `intents` / `status` |

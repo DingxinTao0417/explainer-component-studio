@@ -1,0 +1,128 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"x","type":"number","label":"目标左上角 x（1920×1080 坐标）","default":300,"min":0,"max":1920,"step":1},
+    {"id":"y","type":"number","label":"目标左上角 y","default":576,"min":0,"max":1080,"step":1},
+    {"id":"w","type":"number","label":"目标宽","default":416,"min":0,"max":1800,"step":1},
+    {"id":"h","type":"number","label":"目标高","default":88,"min":0,"max":1000,"step":1},
+    {"id":"note","type":"string","label":"批注文字","default":"先写这个，别的不急"},
+    {"id":"place","type":"enum","label":"批注写在目标的哪一侧","default":"right","options":[{"value":"right","label":"右侧"},{"value":"left","label":"左侧"}]},
+    {"id":"away","type":"number","label":"批注离目标的横向距离（像素）","default":220,"min":80,"max":700,"step":10},
+    {"id":"lift","type":"number","label":"批注相对目标中线的纵向偏移（负数向上）","default":-16,"min":-400,"max":400,"step":2},
+    {"id":"slant","type":"number","label":"字的倾斜角度（度，负数是右边翘起）","default":-4,"min":-12,"max":12,"step":0.5},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"垫示例截图（放大 2 倍）"},{"value":"off","label":"透明，只留批注"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>margin-note · 旁注手写</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="margin-note-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        @font-face { font-family: "KaiTi"; src: local("KaiTi"), local("STKaiti"), local("Kaiti SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .mn { position: absolute; inset: 0; }
+        .mn-shot { position: absolute; left: 0; top: 0; display: block; width: 1920px; height: 1080px; background-repeat: no-repeat; background-size: 3840px 2160px; background-position: -680px -220px; }
+        .mn-svg { position: absolute; left: 0; top: 0; display: block; width: 1920px; height: 1080px; }
+        .mn-ink { fill: var(--k-accent); stroke: rgba(13, 16, 22, 0.78); stroke-width: 6; stroke-linejoin: round; paint-order: stroke; }
+        .mn-rev { fill: none; stroke: #fff; stroke-linecap: butt; }
+        .mn-note { position: absolute; left: 936px; top: 544px; display: block; height: 120px; line-height: 120px; white-space: nowrap; font-family: "KaiTi", var(--k-font); font-size: 84px; font-weight: 700; color: var(--k-accent); -webkit-text-stroke: 9px rgba(13, 16, 22, 0.85); paint-order: stroke fill; transform: rotate(-4deg); transform-origin: 0% 50%; }
+        .mn-ch { display: inline-block; }
+      </style>
+
+      <div id="root" data-composition-id="margin-note" data-width="1920" data-height="1080">
+        <div class="mn">
+          <div class="mn-shot" style="background-image: url(motion-cards/lib/samples/ui.png)"></div>
+          <svg class="mn-svg" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg"><defs></defs></svg>
+          <div class="mn-note" data-layout-allow-occlusion>先写这个，别的不急</div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // per: average time from one character to the next · jitter: how uneven that is (0–1) · wipe: one character being written, left to right
+          // comma: extra pause after punctuation · arc: the connector, drawn after the last character · sag: how far the connector bows downwards
+          var CFG = { at: 0.3, per: 0.085, jitter: 0.25, wipe: 0.1, comma: 0.14, arcWait: 0.08, arc: 0.32, sag: 44, gap: 18 };
+          var v = { x: 300, y: 576, w: 416, h: 88, note: "先写这个，别的不急", place: "right", away: 220, lift: -16, slant: -4, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".mn");
+          var q = function (s) { return root.querySelector(s); };
+          if (String(v.backdrop) === "off") q(".mn-shot").style.display = "none";
+          var num = function (a, d) { a = parseFloat(a); return isFinite(a) ? a : d; };
+          var NS = "http://www.w3.org/2000/svg", svg = q(".mn-svg"), defs = q("defs");
+          function el(tag, attrs, parent) { var e = document.createElementNS(NS, tag); for (var key in attrs) e.setAttribute(key, attrs[key]); parent.appendChild(e); return e; }
+
+          var X = num(v.x, 300), W = num(v.w, 416), cy = num(v.y, 576) + num(v.h, 88) / 2, away = num(v.away, 220), right = String(v.place) !== "left";
+          var ny = cy + num(v.lift, -16), edge = right ? X + W : X, nx = edge + (right ? away : -away);
+          var note = q(".mn-note");
+          note.style.top = ny - 60 + "px";
+          // the note is pinned by the end nearest the target and tilts around that end
+          if (right) { note.style.left = nx + "px"; note.style.right = "auto"; note.style.transformOrigin = "0% 50%"; }
+          else { note.style.right = 1920 - nx + "px"; note.style.left = "auto"; note.style.transformOrigin = "100% 50%"; }
+          note.style.transform = "rotate(" + num(v.slant, -4) + "deg)";
+          var text = String(v.note || ""), chars = [];
+          note.textContent = "";
+          for (var i = 0; i < text.length; i++) {
+            var sp = document.createElement("span");
+            sp.className = "mn-ch";
+            sp.setAttribute("data-layout-allow-occlusion", ""); // the tilt makes the checker think the first character is behind the backdrop
+            sp.textContent = text.charAt(i) === " " ? " " : text.charAt(i);
+            note.appendChild(sp);
+            chars.push(sp);
+          }
+
+          var tl = gsap.timeline({ paused: true }), t = CFG.at;
+          chars.forEach(function (sp, n) {
+            // each character is uncovered left to right, the way a pen crosses it; the clip is wider than the box so the outline is not cut
+            tl.fromTo(sp, { opacity: 0 }, { opacity: 1, duration: 0.02, ease: "none" }, t);
+            tl.fromTo(sp, { clipPath: "inset(-15% 100% -15% -15%)" }, { clipPath: "inset(-15% -15% -15% -15%)", duration: CFG.wipe, ease: "power1.out" }, t);
+            // uneven gaps between characters, and a real pause at punctuation
+            t += CFG.per * (1 + CFG.jitter * Math.sin(n * 2.3 + 0.6)) + (/[，。、；：！？,.;:!?]/.test(sp.textContent) ? CFG.comma : 0);
+          });
+          t += CFG.wipe + CFG.arcWait;
+
+          // the connector leaves from under the near end of the note and stops just short of the target, sagging in between
+          var dir = right ? -1 : 1, ax = nx + dir * 16, ay = ny + 48, bx = edge - dir * CFG.gap, by = cy + 12;
+          var d = "M" + ax + " " + ay + "Q" + ((ax + bx) / 2).toFixed(1) + " " + ((ay + by) / 2 + CFG.sag).toFixed(1) + " " + bx + " " + by;
+          var rev = el("path", { d: d, class: "mn-rev" }, el("mask", { id: "mn-m0", maskUnits: "userSpaceOnUse", x: 0, y: 0, width: 1920, height: 1080 }, defs));
+          var len = rev.getTotalLength(), m = Math.max(10, Math.round(len / 7)), a = [], b = [];
+          for (var j = 0; j <= m; j++) {
+            var u = j / m, p = rev.getPointAtLength(len * u), p0 = rev.getPointAtLength(Math.max(0, len * u - 1)), p1 = rev.getPointAtLength(Math.min(len, len * u + 1));
+            var dx = p1.x - p0.x, dy = p1.y - p0.y, dl = Math.sqrt(dx * dx + dy * dy) || 1, end = u < 0.5 ? 8 : 9;
+            var half = (end + (16 - end) * Math.pow(Math.sin(Math.PI * u), 0.6)) / 2;
+            a.push((p.x - (dy / dl) * half).toFixed(1) + " " + (p.y + (dx / dl) * half).toFixed(1));
+            b.unshift((p.x + (dy / dl) * half).toFixed(1) + " " + (p.y - (dx / dl) * half).toFixed(1));
+          }
+          el("path", { d: "M" + a.concat(b).join("L") + "Z", class: "mn-ink", mask: "url(#mn-m0)" }, svg);
+          rev.style.strokeWidth = "30px";
+          rev.style.strokeDasharray = len + 2 + "px " + (len + 40) + "px"; // the gap is longer than the path, and the start offset sits inside it: no hairline at the pen-down point
+          tl.fromTo(rev, { strokeDashoffset: len + 8 }, { strokeDashoffset: 0, duration: CFG.arc, ease: "power2.out" }, t);
+          window.__timelines["margin-note"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,106 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"x","type":"number","label":"扫描区域左上角 x（1920×1080 坐标）","default":60,"min":0,"max":1920,"step":1},
+    {"id":"y","type":"number","label":"扫描区域左上角 y","default":180,"min":0,"max":1080,"step":1},
+    {"id":"w","type":"number","label":"扫描区域宽","default":1800,"min":100,"max":1920,"step":1},
+    {"id":"h","type":"number","label":"扫描区域高","default":880,"min":100,"max":1080,"step":1},
+    {"id":"boxes","type":"string","label":"被识别出的框：x,y,宽,高；用分号隔开","default":"300,276,416,88;300,576,416,88;300,876,484,88"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"垫示例截图（放大 2 倍）"},{"value":"off","label":"透明，只留扫描线和框"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>scan-line · 扫描线</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="scan-line-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .sl { position: absolute; inset: 0; }
+        .sl-shot { position: absolute; left: 0; top: 0; display: block; width: 1920px; height: 1080px; background-repeat: no-repeat; background-size: 3840px 2160px; background-position: -680px -220px; }
+        .sl-beam { position: absolute; left: 60px; top: 16px; display: block; width: 1800px; height: 180px; opacity: 0; }
+        .sl-trail { position: absolute; left: 0; right: 0; top: 0; height: 160px; background: linear-gradient(to bottom, transparent, var(--k-accent)); opacity: 0.3; }
+        .sl-core { position: absolute; left: 0; right: 0; top: 155px; height: 18px; box-sizing: border-box; background: var(--k-accent); border-top: 3px solid rgba(13, 16, 22, 0.7); border-bottom: 3px solid rgba(13, 16, 22, 0.7); box-shadow: 0 0 36px 8px var(--k-accent); }
+        .sl-box { position: absolute; display: block; box-sizing: border-box; border: 10px solid var(--k-accent); border-radius: 10px; outline: 3px solid rgba(13, 16, 22, 0.8); box-shadow: inset 0 0 0 3px rgba(13, 16, 22, 0.8); }
+        .sl-fill { position: absolute; inset: 0; background: var(--k-accent); opacity: 0; }
+      </style>
+
+      <div id="root" data-composition-id="scan-line" data-width="1920" data-height="1080">
+        <div class="sl">
+          <div class="sl-shot" style="background-image: url(motion-cards/lib/samples/ui.png)"></div>
+          <div class="sl-hits"></div>
+          <div class="sl-beam"><div class="sl-trail"></div><div class="sl-core"></div></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // sweep: top to bottom at constant speed · grow: how far a box is inflated around what it found
+          // pop: a box snapping in · glow: how long its fill takes to die away · late: a box fires this long after the line clears its bottom edge
+          var CFG = { at: 0.3, sweep: 1.5, fadeIn: 0.1, fadeOut: 0.16, grow: 14, pop: 0.18, popFrom: 1.14, glow: 0.45, glowTo: 0.5, late: 0.02 };
+          var v = { x: 60, y: 180, w: 1800, h: 880, boxes: "300,276,416,88;300,576,416,88;300,876,484,88", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".sl");
+          var q = function (s) { return root.querySelector(s); };
+          if (String(v.backdrop) === "off") q(".sl-shot").style.display = "none";
+          var num = function (a, d) { a = parseFloat(a); return isFinite(a) ? a : d; };
+          var X = num(v.x, 60), Y = num(v.y, 180), W = num(v.w, 1800), H = num(v.h, 880);
+          var beam = q(".sl-beam"), hits = q(".sl-hits");
+          // the beam node is 180px tall with the middle of the bright line 164px down, so the trail hangs above the line
+          beam.style.left = X + "px";
+          beam.style.top = Y - 164 + "px";
+          beam.style.width = W + "px";
+
+          var tl = gsap.timeline({ paused: true });
+          tl.fromTo(beam, { opacity: 0 }, { opacity: 1, duration: CFG.fadeIn, ease: "none" }, CFG.at);
+          tl.fromTo(beam, { y: 0 }, { y: H, duration: CFG.sweep, ease: "none" }, CFG.at);
+          tl.to(beam, { opacity: 0, duration: CFG.fadeOut, ease: "none" }, CFG.at + CFG.sweep);
+
+          String(v.boxes || "").split(";").forEach(function (item) {
+            var n = item.split(",").map(parseFloat);
+            if (n.length < 4 || n.some(isNaN)) return;
+            var box = document.createElement("div"), fill = document.createElement("div");
+            box.className = "sl-box";
+            fill.className = "sl-fill";
+            box.style.left = n[0] - CFG.grow + "px";
+            box.style.top = n[1] - CFG.grow + "px";
+            box.style.width = n[2] + CFG.grow * 2 + "px";
+            box.style.height = n[3] + CFG.grow * 2 + "px";
+            box.appendChild(fill);
+            hits.appendChild(box);
+            // each box fires when the line has just cleared its bottom edge: position decides the time, nothing else
+            var t = CFG.at + CFG.sweep * Math.max(0, Math.min(1, (n[1] + n[3] + CFG.grow - Y) / H)) + CFG.late;
+            tl.fromTo(box, { opacity: 0 }, { opacity: 1, duration: 0.04, ease: "none" }, t);
+            tl.fromTo(box, { scale: CFG.popFrom }, { scale: 1, duration: CFG.pop, ease: "power3.out" }, t);
+            tl.fromTo(fill, { opacity: 0 }, { opacity: CFG.glowTo, duration: 0.04, ease: "none" }, t);
+            tl.to(fill, { opacity: 0, duration: CFG.glow, ease: "power2.out" }, t + 0.04);
+          });
+          window.__timelines["scan-line"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

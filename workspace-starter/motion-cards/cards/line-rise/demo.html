@@ -1,0 +1,93 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"lines","type":"string","label":"两到三行，用 | 分开","default":"先把问题说清楚|再给一个例子|最后才讲原理"},
+    {"id":"gap","type":"number","label":"行与行的间隔（秒）","default":0.16,"min":0.05,"max":0.6,"step":0.01},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>line-rise · 逐行上浮</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="line-rise-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .lr { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+        .lr-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .lr-stack { position: relative; display: flex; flex-direction: column; align-items: flex-start; }
+        .lr-mask { display: block; overflow: hidden; padding: 0 0.08em; }
+        .lr-in { display: block; font-size: 116px; font-weight: 800; line-height: 1.36; letter-spacing: 0.01em; white-space: nowrap; }
+        .lr-mask:last-child .lr-in { color: var(--k-accent); }
+      </style>
+
+      <div id="root" data-composition-id="line-rise" data-width="1920" data-height="1080">
+        <div class="lr">
+          <div class="lr-bg"></div>
+          <div class="lr-stack">
+            <span class="lr-mask"><span class="lr-in">先把问题说清楚</span></span>
+            <span class="lr-mask"><span class="lr-in">再给一个例子</span></span>
+            <span class="lr-mask"><span class="lr-in">最后才讲原理</span></span>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { at: 0.2, rise: 0.62, gap: 0.16, travel: 104, lean: 3 };
+          var v = { lines: "先把问题说清楚|再给一个例子|最后才讲原理", gap: CFG.gap, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".lr");
+          var stack = root.querySelector(".lr-stack");
+          var parts = String(v.lines).split("|");
+          stack.textContent = "";
+          var inners = [];
+          for (var i = 0; i < parts.length; i++) {
+            var mask = document.createElement("span");
+            mask.className = "lr-mask";
+            var inner = document.createElement("span");
+            inner.className = "lr-in";
+            inner.textContent = parts[i];
+            mask.appendChild(inner);
+            stack.appendChild(mask);
+            inners.push(inner);
+          }
+          if (String(v.backdrop) === "off") root.querySelector(".lr-bg").style.display = "none";
+          var gap = parseFloat(v.gap) || CFG.gap;
+
+          var tl = gsap.timeline({ paused: true });
+          // every line climbs out from under its own mask; the next one leaves before the previous has landed
+          for (var j = 0; j < inners.length; j++) {
+            tl.set(inners[j], { transformOrigin: "0% 100%" }, 0);
+            tl.fromTo(inners[j], { yPercent: CFG.travel, rotation: CFG.lean }, { yPercent: 0, rotation: 0, duration: CFG.rise, ease: "power4.out" }, CFG.at + j * gap);
+          }
+          window.__timelines["line-rise"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

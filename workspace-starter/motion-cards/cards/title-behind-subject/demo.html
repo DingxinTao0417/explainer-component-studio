@@ -1,0 +1,90 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"大标题（2–5 个字）","default":"先看全局"},
+    {"id":"sub","type":"string","label":"压在最前面的一行小字（可空）","default":"再决定从哪里下手"},
+    {"id":"src","type":"string","label":"图片地址（从项目根目录写起）","default":"motion-cards/lib/samples/p2.jpg"},
+    {"id":"cut","type":"string","label":"遮挡层的轮廓（CSS polygon 的点，1920×1080 坐标）","default":"75px 1080px, 672px 600px, 1185px 802px, 1920px 495px, 1920px 1080px"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"带底图"},{"value":"off","label":"不要底图（只留字和遮挡层）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>title-behind-subject · 字在主体后</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="title-behind-subject-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .tbs { position: absolute; inset: 0; }
+        .tbs-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .tbs-img { position: absolute; left: 0; top: 0; display: block; width: 1920px; height: 1080px; object-fit: cover; filter: brightness(0.86); }
+        .tbs-front { clip-path: polygon(75px 1080px, 672px 600px, 1185px 802px, 1920px 495px, 1920px 1080px); }
+        .tbs-row { position: absolute; left: 0; right: 0; top: 380px; display: flex; justify-content: center; }
+        .tbs-title { display: block; font-size: 300px; font-weight: 900; line-height: 1; letter-spacing: 0.02em; white-space: nowrap; color: var(--k-ink); text-shadow: 0 10px 40px rgba(0, 0, 0, 0.28); }
+        .tbs-subrow { position: absolute; left: 0; right: 0; top: 880px; display: flex; justify-content: center; }
+        .tbs-sub { display: block; font-size: 56px; font-weight: 700; letter-spacing: 0.3em; white-space: nowrap; color: var(--k-ink); }
+      </style>
+
+      <div id="root" data-composition-id="title-behind-subject" data-width="1920" data-height="1080">
+        <div class="tbs">
+          <div class="tbs-bg"></div>
+          <img class="tbs-img tbs-back" src="motion-cards/lib/samples/p2.jpg" alt="" />
+          <div class="tbs-row"><span class="tbs-title" data-layout-allow-occlusion>先看全局</span></div>
+          <img class="tbs-img tbs-front" src="motion-cards/lib/samples/p2.jpg" alt="" />
+          <div class="tbs-subrow"><span class="tbs-sub">再决定从哪里下手</span></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { span: 4, at: 0.35, rise: 1.0, from: 400, float: 16, push: 1.06, subAt: 1.25 };
+          var v = { title: "先看全局", sub: "再决定从哪里下手", src: "motion-cards/lib/samples/p2.jpg", cut: "", backdrop: "on" };
+          try {
+                      var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+                      for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+                    } catch (e) {}
+          var root = document.querySelector(".tbs");
+          var q = function (s) { return root.querySelector(s); };
+          var back = q(".tbs-back"), front = q(".tbs-front"), title = q(".tbs-title"), sub = q(".tbs-sub");
+          back.setAttribute("src", String(v.src));
+          front.setAttribute("src", String(v.src));
+          if (v.cut) front.style.clipPath = String(v.cut) === "none" ? "none" : "polygon(" + v.cut + ")";
+          title.textContent = String(v.title);
+          if (got && got.sub === "") { sub.style.display = "none"; } else { sub.textContent = String(v.sub); }
+          if (String(v.backdrop) === "off") { q(".tbs-bg").style.display = "none"; back.style.display = "none"; }
+
+          var tl = gsap.timeline({ paused: true });
+          // back plate and occluder are the same picture and get the same slow push, so the seam never shows
+          tl.fromTo([back, front], { scale: 1 }, { scale: CFG.push, duration: CFG.span, ease: "none" }, 0);
+          // the title comes up from below the ridge and stops while its lower edge is still covered
+          tl.fromTo(title, { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "none" }, CFG.at);
+          tl.fromTo(title, { y: CFG.from }, { y: 0, duration: CFG.rise, ease: "power3.out" }, CFG.at);
+          // after it settles it keeps drifting a little against the picture: that difference is the depth
+          tl.to(title, { y: -CFG.float, duration: CFG.span - CFG.at - CFG.rise, ease: "none" }, CFG.at + CFG.rise);
+          tl.fromTo(sub, { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" }, CFG.subAt);
+          window.__timelines["title-behind-subject"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

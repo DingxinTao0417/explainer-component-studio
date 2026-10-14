@@ -1,0 +1,156 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"items","type":"string","label":"节点文字（用 | 分隔，2–5 个）","default":"输入问题|检索资料|生成回答|人工复核"},
+    {"id":"cues","type":"string","label":"每个节点点亮的秒数（逗号分隔，不够就均匀排开）","default":"0.5,1.5,2.5,3.5"},
+        {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>flow-nodes · 节点流程线</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="flow-nodes-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .fn { position: absolute; inset: 0; }
+        .fn-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .fn-track, .fn-fill { position: absolute; left: 300px; top: 450px; width: 1320px; height: 10px; border-radius: 5px; }
+        .fn-track { background: var(--k-muted); opacity: 0.3; }
+        .fn-fill { background: var(--k-accent); }
+        .fn-row { position: absolute; left: 80px; top: 325px; width: 1760px; display: flex; }
+        .fn-col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 60px; }
+        .fn-node { position: relative; flex: none; display: flex; align-items: center; justify-content: center; width: 260px; height: 260px; }
+        .fn-base, .fn-on, .fn-rim { position: absolute; inset: 0; border-radius: 50%; box-sizing: border-box; }
+        .fn-base { background: var(--k-panel); }
+        .fn-on { background: var(--k-accent); }
+        .fn-rim { border: 8px solid var(--k-accent); }
+        .fn-n { position: relative; display: block; font-size: 122px; font-weight: 800; color: var(--k-on-accent); }
+        .fn-txt { display: block; font-size: 84px; font-weight: 800; line-height: 1.3; white-space: nowrap; }
+        .fn-old .fn-on { opacity: 0; }
+        .fn-old .fn-n { color: var(--k-accent); }
+        .fn-old .fn-txt { color: var(--k-muted); }
+    
+      </style>
+
+      <div id="root" data-composition-id="flow-nodes" data-width="1920" data-height="1080">
+        <div class="fn">
+          <div class="fn-bg"></div>
+          <div class="fn-track"></div>
+          <div class="fn-fill"></div>
+          <div class="fn-row">
+            <div class="fn-col fn-old"><div class="fn-node"><span class="fn-base"></span><span class="fn-on"></span><span class="fn-rim"></span><span class="fn-n">1</span></div><span class="fn-txt">输入问题</span></div>
+            <div class="fn-col fn-old"><div class="fn-node"><span class="fn-base"></span><span class="fn-on"></span><span class="fn-rim"></span><span class="fn-n">2</span></div><span class="fn-txt">检索资料</span></div>
+            <div class="fn-col fn-old"><div class="fn-node"><span class="fn-base"></span><span class="fn-on"></span><span class="fn-rim"></span><span class="fn-n">3</span></div><span class="fn-txt">生成回答</span></div>
+            <div class="fn-col"><div class="fn-node"><span class="fn-base"></span><span class="fn-on"></span><span class="fn-rim"></span><span class="fn-n">4</span></div><span class="fn-txt">人工复核</span></div>
+          </div>
+    
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { first: 0.5, gap: 1.0, minGap: 0.55, floor: 0.4, draw: 0.5, idle: 0.82, peak: 1.2, pop: 0.34, fill: 0.12, past: 0.9, fonts: [0, 104, 104, 96, 84, 64], node: [0, 280, 280, 280, 260, 220], gapPx: 60 };
+          var v = { items: "输入问题|检索资料|生成回答|人工复核", cues: "0.5,1.5,2.5,3.5", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".fn");
+          var q = function (s) { return root.querySelector(s); };
+          var cs = getComputedStyle(root);
+          var tok = function (name, d) { return (cs.getPropertyValue("--k-" + name) || "").trim() || d; };
+          var INK = tok("ink", "#f3f5f8"), MUTED = tok("muted", "#8b93a3"), ACCENT = tok("accent", "#ffcf33"), ONACC = tok("on-accent", "#14161a");
+          if (String(v.backdrop) === "off") q(".fn-bg").style.display = "none";
+          var split = function (s, max) { return String(s).split("|").map(function (x) { return x.trim(); }).filter(Boolean).slice(0, max); };
+          // rough text width in em: CJK counts 1, latin and digits 0.6
+          var em = function (s) { var w = 0; for (var c = 0; c < s.length; c++) w += s.charCodeAt(c) > 255 ? 1 : 0.6; return Math.max(w, 1); };
+          // cue times: take what was given, continue at the same spacing, keep a floor and a minimum distance
+          var cueList = function (raw, count) {
+            var c = String(raw).split(/[,，\s]+/).map(parseFloat).filter(function (x) { return isFinite(x); }).slice(0, count);
+            var gap = c.length > 1 ? (c[c.length - 1] - c[0]) / (c.length - 1) : CFG.gap;
+            if (!c.length) c.push(CFG.first);
+            while (c.length < count) c.push(c[c.length - 1] + gap);
+            c[0] = Math.max(c[0], CFG.floor);
+            for (var i = 1; i < count; i++) c[i] = Math.max(c[i], c[i - 1] + CFG.minGap);
+            return c;
+          };
+          var items = split(v.items, 5), n = items.length, cues = cueList(v.cues, n);
+
+          // equal columns across 1760px: node centres are arithmetic, the line runs first centre → last centre
+          var W = 1760, xOf = function (i) { return 80 + ((i + 0.5) * W) / n; };
+          // node size follows the count; the node + label block is centred vertically
+          var S = CFG.node[n], top = Math.round(540 - (S + CFG.gapPx + CFG.fonts[n] * 1.3) / 2);
+          var track = q(".fn-track"), fill = q(".fn-fill"), row = q(".fn-row");
+          [track, fill].forEach(function (el) { el.style.left = xOf(0) + "px"; el.style.width = xOf(n - 1) - xOf(0) + "px"; el.style.top = top + S / 2 - 5 + "px"; });
+          row.style.top = top + "px";
+          row.innerHTML = "";
+          var cols = items.map(function (t, i) {
+            var c = document.createElement("div");
+            c.className = "fn-col";
+            c.innerHTML = '<div class="fn-node"><span class="fn-base"></span><span class="fn-on"></span><span class="fn-rim"></span><span class="fn-n">' + (i + 1) + '</span></div><span class="fn-txt"></span>';
+            var g = function (s) { return c.querySelector(s); };
+            g(".fn-txt").textContent = t;
+            g(".fn-node").style.width = g(".fn-node").style.height = S + "px";
+            g(".fn-n").style.fontSize = Math.round(S * 0.47) + "px";
+            var fs = Math.floor(Math.min(CFG.fonts[n], (W / n - 40) / em(t)));
+            g(".fn-txt").style.fontSize = fs + "px";
+            row.appendChild(c);
+            return { past: Math.min(1, Math.max(CFG.past, 56 / fs)), node: g(".fn-node"), on: g(".fn-on"), rim: g(".fn-rim"), num: g(".fn-n"), txt: g(".fn-txt") };
+          });
+
+          var tl = gsap.timeline({ paused: true });
+          tl.set(fill, { transformOrigin: "0% 50%" }, 0);
+          // empty sockets and a faint rail show the whole route before anything lights
+          tl.fromTo(row, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power1.out" }, 0.03);
+          tl.fromTo(track, { opacity: 0 }, { opacity: 0.3, duration: 0.3, ease: "power1.out" }, 0.03);
+          tl.fromTo(fill, { scaleX: 0 }, { scaleX: 0, duration: 0.01 }, 0);
+          cols.forEach(function (c, i) {
+            var t = cues[i];
+            tl.set(c.txt, { transformOrigin: "50% 0%" }, 0);
+            if (i) {
+              // the segment is drawn so that it lands on the cue; the node fires on arrival
+              var seg = Math.min(CFG.draw, (t - cues[i - 1]) * 0.7);
+              tl.to(fill, { scaleX: i / (n - 1), duration: seg, ease: "power2.inOut" }, t - seg);
+            }
+            tl.fromTo(c.node, { scale: CFG.idle }, { scale: CFG.peak, duration: CFG.pop, ease: "back.out(2.5)" }, t);
+            tl.fromTo([c.on, c.rim], { opacity: 0 }, { opacity: 1, duration: CFG.fill, ease: "none" }, t);
+            // the dark number switches on when the disc is half filled, never while it is faint
+            tl.fromTo(c.num, { opacity: 0 }, { opacity: 1, duration: 0.001, ease: "none" }, t + CFG.fill / 2);
+            tl.fromTo(c.txt, { opacity: 0, y: 32 }, { opacity: 1, y: 0, duration: 0.32, ease: "power3.out" }, t + 0.05);
+            if (i < n - 1) {
+              var tn = cues[i + 1];
+              tl.to(c.node, { scale: 1, duration: 0.3, ease: "power2.out" }, tn);
+              tl.to(c.on, { opacity: 0, duration: CFG.fill, ease: "none" }, tn);
+              tl.to(c.num, { color: ACCENT, duration: 0.001, ease: "none" }, tn + CFG.fill / 2);
+              tl.to(c.txt, { scale: c.past, color: MUTED, duration: 0.3, ease: "power2.out" }, tn);
+            }
+          });
+    
+          window.__timelines["flow-nodes"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

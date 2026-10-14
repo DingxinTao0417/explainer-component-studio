@@ -1,0 +1,97 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"lead","type":"string","label":"不变的前半句","default":"写提示词，靠的是"},
+    {"id":"wrong","type":"string","label":"被划掉的旧说法","default":"套模板"},
+    {"id":"right","type":"string","label":"顶替进来的新说法","default":"讲清楚"},
+    {"id":"hit","type":"number","label":"划线的时间（秒）","default":1.0,"min":0,"max":10,"step":0.05},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>strike-swap · 划掉换词</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="strike-swap-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .ss { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+        .ss-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .ss-line { position: relative; display: flex; align-items: baseline; font-size: 116px; font-weight: 800; line-height: 1.5; letter-spacing: 0.01em; }
+        .ss-lead { display: block; white-space: pre; }
+        .ss-slot { position: relative; display: block; margin-left: 0.14em; }
+        .ss-new { display: block; white-space: pre; color: var(--k-accent); }
+        .ss-old { position: absolute; left: 0; top: 100%; display: block; white-space: pre; font-size: 0.56em; }
+        .ss-bar { position: absolute; left: -0.1em; right: -0.1em; top: 50%; height: 0.11em; margin-top: -0.03em; border-radius: 0.06em; background: var(--k-accent); }
+      </style>
+
+      <div id="root" data-composition-id="strike-swap" data-width="1920" data-height="1080">
+        <div class="ss">
+          <div class="ss-bg"></div>
+          <div class="ss-line">
+            <span class="ss-lead">写提示词，靠的是</span>
+            <span class="ss-slot" data-layout-allow-occlusion><span class="ss-new">讲清楚</span><span class="ss-old" data-layout-allow-occlusion><span class="ss-oldword">套模板</span><span class="ss-bar"></span></span></span>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { lineIn: 0.35, strike: 0.2, hold: 0.06, sink: 0.42, small: 0.56, dim: 0.45, enter: 0.1, drop: 96, land: 0.4, tilt: -4 };
+          var v = { lead: "写提示词，靠的是", wrong: "套模板", right: "讲清楚", hit: 1.0, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".ss");
+          var q = function (s) { return root.querySelector(s); };
+          q(".ss-lead").textContent = String(v.lead);
+          q(".ss-oldword").textContent = String(v.wrong);
+          q(".ss-new").textContent = String(v.right);
+          if (String(v.backdrop) === "off") q(".ss-bg").style.display = "none";
+          var hit = Math.max(CFG.lineIn + 0.1, parseFloat(v.hit) || 1.0);
+          var old = q(".ss-old"), bar = q(".ss-bar"), neu = q(".ss-new");
+          old.style.fontSize = CFG.small + "em";
+
+          var tl = gsap.timeline({ paused: true });
+          // the old wording sits ON the line first: it is laid out small underneath and lifted/scaled back up to the line
+          var up = { yPercent: -100 / CFG.small, scale: 1 / CFG.small, opacity: 1 };
+          tl.set(old, { transformOrigin: "0% 0%" }, 0);
+          tl.set(bar, { transformOrigin: "0% 50%" }, 0);
+          tl.fromTo(q(".ss-line"), { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: CFG.lineIn, ease: "power3.out" }, 0);
+          // 1. one decisive slash
+          tl.fromTo(bar, { scaleX: 0, rotation: CFG.tilt }, { scaleX: 1, rotation: CFG.tilt, duration: CFG.strike, ease: "power3.inOut" }, hit);
+          // 2. the struck wording gives up its place: sinks, shrinks, dims
+          var t1 = hit + CFG.strike + CFG.hold;
+          tl.fromTo(old, up, { yPercent: 0, scale: 1, opacity: CFG.dim, duration: CFG.sink, ease: "power3.inOut" }, t1);
+          // 3. the replacement drops in from above while the old one is still on its way down
+          var t2 = t1 + CFG.enter;
+          tl.fromTo(neu, { y: -CFG.drop }, { y: 0, duration: CFG.land, ease: "back.out(2.2)" }, t2);
+          tl.fromTo(neu, { opacity: 0 }, { opacity: 1, duration: 0.14, ease: "none" }, t2);
+          window.__timelines["strike-swap"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

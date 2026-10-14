@@ -1,0 +1,121 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"percent","type":"number","label":"点亮多少格（0–100）","default":37,"min":0,"max":100,"step":1},
+    {"id":"caption","type":"string","label":"数字下面的一行说明","default":"的时间花在返工上"},
+    {"id":"note","type":"string","label":"来源小注（可空）","default":"每格 = 1%　示例数据"},
+    {"id":"fill","type":"number","label":"点亮全程最长用时（秒）","default":1.4,"min":0.4,"max":4,"step":0.1},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>unit-grid · 百格比例</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="unit-grid-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .ug { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 100px; }
+        .ug-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .ug-grid { position: relative; display: grid; grid-template-columns: repeat(10, 65px); grid-auto-rows: 65px; gap: 12px; width: 758px; height: 758px; }
+        .ug-cell { position: relative; display: block; border-radius: 10px; background: color-mix(in srgb, var(--k-muted) 30%, var(--k-bg)); }
+        .ug-on { position: absolute; inset: 0; display: block; border-radius: 10px; background: var(--k-accent); }
+        .ug-side { position: relative; display: flex; flex-direction: column; align-items: flex-start; }
+        .ug-big { display: flex; align-items: baseline; }
+        .ug-num { display: block; font-size: 340px; font-weight: 800; line-height: 1.3; letter-spacing: -0.02em; white-space: nowrap; font-variant-numeric: tabular-nums; text-align: right; color: var(--k-accent); }
+        .ug-pct { display: block; margin-left: 12px; font-size: 136px; font-weight: 800; color: var(--k-accent); white-space: nowrap; }
+        .ug-cap { display: block; font-size: 76px; font-weight: 700; white-space: nowrap; }
+        .ug-note { display: block; margin-top: 24px; font-size: 44px; font-weight: 500; color: var(--k-muted); white-space: nowrap; }
+      </style>
+
+      <div id="root" data-composition-id="unit-grid" data-width="1920" data-height="1080">
+        <div class="ug">
+          <div class="ug-bg"></div>
+          <div class="ug-grid"></div>
+          <div class="ug-side">
+            <div class="ug-big"><span class="ug-num">37</span><span class="ug-pct">%</span></div>
+            <span class="ug-cap">的时间花在返工上</span>
+            <span class="ug-note">每格 = 1%　示例数据</span>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { at: 0.4, stepMax: 0.06, cellIn: 0.22, cellFrom: 0.2, kick: 1.07, kickUp: 0.07, kickDown: 0.28 };
+          var v = { percent: 37, caption: "的时间花在返工上", note: "每格 = 1%　示例数据", fill: 1.4, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".ug");
+          var q = function (s) { return root.querySelector(s); };
+          var n = Math.max(0, Math.min(100, Math.round(parseFloat(v.percent) || 0)));
+          q(".ug-cap").textContent = String(v.caption);
+          q(".ug-note").textContent = String(v.note);
+          if (!String(v.note)) q(".ug-note").style.display = "none";
+          if (String(v.backdrop) === "off") q(".ug-bg").style.display = "none";
+
+          // 100 cells; lighting order runs along the bottom row first and piles upward, so the lit part stays one block
+          var grid = q(".ug-grid"), cells = [], order = [];
+          grid.textContent = "";
+          for (var i = 0; i < 100; i++) {
+            var c = document.createElement("span");
+            c.className = "ug-cell";
+            var on = document.createElement("span");
+            on.className = "ug-on";
+            c.appendChild(on);
+            grid.appendChild(c);
+            cells.push(on);
+          }
+          for (var k = 0; k < 100; k++) order.push(cells[(9 - Math.floor(k / 10)) * 10 + (k % 10)]);
+
+          var num = q(".ug-num"), big = q(".ug-big");
+          num.textContent = String(n);
+          var w = num.offsetWidth;
+          if (w > 0) num.style.width = w + "px";
+          var step = Math.min(CFG.stepMax, (parseFloat(v.fill) || 1.4) / Math.max(1, n));
+          var state = { c: 0 };
+          // the digit is the count of cells that have started lighting, not a separate animation
+          var render = function () { num.textContent = String(Math.max(0, Math.min(n, Math.ceil(state.c - 0.0001)))); };
+
+          var tl = gsap.timeline({ paused: true, onUpdate: render });
+          if (n < 100) tl.set(order.slice(n), { opacity: 0 }, 0);
+          for (var j = 0; j < n; j++) {
+            tl.fromTo(order[j], { opacity: 0, scale: CFG.cellFrom }, { opacity: 1, scale: 1, duration: CFG.cellIn, ease: "back.out(2.6)" }, CFG.at + j * step);
+          }
+          var end = CFG.at + n * step;
+          tl.fromTo(state, { c: 0 }, { c: n, duration: Math.max(0.01, n * step), ease: "none" }, CFG.at);
+          tl.set(big, { transformOrigin: "0% 80%" }, 0);
+          tl.fromTo(big, { scale: 1 }, { scale: CFG.kick, duration: CFG.kickUp, ease: "power2.out" }, end);
+          tl.to(big, { scale: 1, duration: CFG.kickDown, ease: "back.out(3)" }, end + CFG.kickUp);
+          tl.fromTo(q(".ug-cap"), { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.4, ease: "power3.out" }, end + 0.1);
+          tl.fromTo(q(".ug-note"), { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "none" }, end + 0.35);
+          render();
+          window.__timelines["unit-grid"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,84 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"标题（一行）","default":"把复杂的事讲简单"},
+    {"id":"kicker","type":"string","label":"标题上方的小字（可空）","default":"第二部分"},
+    {"id":"wide","type":"number","label":"起始字距（em）","default":0.5,"min":0.1,"max":1,"step":0.05},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>tracking-settle · 字距收拢</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="tracking-settle-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .ts { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .ts-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .ts-kicker { position: relative; display: block; margin: 0 -0.32em 26px 0; font-size: 44px; font-weight: 700; line-height: 1.3; letter-spacing: 0.32em; color: var(--k-accent); white-space: nowrap; }
+        .ts-title { position: relative; display: block; margin-right: -0.04em; font-size: 140px; font-weight: 800; line-height: 1.3; letter-spacing: 0.04em; white-space: nowrap; }
+      </style>
+
+      <div id="root" data-composition-id="tracking-settle" data-width="1920" data-height="1080">
+        <div class="ts">
+          <div class="ts-bg"></div>
+          <span class="ts-kicker">第二部分</span>
+          <span class="ts-title">把复杂的事讲简单</span>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { kickerAt: 0.1, at: 0.3, settle: 1.3, wide: 0.5, tight: 0.04, soft: 18, fade: 0.55 };
+          var v = { title: "把复杂的事讲简单", kicker: "第二部分", wide: CFG.wide, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".ts");
+          var title = root.querySelector(".ts-title"), kicker = root.querySelector(".ts-kicker");
+          title.textContent = String(v.title || "");
+          kicker.textContent = String(v.kicker || "");
+          if (!v.kicker) kicker.style.display = "none";
+          if (String(v.backdrop) === "off") root.querySelector(".ts-bg").style.display = "none";
+          // never start wider than the frame: cap the opening tracking by the glyph count
+          var count = Math.max(1, String(v.title || "").length);
+          var wide = Math.min(parseFloat(v.wide) || CFG.wide, 1720 / (count * 140) - 1);
+          wide = Math.max(wide, CFG.tight);
+
+          var tl = gsap.timeline({ paused: true });
+          tl.fromTo(kicker, { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, CFG.kickerAt);
+          // tracking and focus ride ONE curve: the glyphs close up exactly as they sharpen. The negative right margin
+          // cancels the trailing gap after the last glyph, so the row stays centred the whole way in.
+          tl.fromTo(title,
+            { letterSpacing: wide + "em", marginRight: -wide + "em", filter: "blur(" + CFG.soft + "px)" },
+            { letterSpacing: CFG.tight + "em", marginRight: -CFG.tight + "em", filter: "blur(0px)", duration: CFG.settle, ease: "power3.out" }, CFG.at);
+          tl.fromTo(title, { opacity: 0 }, { opacity: 1, duration: CFG.fade, ease: "power1.out" }, CFG.at);
+          window.__timelines["tracking-settle"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

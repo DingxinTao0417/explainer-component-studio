@@ -1,0 +1,106 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"text","type":"string","label":"要打出的一行字","default":"先别急着写代码，把需求说清楚。"},
+    {"id":"step","type":"number","label":"每个字的平均间隔（秒）","default":0.075,"min":0.03,"max":0.3,"step":0.005},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>typewriter-line · 打字机</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="typewriter-line-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .tw { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+        .tw-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .tw-line { position: relative; display: block; white-space: nowrap; font-size: 100px; font-weight: 700; line-height: 1.5; letter-spacing: 0.02em; }
+        .tw-ch { position: relative; display: inline-block; white-space: pre; }
+        .tw-cur { position: absolute; left: 100%; top: 0.2em; bottom: 0.16em; width: 0.09em; margin-left: 0.04em; border-radius: 0.02em; background: var(--k-accent); }
+      </style>
+
+      <div id="root" data-composition-id="typewriter-line" data-width="1920" data-height="1080">
+        <div class="tw">
+          <div class="tw-bg"></div>
+          <div class="tw-line"><span class="tw-ch">先别急着写代码，把需求说清楚。<i class="tw-cur"></i></span></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { at: 0.4, step: 0.075, jitter: 0.35, pause: 0.34, blink: 0.45, blinks: 2 };
+          var STOPS = "，。、；：？！,.;:?!…";
+          var v = { text: "先别急着写代码，把需求说清楚。", step: CFG.step, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".tw");
+          var line = root.querySelector(".tw-line");
+          if (String(v.backdrop) === "off") root.querySelector(".tw-bg").style.display = "none";
+          var step = parseFloat(v.step) || CFG.step;
+          // every glyph is laid out from the start (so the line never reflows) and carries its own cursor on its right edge;
+          // "typing" only switches glyphs on and hands the lit cursor to the newest one. Cell 0 is an empty cell for the cursor before the first key.
+          var chars = [""].concat(String(v.text).split(""));
+          line.textContent = "";
+          var cells = [], curs = [];
+          for (var i = 0; i < chars.length; i++) {
+            var c = document.createElement("span");
+            c.className = "tw-ch";
+            var g = document.createElement("span");
+            g.textContent = chars[i] || "​";
+            var cur = document.createElement("i");
+            cur.className = "tw-cur";
+            c.appendChild(g);
+            c.appendChild(cur);
+            line.appendChild(c);
+            cells.push(g);
+            curs.push(cur);
+          }
+
+          var tl = gsap.timeline({ paused: true });
+          tl.set(cells.slice(1), { opacity: 0 }, 0);
+          tl.set(curs.slice(1), { opacity: 0 }, 0);
+          var t = CFG.at;
+          for (var j = 1; j < chars.length; j++) {
+            tl.set(cells[j], { opacity: 1 }, t);
+            tl.set(curs[j], { opacity: 1 }, t);
+            tl.set(curs[j - 1], { opacity: 0 }, t);
+            // uneven hands: a fixed sine wobble on the interval, and a real stop after punctuation
+            t += step * (1 + CFG.jitter * Math.sin(j * 2.4 + 1));
+            if (STOPS.indexOf(chars[j]) >= 0 && j < chars.length - 1) t += CFG.pause;
+          }
+          // done typing: the cursor idles with a finite number of blinks and ends lit
+          var last = curs[curs.length - 1];
+          for (var b = 0; b < CFG.blinks; b++) {
+            tl.set(last, { opacity: 0 }, t + CFG.blink * (2 * b + 1));
+            tl.set(last, { opacity: 1 }, t + CFG.blink * (2 * b + 2));
+          }
+          window.__timelines["typewriter-line"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

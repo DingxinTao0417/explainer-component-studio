@@ -1,0 +1,118 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"host","type":"string","label":"人物图地址（透明底；压在实拍上时留空）","default":"motion-cards/lib/samples/host.png"},
+    {"id":"bubbles","type":"string","label":"气泡里的话，用 | 分开（2–3 条，每条 8 字以内）","default":"这也行？|真的假的|等等，再说一遍"},
+    {"id":"gap","type":"number","label":"相邻两个气泡隔多久（秒）","default":0.55,"min":0.3,"max":1.5,"step":0.05},
+    {"id":"stay","type":"number","label":"每个气泡停多久再飘走（秒）","default":1.3,"min":0.6,"max":4,"step":0.1},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>reaction-bubble · 反应气泡</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="reaction-bubble-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .rb { position: absolute; inset: 0; }
+        .rb-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .rb-disc { position: absolute; left: 640px; top: 250px; width: 640px; height: 640px; border-radius: 50%; background: var(--k-panel); }
+        .rb-fig { position: absolute; left: 600px; top: 180px; width: 720px; height: 900px; background: center bottom / contain no-repeat; }
+        .rb-b { position: absolute; display: block; padding: 28px 46px; border-radius: 38px; background: var(--k-ink); box-shadow: 0 18px 44px rgba(0, 0, 0, 0.35); }
+        .rb-txt { position: relative; display: block; font-size: 58px; line-height: 78px; font-weight: 800; color: var(--k-on-accent); white-space: nowrap; }
+        .rb-tail { position: absolute; width: 48px; height: 48px; background: inherit; }
+        .rb-b0 { left: 1130px; top: 120px; }
+        .rb-b0 .rb-tail { left: 44px; bottom: -30px; clip-path: polygon(0 0, 100% 0, 0 100%); }
+        .rb-b1 { right: 1130px; top: 300px; background: var(--k-accent); }
+        .rb-b1 .rb-tail { right: 44px; bottom: -30px; clip-path: polygon(0 0, 100% 0, 100% 100%); }
+        .rb-b2 { left: 1180px; top: 410px; }
+        .rb-b2 .rb-tail { left: -28px; top: 44px; clip-path: polygon(100% 0, 100% 100%, 0 30%); }
+      </style>
+
+      <div id="root" data-composition-id="reaction-bubble" data-width="1920" data-height="1080">
+        <div class="rb">
+          <div class="rb-bg"></div>
+          <div class="rb-disc"></div>
+          <div class="rb-fig" style="background-image: url(motion-cards/lib/samples/host.png)"></div>
+          <div class="rb-b rb-b0"><div class="rb-tail"></div><span class="rb-txt">这也行？</span></div>
+          <div class="rb-b rb-b1"><div class="rb-tail"></div><span class="rb-txt">真的假的</span></div>
+          <div class="rb-b rb-b2"><div class="rb-tail"></div><span class="rb-txt">等等，再说一遍</span></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = {
+            at: 0.4,                      // first bubble
+            popIn: 0.16,                  // 0 → peak
+            peak: 1.14,
+            settle: 0.3,                  // peak → 1, with a wobble
+            leave: 0.5,                   // float away; it stays opaque and shrinks to nothing over the last 60%
+            rise: 110,                    // px it floats up on the way out
+            nod: 10,                      // px the host dips on each pop
+            origin: ["0% 100%", "100% 100%", "0% 30%"],   // each bubble grows out of its own tail
+            tilt: [-3, 2.5, -2],          // resting angle
+            drift: [40, -40, 30],         // sideways drift on the way out
+          };
+          var v = { host: "motion-cards/lib/samples/host.png", bubbles: "这也行？|真的假的|等等，再说一遍", gap: 0.55, stay: 1.3, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".rb");
+          var q = function (s) { return root.querySelector(s); };
+          var all = function (s) { return Array.prototype.slice.call(root.querySelectorAll(s)); };
+          var fig = q(".rb-fig");
+          if (String(v.backdrop) === "off") { q(".rb-bg").style.display = "none"; q(".rb-disc").style.display = "none"; }
+          if (v.host) fig.style.backgroundImage = 'url("' + String(v.host) + '")';
+          else { fig.style.display = "none"; q(".rb-disc").style.display = "none"; }
+          var words = String(v.bubbles || "").split("|").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 3);
+          var gap = Math.max(0.3, parseFloat(v.gap) || 0.55), stay = Math.max(0.6, parseFloat(v.stay) || 1.3);
+
+          var tl = gsap.timeline({ paused: true });
+          all(".rb-b").forEach(function (b, i) {
+            if (i >= words.length) { b.style.display = "none"; return; }
+            b.querySelector(".rb-txt").textContent = words[i];
+            var t = CFG.at + i * gap, a = CFG.tilt[i];
+            tl.set(b, { transformOrigin: CFG.origin[i] }, 0);
+            // pop out of the tail, overshoot, wobble to rest
+            tl.set(b, { opacity: 0 }, 0);
+            tl.set(b, { opacity: 1 }, t);
+            tl.fromTo(b, { scale: 0, rotation: a * 3, x: 0, y: 0 }, { scale: CFG.peak, rotation: -a, duration: CFG.popIn, ease: "power3.out" }, t);
+            tl.to(b, { scale: 1, rotation: a, duration: CFG.settle, ease: "back.out(3)" }, t + CFG.popIn);
+            // hang for a moment, already drifting a little, then float off
+            tl.to(b, { y: -10, duration: stay - CFG.popIn - CFG.settle, ease: "none" }, t + CFG.popIn + CFG.settle);
+            tl.to(b, { y: -CFG.rise, x: CFG.drift[i], rotation: a * 2, duration: CFG.leave, ease: "power1.in" }, t + stay);
+            tl.to(b, { scale: 0, duration: CFG.leave * 0.6, ease: "power2.in" }, t + stay + CFG.leave * 0.4);
+            tl.set(b, { opacity: 0 }, t + stay + CFG.leave);
+            // the host takes each one: a small dip, quick down, slower back
+            tl.to(fig, { y: CFG.nod, duration: 0.09, ease: "power2.out" }, t + 0.04);
+            tl.to(fig, { y: 0, duration: 0.3, ease: "power2.out" }, t + 0.13);
+          });
+          window.__timelines["reaction-bubble"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,104 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"src","type":"string","label":"长网页截图地址（从项目根目录写起）","default":"motion-cards/lib/samples/page.png"},
+    {"id":"pagew","type":"number","label":"截图原始宽度（像素）","default":1600,"min":400,"max":4000,"step":1},
+    {"id":"pageh","type":"number","label":"截图原始高度（像素）","default":4200,"min":400,"max":20000,"step":1},
+    {"id":"x","type":"number","label":"目标句左边（截图像素）","default":152,"min":0,"max":4000,"step":1},
+    {"id":"y","type":"number","label":"目标句上边（截图像素）","default":1670,"min":0,"max":20000,"step":1},
+    {"id":"w","type":"number","label":"目标句宽","default":548,"min":10,"max":4000,"step":1},
+    {"id":"h","type":"number","label":"目标句高","default":68,"min":10,"max":2000,"step":1},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>page-scroll-park · 网页滚动停靠</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="page-scroll-park-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .pp { position: absolute; inset: 0; overflow: hidden; }
+        .pp-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .pp-page { position: absolute; left: 0; top: 0; width: 1920px; height: 5040px; }
+        .pp-img { display: block; width: 1920px; height: 5040px; }
+        .pp-mark { position: absolute; left: 182px; top: 2004px; width: 658px; height: 82px; border-radius: 8px; background: var(--k-accent); mix-blend-mode: multiply; }
+        .pp-rail { position: absolute; right: 10px; top: 12px; width: 10px; height: 1056px; border-radius: 5px; background: rgba(20, 24, 32, 0.14); }
+        .pp-thumb { position: absolute; left: 0; top: 0; width: 10px; height: 226px; border-radius: 5px; background: rgba(20, 24, 32, 0.5); }
+      </style>
+
+      <div id="root" data-composition-id="page-scroll-park" data-width="1920" data-height="1080">
+        <div class="pp">
+          <div class="pp-bg"></div>
+          <div class="pp-page" data-layout-allow-overflow>
+            <img class="pp-img" src="motion-cards/lib/samples/page.png" data-var-src="src" alt="" />
+            <div class="pp-mark"></div>
+          </div>
+          <div class="pp-rail"><div class="pp-thumb"></div></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // start: top of page held · accel: short push-off · brake: long coast into the stop · parkAt: where the target sits (fraction of screen height)
+          var CFG = { start: 0.4, accel: 0.3, brake: 1.3, parkAt: 0.44, markGap: 0.14, markDur: 0.42 };
+          var v = { src: "", pagew: 1600, pageh: 4200, x: 152, y: 1670, w: 548, h: 68, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+          var num = function (key, d) { var n = parseFloat(v[key]); return isFinite(n) ? n : d; };
+
+          var root = document.querySelector(".pp");
+          var q = function (s) { return root.querySelector(s); };
+          if (v.src) q(".pp-img").setAttribute("src", String(v.src));
+          if (String(v.backdrop) === "off") q(".pp-bg").style.display = "none";
+
+          var k1 = 1920 / num("pagew", 1600), H = num("pageh", 4200) * k1;
+          var page = q(".pp-page"), img = q(".pp-img"), mark = q(".pp-mark"), thumb = q(".pp-thumb");
+          page.style.height = img.style.height = H + "px";
+          var mx = num("x", 152) * k1, my = num("y", 1670) * k1, mw = num("w", 548) * k1, mh = num("h", 68) * k1;
+          mark.style.left = mx + "px"; mark.style.top = my + "px"; mark.style.width = mw + "px"; mark.style.height = mh + "px";
+
+          // total scroll distance: put the middle of the target at parkAt, never past the end of the page
+          var D = Math.max(0, Math.min(H - 1080, my + mh / 2 - 1080 * CFG.parkAt));
+          // split it so speed is continuous where the cubic push-off hands over to the quartic coast: 3·d1/accel = 4·d2/brake
+          var d1 = D * (4 * CFG.accel) / (4 * CFG.accel + 3 * CFG.brake);
+          var railH = 1056, th = Math.max(60, railH * 1080 / H);
+          thumb.style.height = th + "px";
+          var ty = function (d) { return (railH - th) * d / Math.max(1, H - 1080); };
+
+          var tl = gsap.timeline({ paused: true });
+          tl.fromTo(page, { y: 0 }, { y: -d1, duration: CFG.accel, ease: "power2.in" }, CFG.start);
+          tl.to(page, { y: -D, duration: CFG.brake, ease: "power3.out" }, CFG.start + CFG.accel);
+          tl.fromTo(thumb, { y: 0 }, { y: ty(d1), duration: CFG.accel, ease: "power2.in" }, CFG.start);
+          tl.to(thumb, { y: ty(D), duration: CFG.brake, ease: "power3.out" }, CFG.start + CFG.accel);
+          // the marker only starts once the page has stopped
+          tl.set(mark, { transformOrigin: "0 50%" }, 0);
+          tl.fromTo(mark, { scaleX: 0 }, { scaleX: 1, duration: CFG.markDur, ease: "power2.inOut" }, CFG.start + CFG.accel + CFG.brake + CFG.markGap);
+          window.__timelines["page-scroll-park"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

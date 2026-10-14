@@ -1,0 +1,94 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"text","type":"string","label":"整句","default":"先看懂报错，再去搜答案"},
+    {"id":"key","type":"string","label":"要画线的重点词（整句的子串）","default":"看懂报错"},
+    {"id":"hit","type":"number","label":"落笔时间（秒）","default":0.9,"min":0,"max":10,"step":0.05},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>underline-draw · 手绘下划线</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="underline-draw-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .ud { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 0 140px; }
+        .ud-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .ud-line { position: relative; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; font-size: 108px; font-weight: 800; line-height: 1.7; letter-spacing: 0.01em; }
+        .ud-rest { display: block; white-space: pre; }
+        .ud-key { position: relative; display: block; white-space: pre; }
+        .ud-word { display: block; }
+        .ud-pen { position: absolute; left: -0.06em; right: -0.1em; bottom: -0.15em; height: 0.34em; display: block; }
+        .ud-pen svg { display: block; width: 100%; height: 100%; overflow: visible; }
+        .ud-pen path { fill: var(--k-accent); }
+      </style>
+
+      <div id="root" data-composition-id="underline-draw" data-width="1920" data-height="1080">
+        <div class="ud">
+          <div class="ud-bg"></div>
+          <div class="ud-line">
+            <span class="ud-rest ud-pre">先</span>
+            <span class="ud-key"><span class="ud-word">看懂报错</span><span class="ud-pen"><svg viewBox="0 0 300 30" preserveAspectRatio="none" aria-hidden="true"><path d="M4,8 C36,3 84,3 130,7 C178,11 238,11 298,2 C264,14 226,23 182,23 C138,22 106,17 76,19 C46,21 24,28 6,27 C1,22 0,13 4,8 Z" /></svg></span></span>
+            <span class="ud-rest ud-post">，再去搜答案</span>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { lineIn: 0.35, draw: 0.46, pad: 6, dip: 5 };
+          var v = { text: "先看懂报错，再去搜答案", key: "看懂报错", hit: 0.9, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".ud");
+          var q = function (s) { return root.querySelector(s); };
+          var text = String(v.text), key = String(v.key), at = text.indexOf(key);
+          if (at < 0) { key = ""; at = text.length; }
+          q(".ud-pre").textContent = text.slice(0, at);
+          q(".ud-word").textContent = key;
+          q(".ud-post").textContent = text.slice(at + key.length);
+          if (!key) q(".ud-key").style.display = "none";
+          if (String(v.backdrop) === "off") q(".ud-bg").style.display = "none";
+          var hit = Math.max(CFG.lineIn, parseFloat(v.hit) || 0.9);
+
+          var tl = gsap.timeline({ paused: true });
+          tl.fromTo([q(".ud-pre"), q(".ud-word"), q(".ud-post")], { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: CFG.lineIn, ease: "power3.out" }, 0);
+          if (key) {
+            var p = CFG.pad;
+            // one stroke: slow while the nib is pressed (the fat part), fast through the flick (the thin tail)
+            tl.fromTo(q(".ud-pen"), { clipPath: "inset(-60% " + (100 + p) + "% -60% -" + p + "%)" }, { clipPath: "inset(-60% -" + p + "% -60% -" + p + "%)", duration: CFG.draw, ease: "power2.in" }, hit);
+            // the word gives a little under the pen and comes back when the stroke leaves
+            tl.fromTo(q(".ud-word"), { y: 0 }, { y: CFG.dip, duration: 0.12, ease: "power2.out", immediateRender: false }, hit);
+            tl.to(q(".ud-word"), { y: 0, duration: 0.3, ease: "back.out(3)" }, hit + CFG.draw - 0.08);
+          }
+          window.__timelines["underline-draw"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

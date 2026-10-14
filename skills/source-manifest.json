@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "source": "author-maintained local skills",
-  "snapshot_date": "2026-10-07",
-  "adaptation": "Repository distribution: portable runtime paths (scripts/runtime_paths.py), placeholder paths in guides, deprecated placeholder files omitted. Installed source skills are unchanged.",
+  "snapshot_date": "2026-10-14",
+  "adaptation": "Repository distribution: portable runtime paths (scripts/runtime_paths.py), placeholder paths in guides, deprecated placeholder files omitted. Installed source skills are unchanged. Channel-specific additions in the author's style-profile.md, visual-grammar.md and voice.md (one channel's fixed tone, voices and local tools, 2026-10-12) are not published; those three files stay at the 2026-10-07 snapshot.",
   "files": [
     {
       "path": "h3-science-video/SKILL.md",
@@ -18,7 +18,7 @@
     },
     {
       "path": "science-video-director/SKILL.md",
-      "source_sha256": "02053f58d5ec4d712cebd9dbfcb77164a1fd903f1ea13fa55fe1dc8c3f38056e"
+      "source_sha256": "32b91ef66619fb33b402f2d2963280787561ff1abe2fa22060f6cfa628fa55c8"
     },
     {
       "path": "science-video-director/agents/openai.yaml",
@@ -38,7 +38,7 @@
     },
     {
       "path": "science-video-director/guide/motion-vocabulary.md",
-      "source_sha256": "d1cc1534b93953b6857f9e548963aceafccb0f543a351b527acf46e6e15b2b95"
+      "source_sha256": "5d80a1e2645e5b3fa17e2d7065a11f56ea7404e0ba528aca048827ab1c151d58"
     },
     {
       "path": "science-video-director/guide/production.md",
@@ -138,7 +138,7 @@
     },
     {
       "path": "science-video-director/templates/page-tour.md",
-      "source_sha256": "07b0758d389d4ec53f25de7616112c945f60b9bd692abc906e35cb82e17ec4bf"
+      "source_sha256": "da9ecbac13832395229257f3c0d06fce11c9458c8181dcdf44cb1bd9fbbd9a55"
     },
     {
       "path": "science-video-director/templates/retro-template.md",

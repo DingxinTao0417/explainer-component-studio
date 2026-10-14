@@ -1,0 +1,102 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"示例标题（留空不显示）","default":"光斑往上漂，标题不动"},
+    {"id":"speed","type":"number","label":"速度倍数","default":1,"min":0.2,"max":3,"step":0.1},
+    {"id":"strength","type":"number","label":"色光浓度（0–1）","default":0.7,"min":0,"max":1,"step":0.05}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>bokeh-drift · 光斑漂浮</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="bokeh-drift-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .bd { position: absolute; inset: 0; overflow: hidden; }
+        .bd-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .bd-fx { position: absolute; inset: 0; opacity: 0.7; }
+        .bd-hold { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 0 160px; }
+        .bd-title { display: block; font-size: 92px; font-weight: 800; line-height: 1.3; letter-spacing: 0.02em; text-align: center; }
+        .bd-s { position: absolute; display: block; border-radius: 50%; }
+        .bd-c1 { background: radial-gradient(closest-side, color-mix(in srgb, var(--k-accent) 62%, transparent) 0 62%, color-mix(in srgb, var(--k-accent) 90%, transparent) 84%, transparent); }
+        .bd-c2 { background: radial-gradient(closest-side, color-mix(in srgb, var(--k-accent-2) 62%, transparent) 0 62%, color-mix(in srgb, var(--k-accent-2) 90%, transparent) 84%, transparent); }
+      </style>
+
+      <div id="root" data-composition-id="bokeh-drift" data-width="1920" data-height="1080">
+        <div class="bd" data-layout-allow-overflow>
+          <div class="bd-bg"></div>
+          <div class="bd-fx">
+
+          </div>
+          <div class="bd-hold"><span class="bd-title">光斑往上漂，标题不动</span></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = {
+            dur: 6, rise: 300, sway: 46,
+            // [centre x, centre y, diameter, colour 1|2, opacity, sway cycles]
+            spots: [
+              [210, 860, 360, 2, 0.2, 2], [1650, 300, 400, 1, 0.16, 2], [1020, 1010, 300, 2, 0.2, 2], [520, 230, 250, 1, 0.2, 2],
+              [1420, 800, 220, 2, 0.26, 3], [820, 560, 180, 1, 0.22, 2], [1780, 950, 170, 1, 0.26, 3], [90, 380, 150, 2, 0.3, 2],
+              [1210, 190, 130, 2, 0.32, 2], [640, 900, 110, 1, 0.34, 1], [1560, 610, 92, 2, 0.4, 1], [360, 620, 80, 1, 0.4, 1],
+              [980, 330, 64, 2, 0.46, 1], [1840, 120, 70, 1, 0.42, 1], [760, 110, 52, 2, 0.5, 1]
+            ]
+          };
+          var v = { title: "光斑往上漂，标题不动", speed: 1, strength: 0.7 };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".bd");
+          var q = function (s) { return root.querySelector(s); };
+          var all = function (s) { return Array.prototype.slice.call(root.querySelectorAll(s)); };
+          var ttl = q(".bd-title");
+          ttl.textContent = String(v.title || "");
+          if (!v.title) q(".bd-hold").style.display = "none";
+          var sp = Math.min(3, Math.max(0.2, parseFloat(v.speed) || 1));
+          var st = parseFloat(v.strength);
+          if (isNaN(st)) st = 0.7;
+          var fx = q(".bd-fx");
+          fx.style.opacity = String(Math.min(1, Math.max(0, st)));
+          var D = CFG.dur;
+
+          var tl = gsap.timeline({ paused: true });
+          // big spots are near: they rise further and sway wider; small ones are far and barely move
+          CFG.spots.forEach(function (s, i) {
+            var el = document.createElement("span"), near = s[2] / 400;
+            el.className = "bd-s bd-c" + s[3];
+            el.style.cssText = "left:" + (s[0] - s[2] / 2) + "px;top:" + (s[1] - s[2] / 2) + "px;width:" + s[2] + "px;height:" + s[2] + "px;opacity:" + s[4];
+            fx.appendChild(el);
+            var up = CFG.rise * (0.25 + 0.75 * near) * sp, side = CFG.sway * (0.3 + 0.7 * near) * (i % 2 ? -1 : 1);
+            tl.fromTo(el, { y: up / 2 }, { y: -up / 2, duration: D, ease: "none" }, 0);
+            tl.fromTo(el, { x: -side }, { x: side, duration: D / s[5], ease: "sine.inOut", repeat: s[5] - 1, yoyo: true }, 0);
+          });
+          window.__timelines["bokeh-drift"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

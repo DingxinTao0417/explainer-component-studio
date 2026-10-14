@@ -1,0 +1,85 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"ox","type":"number","label":"圆心横向 0–1","default":0.5,"min":0,"max":1,"step":0.01},
+    {"id":"oy","type":"number","label":"圆心纵向 0–1","default":0.5,"min":0,"max":1,"step":0.01},
+    {"id":"hold","type":"number","label":"全黑停几帧（1–6）","default":2,"min":1,"max":6,"step":1},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"预览：垫两张占位画面"},{"value":"off","label":"透明（压在两镜交界上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>iris-close · 圈入圈出</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="iris-close-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .ir { position: absolute; inset: 0; overflow: hidden; }
+        .ir-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .ir-a, .ir-b { position: absolute; left: 0; top: 0; display: block; width: 1920px; height: 1080px; object-fit: cover; }
+        .ir-ink { position: absolute; inset: 0; opacity: 0; --ir-r: 2400; }
+      </style>
+
+      <div id="root" data-composition-id="iris-close" data-width="1920" data-height="1080">
+        <div class="ir" data-layout-allow-overflow>
+          <div class="ir-bg"></div>
+          <img class="ir-a" src="motion-cards/lib/samples/p1.jpg" alt="" />
+          <img class="ir-b" src="motion-cards/lib/samples/p2.jpg" alt="" />
+          <div class="ir-ink"></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { cut: 1.0, close: 0.267, open: 0.3, rim: 1.022, swap: 0.02 };
+          var v = { "ox": 0.5, "oy": 0.5, "hold": 2, "backdrop": "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".ir");
+          var q = function (s) { return root.querySelector(s); };
+          var num = function (x, d) { x = parseFloat(x); return isFinite(x) ? x : d; };
+          var clamp = function (x, a, b) { return Math.max(a, Math.min(b, x)); };
+          var W = 1920, H = 1080, F = 1 / 30, cut = CFG.cut;
+          var demo = String(v.backdrop) !== "off";
+          if (!demo) ["bg", "a", "b"].forEach(function (n) { q(".ir-" + n).style.display = "none"; });
+          var tl = gsap.timeline({ paused: true });
+          // preview only: the placeholder shots change under full cover, one frame after `cut`
+          if (demo) tl.fromTo(q(".ir-b"), { opacity: 0 }, { opacity: 1, duration: 0.01, ease: "none" }, cut + CFG.swap);
+          var ink = q(".ir-ink"), ox = clamp(num(v.ox, 0.5), 0, 1), oy = clamp(num(v.oy, 0.5), 0, 1);
+          var hold = clamp(Math.round(num(v.hold, 2)), 1, 6) * F;
+          // radius that just clears the farthest corner: the ring starts and ends exactly off-frame
+          var far = Math.ceil(Math.sqrt(Math.pow(Math.max(ox, 1 - ox) * W, 2) + Math.pow(Math.max(oy, 1 - oy) * H, 2))) + 2;
+          var R = "calc(var(--ir-r) * 1px)", R2 = "calc(var(--ir-r) * " + CFG.rim + "px)";
+          // a hole of radius --ir-r in a solid sheet; the accent rim gets thinner as the hole gets smaller
+          ink.style.background = "radial-gradient(circle at " + ox * 100 + "% " + oy * 100 + "%, transparent " + R + ", var(--k-accent) " + R + ", var(--k-accent) " + R2 + ", var(--k-bg) " + R2 + ")";
+          tl.fromTo(ink, { "--ir-r": far }, { "--ir-r": 0, duration: CFG.close, ease: "power2.in" }, cut - CFG.close);
+          tl.to(ink, { "--ir-r": far, duration: CFG.open, ease: "power2.out" }, cut + hold);
+          ink.style.opacity = "1";
+          window.__timelines["iris-close"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

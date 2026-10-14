@@ -1,0 +1,122 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"srcs","type":"string","label":"六到九张图的地址，用 | 分隔（六张排两行，七到九张排三行）","default":"motion-cards/lib/samples/p1.jpg|motion-cards/lib/samples/p2.jpg|motion-cards/lib/samples/p3.jpg|motion-cards/lib/samples/p4.jpg|motion-cards/lib/samples/p5.jpg|motion-cards/lib/samples/p6.jpg"},
+    {"id":"pick","type":"number","label":"选中第几张（从 1 数）","default":5,"min":1,"max":9,"step":1},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>grid-to-hero · 网格选一张放大</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="grid-to-hero-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .gh { position: absolute; inset: 0; }
+        .gh-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .gh-tile { position: absolute; overflow: hidden; border-radius: 14px; box-shadow: 0 14px 34px rgba(0, 0, 0, 0.4); }
+        .gh-img { display: block; width: 100%; height: 100%; object-fit: cover; }
+        .gh-dim { position: absolute; inset: 0; background: #05070b; opacity: 0; }
+        .gh-ring { position: absolute; inset: 0; box-sizing: border-box; border: 10px solid var(--k-accent); border-radius: 14px; opacity: 0; }
+      </style>
+
+      <div id="root" data-composition-id="grid-to-hero" data-width="1920" data-height="1080">
+        <div class="gh">
+          <div class="gh-bg"></div>
+          <div class="gh-tile"><img class="gh-img" src="motion-cards/lib/samples/p1.jpg" alt="" /><div class="gh-dim"></div><div class="gh-ring"></div></div>
+          <div class="gh-tile"><img class="gh-img" src="motion-cards/lib/samples/p2.jpg" alt="" /><div class="gh-dim"></div><div class="gh-ring"></div></div>
+          <div class="gh-tile"><img class="gh-img" src="motion-cards/lib/samples/p3.jpg" alt="" /><div class="gh-dim"></div><div class="gh-ring"></div></div>
+          <div class="gh-tile"><img class="gh-img" src="motion-cards/lib/samples/p4.jpg" alt="" /><div class="gh-dim"></div><div class="gh-ring"></div></div>
+          <div class="gh-tile"><img class="gh-img" src="motion-cards/lib/samples/p5.jpg" alt="" /><div class="gh-dim"></div><div class="gh-ring"></div></div>
+          <div class="gh-tile"><img class="gh-img" src="motion-cards/lib/samples/p6.jpg" alt="" /><div class="gh-dim"></div><div class="gh-ring"></div></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = {
+            inAt: 0.1, inStep: 0.05,           // grid arrives along the diagonal, fast: it is only the setup
+            pickAt: 1.1, punch: 1.07,          // the chosen tile is marked first (ring + small punch)…
+            growAt: 1.4, growDur: 0.6,         // …and only then grows; the 0.3s gap is what makes it read as "this one"
+            sideDur: 0.5, sideStep: 0.03,
+            dimPick: 0.45, dimSide: 0.6,
+            hero: { l: 60, t: 72, w: 1498, h: 936 },
+            side: { l: 1590, w: 270, gap: 20 },
+          };
+          var v = { pick: 5, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".gh");
+          var q = function (s) { return root.querySelector(s); };
+          var all = function (s) { return Array.prototype.slice.call(root.querySelectorAll(s)); };
+          if (String(v.backdrop) === "off") q(".gh-bg").style.display = "none";
+          var list = String(v.srcs || "").split("|").map(function (s) { return s.trim(); }).filter(Boolean);
+          var n = Math.max(6, Math.min(9, list.length || 6));
+          var tiles = all(".gh-tile");
+          while (tiles.length < n) { var extra = tiles[0].cloneNode(true); root.appendChild(extra); tiles.push(extra); }
+          tiles.forEach(function (t, i) { if (list[i]) t.querySelector(".gh-img").setAttribute("src", list[i]); });
+          var rows = Math.ceil(n / 3), tw = 560, gap = 24;
+          var th = rows === 2 ? 350 : 304;
+          var gx = (1920 - (tw * 3 + gap * 2)) / 2, gy = (1080 - (th * rows + gap * (rows - 1))) / 2;
+          var cell = tiles.map(function (t, i) {
+            var c = i % 3, r = Math.floor(i / 3);
+            var b = { l: gx + c * (tw + gap), t: gy + r * (th + gap), c: c, r: r };
+            t.style.left = b.l + "px"; t.style.top = b.t + "px"; t.style.width = tw + "px"; t.style.height = th + "px";
+            return b;
+          });
+          var pick = Math.max(1, Math.min(n, Math.round(parseFloat(v.pick) || 1))) - 1;
+          var hero = tiles[pick];
+          hero.style.zIndex = 2;
+          // the rest line up in a strip on the right: one column for up to five tiles, two columns beyond that
+          var others = tiles.filter(function (t, i) { return i !== pick; });
+          var ncol = others.length > 5 ? 2 : 1, per = Math.ceil(others.length / ncol);
+          var sw = (CFG.side.w - (ncol - 1) * 14) / ncol, sh = Math.round(sw * 0.625);
+          var sgap = ncol === 1 ? (CFG.hero.h - per * sh) / (per - 1) : CFG.side.gap;
+          var sy = ncol === 1 ? CFG.hero.t : (1080 - (per * sh + (per - 1) * sgap)) / 2;
+
+          var tl = gsap.timeline({ paused: true });
+          tiles.forEach(function (t, i) {
+            tl.fromTo(t, { opacity: 0, scale: 0.86 }, { opacity: 1, scale: 1, duration: 0.3, ease: "power3.out" }, CFG.inAt + (cell[i].c + cell[i].r) * CFG.inStep);
+          });
+          // mark
+          tl.fromTo(hero.querySelector(".gh-ring"), { opacity: 0 }, { opacity: 1, duration: 0.12, ease: "power2.out" }, CFG.pickAt);
+          tl.to(hero, { scale: CFG.punch, duration: 0.16, ease: "power3.out" }, CFG.pickAt);
+          others.forEach(function (t) {
+            tl.fromTo(t.querySelector(".gh-dim"), { opacity: 0 }, { opacity: CFG.dimPick, duration: 0.25, ease: "power1.out" }, CFG.pickAt);
+          });
+          // grow: real width/height, not scale, so the crop re-fits and the corner radius stays the same
+          tl.to(hero, { left: CFG.hero.l, top: CFG.hero.t, width: CFG.hero.w, height: CFG.hero.h, scale: 1, duration: CFG.growDur, ease: "power3.inOut" }, CFG.growAt);
+          others.forEach(function (t, k) {
+            var c = Math.floor(k / per), r = k % per, at = CFG.growAt + k * CFG.sideStep;
+            tl.to(t, { left: CFG.side.l + c * (sw + 14), top: sy + r * (sh + sgap), width: sw, height: sh, duration: CFG.sideDur, ease: "power3.out" }, at);
+            tl.to(t.querySelector(".gh-dim"), { opacity: CFG.dimSide, duration: CFG.sideDur, ease: "power1.out" }, at);
+          });
+          window.__timelines["grid-to-hero"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

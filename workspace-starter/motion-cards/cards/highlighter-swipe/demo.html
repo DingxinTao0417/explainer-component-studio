@@ -1,0 +1,98 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"text","type":"string","label":"整句","default":"每次只改一个变量"},
+    {"id":"key","type":"string","label":"被划的重点（整句的子串）","default":"只改一个"},
+    {"id":"hit","type":"number","label":"荧光笔落下的时间（秒）","default":0.9,"min":0,"max":10,"step":0.05},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>highlighter-swipe · 荧光笔扫过</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="highlighter-swipe-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .hs { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 0 140px; }
+        .hs-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .hs-line { position: relative; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; font-size: 120px; font-weight: 800; line-height: 1.5; letter-spacing: 0.01em; }
+        .hs-rest { display: block; white-space: pre; }
+        .hs-key { position: relative; display: block; margin: 0 0.1em; white-space: pre; }
+        .hs-base { display: block; }
+        .hs-top { position: absolute; inset: 0; display: block; }
+        .hs-band { position: absolute; left: -0.12em; right: -0.12em; top: 0.2em; bottom: 0.13em; width: calc(100% + 0.24em); height: calc(100% - 0.33em); transform: rotate(-1.1deg); }
+        .hs-band path { fill: var(--k-accent); opacity: 0.88; }
+        .hs-ink { position: relative; display: block; color: var(--k-on-accent); }
+      </style>
+
+      <div id="root" data-composition-id="highlighter-swipe" data-width="1920" data-height="1080">
+        <div class="hs">
+          <div class="hs-bg"></div>
+          <div class="hs-line">
+            <span class="hs-rest hs-pre">每次</span>
+            <span class="hs-key" data-layout-allow-occlusion><span class="hs-base">只改一个</span><span class="hs-top"><svg class="hs-band" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M1.6,13 L19,8 L41,12 L63,7 L84,11 L98.8,6 L100,47 L98.2,93 L77,89 L55,95 L33,90 L12,96 L0.6,91 L0,50 Z" /></svg><span class="hs-ink">只改一个</span></span></span>
+            <span class="hs-rest hs-post">变量</span>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { lineIn: 0.35, swipe: 0.42, pad: 14, press: 0.06 };
+          var v = { text: "每次只改一个变量", key: "只改一个", hit: 0.9, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".hs");
+          var q = function (s) { return root.querySelector(s); };
+          var text = String(v.text), key = String(v.key), at = text.indexOf(key);
+          if (at < 0) { key = ""; at = text.length; }
+          q(".hs-pre").textContent = text.slice(0, at);
+          q(".hs-base").textContent = key;
+          q(".hs-ink").textContent = key;
+          q(".hs-post").textContent = text.slice(at + key.length);
+          if (!key) q(".hs-key").style.display = "none";
+          if (String(v.backdrop) === "off") q(".hs-bg").style.display = "none";
+          var hit = Math.max(CFG.lineIn, parseFloat(v.hit) || 0.9);
+
+          var tl = gsap.timeline({ paused: true });
+          // the whole sentence is already readable before the pen comes down
+          tl.fromTo([q(".hs-pre"), q(".hs-base"), q(".hs-post")], { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: CFG.lineIn, ease: "power3.out" }, 0);
+          if (key) {
+            var p = CFG.pad, far = 100 + p;
+            var shown = "inset(-30% -" + p + "% -30% -" + p + "%)";
+            // one wipe, two layers: the band + dark glyphs open from the left while the light glyphs close behind the same edge
+            tl.fromTo(q(".hs-top"), { clipPath: "inset(-30% " + far + "% -30% -" + p + "%)" }, { clipPath: shown, duration: CFG.swipe, ease: "power2.inOut" }, hit);
+            tl.fromTo(q(".hs-base"), { clipPath: shown }, { clipPath: "inset(-30% -" + p + "% -30% " + far + "%)", duration: CFG.swipe, ease: "power2.inOut" }, hit);
+            // the pen presses: the band is a touch fatter while it travels and relaxes when the hand lifts
+            tl.fromTo(q(".hs-band"), { scaleY: 1 + CFG.press * 2 }, { scaleY: 1, duration: 0.3, ease: "power2.out" }, hit + CFG.swipe - 0.06);
+          }
+          window.__timelines["highlighter-swipe"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

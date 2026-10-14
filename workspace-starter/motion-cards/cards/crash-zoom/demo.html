@@ -1,0 +1,99 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"src","type":"string","label":"画面地址（从项目根目录写起）","default":"motion-cards/lib/samples/ui.png"},
+    {"id":"fx","type":"number","label":"推到哪一点：横向 0–1","default":0.36,"min":0,"max":1,"step":0.01},
+    {"id":"fy","type":"number","label":"推到哪一点：纵向 0–1","default":0.54,"min":0,"max":1,"step":0.01},
+    {"id":"zoom","type":"number","label":"推到几倍","default":2.4,"min":1.4,"max":5,"step":0.1},
+    {"id":"hit","type":"number","label":"开始推的时间（秒）","default":0.8,"min":0,"max":10,"step":0.05},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>crash-zoom · 急推</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="crash-zoom-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .cz { position: absolute; inset: 0; overflow: hidden; }
+        .cz-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .cz-cam { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; will-change: transform; }
+        .cz-shot, .cz-ghost { position: absolute; left: 0; top: 0; display: block; width: 1920px; height: 1080px; object-fit: cover; }
+        .cz-ghost { opacity: 0; filter: blur(2px); }
+      </style>
+
+      <div id="root" data-composition-id="crash-zoom" data-width="1920" data-height="1080">
+        <div class="cz" data-layout-allow-overflow>
+          <div class="cz-bg"></div>
+          <div class="cz-cam">
+            <img class="cz-shot" src="motion-cards/lib/samples/ui.png" data-var-src="src" alt="" />
+            <img class="cz-ghost" src="motion-cards/lib/samples/ui.png" alt="" />
+            <img class="cz-ghost" src="motion-cards/lib/samples/ui.png" alt="" />
+            <img class="cz-ghost" src="motion-cards/lib/samples/ui.png" alt="" />
+            <img class="cz-ghost" src="motion-cards/lib/samples/ui.png" alt="" />
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { rush: 0.2, over: 1.07, settle: 0.26, smear: [1.025, 1.05, 1.075, 1.1], smearOpacity: [0.5, 0.4, 0.3, 0.22], smearIn: 0.12, smearLead: 0.033, smearOut: 0.033 };
+          var v = { fx: 0.36, fy: 0.54, zoom: 2.4, hit: 0.8, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".cz");
+          var q = function (s) { return root.querySelector(s); };
+          var num = function (x, d) { x = parseFloat(x); return isFinite(x) ? x : d; };
+          var clamp = function (x, a, b) { return Math.max(a, Math.min(b, x)); };
+          var ghosts = Array.prototype.slice.call(root.querySelectorAll(".cz-ghost"));
+          if (v.src) [q(".cz-shot")].concat(ghosts).forEach(function (im) { im.setAttribute("src", String(v.src)); });
+          if (String(v.backdrop) === "off") q(".cz-bg").style.display = "none";
+          var W = 1920, H = 1080;
+          var fx = clamp(num(v.fx, 0.5), 0, 1), fy = clamp(num(v.fy, 0.5), 0, 1);
+          var z = clamp(num(v.zoom, 2.4), 1.2, 6), hit = Math.max(0, num(v.hit, 0.8));
+          // camera at zoom k looking at the target: target to frame centre, clamped so the layer still covers the frame
+          var at = function (k) { return { scale: k, x: clamp(W / 2 - k * fx * W, W - k * W, 0), y: clamp(H / 2 - k * fy * H, H - k * H, 0) }; };
+          var peak = at(z * CFG.over), rest = at(z);
+          var cam = q(".cz-cam");
+
+          var tl = gsap.timeline({ paused: true });
+          tl.set(cam, { transformOrigin: "0 0" }, 0);
+          tl.set(ghosts, { transformOrigin: fx * 100 + "% " + fy * 100 + "%" }, 0);
+          // 1 · the rush: accelerating all the way in, so the fastest frame is the last one before it stops
+          tl.fromTo(cam, { scale: 1, x: 0, y: 0 }, { scale: peak.scale, x: peak.x, y: peak.y, duration: CFG.rush, ease: "power2.in" }, hit);
+          // 2 · it went a little too far; ease back onto the target
+          tl.to(cam, { scale: rest.scale, x: rest.x, y: rest.y, duration: CFG.settle, ease: "power2.out" }, hit + CFG.rush);
+          // radial smear: larger copies of the picture, scaled around the target, visible only on the fast frames
+          ghosts.forEach(function (g, i) {
+            tl.fromTo(g, { opacity: 0, scale: 1 }, { opacity: CFG.smearOpacity[i], scale: CFG.smear[i], duration: CFG.smearIn, ease: "power1.in" }, hit + CFG.rush - CFG.smearLead - CFG.smearIn);
+            tl.to(g, { opacity: 0, scale: 1, duration: CFG.smearOut, ease: "none" }, hit + CFG.rush - CFG.smearLead);
+          });
+          window.__timelines["crash-zoom"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,115 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"示例标题（留空不显示）","default":"一张安静的纸，字写在上面"},
+    {"id":"speed","type":"number","label":"速度倍数","default":1,"min":0.2,"max":3,"step":0.1},
+    {"id":"strength","type":"number","label":"纹理和光影的浓度（0–1）","default":0.7,"min":0,"max":1,"step":0.05}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>paper-grain · 纸感底</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="paper-grain-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          /* this card is a sheet of paper: its own fallbacks are a light skin; a host that sets --mc-* still wins */
+          --k-bg: var(--mc-bg, #f3efe6);
+          --k-panel: var(--mc-panel, #fffdf7);
+          --k-ink: var(--mc-ink, #1a1c20);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #1f6feb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .pg { position: absolute; inset: 0; overflow: hidden; }
+        .pg-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .pg-fx { position: absolute; inset: 0; opacity: 0.7; }
+        .pg-hold { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 0 160px; }
+        .pg-title { display: block; font-size: 92px; font-weight: 800; line-height: 1.3; letter-spacing: 0.02em; text-align: center; }
+        .pg-light { position: absolute; left: -420px; top: -620px; width: 1500px; height: 1400px; background: radial-gradient(closest-side, color-mix(in srgb, var(--k-accent) 5%, transparent), transparent), radial-gradient(closest-side, color-mix(in srgb, var(--k-panel) 85%, transparent), color-mix(in srgb, var(--k-panel) 30%, transparent) 55%, transparent); }
+        .pg-shade { position: absolute; left: 900px; top: 300px; width: 1700px; height: 1500px; background: radial-gradient(closest-side, color-mix(in srgb, var(--k-ink) 20%, transparent), color-mix(in srgb, var(--k-ink) 8%, transparent) 60%, transparent); }
+        .pg-grain { position: absolute; left: 0; top: 0; display: block; width: 1920px; height: 1080px; }
+        .pg-flood { flood-color: var(--k-ink); }
+        .pg-fold { position: absolute; }
+        .pg-fv { left: 645px; top: 0; width: 70px; height: 1080px; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--k-ink) 6%, transparent) 49%, color-mix(in srgb, var(--k-panel) 30%, transparent) 51%, transparent); }
+        .pg-fh { left: 0; top: 690px; width: 1920px; height: 70px; background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--k-ink) 5%, transparent) 49%, color-mix(in srgb, var(--k-panel) 26%, transparent) 51%, transparent); }
+      </style>
+
+      <div id="root" data-composition-id="paper-grain" data-width="1920" data-height="1080">
+        <div class="pg" data-layout-allow-overflow>
+          <div class="pg-bg"></div>
+          <div class="pg-fx">
+            <div class="pg-light"></div>
+            <div class="pg-shade"></div>
+            <svg class="pg-grain" viewBox="0 0 1920 1080" aria-hidden="true">
+              <filter id="pg-speck" x="0" y="0" width="100%" height="100%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="11" result="n" />
+                <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1.1 1.1 1.1 0 -1.42" result="a" />
+                <feFlood class="pg-flood" result="f" />
+                <feComposite in="f" in2="a" operator="in" result="g" />
+                <feComposite in="g" in2="SourceAlpha" operator="in" />
+              </filter>
+              <filter id="pg-fibre" x="0" y="0" width="100%" height="100%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.02 0.7" numOctaves="2" seed="4" result="n" />
+                <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  3 3 3 0 -4.9" result="a" />
+                <feFlood class="pg-flood" result="f" />
+                <feComposite in="f" in2="a" operator="in" result="g" />
+                <feComposite in="g" in2="SourceAlpha" operator="in" />
+              </filter>
+              <rect width="1920" height="1080" filter="url(#pg-speck)" opacity="0.26" />
+              <rect width="1920" height="1080" filter="url(#pg-fibre)" opacity="0.2" />
+            </svg>
+            <div class="pg-fold pg-fv"></div>
+            <div class="pg-fold pg-fh"></div>
+          </div>
+          <div class="pg-hold"><span class="pg-title">一张安静的纸，字写在上面</span></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { dur: 6, lightX: 620, lightY: 200, shadeX: -520, shadeY: -180, foldLow: 0.55 };
+          var v = { title: "一张安静的纸，字写在上面", speed: 1, strength: 0.7 };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".pg");
+          var q = function (s) { return root.querySelector(s); };
+          var all = function (s) { return Array.prototype.slice.call(root.querySelectorAll(s)); };
+          var ttl = q(".pg-title");
+          ttl.textContent = String(v.title || "");
+          if (!v.title) q(".pg-hold").style.display = "none";
+          var sp = Math.min(3, Math.max(0.2, parseFloat(v.speed) || 1));
+          var st = parseFloat(v.strength);
+          if (isNaN(st)) st = 0.7;
+          var fx = q(".pg-fx");
+          fx.style.opacity = String(Math.min(1, Math.max(0, st)));
+          var D = CFG.dur;
+
+          var tl = gsap.timeline({ paused: true });
+          // the paper never moves: only the light pool and the far-corner shadow drift, in opposite directions
+          tl.fromTo(q(".pg-light"), { x: 0, y: 0 }, { x: CFG.lightX * sp, y: CFG.lightY * sp, duration: D, ease: "sine.inOut" }, 0);
+          tl.fromTo(q(".pg-shade"), { x: 0, y: 0 }, { x: CFG.shadeX * sp, y: CFG.shadeY * sp, duration: D, ease: "sine.inOut" }, 0);
+          // the creases catch a little more light as the pool passes over them
+          tl.fromTo(q(".pg-fv"), { opacity: 1 }, { opacity: CFG.foldLow, duration: D, ease: "sine.inOut" }, 0);
+          tl.fromTo(q(".pg-fh"), { opacity: CFG.foldLow }, { opacity: 1, duration: D, ease: "sine.inOut" }, 0);
+          window.__timelines["paper-grain"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

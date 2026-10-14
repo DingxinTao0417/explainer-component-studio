@@ -1,0 +1,114 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"url","type":"string","label":"地址栏里的网址（不带协议头）","default":"docs.example.com/guide/start"},
+    {"id":"src","type":"string","label":"网页截图地址（从项目根目录写起，取顶部）","default":"motion-cards/lib/samples/page.png"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>browser-rise · 浏览器窗升起</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="browser-rise-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        @font-face { font-family: "Consolas"; src: local("Consolas"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .br { position: absolute; inset: 0; overflow: hidden; }
+        .br-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .br-stage { position: absolute; inset: 0; perspective: 1700px; perspective-origin: 50% 40%; }
+        .br-win { position: absolute; left: 150px; top: 96px; width: 1620px; height: 920px; border-radius: 28px; background: var(--k-panel); border: 2px solid rgba(139, 147, 163, 0.3); box-shadow: 0 60px 140px rgba(0, 0, 0, 0.55); overflow: hidden; }
+        .br-bar { position: absolute; left: 0; right: 0; top: 0; height: 116px; display: flex; align-items: center; gap: 16px; padding: 0 40px; }
+        .br-led { display: block; width: 24px; height: 24px; border-radius: 50%; background: var(--k-muted); opacity: 0.55; }
+        .br-addr { position: relative; display: flex; align-items: center; flex: 1; height: 76px; margin-left: 34px; padding: 0 34px; border-radius: 38px; background: var(--k-bg); }
+        .br-lock { display: block; width: 34px; height: 34px; margin-right: 20px; color: var(--k-muted); }
+        .br-url { display: block; font-family: Consolas, "Courier New", "Microsoft YaHei", monospace; font-size: 42px; line-height: 1.2; white-space: pre; }
+        .br-caret { display: block; width: 5px; height: 46px; margin-left: 5px; background: var(--k-accent); }
+        .br-load { position: absolute; left: 0; right: 0; top: 112px; height: 6px; background: var(--k-accent); }
+        .br-view { position: absolute; left: 0; right: 0; top: 118px; bottom: 0; overflow: hidden; background: var(--k-bg); }
+        .br-img { display: block; width: 1620px; height: 4252px; }
+      </style>
+
+      <div id="root" data-composition-id="browser-rise" data-width="1920" data-height="1080">
+        <div class="br">
+          <div class="br-bg"></div>
+          <div class="br-stage">
+            <div class="br-win" data-layout-allow-overflow>
+              <div class="br-bar">
+                <span class="br-led"></span><span class="br-led"></span><span class="br-led"></span>
+                <div class="br-addr">
+                  <svg class="br-lock" viewBox="0 0 34 34" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="15" width="22" height="16" rx="4" fill="currentColor" /><path d="M11 15 V10 a6 6 0 0 1 12 0 V15" fill="none" stroke="currentColor" stroke-width="4" /></svg>
+                  <span class="br-url">docs.example.com/guide/start</span><span class="br-caret"></span>
+                </div>
+              </div>
+              <div class="br-view" data-layout-allow-overflow><img class="br-img" src="motion-cards/lib/samples/page.png" data-var-src="src" alt="" /></div>
+              <div class="br-load"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // rise: travel time · drop: how far below it starts · tilt: starting lean (top edge away from camera) · cps: typing speed · load: page fade after the last character
+          var CFG = { at: 0.25, rise: 0.95, drop: 640, tilt: 46, small: 0.84, typeLead: 0.2, cps: 26, loadGap: 0.18, load: 0.4 };
+          var v = { url: "docs.example.com/guide/start", src: "", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".br");
+          var q = function (s) { return root.querySelector(s); };
+          if (String(v.backdrop) === "off") q(".br-bg").style.display = "none";
+          var img = q(".br-img");
+          if (v.src) { img.setAttribute("src", String(v.src)); img.style.height = "auto"; }
+          var url = String(v.url), urlEl = q(".br-url"), typed = { n: 0 }, shown = -1;
+          var render = function () {
+            var n = Math.floor(typed.n + 0.001);
+            if (n !== shown) { shown = n; urlEl.textContent = url.slice(0, n); }
+          };
+
+          var win = q(".br-win"), load = q(".br-load");
+          var tl = gsap.timeline({ paused: true, onUpdate: render });
+          tl.set(win, { transformOrigin: "50% 100%" }, 0);
+          // hinged on its bottom edge: it comes up leaning back and stands up as it arrives, decelerating all the way
+          tl.fromTo(win, { y: CFG.drop, rotationX: CFG.tilt, scale: CFG.small }, { y: 0, rotationX: 0, scale: 1, duration: CFG.rise, ease: "power3.out" }, CFG.at);
+          tl.fromTo(win, { opacity: 0 }, { opacity: 1, duration: 0.22, ease: "none" }, CFG.at);
+          // typing starts while the window is still settling, so the two moves overlap instead of queueing
+          var t0 = CFG.at + CFG.rise - CFG.typeLead, dur = url.length / CFG.cps, t1 = t0 + dur;
+          tl.fromTo(typed, { n: 0 }, { n: url.length, duration: dur, ease: "none" }, t0);
+          tl.set(load, { transformOrigin: "0 50%" }, 0);
+          tl.fromTo(load, { scaleX: 0, opacity: 1 }, { scaleX: 0.7, opacity: 1, duration: dur + CFG.loadGap, ease: "power1.out" }, t0);
+          tl.to(load, { scaleX: 1, duration: 0.2, ease: "power2.out" }, t1 + CFG.loadGap);
+          tl.to(load, { opacity: 0, duration: 0.25, ease: "none" }, t1 + CFG.loadGap + 0.2);
+          // the page only appears after the address is complete
+          tl.fromTo(img, { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: CFG.load, ease: "power2.out" }, t1 + CFG.loadGap);
+          tl.fromTo(q(".br-caret"), { opacity: 1 }, { opacity: 0, duration: 0.05, ease: "none" }, t1 + CFG.loadGap);
+          render();
+          window.__timelines["browser-rise"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

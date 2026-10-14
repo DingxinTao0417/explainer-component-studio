@@ -1,0 +1,109 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"percent","type":"number","label":"目标百分比（0–100）","default":68,"min":0,"max":100,"step":1},
+    {"id":"caption","type":"string","label":"环下面的一行说明","default":"的问题，追问一轮就能解决"},
+    {"id":"note","type":"string","label":"来源小注（可空）","default":"示例数据"},
+    {"id":"sweep","type":"number","label":"画环时长（秒）","default":1.3,"min":0.4,"max":4,"step":0.1},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>ring-progress · 环形进度</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="ring-progress-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .rp { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .rp-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .rp-ring { position: relative; display: flex; align-items: center; justify-content: center; width: 640px; height: 640px; }
+        .rp-svg { position: absolute; left: 0; top: 0; width: 640px; height: 640px; display: block; }
+        .rp-track { fill: none; stroke: color-mix(in srgb, var(--k-muted) 34%, var(--k-bg)); stroke-width: 64; }
+        .rp-prog { fill: none; stroke: var(--k-accent); stroke-width: 64; stroke-linecap: round; }
+        .rp-mid { position: relative; display: flex; align-items: baseline; justify-content: center; }
+        .rp-num { display: block; font-size: 210px; font-weight: 800; line-height: 1.32; letter-spacing: -0.02em; white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .rp-pct { display: block; margin-left: 8px; font-size: 84px; font-weight: 800; color: var(--k-muted); white-space: nowrap; }
+        .rp-cap { position: relative; display: block; margin-top: 36px; font-size: 62px; font-weight: 700; white-space: nowrap; }
+        .rp-note { position: relative; display: block; margin-top: 14px; font-size: 40px; font-weight: 500; color: var(--k-muted); white-space: nowrap; }
+      </style>
+
+      <div id="root" data-composition-id="ring-progress" data-width="1920" data-height="1080">
+        <div class="rp">
+          <div class="rp-bg"></div>
+          <div class="rp-ring">
+            <svg class="rp-svg" viewBox="0 0 640 640">
+              <circle class="rp-track" cx="320" cy="320" r="270" />
+              <circle class="rp-prog" cx="320" cy="320" r="270" transform="rotate(-90 320 320)" stroke-dasharray="1153.6 1696.5" />
+            </svg>
+            <div class="rp-mid"><span class="rp-num">68</span><span class="rp-pct">%</span></div>
+          </div>
+          <span class="rp-cap">的问题，追问一轮就能解决</span>
+          <span class="rp-note">示例数据</span>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { at: 0.3, r: 270, pulse: 1.04, pulseUp: 0.08, pulseDown: 0.3, capLag: 0.12 };
+          var v = { percent: 68, caption: "的问题，追问一轮就能解决", note: "示例数据", sweep: 1.3, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".rp");
+          var q = function (s) { return root.querySelector(s); };
+          var goal = Math.max(0, Math.min(100, parseFloat(v.percent) || 0));
+          var dur = Math.max(0.4, parseFloat(v.sweep) || 1.3);
+          q(".rp-cap").textContent = String(v.caption);
+          q(".rp-note").textContent = String(v.note);
+          if (!String(v.note)) q(".rp-note").style.display = "none";
+          if (String(v.backdrop) === "off") q(".rp-bg").style.display = "none";
+          var prog = q(".rp-prog"), num = q(".rp-num"), C = 2 * Math.PI * CFG.r;
+
+          // one value feeds both the arc and the digits, so they can never disagree on any frame
+          var state = { p: 0 };
+          var render = function () {
+            var len = (C * state.p) / 100;
+            prog.setAttribute("stroke-dasharray", len.toFixed(1) + " " + (C + 80).toFixed(1));
+            prog.style.opacity = state.p > 0.2 ? 1 : 0; // a round cap would leave a dot at 0%
+            num.textContent = String(Math.round(state.p));
+          };
+          // power2.inOut: remaining = 2(1-t)^2 * goal; the digits land when that drops under half a point
+          var stop = CFG.at + dur * (1 - Math.sqrt(Math.min(1, 0.25 / (goal || 1))));
+
+          var tl = gsap.timeline({ paused: true, onUpdate: render });
+          tl.fromTo(state, { p: 0 }, { p: goal, duration: dur, ease: "power2.inOut" }, CFG.at);
+          // the overshoot lives in the ring's size, never in the number
+          tl.fromTo(q(".rp-ring"), { scale: 1 }, { scale: CFG.pulse, duration: CFG.pulseUp, ease: "power2.out" }, stop);
+          tl.to(q(".rp-ring"), { scale: 1, duration: CFG.pulseDown, ease: "back.out(3)" }, stop + CFG.pulseUp);
+          tl.fromTo(q(".rp-cap"), { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, stop + CFG.capLag);
+          tl.fromTo(q(".rp-note"), { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "none" }, stop + CFG.capLag + 0.25);
+          render();
+          window.__timelines["ring-progress"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

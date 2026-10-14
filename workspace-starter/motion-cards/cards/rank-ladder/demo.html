@@ -1,0 +1,160 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"names","type":"string","label":"各行名字，按当前名次，用 | 分隔（4–5 行）","default":"分步追问|限定格式|加上背景|给出示例|直接提问"},
+    {"id":"scores","type":"string","label":"各行数值，用 | 分隔","default":"92|85|78|71|64"},
+    {"id":"mover","type":"number","label":"哪一行要上移（当前名次）","default":4,"min":2,"max":5,"step":1},
+    {"id":"climb","type":"number","label":"上移到第几名","default":2,"min":1,"max":4,"step":1},
+    {"id":"newScore","type":"number","label":"上移那一行的新数值","default":88},
+    {"id":"headline","type":"string","label":"结论（一句）","default":"多给一个示例，第四名超到第二（示例数据）"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>rank-ladder · 排名换位</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="rank-ladder-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .rl { position: absolute; inset: 0; }
+        .rl-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .rl-head { position: absolute; left: 0; right: 0; top: 70px; text-align: center; font-size: 60px; font-weight: 800; white-space: nowrap; }
+        .rl-board { position: absolute; left: 300px; top: 200px; width: 1320px; height: 790px; }
+        .rl-rank { position: absolute; left: 0; width: 120px; height: 136px; line-height: 136px; text-align: center; font-size: 80px; font-weight: 800; color: var(--k-muted); }
+        .rl-row { position: absolute; left: 150px; width: 1170px; height: 136px; display: flex; align-items: center; justify-content: space-between; padding: 0 56px; border-radius: 22px; background: var(--k-panel); }
+        .rl-hot { position: absolute; inset: 0; border-radius: 22px; background: var(--k-accent); opacity: 0; box-shadow: 0 26px 60px rgba(0, 0, 0, 0.5); }
+        .rl-name { position: relative; display: block; font-size: 58px; font-weight: 700; white-space: nowrap; }
+        .rl-score { position: relative; display: block; font-size: 68px; font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .rl-row.is-mover { z-index: 2; }
+        .rl-row.is-mover .rl-hot { opacity: 1; }
+        .rl-row.is-mover .rl-name, .rl-row.is-mover .rl-score { color: var(--k-on-accent); }
+      </style>
+
+      <div id="root" data-composition-id="rank-ladder" data-width="1920" data-height="1080">
+        <div class="rl">
+          <div class="rl-bg"></div>
+          <span class="rl-head">多给一个示例，第四名超到第二（示例数据）</span>
+          <div class="rl-board">
+            <span class="rl-rank" style="top: 0">1</span>
+            <span class="rl-rank" style="top: 160px">2</span>
+            <span class="rl-rank" style="top: 320px">3</span>
+            <span class="rl-rank" style="top: 480px">4</span>
+            <span class="rl-rank" style="top: 640px">5</span>
+            <div class="rl-row" style="top: 0"><span class="rl-hot"></span><span class="rl-name">分步追问</span><span class="rl-score">92</span></div>
+            <div class="rl-row is-mover" style="top: 160px"><span class="rl-hot"></span><span class="rl-name">给出示例</span><span class="rl-score">88</span></div>
+            <div class="rl-row" style="top: 320px"><span class="rl-hot"></span><span class="rl-name">限定格式</span><span class="rl-score">85</span></div>
+            <div class="rl-row" style="top: 480px"><span class="rl-hot"></span><span class="rl-name">加上背景</span><span class="rl-score">78</span></div>
+            <div class="rl-row" style="top: 640px"><span class="rl-hot"></span><span class="rl-name">直接提问</span><span class="rl-score">64</span></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { pitch: 160, boardIn: 0.3, armAt: 0.55, arm: 0.22, lift: 1.035, roll: 0.5, goAt: 1.2, perRow: 0.3, lane: 260, laneOut: 0.24, laneBack: 0.28, yield: 0.3, land: 0.3 };
+          var v = { names: "分步追问|限定格式|加上背景|给出示例|直接提问", scores: "92|85|78|71|64", mover: 4, climb: 2, newScore: 88, headline: "多给一个示例，第四名超到第二（示例数据）", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".rl");
+          var q = function (s) { return root.querySelector(s); };
+          var names = String(v.names).split("|").slice(0, 5), scores = String(v.scores).split("|");
+          var n = names.length;
+          var from = Math.max(2, Math.min(n, parseInt(v.mover, 10) || n)) - 1;
+          var to = Math.max(1, Math.min(from, parseInt(v.climb, 10) || 1)) - 1;
+          var oldS = parseFloat(scores[from]) || 0, newS = parseFloat(v.newScore);
+          if (!isFinite(newS)) newS = oldS;
+          q(".rl-head").textContent = String(v.headline);
+          if (String(v.backdrop) === "off") q(".rl-bg").style.display = "none";
+
+          // rank digits are fixed slots; only the rows travel, so no text is ever rewritten mid-move except the score
+          var board = q(".rl-board"), rows = [], ranks = [];
+          board.textContent = "";
+          var mk = function (tag, cls, txt) { var e = document.createElement(tag); e.className = cls; if (txt !== undefined) e.textContent = txt; return e; };
+          for (var i = 0; i < n; i++) {
+            var rk = mk("span", "rl-rank", String(i + 1));
+            rk.style.top = i * CFG.pitch + "px";
+            board.appendChild(rk);
+            ranks.push(rk);
+          }
+          for (var j = 0; j < n; j++) {
+            var row = mk("div", "rl-row");
+            row.style.top = j * CFG.pitch + "px";
+            row.appendChild(mk("span", "rl-hot"));
+            row.appendChild(mk("span", "rl-name", names[j] || ""));
+            row.appendChild(mk("span", "rl-score", scores[j] || ""));
+            board.appendChild(row);
+            rows.push(row);
+          }
+          board.style.top = Math.round(200 + (5 - n) * CFG.pitch * 0.5) + "px";
+          var mv = rows[from], mvName = mv.querySelector(".rl-name"), mvScore = mv.querySelector(".rl-score"), hot = mv.querySelector(".rl-hot");
+          mv.style.zIndex = 2;
+          // palette colours resolved to rgb once so text can be tweened onto the accent plate
+          var ink = getComputedStyle(mvName).color;
+          mvName.style.color = "var(--k-on-accent)";
+          var dark = getComputedStyle(mvName).color || ink;
+          mvName.style.color = "";
+          ranks[to].style.color = "var(--k-accent)";
+          var gold = getComputedStyle(ranks[to]).color;
+          ranks[to].style.color = "";
+          var grey = getComputedStyle(ranks[to]).color;
+
+          var state = { s: oldS };
+          var render = function () { mvScore.textContent = String(Math.round(state.s)); };
+          var steps = from - to, travel = Math.max(0.4, steps * CFG.perRow), goAt = CFG.goAt, landAt = goAt + travel;
+
+          var tl = gsap.timeline({ paused: true, onUpdate: render });
+          tl.fromTo(board, { opacity: 0 }, { opacity: 1, duration: CFG.boardIn, ease: "none" }, 0);
+          // 1 the reason: the row lights up and its score climbs past the rows above
+          tl.fromTo(hot, { opacity: 0 }, { opacity: 1, duration: CFG.arm, ease: "none" }, CFG.armAt);
+          tl.fromTo([mvName, mvScore], { color: ink }, { color: dark, duration: CFG.arm, ease: "none" }, CFG.armAt);
+          tl.fromTo(mv, { scale: 1 }, { scale: CFG.lift, duration: CFG.arm, ease: "power2.out" }, CFG.armAt);
+          tl.fromTo(state, { s: oldS }, { s: newS, duration: CFG.roll, ease: "power2.out" }, CFG.armAt + 0.1);
+          // 2 the overtake: pulls out to the right first, climbs in the clear lane, merges back only after landing
+          tl.fromTo(mv, { x: 0 }, { x: CFG.lane, duration: CFG.laneOut, ease: "power2.out" }, goAt - CFG.laneOut * 0.5);
+          tl.fromTo(mv, { y: 0 }, { y: -steps * CFG.pitch, duration: travel, ease: "power2.inOut" }, goAt);
+          tl.to(mv, { x: 0, duration: CFG.laneBack, ease: "power2.inOut" }, landAt - 0.05);
+          // each passed row gives way as the mover goes by it, nearest first
+          for (var k = from - 1; k >= to; k--) {
+            // the mover's plate really does cover these rows for a few frames while it goes by
+            rows[k].querySelector(".rl-name").setAttribute("data-layout-allow-occlusion", "");
+            rows[k].querySelector(".rl-score").setAttribute("data-layout-allow-occlusion", "");
+            var passAt = goAt + travel * ((from - k - 0.6) / steps) - CFG.yield * 0.5;
+            tl.fromTo(rows[k], { y: 0 }, { y: CFG.pitch, duration: CFG.yield, ease: "power2.inOut" }, Math.max(goAt, passAt));
+          }
+          // 3 landing: settles into the slot, the new rank digit answers
+          var merged = landAt - 0.05 + CFG.laneBack;
+          tl.to(mv, { scale: 1, duration: CFG.land, ease: "back.out(3)" }, merged - 0.08);
+          tl.set(ranks[to], { transformOrigin: "50% 55%" }, 0);
+          tl.fromTo(ranks[to], { scale: 1, color: grey }, { scale: 1.35, color: gold, duration: 0.1, ease: "power2.out" }, merged - 0.05);
+          tl.to(ranks[to], { scale: 1.12, duration: 0.3, ease: "back.out(2.5)" }, merged + 0.05);
+          render();
+          window.__timelines["rank-ladder"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

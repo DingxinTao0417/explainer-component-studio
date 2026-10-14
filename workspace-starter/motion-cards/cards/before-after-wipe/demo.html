@@ -1,0 +1,129 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"srcs","type":"string","label":"两张同构图的图：之前|之后。只给一张时，“之前”自动用它的灰化版","default":"motion-cards/lib/samples/p7.jpg|motion-cards/lib/samples/p3.jpg"},
+    {"id":"before","type":"string","label":"“之前”角标（可空）","default":"之前"},
+    {"id":"after","type":"string","label":"“之后”角标（可空）","default":"之后"},
+    {"id":"pauseAt","type":"number","label":"中途停下来对比的位置（%）","default":52,"min":30,"max":70,"step":1},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>before-after-wipe · 前后对比拖条</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="before-after-wipe-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .bw { position: absolute; inset: 0; }
+        .bw-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .bw-frame { position: absolute; left: 216px; top: 75px; width: 1488px; height: 930px; }
+        .bw-clip { position: absolute; inset: 0; overflow: hidden; border-radius: 18px; box-shadow: 0 40px 90px rgba(0, 0, 0, 0.45); }
+        .bw-img { position: absolute; left: 0; top: 0; display: block; width: 1488px; height: 930px; max-width: none; object-fit: cover; }
+        .bw-gray { filter: grayscale(1) brightness(0.72); }
+        .bw-after { position: absolute; left: 0; top: 0; width: 1488px; height: 930px; overflow: hidden; }
+        .bw-tag { position: absolute; top: 28px; display: block; height: 72px; padding: 0 28px; line-height: 70px; font-size: 40px; font-weight: 700; border-radius: 12px; white-space: nowrap; }
+        .bw-tag-b { right: 28px; color: var(--k-ink); background: rgba(10, 12, 16, 0.72); }
+        .bw-tag-a { left: 28px; color: var(--k-on-accent); background: var(--k-accent); }
+        .bw-line { position: absolute; left: -4px; top: -18px; width: 8px; height: 966px; border-radius: 4px; background: #fff; box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25), 0 0 26px rgba(0, 0, 0, 0.5); }
+        .bw-grip { position: absolute; left: -48px; top: 431px; width: 104px; height: 104px; border-radius: 52px; background: #fff; box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; }
+        .bw-grip svg { display: block; width: 64px; height: 64px; }
+      </style>
+
+      <div id="root" data-composition-id="before-after-wipe" data-width="1920" data-height="1080">
+        <div class="bw">
+          <div class="bw-bg"></div>
+          <div class="bw-frame">
+            <div class="bw-clip">
+              <img class="bw-img bw-before" src="motion-cards/lib/samples/p7.jpg" alt="" />
+              <span class="bw-tag bw-tag-b" data-layout-allow-occlusion>之前</span>
+              <div class="bw-after">
+                <img class="bw-img bw-aimg" src="motion-cards/lib/samples/p3.jpg" alt="" />
+                <span class="bw-tag bw-tag-a" data-layout-allow-overflow>之后</span>
+              </div>
+            </div>
+            <div class="bw-line">
+              <div class="bw-grip"><svg viewBox="0 0 64 64" fill="none" stroke="#14161a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M24 18 L10 32 L24 46" /><path d="M40 18 L54 32 L40 46" /></svg></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = {
+            W: 1488,
+            inAt: 0.1,
+            gripAt: 0.5, startPct: 0,          // the handle shows up first, on the left edge, and waits
+            drag1: 0.85, drag1Dur: 0.7,        // first pull: to the compare position, a little too far…
+            overPct: 2.5, backDur: 0.2,        // …then eased back, the way a hand corrects itself
+            pause: 0.55,                       // both halves stay on screen long enough to compare
+            drag2Dur: 0.75,                    // second pull goes all the way out
+            press: 0.86,                       // handle is squeezed while it is being dragged
+          };
+          var v = { before: "之前", after: "之后", pauseAt: 52, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".bw");
+          var q = function (s) { return root.querySelector(s); };
+          var all = function (s) { return Array.prototype.slice.call(root.querySelectorAll(s)); };
+          if (String(v.backdrop) === "off") q(".bw-bg").style.display = "none";
+          var list = String(v.srcs || "").split("|").map(function (s) { return s.trim(); }).filter(Boolean);
+          if (list[0]) q(".bw-before").setAttribute("src", list[0]);
+          q(".bw-aimg").setAttribute("src", list[1] || list[0] || q(".bw-aimg").getAttribute("src"));
+          if (list.length === 1) q(".bw-before").classList.add("bw-gray");
+          var tb = q(".bw-tag-b"), ta = q(".bw-tag-a");
+          tb.textContent = String(v.before || ""); if (!v.before) tb.style.display = "none";
+          ta.textContent = String(v.after || ""); if (!v.after) ta.style.display = "none";
+          var after = q(".bw-after"), line = q(".bw-line"), grip = q(".bw-grip");
+          var px = function (p) { return Math.round(CFG.W * p / 100); };
+          var stop = Math.max(30, Math.min(70, parseFloat(v.pauseAt) || 52));
+          var x0 = px(CFG.startPct), x1 = px(stop + CFG.overPct), x2 = px(stop), x3 = CFG.W;
+          var tA = CFG.drag1, tB = tA + CFG.drag1Dur, tC = tB + CFG.backDur + CFG.pause, tD = tC + CFG.drag2Dur;
+
+          var tl = gsap.timeline({ paused: true });
+          tl.fromTo(q(".bw-frame"), { opacity: 0, scale: 0.97 }, { opacity: 1, scale: 1, duration: 0.3, ease: "power2.out" }, CFG.inAt);
+          tl.fromTo(line, { scaleY: 0, opacity: 0 }, { scaleY: 1, opacity: 1, duration: 0.22, ease: "power3.out" }, CFG.gripAt);
+          tl.fromTo(grip, { scale: 0 }, { scale: 1, duration: 0.26, ease: "back.out(2.6)" }, CFG.gripAt + 0.06);
+          // the wipe edge and the handle are driven by the same numbers with the same ease, so they can never drift apart
+          var move = function (from, to, dur, ease, at) {
+            tl.fromTo(after, { width: from }, { width: to, duration: dur, ease: ease, immediateRender: false }, at);
+            tl.fromTo(line, { x: from }, { x: to, duration: dur, ease: ease, immediateRender: false }, at);
+          };
+          gsap.set(after, { width: x0 });
+          gsap.set(line, { x: x0 });
+          tl.to(grip, { scale: CFG.press, duration: 0.12, ease: "power2.out" }, tA - 0.1);
+          move(x0, x1, CFG.drag1Dur, "power2.inOut", tA);
+          move(x1, x2, CFG.backDur, "sine.inOut", tB);
+          tl.to(grip, { scale: 1, duration: 0.2, ease: "back.out(3)" }, tB + CFG.backDur);
+          tl.to(grip, { scale: CFG.press, duration: 0.12, ease: "power2.out" }, tC - 0.1);
+          move(x2, x3, CFG.drag2Dur, "power3.inOut", tC);
+          tl.to(line, { opacity: 0, duration: 0.18, ease: "power1.in" }, tD - 0.12);
+          window.__timelines["before-after-wipe"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

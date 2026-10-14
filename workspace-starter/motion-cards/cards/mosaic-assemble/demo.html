@@ -1,0 +1,113 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"srcs","type":"string","label":"拼贴用的图，用 | 分隔；不够十二张就循环用，前两张占最大的两格","default":"motion-cards/lib/samples/p1.jpg|motion-cards/lib/samples/p3.jpg|motion-cards/lib/samples/p5.jpg|motion-cards/lib/samples/p2.jpg|motion-cards/lib/samples/p8.jpg|motion-cards/lib/samples/p4.jpg|motion-cards/lib/samples/p6.jpg|motion-cards/lib/samples/p7.jpg"},
+    {"id":"title","type":"string","label":"最后压在中间的标题（一行，不超过 12 个字）","default":"十二个案例，一个规律"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>mosaic-assemble · 拼贴汇成</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="mosaic-assemble-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .ma { position: absolute; inset: 0; }
+        .ma-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .ma-wall { position: absolute; left: 60px; top: 42px; width: 1800px; height: 996px; }
+        .ma-tile { position: absolute; overflow: hidden; border-radius: 12px; box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45); }
+        .ma-img { display: block; width: 100%; height: 100%; object-fit: cover; }
+        .ma-shade { position: absolute; inset: 0; border-radius: 12px; background: #05070b; opacity: 0; }
+        .ma-mid { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+        .ma-plate { position: relative; display: block; padding: 30px 64px 40px; border-radius: 18px; background: var(--k-bg); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6); }
+        .ma-title { display: block; font-size: 116px; line-height: 150px; font-weight: 800; color: var(--k-ink); white-space: nowrap; }
+        .ma-bar { position: absolute; left: 64px; right: 64px; bottom: 24px; height: 12px; border-radius: 6px; background: var(--k-accent); }
+      </style>
+
+      <div id="root" data-composition-id="mosaic-assemble" data-width="1920" data-height="1080">
+        <div class="ma">
+          <div class="ma-bg"></div>
+          <div class="ma-wall"><div class="ma-shade"></div></div>
+          <div class="ma-mid"><div class="ma-plate"><span class="ma-title">十二个案例，一个规律</span><div class="ma-bar"></div></div></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = {
+            at: 0.15, step: 0.07, fly: 0.6,   // big tiles leave first; each takes 0.6s and lands on expo.out
+            far: 1500,                        // how far outside its slot a tile starts, along the line from screen centre
+            fromScale: 0.55,
+            loose: 1.045,                     // the collage is held slightly apart while tiles arrive…
+            lockDur: 0.22,                    // …then closes up in one move: that is the "it is one picture now" beat
+            shade: 0.5,
+            titleLag: 0.08, titleDur: 0.26, titleFrom: 1.35,
+            // col, row, w, h on a 6 × 4 unit grid; the list is already in flight order (largest first)
+            slots: [[0,0,2,2],[4,2,2,2],[2,0,2,1],[5,0,1,2],[3,1,1,2],[0,2,1,2],[1,2,2,1],[2,3,2,1],[4,0,1,1],[2,1,1,1],[4,1,1,1],[1,3,1,1]],
+          };
+          var v = { title: "十二个案例，一个规律", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".ma");
+          var q = function (s) { return root.querySelector(s); };
+          var all = function (s) { return Array.prototype.slice.call(root.querySelectorAll(s)); };
+          if (String(v.backdrop) === "off") q(".ma-bg").style.display = "none";
+          var list = String(v.srcs || "").split("|").map(function (s) { return s.trim(); }).filter(Boolean);
+          if (!list.length) list = ["motion-cards/lib/samples/p1.jpg"];
+          var titleEl = q(".ma-title");
+          titleEl.textContent = String(v.title || "");
+          if (!v.title) q(".ma-mid").style.display = "none";
+          var wall = q(".ma-wall"), shade = q(".ma-shade"), U = 290, V = 240, G = 12;
+          var tiles = CFG.slots.map(function (s, i) {
+            var d = document.createElement("div");
+            d.className = "ma-tile";
+            var w = s[2] * U + (s[2] - 1) * G, h = s[3] * V + (s[3] - 1) * G, l = s[0] * (U + G), t = s[1] * (V + G);
+            d.style.left = l + "px"; d.style.top = t + "px"; d.style.width = w + "px"; d.style.height = h + "px";
+            var im = document.createElement("img"); im.className = "ma-img"; im.alt = ""; im.setAttribute("src", list[i % list.length]);
+            d.appendChild(im); wall.insertBefore(d, shade);
+            // direction from the centre of the wall through this slot; tiles near the middle get a direction from their index
+            var dx = l + w / 2 - 900, dy = t + h / 2 - 498, len = Math.sqrt(dx * dx + dy * dy);
+            if (len < 200) { dx = Math.cos(i * 2.4); dy = Math.sin(i * 2.4); len = 1; }
+            return { el: d, x: dx / len * CFG.far, y: dy / len * CFG.far, rot: 26 * Math.sin(i * 2.1 + 1) };
+          });
+          var lockAt = CFG.at + (tiles.length - 1) * CFG.step + CFG.fly - 0.12;
+
+          var tl = gsap.timeline({ paused: true });
+          tl.fromTo(wall, { scale: CFG.loose }, { scale: 1, duration: CFG.lockDur, ease: "power3.in" }, lockAt - CFG.lockDur);
+          tiles.forEach(function (t, i) {
+            tl.fromTo(t.el, { x: t.x, y: t.y, rotation: t.rot, scale: CFG.fromScale }, { x: 0, y: 0, rotation: 0, scale: 1, duration: CFG.fly, ease: "expo.out" }, CFG.at + i * CFG.step);
+          });
+          tl.fromTo(shade, { opacity: 0 }, { opacity: v.title ? CFG.shade : 0, duration: 0.3, ease: "power1.out" }, lockAt);
+          // the title hits one beat after the wall closes
+          var hit = lockAt + CFG.titleLag;
+          tl.fromTo(q(".ma-plate"), { opacity: 0, scale: CFG.titleFrom }, { opacity: 1, scale: 1, duration: CFG.titleDur, ease: "power4.out" }, hit);
+          tl.fromTo(q(".ma-bar"), { scaleX: 0, transformOrigin: "0% 50%" }, { scaleX: 1, duration: 0.35, ease: "power3.out" }, hit + 0.14);
+          window.__timelines["mosaic-assemble"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

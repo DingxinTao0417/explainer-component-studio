@@ -1,0 +1,79 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"src","type":"string","label":"画面地址（从项目根目录写起）","default":"motion-cards/lib/samples/ui.png"},
+    {"id":"fx","type":"number","label":"推向哪一点：横向 0–1","default":0.58,"min":0,"max":1,"step":0.01},
+    {"id":"fy","type":"number","label":"推向哪一点：纵向 0–1","default":0.4,"min":0,"max":1,"step":0.01},
+    {"id":"amount","type":"number","label":"整镜一共推近百分之几","default":5,"min":1,"max":12,"step":0.5},
+    {"id":"dur","type":"number","label":"这一镜多长（秒）","default":5,"min":1,"max":30,"step":0.5},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>slow-push · 慢推</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="slow-push-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #0d1016);
+          --k-panel: var(--mc-panel, #1a202b);
+          --k-ink: var(--mc-ink, #f3f5f8);
+          --k-muted: var(--mc-muted, #8b93a3);
+          --k-accent: var(--mc-accent, #ffcf33);
+          --k-accent-2: var(--mc-accent-2, #4f8cff);
+          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .sp { position: absolute; inset: 0; overflow: hidden; }
+        .sp-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .sp-shot { position: absolute; left: 0; top: 0; display: block; width: 1920px; height: 1080px; object-fit: cover; will-change: transform; }
+      </style>
+
+      <div id="root" data-composition-id="slow-push" data-width="1920" data-height="1080">
+        <div class="sp" data-layout-allow-overflow>
+          <div class="sp-bg"></div>
+          <img class="sp-shot" src="motion-cards/lib/samples/ui.png" data-var-src="src" alt="" />
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { ease: "none" };
+          var v = { fx: 0.58, fy: 0.4, amount: 5, dur: 5, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+          var root = document.querySelector(".sp");
+          var q = function (s) { return root.querySelector(s); };
+          var num = function (x, d) { x = parseFloat(x); return isFinite(x) ? x : d; };
+          var clamp = function (x, a, b) { return Math.max(a, Math.min(b, x)); };
+          if (v.src) q(".sp-shot").setAttribute("src", String(v.src));
+          if (String(v.backdrop) === "off") q(".sp-bg").style.display = "none";
+          var fx = clamp(num(v.fx, 0.5), 0, 1), fy = clamp(num(v.fy, 0.5), 0, 1);
+          var grow = clamp(num(v.amount, 5), 0, 20) / 100, dur = Math.max(0.5, num(v.dur, 5));
+          var shot = q(".sp-shot");
+
+          var tl = gsap.timeline({ paused: true });
+          // the layer covers the frame exactly at scale 1 and only ever grows around a point inside it, so no edge can show
+          tl.set(shot, { transformOrigin: fx * 100 + "% " + fy * 100 + "%" }, 0);
+          // one linear move from the first frame to the last: no ease-in, no ease-out, no hold
+          tl.fromTo(shot, { scale: 1 }, { scale: 1 + grow, duration: dur, ease: CFG.ease, force3D: true }, 0);
+          window.__timelines["slow-push"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

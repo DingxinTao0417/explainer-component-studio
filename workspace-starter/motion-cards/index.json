@@ -1,0 +1,5579 @@
+{
+ "count": 108,
+ "groups": [
+  {
+   "name": "字与强调",
+   "count": 13
+  },
+  {
+   "name": "标题与章节",
+   "count": 10
+  },
+  {
+   "name": "数据与图表",
+   "count": 10
+  },
+  {
+   "name": "证据与界面",
+   "count": 12
+  },
+  {
+   "name": "图片与多素材",
+   "count": 10
+  },
+  {
+   "name": "镜头运动",
+   "count": 8
+  },
+  {
+   "name": "转场",
+   "count": 10
+  },
+  {
+   "name": "标注与手绘",
+   "count": 9
+  },
+  {
+   "name": "人物与口播",
+   "count": 8
+  },
+  {
+   "name": "结构与流程",
+   "count": 10
+  },
+  {
+   "name": "幕底与氛围",
+   "count": 8
+  }
+ ],
+ "cards": [
+  {
+   "id": "arrow-point",
+   "name": "箭头指",
+   "group": "标注与手绘",
+   "one_line": "一条带弧度的手绘箭头从空白处甩向目标，箭杆画完后箭头的两笔分两下点上，最后整支箭朝目标戳一下再弹回",
+   "use_when": "旁白说“看这里”“就是这个按钮”，目标周围有一块空白能让箭头起笔，而且想让观众的视线顺着线走过去",
+   "energy": "中",
+   "needs": [
+    "界面"
+   ],
+   "overlay": true,
+   "slot": 3,
+   "hero": 1.6,
+   "sfx": "draw=draw, jab=pop",
+   "pairs_with": [
+    "circle-scribble",
+    "margin-note"
+   ],
+   "vars": [
+    {
+     "id": "x",
+     "type": "number",
+     "label": "目标左上角 x（1920×1080 坐标）",
+     "default": 300
+    },
+    {
+     "id": "y",
+     "type": "number",
+     "label": "目标左上角 y",
+     "default": 576
+    },
+    {
+     "id": "w",
+     "type": "number",
+     "label": "目标宽",
+     "default": 416
+    },
+    {
+     "id": "h",
+     "type": "number",
+     "label": "目标高",
+     "default": 88
+    },
+    {
+     "id": "side",
+     "type": "enum",
+     "label": "箭头从目标的哪个方向来",
+     "default": "rb"
+    },
+    {
+     "id": "reach",
+     "type": "number",
+     "label": "箭头长短（像素）",
+     "default": 420
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "aurora-band",
+   "name": "极光带",
+   "group": "幕底与氛围",
+   "one_line": "三条斜着铺满画面的宽色带整镜沿各自的方向缓慢错位滑动，同时一宽一窄地呼吸",
+   "use_when": "开场、转折、金句这类需要一点情绪和方向感的文字镜，纯色底太平，又不想用具体的图",
+   "energy": "低",
+   "needs": [
+    "无"
+   ],
+   "overlay": false,
+   "slot": 6,
+   "hero": 3,
+   "sfx": "none",
+   "pairs_with": [
+    "line-rise",
+    "quote-pull",
+    "outline-fill-title"
+   ],
+   "vars": [
+    {
+     "id": "title",
+     "type": "string",
+     "label": "示例标题（留空不显示）",
+     "default": "色带在后面慢慢错开"
+    },
+    {
+     "id": "speed",
+     "type": "number",
+     "label": "速度倍数",
+     "default": 1
+    },
+    {
+     "id": "strength",
+     "type": "number",
+     "label": "色光浓度（0–1）",
+     "default": 0.6
+    }
+   ]
+  },
+  {
+   "id": "bar-grow",
+   "name": "柱子长出",
+   "group": "数据与图表",
+   "one_line": "普通柱子从同一条基线从左到右依次长出、跳过要强调的那个位置，强调色的那根最后单独冲上来并过冲，每根到位时数值从柱顶弹出来",
+   "use_when": "旁白在比较三到五个同类的量，而且结论是“其中一个明显不一样”",
+   "energy": "中",
+   "needs": [
+    "数据"
+   ],
+   "overlay": true,
+   "slot": 3,
+   "hero": 2.6,
+   "sfx": "grow=rise, focus=pop",
+   "pairs_with": [
+    "stat-compare",
+    "number-roll"
+   ],
+   "vars": [
+    {
+     "id": "values",
+     "type": "string",
+     "label": "数值，用 | 分隔（3–5 个）",
+     "default": "18|27|64|35"
+    },
+    {
+     "id": "labels",
+     "type": "string",
+     "label": "柱子下的标签，用 | 分隔",
+     "default": "只给任务|加了背景|加了示例|加了格式"
+    },
+    {
+     "id": "unit",
+     "type": "string",
+     "label": "数值后的单位（可空）",
+     "default": "分"
+    },
+    {
+     "id": "focus",
+     "type": "number",
+     "label": "强调第几根（0 = 最高的那根）",
+     "default": 0
+    },
+    {
+     "id": "headline",
+     "type": "string",
+     "label": "结论（一句）",
+     "default": "给一个示例，评分直接翻倍（示例数据）"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "before-after-wipe",
+   "name": "前后对比拖条",
+   "group": "图片与多素材",
+   "one_line": "同一位置叠着两张图，一条带圆把手的竖线从左边拖到中间停住让人对比，再一口气拖到最右，把“之前”擦成“之后”",
+   "use_when": "同一个画面改动前后的两个版本（修图前后、改提示词前后、旧版新版界面），旁白在说“改完以后是这样”",
+   "energy": "低",
+   "needs": [
+    "多图"
+   ],
+   "overlay": true,
+   "slot": 4,
+   "hero": 1.9,
+   "sfx": "grab=tick, drag1=whoosh, drag2=whoosh",
+   "pairs_with": [
+    "media-pop",
+    "stat-compare"
+   ],
+   "vars": [
+    {
+     "id": "srcs",
+     "type": "string",
+     "label": "两张同构图的图：之前|之后。只给一张时，“之前”自动用它的灰化版",
+     "default": "motion-cards/lib/samples/p7.jpg|motion-cards/lib/samples/p3.jpg"
+    },
+    {
+     "id": "before",
+     "type": "string",
+     "label": "“之前”角标（可空）",
+     "default": "之前"
+    },
+    {
+     "id": "after",
+     "type": "string",
+     "label": "“之后”角标（可空）",
+     "default": "之后"
+    },
+    {
+     "id": "pauseAt",
+     "type": "number",
+     "label": "中途停下来对比的位置（%）",
+     "default": 52
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "big-stat-slab",
+   "name": "大数字压屏",
+   "group": "数据与图表",
+   "one_line": "一个占半屏高的数字带着小得多的单位，从比画面还大的尺寸加速砸到位，压扁一下再弹回，说明行晚 0.32 秒从下面跟上",
+   "use_when": "这一句的全部内容就是一个数字，而且它本身够惊人，不需要图表帮忙",
+   "energy": "高",
+   "needs": [
+    "数据"
+   ],
+   "overlay": true,
+   "slot": 3,
+   "hero": 2.6,
+   "sfx": "hit=impact",
+   "pairs_with": [
+    "number-roll",
+    "stat-compare"
+   ],
+   "vars": [
+    {
+     "id": "value",
+     "type": "string",
+     "label": "大数字",
+     "default": "73"
+    },
+    {
+     "id": "unit",
+     "type": "string",
+     "label": "单位",
+     "default": "%"
+    },
+    {
+     "id": "caption",
+     "type": "string",
+     "label": "数字下面的一行说明",
+     "default": "的返工，来自第一句话没说清"
+    },
+    {
+     "id": "note",
+     "type": "string",
+     "label": "来源小注（可空）",
+     "default": "示例数据"
+    },
+    {
+     "id": "hit",
+     "type": "number",
+     "label": "数字砸到位的时间（秒）",
+     "default": 0.5
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "blur-bridge",
+   "name": "模糊过桥",
+   "group": "转场",
+   "one_line": "上一镜越来越虚并微微胀大，虚到认不出内容时在三帧里换成同样虚的下一镜，再收回来变实",
+   "use_when": "两段内容是递进或并列关系，语气平稳，不想打断旁白的气口（“另一方面”“再来看”）",
+   "energy": "低",
+   "needs": [
+    "多图"
+   ],
+   "overlay": false,
+   "slot": 2,
+   "hero": 1,
+   "sfx": "none",
+   "pairs_with": [
+    "rack-focus",
+    "slow-push"
+   ],
+   "vars": [
+    {
+     "id": "from",
+     "type": "string",
+     "label": "上一镜的画面（从项目根目录写起）",
+     "default": "motion-cards/lib/samples/p1.jpg"
+    },
+    {
+     "id": "to",
+     "type": "string",
+     "label": "下一镜的画面（从项目根目录写起）",
+     "default": "motion-cards/lib/samples/p2.jpg"
+    },
+    {
+     "id": "soft",
+     "type": "number",
+     "label": "最虚时的模糊（px）",
+     "default": 30
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "blur-resolve",
+   "name": "虚焦变实",
+   "group": "字与强调",
+   "one_line": "一整句话先以一片虚焦的光斑出现，然后一段一段地对上焦：每段先变清、稍微过头又糊一点、再锁实",
+   "use_when": "内容本身在讲“从模糊到清楚”（想法成形、问题被看清、答案浮现），或者需要一个安静、带镜头感的句子入场",
+   "energy": "低",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 3,
+   "hero": 2.7,
+   "sfx": "focus=rise",
+   "pairs_with": [
+    "tracking-settle",
+    "underline-draw"
+   ],
+   "vars": [
+    {
+     "id": "text",
+     "type": "string",
+     "label": "一句话，按对焦顺序用 | 分段",
+     "default": "把模糊的想法|变成|清楚的步骤"
+    },
+    {
+     "id": "step",
+     "type": "number",
+     "label": "相邻两段的间隔（秒）",
+     "default": 0.3
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "bokeh-drift",
+   "name": "光斑漂浮",
+   "group": "幕底与氛围",
+   "one_line": "十五个大小不一的虚化光斑整镜缓慢上浮并轻微左右摆，大的近、升得多摆得宽，小的远、几乎不动",
+   "use_when": "语气放松、偏感性的段落：开场寒暄、收尾致谢、讲一个小故事，需要一点温度和景深但没有具体画面",
+   "energy": "低",
+   "needs": [
+    "无"
+   ],
+   "overlay": false,
+   "slot": 6,
+   "hero": 3,
+   "sfx": "none",
+   "pairs_with": [
+    "line-rise",
+    "quote-pull",
+    "subscribe-cta"
+   ],
+   "vars": [
+    {
+     "id": "title",
+     "type": "string",
+     "label": "示例标题（留空不显示）",
+     "default": "光斑往上漂，标题不动"
+    },
+    {
+     "id": "speed",
+     "type": "number",
+     "label": "速度倍数",
+     "default": 1
+    },
+    {
+     "id": "strength",
+     "type": "number",
+     "label": "色光浓度（0–1）",
+     "default": 0.7
+    }
+   ]
+  },
+  {
+   "id": "bracket-frame",
+   "name": "角标取景框",
+   "group": "标注与手绘",
+   "one_line": "四个直角先松松地出现在目标外一圈，然后同时向内收紧、略微收过头再回到位，最后闪两下表示对上了",
+   "use_when": "要把观众的注意力框在画面里的一块区域上（一行、一张卡片、一个人脸），语气是“锁定”“就看这一块”，而不是手写批注",
+   "energy": "中",
+   "needs": [
+    "界面"
+   ],
+   "overlay": true,
+   "slot": 3,
+   "hero": 2,
+   "sfx": "close=whoosh, lock=tick",
+   "pairs_with": [
+    "label-callout",
+    "crash-zoom"
+   ],
+   "vars": [
+    {
+     "id": "x",
+     "type": "number",
+     "label": "目标左上角 x（1920×1080 坐标）",
+     "default": 140
+    },
+    {
+     "id": "y",
+     "type": "number",
+     "label": "目标左上角 y",
+     "default": 572
+    },
+    {
+     "id": "w",
+     "type": "number",
+     "label": "目标宽",
+     "default": 580
+    },
+    {
+     "id": "h",
+     "type": "number",
+     "label": "目标高",
+     "default": 158
+    },
+    {
+     "id": "pad",
+     "type": "number",
+     "label": "扣住后离目标的余量（像素）",
+     "default": 16
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "branch-tree",
+   "name": "分叉树",
+   "group": "结构与流程",
+   "one_line": "顶上一个问题，向下一条条画出枝线，每条枝线画到底时它的选项才出现；最后其中一个选项被填亮放大，其余变暗",
+   "use_when": "旁白在说“遇到这种情况，有几条路可走……我们选这一条”，选项二到五个，各是一个短语",
+   "energy": "中",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 4.8,
+   "hero": 4.4,
+   "sfx": "branch=draw, option=pop, pick=chime",
+   "pairs_with": [
+    "flow-nodes",
+    "spotlight-dim"
+   ],
+   "vars": [
+    {
+     "id": "question",
+     "type": "string",
+     "label": "顶上的问题",
+     "default": "结果不理想？"
+    },
+    {
+     "id": "items",
+     "type": "string",
+     "label": "选项（用 | 分隔，2–5 个）",
+     "default": "换个问法|补充背景|从头重来"
+    },
+    {
+     "id": "pick",
+     "type": "number",
+     "label": "被选中的是第几个（0 = 都不选）",
+     "default": 2
+    },
+    {
+     "id": "cues",
+     "type": "string",
+     "label": "每个选项出现的秒数，最后可多写一个给“选中”（逗号分隔）",
+     "default": "0.9,1.7,2.5,3.5"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "browser-rise",
+   "name": "浏览器窗升起",
+   "group": "证据与界面",
+   "one_line": "一个只有三个圆点和地址栏的浏览器窗从画面下方向后仰着升上来，边升边立直；快停稳时地址栏开始逐字打出网址，打完后页面内容才淡入",
+   "use_when": "要引出一个网站、一篇在线文档或一个网页工具，需要一个“我们现在打开它”的开场",
+   "energy": "中",
+   "needs": [
+    "网页"
+   ],
+   "overlay": true,
+   "slot": 4,
+   "hero": 3.4,
+   "sfx": "rise=rise, typing=type",
+   "pairs_with": [
+    "page-scroll-park",
+    "cursor-click",
+    "screen-push-focus"
+   ],
+   "vars": [
+    {
+     "id": "url",
+     "type": "string",
+     "label": "地址栏里的网址（不带协议头）",
+     "default": "docs.example.com/guide/start"
+    },
+    {
+     "id": "src",
+     "type": "string",
+     "label": "网页截图地址（从项目根目录写起，取顶部）",
+     "default": "motion-cards/lib/samples/page.png"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "canvas-tour",
+   "name": "大画布巡游",
+   "group": "镜头运动",
+   "one_line": "三块内容摆在一张大画布上，镜头在每块上停 0.9 秒、用 1 秒飞到下一块，飞的途中略微拉远，全程一个镜头不切",
+   "use_when": "旁白按顺序讲三四个并列或先后的东西（步骤、模块、案例），而且它们之间的位置关系本身就是信息",
+   "energy": "中",
+   "needs": [
+    "多图"
+   ],
+   "overlay": false,
+   "slot": 5.5,
+   "hero": 2.4,
+   "sfx": "move1=whoosh, move2=whoosh",
+   "pairs_with": [
+    "pull-reveal",
+    "crash-zoom",
+    "progress-rail"
+   ],
+   "vars": [
+    {
+     "id": "s1",
+     "type": "string",
+     "label": "第一块的图片地址",
+     "default": "motion-cards/lib/samples/p1.jpg"
+    },
+    {
+     "id": "t1",
+     "type": "string",
+     "label": "第一块的标题",
+     "default": "第一步 · 收集素材"
+    },
+    {
+     "id": "s2",
+     "type": "string",
+     "label": "第二块的图片地址",
+     "default": "motion-cards/lib/samples/ui.png"
+    },
+    {
+     "id": "t2",
+     "type": "string",
+     "label": "第二块的标题",
+     "default": "第二步 · 排进任务表"
+    },
+    {
+     "id": "s3",
+     "type": "string",
+     "label": "第三块的图片地址",
+     "default": "motion-cards/lib/samples/p3.jpg"
+    },
+    {
+     "id": "t3",
+     "type": "string",
+     "label": "第三块的标题",
+     "default": "第三步 · 导出检查"
+    },
+    {
+     "id": "hold",
+     "type": "number",
+     "label": "每一块停多久（秒）",
+     "default": 0.9
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "card-assemble",
+   "name": "信息卡拼装",
+   "group": "结构与流程",
+   "one_line": "一张信息卡的边框先一笔画出来，里面是灰色的占位条；然后标题、图标、几行要点、底部标签依次落进各自的位置",
+   "use_when": "旁白要介绍一个概念或一个工具的“身份卡”：先报名字，再说两到五个要点，最后给它归个类",
+   "energy": "中",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 5,
+   "hero": 4.6,
+   "sfx": "frame=draw, item=tick",
+   "pairs_with": [
+    "label-callout",
+    "checklist-tick"
+   ],
+   "vars": [
+    {
+     "id": "title",
+     "type": "string",
+     "label": "卡片标题",
+     "default": "写好提示词"
+    },
+    {
+     "id": "items",
+     "type": "string",
+     "label": "要点（用 | 分隔，2–5 条）",
+     "default": "先说清楚目标|再给一个示例|最后限定格式"
+    },
+    {
+     "id": "tag",
+     "type": "string",
+     "label": "底部标签",
+     "default": "三步法"
+    },
+    {
+     "id": "cues",
+     "type": "string",
+     "label": "每条要点落位的秒数（逗号分隔，第一条不早于 1.4 秒）",
+     "default": "1.6,2.4,3.2"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "chapter-numeral",
+   "name": "巨大序号章节",
+   "group": "标题与章节",
+   "one_line": "背景里一个顶天立地的半透明序号全程匀速横移，前景的章节标题从遮罩里升起，短线和说明行跟着依次到位",
+   "use_when": "讲解分成几大段，每段开头需要一个安静但有体量的章节页；旁白在说“第二步”“接下来”",
+   "energy": "低",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 4,
+   "hero": 1.6,
+   "sfx": "title=rise, rule=tick",
+   "pairs_with": [
+    "progress-rail",
+    "title-to-corner"
+   ],
+   "vars": [
+    {
+     "id": "num",
+     "type": "string",
+     "label": "序号（1–2 位）",
+     "default": "02"
+    },
+    {
+     "id": "title",
+     "type": "string",
+     "label": "章节标题",
+     "default": "把任务拆成小步"
+    },
+    {
+     "id": "sub",
+     "type": "string",
+     "label": "标题下的一行（可空）",
+     "default": "一次只让它做一件事"
+    },
+    {
+     "id": "drift",
+     "type": "number",
+     "label": "序号在整段里滑过的距离（px，负数向左）",
+     "default": -170
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "char-cascade",
+   "name": "逐字落位",
+   "group": "字与强调",
+   "one_line": "一行大字逐字从上方歪着掉下来，从左到右一个接一个砸到基线上，各自回弹一下站直",
+   "use_when": "一句短口号、一个小标题要有“被一个字一个字摆出来”的仪式感，旁白语速偏慢或者干脆没有旁白",
+   "energy": "中",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 3,
+   "hero": 2.4,
+   "sfx": "land=tick",
+   "pairs_with": [
+    "underline-draw",
+    "highlighter-swipe"
+   ],
+   "vars": [
+    {
+     "id": "text",
+     "type": "string",
+     "label": "一行大字（建议 4–9 个字）",
+     "default": "先跑通，再优化"
+    },
+    {
+     "id": "key",
+     "type": "string",
+     "label": "上强调色的词（可空）",
+     "default": "跑通"
+    },
+    {
+     "id": "step",
+     "type": "number",
+     "label": "相邻两个字的间隔（秒）",
+     "default": 0.055
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "chat-bubbles",
+   "name": "对话气泡流",
+   "group": "证据与界面",
+   "one_line": "提问的气泡从底部顶上来并把旧气泡一起推高；回答先在原位冒出三个跳动的点，接近一秒后点换成整句话；再往前的对话自动变暗",
+   "use_when": "要展示一问一答的交互过程（和助手、客服、同事的对话），重点是“问了什么、答了什么”的先后",
+   "energy": "中",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 5.5,
+   "hero": 5.2,
+   "sfx": "bubble=pop, think=tick",
+   "pairs_with": [
+    "input-typing",
+    "lower-third",
+    "quote-pull"
+   ],
+   "vars": [
+    {
+     "id": "q1",
+     "type": "string",
+     "label": "第一问",
+     "default": "怎么让回答更稳定？"
+    },
+    {
+     "id": "a1",
+     "type": "string",
+     "label": "第一答",
+     "default": "先给一个例子，再说清输出格式。"
+    },
+    {
+     "id": "q2",
+     "type": "string",
+     "label": "第二问",
+     "default": "格式要写多细？"
+    },
+    {
+     "id": "a2",
+     "type": "string",
+     "label": "第二答",
+     "default": "列出字段名，每个字段配一行示例。"
+    },
+    {
+     "id": "tag",
+     "type": "string",
+     "label": "角标（编出来的对话要标明）",
+     "default": "示例对话"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "checklist-tick",
+   "name": "清单逐条勾",
+   "group": "结构与流程",
+   "one_line": "一列清单先灰着摆好，旁白确认到哪一条，那一条的方框填色、勾一笔画出、文字变白；最后一条勾完整列轻轻顿一下",
+   "use_when": "旁白在逐条确认（做到了哪几件事、检查项、回顾要点），每条是一个短句，条目本身观众已经见过或一眼能懂",
+   "energy": "中",
+   "needs": [
+    "文"
+   ],
+   "overlay": false,
+   "slot": 4.6,
+   "hero": 4.2,
+   "sfx": "tick=tick, done=chime",
+   "pairs_with": [
+    "step-stack",
+    "stamp-verdict"
+   ],
+   "vars": [
+    {
+     "id": "items",
+     "type": "string",
+     "label": "清单项（用 | 分隔，2–5 条）",
+     "default": "目标写清楚了|给了参考示例|限定了输出格式"
+    },
+    {
+     "id": "cues",
+     "type": "string",
+     "label": "每一条打勾的秒数（逗号分隔，不够就均匀排开）",
+     "default": "0.9,1.9,2.9"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "circle-scribble",
+   "name": "手绘圈",
+   "group": "标注与手绘",
+   "one_line": "旁白点到画面里某个东西的那一刻，一个不太圆的圈从左上起笔、一笔画完套住它，收笔越过起笔一小段",
+   "use_when": "录屏、截图或照片里有一个具体的按钮、数字、词要观众立刻看过去，而且只有这一个",
+   "energy": "中",
+   "needs": [
+    "界面"
+   ],
+   "overlay": true,
+   "slot": 3,
+   "hero": 0.9,
+   "sfx": "draw=draw",
+   "pairs_with": [
+    "arrow-point",
+    "margin-note"
+   ],
+   "vars": [
+    {
+     "id": "x",
+     "type": "number",
+     "label": "目标左上角 x（1920×1080 坐标）",
+     "default": 300
+    },
+    {
+     "id": "y",
+     "type": "number",
+     "label": "目标左上角 y",
+     "default": 576
+    },
+    {
+     "id": "w",
+     "type": "number",
+     "label": "目标宽",
+     "default": 416
+    },
+    {
+     "id": "h",
+     "type": "number",
+     "label": "目标高",
+     "default": 150
+    },
+    {
+     "id": "pad",
+     "type": "number",
+     "label": "圈离目标的余量（像素）",
+     "default": 20
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "code-walk",
+   "name": "代码逐行讲",
+   "group": "证据与界面",
+   "one_line": "整段代码先退到三成亮度，一条带强调色边的高亮带落在第一段上；每讲到下一段，高亮带整条滑下去并变成新的高度，被罩住的几行变亮并放大 5%",
+   "use_when": "旁白按顺序讲一段代码或配置的两三个部分，每一段说一两句",
+   "energy": "低",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 5,
+   "hero": 3.9,
+   "sfx": "step=tick",
+   "pairs_with": [
+    "terminal-log",
+    "typewriter-line",
+    "lower-third"
+   ],
+   "vars": [
+    {
+     "id": "code",
+     "type": "string",
+     "label": "代码（用 \\n 换行，最多 9 行）",
+     "default": "// 示例：把长文档切成小段\nfunction splitDoc(text, size) {\n  const parts = [];\n  for (let i = 0; i < text.length; i += size) {\n    parts.push(text.slice(i, i + size));\n  }\n  return parts;\n}\nconst chunks = splitDoc(doc, 800);"
+    },
+    {
+     "id": "steps",
+     "type": "string",
+     "label": "依次讲哪几行（起-止，逗号分开）",
+     "default": "2-3,4-6,9"
+    },
+    {
+     "id": "hold",
+     "type": "number",
+     "label": "每段停多久（秒）",
+     "default": 1.3
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "color-slam",
+   "name": "色块砸切",
+   "group": "转场",
+   "one_line": "一整块强调色从一侧加速盖满画面，停一帧，再朝同一个方向冲出去，后面拖着一条第二色的尾巴",
+   "use_when": "话题硬转（换章节、换案例、“说完优点说缺点”），旁白在这里有一个明显的停顿或重音",
+   "energy": "高",
+   "needs": [
+    "无"
+   ],
+   "overlay": true,
+   "slot": 2,
+   "hero": 0.967,
+   "sfx": "slam=impact, leave=whoosh",
+   "pairs_with": [
+    "chapter-numeral",
+    "slab-title-slam"
+   ],
+   "vars": [
+    {
+     "id": "dir",
+     "type": "enum",
+     "label": "色块从哪一侧进",
+     "default": "left"
+    },
+    {
+     "id": "hold",
+     "type": "number",
+     "label": "停几帧（1–4）",
+     "default": 1
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "converge-arrows",
+   "name": "多源汇聚",
+   "group": "结构与流程",
+   "one_line": "几个来源标签从四周依次站出来，各画一条箭头指向中心，最后一条箭头到达的那一帧，中心的结论弹出",
+   "use_when": "旁白在说“把这几样东西合起来，得到一个结论”，来源二到五个，结论是一个短语",
+   "energy": "中",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 4.4,
+   "hero": 4,
+   "sfx": "source=pop, hit=impact",
+   "pairs_with": [
+    "formula-assemble",
+    "word-punch"
+   ],
+   "vars": [
+    {
+     "id": "items",
+     "type": "string",
+     "label": "来源（用 | 分隔，2–5 个）",
+     "default": "用户反馈|销售数据|竞品动态"
+    },
+    {
+     "id": "result",
+     "type": "string",
+     "label": "中心的结论",
+     "default": "下一步做什么"
+    },
+    {
+     "id": "cues",
+     "type": "string",
+     "label": "每个来源出现的秒数，最后可多写一个给结论（逗号分隔）",
+     "default": "0.4,1.4,2.4"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "count-badge",
+   "name": "计数徽章标题",
+   "group": "标题与章节",
+   "one_line": "写着“第 N 个”的圆徽章先在画面正中弹出，里面的数字滚两格落到 N，标题随后从徽章背后向右滑出，把徽章顶到左边",
+   "use_when": "清单式内容（几个方法、几个错误、几个步骤）里每一条的开头，旁白在说“第三个”",
+   "energy": "高",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 3,
+   "hero": 0.85,
+   "sfx": "pop=pop, roll=tick, push=whoosh",
+   "pairs_with": [
+    "progress-rail",
+    "word-punch"
+   ],
+   "vars": [
+    {
+     "id": "n",
+     "type": "number",
+     "label": "第几个（1–9 最好）",
+     "default": 3
+    },
+    {
+     "id": "unit",
+     "type": "string",
+     "label": "量词",
+     "default": "个"
+    },
+    {
+     "id": "title",
+     "type": "string",
+     "label": "标题（建议 4–7 个字）",
+     "default": "检查输出格式"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "crash-zoom",
+   "name": "急推",
+   "group": "镜头运动",
+   "one_line": "画面先静止，到点后镜头在 0.2 秒内加速冲到目标上放大 2.4 倍，冲过头 7% 再收回来，最快的那一两帧带径向拖影",
+   "use_when": "旁白说“就是这里”“问题出在这一行”，要把观众的眼睛一下子按到画面里的一个点上",
+   "energy": "高",
+   "needs": [
+    "界面",
+    "图"
+   ],
+   "overlay": false,
+   "slot": 3,
+   "hero": 2.4,
+   "sfx": "hit=whoosh, land=impact",
+   "pairs_with": [
+    "pull-reveal",
+    "slow-push",
+    "highlighter-swipe"
+   ],
+   "vars": [
+    {
+     "id": "src",
+     "type": "string",
+     "label": "画面地址（从项目根目录写起）",
+     "default": "motion-cards/lib/samples/ui.png"
+    },
+    {
+     "id": "fx",
+     "type": "number",
+     "label": "推到哪一点：横向 0–1",
+     "default": 0.36
+    },
+    {
+     "id": "fy",
+     "type": "number",
+     "label": "推到哪一点：纵向 0–1",
+     "default": 0.54
+    },
+    {
+     "id": "zoom",
+     "type": "number",
+     "label": "推到几倍",
+     "default": 2.4
+    },
+    {
+     "id": "hit",
+     "type": "number",
+     "label": "开始推的时间（秒）",
+     "default": 0.8
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "cursor-click",
+   "name": "光标点击",
+   "group": "证据与界面",
+   "one_line": "一个放大的箭头光标沿弧线滑到按钮上，停一拍后按下：按钮面下沉、发亮，按到底的那一帧从点击处扩散两圈波纹，再弹回",
+   "use_when": "旁白说“点这里”“按下导出”，要让观众看清点的是哪个按钮、是哪一刻点的",
+   "energy": "中",
+   "needs": [
+    "界面"
+   ],
+   "overlay": true,
+   "slot": 3,
+   "hero": 1.45,
+   "sfx": "click=pop",
+   "pairs_with": [
+    "spotlight-dim",
+    "screen-push-focus",
+    "input-typing"
+   ],
+   "vars": [
+    {
+     "id": "label",
+     "type": "string",
+     "label": "按钮上的字",
+     "default": "开始导出"
+    },
+    {
+     "id": "x",
+     "type": "number",
+     "label": "点击位置 x（画面像素）",
+     "default": 1185
+    },
+    {
+     "id": "y",
+     "type": "number",
+     "label": "点击位置 y（画面像素）",
+     "default": 803
+    },
+    {
+     "id": "click",
+     "type": "number",
+     "label": "按下的时间（秒）",
+     "default": 1.2
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "doc-stack-pick",
+   "name": "文档堆里抽一张",
+   "group": "证据与界面",
+   "one_line": "四页错开叠着的文档里，压在中间的一页先横着抽出来（上面的几页被带动一下），离开纸堆后才翻到最上层，放大转正到画面中央，其余几页退后变暗",
+   "use_when": "旁白说“在这么多材料里，关键是这一份”，要表现从一堆里挑出一个",
+   "energy": "中",
+   "needs": [
+    "多图"
+   ],
+   "overlay": true,
+   "slot": 3.5,
+   "hero": 3,
+   "sfx": "draw=whoosh, land=pop",
+   "pairs_with": [
+    "media-pop",
+    "quote-pull",
+    "screen-push-focus"
+   ],
+   "vars": [
+    {
+     "id": "titles",
+     "type": "string",
+     "label": "四页的标题（用 | 分开，从底到顶）",
+     "default": "访谈记录|提纲初稿|数据附表|终版脚本"
+    },
+    {
+     "id": "pick",
+     "type": "number",
+     "label": "抽第几页（1 是最底下那页）",
+     "default": 2
+    },
+    {
+     "id": "note",
+     "type": "string",
+     "label": "每页角上的小字",
+     "default": "示例文档"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "dot-field",
+   "name": "点阵波",
+   "group": "幕底与氛围",
+   "one_line": "铺满全屏的整齐点阵不动，一道斜的波纹整镜缓慢横穿过去，波到之处的点依次变亮变大再恢复",
+   "use_when": "讲数据、网络、信号、模型这类“很多个小单元”的话题，标题或数字卡下面需要一点有秩序的动静",
+   "energy": "低",
+   "needs": [
+    "无"
+   ],
+   "overlay": false,
+   "slot": 6,
+   "hero": 3,
+   "sfx": "none",
+   "pairs_with": [
+    "number-roll",
+    "big-stat-slab",
+    "kicker-headline"
+   ],
+   "vars": [
+    {
+     "id": "title",
+     "type": "string",
+     "label": "示例标题（留空不显示）",
+     "default": "点阵在标题后面慢慢起伏"
+    },
+    {
+     "id": "speed",
+     "type": "number",
+     "label": "速度倍数",
+     "default": 1
+    },
+    {
+     "id": "strength",
+     "type": "number",
+     "label": "波纹亮度（0–1）",
+     "default": 0.7
+    }
+   ]
+  },
+  {
+   "id": "filmstrip-pass",
+   "name": "胶片带掠过",
+   "group": "图片与多素材",
+   "one_line": "一条带齿孔的图片带匀速从右往左滑，每一格经过中间的取景框时放大到 1.42 倍并提亮、把邻格挤开，过了又缩回变暗，最后滑行着停在指定的一格上",
+   "use_when": "旁白在快速带过一串东西（“试了这个、这个、还有这个”），每个只需要看一眼，最后停在要细讲的那一个上",
+   "energy": "中",
+   "needs": [
+    "多图"
+   ],
+   "overlay": true,
+   "slot": 4.5,
+   "hero": 4.3,
+   "sfx": "pass=whoosh, cell=tick, stop=shutter",
+   "pairs_with": [
+    "grid-to-hero",
+    "media-pop",
+    "lower-third"
+   ],
+   "vars": [
+    {
+     "id": "srcs",
+     "type": "string",
+     "label": "胶片上每一格的图，用 | 分隔，按经过的先后排",
+     "default": "motion-cards/lib/samples/p1.jpg|motion-cards/lib/samples/p2.jpg|motion-cards/lib/samples/p3.jpg|motion-cards/lib/samples/p4.jpg|motion-cards/lib/samples/p5.jpg|motion-cards/lib/samples/p6.jpg|motion-cards/lib/samples/p7.jpg|motion-cards/lib/samples/p8.jpg"
+    },
+    {
+     "id": "stop",
+     "type": "number",
+     "label": "最后停在第几格（从 1 数）",
+     "default": 5
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "flash-cut",
+   "name": "闪白切",
+   "group": "转场",
+   "one_line": "上一镜在两帧里冲到过曝，全白停两帧，然后白很快褪掉、拖一小段余光，底下已经是下一镜",
+   "use_when": "旁白出现“结果是——”“按下去之后”这类揭晓、拍照、瞬间发生的节点，换镜要干脆",
+   "energy": "高",
+   "needs": [
+    "无"
+   ],
+   "overlay": true,
+   "slot": 2,
+   "hero": 1.134,
+   "sfx": "flash=shutter",
+   "pairs_with": [
+    "stamp-verdict",
+    "media-pop"
+   ],
+   "vars": [
+    {
+     "id": "hold",
+     "type": "number",
+     "label": "全白停几帧（1–3）",
+     "default": 2
+    },
+    {
+     "id": "tail",
+     "type": "number",
+     "label": "衰减时长（秒）",
+     "default": 0.3
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "flow-nodes",
+   "name": "节点流程线",
+   "group": "结构与流程",
+   "one_line": "几个节点横向排开，一条线从左往右一段段画过去，画到哪个节点，那个节点就放大点亮",
+   "use_when": "旁白在讲一条有方向的流程（输入、处理、输出），环节有三到五个，每个环节的名字不超过五六个字",
+   "energy": "中",
+   "needs": [
+    "文"
+   ],
+   "overlay": false,
+   "slot": 5,
+   "hero": 4.6,
+   "sfx": "node=pop",
+   "pairs_with": [
+    "timeline-vertical",
+    "roadmap-light"
+   ],
+   "vars": [
+    {
+     "id": "items",
+     "type": "string",
+     "label": "节点文字（用 | 分隔，2–5 个）",
+     "default": "输入问题|检索资料|生成回答|人工复核"
+    },
+    {
+     "id": "cues",
+     "type": "string",
+     "label": "每个节点点亮的秒数（逗号分隔，不够就均匀排开）",
+     "default": "0.5,1.5,2.5,3.5"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "follow-card",
+   "name": "关注卡",
+   "group": "人物与口播",
+   "one_line": "一张主页卡片从下方升起坐稳，头像、名字、简介、按钮从左到右先后落位，随后按钮被按下去、在最低点换成“已关注”再弹回来",
+   "use_when": "片中或片尾提醒观众关注、订阅，想演示“点一下”这个动作，而不是只放一句话",
+   "energy": "中",
+   "needs": [
+    "人",
+    "文"
+   ],
+   "overlay": true,
+   "slot": 3.5,
+   "hero": 3,
+   "sfx": "rise=whoosh, press=pop, done=chime",
+   "pairs_with": [
+    "subscribe-cta",
+    "host-to-chip",
+    "nameplate-in"
+   ],
+   "vars": [
+    {
+     "id": "host",
+     "type": "string",
+     "label": "头像图地址（透明底人物或方形头像）",
+     "default": "motion-cards/lib/samples/host.png"
+    },
+    {
+     "id": "who",
+     "type": "string",
+     "label": "名字（8 字以内）",
+     "default": "你的名字"
+    },
+    {
+     "id": "bio",
+     "type": "string",
+     "label": "一行简介（14 字以内，可空）",
+     "default": "每周一条，把一件事讲明白"
+    },
+    {
+     "id": "btn",
+     "type": "string",
+     "label": "按钮文字：按之前",
+     "default": "关注"
+    },
+    {
+     "id": "btnDone",
+     "type": "string",
+     "label": "按钮文字：按之后",
+     "default": "已关注"
+    },
+    {
+     "id": "cardY",
+     "type": "number",
+     "label": "卡片顶边位置（px）",
+     "default": 320
+    },
+    {
+     "id": "pressAt",
+     "type": "number",
+     "label": "按钮被按下的时间（秒）",
+     "default": 1.7
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "formula-assemble",
+   "name": "公式拼装",
+   "group": "结构与流程",
+   "one_line": "几个词块跟着旁白依次从上方落进一行，加号在下一个词块落下前先弹出，最后等号弹出，结果在第二行放大砸出来",
+   "use_when": "旁白用“甲加乙加丙，就等于丁”的句式总结方法，前面的词是条件，最后一个词是结论",
+   "energy": "中",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 4.6,
+   "hero": 4.2,
+   "sfx": "term=pop, result=impact",
+   "pairs_with": [
+    "converge-arrows",
+    "word-punch"
+   ],
+   "vars": [
+    {
+     "id": "items",
+     "type": "string",
+     "label": "等号左边的词块（用 | 分隔，2–5 个）",
+     "default": "清晰目标|具体示例|明确格式"
+    },
+    {
+     "id": "result",
+     "type": "string",
+     "label": "等号右边的结果",
+     "default": "稳定输出"
+    },
+    {
+     "id": "cues",
+     "type": "string",
+     "label": "每个词块落位的秒数，最后可多写一个给结果（逗号分隔）",
+     "default": "0.4,1.3,2.2,3.2"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "grid-perspective",
+   "name": "透视网格",
+   "group": "幕底与氛围",
+   "one_line": "画面下方一张向远处消失的地面网格整镜匀速朝观众滚过来，地平线上压着一条淡淡的光",
+   "use_when": "讲“未来、系统、空间、路线”这类抽象话题的标题镜，需要一点纵深感，但上半屏要干净地留给字",
+   "energy": "低",
+   "needs": [
+    "无"
+   ],
+   "overlay": false,
+   "slot": 6,
+   "hero": 3,
+   "sfx": "none",
+   "pairs_with": [
+    "kicker-headline",
+    "chapter-numeral",
+    "slab-title-slam"
+   ],
+   "vars": [
+    {
+     "id": "title",
+     "type": "string",
+     "label": "示例标题（留空不显示）",
+     "default": "标题放在地平线上方"
+    },
+    {
+     "id": "speed",
+     "type": "number",
+     "label": "速度倍数",
+     "default": 1
+    },
+    {
+     "id": "strength",
+     "type": "number",
+     "label": "网格和地平线光的浓度（0–1）",
+     "default": 0.7
+    }
+   ]
+  },
+  {
+   "id": "grid-to-hero",
+   "name": "网格选一张放大",
+   "group": "图片与多素材",
+   "one_line": "六到九张图先排成网格，其中一张被黄框圈住并鼓一下，0.3 秒后它长到占满左边主区，其余缩成右侧一列小图并压暗",
+   "use_when": "旁白先铺开一批候选（“试了六种写法”），再说“其中这一个最好”，接下来要盯着这一张讲",
+   "energy": "中",
+   "needs": [
+    "多图"
+   ],
+   "overlay": true,
+   "slot": 3.5,
+   "hero": 3.2,
+   "sfx": "pick=tick, grow=whoosh",
+   "pairs_with": [
+    "stack-fan",
+    "media-pop",
+    "lower-third"
+   ],
+   "vars": [
+    {
+     "id": "srcs",
+     "type": "string",
+     "label": "六到九张图的地址，用 | 分隔（六张排两行，七到九张排三行）",
+     "default": "motion-cards/lib/samples/p1.jpg|motion-cards/lib/samples/p2.jpg|motion-cards/lib/samples/p3.jpg|motion-cards/lib/samples/p4.jpg|motion-cards/lib/samples/p5.jpg|motion-cards/lib/samples/p6.jpg"
+    },
+    {
+     "id": "pick",
+     "type": "number",
+     "label": "选中第几张（从 1 数）",
+     "default": 5
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "highlighter-swipe",
+   "name": "荧光笔扫过",
+   "group": "字与强调",
+   "one_line": "整句先到，旁白念到重点的那一刻，一条边缘不齐的荧光色带从左到右扫过那几个字，被扫到的字同时变成深色",
+   "use_when": "一句话里有一小段是要观众记住的原话（规则、定义、关键条件），语气是“划重点”而不是“砸重音”",
+   "energy": "中",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 3,
+   "hero": 2.6,
+   "sfx": "swipe=draw",
+   "pairs_with": [
+    "line-rise",
+    "char-cascade"
+   ],
+   "vars": [
+    {
+     "id": "text",
+     "type": "string",
+     "label": "整句",
+     "default": "每次只改一个变量"
+    },
+    {
+     "id": "key",
+     "type": "string",
+     "label": "被划的重点（整句的子串）",
+     "default": "只改一个"
+    },
+    {
+     "id": "hit",
+     "type": "number",
+     "label": "荧光笔落下的时间（秒）",
+     "default": 0.9
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "host-cutout-pop",
+   "name": "人物弹入",
+   "group": "人物与口播",
+   "one_line": "身后的强调色底形先张开，0.12 秒后抠像人物从画面底边被拉长着窜上来，冲过落点 46px 再坐回去，旁边的字等人站稳才出",
+   "use_when": "主持人或角色第一次登场，或者换了一个话题、要重新把注意力拉回到人身上",
+   "energy": "高",
+   "needs": [
+    "人",
+    "文"
+   ],
+   "overlay": true,
+   "slot": 3,
+   "hero": 2.5,
+   "sfx": "shape=whoosh, land=pop",
+   "pairs_with": [
+    "nameplate-in",
+    "reaction-bubble",
+    "host-side-board"
+   ],
+   "vars": [
+    {
+     "id": "host",
+     "type": "string",
+     "label": "抠像人物图地址（透明底，从项目根目录写起）",
+     "default": "motion-cards/lib/samples/host.png"
+    },
+    {
+     "id": "side",
+     "type": "enum",
+     "label": "人站在哪",
+     "default": "left"
+    },
+    {
+     "id": "shape",
+     "type": "enum",
+     "label": "身后的底形",
+     "default": "circle"
+    },
+    {
+     "id": "kicker",
+     "type": "string",
+     "label": "旁边的小标题（可空）",
+     "default": "这一期"
+    },
+    {
+     "id": "title",
+     "type": "string",
+     "label": "旁边的标题（可空，7 字以内）",
+     "default": "我来带你做"
+    },
+    {
+     "id": "note",
+     "type": "string",
+     "label": "旁边的说明（可空）",
+     "default": "从零开始，一步一步来"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "host-side-board",
+   "name": "人旁白板",
+   "group": "人物与口播",
+   "one_line": "居中的主持人先向一侧滑开并略微缩小，他刚离开的位置长出一块内容板，板上的条目一条条跟着出现",
+   "use_when": "主持人要一边讲一边列清单（准备什么、分几步、注意哪几点），条目是跟着旁白一条条念出来的",
+   "energy": "中",
+   "needs": [
+    "人",
+    "文"
+   ],
+   "overlay": true,
+   "slot": 4,
+   "hero": 3.4,
+   "sfx": "slide=whoosh, item=tick",
+   "pairs_with": [
+    "host-to-chip",
+    "split-host-content",
+    "nameplate-in"
+   ],
+   "vars": [
+    {
+     "id": "host",
+     "type": "string",
+     "label": "人物图地址（透明底，从项目根目录写起）",
+     "default": "motion-cards/lib/samples/host.png"
+    },
+    {
+     "id": "side",
+     "type": "enum",
+     "label": "人让到哪一侧",
+     "default": "left"
+    },
+    {
+     "id": "heading",
+     "type": "string",
+     "label": "板上的标题（可空）",
+     "default": "上手前先备好"
+    },
+    {
+     "id": "items",
+     "type": "string",
+     "label": "条目，用 | 分开（2–4 条）",
+     "default": "一段示例素材|一句明确的目标|十分钟不被打断"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "host-to-chip",
+   "name": "人缩成角标",
+   "group": "人物与口播",
+   "one_line": "满屏的主持人画面向一个角收拢成圆形头像，到位时弹一下坐稳，随后头像外圈按说话的节奏一圈圈往外荡，画面中间让给内容",
+   "use_when": "主持人开场说完一句，接下来要长时间讲图、讲字或讲录屏，但还想让观众知道“是这个人在讲”",
+   "energy": "中",
+   "needs": [
+    "人",
+    "文"
+   ],
+   "overlay": true,
+   "slot": 4,
+   "hero": 2,
+   "sfx": "shrink=whoosh, dock=pop",
+   "pairs_with": [
+    "pip-corner",
+    "host-side-board",
+    "nameplate-in"
+   ],
+   "vars": [
+    {
+     "id": "host",
+     "type": "string",
+     "label": "人物图地址（透明底，从项目根目录写起）",
+     "default": "motion-cards/lib/samples/host.png"
+    },
+    {
+     "id": "corner",
+     "type": "enum",
+     "label": "缩到哪个角",
+     "default": "br"
+    },
+    {
+     "id": "size",
+     "type": "number",
+     "label": "头像直径（px）",
+     "default": 260
+    },
+    {
+     "id": "kicker",
+     "type": "string",
+     "label": "让出来的内容：小标题（可空）",
+     "default": "先看结论"
+    },
+    {
+     "id": "title",
+     "type": "string",
+     "label": "让出来的内容：标题（可空）",
+     "default": "三步就能复现"
+    },
+    {
+     "id": "note",
+     "type": "string",
+     "label": "让出来的内容：说明（可空）",
+     "default": "人退到角上，继续讲"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "input-typing",
+   "name": "输入框打字",
+   "group": "证据与界面",
+   "one_line": "一个大输入框获得焦点，提示词按意群一段一段打出来，段内连贯、段间换一口气；打完停 0.3 秒，发送按钮才亮起并弹一下",
+   "use_when": "旁白在念一条提示词、搜索词或指令，要让观众逐段看清“到底输入了什么”",
+   "energy": "中",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 5,
+   "hero": 4.4,
+   "sfx": "typing=type, arm=chime",
+   "pairs_with": [
+    "chat-bubbles",
+    "cursor-click",
+    "typewriter-line"
+   ],
+   "vars": [
+    {
+     "id": "text",
+     "type": "string",
+     "label": "提示词（用 | 按意群分段，总长两行以内）",
+     "default": "帮我把这份会议记录|整理成三条要点，|每条不超过二十个字，|最后列出待办事项。"
+    },
+    {
+     "id": "hint",
+     "type": "string",
+     "label": "空输入框里的占位字",
+     "default": "在这里描述你想要的结果…"
+    },
+    {
+     "id": "cap",
+     "type": "string",
+     "label": "输入框上方的小字（可空）",
+     "default": "提示词 · 示例"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "iris-close",
+   "name": "圈入圈出",
+   "group": "转场",
+   "one_line": "画面四周的暗幕向指定的一点收成一个越来越小的圆直到全黑，停两帧，再从同一点张开露出下一镜",
+   "use_when": "一段内容讲完要收尾，或者要把注意力先收到画面里的一个点、再从那个点展开下一段",
+   "energy": "中",
+   "needs": [
+    "无"
+   ],
+   "overlay": true,
+   "slot": 2,
+   "hero": 0.934,
+   "sfx": "close=whoosh, open=rise",
+   "pairs_with": [
+    "spotlight-dim",
+    "chapter-numeral"
+   ],
+   "vars": [
+    {
+     "id": "ox",
+     "type": "number",
+     "label": "圆心横向 0–1",
+     "default": 0.5
+    },
+    {
+     "id": "oy",
+     "type": "number",
+     "label": "圆心纵向 0–1",
+     "default": 0.5
+    },
+    {
+     "id": "hold",
+     "type": "number",
+     "label": "全黑停几帧（1–6）",
+     "default": 2
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "kicker-headline",
+   "name": "小标带大标",
+   "group": "标题与章节",
+   "one_line": "一行引子小字先独自站在画面正中，随后上移缩小让出位置，大标题晚四分之一秒从它刚离开的地方长出来",
+   "use_when": "旁白是“铺垫 + 结论”两段式：先一句引子（提问、现象、误区），停一下，再说出真正的标题",
+   "energy": "中",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 3.5,
+   "hero": 3.2,
+   "sfx": "kicker=tick, headline=pop",
+   "pairs_with": [
+    "outline-fill-title",
+    "word-punch"
+   ],
+   "vars": [
+    {
+     "id": "kicker",
+     "type": "string",
+     "label": "引子小字",
+     "default": "很多人第一步就错了"
+    },
+    {
+     "id": "headline",
+     "type": "string",
+     "label": "大标题（建议 5–9 个字）",
+     "default": "先别急着写提示词"
+    },
+    {
+     "id": "give",
+     "type": "number",
+     "label": "小字让位的时间（秒）",
+     "default": 1.1
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "label-callout",
+   "name": "引线标签",
+   "group": "标注与手绘",
+   "one_line": "目标边上先钉下一个圆点，一条折线从圆点引到空白处，线一到头就从线尾推出一块写着名字的标签牌",
+   "use_when": "画面里的东西需要一个名字或一句解释（部件名、字段含义、状态），而且文字不能盖在它身上",
+   "energy": "低",
+   "needs": [
+    "界面",
+    "文"
+   ],
+   "overlay": true,
+   "slot": 3,
+   "hero": 2,
+   "sfx": "dot=pop, plate=whoosh",
+   "pairs_with": [
+    "bracket-frame",
+    "media-pop"
+   ],
+   "vars": [
+    {
+     "id": "x",
+     "type": "number",
+     "label": "目标左上角 x（1920×1080 坐标）",
+     "default": 300
+    },
+    {
+     "id": "y",
+     "type": "number",
+     "label": "目标左上角 y",
+     "default": 276
+    },
+    {
+     "id": "w",
+     "type": "number",
+     "label": "目标宽",
+     "default": 440
+    },
+    {
+     "id": "h",
+     "type": "number",
+     "label": "目标高",
+     "default": 88
+    },
+    {
+     "id": "label",
+     "type": "string",
+     "label": "标签文字",
+     "default": "第一项：已完成"
+    },
+    {
+     "id": "dx",
+     "type": "number",
+     "label": "折点相对圆点的横向偏移（负数向左）",
+     "default": 170
+    },
+    {
+     "id": "dy",
+     "type": "number",
+     "label": "折点相对圆点的纵向偏移（负数向上）",
+     "default": -170
+    },
+    {
+     "id": "run",
+     "type": "number",
+     "label": "折点之后水平段的长度",
+     "default": 70
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "line-carry",
+   "name": "一条线带走",
+   "group": "转场",
+   "one_line": "一条发亮的强调色竖线从画面一侧走到另一侧，线前面是被它微微拖着走的上一镜，线后面已经是下一镜",
+   "use_when": "前后对照、时间往前走一步、同一个界面的两种状态，想让观众同时看到两边各一半",
+   "energy": "中",
+   "needs": [
+    "多图"
+   ],
+   "overlay": false,
+   "slot": 2,
+   "hero": 1,
+   "sfx": "line=whoosh",
+   "pairs_with": [
+    "before-after-wipe",
+    "underline-draw"
+   ],
+   "vars": [
+    {
+     "id": "from",
+     "type": "string",
+     "label": "上一镜的画面（从项目根目录写起）",
+     "default": "motion-cards/lib/samples/p1.jpg"
+    },
+    {
+     "id": "to",
+     "type": "string",
+     "label": "下一镜的画面（从项目根目录写起）",
+     "default": "motion-cards/lib/samples/p2.jpg"
+    },
+    {
+     "id": "dir",
+     "type": "enum",
+     "label": "线往哪边走",
+     "default": "right"
+    },
+    {
+     "id": "thick",
+     "type": "number",
+     "label": "线宽（px）",
+     "default": 14
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "line-draw-chart",
+   "name": "折线画出",
+   "group": "数据与图表",
+   "one_line": "一条折线按时间从左画到右，线头上的圆点带着实时数值一起走，跑到关键拐点刹住停半秒、标注落下，再加速画完，终点数值放大留住",
+   "use_when": "旁白在讲一段随时间变化的过程，而且其中有一个“从这里开始不一样了”的时刻",
+   "energy": "中",
+   "needs": [
+    "数据"
+   ],
+   "overlay": true,
+   "slot": 4,
+   "hero": 3.6,
+   "sfx": "draw=draw, turn=tick, end=pop",
+   "pairs_with": [
+    "spark-metric",
+    "number-roll"
+   ],
+   "vars": [
+    {
+     "id": "values",
+     "type": "string",
+     "label": "数值，用 | 分隔（按时间顺序）",
+     "default": "12|15|14|22|21|38|64"
+    },
+    {
+     "id": "unit",
+     "type": "string",
+     "label": "数值后的单位（可空）",
+     "default": "%"
+    },
+    {
+     "id": "span",
+     "type": "string",
+     "label": "起点和终点的时间标签，用 | 分隔",
+     "default": "第 1 周|第 7 周"
+    },
+    {
+     "id": "turn",
+     "type": "number",
+     "label": "在第几个点停一下（0 = 不停）",
+     "default": 5
+    },
+    {
+     "id": "turnNote",
+     "type": "string",
+     "label": "停顿处的一句标注",
+     "default": "开始给示例"
+    },
+    {
+     "id": "headline",
+     "type": "string",
+     "label": "结论（一句）",
+     "default": "通过率从这一周开始抬头（示例数据）"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "line-rise",
+   "name": "逐行上浮",
+   "group": "字与强调",
+   "one_line": "两三行大字各自从一条看不见的遮罩底边升上来，后一行在前一行还没停稳时就出发",
+   "use_when": "旁白是一组并列或递进的短句（先……再……最后……），每行一口气能念完",
+   "energy": "中",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 3,
+   "hero": 2.6,
+   "sfx": "line=whoosh",
+   "pairs_with": [
+    "word-punch",
+    "underline-draw"
+   ],
+   "vars": [
+    {
+     "id": "lines",
+     "type": "string",
+     "label": "两到三行，用 | 分开",
+     "default": "先把问题说清楚|再给一个例子|最后才讲原理"
+    },
+    {
+     "id": "gap",
+     "type": "number",
+     "label": "行与行的间隔（秒）",
+     "default": 0.16
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "lower-third",
+   "name": "下三分之一名条",
+   "group": "标题与章节",
+   "one_line": "画面左下一根竖条先立起来，强调色块从它里面向右射出，名字和一行说明在色块上先后升起，停留后按原路倒着收回",
+   "use_when": "画面里第一次出现一个人、一个产品或一个地点，需要告诉观众“这是谁、是什么”，而画面本身要继续播",
+   "energy": "低",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 5,
+   "hero": 2.2,
+   "sfx": "in=whoosh, out=whoosh",
+   "pairs_with": [
+    "title-behind-subject",
+    "title-to-corner"
+   ],
+   "vars": [
+    {
+     "id": "name",
+     "type": "string",
+     "label": "名字或称呼",
+     "default": "本期嘉宾"
+    },
+    {
+     "id": "desc",
+     "type": "string",
+     "label": "一行说明",
+     "default": "交互设计师 · 做了八年工具类产品"
+    },
+    {
+     "id": "leave",
+     "type": "number",
+     "label": "开始收回的时间（秒）",
+     "default": 3.7
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "magnifier-lens",
+   "name": "放大镜",
+   "group": "证据与界面",
+   "one_line": "一个圆形放大镜出现在截图一角，沿弧线滑到目标上，镜内始终是镜下那一点的放大画面，到位时镜框变成强调色并轻轻一收",
+   "use_when": "要看的东西很小（一个状态、一个数字、一行小字），但又不想离开整张界面",
+   "energy": "中",
+   "needs": [
+    "界面"
+   ],
+   "overlay": false,
+   "slot": 4,
+   "hero": 3.2,
+   "sfx": "glide=whoosh, lock=pop",
+   "pairs_with": [
+    "screen-push-focus",
+    "spotlight-dim"
+   ],
+   "vars": [
+    {
+     "id": "src",
+     "type": "string",
+     "label": "截图地址（1920×1080，从项目根目录写起）",
+     "default": "motion-cards/lib/samples/ui.png"
+    },
+    {
+     "id": "x",
+     "type": "number",
+     "label": "要看的位置：中心 x（截图像素）",
+     "default": 545
+    },
+    {
+     "id": "y",
+     "type": "number",
+     "label": "要看的位置：中心 y（截图像素）",
+     "default": 736
+    },
+    {
+     "id": "mag",
+     "type": "number",
+     "label": "放大倍数",
+     "default": 2.1
+    },
+    {
+     "id": "size",
+     "type": "number",
+     "label": "镜片直径（像素）",
+     "default": 440
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "margin-note",
+   "name": "旁注手写",
+   "group": "标注与手绘",
+   "one_line": "目标旁边的空白处，一行微微上翘的手写体批注一个字一个字写出来，写完再甩一条下垂的小弧线连到目标",
+   "use_when": "想对画面里的某样东西说一句自己的话（提醒、吐槽、补充），语气是讲解者在页边随手写的，不是正式的标签",
+   "energy": "低",
+   "needs": [
+    "界面",
+    "文"
+   ],
+   "overlay": true,
+   "slot": 4,
+   "hero": 3,
+   "sfx": "write=draw, arc=draw",
+   "pairs_with": [
+    "circle-scribble",
+    "arrow-point"
+   ],
+   "vars": [
+    {
+     "id": "x",
+     "type": "number",
+     "label": "目标左上角 x（1920×1080 坐标）",
+     "default": 300
+    },
+    {
+     "id": "y",
+     "type": "number",
+     "label": "目标左上角 y",
+     "default": 576
+    },
+    {
+     "id": "w",
+     "type": "number",
+     "label": "目标宽",
+     "default": 416
+    },
+    {
+     "id": "h",
+     "type": "number",
+     "label": "目标高",
+     "default": 88
+    },
+    {
+     "id": "note",
+     "type": "string",
+     "label": "批注文字",
+     "default": "先写这个，别的不急"
+    },
+    {
+     "id": "place",
+     "type": "enum",
+     "label": "批注写在目标的哪一侧",
+     "default": "right"
+    },
+    {
+     "id": "away",
+     "type": "number",
+     "label": "批注离目标的横向距离（像素）",
+     "default": 220
+    },
+    {
+     "id": "lift",
+     "type": "number",
+     "label": "批注相对目标中线的纵向偏移（负数向上）",
+     "default": -16
+    },
+    {
+     "id": "slant",
+     "type": "number",
+     "label": "字的倾斜角度（度，负数是右边翘起）",
+     "default": -4
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "media-pop",
+   "name": "图片弹入",
+   "group": "图片与多素材",
+   "one_line": "一张带白边的图从略高处斜着落到桌面上，过冲一下再坐稳，落地那一帧闪一下白",
+   "use_when": "旁白点到一个具体的东西（一张截图、一件产品、一个人），要让它“被拿出来放在面前”",
+   "energy": "中",
+   "needs": [
+    "图"
+   ],
+   "overlay": true,
+   "slot": 3,
+   "hero": 1.2,
+   "sfx": "land=pop",
+   "pairs_with": [
+    "stack-fan",
+    "label-callout"
+   ],
+   "vars": [
+    {
+     "id": "src",
+     "type": "string",
+     "label": "图片地址（从项目根目录写起）",
+     "default": "motion-cards/lib/samples/p1.jpg"
+    },
+    {
+     "id": "label",
+     "type": "string",
+     "label": "图下标签（可空）",
+     "default": "示例图 · 一句说明"
+    },
+    {
+     "id": "tilt",
+     "type": "number",
+     "label": "落定后的倾角（度）",
+     "default": -2.5
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "mesh-flow",
+   "name": "流动色光",
+   "group": "幕底与氛围",
+   "one_line": "四团大而柔的色光垫在底色上，整镜各自沿一小段弯路游移并互相渗开，像一盏很慢的熔岩灯",
+   "use_when": "这一镜只有标题、金句或一个数字，纯色底显得空，又不想让任何图形和文字抢位置",
+   "energy": "低",
+   "needs": [
+    "无"
+   ],
+   "overlay": false,
+   "slot": 6,
+   "hero": 3,
+   "sfx": "none",
+   "pairs_with": [
+    "word-punch",
+    "line-rise",
+    "kicker-headline"
+   ],
+   "vars": [
+    {
+     "id": "title",
+     "type": "string",
+     "label": "示例标题（留空不显示）",
+     "default": "标题压在色光上也读得清"
+    },
+    {
+     "id": "speed",
+     "type": "number",
+     "label": "速度倍数",
+     "default": 1
+    },
+    {
+     "id": "strength",
+     "type": "number",
+     "label": "色光浓度（0–1）",
+     "default": 0.6
+    }
+   ]
+  },
+  {
+   "id": "mosaic-assemble",
+   "name": "拼贴汇成",
+   "group": "图片与多素材",
+   "one_line": "十二张图歪着从画面四周飞进来，大的先到、小的补缝，全部到位后整面拼贴一下并拢、压暗，标题牌紧跟着砸在正中",
+   "use_when": "旁白在做归纳：“这些例子合起来说明一件事”；手上有一批零散的图，结论是一句话",
+   "energy": "高",
+   "needs": [
+    "多图",
+    "文"
+   ],
+   "overlay": true,
+   "slot": 3.5,
+   "hero": 3,
+   "sfx": "fly=whoosh, lock=impact, title=impact",
+   "pairs_with": [
+    "photo-wall-dolly",
+    "word-punch",
+    "kicker-headline"
+   ],
+   "vars": [
+    {
+     "id": "srcs",
+     "type": "string",
+     "label": "拼贴用的图，用 | 分隔；不够十二张就循环用，前两张占最大的两格",
+     "default": "motion-cards/lib/samples/p1.jpg|motion-cards/lib/samples/p3.jpg|motion-cards/lib/samples/p5.jpg|motion-cards/lib/samples/p2.jpg|motion-cards/lib/samples/p8.jpg|motion-cards/lib/samples/p4.jpg|motion-cards/lib/samples/p6.jpg|motion-cards/lib/samples/p7.jpg"
+    },
+    {
+     "id": "title",
+     "type": "string",
+     "label": "最后压在中间的标题（一行，不超过 12 个字）",
+     "default": "十二个案例，一个规律"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "nameplate-in",
+   "name": "名字牌",
+   "group": "人物与口播",
+   "one_line": "人物胸口位置先立起一条强调色竖线，深色衬底从线里向右擦出，名字和身份两行先后从线后滑出来，停留后按原路收回",
+   "use_when": "一个人第一次出镜或第一次开口，需要告诉观众他是谁、凭什么讲这件事",
+   "energy": "低",
+   "needs": [
+    "人",
+    "文"
+   ],
+   "overlay": true,
+   "slot": 4,
+   "hero": 1.8,
+   "sfx": "in=whoosh, out=whoosh",
+   "pairs_with": [
+    "host-cutout-pop",
+    "host-to-chip",
+    "lower-third"
+   ],
+   "vars": [
+    {
+     "id": "host",
+     "type": "string",
+     "label": "人物图地址（透明底；压在实拍上时留空）",
+     "default": "motion-cards/lib/samples/host.png"
+    },
+    {
+     "id": "who",
+     "type": "string",
+     "label": "名字",
+     "default": "小周"
+    },
+    {
+     "id": "role",
+     "type": "string",
+     "label": "身份一行（可空）",
+     "default": "本期主讲 · 做了八年剪辑"
+    },
+    {
+     "id": "plateX",
+     "type": "number",
+     "label": "名字牌左边位置（px）",
+     "default": 640
+    },
+    {
+     "id": "plateY",
+     "type": "number",
+     "label": "名字牌顶边位置（px，对到胸口）",
+     "default": 650
+    },
+    {
+     "id": "hold",
+     "type": "number",
+     "label": "停留时长（秒）",
+     "default": 2
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "number-roll",
+   "name": "数字滚动",
+   "group": "数据与图表",
+   "one_line": "一个大数字从起始值冲向目标值，前快后慢，最后一位落定的那一帧整行轻轻顿一下、由暗变亮",
+   "use_when": "旁白报出一个量级（多少次、多少人、多少钱），想让观众感到“涨上去了”而不是直接看到结果",
+   "energy": "中",
+   "needs": [
+    "数据"
+   ],
+   "overlay": true,
+   "slot": 3,
+   "hero": 2.6,
+   "sfx": "roll=tick, stop=impact",
+   "pairs_with": [
+    "big-stat-slab",
+    "spark-metric"
+   ],
+   "vars": [
+    {
+     "id": "start",
+     "type": "number",
+     "label": "起始值",
+     "default": 0
+    },
+    {
+     "id": "target",
+     "type": "number",
+     "label": "目标值",
+     "default": 12800
+    },
+    {
+     "id": "decimals",
+     "type": "number",
+     "label": "小数位数",
+     "default": 0
+    },
+    {
+     "id": "unit",
+     "type": "string",
+     "label": "单位（可空）",
+     "default": "次"
+    },
+    {
+     "id": "caption",
+     "type": "string",
+     "label": "数字下面的一行说明",
+     "default": "一个提示词模板每天被调用（示例数据）"
+    },
+    {
+     "id": "roll",
+     "type": "number",
+     "label": "滚动时长（秒）",
+     "default": 1.4
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "orbit-card",
+   "name": "环绕",
+   "group": "镜头运动",
+   "one_line": "一张卡片先以 52 度的侧面出现，镜头用 2 秒绕到它正面，一道高光跟着角度从卡面上扫过去，转正时高光刚好离开",
+   "use_when": "要郑重地亮出一件东西（一张成果图、一个产品页、一张证书），想让它有体积、有分量，而不是“弹出来”",
+   "energy": "中",
+   "needs": [
+    "图"
+   ],
+   "overlay": true,
+   "slot": 3.5,
+   "hero": 2.8,
+   "sfx": "turn=whoosh",
+   "pairs_with": [
+    "media-pop",
+    "slow-push",
+    "lower-third"
+   ],
+   "vars": [
+    {
+     "id": "src",
+     "type": "string",
+     "label": "卡片上的图片地址（从项目根目录写起）",
+     "default": "motion-cards/lib/samples/p4.jpg"
+    },
+    {
+     "id": "label",
+     "type": "string",
+     "label": "卡片下方的一行字（可空）",
+     "default": "示例卡片 · 一句说明"
+    },
+    {
+     "id": "from",
+     "type": "number",
+     "label": "从哪个角度开始绕（度，负数从左侧）",
+     "default": -52
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "orbit-rings",
+   "name": "轨道环",
+   "group": "幕底与氛围",
+   "one_line": "五圈同心的细线圆环围着画面中心，整镜各自以不同的慢速匀速转动，每圈上带一个小光点",
+   "use_when": "讲“围绕一个核心”的内容：一个概念和它的几个方面、一个系统和它的部件，标题或关键词放在正中",
+   "energy": "低",
+   "needs": [
+    "无"
+   ],
+   "overlay": false,
+   "slot": 6,
+   "hero": 3,
+   "sfx": "none",
+   "pairs_with": [
+    "kicker-headline",
+    "outline-fill-title",
+    "count-badge"
+   ],
+   "vars": [
+    {
+     "id": "title",
+     "type": "string",
+     "label": "示例标题（留空不显示）",
+     "default": "细环绕着标题慢慢转"
+    },
+    {
+     "id": "speed",
+     "type": "number",
+     "label": "速度倍数",
+     "default": 1
+    },
+    {
+     "id": "strength",
+     "type": "number",
+     "label": "环线和光点的浓度（0–1）",
+     "default": 0.7
+    }
+   ]
+  },
+  {
+   "id": "outline-fill-title",
+   "name": "描边填实",
+   "group": "标题与章节",
+   "one_line": "标题先只有一圈描边，停一拍后强调色从字脚往上灌，液面右高左低地爬到字顶，灌满时整行轻轻顶一下",
+   "use_when": "旁白在说“从空到实”的过程（先有框架再补内容、从想法到落地、进度走完），而且说这句话要 1.5 秒以上",
+   "energy": "中",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 3.5,
+   "hero": 1.3,
+   "sfx": "fill=rise, done=pop",
+   "pairs_with": [
+    "kicker-headline",
+    "underline-draw"
+   ],
+   "vars": [
+    {
+     "id": "title",
+     "type": "string",
+     "label": "标题（建议 4–7 个字）",
+     "default": "先搭骨架再填肉"
+    },
+    {
+     "id": "sub",
+     "type": "string",
+     "label": "标题下的一行（可空）",
+     "default": "结构定了，内容才有地方放"
+    },
+    {
+     "id": "fillAt",
+     "type": "number",
+     "label": "开始灌色的时间（秒）",
+     "default": 0.9
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "page-scroll-park",
+   "name": "网页滚动停靠",
+   "group": "证据与界面",
+   "one_line": "一张铺满的长网页从顶部滚下去，短促起步、长长地减速，停在目标段落上，停稳后那一句被荧光笔划出来",
+   "use_when": "证据在一篇长文、文档或报告的中间某一句，需要让观众知道“这是原文里翻到的”",
+   "energy": "中",
+   "needs": [
+    "网页"
+   ],
+   "overlay": false,
+   "slot": 4,
+   "hero": 3.4,
+   "sfx": "scroll=whoosh, mark=draw",
+   "pairs_with": [
+    "quote-pull",
+    "browser-rise",
+    "screen-push-focus"
+   ],
+   "vars": [
+    {
+     "id": "src",
+     "type": "string",
+     "label": "长网页截图地址（从项目根目录写起）",
+     "default": "motion-cards/lib/samples/page.png"
+    },
+    {
+     "id": "pagew",
+     "type": "number",
+     "label": "截图原始宽度（像素）",
+     "default": 1600
+    },
+    {
+     "id": "pageh",
+     "type": "number",
+     "label": "截图原始高度（像素）",
+     "default": 4200
+    },
+    {
+     "id": "x",
+     "type": "number",
+     "label": "目标句左边（截图像素）",
+     "default": 152
+    },
+    {
+     "id": "y",
+     "type": "number",
+     "label": "目标句上边（截图像素）",
+     "default": 1670
+    },
+    {
+     "id": "w",
+     "type": "number",
+     "label": "目标句宽",
+     "default": 548
+    },
+    {
+     "id": "h",
+     "type": "number",
+     "label": "目标句高",
+     "default": 68
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "paper-grain",
+   "name": "纸感底",
+   "group": "幕底与氛围",
+   "one_line": "一张带细颗粒和两道淡折痕的纸铺满画面，纸本身不动，只有一片亮光和对角的暗影整镜极慢地平移",
+   "use_when": "浅色皮的讲解镜，上面要放手写批注、便签、引用或文档截图，需要一个“桌上一张纸”的底而不是屏幕感的纯色",
+   "energy": "低",
+   "needs": [
+    "无"
+   ],
+   "overlay": false,
+   "slot": 6,
+   "hero": 3,
+   "sfx": "none",
+   "pairs_with": [
+    "margin-note",
+    "highlighter-swipe",
+    "sketch-draw",
+    "quote-pull"
+   ],
+   "vars": [
+    {
+     "id": "title",
+     "type": "string",
+     "label": "示例标题（留空不显示）",
+     "default": "一张安静的纸，字写在上面"
+    },
+    {
+     "id": "speed",
+     "type": "number",
+     "label": "速度倍数",
+     "default": 1
+    },
+    {
+     "id": "strength",
+     "type": "number",
+     "label": "纹理和光影的浓度（0–1）",
+     "default": 0.7
+    }
+   ]
+  },
+  {
+   "id": "parallax-drift",
+   "name": "视差漂移",
+   "group": "镜头运动",
+   "one_line": "远、中、近三层内容在整镜里朝同一个方向匀速漂，5 秒里分别走 42、135、300 像素，近的快、远的慢",
+   "use_when": "画面是几张摆好的图或一组并列的素材，旁白要在上面停留几秒，想让平面的排版有前后空间",
+   "energy": "低",
+   "needs": [
+    "多图"
+   ],
+   "overlay": false,
+   "slot": 5,
+   "hero": 2.4,
+   "sfx": "none",
+   "pairs_with": [
+    "slow-push",
+    "media-pop",
+    "lower-third"
+   ],
+   "vars": [
+    {
+     "id": "src",
+     "type": "string",
+     "label": "远层：铺满的底图地址",
+     "default": "motion-cards/lib/samples/p5.jpg"
+    },
+    {
+     "id": "mid",
+     "type": "string",
+     "label": "中层：第一张图片地址",
+     "default": "motion-cards/lib/samples/p2.jpg"
+    },
+    {
+     "id": "mid2",
+     "type": "string",
+     "label": "中层：第二张图片地址",
+     "default": "motion-cards/lib/samples/p3.jpg"
+    },
+    {
+     "id": "near",
+     "type": "string",
+     "label": "近层：透明底前景图地址",
+     "default": "motion-cards/lib/samples/host.png"
+    },
+    {
+     "id": "dist",
+     "type": "number",
+     "label": "近层整镜一共漂多少像素（负数向左）",
+     "default": -300
+    },
+    {
+     "id": "dur",
+     "type": "number",
+     "label": "这一镜多长（秒）",
+     "default": 5
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "photo-wall-dolly",
+   "name": "照片墙推轨",
+   "group": "图片与多素材",
+   "one_line": "一面大小错落的照片墙，镜头从左上斜着扫向右下，前后三层以不同速度滑动，最后一边摆正一边推近，停在其中一张上并给它套上黄框",
+   "use_when": "旁白在说“这么多里面”，然后落到“其中这一张”；需要先给出数量很多的感觉，再把注意力收到一个点",
+   "energy": "高",
+   "needs": [
+    "多图"
+   ],
+   "overlay": true,
+   "slot": 4.5,
+   "hero": 4.2,
+   "sfx": "sweep=whoosh, push=rise, lock=shutter",
+   "pairs_with": [
+    "grid-to-hero",
+    "mosaic-assemble",
+    "lower-third"
+   ],
+   "vars": [
+    {
+     "id": "srcs",
+     "type": "string",
+     "label": "墙上的图，用 | 分隔；第一张是镜头最后停住的那张，其余循环铺满",
+     "default": "motion-cards/lib/samples/p6.jpg|motion-cards/lib/samples/p1.jpg|motion-cards/lib/samples/p3.jpg|motion-cards/lib/samples/p8.jpg|motion-cards/lib/samples/p4.jpg|motion-cards/lib/samples/p2.jpg|motion-cards/lib/samples/p7.jpg|motion-cards/lib/samples/p5.jpg"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "pie-wedge",
+   "name": "扇形切出",
+   "group": "数据与图表",
+   "one_line": "一个灰色的圆先顺时针扫满，停一拍，其中一块扇形沿着自己的中线向外滑出半步并变成强调色，一条引线从它身上长出去，把数字和说明带出来",
+   "use_when": "旁白在说“整体里的这一块”，重点是它属于一个整体、又要被单独拎出来看",
+   "energy": "中",
+   "needs": [
+    "数据"
+   ],
+   "overlay": true,
+   "slot": 3.5,
+   "hero": 3.1,
+   "sfx": "sweep=whoosh, cut=pop, label=tick",
+   "pairs_with": [
+    "unit-grid",
+    "ring-progress"
+   ],
+   "vars": [
+    {
+     "id": "percent",
+     "type": "number",
+     "label": "切出来的那块占多少（1–60）",
+     "default": 28
+    },
+    {
+     "id": "caption",
+     "type": "string",
+     "label": "数字下面的一行说明",
+     "default": "的时间在等别人回复"
+    },
+    {
+     "id": "note",
+     "type": "string",
+     "label": "来源小注（可空）",
+     "default": "示例数据"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "pip-corner",
+   "name": "画中画缩到角",
+   "group": "图片与多素材",
+   "one_line": "满屏的画面在 0.5 秒里朝一个角收拢，先缩得比小窗略小、再弹到位，带上白边和阴影停在角上，把主画面让出来",
+   "use_when": "前一段是满屏的实拍或录屏，旁白要转去讲别的内容，但这段画面还得留在眼角（操作还在继续、人还在说话）",
+   "energy": "中",
+   "needs": [
+    "图"
+   ],
+   "overlay": true,
+   "slot": 3.5,
+   "hero": 1.4,
+   "sfx": "shrink=whoosh, dock=pop",
+   "pairs_with": [
+    "title-to-corner",
+    "kicker-headline",
+    "lower-third"
+   ],
+   "vars": [
+    {
+     "id": "srcs",
+     "type": "string",
+     "label": "满屏那张图的地址（只用第一张）",
+     "default": "motion-cards/lib/samples/p4.jpg"
+    },
+    {
+     "id": "corner",
+     "type": "enum",
+     "label": "缩到哪个角",
+     "default": "br"
+    },
+    {
+     "id": "size",
+     "type": "number",
+     "label": "小窗宽度（px）",
+     "default": 560
+    },
+    {
+     "id": "kicker",
+     "type": "string",
+     "label": "让出来的主画面：小标题（可空）",
+     "default": "接下来"
+    },
+    {
+     "id": "title",
+     "type": "string",
+     "label": "让出来的主画面：标题（可空）",
+     "default": "把这一步拆开看"
+    },
+    {
+     "id": "note",
+     "type": "string",
+     "label": "让出来的主画面：说明（可空）",
+     "default": "原画面缩到角上，继续放"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "polaroid-drop",
+   "name": "拍立得连落",
+   "group": "图片与多素材",
+   "one_line": "三四张带白边的照片一张接一张从画面上方加速落到桌上，每张倾角不同、压住前一张的边，被压的那张会被碰得晃一下",
+   "use_when": "旁白在数“第一、第二、第三”，每一项都有一张图，而且几项是并列的、不需要谁更大",
+   "energy": "中",
+   "needs": [
+    "多图",
+    "文"
+   ],
+   "overlay": true,
+   "slot": 3,
+   "hero": 1.75,
+   "sfx": "land1=impact, land2=impact, land3=impact, land4=impact",
+   "pairs_with": [
+    "media-pop",
+    "stack-fan",
+    "lower-third"
+   ],
+   "vars": [
+    {
+     "id": "srcs",
+     "type": "string",
+     "label": "三到四张图的地址，用 | 分隔，按落下的先后排",
+     "default": "motion-cards/lib/samples/p3.jpg|motion-cards/lib/samples/p1.jpg|motion-cards/lib/samples/p6.jpg|motion-cards/lib/samples/p8.jpg"
+    },
+    {
+     "id": "captions",
+     "type": "string",
+     "label": "每张照片白边上的字，用 | 分隔（可空）",
+     "default": "准备素材|写下要求|对比结果|挑出最好"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "progress-rail",
+   "name": "章节进度轨",
+   "group": "标题与章节",
+   "one_line": "顶部一条分段的轨道，刚走完的那段先暗下去、标签缩回，当前段再从左到右填满，它的标签放大变亮",
+   "use_when": "一期内容有 3–5 个并列的段落，每次换段时用 2–3 秒告诉观众“走到哪了”；也可以整期常驻在画面顶上",
+   "energy": "低",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 3,
+   "hero": 1.1,
+   "sfx": "fill=tick",
+   "pairs_with": [
+    "chapter-numeral",
+    "title-to-corner"
+   ],
+   "vars": [
+    {
+     "id": "steps",
+     "type": "string",
+     "label": "各段的名字，用 | 分开（3–5 段）",
+     "default": "明确目标|拆解任务|给出示例|检查结果"
+    },
+    {
+     "id": "current",
+     "type": "number",
+     "label": "现在走到第几段（从 1 数）",
+     "default": 2
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "pull-reveal",
+   "name": "拉出全貌",
+   "group": "镜头运动",
+   "one_line": "开场是 3.2 倍的局部特写，停 0.8 秒后镜头向后拉 1.5 秒退到整个画面，再用一个框标出刚才看的是哪一块",
+   "use_when": "旁白先讲一个细节、再说“而这只是其中一项”；或者想让观众先猜这是什么，再给答案",
+   "energy": "中",
+   "needs": [
+    "界面",
+    "图"
+   ],
+   "overlay": false,
+   "slot": 4,
+   "hero": 3.2,
+   "sfx": "pull=whoosh",
+   "pairs_with": [
+    "crash-zoom",
+    "slow-push",
+    "screen-push-focus"
+   ],
+   "vars": [
+    {
+     "id": "src",
+     "type": "string",
+     "label": "画面地址（从项目根目录写起）",
+     "default": "motion-cards/lib/samples/ui.png"
+    },
+    {
+     "id": "fx",
+     "type": "number",
+     "label": "开场特写对着哪一点：横向 0–1",
+     "default": 0.31
+    },
+    {
+     "id": "fy",
+     "type": "number",
+     "label": "开场特写对着哪一点：纵向 0–1",
+     "default": 0.4
+    },
+    {
+     "id": "zoom",
+     "type": "number",
+     "label": "开场特写的倍数",
+     "default": 3.2
+    },
+    {
+     "id": "hold",
+     "type": "number",
+     "label": "特写停多久再拉（秒）",
+     "default": 0.8
+    },
+    {
+     "id": "mark",
+     "type": "enum",
+     "label": "拉开后框出刚才看的那一块",
+     "default": "on"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "push-through",
+   "name": "穿过去",
+   "group": "转场",
+   "one_line": "上一镜朝镜头越冲越快、放大到糊成一片色，下一镜从同一点的深处很小地出现，迎面放大并急刹到位",
+   "use_when": "旁白说“点进去”“往里看”“深入一层”，下一镜是上一镜里某个东西的内部或下一级",
+   "energy": "高",
+   "needs": [
+    "多图"
+   ],
+   "overlay": false,
+   "slot": 2,
+   "hero": 1,
+   "sfx": "rush=whoosh, land=impact",
+   "pairs_with": [
+    "crash-zoom",
+    "screen-push-focus"
+   ],
+   "vars": [
+    {
+     "id": "from",
+     "type": "string",
+     "label": "上一镜的画面（从项目根目录写起）",
+     "default": "motion-cards/lib/samples/p1.jpg"
+    },
+    {
+     "id": "to",
+     "type": "string",
+     "label": "下一镜的画面（从项目根目录写起）",
+     "default": "motion-cards/lib/samples/p2.jpg"
+    },
+    {
+     "id": "ox",
+     "type": "number",
+     "label": "从哪一点穿过去：横向 0–1",
+     "default": 0.5
+    },
+    {
+     "id": "oy",
+     "type": "number",
+     "label": "从哪一点穿过去：纵向 0–1",
+     "default": 0.5
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "quote-pull",
+   "name": "引文拉出",
+   "group": "证据与界面",
+   "one_line": "文档里的一句话先被强调色从左到右划过，这条色块连同上面的字轻压一下后离开纸面、放大到画面中央成为引文卡，身后的页面同时虚化变暗",
+   "use_when": "旁白要原样引用文档、文章或报告里的一句话，并且希望观众知道这句话是从原文里拿出来的",
+   "energy": "中",
+   "needs": [
+    "文"
+   ],
+   "overlay": false,
+   "slot": 4,
+   "hero": 3.4,
+   "sfx": "swipe=draw, pull=whoosh",
+   "pairs_with": [
+    "page-scroll-park",
+    "highlighter-swipe",
+    "lower-third"
+   ],
+   "vars": [
+    {
+     "id": "quote",
+     "type": "string",
+     "label": "被拉出来的那句话（一行，建议 14 字以内）",
+     "default": "先给例子，再提要求。"
+    },
+    {
+     "id": "source",
+     "type": "string",
+     "label": "出处（可空）",
+     "default": "示例文档 · 第 2 节"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "rack-focus",
+   "name": "焦点转移",
+   "group": "镜头运动",
+   "one_line": "前景清楚、后景虚着停一秒，然后 0.7 秒内两层的虚实对调，同时前后层各往相反方向挪一二十像素",
+   "use_when": "旁白的注意力从“谁在看”转到“看的是什么”，或者从一个东西转到它背后的另一个东西，而你不想切镜",
+   "energy": "低",
+   "needs": [
+    "图",
+    "人"
+   ],
+   "overlay": false,
+   "slot": 3.5,
+   "hero": 2.8,
+   "sfx": "none",
+   "pairs_with": [
+    "slow-push",
+    "blur-resolve",
+    "lower-third"
+   ],
+   "vars": [
+    {
+     "id": "src",
+     "type": "string",
+     "label": "后层画面地址（从项目根目录写起）",
+     "default": "motion-cards/lib/samples/ui.png"
+    },
+    {
+     "id": "front",
+     "type": "string",
+     "label": "前层图片地址（透明底）",
+     "default": "motion-cards/lib/samples/host.png"
+    },
+    {
+     "id": "fx",
+     "type": "number",
+     "label": "前层放在哪：横向 0–1",
+     "default": 0.16
+    },
+    {
+     "id": "to",
+     "type": "enum",
+     "label": "焦点最后落在",
+     "default": "back"
+    },
+    {
+     "id": "at",
+     "type": "number",
+     "label": "开始转焦的时间（秒）",
+     "default": 1
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "rank-ladder",
+   "name": "排名换位",
+   "group": "数据与图表",
+   "one_line": "一个五行的排行榜里，下面的一行先亮起来、分数涨上去，然后先向右拉出 260px、在空出来的车道里上移，被它超过的行在它经过时依次让到下面，到位后再并回队列，新名次的数字应一声",
+   "use_when": "旁白在说“原来排第几，现在超到第几”，名次的变化本身就是结论",
+   "energy": "高",
+   "needs": [
+    "数据"
+   ],
+   "overlay": true,
+   "slot": 3.5,
+   "hero": 3.1,
+   "sfx": "arm=rise, go=whoosh, land=impact",
+   "pairs_with": [
+    "bar-grow",
+    "stat-compare"
+   ],
+   "vars": [
+    {
+     "id": "names",
+     "type": "string",
+     "label": "各行名字，按当前名次，用 | 分隔（4–5 行）",
+     "default": "分步追问|限定格式|加上背景|给出示例|直接提问"
+    },
+    {
+     "id": "scores",
+     "type": "string",
+     "label": "各行数值，用 | 分隔",
+     "default": "92|85|78|71|64"
+    },
+    {
+     "id": "mover",
+     "type": "number",
+     "label": "哪一行要上移（当前名次）",
+     "default": 4
+    },
+    {
+     "id": "climb",
+     "type": "number",
+     "label": "上移到第几名",
+     "default": 2
+    },
+    {
+     "id": "newScore",
+     "type": "number",
+     "label": "上移那一行的新数值",
+     "default": 88
+    },
+    {
+     "id": "headline",
+     "type": "string",
+     "label": "结论（一句）",
+     "default": "多给一个示例，第四名超到第二（示例数据）"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "reaction-bubble",
+   "name": "反应气泡",
+   "group": "人物与口播",
+   "one_line": "人物头的两侧接连冒出两三个带尖角的气泡，每个都从自己的尖角里弹出来、晃一下停住，挂一会儿再往上飘着缩没，人物每挨一个就轻轻一沉",
+   "use_when": "主持人刚说了一句反常识的话，要替观众把心里的疑问或吐槽说出来，再接着回答",
+   "energy": "高",
+   "needs": [
+    "人",
+    "文"
+   ],
+   "overlay": true,
+   "slot": 3.5,
+   "hero": 1.667,
+   "sfx": "pop1=pop, pop2=pop, pop3=pop",
+   "pairs_with": [
+    "word-punch",
+    "host-cutout-pop",
+    "chat-bubbles"
+   ],
+   "vars": [
+    {
+     "id": "host",
+     "type": "string",
+     "label": "人物图地址（透明底；压在实拍上时留空）",
+     "default": "motion-cards/lib/samples/host.png"
+    },
+    {
+     "id": "bubbles",
+     "type": "string",
+     "label": "气泡里的话，用 | 分开（2–3 条，每条 8 字以内）",
+     "default": "这也行？|真的假的|等等，再说一遍"
+    },
+    {
+     "id": "gap",
+     "type": "number",
+     "label": "相邻两个气泡隔多久（秒）",
+     "default": 0.55
+    },
+    {
+     "id": "stay",
+     "type": "number",
+     "label": "每个气泡停多久再飘走（秒）",
+     "default": 1.3
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "reticle-lock",
+   "name": "准星锁定",
+   "group": "标注与手绘",
+   "one_line": "一个放大的准星在画面里直线跳两步、每步都停死，第三步扑到目标上，圈收紧摆正、闪一下，旁边滑出一行读数",
+   "use_when": "旁白在“找”一个东西（哪一行有问题、哪个数字不对），找到的那一刻要有分量；语气是系统识别，不是人在批注",
+   "energy": "高",
+   "needs": [
+    "界面",
+    "文"
+   ],
+   "overlay": true,
+   "slot": 4,
+   "hero": 3,
+   "sfx": "hop=tick, lock=impact, read=pop",
+   "pairs_with": [
+    "scan-line",
+    "bracket-frame"
+   ],
+   "vars": [
+    {
+     "id": "x",
+     "type": "number",
+     "label": "目标左上角 x（1920×1080 坐标）",
+     "default": 300
+    },
+    {
+     "id": "y",
+     "type": "number",
+     "label": "目标左上角 y",
+     "default": 576
+    },
+    {
+     "id": "w",
+     "type": "number",
+     "label": "目标宽",
+     "default": 416
+    },
+    {
+     "id": "h",
+     "type": "number",
+     "label": "目标高",
+     "default": 88
+    },
+    {
+     "id": "readout",
+     "type": "string",
+     "label": "锁定后弹出的读数",
+     "default": "已锁定 · 进行中"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "retype-fix",
+   "name": "打错重打",
+   "group": "字与强调",
+   "one_line": "光标先在句尾很顺地打出一个错的说法，停住、闪一下，按住退格把它逐字删光，再稍慢一点打出强调色的正确说法",
+   "use_when": "要纠正一个观众自己也会下意识说出口的说法，而且想让纠正显得像“我自己刚想明白”，不是在训人",
+   "energy": "中",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 3.5,
+   "hero": 3.2,
+   "sfx": "type=type, erase=tick, retype=type",
+   "pairs_with": [
+    "typewriter-line",
+    "strike-swap"
+   ],
+   "vars": [
+    {
+     "id": "lead",
+     "type": "string",
+     "label": "不变的前半句",
+     "default": "学 AI，最重要的是"
+    },
+    {
+     "id": "wrong",
+     "type": "string",
+     "label": "先打出来的错说法",
+     "default": "背提示词"
+    },
+    {
+     "id": "right",
+     "type": "string",
+     "label": "改成的对说法",
+     "default": "学会提问"
+    },
+    {
+     "id": "at",
+     "type": "number",
+     "label": "开始打字的时间（秒）",
+     "default": 0.4
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "ring-progress",
+   "name": "环形进度",
+   "group": "数据与图表",
+   "one_line": "一个粗环从 12 点方向顺时针画到目标百分比，环中间的数字跟着同一个进度值滚，数字落定的那一帧整个环鼓一下，说明行随后跟上",
+   "use_when": "旁白说的是“占了多少”“完成了多少”，一个 0 到 100 之间的比例，而且只讲这一个",
+   "energy": "中",
+   "needs": [
+    "数据"
+   ],
+   "overlay": true,
+   "slot": 3,
+   "hero": 2.7,
+   "sfx": "sweep=rise, stop=pop",
+   "pairs_with": [
+    "unit-grid",
+    "big-stat-slab"
+   ],
+   "vars": [
+    {
+     "id": "percent",
+     "type": "number",
+     "label": "目标百分比（0–100）",
+     "default": 68
+    },
+    {
+     "id": "caption",
+     "type": "string",
+     "label": "环下面的一行说明",
+     "default": "的问题，追问一轮就能解决"
+    },
+    {
+     "id": "note",
+     "type": "string",
+     "label": "来源小注（可空）",
+     "default": "示例数据"
+    },
+    {
+     "id": "sweep",
+     "type": "number",
+     "label": "画环时长（秒）",
+     "default": 1.3
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "roadmap-light",
+   "name": "路线图点亮",
+   "group": "结构与流程",
+   "one_line": "所有步骤卡先以暗的状态一次摊开，旁白讲到哪张，哪张亮起并浮起来，讲完的落回去保持半亮",
+   "use_when": "旁白先说“一共这几步”，再逐个展开；或者这是一条贯穿全片的路线，每到一章回来点亮一格",
+   "energy": "低",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 5.4,
+   "hero": 5,
+   "sfx": "light=tick",
+   "pairs_with": [
+    "flow-nodes",
+    "chapter-numeral"
+   ],
+   "vars": [
+    {
+     "id": "items",
+     "type": "string",
+     "label": "步骤（用 | 分隔，2–5 条）",
+     "default": "明确目标|拆解任务|给出示例|检查结果"
+    },
+    {
+     "id": "cues",
+     "type": "string",
+     "label": "每一步亮起的秒数（逗号分隔，不够就均匀排开）",
+     "default": "0.9,1.9,2.9,3.9"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "scale-contrast",
+   "name": "大小字对比",
+   "group": "字与强调",
+   "one_line": "一行小字先占着画面正中，接着一个撑满画面宽度的巨大的词从镜头前压下来，小字提前一拍被挤到左上角变成注脚",
+   "use_when": "一句铺垫加一个分量很重的短词（原因、结论、数字），而且愿意让这个词独占一整屏",
+   "energy": "高",
+   "needs": [
+    "文"
+   ],
+   "overlay": false,
+   "slot": 3,
+   "hero": 2.7,
+   "sfx": "push=whoosh, hit=impact",
+   "pairs_with": [
+    "line-rise",
+    "stamp-verdict"
+   ],
+   "vars": [
+    {
+     "id": "small",
+     "type": "string",
+     "label": "铺垫的小字（一行）",
+     "default": "结果不好，多半不是模型的问题"
+    },
+    {
+     "id": "big",
+     "type": "string",
+     "label": "压进来的大词（2–4 个字）",
+     "default": "没说清"
+    },
+    {
+     "id": "hit",
+     "type": "number",
+     "label": "大词压下来的时间（秒）",
+     "default": 1.2
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "scan-beams",
+   "name": "光束扫",
+   "group": "幕底与氛围",
+   "one_line": "三道宽窄不一、很淡的斜向光束整镜匀速从左往右扫过，光束经过的地方底色略微被提亮",
+   "use_when": "展示、揭晓、强调“这是重点”的文字镜，想要一点舞台灯光的感觉，但不能有闪光或扫光特效那种抢眼的瞬间",
+   "energy": "低",
+   "needs": [
+    "无"
+   ],
+   "overlay": false,
+   "slot": 6,
+   "hero": 3,
+   "sfx": "none",
+   "pairs_with": [
+    "slab-title-slam",
+    "big-stat-slab",
+    "stamp-verdict"
+   ],
+   "vars": [
+    {
+     "id": "title",
+     "type": "string",
+     "label": "示例标题（留空不显示）",
+     "default": "光从标题后面慢慢扫过"
+    },
+    {
+     "id": "speed",
+     "type": "number",
+     "label": "速度倍数",
+     "default": 1
+    },
+    {
+     "id": "strength",
+     "type": "number",
+     "label": "光束浓度（0–1）",
+     "default": 0.7
+    }
+   ]
+  },
+  {
+   "id": "scan-line",
+   "name": "扫描线",
+   "group": "标注与手绘",
+   "one_line": "一条拖着光尾的水平亮线匀速从上扫到下，线刚离开哪个目标的下沿，那个目标的识别框就弹出来并亮一下",
+   "use_when": "旁白在说“系统把这一页读了一遍”“自动识别出了五处”，要表现逐项被检出，而不是一次全亮",
+   "energy": "中",
+   "needs": [
+    "界面"
+   ],
+   "overlay": true,
+   "slot": 3,
+   "hero": 2.6,
+   "sfx": "sweep=whoosh, hit=tick",
+   "pairs_with": [
+    "reticle-lock",
+    "count-badge"
+   ],
+   "vars": [
+    {
+     "id": "x",
+     "type": "number",
+     "label": "扫描区域左上角 x（1920×1080 坐标）",
+     "default": 60
+    },
+    {
+     "id": "y",
+     "type": "number",
+     "label": "扫描区域左上角 y",
+     "default": 180
+    },
+    {
+     "id": "w",
+     "type": "number",
+     "label": "扫描区域宽",
+     "default": 1800
+    },
+    {
+     "id": "h",
+     "type": "number",
+     "label": "扫描区域高",
+     "default": 880
+    },
+    {
+     "id": "boxes",
+     "type": "string",
+     "label": "被识别出的框：x,y,宽,高；用分号隔开",
+     "default": "300,276,416,88;300,576,416,88;300,876,484,88"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "screen-push-focus",
+   "name": "录屏推近圈框",
+   "group": "证据与界面",
+   "one_line": "截图先全景停半秒，镜头一次推近到目标区域，快到位时强调色框沿边描出来，框外同时压暗",
+   "use_when": "旁白说“看这里”“注意这一项”，而证据在一张满屏截图或录屏的某个小区域里",
+   "energy": "中",
+   "needs": [
+    "界面"
+   ],
+   "overlay": false,
+   "slot": 4,
+   "hero": 3.2,
+   "sfx": "push=whoosh, frame=draw",
+   "pairs_with": [
+    "spotlight-dim",
+    "cursor-click",
+    "magnifier-lens"
+   ],
+   "vars": [
+    {
+     "id": "src",
+     "type": "string",
+     "label": "截图地址（1920×1080，从项目根目录写起）",
+     "default": "motion-cards/lib/samples/ui.png"
+    },
+    {
+     "id": "x",
+     "type": "number",
+     "label": "目标区域左边（截图像素）",
+     "default": 478
+    },
+    {
+     "id": "y",
+     "type": "number",
+     "label": "目标区域上边（截图像素）",
+     "default": 538
+    },
+    {
+     "id": "w",
+     "type": "number",
+     "label": "目标区域宽",
+     "default": 270
+    },
+    {
+     "id": "h",
+     "type": "number",
+     "label": "目标区域高",
+     "default": 96
+    },
+    {
+     "id": "zoom",
+     "type": "number",
+     "label": "最大推近倍数",
+     "default": 2.4
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "shape-wipe",
+   "name": "形状擦除",
+   "group": "转场",
+   "one_line": "一个斜切的长色块（或一个从某点涨开的圆）不停顿地扫过画面，前沿盖掉上一镜，后沿放出下一镜",
+   "use_when": "同一个话题里往前推进一步（下一个步骤、下一个例子），需要“翻页”而不是“断开”",
+   "energy": "中",
+   "needs": [
+    "无"
+   ],
+   "overlay": true,
+   "slot": 2,
+   "hero": 0.9,
+   "sfx": "sweep=whoosh",
+   "pairs_with": [
+    "kicker-headline",
+    "progress-rail"
+   ],
+   "vars": [
+    {
+     "id": "shape",
+     "type": "enum",
+     "label": "形状",
+     "default": "slant"
+    },
+    {
+     "id": "dir",
+     "type": "enum",
+     "label": "斜块往哪边扫",
+     "default": "right"
+    },
+    {
+     "id": "ox",
+     "type": "number",
+     "label": "圆心横向 0–1（圆形时）",
+     "default": 0.5
+    },
+    {
+     "id": "oy",
+     "type": "number",
+     "label": "圆心纵向 0–1（圆形时）",
+     "default": 0.5
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "sketch-draw",
+   "name": "线稿画出",
+   "group": "标注与手绘",
+   "one_line": "一张“方框 → 圆 → 方框”的示意图按阅读顺序一笔一笔画出来，每个形状画到一半时它里面的字跟着浮出来",
+   "use_when": "旁白在讲一个三步的关系或流程（输入、处理、输出），想让观众跟着讲解的顺序一步步看到，而不是一次看到整张图",
+   "energy": "低",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 5,
+   "hero": 4.2,
+   "sfx": "stroke=draw",
+   "pairs_with": [
+    "line-rise",
+    "label-callout"
+   ],
+   "vars": [
+    {
+     "id": "items",
+     "type": "string",
+     "label": "三个节点的文字，用 | 隔开（方框 | 圆 | 方框）",
+     "default": "素材|模型|成片"
+    },
+    {
+     "id": "x",
+     "type": "number",
+     "label": "示意图左上角 x（1920×1080 坐标）",
+     "default": 160
+    },
+    {
+     "id": "y",
+     "type": "number",
+     "label": "示意图左上角 y",
+     "default": 380
+    },
+    {
+     "id": "w",
+     "type": "number",
+     "label": "示意图宽",
+     "default": 1600
+    },
+    {
+     "id": "h",
+     "type": "number",
+     "label": "示意图高（也是圆的直径）",
+     "default": 320
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "slab-title-slam",
+   "name": "厚底标题砸入",
+   "group": "标题与章节",
+   "one_line": "一块强调色厚底板从画面外加速冲进来撞停，标题字在它停住的那一帧才出现，底板带着字弹一下",
+   "use_when": "一期或一章的开头要一个不容商量的标题；旁白是短促的陈述句，重音落在标题最后一个字上",
+   "energy": "高",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 3,
+   "hero": 0.7,
+   "sfx": "slam=impact, travel=whoosh",
+   "pairs_with": [
+    "word-punch",
+    "progress-rail"
+   ],
+   "vars": [
+    {
+     "id": "title",
+     "type": "string",
+     "label": "标题（建议 4–8 个字）",
+     "default": "三步写好提示词"
+    },
+    {
+     "id": "sub",
+     "type": "string",
+     "label": "底板下的一行说明（可空）",
+     "default": "照着做，十分钟上手"
+    },
+    {
+     "id": "side",
+     "type": "enum",
+     "label": "底板从哪边砸进来",
+     "default": "left"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "slice-shutter",
+   "name": "百叶切",
+   "group": "转场",
+   "one_line": "上一镜被切成几条横条（或竖条），从第一条到最后一条依次绕自己的中线翻成侧面消失，缝里露出下一镜",
+   "use_when": "一组并列的内容换到下一组（清单翻页、换一批例子），想要有节拍、带一点机械感的换镜",
+   "energy": "中",
+   "needs": [
+    "多图"
+   ],
+   "overlay": false,
+   "slot": 2,
+   "hero": 1,
+   "sfx": "flip=tick",
+   "pairs_with": [
+    "rank-ladder",
+    "mosaic-assemble"
+   ],
+   "vars": [
+    {
+     "id": "from",
+     "type": "string",
+     "label": "上一镜的画面（从项目根目录写起）",
+     "default": "motion-cards/lib/samples/p1.jpg"
+    },
+    {
+     "id": "to",
+     "type": "string",
+     "label": "下一镜的画面（从项目根目录写起）",
+     "default": "motion-cards/lib/samples/p2.jpg"
+    },
+    {
+     "id": "axis",
+     "type": "enum",
+     "label": "条的方向",
+     "default": "rows"
+    },
+    {
+     "id": "count",
+     "type": "number",
+     "label": "条数（3–12）",
+     "default": 6
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "slow-push",
+   "name": "慢推",
+   "group": "镜头运动",
+   "one_line": "整个画面从第一帧到最后一帧匀速向一个点推近 5%，不加速、不减速、不停，让一张静止的图一直“活着”",
+   "use_when": "旁白要在一张截图、一张照片上讲五秒以上，画面里没有别的东西在动",
+   "energy": "低",
+   "needs": [
+    "图",
+    "界面"
+   ],
+   "overlay": false,
+   "slot": 5,
+   "hero": 2.4,
+   "sfx": "none",
+   "pairs_with": [
+    "crash-zoom",
+    "lower-third",
+    "highlighter-swipe"
+   ],
+   "vars": [
+    {
+     "id": "src",
+     "type": "string",
+     "label": "画面地址（从项目根目录写起）",
+     "default": "motion-cards/lib/samples/ui.png"
+    },
+    {
+     "id": "fx",
+     "type": "number",
+     "label": "推向哪一点：横向 0–1",
+     "default": 0.58
+    },
+    {
+     "id": "fy",
+     "type": "number",
+     "label": "推向哪一点：纵向 0–1",
+     "default": 0.4
+    },
+    {
+     "id": "amount",
+     "type": "number",
+     "label": "整镜一共推近百分之几",
+     "default": 5
+    },
+    {
+     "id": "dur",
+     "type": "number",
+     "label": "这一镜多长（秒）",
+     "default": 5
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "spark-metric",
+   "name": "指标带迷你线",
+   "group": "数据与图表",
+   "one_line": "一张指标卡里，大数字先站住，涨跌箭头顺着自己的方向冲进来，最后一条迷你趋势线从左画到右、在终点点一个圆点",
+   "use_when": "旁白在报一个指标的现状和变化（现在是多少、比之前涨了还是跌了），需要一个像仪表盘上摘下来的小卡片",
+   "energy": "低",
+   "needs": [
+    "数据"
+   ],
+   "overlay": true,
+   "slot": 3,
+   "hero": 2.6,
+   "sfx": "delta=pop, line=draw",
+   "pairs_with": [
+    "number-roll",
+    "line-draw-chart"
+   ],
+   "vars": [
+    {
+     "id": "title",
+     "type": "string",
+     "label": "指标名",
+     "default": "本周处理完的工单（示例数据）"
+    },
+    {
+     "id": "value",
+     "type": "string",
+     "label": "大数字",
+     "default": "1,284"
+    },
+    {
+     "id": "delta",
+     "type": "string",
+     "label": "涨跌幅（以 - 开头算下跌）",
+     "default": "+24%"
+    },
+    {
+     "id": "trend",
+     "type": "string",
+     "label": "迷你线的数值，用 | 分隔",
+     "default": "40|46|42|55|51|66|60|79|98|128"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "split-host-content",
+   "name": "六四分屏",
+   "group": "人物与口播",
+   "one_line": "一条强调色分界线先从上画到下，人的那 40% 和内容的那 60% 随后以线为起点向两边推开，人先开、内容晚 0.14 秒",
+   "use_when": "一段较长的讲解里，人和要点需要同屏停留十几秒以上，人负责语气，右边负责让观众记住",
+   "energy": "低",
+   "needs": [
+    "人",
+    "文"
+   ],
+   "overlay": false,
+   "slot": 4,
+   "hero": 3.2,
+   "sfx": "line=draw, open=whoosh",
+   "pairs_with": [
+    "host-side-board",
+    "host-to-chip",
+    "line-rise"
+   ],
+   "vars": [
+    {
+     "id": "host",
+     "type": "string",
+     "label": "人物图地址（透明底，从项目根目录写起）",
+     "default": "motion-cards/lib/samples/host.png"
+    },
+    {
+     "id": "side",
+     "type": "enum",
+     "label": "人在哪一边",
+     "default": "left"
+    },
+    {
+     "id": "share",
+     "type": "number",
+     "label": "人那一块占画面宽度（%）",
+     "default": 40
+    },
+    {
+     "id": "kicker",
+     "type": "string",
+     "label": "小标题（可空）",
+     "default": "第二步"
+    },
+    {
+     "id": "title",
+     "type": "string",
+     "label": "标题（10 字以内）",
+     "default": "先搭框架，再填细节"
+    },
+    {
+     "id": "points",
+     "type": "string",
+     "label": "要点，用 | 分开（最多 3 条）",
+     "default": "列出三个小标题|每个标题下写一句话"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "split-title-reveal",
+   "name": "裂开露标题",
+   "group": "标题与章节",
+   "one_line": "一条亮线从画面中心向两边划开，画面沿这条线上下猛地裂出一道缝露出后面的标题，缝继续慢慢变宽，然后两半加速退出画面",
+   "use_when": "上一段内容结束、要翻到一个新话题；旁白有一个明显的转折词（“但是”“换个角度”“真正的问题是”）",
+   "energy": "高",
+   "needs": [
+    "文",
+    "图"
+   ],
+   "overlay": true,
+   "slot": 4,
+   "hero": 1.5,
+   "sfx": "score=draw, burst=impact, exit=whoosh",
+   "pairs_with": [
+    "slab-title-slam",
+    "kicker-headline"
+   ],
+   "vars": [
+    {
+     "id": "title",
+     "type": "string",
+     "label": "标题（建议 4–8 个字）",
+     "default": "换一个思路试试"
+    },
+    {
+     "id": "sub",
+     "type": "string",
+     "label": "两半退场后出现的一行（可空）",
+     "default": "同样的问题，倒过来问"
+    },
+    {
+     "id": "src",
+     "type": "string",
+     "label": "被裂开的那张画面（从项目根目录写起）",
+     "default": "motion-cards/lib/samples/p5.jpg"
+    },
+    {
+     "id": "gap",
+     "type": "number",
+     "label": "第一下裂开的缝高（px）",
+     "default": 340
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "spotlight-dim",
+   "name": "聚光压暗",
+   "group": "证据与界面",
+   "one_line": "暗场从画面四边向里收，收成一个贴着目标的圆角亮窗并描上强调色边；讲到下一处时，亮窗整块滑过去并变成新的形状",
+   "use_when": "界面不需要放大，但要依次指两三个地方；或者要压在一段正在播放的录屏上指位置",
+   "energy": "低",
+   "needs": [
+    "界面"
+   ],
+   "overlay": true,
+   "slot": 4,
+   "hero": 3.4,
+   "sfx": "close=whoosh, hop=whoosh",
+   "pairs_with": [
+    "screen-push-focus",
+    "cursor-click",
+    "lower-third"
+   ],
+   "vars": [
+    {
+     "id": "src",
+     "type": "string",
+     "label": "截图地址（1920×1080；底设为透明时不显示）",
+     "default": "motion-cards/lib/samples/ui.png"
+    },
+    {
+     "id": "x",
+     "type": "number",
+     "label": "第一处：左",
+     "default": 380
+    },
+    {
+     "id": "y",
+     "type": "number",
+     "label": "第一处：上",
+     "default": 370
+    },
+    {
+     "id": "w",
+     "type": "number",
+     "label": "第一处：宽",
+     "default": 1460
+    },
+    {
+     "id": "h",
+     "type": "number",
+     "label": "第一处：高",
+     "default": 122
+    },
+    {
+     "id": "x2",
+     "type": "number",
+     "label": "第二处：左（宽填 0 就不移动）",
+     "default": 1600
+    },
+    {
+     "id": "y2",
+     "type": "number",
+     "label": "第二处：上",
+     "default": 540
+    },
+    {
+     "id": "w2",
+     "type": "number",
+     "label": "第二处：宽",
+     "default": 222
+    },
+    {
+     "id": "h2",
+     "type": "number",
+     "label": "第二处：高",
+     "default": 86
+    },
+    {
+     "id": "move",
+     "type": "number",
+     "label": "移到第二处的时间（秒）",
+     "default": 2.1
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "stack-fan",
+   "name": "卡堆扇开",
+   "group": "图片与多素材",
+   "one_line": "五张图先叠成一摞整体落下，停一拍，下面四张绕同一个支点向两边扇开，最上面一张最后落回并比别的大一号",
+   "use_when": "旁白先说“有这么几样”，再点出其中最重要的一样；手上有四五张同类的图，其中一张是主图",
+   "energy": "中",
+   "needs": [
+    "多图"
+   ],
+   "overlay": true,
+   "slot": 3,
+   "hero": 2.6,
+   "sfx": "land=impact, fan=whoosh, top=pop",
+   "pairs_with": [
+    "media-pop",
+    "grid-to-hero"
+   ],
+   "vars": [
+    {
+     "id": "srcs",
+     "type": "string",
+     "label": "五张图的地址，用 | 分隔；最后一张是压在最上面的主图",
+     "default": "motion-cards/lib/samples/p2.jpg|motion-cards/lib/samples/p6.jpg|motion-cards/lib/samples/p4.jpg|motion-cards/lib/samples/p7.jpg|motion-cards/lib/samples/p1.jpg"
+    },
+    {
+     "id": "spread",
+     "type": "number",
+     "label": "最外侧一张扇开的角度（度）",
+     "default": 16
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "stamp-verdict",
+   "name": "盖章定论",
+   "group": "字与强调",
+   "one_line": "一句话摆在画面上，接着一个带粗边框的结论词从镜头前斜着砸在它的右下角，整屏一震，章的外沿扩散出一圈印痕，原话随之变暗",
+   "use_when": "旁白对一个说法下最终判断（成立 / 不成立 / 过时了 / 已验证），语气是一锤定音",
+   "energy": "高",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 3,
+   "hero": 2.7,
+   "sfx": "hit=impact",
+   "pairs_with": [
+    "strike-swap",
+    "scale-contrast"
+   ],
+   "vars": [
+    {
+     "id": "claim",
+     "type": "string",
+     "label": "被下结论的那句话",
+     "default": "提示词越长，效果越好"
+    },
+    {
+     "id": "verdict",
+     "type": "string",
+     "label": "章上的字（1–4 个字）",
+     "default": "不成立"
+    },
+    {
+     "id": "hit",
+     "type": "number",
+     "label": "章盖下来的时间（秒）",
+     "default": 1.1
+    },
+    {
+     "id": "tilt",
+     "type": "number",
+     "label": "章的倾角（度）",
+     "default": -9
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "stat-compare",
+   "name": "两数对比",
+   "group": "数据与图表",
+   "one_line": "左边的数字先到、带出一条长条，右边的数字后到、只带出一小截，两条从同一个起点用同一把尺画出来，最后倍数像盖章一样压在两个数字中间",
+   "use_when": "旁白在说“以前要多少，现在只要多少”或“A 是 B 的多少倍”，而且两个数差得足够悬殊",
+   "energy": "高",
+   "needs": [
+    "数据"
+   ],
+   "overlay": true,
+   "slot": 3.5,
+   "hero": 3.2,
+   "sfx": "a=whoosh, b=pop, verdict=impact",
+   "pairs_with": [
+    "big-stat-slab",
+    "bar-grow"
+   ],
+   "vars": [
+    {
+     "id": "pair",
+     "type": "string",
+     "label": "两个数值，用 | 分隔（先左后右）",
+     "default": "52|4"
+    },
+    {
+     "id": "unit",
+     "type": "string",
+     "label": "单位",
+     "default": "分钟"
+    },
+    {
+     "id": "names",
+     "type": "string",
+     "label": "两边的名字，用 | 分隔",
+     "default": "从零手写一份周报|给够背景让 AI 起草"
+    },
+    {
+     "id": "verdict",
+     "type": "string",
+     "label": "压在中间的结论（填 auto 自动算倍数）",
+     "default": "快 13 倍"
+    },
+    {
+     "id": "note",
+     "type": "string",
+     "label": "来源小注（可空）",
+     "default": "示例数据"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "step-stack",
+   "name": "步骤叠出",
+   "group": "结构与流程",
+   "one_line": "旁白每说到一步，这一步的卡从下方升进前排，之前的卡同一拍被顶上去、缩小、变灰",
+   "use_when": "旁白按“第一步、第二步、第三步”往下讲，每一步只有一个短语，需要观众始终知道现在讲到第几步",
+   "energy": "中",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 4.2,
+   "hero": 3.9,
+   "sfx": "step=whoosh",
+   "pairs_with": [
+    "chapter-numeral",
+    "checklist-tick"
+   ],
+   "vars": [
+    {
+     "id": "items",
+     "type": "string",
+     "label": "步骤（用 | 分隔，2–5 条）",
+     "default": "明确目标|拆解任务|给出示例"
+    },
+    {
+     "id": "cues",
+     "type": "string",
+     "label": "每一步出现的秒数（逗号分隔，不够就均匀排开）",
+     "default": "0.4,1.6,2.8"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "strike-swap",
+   "name": "划掉换词",
+   "group": "字与强调",
+   "one_line": "句尾的旧说法被一道斜线划掉，随即变小变淡沉到下一行，新说法趁它还在下沉就从上方落进它原来的位置",
+   "use_when": "旁白在纠正一个常见说法（“不是……而是……”“很多人以为……其实……”），而且新旧两个说法长度相近",
+   "energy": "中",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 3,
+   "hero": 2.7,
+   "sfx": "strike=draw, land=pop",
+   "pairs_with": [
+    "line-rise",
+    "stamp-verdict"
+   ],
+   "vars": [
+    {
+     "id": "lead",
+     "type": "string",
+     "label": "不变的前半句",
+     "default": "写提示词，靠的是"
+    },
+    {
+     "id": "wrong",
+     "type": "string",
+     "label": "被划掉的旧说法",
+     "default": "套模板"
+    },
+    {
+     "id": "right",
+     "type": "string",
+     "label": "顶替进来的新说法",
+     "default": "讲清楚"
+    },
+    {
+     "id": "hit",
+     "type": "number",
+     "label": "划线的时间（秒）",
+     "default": 1
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "subscribe-cta",
+   "name": "行动号召",
+   "group": "人物与口播",
+   "one_line": "一行里的三样东西按阅读顺序先后到：图标跳一下并晃几下，一句话滑出，箭头自己画向按钮、按钮随后弹出；两秒后图标、箭头、按钮按同样的顺序再轻轻提醒一遍",
+   "use_when": "片尾或一段讲完的收口，需要一句明确的“接下来请你做什么”",
+   "energy": "中",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 4.5,
+   "hero": 4.2,
+   "sfx": "icon=pop, arrow=draw, button=pop, again=tick",
+   "pairs_with": [
+    "follow-card",
+    "host-to-chip",
+    "word-punch"
+   ],
+   "vars": [
+    {
+     "id": "icon",
+     "type": "enum",
+     "label": "图标",
+     "default": "bell"
+    },
+    {
+     "id": "line",
+     "type": "string",
+     "label": "一句话（12 字以内）",
+     "default": "觉得有用，就点个关注"
+    },
+    {
+     "id": "btn",
+     "type": "string",
+     "label": "按钮文字（4 字以内）",
+     "default": "关注"
+    },
+    {
+     "id": "rowY",
+     "type": "number",
+     "label": "这一行的顶边位置（px）",
+     "default": 430
+    },
+    {
+     "id": "again",
+     "type": "number",
+     "label": "第二次提示的时间（秒）",
+     "default": 2.7
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "terminal-log",
+   "name": "终端日志",
+   "group": "证据与界面",
+   "one_line": "深色终端窗里，命令匀速逐字打出，停一拍回车，输出整行整行不等间隔地刷出来，最后一行先是灰的，三分之一秒后被强调色从左扫亮并打上勾",
+   "use_when": "要展示“跑了一条命令，它成功了”：安装、构建、导出、跑脚本，重点在最后的结果",
+   "energy": "中",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 4.5,
+   "hero": 3.2,
+   "sfx": "typing=type, done=chime",
+   "pairs_with": [
+    "code-walk",
+    "input-typing",
+    "stamp-verdict"
+   ],
+   "vars": [
+    {
+     "id": "cmd",
+     "type": "string",
+     "label": "命令",
+     "default": "build --target demo"
+    },
+    {
+     "id": "out",
+     "type": "string",
+     "label": "输出行（用 | 分开，最多 5 行）",
+     "default": "读取配置 demo.config|编译 12 个模块|打包资源 3.2 MB|写入 dist/"
+    },
+    {
+     "id": "done",
+     "type": "string",
+     "label": "最后一行成功状态",
+     "default": "完成 · 用时 1.8 秒（示例）"
+    },
+    {
+     "id": "title",
+     "type": "string",
+     "label": "窗口标题",
+     "default": "终端 · 示例"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "tick-cross",
+   "name": "打勾打叉",
+   "group": "标注与手绘",
+   "one_line": "一列条目先全部摆好，然后从上到下每隔半秒在条目左边手画一个勾或一个叉，叉的两笔画完后那一条变淡",
+   "use_when": "旁白在逐条表态（这个做、那个别做；这条对、那条错），条目本身观众已经看到，重点是每一条的判决",
+   "energy": "中",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 4,
+   "hero": 3.4,
+   "sfx": "tick=draw, cross=draw",
+   "pairs_with": [
+    "line-rise",
+    "stamp-verdict"
+   ],
+   "vars": [
+    {
+     "id": "items",
+     "type": "string",
+     "label": "条目，用 | 隔开（留空则只画记号）",
+     "default": "先列提纲再动笔|想到哪里写到哪里|放一晚再改一遍|第一稿就要完美"
+    },
+    {
+     "id": "marks",
+     "type": "string",
+     "label": "每条的记号：v 是勾，x 是叉，用逗号隔开",
+     "default": "v,x,v,x"
+    },
+    {
+     "id": "x",
+     "type": "number",
+     "label": "第一个记号左上角 x（1920×1080 坐标）",
+     "default": 380
+    },
+    {
+     "id": "y",
+     "type": "number",
+     "label": "第一行顶边 y",
+     "default": 100
+    },
+    {
+     "id": "pitch",
+     "type": "number",
+     "label": "行距（像素）",
+     "default": 220
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "tilt-page-3d",
+   "name": "三维倾斜页",
+   "group": "镜头运动",
+   "one_line": "一张长页面向后仰 54 度、斜着躺在画面里，镜头贴着它滑行 2.6 秒，滑到后半程页面立起来转正，和滑行同一帧停住",
+   "use_when": "要带观众“翻到”一篇长文、一份文档、一个长网页里的某一段，而且想先给出“这东西很长”的印象",
+   "energy": "中",
+   "needs": [
+    "网页"
+   ],
+   "overlay": true,
+   "slot": 4,
+   "hero": 3.4,
+   "sfx": "glide=whoosh",
+   "pairs_with": [
+    "page-scroll-park",
+    "highlighter-swipe",
+    "crash-zoom"
+   ],
+   "vars": [
+    {
+     "id": "src",
+     "type": "string",
+     "label": "长页面图片地址（从项目根目录写起）",
+     "default": "motion-cards/lib/samples/page.png"
+    },
+    {
+     "id": "ratio",
+     "type": "number",
+     "label": "页面的高宽比（高 ÷ 宽）",
+     "default": 2.625
+    },
+    {
+     "id": "fy",
+     "type": "number",
+     "label": "最后停在页面的哪里：纵向 0–1",
+     "default": 0.41
+    },
+    {
+     "id": "travel",
+     "type": "number",
+     "label": "滑行多远（页面上的像素，正数向页首方向飞）",
+     "default": 1100
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "timeline-vertical",
+   "name": "竖时间线",
+   "group": "结构与流程",
+   "one_line": "一条竖线从上往下长，长到哪个节点，那个节点的圆点就亮起，文字从线里被推出来",
+   "use_when": "旁白按时间或阶段往下讲（第一天、第一周、第一个月；过去、现在、以后），每个阶段一个短语",
+   "energy": "中",
+   "needs": [
+    "文"
+   ],
+   "overlay": false,
+   "slot": 4.4,
+   "hero": 4,
+   "sfx": "node=tick",
+   "pairs_with": [
+    "step-stack",
+    "progress-rail"
+   ],
+   "vars": [
+    {
+     "id": "items",
+     "type": "string",
+     "label": "节点文字（用 | 分隔，2–5 条）",
+     "default": "跑通一个例子|做成固定流程|交给别人也能用"
+    },
+    {
+     "id": "tags",
+     "type": "string",
+     "label": "线左边的时间标签（用 | 分隔，可留空）",
+     "default": "第一天|第一周|第一个月"
+    },
+    {
+     "id": "cues",
+     "type": "string",
+     "label": "每个节点亮起的秒数（逗号分隔，不够就均匀排开）",
+     "default": "0.5,1.7,2.9"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "title-behind-subject",
+   "name": "字在主体后",
+   "group": "标题与章节",
+   "one_line": "大标题从画面主体的背后慢慢升上来，停下时下缘仍被主体的轮廓挡着，一行小字再压到最前面",
+   "use_when": "有一张主体轮廓清楚的图或定格画面（山脊、建筑、人物半身），想让标题长在画面里而不是贴在画面上",
+   "energy": "中",
+   "needs": [
+    "文",
+    "图"
+   ],
+   "overlay": false,
+   "slot": 4,
+   "hero": 1.6,
+   "sfx": "rise=rise",
+   "pairs_with": [
+    "chapter-numeral",
+    "lower-third"
+   ],
+   "vars": [
+    {
+     "id": "title",
+     "type": "string",
+     "label": "大标题（2–5 个字）",
+     "default": "先看全局"
+    },
+    {
+     "id": "sub",
+     "type": "string",
+     "label": "压在最前面的一行小字（可空）",
+     "default": "再决定从哪里下手"
+    },
+    {
+     "id": "src",
+     "type": "string",
+     "label": "图片地址（从项目根目录写起）",
+     "default": "motion-cards/lib/samples/p2.jpg"
+    },
+    {
+     "id": "cut",
+     "type": "string",
+     "label": "遮挡层的轮廓（CSS polygon 的点，1920×1080 坐标）",
+     "default": "75px 1080px, 672px 600px, 1185px 802px, 1920px 495px, 1920px 1080px"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "title-to-corner",
+   "name": "标题退成角标",
+   "group": "标题与章节",
+   "one_line": "居中的大标题读完之后，同一行字缩小并沿一条弯路退到左上角，一根色条咔地立在它左边，正文随后占满腾出来的画面",
+   "use_when": "标题页之后紧接着要讲细节，又希望观众全程知道“现在在讲哪一段”；旁白从念标题过渡到“具体来说”",
+   "energy": "中",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 4,
+   "hero": 3.6,
+   "sfx": "park=whoosh, bar=tick",
+   "pairs_with": [
+    "chapter-numeral",
+    "progress-rail"
+   ],
+   "vars": [
+    {
+     "id": "title",
+     "type": "string",
+     "label": "标题（建议 4–8 个字）",
+     "default": "提示词三件套"
+    },
+    {
+     "id": "points",
+     "type": "string",
+     "label": "腾出画面后进来的正文，用 | 分行（可空）",
+     "default": "目标：说清要什么|例子：给一个样板|检查：让它自己核对"
+    },
+    {
+     "id": "park",
+     "type": "number",
+     "label": "标题开始退到角上的时间（秒）",
+     "default": 1.2
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "tracking-settle",
+   "name": "字距收拢",
+   "group": "字与强调",
+   "one_line": "标题以拉得很开的字距和一层虚化出现在原地，字与字向中间靠拢的同时逐渐变清楚，最后一段几乎是静止着收紧",
+   "use_when": "章节标题、片头主题句这类需要“沉下来”的时刻，旁白语速慢或者此处只有音乐",
+   "energy": "低",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 3,
+   "hero": 2.7,
+   "sfx": "settle=rise",
+   "pairs_with": [
+    "line-rise",
+    "blur-resolve"
+   ],
+   "vars": [
+    {
+     "id": "title",
+     "type": "string",
+     "label": "标题（一行）",
+     "default": "把复杂的事讲简单"
+    },
+    {
+     "id": "kicker",
+     "type": "string",
+     "label": "标题上方的小字（可空）",
+     "default": "第二部分"
+    },
+    {
+     "id": "wide",
+     "type": "number",
+     "label": "起始字距（em）",
+     "default": 0.5
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "triptych-relay",
+   "name": "三联接力",
+   "group": "图片与多素材",
+   "one_line": "三张竖裁的图并排，旁白讲到哪一格，那一格就在 0.5 秒里变宽变亮、底部进度条开始走，另外两格同时收窄变暗",
+   "use_when": "一段旁白连着讲三个并列或先后的东西（三个步骤、三个例子、三种方案），每个讲一两秒，而且希望三个一直都在画面里",
+   "energy": "中",
+   "needs": [
+    "多图",
+    "文"
+   ],
+   "overlay": true,
+   "slot": 5,
+   "hero": 2.6,
+   "sfx": "pass1=whoosh, pass2=whoosh, pass3=whoosh",
+   "pairs_with": [
+    "chapter-numeral",
+    "progress-rail",
+    "lower-third"
+   ],
+   "vars": [
+    {
+     "id": "srcs",
+     "type": "string",
+     "label": "三张图的地址，用 | 分隔，按接棒顺序",
+     "default": "motion-cards/lib/samples/p5.jpg|motion-cards/lib/samples/p1.jpg|motion-cards/lib/samples/p3.jpg"
+    },
+    {
+     "id": "labels",
+     "type": "string",
+     "label": "三格的标签，用 | 分隔（每个不超过 6 个字）",
+     "default": "写提示词|看结果|改一轮"
+    },
+    {
+     "id": "beats",
+     "type": "string",
+     "label": "三次接棒的时刻（秒），用 | 分隔，对齐旁白",
+     "default": "0.7|2.0|3.3"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "typewriter-line",
+   "name": "打字机",
+   "group": "字与强调",
+   "one_line": "一行字跟着一根强调色光标逐字打出来，遇到标点停一口气，打完以后光标原地闪两下",
+   "use_when": "画面在模拟“正在输入”（提示词、搜索词、一条消息、一句命令），或者想让观众按阅读速度一个字一个字跟着读",
+   "energy": "低",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 4,
+   "hero": 3.8,
+   "sfx": "key=type",
+   "pairs_with": [
+    "retype-fix",
+    "highlighter-swipe"
+   ],
+   "vars": [
+    {
+     "id": "text",
+     "type": "string",
+     "label": "要打出的一行字",
+     "default": "先别急着写代码，把需求说清楚。"
+    },
+    {
+     "id": "step",
+     "type": "number",
+     "label": "每个字的平均间隔（秒）",
+     "default": 0.075
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "underline-draw",
+   "name": "手绘下划线",
+   "group": "字与强调",
+   "one_line": "整句先到，念到重点词时，词下面一条头粗尾细的手绘线从左到右一笔甩出去，词被笔压得微微一沉",
+   "use_when": "要轻轻点一下某个词（术语、步骤名、要记的那个动作），又不想打断整句的阅读",
+   "energy": "低",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 3,
+   "hero": 2.6,
+   "sfx": "stroke=draw",
+   "pairs_with": [
+    "line-rise",
+    "char-cascade"
+   ],
+   "vars": [
+    {
+     "id": "text",
+     "type": "string",
+     "label": "整句",
+     "default": "先看懂报错，再去搜答案"
+    },
+    {
+     "id": "key",
+     "type": "string",
+     "label": "要画线的重点词（整句的子串）",
+     "default": "看懂报错"
+    },
+    {
+     "id": "hit",
+     "type": "number",
+     "label": "落笔时间（秒）",
+     "default": 0.9
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "unit-grid",
+   "name": "百格比例",
+   "group": "数据与图表",
+   "one_line": "十乘十的一百个小方格，从左下角开始一格一格匀速点亮，连成一整块，旁边的大数字就是此刻亮了几格",
+   "use_when": "旁白说“百分之几”，而你想让观众感到这是“一百份里的多少份”，尤其是比例不大不小、光看数字没感觉的时候",
+   "energy": "中",
+   "needs": [
+    "数据"
+   ],
+   "overlay": true,
+   "slot": 3.5,
+   "hero": 3.2,
+   "sfx": "fill=tick, stop=pop",
+   "pairs_with": [
+    "ring-progress",
+    "big-stat-slab"
+   ],
+   "vars": [
+    {
+     "id": "percent",
+     "type": "number",
+     "label": "点亮多少格（0–100）",
+     "default": 37
+    },
+    {
+     "id": "caption",
+     "type": "string",
+     "label": "数字下面的一行说明",
+     "default": "的时间花在返工上"
+    },
+    {
+     "id": "note",
+     "type": "string",
+     "label": "来源小注（可空）",
+     "default": "每格 = 1%　示例数据"
+    },
+    {
+     "id": "fill",
+     "type": "number",
+     "label": "点亮全程最长用时（秒）",
+     "default": 1.4
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "versus-split",
+   "name": "对决分屏",
+   "group": "结构与流程",
+   "one_line": "一条斜线把画面劈成两半，两边的标题从两侧加速撞到线前停住，撞击处弹出对比符号，然后两边的要点沿着斜线逐行列出",
+   "use_when": "旁白在比较两种做法、两个方案、两类人，先点出双方名字，再一条条对比",
+   "energy": "高",
+   "needs": [
+    "文"
+   ],
+   "overlay": false,
+   "slot": 5,
+   "hero": 4.6,
+   "sfx": "cut=whoosh, hit=impact, row=tick",
+   "pairs_with": [
+    "before-after-wipe",
+    "stat-compare"
+   ],
+   "vars": [
+    {
+     "id": "sideA",
+     "type": "string",
+     "label": "左边标题",
+     "default": "凭感觉写"
+    },
+    {
+     "id": "sideB",
+     "type": "string",
+     "label": "右边标题",
+     "default": "按结构写"
+    },
+    {
+     "id": "itemsA",
+     "type": "string",
+     "label": "左边要点（用 | 分隔，1–4 条）",
+     "default": "想到哪写到哪|结果忽好忽坏|出错难排查"
+    },
+    {
+     "id": "itemsB",
+     "type": "string",
+     "label": "右边要点（用 | 分隔，1–4 条）",
+     "default": "先定目标格式|结果稳定可复现|哪步错改哪步"
+    },
+    {
+     "id": "mark",
+     "type": "string",
+     "label": "中间的对比符号",
+     "default": "VS"
+    },
+    {
+     "id": "cues",
+     "type": "string",
+     "label": "每一行要点出现的秒数（逗号分隔；写满左右总条数时按先左后右逐条对）",
+     "default": "1.4,2.3,3.2"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "whip-pan",
+   "name": "甩镜",
+   "group": "转场",
+   "one_line": "上一镜带着越来越重的横向拖影被甩出画面，下一镜紧贴着它从另一侧甩进来，拖影收干净时急停",
+   "use_when": "旁白在同一口气里换了对象或地点（“而另一边”“同一时间”），节奏快，不想有停顿",
+   "energy": "高",
+   "needs": [
+    "多图"
+   ],
+   "overlay": false,
+   "slot": 2,
+   "hero": 1,
+   "sfx": "whip=whoosh",
+   "pairs_with": [
+    "triptych-relay",
+    "filmstrip-pass"
+   ],
+   "vars": [
+    {
+     "id": "from",
+     "type": "string",
+     "label": "上一镜的画面（从项目根目录写起）",
+     "default": "motion-cards/lib/samples/p1.jpg"
+    },
+    {
+     "id": "to",
+     "type": "string",
+     "label": "下一镜的画面（从项目根目录写起）",
+     "default": "motion-cards/lib/samples/p2.jpg"
+    },
+    {
+     "id": "dir",
+     "type": "enum",
+     "label": "画面往哪边甩走",
+     "default": "left"
+    },
+    {
+     "id": "smear",
+     "type": "number",
+     "label": "最快那一帧的拖影（px）",
+     "default": 90
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "word-punch",
+   "name": "重音词砸字",
+   "group": "字与强调",
+   "one_line": "整句先平平地到，重音词扣住不出，等旁白念到它的那一帧才带着色块砸进来，整屏跟着挨一下",
+   "use_when": "一句话里有一个词是全句的分量（数字、结论、反转），而且旁白会重读它",
+   "energy": "高",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 3,
+   "hero": 1.4,
+   "sfx": "hit=impact",
+   "pairs_with": [
+    "line-rise",
+    "underline-draw"
+   ],
+   "vars": [
+    {
+     "id": "text",
+     "type": "string",
+     "label": "整句",
+     "default": "提示词越具体，结果越稳"
+    },
+    {
+     "id": "key",
+     "type": "string",
+     "label": "重音词（整句的子串）",
+     "default": "越具体"
+    },
+    {
+     "id": "hit",
+     "type": "number",
+     "label": "重音词砸下的时间（秒）",
+     "default": 0.9
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "word-slot",
+   "name": "词槽轮换",
+   "group": "字与强调",
+   "one_line": "一句话里留一个带底色的空位，几个候选词在里面自上而下飞快滚过、越滚越慢，最后冲过头一点再退回来停在答案上，外框随即扣住",
+   "use_when": "旁白在卖关子（“关键不是 A，不是 B，也不是 C，而是……”），或者要表现“试了好几个选项，最后选定这个”",
+   "energy": "高",
+   "needs": [
+    "文"
+   ],
+   "overlay": true,
+   "slot": 3.5,
+   "hero": 3,
+   "sfx": "spin=tick, stop=impact",
+   "pairs_with": [
+    "word-punch",
+    "underline-draw"
+   ],
+   "vars": [
+    {
+     "id": "lead",
+     "type": "string",
+     "label": "空位前的半句",
+     "default": "好提示词，要写得"
+    },
+    {
+     "id": "tail",
+     "type": "string",
+     "label": "空位后的半句（可空）",
+     "default": ""
+    },
+    {
+     "id": "options",
+     "type": "string",
+     "label": "滚过去的几个词，用 | 分开",
+     "default": "更长|更礼貌|更花哨"
+    },
+    {
+     "id": "answer",
+     "type": "string",
+     "label": "最后停住的答案",
+     "default": "更具体"
+    },
+    {
+     "id": "spin",
+     "type": "number",
+     "label": "开始滚动的时间（秒）",
+     "default": 0.5
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "zoom-match",
+   "name": "匹配缩放",
+   "group": "转场",
+   "one_line": "上一镜朝画面里的一个点急推到 3 倍，换镜时下一镜里对应的点正好压在同一个屏幕位置上，再从 3 倍拉回全貌",
+   "use_when": "两镜里有同一个东西或同一类东西（同一个按钮、同一张脸、两个圆形的图标），旁白说“这个 X，其实是……”",
+   "energy": "中",
+   "needs": [
+    "多图"
+   ],
+   "overlay": false,
+   "slot": 2,
+   "hero": 0.9,
+   "sfx": "push=whoosh",
+   "pairs_with": [
+    "crash-zoom",
+    "magnifier-lens"
+   ],
+   "vars": [
+    {
+     "id": "from",
+     "type": "string",
+     "label": "上一镜的画面（从项目根目录写起）",
+     "default": "motion-cards/lib/samples/p1.jpg"
+    },
+    {
+     "id": "to",
+     "type": "string",
+     "label": "下一镜的画面（从项目根目录写起）",
+     "default": "motion-cards/lib/samples/p2.jpg"
+    },
+    {
+     "id": "ax",
+     "type": "number",
+     "label": "上一镜推向的点：横向 0–1",
+     "default": 0.53
+    },
+    {
+     "id": "ay",
+     "type": "number",
+     "label": "上一镜推向的点：纵向 0–1",
+     "default": 0.27
+    },
+    {
+     "id": "bx",
+     "type": "number",
+     "label": "下一镜里对上的点：横向 0–1",
+     "default": 0.43
+    },
+    {
+     "id": "by",
+     "type": "number",
+     "label": "下一镜里对上的点：纵向 0–1",
+     "default": 0.15
+    },
+    {
+     "id": "zoom",
+     "type": "number",
+     "label": "推到几倍",
+     "default": 3
+    },
+    {
+     "id": "mark",
+     "type": "enum",
+     "label": "对位圈",
+     "default": "on"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  }
+ ]
+}
