@@ -98,6 +98,6 @@
 - **有子代理工具**，而且工作区 AGENTS.md 允许派子代理时，派 2 个子代理并行做，每个做一版。交给子代理的提示词按 `templates/explore-agent.md` 写。没有子代理工具时，自己按顺序做；B 版可以只做前 10 秒。
 - **两版做完后并排比较**：
   - 节奏和画面对比：`python -X utf8 <skill>/scripts/frames.py exports/explore/B/sample.mp4 --compare exports/explore/A/sample.mp4`，得到左右并排的接触表和节奏对比表。
-  - 同一时刻的画面对比：`npx --yes hyperframes@0.8.57 compare explore/A explore/B --at <钩子那一秒> --labels A,B --out qa/explore/compare.png`。
+  - 同一时刻的画面对比：`npx --yes hyperframes@0.8.174 compare explore/A explore/B --at <钩子那一秒> --labels A,B --out qa/explore/compare.png`。
 - **自己先看，再交给用户**。先把两版里明显的问题修掉，再一起交给用户，只问一个问题：“选 A、选 B，还是混着用（比如 A 的开头 + B 的母题）？”每版用三行介绍：方案是什么、画面世界、开头第一帧。然后写上你推荐哪版、为什么。
 - **这仍然是全片开工前唯一的确认点**。探索样片替代普通样片，不会额外多出一轮确认。

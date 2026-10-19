@@ -4,6 +4,8 @@ name: 两数对比
 group: 数据与图表
 type: structure
 intents: compare,number
+numbers: 2
+chart: compare
 one_line: 左边的数字先到、带出一条长条，右边的数字后到、只带出一小截，两条从同一个起点用同一把尺画出来，最后倍数像盖章一样压在两个数字中间
 use_when: 旁白在说“以前要多少，现在只要多少”或“A 是 B 的多少倍”，而且两个数差得足够悬殊
 energy: 高

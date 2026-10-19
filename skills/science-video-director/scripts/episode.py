@@ -2,6 +2,8 @@
 
   init     新建一期项目并复制输入（不覆盖已有目录）
   add      给已有项目登记新输入（配音、稿子、SRT、素材），项目外的文件会复制进来
+  media    把视频、图片、音频放进 HyperFrames 工程：起英文名；视频重编码成恒定帧率、每秒一个关键帧，
+           默认去掉自带声轨，可以只截要用的一段（原片不动，留作出处）
   status   看这一期走到哪一步、缺什么
   stage    记录阶段变化和用户原话（写进 PROJECT.json 和 planning/NOTES.md）
   check    检查时间轴、旁白、字幕和素材文件；只报告问题，不拦截制作
@@ -24,7 +26,7 @@ from pathlib import Path
 
 from runtime_paths import default_projects, default_qwen
 
-from _media import find_ffprobe
+from _media import MediaError, find_ffmpeg, find_ffprobe, run_ffmpeg
 
 SKILL = Path(__file__).resolve().parents[1]
 DEFAULT_ROOT = default_projects()
@@ -182,6 +184,137 @@ def add_input(args):
     save(root / 'PROJECT.json', manifest)
     append_note(root, f'登记输入 {ident}（{args.role}）：{relative}')
     print(json.dumps(item, ensure_ascii=False))
+    return 0
+
+
+# ---------------------------------------------------------------- media
+
+VIDEO_EXT = {'.mp4', '.mov', '.m4v', '.webm', '.mkv', '.avi'}
+IMAGE_EXT = {'.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg'}
+AUDIO_EXT = {'.wav', '.mp3', '.m4a', '.aac', '.flac', '.ogg'}
+KEYFRAME_GAP = 2.0  # HyperFrames 在最长关键帧间隔超过 2 秒时警告：按时间跳帧会卡、会冻住
+
+
+def frame_rate(text):
+    try:
+        top, _, bottom = str(text or '').partition('/')
+        value = float(top) / float(bottom or 1)
+        return value if math.isfinite(value) and value > 0 else 0.0
+    except (ValueError, ZeroDivisionError):
+        return 0.0
+
+
+def video_info(path, ffprobe):
+    proc = subprocess.run([str(ffprobe), '-v', 'error', '-show_entries',
+                           'stream=codec_type,width,height,r_frame_rate,avg_frame_rate:format=duration', '-of', 'json', str(path)],
+                          capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=60)
+    if proc.returncode:
+        raise ValueError(f'ffprobe 读不了这个文件：{path}')
+    data = json.loads(proc.stdout or '{}')
+    streams = data.get('streams') or []
+    video = next((s for s in streams if s.get('codec_type') == 'video'), None)
+    if not video:
+        raise ValueError(f'没有画面轨：{path}')
+    r_fps, avg_fps = frame_rate(video.get('r_frame_rate')), frame_rate(video.get('avg_frame_rate'))
+    duration = float((data.get('format') or {}).get('duration') or 0) or None
+    return {'width': video.get('width'), 'height': video.get('height'), 'r_frame_rate': video.get('r_frame_rate'),
+            'fps': r_fps, 'avg_fps': avg_fps, 'duration': duration,
+            # 录屏常是可变帧率：标称帧率和平均帧率差 10% 以上（HyperFrames 也按这个判断）
+            'vfr': bool(r_fps and avg_fps and abs(r_fps - avg_fps) / max(r_fps, avg_fps) > 0.1),
+            'audio': any(s.get('codec_type') == 'audio' for s in streams)}
+
+
+def keyframe_gap(path, ffprobe, duration=None):
+    """最长的关键帧间隔（秒），连最后一个关键帧到片尾也算。只读包的标记，不解码画面。"""
+    proc = subprocess.run([str(ffprobe), '-v', 'error', '-select_streams', 'v:0', '-show_entries', 'packet=pts_time,flags',
+                           '-of', 'csv=p=0', str(path)], capture_output=True, text=True, encoding='utf-8', errors='replace',
+                          timeout=600)
+    times = []
+    for line in proc.stdout.splitlines():
+        pts, _, flags = line.partition(',')
+        if 'K' in flags:
+            try:
+                times.append(float(pts))
+            except ValueError:
+                pass
+    if not times:
+        return None
+    times.sort()
+    edges = times + ([duration] if duration and duration > times[-1] else [])
+    return round(max((b - a for a, b in zip(edges, edges[1:])), default=0.0), 2)
+
+
+def media(args):
+    root = Path(args.project).resolve()
+    if not (root / 'PROJECT.json').is_file():
+        raise ValueError(f'不是项目目录（没有 PROJECT.json）：{root}')
+    source = Path(args.file).expanduser().resolve()
+    if not source.is_file():
+        raise ValueError(f'找不到文件：{source}')
+    ext = source.suffix.lower()
+    kind = 'video' if ext in VIDEO_EXT else 'images' if ext in IMAGE_EXT else 'audio' if ext in AUDIO_EXT else None
+    if not kind:
+        raise ValueError(f'不认识的素材类型：{source.name}')
+    if kind != 'video' and (args.start is not None or args.duration is not None or args.keep_audio):
+        raise ValueError('--start / --duration / --keep-audio 只用于视频。')
+    name = args.name or re.sub(r'[^A-Za-z0-9]+', '-', source.stem).strip('-').lower()
+    if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]*', name or ''):
+        raise ValueError('文件名只用英文、数字、点、下划线或连字符：用 --name 指定，比如 --name office-night。')
+    relative = f'assets/{kind}/{name}{".mp4" if kind == "video" else ext}'
+    # --into：放进别的 HyperFrames 工程（探索样片的 explore/A）；这时不写本期 NOTES，子代理只动自己的目录
+    hf = Path(args.into).expanduser().resolve() if args.into else root / 'hyperframes'
+    dest = hf / relative
+    if dest.exists():
+        raise ValueError(f'目标已存在：{dest}。换一个 --name，旧文件不覆盖。')
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    report = {'ok': True, 'kind': kind, 'source': str(source), 'file': str(dest), 'src': relative}
+    if kind != 'video':
+        shutil.copy2(source, dest)
+        note = '复制，改英文名'
+    else:
+        ffmpeg = find_ffmpeg(args.ffmpeg)
+        ffprobe = find_ffprobe(ffmpeg=ffmpeg)
+        if not ffprobe:
+            raise ValueError('找不到 ffprobe：设置环境变量 FFPROBE_PATH，或把它放在 ffmpeg 旁边。')
+        info = video_info(source, ffprobe)
+        # 恒定帧率输出：可变帧率的录屏统一转 30fps；其余保持原帧率（如 25、30000/1001）
+        fps = args.fps or (30 if info['vfr'] else info['r_frame_rate'])
+        keyint = max(1, round(frame_rate(fps)))
+        cmd = ['-y']
+        if args.start:
+            cmd += ['-ss', f'{args.start:.3f}']
+        cmd += ['-i', str(source)]
+        if args.duration:
+            cmd += ['-t', f'{args.duration:.3f}']
+        if args.max_width and (info['width'] or 0) > args.max_width:
+            cmd += ['-vf', f'scale={args.max_width}:-2']
+        cmd += ['-map', '0:v:0', '-c:v', 'libx264', '-preset', 'medium', '-crf', str(args.crf), '-pix_fmt', 'yuv420p',
+                '-r', str(fps), '-g', str(keyint), '-keyint_min', str(keyint), '-sc_threshold', '0', '-movflags', '+faststart']
+        keep = bool(args.keep_audio and info['audio'])
+        cmd += ['-map', '0:a:0', '-c:a', 'aac', '-b:a', '192k'] if keep else ['-an']
+        part = dest.with_name(dest.name + '.part')
+        proc = run_ffmpeg(ffmpeg, [*cmd, '-f', 'mp4', str(part)], timeout=3600)
+        if proc.returncode or not part.is_file():
+            part.unlink(missing_ok=True)
+            raise ValueError('ffmpeg 转码失败：' + ((proc.stderr or '').strip().splitlines() or ['没有输出'])[-1])
+        part.replace(dest)
+        out = video_info(dest, ffprobe)
+        report.update({'width': out['width'], 'height': out['height'], 'fps': round(out['fps'], 3),
+                       'duration': round(out['duration'] or 0, 3),
+                       'keyframe_gap': keyframe_gap(dest, ffprobe, out['duration']),
+                       'source_keyframe_gap': keyframe_gap(source, ffprobe, info['duration']),
+                       'source_vfr': info['vfr'], 'audio': 'kept' if keep else ('dropped' if info['audio'] else 'none')})
+        if args.start or args.duration:
+            report['trim'] = {'start': args.start or 0, 'duration': args.duration}
+        sound = 'data-has-audio="true"' if keep else 'muted'
+        report['snippet'] = (f'<video id="{re.sub(r"[^A-Za-z0-9_-]", "-", name)}" class="clip" src="{relative}" data-start="0" '
+                             f'data-duration="{report["duration"]:.2f}" data-media-start="0" data-track-index="0" {sound} playsinline></video>')
+        trim = f'，截 {args.start or 0:g} 秒起' + (f' {args.duration:g} 秒' if args.duration else '') if (args.start or args.duration) else ''
+        note = f'每秒一个关键帧（原片最长 {report["source_keyframe_gap"]} 秒一个），{report["fps"]:g}fps 恒定帧率{trim}，声轨{"保留" if keep else "去掉"}'
+    report['bytes'] = dest.stat().st_size
+    if not args.into:
+        append_note(root, f'素材进工程：{source.name} → hyperframes/{relative}（{note}）')
+    print(json.dumps(report, ensure_ascii=False, indent=2))
     return 0
 
 
@@ -417,6 +550,37 @@ def check(args):
             if not (cards_dir / cid / 'demo.html').exists():
                 hints.append(f'{scene.get("id")}：动效卡 {cid} 还没装进工程（cards.mjs use <项目>/hyperframes {cid}）。')
 
+    # 分镜的 materials 要用和动效卡 needs 同一套词，写错了选卡时会当成“这一镜没有素材”
+    try:
+        kinds = set(json.loads((Path(__file__).resolve().parent / 'semantics' / 'intents.json').read_text(encoding='utf-8-sig'))['materials']['kinds'])
+    except (OSError, ValueError, KeyError):
+        kinds = set()
+    for scene in scenes if kinds else []:
+        odd = [m for m in scene.get('materials') or [] if m not in kinds]
+        if odd:
+            hints.append(f'{scene.get("id")}：materials 里的 {"、".join(map(str, odd))} 不认识，只能写 {" / ".join(sorted(kinds))}。')
+
+    # 工程里用到的视频：关键帧太稀时 HyperFrames 跳帧会卡（渲染日志里只有一行 WARNING，容易漏看）
+    hf = root / 'hyperframes'
+    pages = [p for p in [hf / 'index.html', *sorted((hf / 'compositions').glob('*.html')), *sorted((hf / 'components').glob('*.html'))]
+             if p.is_file()]
+    videos = sorted({src for page in pages for src in re.findall(r'<video\b[^>]*?\bsrc="([^"]+)"', page.read_text(encoding='utf-8'))
+                     if not re.match(r'(?i)https?:', src)})
+    probe = find_ffprobe() if videos else None
+    for src in videos:
+        path = hf / src
+        if not path.is_file():
+            problems.append(f'工程里的视频找不到：hyperframes/{src}')
+            continue
+        try:
+            gap = keyframe_gap(path, probe, media_duration(path, probe)) if probe else None
+        except Exception as exc:  # 量不出来不影响其他结果
+            hints.append(f'hyperframes/{src} 的关键帧没量成：{exc}')
+            continue
+        if gap and gap > KEYFRAME_GAP:
+            hints.append(f'hyperframes/{src} 最长 {gap:g} 秒才有一个关键帧，HyperFrames 跳帧会卡：'
+                         '用 episode.py media 把原片重新放进工程（每秒一个关键帧）。')
+
     # 采用素材的来源
     for aid, asset in assets.items():
         if asset.get('selected') and asset.get('origin') == 'external' and not asset.get('source_url'):
@@ -484,6 +648,18 @@ def main():
     extra.add_argument('--role', required=True, choices=['script', 'narration', 'srt', 'design', 'material'])
     extra.add_argument('--note')
     extra.add_argument('--ffprobe')
+    bring = sub.add_parser('media', help='把视频、图片、音频放进 HyperFrames 工程（hyperframes/assets/）')
+    bring.add_argument('project')
+    bring.add_argument('file')
+    bring.add_argument('--name', help='英文文件名（不带扩展名）；不写就从原文件名里取英文和数字')
+    bring.add_argument('--start', type=float, help='视频从第几秒开始截（只要用一段时，截了更小、更快）')
+    bring.add_argument('--duration', type=float, help='截多长（秒）')
+    bring.add_argument('--keep-audio', action='store_true', help='保留视频自带的声音（默认去掉，B-roll 和录屏一般不要）')
+    bring.add_argument('--fps', help='输出帧率；默认保持原帧率，可变帧率的录屏转成 30')
+    bring.add_argument('--max-width', type=int, help='宽度超过它就等比缩小（默认不缩，留着推近的余量）')
+    bring.add_argument('--crf', type=int, default=17, help='画质，默认 17（肉眼看不出损失）；越小越清、文件越大')
+    bring.add_argument('--into', help='放进哪个 HyperFrames 工程，默认 <项目>/hyperframes；探索样片写 <项目>/explore/A（不记 NOTES）')
+    bring.add_argument('--ffmpeg')
     state = sub.add_parser('status')
     state.add_argument('project')
     stage = sub.add_parser('stage')
@@ -501,9 +677,9 @@ def main():
     captions.add_argument('--overwrite', action='store_true')
     args = parser.parse_args()
     try:
-        return {'init': init, 'add': add_input, 'status': status, 'stage': set_stage, 'check': check,
+        return {'init': init, 'add': add_input, 'media': media, 'status': status, 'stage': set_stage, 'check': check,
                 'captions': export_captions}[args.command](args) or 0
-    except (ValueError, OSError, KeyError, TypeError) as exc:
+    except (ValueError, OSError, KeyError, TypeError, subprocess.SubprocessError, MediaError) as exc:
         print(json.dumps({'ok': False, 'error': str(exc)}, ensure_ascii=False), file=sys.stderr)
         return 1
 

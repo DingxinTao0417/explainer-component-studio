@@ -49,7 +49,7 @@ python scripts/init-workspace.py --workspace <你的工作区>
   - `build.mjs`：把 `src/` 里的组件构建到 `compositions/`；`--project <工程目录> --tone <字母>` 把组件、字体、GSAP 和音效装进 `<工程目录>/brand/`，没有宿主 `index.html` 时建一个。音效用本仓库 `assets/sfx/` 里的 13 个。
   - `tools/tone-stills.mjs`：用一句钩子文字，在每种调性下各截一张静帧，再拼一张对比图。
 - 对助手说：“按 workspace-starter/brand-kit/README.md 的接口和 visual-grammar.md 第 6 节，在我的工作区 brand-kit 里做 tokens.css、build.mjs 和 tone-stills.mjs。主色是……，频道名是……。先只做 A 调。”
-- 做完的标志：`node build.mjs --project <一个空目录> --tone A` 能建出可以 `npx --yes hyperframes@0.8.57 check` 通过的工程。
+- 做完的标志：`node build.mjs --project <一个空目录> --tone A` 能建出可以 `npx --yes hyperframes@0.8.174 check` 通过的工程。
 
 ## 4. 品牌包：组件
 
@@ -102,7 +102,7 @@ python scripts/init-workspace.py --workspace <你的工作区>
 ## 9. 收尾
 
 - 品牌包说明：把 `brand-kit/README.md` 从占位说明换成你自己的——每个组件的变量表和一段可以直接贴的挂载片段。技能挂组件时读的就是它。
-- 素材来源（可选）：要用 Pexels 实拍素材，按 `guide/assets.md` 运行 `scripts/pexels.ps1 -Action configure` 存凭据。
+- 素材来源（可选）：要用 Pexels 实拍素材，按 `guide/assets.md` 运行 `scripts/pexels.ps1 -Action configure` 存凭据（Windows 自带的 PowerShell 5.1 就能跑，不用另装 PowerShell 7）。
 - 频道复盘：`<工作区>/频道复盘.md` 已经有表头，发布第一期后开始填。
 - 做完的标志：检查命令显示“必做的还剩 0 项”。
 

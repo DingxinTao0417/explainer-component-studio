@@ -4,6 +4,7 @@
   data-composition-variables='[
     {"id":"items","type":"string","label":"步骤（用 | 分隔，2–5 条）","default":"明确目标|拆解任务|给出示例"},
     {"id":"cues","type":"string","label":"每一步出现的秒数（逗号分隔，不够就均匀排开）","default":"0.4,1.6,2.8"},
+    {"id":"side","type":"enum","label":"整叠卡放在哪","default":"center","options":[{"value":"center","label":"居中（卡宽 1500）"},{"value":"left","label":"左半屏（卡宽 800，右边留给画面）"},{"value":"right","label":"右半屏（卡宽 800，左边留给画面）"}]},
     {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
   ]'
 >
@@ -62,8 +63,8 @@
 
       <script>
         (function () {
-          var CFG = { levels: [1, 0.8, 0.7, 0.7, 0.7], rise: 260, move: 0.5, fade: 0.14, dim: 0.35, cardH: 220, gapPx: 18, first: 0.4, gap: 1.2, minGap: 0.55 };
-          var v = { items: "明确目标|拆解任务|给出示例", cues: "0.4,1.6,2.8", backdrop: "on" };
+          var CFG = { levels: [1, 0.8, 0.7, 0.7, 0.7], rise: 260, move: 0.5, fade: 0.14, dim: 0.35, cardH: 220, gapPx: 18, first: 0.4, gap: 1.2, minGap: 0.55, sideW: 800, edge: 96 };
+          var v = { items: "明确目标|拆解任务|给出示例", cues: "0.4,1.6,2.8", side: "center", backdrop: "on" };
           try {
             var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
             for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
@@ -83,17 +84,29 @@
           while (cues.length < n) cues.push(cues[cues.length - 1] + gap);
           for (var i = 1; i < n; i++) cues[i] = Math.max(cues[i], cues[i - 1] + CFG.minGap);
 
+          // side: left / right put the stack in one half (800px cards, 96px from that edge) so footage keeps the other half
+          var side = /^(left|right)$/.test(String(v.side)) ? String(v.side) : "center";
+          var W = side === "center" ? 1500 : CFG.sideW;
+
           // rebuild the cards from the variable; every card starts in the "current" look
           var em = function (s) { var w = 0; for (var c = 0; c < s.length; c++) w += s.charCodeAt(c) > 255 ? 1 : 0.6; return w; };
           var col = q(".ss-col"), cards = [];
           col.innerHTML = "";
+          if (side !== "center") {
+            col.style.alignItems = side === "left" ? "flex-start" : "flex-end";
+            col.style.padding = side === "left" ? "0 0 0 " + CFG.edge + "px" : "0 " + CFG.edge + "px 0 0";
+          }
           items.forEach(function (t, j) {
             var el = document.createElement("div");
             el.className = "ss-card";
             el.innerHTML = '<span class="ss-edge"></span><span class="ss-num"><span class="ss-dot"></span><span class="ss-ring"></span><span class="ss-n">' + (j + 1) + '</span></span><span class="ss-txt"></span>';
+            el.style.width = W + "px";
+            // cards that step back shrink towards the anchored edge, so the stack keeps one straight edge
+            el.style.transformOrigin = side === "left" ? "0% 50%" : side === "right" ? "100% 50%" : "50% 50%";
             var txt = el.querySelector(".ss-txt");
             txt.textContent = t;
-            txt.style.fontSize = Math.floor(Math.min(88, 1200 / em(t))) + "px";
+            // room for text = card width − padding (120) − number (124) − gap (48), rounded down to W − 300
+            txt.style.fontSize = Math.floor(Math.min(88, (W - 300) / em(t))) + "px";
             col.appendChild(el);
             cards.push(el);
           });

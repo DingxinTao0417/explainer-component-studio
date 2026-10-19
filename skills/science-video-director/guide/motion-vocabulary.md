@@ -58,7 +58,7 @@ node "$mc/tools/cards.mjs" serve                             # 画廊：http://l
 4. **换皮。** 在项目根元素上设 `--mc-bg / --mc-panel / --mc-ink / --mc-muted / --mc-accent / --mc-accent-2 / --mc-on-accent / --mc-font`，值取本期调性的品牌 token。所有卡一起变，同一期里不要给个别卡另配颜色。
 5. **压在实拍或录屏上。** 变量里加 `"backdrop":"off"`，只留动效本身。标注类的卡用 `x / y / w / h` 指目标，坐标读实测值（`pageshot.mjs` 或截图量），不目测。
 6. **要改节奏。** 改项目里那份 `demo.html` 脚本顶部的 `CFG`，先看“参数手感”。库里的原卡不动。
-7. **检查。** `npx --yes hyperframes@0.8.57 check`，再用 `frames.py --cues` 核对卡点和标注有没有套住目标。
+7. **检查。** `npx --yes hyperframes@0.8.174 check`，再用 `frames.py --cues` 核对卡点和标注有没有套住目标。
 8. **音效。** 卡的前言 `sfx` 写了哪一拍该配什么类型的声音（impact / pop / whoosh / tick / rise / type / draw / shutter / chime）；音色从品牌包的 `sfx-map.json` 里取对应的。
 
 ## 用的时候守住本频道的标准

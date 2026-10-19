@@ -27,14 +27,14 @@
 - 旁白：`{项目}/{audio}`，只用 {起}–{止} 秒这一段。
 - 逐词时间：`{项目}/subtitles/{align_…}/transcript.json`（已经对好，不用再跑识别，也不要启动 Qwen）。要让某个元素正好在某个词说出来时出现，用 `python -X utf8 <skills目录>/science-video-director/scripts/align.py find --transcript … --words "词1,词2"` 查这个词的时间（find 和 cues 只用标准库，任何 Python 都能跑）。
 - 字幕：用 brand-kit 的 captions 组件，变量已经生成好：`{项目}/subtitles/hf_cues.json` 的 `html` 字段，整段贴上即可。
-- 素材：{录屏、截图、图片路径；缺的用标注清楚的占位代替。文件名有空格、括号或中文的，先复制成英文名放进工程的 assets/}
+- 素材：{录屏、截图、图片路径；缺的用标注清楚的占位代替。派之前先用 `episode.py media {项目} <文件> --name <英文名> --into {项目}/explore/{A}` 把要用的视频、图片放进它的工程（英文名、每秒一个关键帧），这里写 `assets/…` 路径。它自己找到新素材时也用这条命令放进自己的工程}
 
 **做法和限制：**
 
 - 工程建在 `{项目}/explore/{A}/`（不要放进名叫 hyperframes 的文件夹）。运行 `node <工作区>/brand-kit/build.mjs --project {项目}/explore/{A} --tone {调性字母}`，它会建好宿主 index.html、package.json 并装好品牌包，一次就够。不要修改别的目录。
 - 元素在旁白说到它时才出现，不要一上来就全部摆满。缓动用 power3，不用回弹；不做“呼吸”动画，不做无限循环。
 - 字号、录屏、主色的要求按七条标准。
-- 所有 HyperFrames 命令都写成 `npx --yes hyperframes@0.8.57 …`（不带版本号会用错版本）。做完运行 `npx --yes hyperframes@0.8.57 check`，然后渲染到 `{项目}/exports/explore/{A}/sample.mp4`（24fps，低清可以）。
+- 所有 HyperFrames 命令都写成 `npx --yes hyperframes@0.8.174 …`（不带版本号会用错版本）。做完运行 `npx --yes hyperframes@0.8.174 check`，然后渲染到 `{项目}/exports/explore/{A}/sample.mp4`（24fps，低清可以）。
 - 渲染后运行 `python -X utf8 <skill>/scripts/frames.py {项目}/exports/explore/{A}/sample.mp4`，打开 hook_01.jpg 和接触表，真的看一遍，把最明显的两三个问题修掉，再渲染一次。
 
 **最后回报（不超过 10 行）：**

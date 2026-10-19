@@ -47,12 +47,13 @@ projects/YYYYMMDD_主题/
       "source": "screen_record",
       "visual": "做好的网页全屏滚动，右下角头像角标",
       "on_screen_text": ["3 分钟做出大牌官网"],
-      "motion": "从首屏慢推到产品图",
+      "motion": "slow-push",
       "component": "hook-title",
       "technique": ["T001"],
       "cue_words": ["三分钟"],
       "sfx": "whoosh@0.0",
       "asset_ids": ["A001"],
+      "materials": ["界面"],
       "status": "planned"
     }
   ]
@@ -63,14 +64,14 @@ projects/YYYYMMDD_主题/
 - `source`：`screen_record`、`real_footage`、`photo`、`user_video`、`ai_video`、`illustration`、`component`、`custom`。
 - 以下字段 `episode.py` 不检查，是给自查、回放测试和复盘看的：
   - `component`：用到的品牌组件 id（定制镜头写 `custom`，纯素材不写）；
-  - `motion`：用到的动效卡 id；
+  - `motion`：用到的动效卡 id，几张就用逗号隔开；
+  - `materials`：这一镜手上有什么素材，用和动效卡 `needs` 一样的词：`图`、`多图`、`界面`、`网页`、`人`；什么都没有写 `[]`。`shot_semantics.py suggest` 按它筛卡：没有的不推荐，用得上的排前面。不写时从 `source`（`screen_record` 算界面，照片、插画、视频算图）、`asset_ids` 指向的素材（`ASSETS.json` 的登记和 `PROJECT.json` 里用户给的图片、视频，两张以上算多图）和 `type: host`（算人）推。截图是不是软件界面、长图是不是网页推不出来，这两种要自己写上；
   - `intent`：`shot_semantics.py suggest` 识别出的讲解意图 id（如 compare、steps、number）；
   - `slots`：按旁白填好的组件变量（就是 suggest 输出的 slots，改过后的终稿）；
   - `cues`：卡词结果，`{"data-start": 12.3, "cues": [0.6, 1.5]}` 这类；
   - `technique`：用到的手法卡；
   - `cue_words`：这个镜头要卡在哪个词上出现，时间用 `align.py find` 或 suggest 的 timing 查。`episode.py check` 会核对每个词在旁白里找不找得到、是不是在这一镜里说的、离镜尾够不够远；`frames.py --cues` 按它抽卡词帧；
   - `layout`：这一镜的版式，一句短话写“人在哪 / 素材装在哪”，如 `"角标右下 / 录屏铺满"`、`"不在场 / 左图右清单"`、`"全屏口播"`。排逐镜之前先把全片的 `layout` 填一遍，就是版式节奏表：连续 3 镜一样、或同一个组件连用 3 镜，`episode.py check` 会提示；
-  - `motion`：从动效词汇里借了动法时，写卡名，如 `"evidence-scroll-tour"`；
   - `notes`：这一镜做完要核对的事，比如手法卡的“别这样用”、动效卡的“已知坑”和“落位自检”。
   旧项目没有 `intent` / `slots` / `cues` / `layout` 也能用。
 - `status`：`planned` → `draft`（还有占位）→ `ready`。
@@ -94,11 +95,12 @@ projects/YYYYMMDD_主题/
 
 ### 先装好工具
 
-- **命令一律带版本号**：本文和品牌包文档里的 HyperFrames 命令都写成 `npx --yes hyperframes@0.8.57 <命令>`，或者在工程里用 `npm run check` / `npm run render`。工程文件夹叫 hyperframes，不带版本号的 `npx hyperframes` 可能用错版本。
-- **文件名**：素材文件名有空格、括号或中文的，先复制成英文名放进工程的 `assets/`，再引用。
+- **命令一律带版本号**：本文和品牌包文档里的 HyperFrames 命令都写成 `npx --yes hyperframes@0.8.174 <命令>`，或者在工程里用 `npm run check` / `npm run render`。工程文件夹叫 hyperframes，不带版本号的 `npx hyperframes` 可能用错版本。
+- **升级版本**：新版本先在动效卡库全量验证（`HF_CLI="npx --yes hyperframes@<新版本>" node <工作区>/motion-cards/tools/cards.mjs verify all`），通过后再改本文、品牌包 `build.mjs` 的 `HF_VERSION` 和卡库 `cards.mjs` 里的版本号。已交付的旧工程保持原来的版本，不跟着升。
+- **素材进工程**：视频、图片、音频一律用 `python -X utf8 <skill>/scripts/episode.py media <项目> <文件> --name <英文名>` 放进 `hyperframes/assets/`，不手动复制。它起英文文件名；视频重编码成恒定帧率、每秒一个关键帧（HyperFrames 按时间跳帧，原片和录屏常常几秒才一个关键帧，会卡帧冻住，渲染日志里只有一行 WARNING），默认去掉自带声轨（`--keep-audio` 保留），`--start/--duration` 只截要用的一段。输出里有 `src` 和一段 `<video>` 片段可以直接贴。原片不动，留作出处。`episode.py check` 会量工程里每个视频的关键帧间隔，超过 2 秒的列出来。
 
 - 先读 `hyperframes` skill 的入口，按它的路由加载子 skill：core、animation、creative、audio、cli。混合录屏的讲解片通常走 `general-video`。
-- skill 缺失或过期时，运行 `npx --yes hyperframes@0.8.57 skills update <名字>`。
+- skill 缺失或过期时，运行 `npx --yes hyperframes@0.8.174 skills update <名字>`。
 - 讲解片的动效原则在 `faceless-explainer` 的 visual-design 和 motion-language 里，第一次做片前读一遍：
   - 旁白说到才出现，不提前摆满；
   - 缓动用 power3，不回弹；
@@ -111,7 +113,7 @@ projects/YYYYMMDD_主题/
 ### 品牌包
 
 - 运行 `node <工作区>/brand-kit/build.mjs --project <项目>/hyperframes --tone <本期调性字母>`，把组件、字体、GSAP、13 个音效和 `sfx-map.json` 装进 `hyperframes/brand/`。
-  - 工程里还没有 `index.html` 时，它会建一个宿主骨架（tone 变量、字体块、`#root`），同时建好 package.json（固定 hyperframes@0.8.57）、hyperframes.json 和 meta.json，一次就够。
+  - 工程里还没有 `index.html` 时，它会建一个宿主骨架（tone 变量、字体块、`#root`），同时建好 package.json（固定 hyperframes@0.8.174）、hyperframes.json 和 meta.json，一次就够。
   - 已有 `index.html` 的，只刷新字体块。以后改了品牌包，再运行一次同步。
 - 13 个组件是：
   - `chapter-card`（章节卡）、`keyword-punch`（关键词冲击）、`big-number`（大数字）、`compare-split`（左右对比）、`step-list`（步骤清单）；
@@ -131,7 +133,7 @@ projects/YYYYMMDD_主题/
 - **动画要确定、可拖动**：只用有限时长的时间轴动画，不用随机数、墙钟时间和无限循环。来回拖动进度条时，画面要保持一致。
 - **文字和数字用可编辑图层**，不要烤进生成图里。
 - **字幕层**独立于内容层，固定在底部安全区。录屏的关键区域在底部时，把字幕上移，或者推近画面避开它。
-- 每次改完合成都运行 `npx --yes hyperframes@0.8.57 check`（或 `npm run check`），改到 0 个 error 为止。
+- 每次改完合成都运行 `npx --yes hyperframes@0.8.174 check`（或 `npm run check`），改到 0 个 error 为止。
 
 ## 声音
 
@@ -141,7 +143,7 @@ projects/YYYYMMDD_主题/
 - **音效**：按 `brand/sfx-map.json` 放在组件出现的那一刻。一个镜头最多 2 个，每分钟约 6–12 个。
 - **BGM**：
   - 按调性表选方向，用授权写明的曲子，登记到 ASSETS.json 和 ATTRIBUTION.md。不用热门歌曲，也不照搬参考片的配乐。
-  - 有拍点需求时，运行 `npx --yes hyperframes@0.8.57 beats` 取拍点，再用 `audio.py snap` 看哪些切点可以对到拍上。
+  - 有拍点需求时，运行 `npx --yes hyperframes@0.8.174 beats` 取拍点，再用 `audio.py snap` 看哪些切点可以对到拍上。
 - **闪避**：运行 `audio.py envelope <旁白> --bgm <曲子> --bgm-start <秒> --length <秒> --out planning/bgm_duck.json`，把它输出的 `data-automation` 属性贴到 BGM 的 `<audio>` 上。
 - **检查**：渲染预览后，运行 `audio.py report <预览.mp4> --voice <旁白> --bgm <曲子>`，看整体响度、峰值、削波、冷场，以及人声和 BGM 的差距。数字达标只说明没有明显错误，好不好听要交给用户试听。
 - **音效听不听得到**：`audio.py sfx <预览.mp4> --voice <旁白> --html hyperframes/index.html`。它从成片里减掉人声，逐个看音效落点有没有冒出来，列出“听不清”的（压在人声下面，或者太轻）和每分钟的个数。听不清的音效等于没放：挪到句间的气口、换更亮的音色、提高音量，或者删掉。《认知灵活性》成片实测 56 个音效里 25 个听不清，多数是压在人声下的轻点击声。这也只是线索，最后请用户试听。
@@ -149,14 +151,14 @@ projects/YYYYMMDD_主题/
 
 ## 预览、看片与导出
 
-1. **预览**：按 hyperframes-cli 的方式启动本地预览（`npx --yes hyperframes@0.8.57 preview --background`），或者渲染低清 mp4，样片也一样。预览端口选空闲的，不要占用或关掉 3031 画廊等别的服务。
+1. **预览**：按 hyperframes-cli 的方式启动本地预览（`npx --yes hyperframes@0.8.174 preview --background`），或者渲染低清 mp4，样片也一样。预览端口选空闲的，不要占用或关掉 3031 画廊等别的服务。
 2. **看片**：
    - **先看静帧，再渲视频。** 位置、遮挡、文案、配色、层级、取景这些问题，`snapshot --at <秒>` 抽一帧就能回答，十几秒的事；渲视频留给静帧看不出的问题：节奏、闪烁、声画同步。改了哪一章就只看那一章，几处小改攒成一批再渲。
    - 运行 `python -X utf8 <skill>/scripts/frames.py <预览.mp4> --cues planning/EDIT.json`，打开 hook_01.jpg、每张 sheet 和每张 cues 图，对照 visual-grammar.md 的自查清单，逐条写进 REPORT.md，然后修改。
    - **卡词帧**（cues 图）：EDIT.json 里每个 `cue_words` 一行，左边是这个词说出口之前，右边是说出口之后。左边不该已经亮出答案，右边该已经在回应；框和箭头这类只出现一两秒的标注，按固定间隔抽的接触表多半抽不到，要在这里核对有没有套住目标。图上的编号对应 REPORT.md 里的“编号 → 镜头、词、时刻”表。样片只截了全片的一段时，加 `--cue-offset <旁白起点 − 样片起点>`。
    - frames.py 给出的数字（平均镜头长度、超过 6 秒不换的段落、静止段）只是线索，最终靠看图判断。
    - **和参考片并排比**：`frames.py <预览.mp4> --compare <工作区>/已拆解视频/<参考片>.mp4`（还没挪走的在 `待拆解视频/`）。每行左边是本片、右边是参考片，外加一张节奏对照表。每期至少跟一条参考片比一次，差距一眼就能看出来。
-   - **单帧细看**：`npx --yes hyperframes@0.8.57 snapshot --at 3,12.5 --zoom <x,y,w,h>` 放大检查小字和边缘。
+   - **单帧细看**：`npx --yes hyperframes@0.8.174 snapshot --at 3,12.5 --zoom <x,y,w,h>` 放大检查小字和边缘。
 3. **用户预览**：告诉用户看哪个文件或地址，用两三句话说这一版改了什么、还有什么已知问题。
 4. **导出**：用户明确说导出后，渲染 `exports/<主题>_v<N>_1080p.mp4`（用新的版本号，不覆盖旧文件）。然后对成片再跑一次 frames.py 和 audio.py report，确认没有黑帧、字幕首尾完整、音轨都在、时长正确。最后运行 `episode.py stage <项目> delivered`。
 5. **ATTRIBUTION.md**：列出采用的 Pexels 和网络素材（作者、页面链接、许可）、音乐和音效。音效的来源见 `brand/sfx/CREDITS.md`。

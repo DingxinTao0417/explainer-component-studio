@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "source": "author-maintained local skills",
-  "snapshot_date": "2026-10-18",
+  "snapshot_date": "2026-10-19",
   "adaptation": "Repository distribution: portable runtime paths (scripts/runtime_paths.py), placeholder paths in guides, deprecated placeholder files omitted. Installed source skills are unchanged. Channel-specific content in the author's style-profile.md, visual-grammar.md and voice.md (one channel's fixed tone, voices and local tools) is not published; those files carry only the general edits.",
   "files": [
     {
@@ -18,7 +18,7 @@
     },
     {
       "path": "science-video-director/SKILL.md",
-      "source_sha256": "625dafd760cc5e437a001f6ec11258f853646ac86d92a20b6cea6faa66b27e8d"
+      "source_sha256": "c3ce3c28e8d5ac95c5fdec7e6155f00ffdf8f58885ef8f4fcf1a50a210578e86"
     },
     {
       "path": "science-video-director/agents/openai.yaml",
@@ -26,23 +26,23 @@
     },
     {
       "path": "science-video-director/guide/assets.md",
-      "source_sha256": "5f54384fcdd375fe063d0398f61723457f39b944e5e81d299512189635fe00ef"
+      "source_sha256": "5b11d3d5b59b8fec01414a5a17bf8e5426fe192f3396ee690b7f1a720cd32540"
     },
     {
       "path": "science-video-director/guide/components.md",
-      "source_sha256": "c5a9a81b74cb4d59d81c426ee533798c39a52d46883f34324e0e43555d14b0f2"
+      "source_sha256": "5bd31be97c52d19dc6d34a1d61054876f7688ae3f765741f586c9ae5666eceda"
     },
     {
       "path": "science-video-director/guide/ideation.md",
-      "source_sha256": "8747077abf1576c79543f5111bfefb00012a292ad2adc6c0a3ef1378220555a2"
+      "source_sha256": "fa95249d4538512e726d310abb3c7f161d2ca51b5143692ebf546a544bcce142"
     },
     {
       "path": "science-video-director/guide/motion-vocabulary.md",
-      "source_sha256": "86dad953cc55a65d09b9ea4cb3ab6b877e32c9e11dcac30d7f4934458aa4e2c6"
+      "source_sha256": "861db502fe01b3e1f9782a43e2c2d5d8d7d4b60fbdeb0779866984886d6e8ea0"
     },
     {
       "path": "science-video-director/guide/production.md",
-      "source_sha256": "60e98078fe4047e28ff71dfde8a824928077217008065c8d4571fad5e357c481"
+      "source_sha256": "7beb9a1a12d3b1ef7309cdbf30c47334745f40f40f155b83e318945df43b514a"
     },
     {
       "path": "science-video-director/guide/retro.md",
@@ -50,15 +50,15 @@
     },
     {
       "path": "science-video-director/guide/style-profile.md",
-      "source_sha256": "88d0c7c2d3c927fa6c6e725b61b3d07c49c795df040e252235dffb5bf3dcc4d9"
+      "source_sha256": "beaba093cec19ee0133febf11e74d4865e84465d3346ab6ec6b8f7424a43fa5c"
     },
     {
       "path": "science-video-director/guide/visual-grammar.md",
-      "source_sha256": "f06d3a1f5ee05930f3da4f712750f26c83eba0b3395de01a9c82bc96eb42fbe8"
+      "source_sha256": "e2e1c7d5f5ed41a2b2556c44c24588acef05790c4886a8362942ac4d001c6fa6"
     },
     {
       "path": "science-video-director/guide/voice.md",
-      "source_sha256": "db8539c840ab8104270c1880a9cb40bb2ef9456ebc1e9119feb1989d3486bdb0"
+      "source_sha256": "0df94eff04e7c81723745155428069cfd70023bc74b15cfd9d68231e1083476f"
     },
     {
       "path": "science-video-director/scripts/_media.py",
@@ -78,7 +78,7 @@
     },
     {
       "path": "science-video-director/scripts/episode.py",
-      "source_sha256": "0227c18b72b39f9b93cd27aa93e7fd6b839160b602b232a48f4b10729cfb9055"
+      "source_sha256": "badd03e9056b5819cf81bc3d6d55b1eab6df349d02ae2a00c88787099716dcde"
     },
     {
       "path": "science-video-director/scripts/frames.py",
@@ -94,7 +94,7 @@
     },
     {
       "path": "science-video-director/scripts/pexels.ps1",
-      "source_sha256": "267369d2436ff4a01c90ee93a7152e8d08e7b5b13b628fc52394f19ef01ef3bf"
+      "source_sha256": "86d94b5deabff7ece3559f6ebf61e38d5e68e7cb1e65e4444dfa56230a447665"
     },
     {
       "path": "science-video-director/scripts/qwen_voiceover.py",
@@ -106,11 +106,11 @@
     },
     {
       "path": "science-video-director/scripts/semantics/intents.json",
-      "source_sha256": "2ea1588265c96ca4d39dfd7860bfabda6ad492654f2885b7e855ecd76ce4e56d"
+      "source_sha256": "e1e97800c75ed46f9cf37f547ab62ac13998318ab52aa8c794700da5d193773b"
     },
     {
       "path": "science-video-director/scripts/shot_semantics.py",
-      "source_sha256": "9f2b67dbb238c11fea4b436557e3b901920f34553fa6fb4248caf6cd4532d341"
+      "source_sha256": "a4de33470960f2f3ad7112536535888e4ee83353e0e5732cd59f5f191b1c2833"
     },
     {
       "path": "science-video-director/scripts/voices.py",
@@ -122,7 +122,7 @@
     },
     {
       "path": "science-video-director/templates/explore-agent.md",
-      "source_sha256": "a62f81eaf79b0d78fd0ddceefe11ace7c143548da8c0ffe6ef857d04b99c79fc"
+      "source_sha256": "075055b7db59f06102dab8e1f96ebddf9752e97fb6b6d20182553927bfda2205"
     },
     {
       "path": "science-video-director/templates/page-tour.md",
@@ -134,7 +134,7 @@
     },
     {
       "path": "science-video-director/templates/review-agent.md",
-      "source_sha256": "0b1f1d4d139671d0c8a7c6def2da018a495627089869e38c0ceb8f9802dd5acb"
+      "source_sha256": "fb877fa3b980a1281bcb17c6b02b2d7ce93362b8daebeb22306603112daf273d"
     },
     {
       "path": "science-video-preproduction/SKILL.md",

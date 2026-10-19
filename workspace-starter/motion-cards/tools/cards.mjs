@@ -6,11 +6,13 @@
 //                                                       cards/<id>/strip.jpg (5 frames) + thumb.jpg
 //   node tools/cards.mjs index                          rebuild index.json from the cards' front matter
 //   node tools/cards.mjs gallery                        rebuild gallery/index.html
-//   node tools/cards.mjs serve [port]                     local gallery at http://localhost:3040/motion-cards/gallery/
+//   node tools/cards.mjs serve [port]                   local gallery at http://localhost:3040/motion-cards/gallery/
+//   node tools/cards.mjs site <dir> [--bare]            static copy of the gallery for hosting: <dir>/index.html + <dir>/motion-cards/
+//                                                       (--bare: page body only, for hosts that add their own <html>/<head>)
 //   node tools/cards.mjs find --text 数字 --needs 图 --energy 高 --group 转场 --intent compare --overlay
 //   node tools/cards.mjs show <id>
 //   node tools/cards.mjs use <project> <id,id…>         copy cards + lib into <project>/motion-cards and print host clips
-// Env: HF_CLI (default "npx --yes hyperframes@0.8.57"), MC_WORK (scratch dir), PYTHON
+// Env: HF_CLI (default "npx --yes hyperframes@0.8.174"), MC_WORK (scratch dir), PYTHON
 import { execSync, execFileSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -19,13 +21,17 @@ import { fileURLToPath } from "node:url";
 
 const LIB = dirname(dirname(fileURLToPath(import.meta.url)));
 const CARDS = join(LIB, "cards");
-const CLI = process.env.HF_CLI || "npx --yes hyperframes@0.8.57";
+const HF = "0.8.174"; // the HyperFrames version the cards are verified against
+const CLI = process.env.HF_CLI || "npx --yes hyperframes@" + HF;
 const PY = process.env.PYTHON || (process.platform === "win32" ? "python" : "python3");
 const GROUPS = ["字与强调", "标题与章节", "数据与图表", "证据与界面", "图片与多素材", "镜头运动", "转场", "标注与手绘", "人物与口播", "结构与流程", "幕底与氛围"];
 const ENERGY = ["低", "中", "高"];
 // 讲解意图：这张卡能替旁白里的哪种意思出画面。排在前面的是主要用途。
 const INTENTS = { hook: "开场钩子", chapter: "章节进入", keyword: "概念首次出现", definition: "定义", number: "数字作论据", compare: "对比", steps: "步骤清单", process: "流程或因果链", branch: "分支选择", categories: "并列分类", grouping: "归组关系", point: "指向重点", software: "软件操作", result: "结果兑现", question: "提问悬念", conclusion: "结论金句", caution: "注意误区", metaphor: "比喻情境", outro: "结尾号召", host: "主持人出场", transition: "转场" };
 const TYPES = ["structure", "evidence", "metaphor", "host"];
+// 数字类的卡：一屏摆几个数字（numbers: 1 / 2 / 3-5），数字之间画的是哪种关系（chart）
+const CHARTS = { compare: "比大小", ranking: "名次变化", trend: "趋势", proportion: "占比", quantity: "数量" };
+const range = (s) => { const m = /^(\d+)(?:-(\d+))?$/.exec(String(s || "").trim()); return m ? [+m[1], +(m[2] || m[1])] : null; };
 const list = (s) => String(s || "").split(/[,，、\s]+/).filter((x) => x && x !== "none");
 const SECTIONS = ["命门", "动作拆解", "参数手感", "已知坑", "动效与皮的边界", "接进片子"];
 const TOKENS = ["--k-bg", "--k-ink", "--k-accent", "--k-font"];
@@ -79,6 +85,13 @@ function lintOne(id) {
     if (fm.group && !GROUPS.includes(fm.group)) err(`group 要是其中之一：${GROUPS.join(" / ")}`);
     if (fm.type && !TYPES.includes(fm.type)) err(`type 只能是 ${TYPES.join(" / ")}`);
     for (const it of list(fm.intents)) if (!INTENTS[it]) err(`intents 里的 ${it} 不在意图表里：${Object.keys(INTENTS).join(" ")}（幕底这类不靠旁白挑的卡写 none）`);
+    if (list(fm.intents).includes("number") && !fm.numbers) err("intents 里有 number 的卡要写 numbers：这一屏摆几个数字，如 1、2、3-5");
+    if (fm.numbers) {
+      const r = range(fm.numbers);
+      if (!r || r[0] < 1 || r[1] < r[0]) err("numbers 写成一个数或一个范围，如 1、2、3-5");
+      else if (r[1] >= 2 && !fm.chart) err("能摆两个以上数字的卡要写 chart：" + Object.keys(CHARTS).join(" / "));
+    }
+    if (fm.chart && !CHARTS[fm.chart]) err(`chart 只能是 ${Object.keys(CHARTS).join(" / ")}`);
     if (fm.energy && !ENERGY.includes(fm.energy)) err("energy 只能是 低 / 中 / 高");
     if (fm.overlay && !["yes", "no"].includes(fm.overlay)) err("overlay 只能是 yes / no");
     if (fm.frames && nums(fm.frames).length !== 5) err("frames 要正好 5 个时间点");
@@ -207,7 +220,7 @@ function buildIndex() {
     const { fm, slot } = meta(id);
     let vars = [];
     try { vars = JSON.parse((/data-composition-variables='([\s\S]*?)'/.exec(read(join(CARDS, id, "demo.html"))) || [, "[]"])[1]).map((d) => ({ id: d.id, type: d.type, label: d.label, default: d.default })); } catch (e) {}
-    return { id, name: fm.name, group: fm.group, type: fm.type, intents: list(fm.intents), one_line: fm.one_line, use_when: fm.use_when, energy: fm.energy, needs: (fm.needs || "").split(/[,，、\s]+/).filter(Boolean), overlay: fm.overlay === "yes", slot, hero: parseFloat(fm.hero), sfx: fm.sfx, pairs_with: (fm.pairs_with || "").split(/[,，\s]+/).filter(Boolean), vars };
+    return { id, name: fm.name, group: fm.group, type: fm.type, intents: list(fm.intents), numbers: range(fm.numbers), chart: fm.chart || null, one_line: fm.one_line, use_when: fm.use_when, energy: fm.energy, needs: (fm.needs || "").split(/[,，、\s]+/).filter(Boolean), overlay: fm.overlay === "yes", slot, hero: parseFloat(fm.hero), sfx: fm.sfx, pairs_with: (fm.pairs_with || "").split(/[,，\s]+/).filter(Boolean), vars };
   });
   const groups = GROUPS.map((g) => ({ name: g, count: cards.filter((c) => c.group === g).length })).filter((g) => g.count);
   writeFileSync(join(LIB, "index.json"), JSON.stringify({ count: cards.length, intents: INTENTS, groups, cards }, null, 1) + "\n");
@@ -215,13 +228,53 @@ function buildIndex() {
   return { cards, groups };
 }
 
-// ---------------------------------------------------------------- gallery
-function gallery() {
+// ---------------------------------------------------------------- gallery / site
+// One page, two homes: gallery/index.html on this machine (through `serve`, or double-clicked) and `site <dir>`, a static
+// copy for hosting. The site loads GSAP from cdnjs (the same 3.14.2 build as lib/gsap.min.js) instead of carrying it.
+const GSAP_CDN = "https://cdnjs.cloudflare.com/ajax/libs/gsap/3.14.2/gsap.min.js";
+const SITE_MARK = ".motion-cards-site";
+
+function galleryPage(base) {
   const { cards, groups } = buildIndex();
-  const tpl = read(join(LIB, "tools", "gallery.template.html"));
+  for (const c of cards) {
+    c.frames = meta(c.id).frames;
+    c.doc = read(join(CARDS, c.id, "card.md")).replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, "").trim();
+  }
+  const data = { base, hf: HF, built: new Date().toISOString().slice(0, 10), intents: INTENTS, charts: CHARTS, groups, cards };
+  // "<" escaped so card text can never close the data <script>; a function replacer so "$`" in card text stays literal
+  const js = "window.MC = " + JSON.stringify(data).replace(/</g, "\\u003c") + ";";
+  return read(join(LIB, "tools", "gallery.template.html")).replace("/*@DATA@*/", () => js);
+}
+
+// the template is a page body; everywhere except a host that adds its own skeleton (site --bare) it gets this one
+const SKELETON = '<!doctype html>\n<html lang="zh-CN">\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n';
+
+function gallery() {
   mkdirSync(join(LIB, "gallery"), { recursive: true });
-  writeFileSync(join(LIB, "gallery", "index.html"), tpl.replace("/*@DATA@*/", "window.MC = " + JSON.stringify({ cards, groups }) + ";"));
+  writeFileSync(join(LIB, "gallery", "index.html"), SKELETON + galleryPage("../"));
   console.log("gallery/index.html 已生成");
+}
+
+function site(dir, bare) {
+  if (!dir) throw new Error("usage: cards.mjs site <dir> [--bare]");
+  const out = resolve(dir);
+  if (existsSync(out) && readdirSync(out).length && !existsSync(join(out, SITE_MARK))) throw new Error(`${out} 不是空文件夹，也不是 site 生成的。换一个空文件夹。`);
+  const lib = join(out, "motion-cards", "lib");
+  mkdirSync(lib, { recursive: true });
+  cpSync(join(LIB, "lib", "samples"), join(lib, "samples"), { recursive: true });
+  const preview = read(join(LIB, "lib", "preview.js"));
+  const local = 'g.src = here + "gsap.min.js";';
+  if (!preview.includes(local)) throw new Error("preview.js 里找不到加载 GSAP 的那一行，site 要跟着改");
+  writeFileSync(join(lib, "preview.js"), preview.replace(local, `g.src = "${GSAP_CDN}";`));
+  const ids = allIds();
+  for (const id of ids) {
+    const d = join(out, "motion-cards", "cards", id);
+    mkdirSync(d, { recursive: true });
+    for (const f of ["demo.html", "thumb.jpg", "strip.jpg"]) cpSync(join(CARDS, id, f), join(d, f));
+  }
+  writeFileSync(join(out, "index.html"), (bare ? "" : SKELETON) + galleryPage("motion-cards/"));
+  writeFileSync(join(out, SITE_MARK), "built by motion-cards/tools/cards.mjs site\n");
+  console.log(`site 已生成：${out}\n  index.html${bare ? "（只有页面主体，不带 <html>/<head>，给会自己套外壳的发布平台）" : ""}\n  motion-cards/cards/<id>/{demo.html,thumb.jpg,strip.jpg} × ${ids.length}、lib/preview.js（GSAP 走 cdnjs）、lib/samples/`);
 }
 
 // ---------------------------------------------------------------- use
@@ -292,5 +345,6 @@ else if (cmd === "lint") process.exit(lint(a) ? 1 : 0);
 else if (cmd === "verify") process.exit(verify(a) ? 1 : 0);
 else if (cmd === "index") buildIndex();
 else if (cmd === "gallery") gallery();
+else if (cmd === "site") site(process.argv.slice(3).find((x) => !x.startsWith("--")), process.argv.includes("--bare"));
 else if (cmd === "use") use(a, b);
-else console.log("usage: node tools/cards.mjs lint|verify|index|gallery|use …");
+else console.log("usage: node tools/cards.mjs lint|verify|index|gallery|serve|site|find|show|use …");

@@ -4,6 +4,8 @@ name: 柱子长出
 group: 数据与图表
 type: structure
 intents: number,compare
+numbers: 3-5
+chart: compare
 one_line: 普通柱子从同一条基线从左到右依次长出、跳过要强调的那个位置，强调色的那根最后单独冲上来并过冲，每根到位时数值从柱顶弹出来
 use_when: 旁白在比较三到五个同类的量，而且结论是“其中一个明显不一样”
 energy: 中

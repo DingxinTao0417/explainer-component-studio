@@ -29,6 +29,13 @@ python -X utf8 "$skill/shot_semantics.py" suggest --edit planning/EDIT.json --sc
 
 旁白里说得出来的意图（对比、步骤、一个数字、概念首次出现、结论、问句、结尾）脚本自己认得出；说不出来的（一句话要不要压成关键词卡、几个数字要比大小还是看趋势）由分镜标 `intent`。
 
+素材和连用也影响排序：
+
+- **素材**：这一镜手上有什么，从分镜的 `materials` 来（没写就从 `source`、`asset_ids`、`type` 推，见 production.md）。卡要的素材这一镜没有，就不推荐（`warnings` 会说少了什么、没推荐哪几张）；用得上这一镜素材的卡加分，排到纯文字的版式前面，这就是“多用真实素材”。用 `--text` 单试一句话又没说素材时，不筛，`warnings` 会提醒你确认手上有没有。
+- **连用**：上一镜刚用过的卡或版式降一点分，前两镜都用过的降很多（再用就连续 3 镜），全片用到第 4 次也降分。品牌包的叠层（录屏聚焦、取景框、头像角标）本来就反复用，不算。前几镜用了什么，从分镜每一镜的 `component` 和 `motion` 读。
+
+数字类镜头另外看一样：旁白里说了几个数字、数字之间是什么关系（“涨到”是趋势、“占了”是占比，没有提示词按比大小）。数字类的卡在前言里写了 `numbers`（这一屏摆几个数字）和 `chart`（画哪种关系），对得上的排前面，摆不下或撑不满的降权。所以两个数字对比会推荐 stat-compare，一个数字推荐大数字，一串随时间变化的数字推荐折线。
+
 输出里看四样东西：
 
 1. **intents**：识别到的讲解意图（意图表在 `scripts/semantics/intents.json`，21 个：钩子、章节、概念首次出现、定义、数字、对比、步骤、流程、分支、并列分类、归组、指向、软件操作、结果、提问、结论、注意、比喻、结尾、主持人、转场）。卡库的 `intents` 用的是同一套 id。
@@ -38,7 +45,9 @@ python -X utf8 "$skill/shot_semantics.py" suggest --edit planning/EDIT.json --sc
    - `install`：把卡装进本期工程的命令；
    - `variable_values`：卡的默认变量，已经用旁白和词时间覆盖了能填的那几项，直接写进 `data-variable-values`；
    - `slot_seconds`、`energy`、`needs`：这张卡建议占几秒、多激烈、要什么素材。
-4. **warnings**：上一镜同版式、全片用了 4 次以上、槽位超字数。
+4. **warnings**：上一镜同版式、全片用了 4 次以上、槽位超字数、因为缺素材没推荐哪些卡。
+
+另外 **materials** 是这一镜被认为手上有的素材（`null` 表示不知道）。
 
 候选不是结论。你读候选、看连拍图、按本期内容改变量，再决定。脚本只做确定性的初筛、约束检查和时间换算，不联网不调模型。
 
@@ -65,7 +74,7 @@ node "$mc/tools/cards.mjs" use <项目>/hyperframes word-punch     # 复制卡�
 python -X utf8 "$skill/shot_semantics.py" scaffold --project <项目> --scene S07 --name routes-table --edit planning/EDIT.json --captions subtitles/CAPTIONS.json
 ```
 
-它把品牌包的 `custom-shot` 骨架复制成 `hyperframes/components/S07-routes-table.html`（只新建不覆盖），改好 id 和时间轴键，把本镜简报写进文件头，返回挂载片段。你只在 `.cs-stage` 里画这一镜的内容（HTML 或 SVG），把 `HFK.cues` 的时间换成 suggest 给的词时间。规矩不变：主体 ≥60%、标签 ≥40px、一个主色、只用 fromTo / set、重要内容在字幕带上方。画完 `npx --yes hyperframes@0.8.57 check`。
+它把品牌包的 `custom-shot` 骨架复制成 `hyperframes/components/S07-routes-table.html`（只新建不覆盖），改好 id 和时间轴键，把本镜简报写进文件头，返回挂载片段。你只在 `.cs-stage` 里画这一镜的内容（HTML 或 SVG），把 `HFK.cues` 的时间换成 suggest 给的词时间。规矩不变：主体 ≥60%、标签 ≥40px、一个主色、只用 fromTo / set、重要内容在字幕带上方。画完 `npx --yes hyperframes@0.8.174 check`。
 
 同一种定制镜头在两期以上出现，就照 `motion-cards/SPEC.md` 把它做成卡库里的新卡（写好 `type` 和 `intents`，`lint` + `verify` 通过），别每期再画一遍。
 
@@ -91,6 +100,6 @@ python -X utf8 "$skill/shot_semantics.py" scaffold --project <项目> --scene S0
 ## 检查与维护
 
 - `python -X utf8 "$skill/shot_semantics.py" check`：意图表、品牌包元数据、卡库索引三者引用一致，并列出没有任何候选的意图。
-- 卡库加了或改了卡：`node "$mc/tools/cards.mjs" lint` → `verify <id>` → `gallery`（重建 `index.json`，脚本读的就是它）。
+- 卡库加了或改了卡：数字类的卡写好 `numbers` 和 `chart`（lint 会查），然后 `node "$mc/tools/cards.mjs" lint` → `verify <id>` → `gallery`（重建 `index.json`，脚本读的就是它）。
 - 回放测试：`shot_semantics.py dataset --project <项目> --out d.json` 把 EDIT.json + CAPTIONS.json 对成测试集，`replay --dataset d.json --labels labels.json` 打分。改意图表、卡的 `intents` 或品牌包元数据后，至少跑一次已交付几期的回放。
 - 本期内容写在本期工程里，不改卡库和品牌包的默认值。两处的全库改造只在用户明确要求时做；做一期视频时不顺手改库。

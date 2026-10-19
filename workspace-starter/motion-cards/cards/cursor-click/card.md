@@ -7,7 +7,7 @@ intents: software
 one_line: 一个放大的箭头光标沿弧线滑到按钮上，停一拍后按下：按钮面下沉、发亮，按到底的那一帧从点击处扩散两圈波纹，再弹回
 use_when: 旁白说“点这里”“按下导出”，要让观众看清点的是哪个按钮、是哪一刻点的
 energy: 中
-needs: 界面
+needs: 文
 overlay: yes
 slot: 3
 hero: 1.45

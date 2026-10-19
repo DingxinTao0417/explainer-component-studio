@@ -1,7 +1,8 @@
-#Requires -Version 7.0
+#Requires -Version 5.1
 <#
 Pexels client for local video production. Credentials never enter output/metadata.
 Configure reads the key from stdin (or a secure interactive prompt), not an argument.
+Runs on Windows PowerShell 5.1 and PowerShell 7. Keep this file ASCII-only: 5.1 reads a BOM-less script as ANSI.
 #>
 [CmdletBinding()]
 param(
@@ -19,6 +20,13 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
+$isCore = $PSVersionTable.PSEdition -eq 'Core'
+if (!$isCore) {
+    # Windows PowerShell 5.1 runs on .NET Framework: HttpClient is not loaded by default, and old TLS defaults exist.
+    Add-Type -AssemblyName System.Net.Http
+    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+}
+$onWindows = (!$isCore) -or $IsWindows
 $credentialDir = Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'ScienceVideoDirector/credentials'
 $credentialFile = Join-Path $credentialDir 'pexels.dpapi'
 
@@ -31,10 +39,31 @@ function Load-Key {
     try { return [Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer) }
     finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($pointer); $secure.Dispose() }
 }
+# Relative paths follow the PowerShell location; .NET's GetFullPath would use the process start directory.
+function Resolve-Target([string]$Path) { $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path) }
+# 5.1 has no ConvertFrom-Json -AsHashtable: turn its PSCustomObjects into ordered dictionaries so both editions read alike.
+function ConvertTo-Plain($Value) {
+    if ($null -eq $Value) { return $null }
+    if ($Value -is [System.Management.Automation.PSCustomObject]) {
+        $table = [ordered]@{}
+        foreach ($property in $Value.PSObject.Properties) { $table[$property.Name] = ConvertTo-Plain $property.Value }
+        return $table
+    }
+    if ($Value -is [System.Collections.IList]) {
+        $list = New-Object System.Collections.ArrayList
+        foreach ($entry in $Value) { [void]$list.Add((ConvertTo-Plain $entry)) }
+        return ,$list
+    }
+    return $Value
+}
+function Read-Json([string]$Text) {
+    if ($isCore) { return $Text | ConvertFrom-Json -AsHashtable }
+    return ConvertTo-Plain ($Text | ConvertFrom-Json)
+}
 function Write-NewJson([string]$Path, $Value) {
-    $absolute = [IO.Path]::GetFullPath($Path)
+    $absolute = Resolve-Target $Path
     [IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($absolute)) | Out-Null
-    $bytes = [Text.Encoding]::UTF8.GetBytes(($Value | ConvertTo-Json -Depth 30))
+    $bytes = [Text.UTF8Encoding]::new($false).GetBytes(($Value | ConvertTo-Json -Depth 30))
     $stream = [IO.File]::Open($absolute, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write)
     try { $stream.Write($bytes, 0, $bytes.Length) } finally { $stream.Dispose() }
 }
@@ -46,7 +75,7 @@ function Header-Value($Response, [string]$Name) {
 try {
     switch ($Action) {
         configure {
-            if (!$IsWindows) { throw 'windows_required_for_dpapi' }
+            if (!$onWindows) { throw 'windows_required_for_dpapi' }
             if ($ReadKeyFromStdin) {
                 $plain = [Console]::In.ReadLine()
                 if ([string]::IsNullOrWhiteSpace($plain)) { throw 'empty_credential' }
@@ -66,7 +95,9 @@ try {
             $temp = Join-Path $credentialDir ([guid]::NewGuid().ToString() + '.tmp')
             try {
                 [IO.File]::WriteAllText($temp, $ciphertext, [Text.UTF8Encoding]::new($false))
-                [IO.File]::Move($temp, $credentialFile, $true)
+                # .NET Framework has no File.Move(src, dst, overwrite); Replace swaps in place without a backup copy
+                if ([IO.File]::Exists($credentialFile)) { [IO.File]::Replace($temp, $credentialFile, [NullString]::Value) }
+                else { [IO.File]::Move($temp, $credentialFile) }
             } finally { if ([IO.File]::Exists($temp)) { [IO.File]::Delete($temp) } }
             Emit @{ ok = $true; storage = 'Windows DPAPI / current user'; credential_file = $credentialFile }
         }
@@ -74,11 +105,11 @@ try {
             $key = Load-Key
             $available = ![string]::IsNullOrWhiteSpace($key)
             $key = $null
-            Emit @{ configured = $available; source = $(if ($env:PEXELS_API_KEY) {'environment'} else {'Windows DPAPI'}) }
+            Emit @{ configured = $available; source = $(if ($env:PEXELS_API_KEY) {'environment'} else {'Windows DPAPI'}); powershell = $PSVersionTable.PSVersion.ToString() }
         }
         search {
             if ([string]::IsNullOrWhiteSpace($Query)) { throw 'query_required' }
-            if ($Out -and (Test-Path -LiteralPath $Out)) { throw 'output_exists' }
+            if ($Out -and (Test-Path -LiteralPath (Resolve-Target $Out))) { throw 'output_exists' }
             $endpoint = if ($Kind -eq 'video') {'v1/videos/search'} else {'v1/search'}
             $uri = 'https://api.pexels.com/' + $endpoint + '?query=' + [uri]::EscapeDataString($Query) +
                 '&orientation=' + $Orientation + '&per_page=' + $PerPage + '&page=' + $Page
@@ -95,7 +126,7 @@ try {
                 $response = $client.SendAsync($request).GetAwaiter().GetResult()
                 $statusCode = [int]$response.StatusCode
                 if (!$response.IsSuccessStatusCode) { throw "pexels_http_$statusCode" }
-                $body = $response.Content.ReadAsStringAsync().GetAwaiter().GetResult() | ConvertFrom-Json -AsHashtable
+                $body = Read-Json ($response.Content.ReadAsStringAsync().GetAwaiter().GetResult())
                 $items = @(if ($Kind -eq 'video') { $body.videos } else { $body.photos })
                 $result = [ordered]@{
                     provider = 'pexels'; provider_url = 'https://www.pexels.com/'
@@ -113,7 +144,7 @@ try {
                 }
                 if ($Out) {
                     Write-NewJson $Out $result
-                    Emit @{ ok = $true; http_status = $statusCode; kind = $Kind; count = $items.Count; out = [IO.Path]::GetFullPath($Out); provider_url = $result.provider_url; rate_limit = $result.rate_limit }
+                    Emit @{ ok = $true; http_status = $statusCode; kind = $Kind; count = $items.Count; out = (Resolve-Target $Out); provider_url = $result.provider_url; rate_limit = $result.rate_limit }
                 } else { Emit $result }
             } finally {
                 if ($response) { $response.Dispose() }
@@ -122,20 +153,21 @@ try {
         }
         download {
             if (!$Candidates -or !$AssetId -or !$Variant -or !$Out) { throw 'candidates_asset_id_variant_out_required' }
-            $absolute = [IO.Path]::GetFullPath($Out)
+            $absolute = Resolve-Target $Out
             $metadataPath = $absolute + '.source.json'
             if ((Test-Path -LiteralPath $absolute) -or (Test-Path -LiteralPath $metadataPath)) { throw 'output_exists' }
-            $catalog = Get-Content -LiteralPath $Candidates -Raw | ConvertFrom-Json -AsHashtable
+            # -Encoding UTF8: 5.1 would otherwise read the BOM-less file in the ANSI code page and garble author names
+            $catalog = Read-Json (Get-Content -LiteralPath (Resolve-Target $Candidates) -Raw -Encoding UTF8)
             if ($catalog.provider -ne 'pexels') { throw 'not_pexels_candidates' }
-            $matches = @($catalog.items | Where-Object { $_.id -eq $AssetId })
-            if ($matches.Count -ne 1) { throw 'asset_not_found_or_ambiguous' }
-            $item = $matches[0]
+            $found = @($catalog.items | Where-Object { $_.id -eq $AssetId })
+            if ($found.Count -ne 1) { throw 'asset_not_found_or_ambiguous' }
+            $item = $found[0]
             if ($catalog.kind -eq 'video') {
                 $files = @($item.video_files | Where-Object { [string]$_.id -eq $Variant })
                 if ($files.Count -ne 1) { throw 'video_variant_not_found' }
                 $selected = $files[0]; $url = $selected.link; $author = $item.user
             } elseif ($catalog.kind -eq 'photo') {
-                if (!$item.src.ContainsKey($Variant)) { throw 'photo_variant_not_found' }
+                if (!$item.src.Contains($Variant)) { throw 'photo_variant_not_found' }
                 $url = $item.src[$Variant]; $selected = @{ name = $Variant }
                 $author = @{ name = $item.photographer; url = $item.photographer_url }
             } else { throw 'unsupported_media_kind' }
@@ -168,7 +200,13 @@ try {
                     status = 'downloaded_unverified'; inspection = 'pending media probe and visual review'
                 }
                 Write-NewJson $metadataPath $metadata
-                Emit @{ ok = $true; file = $absolute; source = $metadataPath; bytes = $size; status = 'downloaded_unverified' }
+                $done = [ordered]@{ ok = $true; file = $absolute; source = $metadataPath; bytes = $size; status = 'downloaded_unverified' }
+                if ($catalog.kind -eq 'video') {
+                    # This file stays the untouched original (its sha256 is the provenance record). The copy that goes into
+                    # the HyperFrames project is re-encoded with one keyframe per second by episode.py media.
+                    $done.next = 'python -X utf8 "' + (Join-Path $PSScriptRoot 'episode.py') + '" media {project} "' + $absolute + '" --name {ascii-name}'
+                }
+                Emit $done
             } finally {
                 if ($response) { $response.Dispose() }; $client.Dispose()
                 if ([IO.File]::Exists($temp)) { [IO.File]::Delete($temp) }

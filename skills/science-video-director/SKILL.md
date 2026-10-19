@@ -44,7 +44,7 @@ description: 把用户的稿件或 SRT、配音和素材做成完整的中文科
 | 动效卡库 | `<工作区>/motion-cards`（108 张动效卡，11 个分组；每张是一份说明加一个可直接挂载的单文件子合成），用 `node …/tools/cards.mjs find / show / use / serve` | 品牌包以外的镜头都从这里来：字的强调、数据、证据、多图、镜头、转场、标注、人物、结构、幕底；装进项目直接用，换皮不换动作；见 guide/motion-vocabulary.md |
 | 选镜头 | `shot_semantics.py`（旁白 → 意图 → 品牌组件或动效卡候选，或“不用组件” → 变量草稿 → 卡词时间） | 品牌包和卡库的唯一入口，见 guide/components.md |
 | 网页证据 | `pageshot.mjs`（网页 → 全页长图 + 目标的实测坐标） | 官网、文档、榜单这类证据画面，见 guide/assets.md |
-| 眼睛 | `frames.py`（接触表、节奏、`--cues` 卡词帧、`--compare` 和参考片并排）、`npx --yes hyperframes@0.8.57 snapshot` / `compare`、`brand-kit/tools/tone-stills.mjs`（调性静帧） | 看片、比较 |
+| 眼睛 | `frames.py`（接触表、节奏、`--cues` 卡词帧、`--compare` 和参考片并排）、`npx --yes hyperframes@0.8.174 snapshot` / `compare`、`brand-kit/tools/tone-stills.mjs`（调性静帧） | 看片、比较 |
 | 耳朵 | `align.py`（逐字对齐、关键词时间、字幕变量）、`audio.py`（响度报告、音效听不听得到、响度归一、拍点、BGM 闪避曲线） | 对齐、混音 |
 | 声音 | `qwen_voiceover.py`（旁白，用户本人音色）、`voices.py`（角色声音库、对白） | 配音 |
 | 复盘 | `retention.py`、`dissect.py` | 留存曲线对镜头、拆解参考视频 |
@@ -112,7 +112,7 @@ description: 把用户的稿件或 SRT、配音和素材做成完整的中文科
   细节见 `guide/production.md` 和 `brand-kit/SOUND.md`。
 - **素材**：按 `guide/assets.md` 准备：录屏任务卡、真人口播任务卡、Pexels、网页证据（`pageshot.mjs`）、image2 透明元素、AI 视频交接（由用户自己生成）。需要用户动手的，一次写进 `planning/TASKS.md` 交出去，然后继续做不依赖它的部分。
 - **合成**：
-  - 按 `guide/production.md` 搭 HyperFrames 工程。先运行 `brand-kit/build.mjs --project <项目>/hyperframes` 装品牌包。
+  - 按 `guide/production.md` 搭 HyperFrames 工程。先运行 `brand-kit/build.mjs --project <项目>/hyperframes` 装品牌包。视频、图片用 `episode.py media` 放进工程，不手动复制（视频要转成每秒一个关键帧，否则 HyperFrames 跳帧会卡）。
   - 章节卡、字幕、录屏聚焦、取景框、主持人头像都用品牌组件，全片复用。其余镜头用 suggest 给的动效卡：`cards.mjs use` 装进工程，挂载时 `data-variable-values` 用候选里的 `card.variable_values`，项目根元素设 `--mc-*` 换成本期调性（见 `guide/components.md` 和 `guide/motion-vocabulary.md`）。
   - suggest 给 `custom` 时，先换几个说法 `cards.mjs find` 确认卡库里真的没有，再用 `shot_semantics.py scaffold` 起品牌风骨架现场做（`guide/components.md`“现场做一镜”）。
   - 组件的默认样式只是起点，放大、改色、去外框都是正常操作。
@@ -205,7 +205,7 @@ description: 把用户的稿件或 SRT、配音和素材做成完整的中文科
 
 | 脚本 | 用途 |
 | --- | --- |
-| `episode.py` | `init` 建项目；`add` 登记新输入（配音、稿子、素材）；`status` 看进度；`stage` 记阶段和用户原话；`check` 查时间轴、字幕、画面类型分布、版式连用和卡词时间；`captions` 导出字幕 |
+| `episode.py` | `init` 建项目；`add` 登记新输入（配音、稿子、素材）；`media` 把视频、图片、音频放进 HyperFrames 工程（英文名，视频每秒一个关键帧、去掉自带声轨，可截一段）；`status` 看进度；`stage` 记阶段和用户原话；`check` 查时间轴、字幕、画面类型分布、版式连用、卡词时间和工程里视频的关键帧间隔；`captions` 导出字幕 |
 | `frames.py` | 把视频变成开头逐秒图、全片接触表和节奏报告；`--cues` 按卡词抽“说之前 / 说之后”两帧；`--compare` 和参考片或另一版样片并排比较 |
 | `align.py` | `run` 逐字对齐稿子，产出 transcript / captions；`find` 查关键词被说出的时间；`cues` 生成品牌字幕组件的变量 |
 | `audio.py` | `report` 查响度、峰值、削波、BGM 差距；`sfx` 逐个音效查听不听得到；`normalize` 两遍响度归一、另存新文件；`snap` 切点对拍；`envelope` 生成 BGM 闪避曲线 |
@@ -214,6 +214,6 @@ description: 把用户的稿件或 SRT、配音和素材做成完整的中文科
 | `retention.py` | 留存曲线对镜头，找掉人的地方 |
 | `dissect.py` | 拆解参考视频，写进手法库 |
 | `shot_semantics.py` | `suggest` 旁白 → 候选 / 不用组件 / 槽位草稿 / 卡词时间；`check` 校验意图表、品牌包元数据和卡库索引；`dataset` / `replay` 用已交付的期回放测命中率 |
-| `pexels.ps1` | Pexels 检索与下载 |
+| `pexels.ps1` | Pexels 检索与下载（Windows PowerShell 5.1 或 PowerShell 7） |
 | `pageshot.mjs` | 网页 → 全页长图 + 目标的实测坐标（`node` 运行，用本机 Chrome 或 Edge） |
 | `motion-cards/tools/cards.mjs`（`node` 运行，在工作区，不在本目录） | 动效卡库：`find` 按关键词、分组、素材类型、能量找卡；`show` 看一张卡；`use` 把卡装进项目并打印挂载片段；`serve` 开画廊；`lint` / `verify` 给新卡验收 |

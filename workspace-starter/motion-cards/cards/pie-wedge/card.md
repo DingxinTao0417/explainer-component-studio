@@ -4,6 +4,8 @@ name: 扇形切出
 group: 数据与图表
 type: structure
 intents: number,grouping
+numbers: 1-2
+chart: proportion
 one_line: 一个灰色的圆先顺时针扫满，停一拍，其中一块扇形沿着自己的中线向外滑出半步并变成强调色，一条引线从它身上长出去，把数字和说明带出来
 use_when: 旁白在说“整体里的这一块”，重点是它属于一个整体、又要被单独拎出来看
 energy: 中

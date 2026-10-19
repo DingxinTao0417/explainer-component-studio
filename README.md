@@ -19,6 +19,7 @@
 ```bash
 cd workspace-starter/motion-cards
 node tools/cards.mjs serve                     # 画廊：http://localhost:3040/motion-cards/gallery/
+node tools/cards.mjs site <空文件夹>           # 生成能放到网上的静态画廊（GitHub Pages 等）
 node tools/cards.mjs find --intent compare --needs 数据
 node tools/cards.mjs use <你的项目>/hyperframes before-after-wipe,number-roll
 ```

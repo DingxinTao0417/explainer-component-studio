@@ -1,144 +1,530 @@
-<!doctype html>
-<html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>动效卡库</title>
-    <style>
-      :root { --bg: #0b0d11; --panel: #14181f; --line: #232a35; --ink: #e9ecf1; --muted: #8791a3; --accent: #ffcf33; }
-      * { box-sizing: border-box; }
-      body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.6 "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; }
-      header { position: sticky; top: 0; z-index: 5; background: rgba(11, 13, 17, 0.94); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); padding: 14px 24px 10px; }
-      h1 { margin: 0 0 10px; font-size: 20px; }
-      h1 small { color: var(--muted); font-weight: 400; font-size: 14px; margin-left: 10px; }
-      .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-      input[type="search"] { flex: 1 1 260px; min-width: 200px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; color: var(--ink); padding: 8px 12px; font: inherit; }
-      .chip { border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 999px; padding: 4px 12px; font: inherit; font-size: 13px; cursor: pointer; }
-      .chip.on { background: var(--accent); border-color: var(--accent); color: #14161a; font-weight: 700; }
-      main { padding: 20px 24px 80px; }
-      h2 { font-size: 16px; margin: 26px 0 12px; color: var(--muted); font-weight: 700; }
-      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
-      .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; cursor: pointer; }
-      .card:hover { border-color: #3a4556; }
-      .stage { position: relative; aspect-ratio: 16 / 9; background: #000 center/cover no-repeat; }
-      .stage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; pointer-events: none; }
-      .meta { padding: 10px 12px 12px; }
-      .name { font-weight: 700; }
-      .name code { color: var(--muted); font: 12px ui-monospace, Consolas, monospace; margin-left: 8px; }
-      .one { color: var(--muted); font-size: 13px; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-      .tags { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
-      .tag { font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 6px; }
-      .tag.e高 { color: #ff8a65; border-color: #5a3327; } .tag.e中 { color: #ffd76a; border-color: #5a4a1e; } .tag.e低 { color: #7fd3a8; border-color: #244a3a; }
-      dialog { width: min(1180px, 94vw); max-height: 92vh; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; padding: 0; }
-      dialog::backdrop { background: rgba(0, 0, 0, 0.7); }
-      .dl-head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
-      .dl-head b { font-size: 17px; } .dl-head span { flex: 1; color: var(--muted); font: 13px ui-monospace, Consolas, monospace; }
-      .dl-body { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 0; }
-      .dl-stage { position: relative; aspect-ratio: 16 / 9.6; background: #000; align-self: start; }
-      .dl-stage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-      .dl-doc { padding: 6px 20px 20px; overflow: auto; max-height: 78vh; font-size: 14px; }
-      .dl-doc h3 { font-size: 15px; margin: 18px 0 6px; color: var(--accent); }
-      .dl-doc table { border-collapse: collapse; width: 100%; font-size: 13px; } .dl-doc td, .dl-doc th { border: 1px solid var(--line); padding: 4px 8px; text-align: left; vertical-align: top; }
-      .dl-doc code { background: #0d1016; padding: 0 4px; border-radius: 3px; font: 12.5px ui-monospace, Consolas, monospace; }
-      .dl-doc pre { white-space: pre-wrap; background: #0d1016; padding: 10px; border-radius: 6px; font: 12.5px/1.5 ui-monospace, Consolas, monospace; user-select: all; }
-      @media (max-width: 860px) { .dl-body { grid-template-columns: 1fr; } }
-    </style>
-  </head>
-  <body>
-    <header>
-      <h1>动效卡库<small id="count"></small></h1>
-      <div class="row">
-        <input id="q" type="search" placeholder="搜名字、用途、素材类型，比如：数字 / 对比 / 录屏 / 转场" />
-        <button class="chip" data-skin="dark">深色</button><button class="chip" data-skin="light">浅色</button>
-      </div>
-      <div class="row" id="groups" style="margin-top: 8px"></div>
-    </header>
-    <main id="main"></main>
-    <dialog id="dl">
-      <div class="dl-head"><b id="dl-name"></b><span id="dl-id"></span><button class="chip" id="dl-close">关闭</button></div>
-      <div class="dl-body"><div class="dl-stage" id="dl-stage"></div><div class="dl-doc" id="dl-doc"></div></div>
-    </dialog>
-    <script>
-      /*@DATA@*/
-    </script>
-    <script>
-      (function () {
-        var cards = MC.cards, groups = MC.groups, state = { q: "", group: "", skin: "dark" };
-        var $ = function (s) { return document.querySelector(s); };
-        var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
-        var demo = function (c, extra) { return "../cards/" + c.id + "/demo.html?skin=" + state.skin + (extra || ""); };
+<title>动效卡库</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<style>
+  /* 剪辑台：顶部场记栏（名字、计数、搜索），宽屏左侧是筛选轨、窄屏收成一块；主区是一张 16:9 的接触表，每张卡底下一条真时间轴（建议时长、五个抽帧时刻、主画面）；点开是检视台。 */
+  :root {
+    --ground: #eceef1;
+    --panel: #ffffff;
+    --ink: #161a20;
+    --muted: #5a6371;
+    --line: #d3d8df;
+    --key: #ffcf33;
+    --key-ink: #161a20;
+    --key-text: #8a6200;
+    --scrim: rgba(18, 21, 26, 0.55);
+    --font-display: "ZCOOL QingKe HuangYou", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+    --font-body: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", Consolas, "SFMono-Regular", Menlo, monospace;
+    --energy-low: #2f8a5b;
+    --energy-mid: #b07a00;
+    --energy-high: #c2412d;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #101216; --panel: #181b21; --ink: #eceef2; --muted: #9199a7; --line: #2b3038;
+      --key: #ffcf33; --key-ink: #161a20; --key-text: #ffcf33; --scrim: rgba(0, 0, 0, 0.66);
+      --energy-low: #6fd29c; --energy-mid: #ffcf33; --energy-high: #ff8a70;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #101216; --panel: #181b21; --ink: #eceef2; --muted: #9199a7; --line: #2b3038;
+    --key: #ffcf33; --key-ink: #161a20; --key-text: #ffcf33; --scrim: rgba(0, 0, 0, 0.66);
+    --energy-low: #6fd29c; --energy-mid: #ffcf33; --energy-high: #ff8a70;
+    color-scheme: dark;
+  }
 
-        var io = new IntersectionObserver(function (es) {
-          es.forEach(function (e) {
-            var st = e.target, f = st.querySelector("iframe");
-            if (e.isIntersecting && !f) { f = document.createElement("iframe"); f.loading = "lazy"; f.src = st.dataset.src; st.appendChild(f); }
-            else if (!e.isIntersecting && f) f.remove(); // only the cards on screen keep playing
-          });
-        }, { rootMargin: "120px" });
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font: 15px/1.6 var(--font-body);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 0 96px;
+  }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--key-text); outline-offset: 2px; }
+  .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 
-        function render() {
-          var q = state.q.trim().toLowerCase();
-          var list = cards.filter(function (c) {
-            if (state.group && c.group !== state.group) return false;
-            if (!q) return true;
-            return [c.id, c.name, c.one_line, c.use_when, c.group, c.energy, (c.needs || []).join(" ")].join(" ").toLowerCase().indexOf(q) >= 0;
-          });
-          $("#count").textContent = list.length + " / " + cards.length + " 张";
-          io.disconnect();
-          var html = "";
-          groups.forEach(function (g) {
-            var sub = list.filter(function (c) { return c.group === g.name; });
-            if (!sub.length) return;
-            html += "<h2>" + esc(g.name) + " · " + sub.length + '</h2><div class="grid">';
-            sub.forEach(function (c) {
-              html += '<div class="card" data-id="' + c.id + '"><div class="stage" data-src="' + demo(c, "&bare=1") + '" style="background-image:url(../cards/' + c.id + '/thumb.jpg)"></div><div class="meta"><div class="name">' + esc(c.name) + "<code>" + c.id + '</code></div><div class="one">' + esc(c.one_line) + '</div><div class="tags"><span class="tag e' + esc(c.energy) + '">能量 ' + esc(c.energy) + "</span>" + (c.needs || []).map(function (n) { return '<span class="tag">' + esc(n) + "</span>"; }).join("") + (c.overlay ? '<span class="tag">可叠加</span>' : "") + "</div></div></div>";
-            });
-            html += "</div>";
-          });
-          $("#main").innerHTML = html || '<p style="color:var(--muted)">没有匹配的卡。</p>';
-          document.querySelectorAll(".stage").forEach(function (s) { io.observe(s); });
-        }
+  /* ---- 场记栏 ---- */
+  .masthead { display: grid; gap: 14px; padding-block: 28px 18px; max-width: 1480px; margin: 0 auto; }
+  .titleline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; }
+  h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(40px, 6vw, 64px); line-height: 1; margin: 0; letter-spacing: 0.02em; }
+  .slate { display: flex; flex-wrap: wrap; gap: 4px 16px; color: var(--muted); font-size: 13px; }
+  .slate b { color: var(--ink); font-weight: 700; }
+  .lede { margin: 0; max-width: 62ch; color: var(--muted); }
+  .searchrow { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .search { flex: 1 1 280px; min-width: 0; display: flex; align-items: center; gap: 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 0 12px; }
+  .search input { flex: 1; min-width: 0; border: 0; background: transparent; padding: 10px 0; outline: none; }
+  .search:focus-within { border-color: var(--key-text); }
+  .search svg { flex: none; color: var(--muted); }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--panel); }
+  .seg button { border: 0; background: transparent; padding: 8px 12px; font-size: 13px; color: var(--muted); }
+  .seg button[aria-pressed="true"] { background: var(--key); color: var(--key-ink); font-weight: 700; }
+  .filter-toggle { display: none; border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 8px 12px; font-size: 13px; }
 
-        function md(src) { // just enough markdown for a card
-          var out = "", lines = src.replace(/^---[\s\S]*?---\s*/, "").split(/\r?\n/), i = 0;
-          var inline = function (s) { return esc(s).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>"); };
-          while (i < lines.length) {
-            var l = lines[i];
-            if (/^## /.test(l)) out += "<h3>" + inline(l.slice(3)) + "</h3>";
-            else if (/^\|/.test(l)) {
-              out += "<table>";
-              var first = true;
-              while (i < lines.length && /^\|/.test(lines[i])) {
-                if (!/^\|\s*-/.test(lines[i])) { var cells = lines[i].replace(/^\||\|$/g, "").split("|"); out += "<tr>" + cells.map(function (c) { return (first ? "<th>" : "<td>") + inline(c.trim()) + (first ? "</th>" : "</td>"); }).join("") + "</tr>"; first = false; }
-                i++;
-              }
-              out += "</table>"; continue;
-            } else if (/^\s*(\d+\.|-)\s+/.test(l)) out += "<div>• " + inline(l.replace(/^\s*(\d+\.|-)\s+/, "")) + "</div>";
-            else if (l.trim()) out += "<p>" + inline(l) + "</p>";
-            i++;
-          }
-          return out;
-        }
+  /* ---- 主体：筛选轨 + 接触表 ---- */
+  .bench { display: grid; grid-template-columns: 232px minmax(0, 1fr); gap: 28px; max-width: 1480px; margin: 0 auto; align-items: start; }
+  .rail { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); display: grid; gap: 20px; max-height: calc(100vh - 24px); overflow-y: auto; padding-right: 4px; }
+  .rail h2 { font-size: 12px; letter-spacing: 0.12em; color: var(--muted); margin: 0 0 8px; font-weight: 700; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 3px 10px; font-size: 13px; color: var(--ink); display: inline-flex; gap: 6px; align-items: center; }
+  .chip .n { color: var(--muted); font-family: var(--font-mono); font-size: 11px; }
+  .chip[aria-pressed="true"] { background: var(--key); border-color: var(--key); color: var(--key-ink); }
+  .chip[aria-pressed="true"] .n { color: var(--key-ink); }
+  .rail select { width: 100%; border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 8px 10px; }
+  .rail .reset { border: 0; background: none; color: var(--key-text); padding: 0; font-size: 13px; text-align: left; justify-self: start; }
+  .count { font-size: 13px; color: var(--muted); }
 
-        function open(id) {
-          var c = cards.filter(function (x) { return x.id === id; })[0];
-          if (!c) return;
-          $("#dl-name").textContent = c.name; $("#dl-id").textContent = c.id + " · " + c.group + " · 建议 " + c.slot + " 秒";
-          $("#dl-stage").innerHTML = '<iframe src="' + demo(c) + '"></iframe>';
-          var clip = '<div id="' + c.id + '-1" class="clip" data-composition-id="' + c.id + '" data-composition-src="motion-cards/cards/' + c.id + '/demo.html" data-variable-values=\'' + JSON.stringify(Object.fromEntries((c.vars || []).map(function (v) { return [v.id, v.default]; }))) + '\' data-start="0" data-duration="' + c.slot + '" data-track-index="2" data-width="1920" data-height="1080"></div>';
-          $("#dl-doc").innerHTML = "<p>" + esc(c.use_when) + "</p><h3>挂进项目</h3><pre>" + esc(clip) + "</pre><p style='color:var(--muted)'>正在读取卡片…</p>";
-          fetch("../cards/" + c.id + "/card.md").then(function (r) { return r.text(); }).then(function (t) { $("#dl-doc").lastChild.outerHTML = md(t); }).catch(function () { $("#dl-doc").lastChild.textContent = "直接用文件方式打开时浏览器不让读 card.md，请看 cards/" + c.id + "/card.md，或用 npx serve 起一个本地服务。"; });
-          $("#dl").showModal();
-        }
+  .sheet { display: grid; gap: 34px; min-width: 0; }
+  .group-head { display: flex; align-items: baseline; gap: 10px; margin: 0 0 12px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+  .group-head h3 { margin: 0; font-size: 18px; font-weight: 700; }
+  .group-head .n { font-family: var(--font-mono); color: var(--muted); font-size: 12px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); gap: 18px; }
 
-        $("#groups").innerHTML = '<button class="chip on" data-g="">全部</button>' + groups.map(function (g) { return '<button class="chip" data-g="' + esc(g.name) + '">' + esc(g.name) + " " + g.count + "</button>"; }).join("");
-        $("#groups").onclick = function (e) { var b = e.target.closest("[data-g]"); if (!b) return; state.group = b.dataset.g; document.querySelectorAll("[data-g]").forEach(function (x) { x.classList.toggle("on", x === b); }); render(); };
-        document.querySelectorAll("[data-skin]").forEach(function (b) { b.classList.toggle("on", b.dataset.skin === state.skin); b.onclick = function () { state.skin = b.dataset.skin; document.querySelectorAll("[data-skin]").forEach(function (x) { x.classList.toggle("on", x === b); }); render(); }; });
-        $("#q").oninput = function (e) { state.q = e.target.value; render(); };
-        $("#main").onclick = function (e) { var c = e.target.closest(".card"); if (c) open(c.dataset.id); };
-        $("#dl-close").onclick = function () { $("#dl").close(); $("#dl-stage").innerHTML = ""; };
-        render();
-      })();
-    </script>
-  </body>
-</html>
+  .tile { position: relative; display: grid; grid-template-rows: auto 1fr; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; min-width: 0; }
+  .tile:hover { border-color: var(--muted); }
+  .stage { position: relative; aspect-ratio: 16 / 9; max-width: 100%; background: #0d1016 center / cover no-repeat; cursor: pointer; overflow: hidden; }
+  /* color-scheme: normal stops a dark page from painting an opaque white backdrop behind the loading demo */
+  .stage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; pointer-events: none; color-scheme: normal; opacity: 0; transition: opacity 0.25s; }
+  .stage iframe.on { opacity: 1; }
+  .stage .play { position: absolute; left: 10px; bottom: 10px; border: 0; border-radius: 999px; background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 12px; padding: 4px 10px; }
+  .pick { position: absolute; z-index: 1; top: 8px; right: 8px; width: 32px; height: 32px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.5); background: rgba(10, 12, 16, 0.55); color: #fff; font-size: 18px; line-height: 1; display: grid; place-items: center; padding: 0; }
+  .pick[aria-pressed="true"] { background: var(--key); border-color: var(--key); color: var(--key-ink); font-weight: 700; }
+  .meta { display: grid; gap: 6px; padding: 10px 12px 12px; min-width: 0; }
+  .name { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
+  .open { border: 0; background: none; padding: 0; font-size: 15px; font-weight: 700; text-align: left; color: var(--ink); }
+  .open:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .name .id { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+  .one { margin: 0; font-size: 13px; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .tags { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12px; color: var(--muted); }
+  .energy::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; background: currentColor; vertical-align: 1px; }
+  .energy.e低 { color: var(--energy-low); } .energy.e中 { color: var(--energy-mid); } .energy.e高 { color: var(--energy-high); }
+
+  /* 每张卡的真时间轴：建议时长、五个抽帧时刻、主画面 */
+  .ruler { position: relative; height: 18px; margin-top: 2px; }
+  .ruler .track { position: absolute; left: 0; right: 34px; top: 8px; height: 2px; background: var(--line); }
+  .ruler .tick { position: absolute; top: 4px; width: 1px; height: 10px; background: var(--muted); }
+  .ruler .hero { position: absolute; top: 4px; width: 9px; height: 9px; background: var(--key); border: 1px solid var(--key-ink); transform: translateX(-4px) rotate(45deg); }
+  .ruler .len { position: absolute; right: 0; top: 0; font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+
+  .empty { padding: 40px 0; color: var(--muted); }
+
+  /* ---- 检视台 ---- */
+  dialog { width: min(1240px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow: auto; padding: 0; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); color: var(--ink); }
+  dialog::backdrop { background: var(--scrim); }
+  .dl-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 12px 16px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--panel); z-index: 1; }
+  .dl-head .title { flex: 1 1 220px; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+  .dl-head .title strong { font-size: 18px; }
+  .dl-head .title span { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+  .dl-head .tools { display: flex; flex-wrap: wrap; gap: 8px; }
+  .btn { border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 6px 12px; font-size: 13px; }
+  .btn.key { background: var(--key); border-color: var(--key); color: var(--key-ink); font-weight: 700; }
+  .dl-body { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+  .dl-left { padding: 16px; display: grid; gap: 14px; align-content: start; border-right: 1px solid var(--line); min-width: 0; }
+  /* 预览高度 = 16:9 画面 + 34px 播放条 */
+  .dl-stage { position: relative; background: #0d1016; border-radius: 8px; overflow: hidden; }
+  .dl-stage::before { content: ""; display: block; padding-top: calc(56.25% + 34px); }
+  .dl-stage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; color-scheme: normal; }
+  .strip { margin: 0; }
+  .strip img { display: block; width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--line); }
+  .strip figcaption { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .facts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 14px; font-size: 13px; margin: 0; }
+  .facts dt { color: var(--muted); }
+  .facts dd { margin: 0; min-width: 0; }
+  .dl-right { padding: 16px 20px 24px; display: grid; gap: 18px; align-content: start; min-width: 0; overflow-wrap: anywhere; }
+  .dl-right h4 { margin: 0 0 6px; font-size: 12px; letter-spacing: 0.12em; color: var(--muted); }
+  .snippet pre { margin: 0; padding: 12px; border-radius: 8px; background: var(--ground); border: 1px solid var(--line); font: 12px/1.55 var(--font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .vars-wrap { overflow-x: auto; }
+  .vars { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .vars th, .vars td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .vars td:first-child, .vars td:nth-child(3) { font-family: var(--font-mono); font-size: 12px; }
+  .doc { font-size: 14px; }
+  .doc h3 { font-size: 15px; margin: 18px 0 6px; padding-top: 10px; border-top: 1px solid var(--line); }
+  .doc h3:first-child { margin-top: 0; }
+  .doc p { margin: 6px 0; }
+  .doc ul, .doc ol { margin: 6px 0; padding-left: 22px; }
+  .doc li { margin: 3px 0; }
+  .doc code { font-family: var(--font-mono); font-size: 12.5px; background: var(--ground); border-radius: 4px; padding: 0 4px; }
+  .doc .table-wrap { overflow-x: auto; }
+  .doc table { border-collapse: collapse; font-size: 13px; min-width: 100%; }
+  .doc th, .doc td { border: 1px solid var(--line); padding: 4px 8px; text-align: left; vertical-align: top; }
+  .doc th { background: var(--ground); }
+
+  /* ---- 选卡篮 ---- */
+  .basket { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; background: var(--panel); border-top: 1px solid var(--line); padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+  .basket[hidden] { display: none; }
+  .basket .picked { flex: 1 1 260px; min-width: 0; display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+  .basket .picked span { flex: none; font-family: var(--font-mono); font-size: 12px; border: 1px solid var(--line); border-radius: 6px; padding: 2px 8px; }
+  .basket .label { font-weight: 700; }
+  .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(76px + env(safe-area-inset-bottom, 0px)); z-index: 6; background: var(--ink); color: var(--panel); padding: 8px 14px; border-radius: 8px; font-size: 13px; max-width: calc(100vw - 32px); }
+  .toast[hidden], .manual[hidden] { display: none; }
+  .manual { position: fixed; inset: auto max(16px, env(safe-area-inset-right, 0px)) calc(80px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); z-index: 6; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: grid; gap: 8px; }
+  .manual textarea { width: 100%; min-height: 70px; font: 12px var(--font-mono); background: var(--ground); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 8px; }
+
+  @media (max-width: 900px) {
+    .bench { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+    .rail { position: static; max-height: none; overflow: visible; padding: 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+    .rail[data-open="false"] { display: none; }
+    .filter-toggle { display: inline-block; }
+    .dl-body { grid-template-columns: minmax(0, 1fr); }
+    .dl-left { border-right: 0; border-bottom: 1px solid var(--line); }
+  }
+  @media (max-width: 600px) {
+    body { padding-block-end: 120px; }
+    .basket { gap: 8px; }
+    .basket .picked { display: none; }
+    .basket .label { flex: 1 0 100%; }
+    .dl-head .wide { display: none; }
+  }
+</style>
+
+<header class="masthead">
+  <div class="titleline">
+    <h1>动效卡库</h1>
+    <div class="slate" id="slate"></div>
+  </div>
+  <p class="lede">每张卡是一个动法：一份说明（命门、参数手感、已知坑）加一个单文件 HyperFrames 子合成。滚到哪张，哪张自动播放；点开看完整说明和挂进工程的代码；用预览右上角的 ＋ 把要用的卡放进选卡篮。</p>
+  <div class="searchrow">
+    <label class="search" for="q">
+      <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <input id="q" type="search" placeholder="搜卡名、用途、动法，比如：数字、对比、录屏、转场" autocomplete="off">
+    </label>
+    <div class="seg" role="group" aria-label="卡片预览用哪套皮">
+      <button type="button" id="skin-dark" aria-pressed="true">深色皮</button>
+      <button type="button" id="skin-light" aria-pressed="false">浅色皮</button>
+    </div>
+    <button type="button" class="filter-toggle" id="filter-toggle" aria-expanded="false" aria-controls="rail">筛选</button>
+  </div>
+</header>
+
+<div class="bench">
+  <aside class="rail" id="rail" data-open="false" aria-label="筛选">
+    <div class="count" id="count" aria-live="polite"></div>
+    <section><h2>分组</h2><div class="chips" id="f-group"></div></section>
+    <section><h2>能量</h2><div class="chips" id="f-energy"></div></section>
+    <section><h2>需要的素材</h2><div class="chips" id="f-needs"></div></section>
+    <section>
+      <h2><label for="f-intent">旁白在说什么</label></h2>
+      <select id="f-intent"></select>
+    </section>
+    <section><h2>用法</h2><div class="chips" id="f-overlay"></div></section>
+    <button type="button" class="reset" id="reset">清空筛选</button>
+  </aside>
+  <main class="sheet" id="sheet"></main>
+</div>
+
+<dialog id="dl" aria-labelledby="dl-name">
+  <div class="dl-head">
+    <div class="title"><strong id="dl-name"></strong><span id="dl-id"></span></div>
+    <div class="tools">
+      <button type="button" class="btn" id="dl-prev" aria-label="上一张">←<span class="wide"> 上一张</span></button>
+      <button type="button" class="btn" id="dl-next" aria-label="下一张"><span class="wide">下一张 </span>→</button>
+      <button type="button" class="btn" id="dl-pick"></button>
+      <button type="button" class="btn" id="dl-close">关闭</button>
+    </div>
+  </div>
+  <div class="dl-body">
+    <div class="dl-left">
+      <div class="dl-stage" id="dl-stage"></div>
+      <figure class="strip" id="dl-strip"></figure>
+      <dl class="facts" id="dl-facts"></dl>
+    </div>
+    <div class="dl-right">
+      <section>
+        <h4>挂进工程</h4>
+        <div class="snippet"><pre id="dl-snippet"></pre></div>
+        <div class="row"><button type="button" class="btn key" id="dl-copy">复制挂载片段</button><button type="button" class="btn" id="dl-copy-use">复制装卡命令</button></div>
+      </section>
+      <section><h4>变量</h4><div class="vars-wrap"><table class="vars" id="dl-vars"></table></div></section>
+      <section class="doc" id="dl-doc"></section>
+    </div>
+  </div>
+</dialog>
+
+<div class="basket" id="basket" hidden>
+  <span class="label" id="basket-n"></span>
+  <div class="picked" id="basket-list"></div>
+  <button type="button" class="btn key" id="copy-names">复制卡名</button>
+  <button type="button" class="btn" id="copy-use">复制装卡命令</button>
+  <button type="button" class="btn" id="clear">清空</button>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+<div class="manual" id="manual" hidden><span>浏览器不让直接复制，请手动复制下面的内容：</span><textarea id="manual-text" readonly></textarea><button type="button" class="btn" id="manual-close">好</button></div>
+
+<script>
+/*@DATA@*/
+</script>
+<script>
+(function () {
+  "use strict";
+  var D = window.MC, BASE = D.base, cards = D.cards, groups = D.groups;
+  var $ = function (s) { return document.querySelector(s); };
+  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var store = {
+    get: function (k, d) { try { var v = localStorage.getItem("mc." + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set: function (k, v) { try { localStorage.setItem("mc." + k, JSON.stringify(v)); } catch (e) {} }
+  };
+
+  // Webfonts are an extra: added from script so an unreachable font host never holds up the page.
+  ["https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap",
+   "https://fonts.googleapis.com/css2?family=ZCOOL+QingKe+HuangYou&display=swap&text=" + encodeURIComponent($("h1").textContent)].forEach(function (href) {
+    var l = document.createElement("link"); l.rel = "stylesheet"; l.href = href; document.head.appendChild(l);
+  });
+
+  // page order (group, then id), so "下一张" is the next tile on screen
+  var gi = {};
+  groups.forEach(function (g, i) { gi[g.name] = i; });
+  cards.sort(function (a, b) { return (gi[a.group] - gi[b.group]) || (a.id < b.id ? -1 : 1); });
+  var byId = {};
+  cards.forEach(function (c) {
+    byId[c.id] = c;
+    c._hay = [c.id, c.name, c.one_line, c.use_when, c.group, c.needs.join(" "), c.intents.map(function (k) { return D.intents[k]; }).join(" ")].join(" ").toLowerCase();
+    c._doc = (c.doc || "").toLowerCase();
+  });
+  var skin = store.get("skin", "dark");
+  if (skin !== "light") skin = "dark";
+  var state = { q: "", group: "", energy: "", need: "", intent: "", overlay: false };
+  var basket = store.get("basket", []);
+  basket = Array.isArray(basket) ? basket.filter(function (id) { return byId[id]; }) : [];
+  var NEEDS = ["文", "数据", "图", "多图", "界面", "网页", "人", "无"];
+  var current = null;
+
+  $("#slate").innerHTML = "<span><b class='mono'>" + cards.length + "</b> 张卡</span><span><b class='mono'>" + groups.length + "</b> 组</span><span>HyperFrames <b class='mono'>" + esc(D.hf) + "</b></span><span>更新于 <b class='mono'>" + esc(D.built) + "</b></span>";
+
+  // ---- filters
+  function chip(label, n, pressed, attr) { return "<button type='button' class='chip' aria-pressed='" + pressed + "' " + attr + ">" + esc(label) + (n != null ? "<span class='n'>" + n + "</span>" : "") + "</button>"; }
+  function drawFilters() {
+    $("#f-group").innerHTML = chip("全部", cards.length, !state.group, "data-group=''") + groups.map(function (g) { return chip(g.name, g.count, state.group === g.name, "data-group='" + esc(g.name) + "'"); }).join("");
+    $("#f-energy").innerHTML = ["", "低", "中", "高"].map(function (e) { return chip(e || "全部", null, state.energy === e, "data-energy='" + e + "'"); }).join("");
+    $("#f-needs").innerHTML = chip("不限", null, !state.need, "data-need=''") + NEEDS.map(function (n) { return chip(n, cards.filter(function (c) { return c.needs.indexOf(n) >= 0; }).length, state.need === n, "data-need='" + n + "'"); }).join("");
+    $("#f-overlay").innerHTML = chip("能透明压在画面上", cards.filter(function (c) { return c.overlay; }).length, state.overlay, "data-overlay='1'");
+    $("#f-intent").innerHTML = "<option value=''>全部</option>" + Object.keys(D.intents).map(function (k) {
+      var n = cards.filter(function (c) { return c.intents.indexOf(k) >= 0; }).length;
+      return n ? "<option value='" + k + "'" + (state.intent === k ? " selected" : "") + ">" + esc(D.intents[k]) + "（" + n + "）</option>" : "";
+    }).join("");
+    $("#skin-dark").setAttribute("aria-pressed", skin === "dark");
+    $("#skin-light").setAttribute("aria-pressed", skin === "light");
+  }
+  $("#rail").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-group],[data-energy],[data-need],[data-overlay]");
+    if (!b) return;
+    if (b.hasAttribute("data-group")) state.group = b.getAttribute("data-group");
+    if (b.hasAttribute("data-energy")) state.energy = b.getAttribute("data-energy");
+    if (b.hasAttribute("data-need")) state.need = b.getAttribute("data-need");
+    if (b.hasAttribute("data-overlay")) state.overlay = !state.overlay;
+    drawFilters(); render();
+  });
+  $("#f-intent").addEventListener("change", function (e) { state.intent = e.target.value; render(); });
+  var typing;
+  $("#q").addEventListener("input", function (e) { clearTimeout(typing); typing = setTimeout(function () { state.q = e.target.value; render(); }, 180); });
+  $("#reset").addEventListener("click", function () { state = { q: "", group: "", energy: "", need: "", intent: "", overlay: false }; $("#q").value = ""; drawFilters(); render(); });
+  $("#filter-toggle").addEventListener("click", function () { var r = $("#rail"), open = r.getAttribute("data-open") !== "true"; r.setAttribute("data-open", open); this.setAttribute("aria-expanded", open); });
+  ["dark", "light"].forEach(function (s) { $("#skin-" + s).addEventListener("click", function () { skin = s; store.set("skin", s); drawFilters(); render(); }); });
+
+  // Search looks at names and uses first; only when nothing matches there does it fall back to the full card text.
+  function visible() {
+    var base = cards.filter(function (c) {
+      return (!state.group || c.group === state.group) && (!state.energy || c.energy === state.energy) &&
+        (!state.need || c.needs.indexOf(state.need) >= 0) && (!state.intent || c.intents.indexOf(state.intent) >= 0) && (!state.overlay || c.overlay);
+    });
+    var words = state.q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    if (!words.length) return { list: base, full: false };
+    var has = function (field) { return function (c) { return words.every(function (w) { return c[field].indexOf(w) >= 0; }); }; };
+    var hit = base.filter(has("_hay"));
+    return hit.length ? { list: hit, full: false } : { list: base.filter(has("_doc")), full: true };
+  }
+
+  // ---- per-card timeline: slot length, the five sampled frames, the hero frame
+  function ruler(c) {
+    var slot = c.slot || 4, at = function (t) { return "left:calc((100% - 34px) * " + Math.max(0, Math.min(1, t / slot)).toFixed(4) + ")"; };
+    var ticks = (c.frames || []).map(function (t) { return "<i class='tick' style='" + at(t) + "'></i>"; }).join("");
+    var hero = c.hero != null ? "<i class='hero' style='" + at(c.hero) + "'></i>" : "";
+    return "<div class='ruler' aria-hidden='true' title='建议时长 " + slot + " 秒；竖线是连拍的五个时刻，菱形是主画面（" + c.hero + " 秒）'><i class='track'></i>" + ticks + hero + "<span class='len'>" + slot + "s</span></div>";
+  }
+  function demoUrl(c, extra) { return BASE + "cards/" + c.id + "/demo.html?skin=" + skin + (extra || ""); }
+
+  // ---- contact sheet: a preview iframe exists only while its tile is on screen
+  var io = "IntersectionObserver" in window ? new IntersectionObserver(function (es) {
+    es.forEach(function (e) {
+      var st = e.target, f = st.querySelector("iframe");
+      if (e.isIntersecting && !f && !reduced) mount(st);
+      else if (!e.isIntersecting && f) unmount(st);
+    });
+  }, { rootMargin: "200px 0px" }) : null;
+  function unmount(st) {
+    var f = st.querySelector("iframe"), p = st.querySelector(".play");
+    if (f) f.remove();
+    if (p) p.hidden = false;
+  }
+  function mount(st) {
+    if (st.querySelector("iframe")) return;
+    var p = st.querySelector(".play");
+    if (p) p.hidden = true;
+    var f = document.createElement("iframe");
+    f.setAttribute("aria-hidden", "true");
+    f.tabIndex = -1;
+    f.addEventListener("load", function () { f.classList.add("on"); });
+    f.src = st.getAttribute("data-src");
+    st.insertBefore(f, st.firstChild);
+  }
+  function pickLabel(c, on) { return (on ? "移出选卡篮：" : "放进选卡篮：") + c.name; }
+  var shown = "";
+  function render() {
+    var v = visible(), list = v.list;
+    $("#count").textContent = v.full ? "卡名和用途里没有，按说明全文找到 " + list.length + " 张" : "显示 " + list.length + " / " + cards.length + " 张";
+    var key = skin + "|" + list.map(function (c) { return c.id; }).join(",");
+    if (key === shown) return;
+    shown = key;
+    if (io) io.disconnect();
+    var html = "";
+    groups.forEach(function (g) {
+      var sub = list.filter(function (c) { return c.group === g.name; });
+      if (!sub.length) return;
+      html += "<section><div class='group-head'><h3>" + esc(g.name) + "</h3><span class='n'>" + sub.length + "</span></div><div class='grid'>";
+      sub.forEach(function (c) {
+        var on = basket.indexOf(c.id) >= 0;
+        html += "<article class='tile' data-id='" + c.id + "'>" +
+          "<div class='stage' data-src='" + esc(demoUrl(c, "&bare=1")) + "' style=\"background-image:url('" + BASE + "cards/" + c.id + "/thumb.jpg')\">" +
+          (reduced ? "<button type='button' class='play'>▶ 播放</button>" : "") + "</div>" +
+          "<button type='button' class='pick' aria-pressed='" + on + "' aria-label='" + esc(pickLabel(c, on)) + "'>" + (on ? "✓" : "＋") + "</button>" +
+          "<div class='meta'><div class='name'><button type='button' class='open'>" + esc(c.name) + "</button><span class='id'>" + c.id + "</span></div>" +
+          "<p class='one'>" + esc(c.one_line) + "</p>" +
+          "<div class='tags'><span class='energy e" + esc(c.energy) + "'>能量" + esc(c.energy) + "</span><span>" + c.needs.map(esc).join(" · ") + "</span>" + (c.overlay ? "<span>可叠加</span>" : "") + "</div>" +
+          ruler(c) + "</div></article>";
+      });
+      html += "</div></section>";
+    });
+    $("#sheet").innerHTML = html || "<p class='empty'>没有符合条件的卡。换个说法搜，或者点“清空筛选”。</p>";
+    if (io) document.querySelectorAll(".stage").forEach(function (s) { io.observe(s); });
+  }
+  $("#sheet").addEventListener("click", function (e) {
+    var tile = e.target.closest(".tile"); if (!tile) return;
+    var id = tile.getAttribute("data-id");
+    if (e.target.closest(".pick")) return toggle(id);
+    if (e.target.closest(".play")) return mount(e.target.closest(".stage"));
+    if (e.target.closest(".stage") || e.target.closest(".open")) open(id);
+  });
+
+  // ---- basket
+  function toggle(id) {
+    var i = basket.indexOf(id);
+    if (i >= 0) basket.splice(i, 1); else basket.push(id);
+    store.set("basket", basket);
+    syncPicks();
+  }
+  function syncPicks() {
+    document.querySelectorAll(".tile").forEach(function (t) {
+      var c = byId[t.getAttribute("data-id")], on = basket.indexOf(c.id) >= 0, b = t.querySelector(".pick");
+      b.setAttribute("aria-pressed", on); b.setAttribute("aria-label", pickLabel(c, on)); b.textContent = on ? "✓" : "＋";
+    });
+    $("#basket").hidden = !basket.length;
+    $("#basket-n").textContent = "选卡篮 " + basket.length + " 张";
+    $("#basket-list").innerHTML = basket.map(function (id) { return "<span>" + esc(id) + "</span>"; }).join("");
+    if (current) drawPick();
+  }
+  function useCmd(ids) { return "node motion-cards/tools/cards.mjs use <项目>/hyperframes " + ids.join(","); }
+  $("#copy-names").addEventListener("click", function () { copy(basket.map(function (id) { return id + "（" + byId[id].name + "）"; }).join("、"), "已复制 " + basket.length + " 张卡的名字"); });
+  $("#copy-use").addEventListener("click", function () { copy(useCmd(basket), "已复制装卡命令"); });
+  $("#clear").addEventListener("click", function () { basket = []; store.set("basket", basket); syncPicks(); });
+
+  // an open modal dialog covers everything outside it, so the toast and the copy fallback move inside it
+  function layer(el) { var host = $("#dl").open ? $("#dl") : document.body; if (el.parentNode !== host) host.appendChild(el); return el; }
+  function copy(text, done) {
+    var fail = function () { layer($("#manual")).hidden = false; $("#manual-text").value = text; $("#manual-text").focus(); $("#manual-text").select(); };
+    try { navigator.clipboard.writeText(text).then(function () { toast(done); }, fail); } catch (e) { fail(); }
+  }
+  $("#manual-close").addEventListener("click", function () { $("#manual").hidden = true; });
+  var tt;
+  function toast(msg) { var t = layer($("#toast")); t.textContent = msg; t.hidden = false; clearTimeout(tt); tt = setTimeout(function () { t.hidden = true; }, 1800); }
+
+  // ---- inspector
+  function md(src) {
+    var out = "", lines = src.split(/\r?\n/), i = 0;
+    var inline = function (s) { return esc(s).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>"); };
+    var cells = function (row) { return row.trim().replace(/^\||\|$/g, "").split("|").map(function (x) { return x.trim(); }); };
+    while (i < lines.length) {
+      var l = lines[i];
+      if (/^#{2,3} /.test(l)) { out += "<h3>" + inline(l.replace(/^#+ /, "")) + "</h3>"; i++; continue; }
+      if (/^\|/.test(l)) {
+        var rows = [];
+        while (i < lines.length && /^\|/.test(lines[i])) { if (!/^\|[\s:|-]+$/.test(lines[i].trim())) rows.push(cells(lines[i])); i++; }
+        out += "<div class='table-wrap'><table>" + rows.map(function (r, k) { var t = k ? "td" : "th"; return "<tr>" + r.map(function (c) { return "<" + t + ">" + inline(c) + "</" + t + ">"; }).join("") + "</tr>"; }).join("") + "</table></div>";
+        continue;
+      }
+      var m = /^\s*(\d+\.|-)\s+/.exec(l);
+      if (m) {
+        var ordered = /\d/.test(m[1]), re = ordered ? /^\s*\d+\.\s+/ : /^\s*-\s+/, items = [];
+        while (i < lines.length && re.test(lines[i])) { items.push(lines[i].replace(re, "")); i++; }
+        out += (ordered ? "<ol>" : "<ul>") + items.map(function (t) { return "<li>" + inline(t) + "</li>"; }).join("") + (ordered ? "</ol>" : "</ul>");
+        continue;
+      }
+      if (l.trim()) out += "<p>" + inline(l) + "</p>";
+      i++;
+    }
+    return out;
+  }
+  function snippet(c) {
+    var vals = {}; c.vars.forEach(function (v) { vals[v.id] = v.default; });
+    return "<div id=\"" + c.id + "-1\" class=\"clip\"\n     data-composition-id=\"" + c.id + "\"\n     data-composition-src=\"motion-cards/cards/" + c.id + "/demo.html\"\n     data-variable-values='" + JSON.stringify(vals).replace(/'/g, "&#39;") + "'\n     data-start=\"0\" data-duration=\"" + c.slot + "\" data-track-index=\"2\"\n     data-width=\"1920\" data-height=\"1080\"></div>";
+  }
+  function drawPick() {
+    var on = basket.indexOf(current.id) >= 0;
+    $("#dl-pick").textContent = on ? "✓ 在选卡篮里" : "＋ 放进选卡篮";
+    $("#dl-pick").className = "btn" + (on ? " key" : "");
+    $("#dl-pick").setAttribute("aria-pressed", on);
+  }
+  function open(id) {
+    var c = byId[id];
+    if (!c) return;
+    current = c;
+    $("#dl-name").textContent = c.name;
+    $("#dl-id").textContent = c.id + " · " + c.group;
+    $("#dl-stage").innerHTML = "<iframe title='" + esc(c.name) + " 预览，可拖动进度条' src='" + esc(demoUrl(c)) + "'></iframe>";
+    $("#dl-strip").innerHTML = "<img alt='" + esc(c.name) + " 的五帧连拍' src='" + BASE + "cards/" + c.id + "/strip.jpg' width='1936' height='238'><figcaption>连拍：五个关键时刻，每帧左上角是时间。</figcaption>";
+    var intents = c.intents.map(function (k) { return D.intents[k]; }).join("、") || "不按旁白挑，垫在画面底下用";
+    var facts = [["用在", c.use_when], ["旁白在说", intents], ["要的素材", c.needs.join("、")], ["能量", c.energy + (c.overlay ? "，能透明压在画面上" : "")], ["建议时长", c.slot + " 秒，主画面在 " + c.hero + " 秒"]];
+    if (c.numbers) facts.push(["数字", "一屏摆 " + (c.numbers[0] === c.numbers[1] ? c.numbers[0] : c.numbers[0] + "–" + c.numbers[1]) + " 个" + (c.chart ? "，画" + (D.charts[c.chart] || c.chart) : "")]);
+    if (c.sfx && c.sfx !== "none") facts.push(["音效", c.sfx]);
+    if (c.pairs_with && c.pairs_with.length) facts.push(["常搭", c.pairs_with.map(function (p) { return byId[p] ? byId[p].name + "（" + p + "）" : p; }).join("、")]);
+    $("#dl-facts").innerHTML = facts.map(function (f) { return "<dt>" + f[0] + "</dt><dd>" + esc(f[1]) + "</dd>"; }).join("");
+    $("#dl-snippet").textContent = snippet(c);
+    $("#dl-vars").innerHTML = c.vars.length ? "<tr><th>变量</th><th>说明</th><th>默认</th></tr>" + c.vars.map(function (v) { return "<tr><td>" + esc(v.id) + "</td><td>" + esc(v.label) + "</td><td>" + esc(typeof v.default === "string" ? v.default : JSON.stringify(v.default)) + "</td></tr>"; }).join("") : "<tr><td>这张卡没有变量</td></tr>";
+    $("#dl-doc").innerHTML = md(c.doc || "");
+    drawPick();
+    if (!$("#dl").open) $("#dl").showModal();
+    $("#dl").scrollTop = 0;
+    try { history.replaceState(null, "", "#" + c.id); } catch (e) {}
+  }
+  $("#dl").addEventListener("close", function () { $("#dl-stage").innerHTML = ""; $("#manual").hidden = true; current = null; try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {} });
+  function step(d) {
+    var list = visible().list;
+    if (!current || !list.length) return;
+    var i = list.indexOf(current);
+    open(list[(i + d + list.length) % list.length].id);
+  }
+  $("#dl-prev").addEventListener("click", function () { step(-1); });
+  $("#dl-next").addEventListener("click", function () { step(1); });
+  $("#dl-close").addEventListener("click", function () { $("#dl").close(); });
+  $("#dl-pick").addEventListener("click", function () { if (current) toggle(current.id); });
+  $("#dl-copy").addEventListener("click", function () { if (current) copy(snippet(current), "已复制挂载片段"); });
+  $("#dl-copy-use").addEventListener("click", function () { if (current) copy(useCmd([current.id]), "已复制装卡命令"); });
+  $("#dl").addEventListener("keydown", function (e) {
+    if (/^(TEXTAREA|INPUT|SELECT)$/.test(e.target.tagName)) return;
+    if (e.key === "ArrowLeft") step(-1);
+    if (e.key === "ArrowRight") step(1);
+  });
+  $("#dl").addEventListener("click", function (e) { if (e.target === $("#dl")) $("#dl").close(); });
+
+  function fromHash() { var h = decodeURIComponent((location.hash || "").slice(1)); if (byId[h] && (!current || current.id !== h)) open(h); }
+  addEventListener("hashchange", fromHash);
+  drawFilters(); syncPicks(); render(); fromHash();
+})();
+</script>

@@ -19,7 +19,7 @@
 
 ## Pexels
 
-用 PowerShell 7 运行 `scripts/pexels.ps1`。凭据按 Windows 用户用 DPAPI 加密保存在 `%LOCALAPPDATA%/ScienceVideoDirector/credentials/pexels.dpapi`，不要打印、不要写进文件或聊天。
+用 `scripts/pexels.ps1`，Windows 自带的 PowerShell 5.1 和 PowerShell 7 都能跑。凭据按 Windows 用户用 DPAPI 加密保存在 `%LOCALAPPDATA%/ScienceVideoDirector/credentials/pexels.dpapi`，不要打印、不要写进文件或聊天。执行策略不让跑脚本时，用 `powershell -NoProfile -ExecutionPolicy Bypass -File $pexels -Action …`，只对这一次放行，不改系统设置。
 
 ```powershell
 $pexels = "$env:USERPROFILE/.codex/skills/science-video-director/scripts/pexels.ps1"
@@ -32,6 +32,7 @@ $pexels = "$env:USERPROFILE/.codex/skills/science-video-director/scripts/pexels.
 
 - 用英文写具体检索词：对象 + 动作 + 场景 + 光线。先看缩略图或预览，选主体清楚、有推近余量的。
 - 下载会生成 `<文件名>.source.json`（来源、作者、许可链接）。采用后登记到 ASSETS.json 和 ATTRIBUTION.md。
+- 下载的是原片，留在项目的 `assets/` 里当出处，不改它。要用进 HyperFrames 工程时，用 `episode.py media` 转一份放进去（见 production.md“素材进工程”）：Pexels 原片常常 3–10 秒才一个关键帧，直接用会卡帧。
 - 缺凭据、401/403/429 时说明缺口，不要循环重试。更新凭据要用户明确同意，用 `-Action configure` 的安全输入。
 - 不在用户电脑上（pexels.ps1 跑不了）时，可以用网页搜索 Pexels 找候选，把具体页面链接写进 TASKS.md，回到本机再下载。
 

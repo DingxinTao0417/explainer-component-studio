@@ -4,6 +4,8 @@ name: 环形进度
 group: 数据与图表
 type: structure
 intents: number
+numbers: 1
+chart: proportion
 one_line: 一个粗环从 12 点方向顺时针画到目标百分比，环中间的数字跟着同一个进度值滚，数字落定的那一帧整个环鼓一下，说明行随后跟上
 use_when: 旁白说的是“占了多少”“完成了多少”，一个 0 到 100 之间的比例，而且只讲这一个
 energy: 中

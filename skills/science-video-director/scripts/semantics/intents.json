@@ -1,5 +1,5 @@
 {
-  "$comment": "讲解意图表。第一层是 EDIT.json 的四类画面 type，第二层是这里的意图。patterns 是对旁白句的正则（Python re），命中给 weight 分；组件的语义元数据用 intent id 引用这里。改这张表要同时跑 shot_semantics.py check。 2026-09-28 r2：数字只认阿拉伯数字或带单位的中文数词；步骤要两个以上；outro 不再认裸的“关注”；caution 不再认裸的“别”。 r3（2026-09-28 保留集后，用户决定降标到 ≥60%）：keyword 认“叫作”；数字认“一千二百多年”这类带百千万的中文数词。",
+  "$comment": "讲解意图表。第一层是 EDIT.json 的四类画面 type，第二层是这里的意图。patterns 是对旁白句的正则（Python re），命中给 weight 分；组件的语义元数据用 intent id 引用这里。改这张表要同时跑 shot_semantics.py check。 2026-09-28 r2：数字只认阿拉伯数字或带单位的中文数词；步骤要两个以上；outro 不再认裸的“关注”；caution 不再认裸的“别”。 r3（2026-09-28 保留集后，用户决定降标到 ≥60%）：keyword 认“叫作”；数字认“一千二百多年”这类带百千万的中文数词。 r4（2026-10-18，卡库成为主路）：chart_hints 的 ranking 拆成 compare（谁多谁少）和 ranking（名次变化）；两个以上数字的卡按卡前言的 numbers / chart 排序。 r5（2026-10-18）：加 materials 表，选卡按这一镜有没有卡要的素材筛选和加分。",
   "types": {
     "host": "主持人：带情绪、建立信任",
     "evidence": "证据：真实录屏、真实结果、原始资料",
@@ -284,18 +284,72 @@
     "illustration"
   ],
   "chart_hints": {
-    "$comment": "多个数字同时出现时的图表意图细分",
+    "$comment": "两个以上数字同时出现时，数字之间是什么关系。没有提示词时按 compare 算。数字类的卡在前言里用 chart 声明自己画的是哪一种（见 motion-cards/SPEC.md）。",
     "trend": [
       "趋势|越来越|逐年|逐月|上升|下降|涨|跌|变化曲线"
     ],
     "proportion": [
       "占比|占了|百分之|成(以上|左右)|一半|三分之|四分之"
     ],
+    "compare": [
+      "最多|最少|高于|低于|多于|少于|相比"
+    ],
     "ranking": [
-      "最多|最少|排第|高于|低于|多于|少于|相比"
+      "排第|排名|名次|第[一二三四五六七八九十0-9]+名|反超"
     ],
     "quantity": [
       "一共|总共|里有.{0,4}(个|份|单|条)|每.{1,4}(个|份|单|条)"
     ]
+  },
+  "materials": {
+    "$comment": "这一镜手上有什么素材。词和动效卡前言的 needs 一致；文（旁白的话）和数据（旁白里的数字）从旁白判断，不用登记。EDIT 镜头写了 materials 就以它为准，没写就从 source、asset_ids 指向的素材 kind、镜头 type 推。有界面、网页或多图，就一定也有图。",
+    "kinds": [
+      "图",
+      "多图",
+      "界面",
+      "网页",
+      "人"
+    ],
+    "implies": {
+      "多图": [
+        "图"
+      ],
+      "界面": [
+        "图"
+      ],
+      "网页": [
+        "图"
+      ]
+    },
+    "from_source": {
+      "screen_record": [
+        "界面"
+      ],
+      "photo": [
+        "图"
+      ],
+      "illustration": [
+        "图"
+      ],
+      "user_video": [
+        "图"
+      ],
+      "real_footage": [
+        "图"
+      ],
+      "ai_video": [
+        "图"
+      ]
+    },
+    "from_asset_kind": {
+      "image": "图",
+      "graphic": "图",
+      "video": "图"
+    },
+    "from_type": {
+      "host": [
+        "人"
+      ]
+    }
   }
 }

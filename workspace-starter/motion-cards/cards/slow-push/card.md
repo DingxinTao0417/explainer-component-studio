@@ -7,7 +7,7 @@ intents: metaphor,result
 one_line: 整个画面从第一帧到最后一帧匀速向一个点推近 5%，不加速、不减速、不停，让一张静止的图一直“活着”
 use_when: 旁白要在一张截图、一张照片上讲五秒以上，画面里没有别的东西在动
 energy: 低
-needs: 图, 界面
+needs: 图
 overlay: no
 slot: 5
 hero: 2.4

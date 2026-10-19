@@ -7,7 +7,7 @@ intents: result,hook
 one_line: 开场是 3.2 倍的局部特写，停 0.8 秒后镜头向后拉 1.5 秒退到整个画面，再用一个框标出刚才看的是哪一块
 use_when: 旁白先讲一个细节、再说“而这只是其中一项”；或者想让观众先猜这是什么，再给答案
 energy: 中
-needs: 界面, 图
+needs: 图
 overlay: no
 slot: 4
 hero: 3.2

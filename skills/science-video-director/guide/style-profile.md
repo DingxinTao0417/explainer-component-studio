@@ -49,7 +49,7 @@
 | Pexels | `scripts/pexels.ps1`，凭据由 Windows DPAPI 加密存在本机（见 assets.md） |
 | 生图 | 当前 `imagegen` skill（用户偏好 image2 路线） |
 | H3 AI 视频 | `h3-science-video` skill；Budget 工作流 `<工作区>/shots/02/h3_scene02_budget_v1.json`。只在用户让你生成时用 |
-| HyperFrames | 先读 `hyperframes` skill 的路由；上期工程用 `npx --yes hyperframes@0.8.57`。项目文件夹本身叫 hyperframes 时，不要用不带版本号的 `npx hyperframes` |
+| HyperFrames | 先读 `hyperframes` skill 的路由；上期工程用 `npx --yes hyperframes@0.8.174`。项目文件夹本身叫 hyperframes 时，不要用不带版本号的 `npx hyperframes` |
 
 路径不存在时，说明是哪一项缺了，问用户，不要去全盘搜索。
 
@@ -59,4 +59,4 @@
 - **旧版 skill 失败的原因**：确认、指纹、交接、冻结、独立审片这些流程门槛占了大部分篇幅和工时，有两轮返修只是在恢复文件哈希。新流程只留一个确认点（样片），其余靠看片自查。不要把这些门槛加回来。
 - **旧项目接续**：旧项目里的 PROPOSAL.json、handoffs、qa/reviews、workflow-events.jsonl 等记录，只当历史参考，不再作为继续制作的前提。
 - **镜头工艺的来历（2026-10-07）**：同屏预算、语义拍、让位、版式轮换、网页证据的拍法、卡词帧和音效可听度检查，是参考外部开源作品后加进来的。没加的：逐层分镜矩阵、一串机器闸门、必过的独立审片、常开的工作台，这些和上一条教训是同一类东西；“相机永不静止”“禁止硬切”“视频套边框”和本频道标准相反。
-- **组件来源（2026-10-18）**：品牌包管频道版式，其余镜头一律从动效卡库来；卡库以后逐步扩充，新动法按 motion-cards/SPEC.md 做成卡。
+- **组件来源（2026-10-18）**：老组件库和外部参考库都已移除。品牌包管频道版式，其余镜头一律从动效卡库来；卡库以后逐步扩充，新动法按 motion-cards/SPEC.md 做成卡。

@@ -4,6 +4,7 @@ name: 数字滚动
 group: 数据与图表
 type: structure
 intents: number,result
+numbers: 1
 one_line: 一个大数字从起始值冲向目标值，前快后慢，最后一位落定的那一帧整行轻轻顿一下、由暗变亮
 use_when: 旁白报出一个量级（多少次、多少人、多少钱），想让观众感到“涨上去了”而不是直接看到结果
 energy: 中

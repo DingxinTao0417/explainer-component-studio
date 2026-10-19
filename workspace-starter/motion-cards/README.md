@@ -11,7 +11,16 @@ node tools/cards.mjs gallery        # 生成 gallery/index.html
 node tools/cards.mjs serve          # 打开 http://localhost:3040/motion-cards/gallery/
 ```
 
-画廊一页列出全部卡，滚到哪张哪张自动播放，可以搜索、按分组筛选、切换深浅色。点开一张能看说明和挂进项目的代码。直接双击 `gallery/index.html` 也能看预览，只是读不到卡片说明。
+画廊一页列出全部卡，滚到哪张哪张自动播放。可以搜索（卡名和用途里搜不到，就搜说明全文），按分组、能量、要的素材、旁白在说什么筛选，切换卡片的深浅色皮。点开一张能看完整说明、变量、挂进项目的代码，左右键翻上一张下一张。要用的卡点 ＋ 放进选卡篮，一次复制卡名或装卡命令。直接双击 `gallery/index.html` 也能看。
+
+放到网上给别人看：
+
+```bash
+node tools/cards.mjs site <空文件夹>          # 完整网页，放 GitHub Pages 这类静态托管
+node tools/cards.mjs site <空文件夹> --bare   # 只有页面主体，给会自己套 <html>/<head> 的发布平台
+```
+
+生成的文件夹里是 `index.html` 和 `motion-cards/`（每张卡的 demo、缩略图、连拍，预览脚本，示例图），整个上传即可。网页版的 GSAP 从 cdnjs 加载，和 `lib/gsap.min.js` 是同一个 3.14.2 文件。
 
 单张卡：直接打开 `cards/<id>/demo.html`。地址后面加 `?skin=light` 换浅色，`?t=1.2` 停在某一秒，`?v={"text":"换一句"}` 换变量。
 
@@ -60,7 +69,7 @@ node tools/cards.mjs find --text 对比 --needs 图      # 还可以加 --intent
 node tools/cards.mjs show before-after-wipe          # 打印整张卡
 ```
 
-`index.json` 是全部卡的机读索引：`id / name / group / type / intents / one_line / use_when / energy / needs / overlay / slot / sfx / vars`。按素材类型（`needs`）和能量（`energy`）先筛，再看 `use_when`。
+`index.json` 是全部卡的机读索引：`id / name / group / type / intents / numbers / chart / one_line / use_when / energy / needs / overlay / slot / sfx / vars`。按素材类型（`needs`）和能量（`energy`）先筛，再看 `use_when`。
 
 ## 加一张卡
 
@@ -72,7 +81,7 @@ node tools/cards.mjs verify <id>     # 在真实 HyperFrames 里挂载、检查�
 node tools/cards.mjs gallery         # 更新索引和画廊
 ```
 
-`verify` 通过后打开 `cards/<id>/strip.jpg` 看一遍再算完成。
+`verify` 通过后打开 `cards/<id>/strip.jpg` 看一遍再算完成。放在网上的画廊要重新 `site` 一遍再上传。
 
 ## 目录
 
@@ -87,4 +96,4 @@ motion-cards/
 └── README.md
 ```
 
-需要 Node 18+、Python 3（带 Pillow）和 HyperFrames CLI（`verify` 默认用 `npx --yes hyperframes@0.8.57`，可用环境变量 `HF_CLI` 换）。GSAP 的许可见 gsap.com/standard-license。
+需要 Node 22+、Python 3（带 Pillow）和 HyperFrames CLI（`verify` 默认用 `npx --yes hyperframes@0.8.174`，可用环境变量 `HF_CLI` 换）。GSAP 的许可见 gsap.com/standard-license。

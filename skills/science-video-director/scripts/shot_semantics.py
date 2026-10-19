@@ -5,6 +5,7 @@
 用法（python -X utf8 shot_semantics.py …）：
   suggest --text "旁白句子" [--type structure] [--source real_footage] [--tone C] [--prev chapter-card,keyword-punch]
           [--position open|close|mid] [--scene-start 12.3] [--transcript subtitles/transcript.json] [--limit 3]
+          [--have 图,界面]          # 这一镜手上有的素材；--edit 时不写就从 EDIT 镜头的 materials / source / asset_ids 推
           [--out planning/semantics/S05.json]
   suggest --edit planning/EDIT.json --scene S05 --captions subtitles/CAPTIONS.json [--transcript …]   # 从分镜取旁白和上下文
   dataset --project <项目> --out <文件>          # 把 EDIT.json + CAPTIONS.json 对成回放测试集（不含标准答案）
@@ -29,6 +30,7 @@ INTENTS_FILE = HERE / 'semantics' / 'intents.json'
 BRAND_DIR = default_brand_kit()
 CARDS_DIR = default_motion_cards()
 CLAUSE_SPLIT = re.compile(r'[，,。！!；;：:？?、\n]+')
+CHART_NAMES = {'compare': '比大小', 'ranking': '名次变化', 'trend': '趋势', 'proportion': '占比', 'quantity': '数量'}
 NUM_RE = re.compile(r'(\d+(?:[.,]\d+)?|[一二三四五六七八九十百千万亿]{1,6})\s*(秒|分钟|小时|天|年|块|元|万|亿|%|％|个|条|单|次|倍|人|份|页|层|行|字)')
 
 
@@ -85,6 +87,7 @@ def card_record(card):
             'role': 'overlay' if card.get('overlay') else 'fullscreen', 'status': 'core',
             'use': f"{card.get('name')}：{card.get('one_line')}（用在：{card.get('use_when')}）", 'avoid': [],
             'slots': slots, 'energy': card.get('energy'), 'needs': card.get('needs') or [], 'slot': card.get('slot'),
+            'numbers': tuple(card['numbers']) if card.get('numbers') else None, 'chart': card.get('chart'),
             'card_vars': {v['id']: v.get('default') for v in card.get('vars', [])}}
 
 
@@ -134,27 +137,99 @@ def detect_intents(text, intents, cue_words=(), position='mid'):
     return found
 
 
+ARTICLE_UNITS = set('个条单次人份页层行字')
+
+
 def numbers_in(text):
     out = []
     for m in NUM_RE.finditer(text or ''):
+        if m.group(1) == '一' and m.group(2) in ARTICLE_UNITS:
+            continue  # “一份周报”“一个问题”：量词，不是数据
         out.append({'raw': m.group(0), 'value': m.group(1), 'unit': m.group(2)})
     return out
 
 
 def chart_hint(text, intents):
     for key, pats in intents.get('chart_hints', {}).items():
+        if key.startswith('$'):
+            continue
         if any(re.search(p, text or '') for p in pats):
             return key
     return None
 
 
+# ---------- 素材与连用 ----------
+def expand_materials(have, intents):
+    """补全素材：有界面、网页或多图，就一定也有图（规则在 intents.json 的 materials.implies）。"""
+    out = set(have or [])
+    for k, extra in intents.get('materials', {}).get('implies', {}).items():
+        if k in out:
+            out.update(extra)
+    return out
+
+
+IMAGE_EXT = {'.png', '.jpg', '.jpeg', '.webp', '.gif', '.bmp'}
+VIDEO_EXT = {'.mp4', '.mov', '.webm', '.mkv', '.m4v'}
+
+
+def load_assets(path):
+    """planning/ASSETS.json 里登记的素材，加上 PROJECT.json 里用户给的素材输入（I001…）→ {id: 记录}。
+    镜头的 asset_ids 两种 id 都会引用；输入没有 kind，按扩展名补成 image / video。文件不在就当没有登记。"""
+    p = Path(path)
+    out = {}
+    if p.is_file():
+        data = load_json(p)
+        items = data.get('assets', []) if isinstance(data, dict) else data
+        out.update({a['id']: a for a in items if isinstance(a, dict) and a.get('id')})
+    manifest = p.parent.parent / 'PROJECT.json'
+    if manifest.is_file():
+        for item in load_json(manifest).get('inputs') or []:
+            if isinstance(item, dict) and item.get('role') == 'material' and item.get('id') not in out:
+                ext = Path(str(item.get('file') or '')).suffix.lower()
+                kind = 'image' if ext in IMAGE_EXT else 'video' if ext in VIDEO_EXT else None
+                if kind:
+                    out[item['id']] = {**item, 'kind': kind}
+    return out
+
+
+def scene_materials(scene, assets, intents):
+    """一镜手上有什么素材：EDIT 镜头写了 materials 就用它；没写就从 source、asset_ids 指向的 kind、镜头 type 推。"""
+    if scene.get('materials') is not None:
+        return list(scene['materials'])
+    table = intents.get('materials', {})
+    have = set(table.get('from_source', {}).get(scene.get('source') or '', []))
+    have.update(table.get('from_type', {}).get(scene.get('type') or '', []))
+    images = [a for a in scene.get('asset_ids') or [] if table.get('from_asset_kind', {}).get((assets.get(a) or {}).get('kind')) == '图']
+    if images:
+        have.add('图')
+    if len(images) >= 2:
+        have.add('多图')
+    return sorted(have)
+
+
+def used_in(scene):
+    """一镜用过的品牌组件和动效卡（component / motion，旧项目的 components / component_ids）。"""
+    ids = []
+    for key in ('component', 'motion'):
+        ids += [x.strip() for x in str(scene.get(key) or '').split(',')]
+    for key in ('components', 'component_ids'):
+        if isinstance(scene.get(key), list):
+            ids += [x for x in scene[key] if isinstance(x, str)]
+    return [x for x in ids if x and x not in ('custom', 'none')]
+
+
 # ---------- 排序 ----------
-def rank(text, found, comps, brand_meta, context, intents):
+def rank(text, found, comps, brand_meta, context, intents, excluded=None):
     ctx_type = context.get('type')
     nums = numbers_in(text)
     hint = chart_hint(text, intents)
     prefer = brand_meta.get('overlap_with_library', {})
     prev = context.get('prev') or []
+    shots = [set(p) if isinstance(p, (list, tuple, set)) else ({p} if p else set()) for p in prev]  # 之前每一镜用过什么，按时间先后
+    have = context.get('materials')  # None = 不知道这一镜有什么素材
+    have = expand_materials(have, intents) if have is not None else None
+    kinds = set(intents.get('materials', {}).get('kinds', []))
+    has_data = bool(nums) or any(it['id'] == 'number' for it in found)
     ranked = []
     for c in comps:
         score, why = 0.0, []
@@ -176,6 +251,19 @@ def rank(text, found, comps, brand_meta, context, intents):
                 why.append('主题词 ' + '/'.join(hit[:3]))
             else:
                 why.append('分镜声明意图，跳过主题词门槛')
+        # 素材：卡要的素材这一镜没有就不推荐；用得上这一镜素材的卡排到文字版式前面
+        needs = set(c.get('needs') or [])
+        if '数据' in needs and not has_data:
+            if excluded is not None:
+                excluded.append((c['id'], '旁白里没有数字'))
+            continue
+        need_material = needs & kinds
+        if have is not None and need_material:
+            missing = need_material - have
+            if missing:
+                if excluded is not None:
+                    excluded.append((c['id'], '这一镜没有' + '、'.join(sorted(missing))))
+                continue
         if c.get('role') == 'overlay':
             score *= 0.9
         if ctx_type and c.get('type') and c['type'] != ctx_type:
@@ -186,22 +274,44 @@ def rank(text, found, comps, brand_meta, context, intents):
             if pref.get('prefer') == c['id']:
                 score += 0.4
                 why.append('品牌包优先')
-        if 'number' in c['intents'] and not declared_here:
-            if c.get('chart'):
-                if len(nums) >= 2 and (hint == c['chart'] or hint is None and c['chart'] == 'ranking'):
+        if have is not None and need_material:  # 和“品牌包优先”一样是加分项，放在类型、叠层这些乘数之后
+            score += 0.5
+            why.append('用上这一镜的' + '、'.join(sorted(need_material)))
+        # 数字的个数和关系：组件声明一屏摆几个数字（numbers）、画的是哪种关系（chart），对不上就降权
+        lo_hi = c.get('numbers') or ((1, 1) if c['id'] == 'big-number' else None)
+        if 'number' in c['intents'] and not declared_here and lo_hi and nums:
+            lo, hi = lo_hi
+            n = len(nums)
+            if n > hi:
+                score *= 0.5
+                why.append(f'旁白有 {n} 个数字，这一屏最多摆 {hi} 个')
+            elif n < lo:
+                score *= 0.5
+                why.append(f'旁白只有 {n} 个数字，这一屏要 {lo} 个以上')
+            elif n >= 2:
+                want = hint or 'compare'
+                if c.get('chart') == want:
                     score += 0.5
-                    why.append(f'{len(nums)} 个数字，图表 {c["chart"]}')
-                else:
-                    score *= 0.5
-                    why.append('只有一个数字，图表降权')
-            elif c['id'] == 'big-number' and len(nums) >= 2:
-                score *= 0.6
-                why.append('不止一个数字')
+                    why.append(f'{n} 个数字，{CHART_NAMES.get(want, want)}')
+                else:  # 摆得下，只是讲的关系不一样：轻罚，比“摆不下”轻
+                    score *= 0.8
+                    why.append(f'{n} 个数字是{CHART_NAMES.get(want, want)}，这一屏画的是{CHART_NAMES.get(c.get("chart"), "别的")}')
+        # 连用：上一镜刚用过轻罚，前两镜都用过重罚（再用就连续 3 镜）。品牌包的叠层（录屏聚焦、取景框、头像角标…）本来就反复用，不罚
         warnings = []
-        if prev and prev[-1] == c['id']:
-            warnings.append('上一镜就是这个版式，别连用')
-        if prev.count(c['id']) >= 4:
-            warnings.append(f'全片已用 {prev.count(c["id"])} 次')
+        layer = c['library'] == 'brand-kit' and c.get('role') == 'overlay'
+        uses = sum(c['id'] in sh for sh in shots)
+        if not layer and shots and c['id'] in shots[-1]:
+            if len(shots) >= 2 and c['id'] in shots[-2]:
+                score *= 0.4
+                why.append('前两镜都是它')
+                warnings.append('前两镜都是这个版式，再用就连续 3 镜')
+            else:
+                score *= 0.7
+                why.append('上一镜刚用过')
+                warnings.append('上一镜就是这个版式，别连用')
+        if not layer and uses >= 4:
+            score *= 0.8
+            warnings.append(f'全片已用 {uses} 次')
         if c.get('tone_support') not in (None, 'tokens', 'n/a') and context.get('tone') and context['tone'] not in c.get('tone_support', []):
             warnings.append('不支持本期调性')
         ranked.append({'library': c['library'], 'id': c['id'], 'score': round(score, 2), 'why': why, 'role': c.get('role'), 'avoid': c.get('avoid', []), 'warnings': warnings, '_meta': c})
@@ -435,7 +545,8 @@ def suggest(text, context, limit=3, include_hidden=False, transcript=None):
     cue_words = context.get('cue_words') or []
     position = context.get('position') or 'mid'
     found = detect_intents(text, intents, cue_words, position)
-    ranked = rank(text, found, comps, brand, context, intents)
+    excluded = []
+    ranked = rank(text, found, comps, brand, context, intents, excluded)
     layer_type = context.get('type') or (found[0]['type'] if found else 'metaphor')
     by_id = {it['id']: it for it in intents['intents']}
     overlays = []
@@ -453,12 +564,14 @@ def suggest(text, context, limit=3, include_hidden=False, transcript=None):
         # 分镜声明的意图：排第一，分数压过旁白识别
         found = [it for it in found if it['id'] != declared]
         found.insert(0, {'id': declared, 'name': by_id[declared]['name'], 'type': by_id[declared]['type'], 'score': 1.3, 'hits': ['分镜声明的意图']})
-        ranked = rank(text, found, comps, brand, context, intents)
+        excluded = []
+        ranked = rank(text, found, comps, brand, context, intents, excluded)
         structural = [it for it in found if not by_id[it['id']].get('no_component_default') and it['score'] >= 0.7]
     if context.get('chapter_start'):
         found = [it for it in found if it['id'] != 'chapter']
         found.insert(0, {'id': 'chapter', 'name': '章节进入', 'type': 'structure', 'score': 1.3, 'hits': ['分镜声明的章节起点']})
-        ranked = rank(text, found, comps, brand, context, intents)
+        excluded = []
+        ranked = rank(text, found, comps, brand, context, intents, excluded)
         structural = [it for it in found if not by_id[it['id']].get('no_component_default') and it['score'] >= 0.7]
     if source in no_comp_sources:
         decision, reason = 'none', f'镜头素材是 {source}：真实画面优先，组件只作叠层'
@@ -504,6 +617,15 @@ def suggest(text, context, limit=3, include_hidden=False, transcript=None):
     for r in ranked[limit:]:
         r.pop('_meta', None)
     warnings = [w for c in candidates for w in c['warnings']]
+    have = context.get('materials')
+    by_reason = {}
+    for cid, why in excluded:
+        by_reason.setdefault(why, []).append(cid)
+    for why, ids in by_reason.items():
+        tip = '' if why == '旁白里没有数字' else '；手上其实有的话，在 EDIT 镜头写 materials 或加 --have'
+        warnings.append(f"{why}：没推荐 {len(ids)} 张要它的卡（{'、'.join(ids[:4])}{'…' if len(ids) > 4 else ''}）{tip}")
+    if have is None and any(set(c.get('card', {}).get('needs') or []) & set(intents.get('materials', {}).get('kinds', [])) for c in candidates):
+        warnings.append('没说这一镜手上有什么素材（EDIT 的 materials / source / asset_ids，或 --have）：要图、要截图的卡也照常推荐了，用之前确认手上真有')
     for c in candidates:
         if c['overflow']:
             warnings.append(f"{c['id']}：{len(c['overflow'])} 个槽位超字数，按 strategy 缩写或拆分，不缩字号")
@@ -514,6 +636,7 @@ def suggest(text, context, limit=3, include_hidden=False, transcript=None):
         'context': {k: v for k, v in context.items() if v not in (None, [], '')},
         'type': layer_type,
         'intents': found,
+        'materials': sorted(expand_materials(context.get('materials'), intents)) if context.get('materials') is not None else None,
         'decision': decision,
         'reason': reason,
         'instead': instead if decision == 'none' else [],
@@ -586,7 +709,7 @@ def scaffold(project, scene, name, text=None, brief=None):
              f'data-start="<镜头起点>" data-duration="<镜头时长>" data-track-index="1" data-width="1920" data-height="1080" '
              f"data-variable-values='{{\"title\":\"<画面内标题或空>\",\"highlight\":\"<强调词>\"}}'></div>")
     return {'ok': True, 'file': str(dest), 'mount': mount,
-            'next': '在 .cs-stage 里画本镜的内容（HTML 或 SVG），把 HFK.cues 的时间换成 suggest 给的词时间，然后 npx --yes hyperframes@0.8.57 check。'}
+            'next': '在 .cs-stage 里画本镜的内容（HTML 或 SVG），把 HFK.cues 的时间换成 suggest 给的词时间，然后 npx --yes hyperframes@0.8.174 check。'}
 
 
 # ---------- 测试集 ----------
@@ -609,6 +732,8 @@ def scene_narration(scene, cues):
 def build_dataset(project, out):
     project = Path(project)
     edit = load_json(project / 'planning' / 'EDIT.json')
+    intents = load_json(INTENTS_FILE)
+    assets = load_assets(project / 'planning' / 'ASSETS.json')
     caps = load_json(project / 'subtitles' / 'CAPTIONS.json')['cues']
     rows = []
     total = float(edit.get('duration') or edit['scenes'][-1]['end'])
@@ -616,6 +741,7 @@ def build_dataset(project, out):
         pos = 'open' if float(sc['start']) < 10 else ('close' if float(sc['end']) > total - 20 else 'mid')
         rows.append({'project': project.name, 'scene': sc['id'], 'start': sc['start'], 'end': sc['end'], 'position': pos,
                      'type': sc.get('type'), 'source': sc.get('source'), 'edit_component': sc.get('component'),
+                     'materials': scene_materials(sc, assets, intents), 'used': used_in(sc),
                      'cue_words': sc.get('cue_words') or [], 'visual': sc.get('visual'), 'narration': scene_narration(sc, caps)})
     save_new(out, {'project': project.name, 'rows': rows})
     return {'ok': True, 'rows': len(rows), 'out': str(out)}
@@ -629,7 +755,8 @@ def replay(dataset, labels, out, include_hidden=False, with_intent=False):
     results, used, real, declared = [], [], [], []
     prev = []
     for row in data['rows']:
-        ctx = {'type': row.get('type'), 'source': row.get('source'), 'cue_words': row.get('cue_words'), 'position': row.get('position'), 'prev': prev[-6:], 'scene_start': row.get('start')}
+        ctx = {'type': row.get('type'), 'source': row.get('source'), 'cue_words': row.get('cue_words'), 'position': row.get('position'), 'prev': prev[-6:], 'scene_start': row.get('start'),
+               'materials': row.get('materials')}  # 旧测试集没有 materials：按“不知道”处理
         label = lab.get(row['scene'], {})
         gold = label.get('component') or row.get('edit_component')
         if with_intent and gold and gold not in ('none', 'custom', 'chapter-card'):
@@ -721,7 +848,8 @@ def main():
     s.add_argument('--type', choices=['host', 'evidence', 'structure', 'metaphor'])
     s.add_argument('--source')
     s.add_argument('--tone')
-    s.add_argument('--prev', help='前几镜用过的组件，逗号分隔')
+    s.add_argument('--prev', help='前几镜用过的组件或卡，逗号分隔，一项是一镜，按时间先后')
+    s.add_argument('--have', help='这一镜手上有的素材，逗号分隔：图、多图、界面、网页、人；写“无”表示什么都没有。--edit 时不写就从 EDIT 镜头推')
     s.add_argument('--cue-words', help='要卡的词，逗号分隔')
     s.add_argument('--position', choices=['open', 'mid', 'close'])
     s.add_argument('--scene-start', type=float)
@@ -770,7 +898,9 @@ def main():
     else:
         ctx = {'type': a.type, 'source': a.source, 'tone': a.tone, 'position': a.position, 'scene_start': a.scene_start, 'chapter_start': a.chapter_start, 'intent': a.intent, 'want': a.want,
                'prev': [p.strip() for p in (a.prev or '').split(',') if p.strip()],
+               'materials': None if a.have is None else [m.strip() for m in a.have.split(',') if m.strip() and m.strip() != '无'],
                'cue_words': [w.strip() for w in (a.cue_words or '').split(',') if w.strip()]}
+        intents_table = load_json(INTENTS_FILE)
         text = a.text
         if a.edit:
             edit = load_json(a.edit)
@@ -781,11 +911,16 @@ def main():
             ctx.update({'type': ctx['type'] or sc.get('type'), 'source': ctx['source'] or sc.get('source'), 'intent': ctx.get('intent') or sc.get('intent'), 'want': ctx.get('want') or ('custom' if sc.get('source') == 'custom' else None), 'cue_words': ctx['cue_words'] or sc.get('cue_words') or [],
                         'scene_start': sc['start'], 'position': ctx['position'] or ('open' if float(sc['start']) < 10 else 'close' if float(sc['end']) > total - 20 else 'mid')})
             if not ctx['prev']:
-                ctx['prev'] = [x.get('component') for x in edit['scenes'] if x.get('component') and float(x['start']) < float(sc['start'])][-6:]
+                earlier = sorted((x for x in edit['scenes'] if float(x['start']) < float(sc['start'])), key=lambda x: float(x['start']))
+                ctx['prev'] = [used_in(x) for x in earlier]
+            if ctx['materials'] is None:
+                ctx['materials'] = scene_materials(sc, load_assets(Path(a.edit).parent / 'ASSETS.json'), intents_table)
             if a.captions:
                 text = text or scene_narration(sc, load_json(a.captions)['cues'])
             if not text:
                 text = sc.get('narration') or sc.get('visual') or ''
+        if ctx['materials'] is None and not a.edit and a.source:
+            ctx['materials'] = scene_materials({'source': a.source, 'type': a.type}, {}, intents_table)
         if not text:
             raise SystemExit('需要 --text，或 --edit + --scene + --captions')
         transcript = load_json(a.transcript) if a.transcript else None
