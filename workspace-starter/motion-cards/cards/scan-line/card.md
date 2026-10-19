@@ -2,6 +2,8 @@
 id: scan-line
 name: 扫描线
 group: 标注与手绘
+type: evidence
+intents: point,software
 one_line: 一条拖着光尾的水平亮线匀速从上扫到下，线刚离开哪个目标的下沿，那个目标的识别框就弹出来并亮一下
 use_when: 旁白在说“系统把这一页读了一遍”“自动识别出了五处”，要表现逐项被检出，而不是一次全亮
 energy: 中

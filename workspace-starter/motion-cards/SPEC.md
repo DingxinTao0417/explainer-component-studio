@@ -74,6 +74,8 @@
 id: word-punch                # 和目录名一致
 name: 重音词砸字               # 中文名，≤8 字
 group: 字与强调                # 见下面的分组
+type: structure               # 镜头类型：structure 结构 / evidence 证据 / metaphor 比喻情境 / host 主持人
+intents: keyword,conclusion   # 能替旁白里的哪种意思出画面，主要用途写在前面；不靠旁白挑的卡（幕底）写 none
 one_line: 一句话：谁、什么时刻、怎么动
 use_when: 什么样的旁白或素材该用它
 energy: 高                    # 低 / 中 / 高
@@ -86,6 +88,8 @@ sfx: hit=impact               # 音效提示：<时刻名>=<声音类型>，多�
 pairs_with: line-rise         # 常搭配的卡，可空
 ---
 ```
+
+讲解意图（`intents` 只能用这些 id）：`hook` 开场钩子、`chapter` 章节进入、`keyword` 概念首次出现、`definition` 定义、`number` 数字作论据、`compare` 对比、`steps` 步骤清单、`process` 流程或因果链、`branch` 分支选择、`categories` 并列分类、`grouping` 归组关系、`point` 指向重点、`software` 软件操作、`result` 结果兑现、`question` 提问悬念、`conclusion` 结论金句、`caution` 注意误区、`metaphor` 比喻情境、`outro` 结尾号召、`host` 主持人出场、`transition` 转场。编导工具先从旁白里认出意图，再到卡库里找声明了这个意图的卡，所以这里写得准，卡才会在该出现的时候被推荐。
 
 分组：字与强调 / 标题与章节 / 数据与图表 / 证据与界面 / 图片与多素材 / 镜头运动 / 转场 / 标注与手绘 / 人物与口播 / 结构与流程 / 幕底与氛围。
 

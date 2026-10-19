@@ -2,6 +2,8 @@
 id: triptych-relay
 name: 三联接力
 group: 图片与多素材
+type: evidence
+intents: steps,compare
 one_line: 三张竖裁的图并排，旁白讲到哪一格，那一格就在 0.5 秒里变宽变亮、底部进度条开始走，另外两格同时收窄变暗
 use_when: 一段旁白连着讲三个并列或先后的东西（三个步骤、三个例子、三种方案），每个讲一两秒，而且希望三个一直都在画面里
 energy: 中

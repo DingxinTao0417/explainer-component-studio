@@ -2,6 +2,8 @@
 id: scan-beams
 name: 光束扫
 group: 幕底与氛围
+type: structure
+intents: none
 one_line: 三道宽窄不一、很淡的斜向光束整镜匀速从左往右扫过，光束经过的地方底色略微被提亮
 use_when: 展示、揭晓、强调“这是重点”的文字镜，想要一点舞台灯光的感觉，但不能有闪光或扫光特效那种抢眼的瞬间
 energy: 低

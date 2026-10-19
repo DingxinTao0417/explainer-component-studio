@@ -13,7 +13,7 @@
 3. `<工作区>/brand-kit/README.md`：品牌组件怎么挂、怎么切调性；
 4. 手法卡：`<工作区>/手法库/cards/{T0xx_…}.md`、`{…}`；
 5. HyperFrames：先读 `hyperframes` skill 的入口，再按它的指引读 `hyperframes-core`；动效参考 `hyperframes-animation` 的 blueprints 和 rules 索引。
-6. 要现场做一镜时：`<skills目录>/science-video-director/guide/motion-vocabulary.md`，用里面的 `vocab.py find` 找现成的动法照着搬，不从零发明。
+6. 品牌包以外的镜头：`<skills目录>/science-video-director/guide/motion-vocabulary.md`，用动效卡库 `<工作区>/motion-cards` 的 `tools/cards.mjs find` 找卡、`use` 装进你自己的工程目录，不从零发明。
 
 **你的方案：**
 

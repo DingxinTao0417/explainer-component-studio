@@ -2,6 +2,8 @@
 id: whip-pan
 name: 甩镜
 group: 转场
+type: structure
+intents: transition
 one_line: 上一镜带着越来越重的横向拖影被甩出画面，下一镜紧贴着它从另一侧甩进来，拖影收干净时急停
 use_when: 旁白在同一口气里换了对象或地点（“而另一边”“同一时间”），节奏快，不想有停顿
 energy: 高

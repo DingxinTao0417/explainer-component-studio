@@ -2,6 +2,8 @@
 id: input-typing
 name: 输入框打字
 group: 证据与界面
+type: evidence
+intents: software
 one_line: 一个大输入框获得焦点，提示词按意群一段一段打出来，段内连贯、段间换一口气；打完停 0.3 秒，发送按钮才亮起并弹一下
 use_when: 旁白在念一条提示词、搜索词或指令，要让观众逐段看清“到底输入了什么”
 energy: 中

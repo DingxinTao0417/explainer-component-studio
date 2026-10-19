@@ -2,6 +2,8 @@
 id: scale-contrast
 name: 大小字对比
 group: 字与强调
+type: structure
+intents: conclusion,hook
 one_line: 一行小字先占着画面正中，接着一个撑满画面宽度的巨大的词从镜头前压下来，小字提前一拍被挤到左上角变成注脚
 use_when: 一句铺垫加一个分量很重的短词（原因、结论、数字），而且愿意让这个词独占一整屏
 energy: 高

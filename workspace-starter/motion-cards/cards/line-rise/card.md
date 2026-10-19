@@ -2,6 +2,8 @@
 id: line-rise
 name: 逐行上浮
 group: 字与强调
+type: structure
+intents: conclusion,keyword
 one_line: 两三行大字各自从一条看不见的遮罩底边升上来，后一行在前一行还没停稳时就出发
 use_when: 旁白是一组并列或递进的短句（先……再……最后……），每行一口气能念完
 energy: 中

@@ -2,6 +2,8 @@
 id: mosaic-assemble
 name: 拼贴汇成
 group: 图片与多素材
+type: evidence
+intents: grouping,hook
 one_line: 十二张图歪着从画面四周飞进来，大的先到、小的补缝，全部到位后整面拼贴一下并拢、压暗，标题牌紧跟着砸在正中
 use_when: 旁白在做归纳：“这些例子合起来说明一件事”；手上有一批零散的图，结论是一句话
 energy: 高

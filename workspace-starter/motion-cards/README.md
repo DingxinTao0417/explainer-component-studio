@@ -56,11 +56,11 @@ node tools/cards.mjs use <项目目录> word-punch,number-roll
 ## 找
 
 ```bash
-node tools/cards.mjs find --text 对比 --needs 图      # 还可以加 --energy 高 --group 转场 --overlay
+node tools/cards.mjs find --text 对比 --needs 图      # 还可以加 --intent compare --energy 高 --group 转场 --overlay
 node tools/cards.mjs show before-after-wipe          # 打印整张卡
 ```
 
-`index.json` 是全部卡的机读索引：`id / name / group / one_line / use_when / energy / needs / overlay / slot / sfx / vars`。按素材类型（`needs`）和能量（`energy`）先筛，再看 `use_when`。
+`index.json` 是全部卡的机读索引：`id / name / group / type / intents / one_line / use_when / energy / needs / overlay / slot / sfx / vars`。按素材类型（`needs`）和能量（`energy`）先筛，再看 `use_when`。
 
 ## 加一张卡
 

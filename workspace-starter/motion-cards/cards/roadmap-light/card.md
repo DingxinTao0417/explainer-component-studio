@@ -2,6 +2,8 @@
 id: roadmap-light
 name: 路线图点亮
 group: 结构与流程
+type: structure
+intents: chapter,steps
 one_line: 所有步骤卡先以暗的状态一次摊开，旁白讲到哪张，哪张亮起并浮起来，讲完的落回去保持半亮
 use_when: 旁白先说“一共这几步”，再逐个展开；或者这是一条贯穿全片的路线，每到一章回来点亮一格
 energy: 低

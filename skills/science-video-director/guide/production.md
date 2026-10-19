@@ -62,7 +62,8 @@ projects/YYYYMMDD_主题/
 - `type`：`host` / `evidence` / `structure` / `metaphor`，含义见 visual-grammar.md。`episode.py check` 会统计四类画面的占比，以及同类画面连续了多久。
 - `source`：`screen_record`、`real_footage`、`photo`、`user_video`、`ai_video`、`illustration`、`component`、`custom`。
 - 以下字段 `episode.py` 不检查，是给自查、回放测试和复盘看的：
-  - `component`：用到的组件 id（品牌包或组件库；定制镜头写 `custom`，纯素材不写）；
+  - `component`：用到的品牌组件 id（定制镜头写 `custom`，纯素材不写）；
+  - `motion`：用到的动效卡 id；
   - `intent`：`shot_semantics.py suggest` 识别出的讲解意图 id（如 compare、steps、number）；
   - `slots`：按旁白填好的组件变量（就是 suggest 输出的 slots，改过后的终稿）；
   - `cues`：卡词结果，`{"data-start": 12.3, "cues": [0.6, 1.5]}` 这类；
@@ -120,8 +121,8 @@ projects/YYYYMMDD_主题/
 
   用法和变量都在 brand-kit README 里。
 - 组件的默认样式只是起点。样片里定下的改动（字号、位置、强调方式），改进 brand-kit 的 `src/` 再重新构建；只有本期特有的改动，才留在项目里。
-- 两套库都表达不了的镜头，用 `shot_semantics.py scaffold` 起 custom-shot 骨架现场画（components.md“现场做一镜”）。
-- brand-kit 没有覆盖的画面，比如界面复刻、复杂图解、箭头标注，按 components.md 从组件库里调，场景配置的 `appearance` 写本期 `tone` 和 `mode: "video"`（跟品牌包配色、去掉栏目眉页脚、字放大、主体推近）；也不合适的，就直接写定制镜头。
+- brand-kit 没有覆盖的画面（数据图、标注、多图、证据拍法、结构图、转场、幕底），用动效卡：`node <工作区>/motion-cards/tools/cards.mjs use <项目>/hyperframes <id,id…>` 装进工程，宿主根元素上设 `--mc-*` 变量换成本期调性的颜色和字体（components.md“用一张卡”）。
+- 品牌包和卡库都表达不了的镜头，用 `shot_semantics.py scaffold` 起 custom-shot 骨架现场画（components.md“现场做一镜”）。
 
 ### 工程规矩
 
@@ -164,5 +165,5 @@ projects/YYYYMMDD_主题/
 
 - **中文路径让旧版 ffmpeg 报错**：脚本会自动优先用 `<Qwen3-TTS>/tools/ffmpeg-9.0.1-essentials_build/bin/` 里的 ffmpeg 9。手动调用时也用它，或者按 style-profile.md 设置 `FFMPEG_PATH` / `FFPROBE_PATH`。
 - **MP3 编码延迟造成约 60ms 的时长差**：属于正常警告，不要为了消掉它去裁剪或变速人声。
-- **组件包被手动改过**：`component_library.py` 会提示文件已改动；如果是有意调整，确认即可。
+- **改了装进项目的卡**：`cards.mjs use` 复制的是卡的副本，改项目里的那份不影响卡库；想让以后每期都受益，回卡库改原卡并重新 `verify`。
 - **组件实例一多，check / preview 就超时**：检查字体是不是写进了组件里。字体只能在宿主的字体块里出现一次（brand-kit README 的“字体为什么放在宿主”一节）。

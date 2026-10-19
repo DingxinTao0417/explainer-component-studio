@@ -2,6 +2,8 @@
 id: title-to-corner
 name: 标题退成角标
 group: 标题与章节
+type: structure
+intents: chapter,categories
 one_line: 居中的大标题读完之后，同一行字缩小并沿一条弯路退到左上角，一根色条咔地立在它左边，正文随后占满腾出来的画面
 use_when: 标题页之后紧接着要讲细节，又希望观众全程知道“现在在讲哪一段”；旁白从念标题过渡到“具体来说”
 energy: 中

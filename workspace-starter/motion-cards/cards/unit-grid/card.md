@@ -2,6 +2,8 @@
 id: unit-grid
 name: 百格比例
 group: 数据与图表
+type: structure
+intents: number
 one_line: 十乘十的一百个小方格，从左下角开始一格一格匀速点亮，连成一整块，旁边的大数字就是此刻亮了几格
 use_when: 旁白说“百分之几”，而你想让观众感到这是“一百份里的多少份”，尤其是比例不大不小、光看数字没感觉的时候
 energy: 中

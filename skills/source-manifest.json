@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "source": "author-maintained local skills",
-  "snapshot_date": "2026-10-14",
-  "adaptation": "Repository distribution: portable runtime paths (scripts/runtime_paths.py), placeholder paths in guides, deprecated placeholder files omitted. Installed source skills are unchanged. Channel-specific additions in the author's style-profile.md, visual-grammar.md and voice.md (one channel's fixed tone, voices and local tools, 2026-10-12) are not published; those three files stay at the 2026-10-07 snapshot.",
+  "snapshot_date": "2026-10-18",
+  "adaptation": "Repository distribution: portable runtime paths (scripts/runtime_paths.py), placeholder paths in guides, deprecated placeholder files omitted. Installed source skills are unchanged. Channel-specific content in the author's style-profile.md, visual-grammar.md and voice.md (one channel's fixed tone, voices and local tools) is not published; those files carry only the general edits.",
   "files": [
     {
       "path": "h3-science-video/SKILL.md",
@@ -18,7 +18,7 @@
     },
     {
       "path": "science-video-director/SKILL.md",
-      "source_sha256": "32b91ef66619fb33b402f2d2963280787561ff1abe2fa22060f6cfa628fa55c8"
+      "source_sha256": "625dafd760cc5e437a001f6ec11258f853646ac86d92a20b6cea6faa66b27e8d"
     },
     {
       "path": "science-video-director/agents/openai.yaml",
@@ -26,11 +26,11 @@
     },
     {
       "path": "science-video-director/guide/assets.md",
-      "source_sha256": "a26d6f0d1f92d43ad2701a91b37ce2d741c1e087a100bfee0f129432afbb71d1"
+      "source_sha256": "5f54384fcdd375fe063d0398f61723457f39b944e5e81d299512189635fe00ef"
     },
     {
       "path": "science-video-director/guide/components.md",
-      "source_sha256": "19678f6b1113d25f521fbace9e63533500d7a60eace55d92f4cd8a7e46776b56"
+      "source_sha256": "c5a9a81b74cb4d59d81c426ee533798c39a52d46883f34324e0e43555d14b0f2"
     },
     {
       "path": "science-video-director/guide/ideation.md",
@@ -38,11 +38,11 @@
     },
     {
       "path": "science-video-director/guide/motion-vocabulary.md",
-      "source_sha256": "5d80a1e2645e5b3fa17e2d7065a11f56ea7404e0ba528aca048827ab1c151d58"
+      "source_sha256": "86dad953cc55a65d09b9ea4cb3ab6b877e32c9e11dcac30d7f4934458aa4e2c6"
     },
     {
       "path": "science-video-director/guide/production.md",
-      "source_sha256": "a7bac003942c3003b7b4f68a38eeb599dfd20aba02bc985e55c094b83350e0e0"
+      "source_sha256": "60e98078fe4047e28ff71dfde8a824928077217008065c8d4571fad5e357c481"
     },
     {
       "path": "science-video-director/guide/retro.md",
@@ -73,10 +73,6 @@
       "source_sha256": "e1299cf3a06cfe7dca939b94cc695d1108327e8c485e8b67f447e96151be6474"
     },
     {
-      "path": "science-video-director/scripts/component_library.py",
-      "source_sha256": "cf1c3941b07d76980e5448ffc5adb1124d4b7b851c105a689c6fcd641bb7912f"
-    },
-    {
       "path": "science-video-director/scripts/dissect.py",
       "source_sha256": "003d170f58a978e7ce85656b8c4fd9be54f685bc1288eea53c403ef5b882f7e3"
     },
@@ -87,10 +83,6 @@
     {
       "path": "science-video-director/scripts/frames.py",
       "source_sha256": "53a7a76c1aaec3462c5a2b7c7ced02e67a0575d740d357882e85134069fe5481"
-    },
-    {
-      "path": "science-video-director/scripts/library_prepare.py",
-      "source_sha256": "f3fa60f6c880b604bfa1670e4ba3772919d2b7ef533a57e1b5d2ab0b8935bec8"
     },
     {
       "path": "science-video-director/scripts/motion_variation.py",
@@ -118,11 +110,7 @@
     },
     {
       "path": "science-video-director/scripts/shot_semantics.py",
-      "source_sha256": "9094f5780167e98b9d55052c3aac18a58fcc61a4592113bde25b23187ceb06eb"
-    },
-    {
-      "path": "science-video-director/scripts/vocab.py",
-      "source_sha256": "eabf22c2d938658bb6b189987595c4a028011561af9562182aecb21bc68904d9"
+      "source_sha256": "9f2b67dbb238c11fea4b436557e3b901920f34553fa6fb4248caf6cd4532d341"
     },
     {
       "path": "science-video-director/scripts/voices.py",
@@ -134,7 +122,7 @@
     },
     {
       "path": "science-video-director/templates/explore-agent.md",
-      "source_sha256": "31addb6d150857f7e1beba3d331910ac4881632618be4d0011ec66a2fb1c9f12"
+      "source_sha256": "a62f81eaf79b0d78fd0ddceefe11ace7c143548da8c0ffe6ef857d04b99c79fc"
     },
     {
       "path": "science-video-director/templates/page-tour.md",

@@ -2,6 +2,8 @@
 id: bokeh-drift
 name: 光斑漂浮
 group: 幕底与氛围
+type: structure
+intents: none
 one_line: 十五个大小不一的虚化光斑整镜缓慢上浮并轻微左右摆，大的近、升得多摆得宽，小的远、几乎不动
 use_when: 语气放松、偏感性的段落：开场寒暄、收尾致谢、讲一个小故事，需要一点温度和景深但没有具体画面
 energy: 低

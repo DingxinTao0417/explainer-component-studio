@@ -2,6 +2,8 @@
 id: browser-rise
 name: 浏览器窗升起
 group: 证据与界面
+type: evidence
+intents: software,result
 one_line: 一个只有三个圆点和地址栏的浏览器窗从画面下方向后仰着升上来，边升边立直；快停稳时地址栏开始逐字打出网址，打完后页面内容才淡入
 use_when: 要引出一个网站、一篇在线文档或一个网页工具，需要一个“我们现在打开它”的开场
 energy: 中

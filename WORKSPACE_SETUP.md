@@ -1,6 +1,6 @@
 # 工作区初始化指引
 
-`science-video-director` 做片时要用到三样跨期积累的东西：品牌包（频道每期都一样的版式、颜色、字体、主持人、声音）、手法库（从你喜欢的视频里拆出来的镜头手法）和频道复盘。作者自己的这三样没有随仓库发布，仓库里只有空骨架 [workspace-starter/](workspace-starter/README.md)。这份指引带你一步一步做出自己的。
+`science-video-director` 做片时要用到四样跨期积累的东西：品牌包（频道每期都一样的版式、颜色、字体、主持人、声音）、动效卡库（品牌包以外所有镜头的动法）、手法库（从你喜欢的视频里拆出来的镜头手法）和频道复盘。动效卡库是通用的，随仓库发布、拿来就能用；其余三样是作者频道自己的，仓库里只有空骨架 [workspace-starter/](workspace-starter/README.md)。这份指引带你一步一步做出自己的。
 
 每一步都是同一个格式：要准备什么、怎么做、怎么算做完。很多步可以交给装了技能的 AI 助手做，“对助手说”给的是可以直接用的一句话。随时运行下面这条命令，看还剩哪几步：
 
@@ -16,7 +16,6 @@ python scripts/init-workspace.py --workspace <你的工作区> --check
 - 做法：克隆本仓库，在根目录运行：
 
 ```bash
-npm ci
 python scripts/install-skills.py
 ```
 
@@ -30,7 +29,7 @@ python scripts/install-skills.py
 python scripts/init-workspace.py --workspace <你的工作区>
 ```
 
-  它把 `workspace-starter/` 里的骨架复制过去，并新建 `projects/`；已有的文件不覆盖。然后把环境变量 `SCIENCE_VIDEO_WORKSPACE` 设成这个目录（Windows：`setx SCIENCE_VIDEO_WORKSPACE "<你的工作区>"`，重新打开终端生效）。技能指南里写的 `<工作区>` 指的就是它。
+  它把 `workspace-starter/` 里的骨架和动效卡库 `motion-cards/` 复制过去，并新建 `projects/`；已有的文件不覆盖。以后你扩充的是工作区里这份卡库，技能也优先读它。然后把环境变量 `SCIENCE_VIDEO_WORKSPACE` 设成这个目录（Windows：`setx SCIENCE_VIDEO_WORKSPACE "<你的工作区>"`，重新打开终端生效）。技能指南里写的 `<工作区>` 指的就是它。
 - 做完的标志：检查命令里“1 工作区”显示完成。
 
 ## 2. 写下你的频道偏好
@@ -82,14 +81,15 @@ python scripts/init-workspace.py --workspace <你的工作区>
 ## 7. 声音和语义
 
 - `SOUND.md`：每种调性配什么方向的音乐、音效怎么用、混音标准。混音数字照 `guide/production.md` 的声音一节。
-- `sfx-map.json`：每个组件配哪个音效（取自本仓库 `assets/sfx/`）、相对组件开始第几秒响、音量。落点按组件动画的时间定。
+- 音效：自备一组有授权的短音效（点击、弹出、掠过、提示、上扬这类，十来个就够），放 `brand-kit/sfx/`，`build.mjs` 把它们复制进每期工程。仓库不附带音效文件：常见的免费音效许可允许用进作品，但不允许原样再分发。
+- `sfx-map.json`：每个组件配哪个音效（取自 `brand-kit/sfx/`）、相对组件开始第几秒响、音量。落点按组件动画的时间定。动效卡的 `card.md` 前言里也写了哪一拍该配哪类声音（`sfx`），用同一组音效。
 - `semantics.json`：每个组件服务哪些讲解意图、变量的字数上限、什么时候别用。意图 id 取自技能的 `scripts/semantics/intents.json`。
 - 配乐：自备有授权的音乐，放进每期项目的 `assets/bgm/`，不放品牌包。
 - 配音（可选）：用自己的录音时什么都不用装。想本地生成，就装 Qwen3-TTS，把 `QWEN_TTS_ROOT` 设成安装目录，按 `guide/voice.md` 录一段自己的声音做旁白音色；对白角色用 `voices.py` 建到 `brand-kit/voices/`。
 - 对助手说：“读 brand-kit 里已经做好的组件，按它们的动画时间写 sfx-map.json，再写 semantics.json 和 SOUND.md。”
 - 做完的标志：检查命令里“7 声音和语义”显示完成。
 
-说明：`shot_semantics.py` 还要读组件库的 `component-semantics.json`，本仓库的组件库目前没有这个文件，所以它暂时跑不起来。这段时间组件由你或助手照 `semantics.json` 和 brand-kit 的 README 手动选。
+说明：`shot_semantics.py` 按旁白从品牌包（`semantics.json`）和动效卡库（`motion-cards/index.json`）两处出候选。品牌包还没做好时，它只推荐卡库里的卡，照样能用。
 
 ## 8. 手法库
 

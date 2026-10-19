@@ -27,7 +27,7 @@
 - **子代理**：工作区 AGENTS.md 已授权，做探索样片和请外人审片时可以直接派子代理（一次最多 3 个），不用每次再问。
 - **复盘**：发布后用户会发数据截图，按 retro.md 复盘；下一期写 BRIEF 前先读 `频道复盘.md` 最近三行。
 - **导出和发布**：用户明确说“导出”才渲染成片；不自动公开发布。
-- **旧风格**：白底、Codex 蓝 #2563EB、薄荷绿 #81C9B0 的组件库风格，现在是调性配方 C 的基础，属于可选项，不是默认。
+- **旧风格**：白底、Codex 蓝 #2563EB、薄荷绿 #81C9B0，现在是调性配方 C 的基础，属于可选项，不是默认。
 
 ## 本机路径
 
@@ -38,11 +38,9 @@
 | 工作区 | `<工作区>`（放 brand-kit、手法库、projects 的目录） |
 | 每期项目 | `<工作区>/projects/<YYYYMMDD>_<主题简称>/` |
 | skill 脚本 | `<skills目录>/science-video-director/scripts/` |
-| 组件库 | `<工作区>/hyperframes-explainer-template/component-library` |
-| 组件画廊 | 库内 `scripts/start-preview.ps1` 启动，`http://127.0.0.1:3031/catalog.html`；快照在库内 `snapshots/` |
+| 动效卡库 | `<工作区>/motion-cards`（108 张卡；画廊 `node tools/cards.mjs serve` → `http://localhost:3040/motion-cards/gallery/`；规格 SPEC.md） |
 | 品牌包 | `<工作区>/brand-kit`（12 个组件、四种调性、字体、音效映射 sfx-map.json、SOUND.md、插画主持人提示词 assets/host/、角色声音库 voices/） |
 | 手法库 | `<工作区>/手法库`（INDEX.md、cards/T001–T030、拆解/） |
-| 参考库 | `<工作区>/参考库/video-talkcraft`（别人的开源仓库，108 张动效配方卡 + demo；用 `scripts/vocab.py` 查。PolyForm Noncommercial 许可：只读、不复制进 skill 和品牌包，见 motion-vocabulary.md） |
 | 参考视频 | 用户喜欢的视频放 `<工作区>/待拆解视频/`，拆完移到 `已拆解视频/`（frames.py --compare 从这里取参考片） |
 | 频道复盘 | `<工作区>/频道复盘.md`（每期一行，规律升级记录） |
 | FFmpeg / FFprobe | 脚本自动找，优先用 `<Qwen3-TTS>/tools/ffmpeg-9.0.1-essentials_build/bin/`（ffmpeg 9，中文路径没问题）。手动调用或别的工具要用时，设 `$env:FFMPEG_PATH` / `$env:FFPROBE_PATH` 指向它。系统自带的旧版处理中文路径不可靠 |
@@ -60,4 +58,5 @@
 - **《迁移》R011**：正文全是同一种白卡片图解，没有人、没有录屏，字很小，货车重复出现。详见 visual-grammar.md 第 11 节。
 - **旧版 skill 失败的原因**：确认、指纹、交接、冻结、独立审片这些流程门槛占了大部分篇幅和工时，有两轮返修只是在恢复文件哈希。新流程只留一个确认点（样片），其余靠看片自查。不要把这些门槛加回来。
 - **旧项目接续**：旧项目里的 PROPOSAL.json、handoffs、qa/reviews、workflow-events.jsonl 等记录，只当历史参考，不再作为继续制作的前提。
-- **向 video-talkcraft 借鉴（2026-10-07）**：借的是镜头工艺（同屏预算、语义拍、让位、版式轮换）、动效词汇、网页证据的拍法、卡词帧和音效可听度检查。没借它的流水线：逐层分镜矩阵、一串机器闸门、必过的独立审片、常开的工作台，这些和上一条教训是同一类东西。它的“相机永不静止”“禁止硬切”“视频套边框”和本频道标准相反，也没采纳。
+- **镜头工艺的来历（2026-10-07）**：同屏预算、语义拍、让位、版式轮换、网页证据的拍法、卡词帧和音效可听度检查，是参考外部开源作品后加进来的。没加的：逐层分镜矩阵、一串机器闸门、必过的独立审片、常开的工作台，这些和上一条教训是同一类东西；“相机永不静止”“禁止硬切”“视频套边框”和本频道标准相反。
+- **组件来源（2026-10-18）**：品牌包管频道版式，其余镜头一律从动效卡库来；卡库以后逐步扩充，新动法按 motion-cards/SPEC.md 做成卡。

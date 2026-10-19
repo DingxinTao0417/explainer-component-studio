@@ -2,6 +2,8 @@
 id: color-slam
 name: 色块砸切
 group: 转场
+type: structure
+intents: transition,chapter
 one_line: 一整块强调色从一侧加速盖满画面，停一帧，再朝同一个方向冲出去，后面拖着一条第二色的尾巴
 use_when: 话题硬转（换章节、换案例、“说完优点说缺点”），旁白在这里有一个明显的停顿或重音
 energy: 高

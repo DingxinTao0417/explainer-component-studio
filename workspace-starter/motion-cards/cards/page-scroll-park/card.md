@@ -2,6 +2,8 @@
 id: page-scroll-park
 name: 网页滚动停靠
 group: 证据与界面
+type: evidence
+intents: point,result
 one_line: 一张铺满的长网页从顶部滚下去，短促起步、长长地减速，停在目标段落上，停稳后那一句被荧光笔划出来
 use_when: 证据在一篇长文、文档或报告的中间某一句，需要让观众知道“这是原文里翻到的”
 energy: 中

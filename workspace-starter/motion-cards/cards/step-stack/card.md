@@ -2,6 +2,8 @@
 id: step-stack
 name: 步骤叠出
 group: 结构与流程
+type: structure
+intents: steps
 one_line: 旁白每说到一步，这一步的卡从下方升进前排，之前的卡同一拍被顶上去、缩小、变灰
 use_when: 旁白按“第一步、第二步、第三步”往下讲，每一步只有一个短语，需要观众始终知道现在讲到第几步
 energy: 中

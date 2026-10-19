@@ -2,6 +2,8 @@
 id: photo-wall-dolly
 name: 照片墙推轨
 group: 图片与多素材
+type: evidence
+intents: grouping,hook
 one_line: 一面大小错落的照片墙，镜头从左上斜着扫向右下，前后三层以不同速度滑动，最后一边摆正一边推近，停在其中一张上并给它套上黄框
 use_when: 旁白在说“这么多里面”，然后落到“其中这一张”；需要先给出数量很多的感觉，再把注意力收到一个点
 energy: 高

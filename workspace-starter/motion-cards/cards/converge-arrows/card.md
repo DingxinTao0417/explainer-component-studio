@@ -2,6 +2,8 @@
 id: converge-arrows
 name: 多源汇聚
 group: 结构与流程
+type: structure
+intents: grouping,process
 one_line: 几个来源标签从四周依次站出来，各画一条箭头指向中心，最后一条箭头到达的那一帧，中心的结论弹出
 use_when: 旁白在说“把这几样东西合起来，得到一个结论”，来源二到五个，结论是一个短语
 energy: 中

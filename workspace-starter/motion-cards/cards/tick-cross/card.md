@@ -2,6 +2,8 @@
 id: tick-cross
 name: 打勾打叉
 group: 标注与手绘
+type: evidence
+intents: caution,compare
 one_line: 一列条目先全部摆好，然后从上到下每隔半秒在条目左边手画一个勾或一个叉，叉的两笔画完后那一条变淡
 use_when: 旁白在逐条表态（这个做、那个别做；这条对、那条错），条目本身观众已经看到，重点是每一条的判决
 energy: 中

@@ -2,6 +2,8 @@
 id: pip-corner
 name: 画中画缩到角
 group: 图片与多素材
+type: evidence
+intents: transition,host
 one_line: 满屏的画面在 0.5 秒里朝一个角收拢，先缩得比小窗略小、再弹到位，带上白边和阴影停在角上，把主画面让出来
 use_when: 前一段是满屏的实拍或录屏，旁白要转去讲别的内容，但这段画面还得留在眼角（操作还在继续、人还在说话）
 energy: 中

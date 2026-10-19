@@ -2,6 +2,8 @@
 id: tracking-settle
 name: 字距收拢
 group: 字与强调
+type: structure
+intents: chapter,keyword
 one_line: 标题以拉得很开的字距和一层虚化出现在原地，字与字向中间靠拢的同时逐渐变清楚，最后一段几乎是静止着收紧
 use_when: 章节标题、片头主题句这类需要“沉下来”的时刻，旁白语速慢或者此处只有音乐
 energy: 低

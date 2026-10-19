@@ -2,6 +2,8 @@
 id: slice-shutter
 name: 百叶切
 group: 转场
+type: structure
+intents: transition
 one_line: 上一镜被切成几条横条（或竖条），从第一条到最后一条依次绕自己的中线翻成侧面消失，缝里露出下一镜
 use_when: 一组并列的内容换到下一组（清单翻页、换一批例子），想要有节拍、带一点机械感的换镜
 energy: 中

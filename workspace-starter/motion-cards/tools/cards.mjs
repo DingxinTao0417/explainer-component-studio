@@ -7,7 +7,7 @@
 //   node tools/cards.mjs index                          rebuild index.json from the cards' front matter
 //   node tools/cards.mjs gallery                        rebuild gallery/index.html
 //   node tools/cards.mjs serve [port]                     local gallery at http://localhost:3040/motion-cards/gallery/
-//   node tools/cards.mjs find --text 数字 --needs 图 --energy 高 --group 转场 --overlay
+//   node tools/cards.mjs find --text 数字 --needs 图 --energy 高 --group 转场 --intent compare --overlay
 //   node tools/cards.mjs show <id>
 //   node tools/cards.mjs use <project> <id,id…>         copy cards + lib into <project>/motion-cards and print host clips
 // Env: HF_CLI (default "npx --yes hyperframes@0.8.57"), MC_WORK (scratch dir), PYTHON
@@ -23,6 +23,10 @@ const CLI = process.env.HF_CLI || "npx --yes hyperframes@0.8.57";
 const PY = process.env.PYTHON || (process.platform === "win32" ? "python" : "python3");
 const GROUPS = ["字与强调", "标题与章节", "数据与图表", "证据与界面", "图片与多素材", "镜头运动", "转场", "标注与手绘", "人物与口播", "结构与流程", "幕底与氛围"];
 const ENERGY = ["低", "中", "高"];
+// 讲解意图：这张卡能替旁白里的哪种意思出画面。排在前面的是主要用途。
+const INTENTS = { hook: "开场钩子", chapter: "章节进入", keyword: "概念首次出现", definition: "定义", number: "数字作论据", compare: "对比", steps: "步骤清单", process: "流程或因果链", branch: "分支选择", categories: "并列分类", grouping: "归组关系", point: "指向重点", software: "软件操作", result: "结果兑现", question: "提问悬念", conclusion: "结论金句", caution: "注意误区", metaphor: "比喻情境", outro: "结尾号召", host: "主持人出场", transition: "转场" };
+const TYPES = ["structure", "evidence", "metaphor", "host"];
+const list = (s) => String(s || "").split(/[,，、\s]+/).filter((x) => x && x !== "none");
 const SECTIONS = ["命门", "动作拆解", "参数手感", "已知坑", "动效与皮的边界", "接进片子"];
 const TOKENS = ["--k-bg", "--k-ink", "--k-accent", "--k-font"];
 const RESERVED = ["bg", "ink", "accent", "font", "panel", "muted"];
@@ -70,9 +74,11 @@ function lintOne(id) {
   if (!existsSync(htmlPath)) { err("缺 demo.html"); return out; }
   if (existsSync(mdPath)) {
     const md = read(mdPath), fm = frontMatter(md);
-    for (const k of ["id", "name", "group", "one_line", "use_when", "energy", "needs", "overlay", "slot", "hero", "frames", "sfx"]) if (!(k in fm) || fm[k] === "") err(`card.md 前言缺 ${k}`);
+    for (const k of ["id", "name", "group", "type", "intents", "one_line", "use_when", "energy", "needs", "overlay", "slot", "hero", "frames", "sfx"]) if (!(k in fm) || fm[k] === "") err(`card.md 前言缺 ${k}`);
     if (fm.id && fm.id !== id) err(`前言 id=${fm.id} 和目录名不一致`);
     if (fm.group && !GROUPS.includes(fm.group)) err(`group 要是其中之一：${GROUPS.join(" / ")}`);
+    if (fm.type && !TYPES.includes(fm.type)) err(`type 只能是 ${TYPES.join(" / ")}`);
+    for (const it of list(fm.intents)) if (!INTENTS[it]) err(`intents 里的 ${it} 不在意图表里：${Object.keys(INTENTS).join(" ")}（幕底这类不靠旁白挑的卡写 none）`);
     if (fm.energy && !ENERGY.includes(fm.energy)) err("energy 只能是 低 / 中 / 高");
     if (fm.overlay && !["yes", "no"].includes(fm.overlay)) err("overlay 只能是 yes / no");
     if (fm.frames && nums(fm.frames).length !== 5) err("frames 要正好 5 个时间点");
@@ -201,10 +207,10 @@ function buildIndex() {
     const { fm, slot } = meta(id);
     let vars = [];
     try { vars = JSON.parse((/data-composition-variables='([\s\S]*?)'/.exec(read(join(CARDS, id, "demo.html"))) || [, "[]"])[1]).map((d) => ({ id: d.id, type: d.type, label: d.label, default: d.default })); } catch (e) {}
-    return { id, name: fm.name, group: fm.group, one_line: fm.one_line, use_when: fm.use_when, energy: fm.energy, needs: (fm.needs || "").split(/[,，、\s]+/).filter(Boolean), overlay: fm.overlay === "yes", slot, hero: parseFloat(fm.hero), sfx: fm.sfx, pairs_with: (fm.pairs_with || "").split(/[,，\s]+/).filter(Boolean), vars };
+    return { id, name: fm.name, group: fm.group, type: fm.type, intents: list(fm.intents), one_line: fm.one_line, use_when: fm.use_when, energy: fm.energy, needs: (fm.needs || "").split(/[,，、\s]+/).filter(Boolean), overlay: fm.overlay === "yes", slot, hero: parseFloat(fm.hero), sfx: fm.sfx, pairs_with: (fm.pairs_with || "").split(/[,，\s]+/).filter(Boolean), vars };
   });
   const groups = GROUPS.map((g) => ({ name: g, count: cards.filter((c) => c.group === g).length })).filter((g) => g.count);
-  writeFileSync(join(LIB, "index.json"), JSON.stringify({ count: cards.length, groups, cards }, null, 1) + "\n");
+  writeFileSync(join(LIB, "index.json"), JSON.stringify({ count: cards.length, intents: INTENTS, groups, cards }, null, 1) + "\n");
   console.log(`index.json：${cards.length} 张卡，${groups.map((g) => g.name + " " + g.count).join(" · ")}`);
   return { cards, groups };
 }
@@ -244,6 +250,7 @@ function find(args) {
     if (opt.group && !String(c.group).includes(opt.group)) return false;
     if (opt.needs && !opt.needs.split(/[,，]/).some((n) => String(c.needs).split(/[,，、\s]+/).includes(n))) return false;
     if (opt.energy && c.energy !== opt.energy) return false;
+    if (opt.intent && !opt.intent.split(/[,，]/).some((it) => list(c.intents).includes(it))) return false;
     if (opt.overlay && c.overlay !== "yes") return false;
     return true;
   });

@@ -2,6 +2,8 @@
 id: stamp-verdict
 name: 盖章定论
 group: 字与强调
+type: structure
+intents: caution,conclusion
 one_line: 一句话摆在画面上，接着一个带粗边框的结论词从镜头前斜着砸在它的右下角，整屏一震，章的外沿扩散出一圈印痕，原话随之变暗
 use_when: 旁白对一个说法下最终判断（成立 / 不成立 / 过时了 / 已验证），语气是一锤定音
 energy: 高

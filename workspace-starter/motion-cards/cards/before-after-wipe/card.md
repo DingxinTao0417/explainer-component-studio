@@ -2,6 +2,8 @@
 id: before-after-wipe
 name: 前后对比拖条
 group: 图片与多素材
+type: evidence
+intents: compare,result
 one_line: 同一位置叠着两张图，一条带圆把手的竖线从左边拖到中间停住让人对比，再一口气拖到最右，把“之前”擦成“之后”
 use_when: 同一个画面改动前后的两个版本（修图前后、改提示词前后、旧版新版界面），旁白在说“改完以后是这样”
 energy: 低

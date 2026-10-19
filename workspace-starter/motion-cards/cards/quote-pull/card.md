@@ -2,6 +2,8 @@
 id: quote-pull
 name: 引文拉出
 group: 证据与界面
+type: evidence
+intents: point,definition
 one_line: 文档里的一句话先被强调色从左到右划过，这条色块连同上面的字轻压一下后离开纸面、放大到画面中央成为引文卡，身后的页面同时虚化变暗
 use_when: 旁白要原样引用文档、文章或报告里的一句话，并且希望观众知道这句话是从原文里拿出来的
 energy: 中

@@ -2,6 +2,8 @@
 id: orbit-rings
 name: 轨道环
 group: 幕底与氛围
+type: structure
+intents: none
 one_line: 五圈同心的细线圆环围着画面中心，整镜各自以不同的慢速匀速转动，每圈上带一个小光点
 use_when: 讲“围绕一个核心”的内容：一个概念和它的几个方面、一个系统和它的部件，标题或关键词放在正中
 energy: 低

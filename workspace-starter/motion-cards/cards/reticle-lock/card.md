@@ -2,6 +2,8 @@
 id: reticle-lock
 name: 准星锁定
 group: 标注与手绘
+type: evidence
+intents: point,result
 one_line: 一个放大的准星在画面里直线跳两步、每步都停死，第三步扑到目标上，圈收紧摆正、闪一下，旁边滑出一行读数
 use_when: 旁白在“找”一个东西（哪一行有问题、哪个数字不对），找到的那一刻要有分量；语气是系统识别，不是人在批注
 energy: 高

@@ -2,6 +2,8 @@
 id: paper-grain
 name: 纸感底
 group: 幕底与氛围
+type: structure
+intents: none
 one_line: 一张带细颗粒和两道淡折痕的纸铺满画面，纸本身不动，只有一片亮光和对角的暗影整镜极慢地平移
 use_when: 浅色皮的讲解镜，上面要放手写批注、便签、引用或文档截图，需要一个“桌上一张纸”的底而不是屏幕感的纯色
 energy: 低

@@ -2,6 +2,8 @@
 id: media-pop
 name: 图片弹入
 group: 图片与多素材
+type: evidence
+intents: result,metaphor
 one_line: 一张带白边的图从略高处斜着落到桌面上，过冲一下再坐稳，落地那一帧闪一下白
 use_when: 旁白点到一个具体的东西（一张截图、一件产品、一个人），要让它“被拿出来放在面前”
 energy: 中

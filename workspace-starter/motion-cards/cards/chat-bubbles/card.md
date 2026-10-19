@@ -2,6 +2,8 @@
 id: chat-bubbles
 name: 对话气泡流
 group: 证据与界面
+type: evidence
+intents: software,result
 one_line: 提问的气泡从底部顶上来并把旧气泡一起推高；回答先在原位冒出三个跳动的点，接近一秒后点换成整句话；再往前的对话自动变暗
 use_when: 要展示一问一答的交互过程（和助手、客服、同事的对话），重点是“问了什么、答了什么”的先后
 energy: 中

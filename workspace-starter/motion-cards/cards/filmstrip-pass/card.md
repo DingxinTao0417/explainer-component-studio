@@ -2,6 +2,8 @@
 id: filmstrip-pass
 name: 胶片带掠过
 group: 图片与多素材
+type: evidence
+intents: categories,steps
 one_line: 一条带齿孔的图片带匀速从右往左滑，每一格经过中间的取景框时放大到 1.42 倍并提亮、把邻格挤开，过了又缩回变暗，最后滑行着停在指定的一格上
 use_when: 旁白在快速带过一串东西（“试了这个、这个、还有这个”），每个只需要看一眼，最后停在要细讲的那一个上
 energy: 中

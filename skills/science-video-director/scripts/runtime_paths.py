@@ -15,19 +15,6 @@ def _setting(env_name, key):
     return Path(configured).expanduser().resolve() if configured else None
 
 
-def default_library():
-    """组件库：含 registry.mjs 和 manifest.json 的目录。"""
-    configured = _setting('EXPLAINER_COMPONENT_LIBRARY', 'component_library')
-    if configured:
-        return configured
-    for anchor in (Path(__file__).resolve(), Path.cwd().resolve()):
-        for candidate in (anchor, *anchor.parents):
-            if (candidate / 'registry.mjs').is_file() and (candidate / 'manifest.json').is_file():
-                return candidate
-    # 调用方保留 --library 参数并自行检查；不悄悄退回作者机器上的路径。
-    return Path.cwd().resolve()
-
-
 def default_workspace():
     """工作区：放 brand-kit、手法库、projects 的目录。"""
     return _setting('SCIENCE_VIDEO_WORKSPACE', 'workspace') or Path.cwd().resolve()
@@ -43,3 +30,14 @@ def default_brand_kit():
 
 def default_qwen():
     return _setting('QWEN_TTS_ROOT', 'qwen_tts') or (Path.home() / 'Qwen3-TTS').resolve()
+
+
+def default_motion_cards():
+    """动效卡库：环境变量 > 工作区里的 motion-cards（你自己在扩充的那份）> 安装记录（仓库自带的那份）。"""
+    configured = os.environ.get('MOTION_CARDS_DIR')
+    if configured:
+        return Path(configured).expanduser().resolve()
+    own = default_workspace() / 'motion-cards'
+    if (own / 'index.json').is_file():
+        return own
+    return _setting('MOTION_CARDS_DIR', 'motion_cards') or own

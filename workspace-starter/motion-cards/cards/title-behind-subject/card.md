@@ -2,6 +2,8 @@
 id: title-behind-subject
 name: 字在主体后
 group: 标题与章节
+type: structure
+intents: hook,chapter
 one_line: 大标题从画面主体的背后慢慢升上来，停下时下缘仍被主体的轮廓挡着，一行小字再压到最前面
 use_when: 有一张主体轮廓清楚的图或定格画面（山脊、建筑、人物半身），想让标题长在画面里而不是贴在画面上
 energy: 中

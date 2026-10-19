@@ -2,6 +2,8 @@
 id: char-cascade
 name: 逐字落位
 group: 字与强调
+type: structure
+intents: keyword,hook
 one_line: 一行大字逐字从上方歪着掉下来，从左到右一个接一个砸到基线上，各自回弹一下站直
 use_when: 一句短口号、一个小标题要有“被一个字一个字摆出来”的仪式感，旁白语速偏慢或者干脆没有旁白
 energy: 中

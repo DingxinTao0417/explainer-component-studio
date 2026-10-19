@@ -2,6 +2,8 @@
 id: flow-nodes
 name: 节点流程线
 group: 结构与流程
+type: structure
+intents: process,steps
 one_line: 几个节点横向排开，一条线从左往右一段段画过去，画到哪个节点，那个节点就放大点亮
 use_when: 旁白在讲一条有方向的流程（输入、处理、输出），环节有三到五个，每个环节的名字不超过五六个字
 energy: 中

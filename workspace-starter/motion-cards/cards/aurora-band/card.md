@@ -2,6 +2,8 @@
 id: aurora-band
 name: 极光带
 group: 幕底与氛围
+type: structure
+intents: none
 one_line: 三条斜着铺满画面的宽色带整镜沿各自的方向缓慢错位滑动，同时一宽一窄地呼吸
 use_when: 开场、转折、金句这类需要一点情绪和方向感的文字镜，纯色底太平，又不想用具体的图
 energy: 低

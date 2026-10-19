@@ -2,6 +2,8 @@
 id: strike-swap
 name: 划掉换词
 group: 字与强调
+type: structure
+intents: caution,compare
 one_line: 句尾的旧说法被一道斜线划掉，随即变小变淡沉到下一行，新说法趁它还在下沉就从上方落进它原来的位置
 use_when: 旁白在纠正一个常见说法（“不是……而是……”“很多人以为……其实……”），而且新旧两个说法长度相近
 energy: 中

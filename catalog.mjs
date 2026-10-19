@@ -1,1 +1,0 @@
-import './catalog-controller.mjs';

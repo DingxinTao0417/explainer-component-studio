@@ -2,6 +2,8 @@
 id: orbit-card
 name: 环绕
 group: 镜头运动
+type: evidence
+intents: result,hook
 one_line: 一张卡片先以 52 度的侧面出现，镜头用 2 秒绕到它正面，一道高光跟着角度从卡面上扫过去，转正时高光刚好离开
 use_when: 要郑重地亮出一件东西（一张成果图、一个产品页、一张证书），想让它有体积、有分量，而不是“弹出来”
 energy: 中

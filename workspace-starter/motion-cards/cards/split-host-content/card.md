@@ -2,6 +2,8 @@
 id: split-host-content
 name: 六四分屏
 group: 人物与口播
+type: host
+intents: host,steps
 one_line: 一条强调色分界线先从上画到下，人的那 40% 和内容的那 60% 随后以线为起点向两边推开，人先开、内容晚 0.14 秒
 use_when: 一段较长的讲解里，人和要点需要同屏停留十几秒以上，人负责语气，右边负责让观众记住
 energy: 低

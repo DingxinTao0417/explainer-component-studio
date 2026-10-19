@@ -2,6 +2,8 @@
 id: screen-push-focus
 name: 录屏推近圈框
 group: 证据与界面
+type: evidence
+intents: point,software
 one_line: 截图先全景停半秒，镜头一次推近到目标区域，快到位时强调色框沿边描出来，框外同时压暗
 use_when: 旁白说“看这里”“注意这一项”，而证据在一张满屏截图或录屏的某个小区域里
 energy: 中

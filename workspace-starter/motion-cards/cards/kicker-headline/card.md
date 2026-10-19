@@ -2,6 +2,8 @@
 id: kicker-headline
 name: 小标带大标
 group: 标题与章节
+type: structure
+intents: question,chapter
 one_line: 一行引子小字先独自站在画面正中，随后上移缩小让出位置，大标题晚四分之一秒从它刚离开的地方长出来
 use_when: 旁白是“铺垫 + 结论”两段式：先一句引子（提问、现象、误区），停一下，再说出真正的标题
 energy: 中

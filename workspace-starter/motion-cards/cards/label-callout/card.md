@@ -2,6 +2,8 @@
 id: label-callout
 name: 引线标签
 group: 标注与手绘
+type: evidence
+intents: point,definition
 one_line: 目标边上先钉下一个圆点，一条折线从圆点引到空白处，线一到头就从线尾推出一块写着名字的标签牌
 use_when: 画面里的东西需要一个名字或一句解释（部件名、字段含义、状态），而且文字不能盖在它身上
 energy: 低

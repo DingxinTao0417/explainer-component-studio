@@ -2,6 +2,8 @@
 id: split-title-reveal
 name: 裂开露标题
 group: 标题与章节
+type: structure
+intents: chapter,transition
 one_line: 一条亮线从画面中心向两边划开，画面沿这条线上下猛地裂出一道缝露出后面的标题，缝继续慢慢变宽，然后两半加速退出画面
 use_when: 上一段内容结束、要翻到一个新话题；旁白有一个明显的转折词（“但是”“换个角度”“真正的问题是”）
 energy: 高

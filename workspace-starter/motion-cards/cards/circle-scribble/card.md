@@ -2,6 +2,8 @@
 id: circle-scribble
 name: 手绘圈
 group: 标注与手绘
+type: evidence
+intents: point
 one_line: 旁白点到画面里某个东西的那一刻，一个不太圆的圈从左上起笔、一笔画完套住它，收笔越过起笔一小段
 use_when: 录屏、截图或照片里有一个具体的按钮、数字、词要观众立刻看过去，而且只有这一个
 energy: 中

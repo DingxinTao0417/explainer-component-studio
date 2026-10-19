@@ -410,13 +410,12 @@ def check(args):
         except Exception as exc:  # 卡词检查失败不影响其他结果
             hints.append(f'卡词检查没跑成：{exc}')
 
-    # 组件库挂载（只在用了组件时检查，结果都是提示）
-    if any(scene.get('component_bindings') for scene in scenes):
-        try:
-            from component_library import check_bindings
-            hints.extend(check_bindings(root, manifest, edit)['warnings'])
-        except Exception as exc:  # 组件检查失败不影响其他结果
-            hints.append(f'组件挂载检查没跑成：{exc}')
+    # 动效卡（分镜的 motion 写了卡 id 时，看卡有没有装进工程；结果都是提示）
+    cards_dir = root / 'hyperframes' / 'motion-cards' / 'cards'
+    for scene in scenes:
+        for cid in [c.strip() for c in str(scene.get('motion') or '').split(',') if c.strip()]:
+            if not (cards_dir / cid / 'demo.html').exists():
+                hints.append(f'{scene.get("id")}：动效卡 {cid} 还没装进工程（cards.mjs use <项目>/hyperframes {cid}）。')
 
     # 采用素材的来源
     for aid, asset in assets.items():

@@ -2,6 +2,8 @@
 id: grid-to-hero
 name: 网格选一张放大
 group: 图片与多素材
+type: evidence
+intents: point,categories
 one_line: 六到九张图先排成网格，其中一张被黄框圈住并鼓一下，0.3 秒后它长到占满左边主区，其余缩成右侧一列小图并压暗
 use_when: 旁白先铺开一批候选（“试了六种写法”），再说“其中这一个最好”，接下来要盯着这一张讲
 energy: 中

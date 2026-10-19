@@ -2,6 +2,8 @@
 id: push-through
 name: 穿过去
 group: 转场
+type: structure
+intents: transition
 one_line: 上一镜朝镜头越冲越快、放大到糊成一片色，下一镜从同一点的深处很小地出现，迎面放大并急刹到位
 use_when: 旁白说“点进去”“往里看”“深入一层”，下一镜是上一镜里某个东西的内部或下一级
 energy: 高

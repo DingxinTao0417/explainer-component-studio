@@ -2,6 +2,8 @@
 id: bracket-frame
 name: 角标取景框
 group: 标注与手绘
+type: evidence
+intents: point
 one_line: 四个直角先松松地出现在目标外一圈，然后同时向内收紧、略微收过头再回到位，最后闪两下表示对上了
 use_when: 要把观众的注意力框在画面里的一块区域上（一行、一张卡片、一个人脸），语气是“锁定”“就看这一块”，而不是手写批注
 energy: 中

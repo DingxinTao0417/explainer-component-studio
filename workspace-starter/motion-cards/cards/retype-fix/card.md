@@ -2,6 +2,8 @@
 id: retype-fix
 name: 打错重打
 group: 字与强调
+type: structure
+intents: caution,compare
 one_line: 光标先在句尾很顺地打出一个错的说法，停住、闪一下，按住退格把它逐字删光，再稍慢一点打出强调色的正确说法
 use_when: 要纠正一个观众自己也会下意识说出口的说法，而且想让纠正显得像“我自己刚想明白”，不是在训人
 energy: 中

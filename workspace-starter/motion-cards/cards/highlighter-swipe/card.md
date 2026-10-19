@@ -2,6 +2,8 @@
 id: highlighter-swipe
 name: 荧光笔扫过
 group: 字与强调
+type: structure
+intents: point,keyword
 one_line: 整句先到，旁白念到重点的那一刻，一条边缘不齐的荧光色带从左到右扫过那几个字，被扫到的字同时变成深色
 use_when: 一句话里有一小段是要观众记住的原话（规则、定义、关键条件），语气是“划重点”而不是“砸重音”
 energy: 中

@@ -2,6 +2,8 @@
 id: margin-note
 name: 旁注手写
 group: 标注与手绘
+type: evidence
+intents: point,caution
 one_line: 目标旁边的空白处，一行微微上翘的手写体批注一个字一个字写出来，写完再甩一条下垂的小弧线连到目标
 use_when: 想对画面里的某样东西说一句自己的话（提醒、吐槽、补充），语气是讲解者在页边随手写的，不是正式的标签
 energy: 低

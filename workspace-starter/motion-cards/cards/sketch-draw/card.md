@@ -2,6 +2,8 @@
 id: sketch-draw
 name: 线稿画出
 group: 标注与手绘
+type: metaphor
+intents: process
 one_line: 一张“方框 → 圆 → 方框”的示意图按阅读顺序一笔一笔画出来，每个形状画到一半时它里面的字跟着浮出来
 use_when: 旁白在讲一个三步的关系或流程（输入、处理、输出），想让观众跟着讲解的顺序一步步看到，而不是一次看到整张图
 energy: 低

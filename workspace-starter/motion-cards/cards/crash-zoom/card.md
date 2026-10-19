@@ -2,6 +2,8 @@
 id: crash-zoom
 name: 急推
 group: 镜头运动
+type: evidence
+intents: point,hook
 one_line: 画面先静止，到点后镜头在 0.2 秒内加速冲到目标上放大 2.4 倍，冲过头 7% 再收回来，最快的那一两帧带径向拖影
 use_when: 旁白说“就是这里”“问题出在这一行”，要把观众的眼睛一下子按到画面里的一个点上
 energy: 高

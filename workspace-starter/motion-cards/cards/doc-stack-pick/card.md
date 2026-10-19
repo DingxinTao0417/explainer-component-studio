@@ -2,6 +2,8 @@
 id: doc-stack-pick
 name: 文档堆里抽一张
 group: 证据与界面
+type: evidence
+intents: result,point
 one_line: 四页错开叠着的文档里，压在中间的一页先横着抽出来（上面的几页被带动一下），离开纸堆后才翻到最上层，放大转正到画面中央，其余几页退后变暗
 use_when: 旁白说“在这么多材料里，关键是这一份”，要表现从一堆里挑出一个
 energy: 中

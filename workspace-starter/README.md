@@ -13,7 +13,6 @@ workspace-starter/
   待拆解视频/       你喜欢的参考视频放这里
   已拆解视频/       拆完的参考片移到这里，看片时拿来并排比
   motion-cards/     动效卡库：108 张通用动效卡，每张是一份说明加一个可直接挂载的单文件 HyperFrames 子合成（见里面的 README 和 SPEC）
-  参考库/           别人的开源作品，只读：video-talkcraft 的 108 张动效配方卡和 demo（见里面的 README 和它自己的 LICENSE）
   频道复盘.md       每期发布数据一行
 ```
 

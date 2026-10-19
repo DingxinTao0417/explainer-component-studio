@@ -2,6 +2,8 @@
 id: magnifier-lens
 name: 放大镜
 group: 证据与界面
+type: evidence
+intents: point
 one_line: 一个圆形放大镜出现在截图一角，沿弧线滑到目标上，镜内始终是镜下那一点的放大画面，到位时镜框变成强调色并轻轻一收
 use_when: 要看的东西很小（一个状态、一个数字、一行小字），但又不想离开整张界面
 energy: 中

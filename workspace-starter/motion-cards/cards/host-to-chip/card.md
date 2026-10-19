@@ -2,6 +2,8 @@
 id: host-to-chip
 name: 人缩成角标
 group: 人物与口播
+type: host
+intents: host,software
 one_line: 满屏的主持人画面向一个角收拢成圆形头像，到位时弹一下坐稳，随后头像外圈按说话的节奏一圈圈往外荡，画面中间让给内容
 use_when: 主持人开场说完一句，接下来要长时间讲图、讲字或讲录屏，但还想让观众知道“是这个人在讲”
 energy: 中

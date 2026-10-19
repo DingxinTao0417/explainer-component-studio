@@ -2,6 +2,8 @@
 id: terminal-log
 name: 终端日志
 group: 证据与界面
+type: evidence
+intents: software,result
 one_line: 深色终端窗里，命令匀速逐字打出，停一拍回车，输出整行整行不等间隔地刷出来，最后一行先是灰的，三分之一秒后被强调色从左扫亮并打上勾
 use_when: 要展示“跑了一条命令，它成功了”：安装、构建、导出、跑脚本，重点在最后的结果
 energy: 中

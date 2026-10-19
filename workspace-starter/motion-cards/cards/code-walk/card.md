@@ -2,6 +2,8 @@
 id: code-walk
 name: 代码逐行讲
 group: 证据与界面
+type: evidence
+intents: software,steps
 one_line: 整段代码先退到三成亮度，一条带强调色边的高亮带落在第一段上；每讲到下一段，高亮带整条滑下去并变成新的高度，被罩住的几行变亮并放大 5%
 use_when: 旁白按顺序讲一段代码或配置的两三个部分，每一段说一两句
 energy: 低

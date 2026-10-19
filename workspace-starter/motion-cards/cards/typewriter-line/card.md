@@ -2,6 +2,8 @@
 id: typewriter-line
 name: 打字机
 group: 字与强调
+type: structure
+intents: question,keyword
 one_line: 一行字跟着一根强调色光标逐字打出来，遇到标点停一口气，打完以后光标原地闪两下
 use_when: 画面在模拟“正在输入”（提示词、搜索词、一条消息、一句命令），或者想让观众按阅读速度一个字一个字跟着读
 energy: 低

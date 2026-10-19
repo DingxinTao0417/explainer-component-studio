@@ -2,6 +2,8 @@
 id: line-draw-chart
 name: 折线画出
 group: 数据与图表
+type: structure
+intents: number,result
 one_line: 一条折线按时间从左画到右，线头上的圆点带着实时数值一起走，跑到关键拐点刹住停半秒、标注落下，再加速画完，终点数值放大留住
 use_when: 旁白在讲一段随时间变化的过程，而且其中有一个“从这里开始不一样了”的时刻
 energy: 中

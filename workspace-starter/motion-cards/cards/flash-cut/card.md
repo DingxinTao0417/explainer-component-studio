@@ -2,6 +2,8 @@
 id: flash-cut
 name: 闪白切
 group: 转场
+type: structure
+intents: transition
 one_line: 上一镜在两帧里冲到过曝，全白停两帧，然后白很快褪掉、拖一小段余光，底下已经是下一镜
 use_when: 旁白出现“结果是——”“按下去之后”这类揭晓、拍照、瞬间发生的节点，换镜要干脆
 energy: 高

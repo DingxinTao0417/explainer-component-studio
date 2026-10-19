@@ -2,6 +2,8 @@
 id: mesh-flow
 name: 流动色光
 group: 幕底与氛围
+type: structure
+intents: none
 one_line: 四团大而柔的色光垫在底色上，整镜各自沿一小段弯路游移并互相渗开，像一盏很慢的熔岩灯
 use_when: 这一镜只有标题、金句或一个数字，纯色底显得空，又不想让任何图形和文字抢位置
 energy: 低

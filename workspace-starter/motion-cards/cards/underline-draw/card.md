@@ -2,6 +2,8 @@
 id: underline-draw
 name: 手绘下划线
 group: 字与强调
+type: structure
+intents: point,keyword
 one_line: 整句先到，念到重点词时，词下面一条头粗尾细的手绘线从左到右一笔甩出去，词被笔压得微微一沉
 use_when: 要轻轻点一下某个词（术语、步骤名、要记的那个动作），又不想打断整句的阅读
 energy: 低

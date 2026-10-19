@@ -2,6 +2,8 @@
 id: arrow-point
 name: 箭头指
 group: 标注与手绘
+type: evidence
+intents: point
 one_line: 一条带弧度的手绘箭头从空白处甩向目标，箭杆画完后箭头的两笔分两下点上，最后整支箭朝目标戳一下再弹回
 use_when: 旁白说“看这里”“就是这个按钮”，目标周围有一块空白能让箭头起笔，而且想让观众的视线顺着线走过去
 energy: 中

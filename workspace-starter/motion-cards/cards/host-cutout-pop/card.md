@@ -2,6 +2,8 @@
 id: host-cutout-pop
 name: 人物弹入
 group: 人物与口播
+type: host
+intents: host,hook
 one_line: 身后的强调色底形先张开，0.12 秒后抠像人物从画面底边被拉长着窜上来，冲过落点 46px 再坐回去，旁边的字等人站稳才出
 use_when: 主持人或角色第一次登场，或者换了一个话题、要重新把注意力拉回到人身上
 energy: 高

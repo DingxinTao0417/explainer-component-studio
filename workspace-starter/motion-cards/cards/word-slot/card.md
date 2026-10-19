@@ -2,6 +2,8 @@
 id: word-slot
 name: 词槽轮换
 group: 字与强调
+type: structure
+intents: categories,keyword
 one_line: 一句话里留一个带底色的空位，几个候选词在里面自上而下飞快滚过、越滚越慢，最后冲过头一点再退回来停在答案上，外框随即扣住
 use_when: 旁白在卖关子（“关键不是 A，不是 B，也不是 C，而是……”），或者要表现“试了好几个选项，最后选定这个”
 energy: 高

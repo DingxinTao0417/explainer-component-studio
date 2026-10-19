@@ -2,6 +2,8 @@
 id: count-badge
 name: 计数徽章标题
 group: 标题与章节
+type: structure
+intents: steps,categories
 one_line: 写着“第 N 个”的圆徽章先在画面正中弹出，里面的数字滚两格落到 N，标题随后从徽章背后向右滑出，把徽章顶到左边
 use_when: 清单式内容（几个方法、几个错误、几个步骤）里每一条的开头，旁白在说“第三个”
 energy: 高

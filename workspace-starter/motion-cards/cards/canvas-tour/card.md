@@ -2,6 +2,8 @@
 id: canvas-tour
 name: 大画布巡游
 group: 镜头运动
+type: evidence
+intents: process,steps
 one_line: 三块内容摆在一张大画布上，镜头在每块上停 0.9 秒、用 1 秒飞到下一块，飞的途中略微拉远，全程一个镜头不切
 use_when: 旁白按顺序讲三四个并列或先后的东西（步骤、模块、案例），而且它们之间的位置关系本身就是信息
 energy: 中

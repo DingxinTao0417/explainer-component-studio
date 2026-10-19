@@ -2,6 +2,8 @@
 id: slab-title-slam
 name: 厚底标题砸入
 group: 标题与章节
+type: structure
+intents: hook,chapter
 one_line: 一块强调色厚底板从画面外加速冲进来撞停，标题字在它停住的那一帧才出现，底板带着字弹一下
 use_when: 一期或一章的开头要一个不容商量的标题；旁白是短促的陈述句，重音落在标题最后一个字上
 energy: 高

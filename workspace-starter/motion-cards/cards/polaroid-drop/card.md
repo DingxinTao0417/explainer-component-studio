@@ -2,6 +2,8 @@
 id: polaroid-drop
 name: 拍立得连落
 group: 图片与多素材
+type: evidence
+intents: steps,categories
 one_line: 三四张带白边的照片一张接一张从画面上方加速落到桌上，每张倾角不同、压住前一张的边，被压的那张会被碰得晃一下
 use_when: 旁白在数“第一、第二、第三”，每一项都有一张图，而且几项是并列的、不需要谁更大
 energy: 中

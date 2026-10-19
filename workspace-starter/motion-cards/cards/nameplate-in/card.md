@@ -2,6 +2,8 @@
 id: nameplate-in
 name: 名字牌
 group: 人物与口播
+type: host
+intents: host
 one_line: 人物胸口位置先立起一条强调色竖线，深色衬底从线里向右擦出，名字和身份两行先后从线后滑出来，停留后按原路收回
 use_when: 一个人第一次出镜或第一次开口，需要告诉观众他是谁、凭什么讲这件事
 energy: 低

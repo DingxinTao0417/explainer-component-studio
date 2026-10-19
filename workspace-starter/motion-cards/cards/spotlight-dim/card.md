@@ -2,6 +2,8 @@
 id: spotlight-dim
 name: 聚光压暗
 group: 证据与界面
+type: evidence
+intents: point,software
 one_line: 暗场从画面四边向里收，收成一个贴着目标的圆角亮窗并描上强调色边；讲到下一处时，亮窗整块滑过去并变成新的形状
 use_when: 界面不需要放大，但要依次指两三个地方；或者要压在一段正在播放的录屏上指位置
 energy: 低

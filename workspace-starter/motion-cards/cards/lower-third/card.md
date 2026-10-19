@@ -2,6 +2,8 @@
 id: lower-third
 name: 下三分之一名条
 group: 标题与章节
+type: host
+intents: host
 one_line: 画面左下一根竖条先立起来，强调色块从它里面向右射出，名字和一行说明在色块上先后升起，停留后按原路倒着收回
 use_when: 画面里第一次出现一个人、一个产品或一个地点，需要告诉观众“这是谁、是什么”，而画面本身要继续播
 energy: 低

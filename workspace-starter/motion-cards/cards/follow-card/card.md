@@ -2,6 +2,8 @@
 id: follow-card
 name: 关注卡
 group: 人物与口播
+type: structure
+intents: outro
 one_line: 一张主页卡片从下方升起坐稳，头像、名字、简介、按钮从左到右先后落位，随后按钮被按下去、在最低点换成“已关注”再弹回来
 use_when: 片中或片尾提醒观众关注、订阅，想演示“点一下”这个动作，而不是只放一句话
 energy: 中

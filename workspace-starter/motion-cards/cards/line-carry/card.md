@@ -2,6 +2,8 @@
 id: line-carry
 name: 一条线带走
 group: 转场
+type: structure
+intents: transition
 one_line: 一条发亮的强调色竖线从画面一侧走到另一侧，线前面是被它微微拖着走的上一镜，线后面已经是下一镜
 use_when: 前后对照、时间往前走一步、同一个界面的两种状态，想让观众同时看到两边各一半
 energy: 中

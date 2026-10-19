@@ -2,6 +2,8 @@
 id: outline-fill-title
 name: 描边填实
 group: 标题与章节
+type: structure
+intents: chapter,keyword
 one_line: 标题先只有一圈描边，停一拍后强调色从字脚往上灌，液面右高左低地爬到字顶，灌满时整行轻轻顶一下
 use_when: 旁白在说“从空到实”的过程（先有框架再补内容、从想法到落地、进度走完），而且说这句话要 1.5 秒以上
 energy: 中

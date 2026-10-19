@@ -2,6 +2,8 @@
 id: stack-fan
 name: 卡堆扇开
 group: 图片与多素材
+type: evidence
+intents: categories,result
 one_line: 五张图先叠成一摞整体落下，停一拍，下面四张绕同一个支点向两边扇开，最上面一张最后落回并比别的大一号
 use_when: 旁白先说“有这么几样”，再点出其中最重要的一样；手上有四五张同类的图，其中一张是主图
 energy: 中

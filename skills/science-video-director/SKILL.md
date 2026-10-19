@@ -41,9 +41,8 @@ description: 把用户的稿件或 SRT、配音和素材做成完整的中文科
 | --- | --- | --- |
 | 品牌包 | `<工作区>/brand-kit` | 13 个频道组件（章节卡、关键词、大数字、对比、步骤、录屏聚焦、取景框、头像、钩子、结尾、转场、字幕…），四种调性一键切换，字体，音效映射，语义元数据 semantics.json，插画主持人提示词，角色声音库 |
 | 手法库 | `<工作区>/手法库` | 从参考片拆出来的 30 张手法卡：具体用什么招、哪个组件、停多久 |
-| 组件库 | `<工作区>/hyperframes-explainer-template/component-library` | 界面复刻、信息图、箭头标注、B-roll（品牌包没有的画面）；按 core / episode / legacy / hidden-platform 分级，默认只挑 core；跟品牌包调性，有成片模式 |
-| 选组件 | `shot_semantics.py`（旁白 → 意图 → 候选或“不用组件” → 槽位草稿 → 卡词时间） | 两套库的唯一入口，见 guide/components.md |
-| 动效卡库 | `<工作区>/motion-cards`（108 张动效卡，11 个分组；每张是一份说明加一个可直接挂载的单文件子合成），用 `node …/tools/cards.mjs find / show / use / serve` | 字的强调、数据、证据、多图、镜头、转场、标注、人物、结构、幕底这些镜头怎么动；装进项目直接用，换皮不换动作；见 guide/motion-vocabulary.md |
+| 动效卡库 | `<工作区>/motion-cards`（108 张动效卡，11 个分组；每张是一份说明加一个可直接挂载的单文件子合成），用 `node …/tools/cards.mjs find / show / use / serve` | 品牌包以外的镜头都从这里来：字的强调、数据、证据、多图、镜头、转场、标注、人物、结构、幕底；装进项目直接用，换皮不换动作；见 guide/motion-vocabulary.md |
+| 选镜头 | `shot_semantics.py`（旁白 → 意图 → 品牌组件或动效卡候选，或“不用组件” → 变量草稿 → 卡词时间） | 品牌包和卡库的唯一入口，见 guide/components.md |
 | 网页证据 | `pageshot.mjs`（网页 → 全页长图 + 目标的实测坐标） | 官网、文档、榜单这类证据画面，见 guide/assets.md |
 | 眼睛 | `frames.py`（接触表、节奏、`--cues` 卡词帧、`--compare` 和参考片并排）、`npx --yes hyperframes@0.8.57 snapshot` / `compare`、`brand-kit/tools/tone-stills.mjs`（调性静帧） | 看片、比较 |
 | 耳朵 | `align.py`（逐字对齐、关键词时间、字幕变量）、`audio.py`（响度报告、音效听不听得到、响度归一、拍点、BGM 闪避曲线） | 对齐、混音 |
@@ -114,8 +113,8 @@ description: 把用户的稿件或 SRT、配音和素材做成完整的中文科
 - **素材**：按 `guide/assets.md` 准备：录屏任务卡、真人口播任务卡、Pexels、网页证据（`pageshot.mjs`）、image2 透明元素、AI 视频交接（由用户自己生成）。需要用户动手的，一次写进 `planning/TASKS.md` 交出去，然后继续做不依赖它的部分。
 - **合成**：
   - 按 `guide/production.md` 搭 HyperFrames 工程。先运行 `brand-kit/build.mjs --project <项目>/hyperframes` 装品牌包。
-  - suggest 给 `custom` 时：先在动效卡库里找（`cards.mjs find`），有合适的就 `cards.mjs use` 装进项目直接挂载，用本期调性的 token 换皮。库里没有再用 `shot_semantics.py scaffold` 起品牌风骨架现场做（见 `guide/motion-vocabulary.md` 和 `guide/components.md`“现场做一镜”）。
-  - 章节卡、字幕、录屏聚焦、取景框、主持人头像都用品牌组件，全片复用。界面复刻、图解这类画面，用组件库（场景配置 `appearance` 写本期 `tone` 和 `mode: "video"`）或定制镜头，见 `guide/components.md`。
+  - 章节卡、字幕、录屏聚焦、取景框、主持人头像都用品牌组件，全片复用。其余镜头用 suggest 给的动效卡：`cards.mjs use` 装进工程，挂载时 `data-variable-values` 用候选里的 `card.variable_values`，项目根元素设 `--mc-*` 换成本期调性（见 `guide/components.md` 和 `guide/motion-vocabulary.md`）。
+  - suggest 给 `custom` 时，先换几个说法 `cards.mjs find` 确认卡库里真的没有，再用 `shot_semantics.py scaffold` 起品牌风骨架现场做（`guide/components.md`“现场做一镜”）。
   - 组件的默认样式只是起点，放大、改色、去外框都是正常操作。
 - **边做边看**：每做完一章就抽几帧看看，不要等全片做完才发现方向偏了。能用静帧回答的问题（位置、遮挡、文案、层级）不渲视频。
 
@@ -193,7 +192,7 @@ description: 把用户的稿件或 SRT、配音和素材做成完整的中文科
 | `guide/production.md` | 搭 HyperFrames 工程、装品牌包，处理 EDIT.json、对齐、字幕、混音、渲染导出时读 |
 | `guide/voice.md` | 生成旁白、做角色对白、逐字对齐和关键词卡点时读 |
 | `guide/assets.md` | 找素材，写录屏或口播任务卡，生图，做 AI 视频交接时读 |
-| `guide/components.md` | 选用品牌组件或组件库时读 |
+| `guide/components.md` | 选品牌组件或动效卡、读 suggest 的输出、现场做一镜时读 |
 | `guide/motion-vocabulary.md` | 现场做一镜、多图同屏、拍网页、加标注、挑章节转场时读。内容是动效卡库怎么查、怎么装进项目、怎么对时间和换皮 |
 | `guide/retro.md` | 用户发来发布数据时读 |
 | `templates/brief-template.md` | 写导演阐述时用 |
@@ -214,9 +213,7 @@ description: 把用户的稿件或 SRT、配音和素材做成完整的中文科
 | `voices.py` | 角色声音库：design / pick / lock / import / preset / plan / speak |
 | `retention.py` | 留存曲线对镜头，找掉人的地方 |
 | `dissect.py` | 拆解参考视频，写进手法库 |
-| `shot_semantics.py` | `suggest` 旁白 → 候选 / 不用组件 / 槽位草稿 / 卡词时间；`check` 校验意图表和两套元数据；`dataset` / `replay` 用已交付的期回放测命中率 |
-| `library_prepare.py` / `component_library.py` | 组件库检索（`--include-hidden` 才带隐藏组件）、校验、调参、导出挂载 |
+| `shot_semantics.py` | `suggest` 旁白 → 候选 / 不用组件 / 槽位草稿 / 卡词时间；`check` 校验意图表、品牌包元数据和卡库索引；`dataset` / `replay` 用已交付的期回放测命中率 |
 | `pexels.ps1` | Pexels 检索与下载 |
 | `pageshot.mjs` | 网页 → 全页长图 + 目标的实测坐标（`node` 运行，用本机 Chrome 或 Edge） |
 | `motion-cards/tools/cards.mjs`（`node` 运行，在工作区，不在本目录） | 动效卡库：`find` 按关键词、分组、素材类型、能量找卡；`show` 看一张卡；`use` 把卡装进项目并打印挂载片段；`serve` 开画廊；`lint` / `verify` 给新卡验收 |
-| `vocab.py` | 另一个只读参考库 video-talkcraft 的查询：`find` / `show` / `intents` / `status` |

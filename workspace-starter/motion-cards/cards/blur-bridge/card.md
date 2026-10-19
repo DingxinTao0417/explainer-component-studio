@@ -2,6 +2,8 @@
 id: blur-bridge
 name: 模糊过桥
 group: 转场
+type: structure
+intents: transition
 one_line: 上一镜越来越虚并微微胀大，虚到认不出内容时在三帧里换成同样虚的下一镜，再收回来变实
 use_when: 两段内容是递进或并列关系，语气平稳，不想打断旁白的气口（“另一方面”“再来看”）
 energy: 低

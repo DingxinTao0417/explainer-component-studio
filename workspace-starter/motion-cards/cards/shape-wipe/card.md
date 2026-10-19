@@ -2,6 +2,8 @@
 id: shape-wipe
 name: 形状擦除
 group: 转场
+type: structure
+intents: transition
 one_line: 一个斜切的长色块（或一个从某点涨开的圆）不停顿地扫过画面，前沿盖掉上一镜，后沿放出下一镜
 use_when: 同一个话题里往前推进一步（下一个步骤、下一个例子），需要“翻页”而不是“断开”
 energy: 中

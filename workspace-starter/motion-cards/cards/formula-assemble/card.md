@@ -2,6 +2,8 @@
 id: formula-assemble
 name: 公式拼装
 group: 结构与流程
+type: structure
+intents: grouping,definition
 one_line: 几个词块跟着旁白依次从上方落进一行，加号在下一个词块落下前先弹出，最后等号弹出，结果在第二行放大砸出来
 use_when: 旁白用“甲加乙加丙，就等于丁”的句式总结方法，前面的词是条件，最后一个词是结论
 energy: 中

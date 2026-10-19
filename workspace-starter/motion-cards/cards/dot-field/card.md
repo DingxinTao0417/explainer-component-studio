@@ -2,6 +2,8 @@
 id: dot-field
 name: 点阵波
 group: 幕底与氛围
+type: structure
+intents: none
 one_line: 铺满全屏的整齐点阵不动，一道斜的波纹整镜缓慢横穿过去，波到之处的点依次变亮变大再恢复
 use_when: 讲数据、网络、信号、模型这类“很多个小单元”的话题，标题或数字卡下面需要一点有秩序的动静
 energy: 低

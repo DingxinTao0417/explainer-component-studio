@@ -2,6 +2,8 @@
 id: zoom-match
 name: 匹配缩放
 group: 转场
+type: structure
+intents: transition
 one_line: 上一镜朝画面里的一个点急推到 3 倍，换镜时下一镜里对应的点正好压在同一个屏幕位置上，再从 3 倍拉回全貌
 use_when: 两镜里有同一个东西或同一类东西（同一个按钮、同一张脸、两个圆形的图标），旁白说“这个 X，其实是……”
 energy: 中

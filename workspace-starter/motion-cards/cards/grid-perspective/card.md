@@ -2,6 +2,8 @@
 id: grid-perspective
 name: 透视网格
 group: 幕底与氛围
+type: structure
+intents: none
 one_line: 画面下方一张向远处消失的地面网格整镜匀速朝观众滚过来，地平线上压着一条淡淡的光
 use_when: 讲“未来、系统、空间、路线”这类抽象话题的标题镜，需要一点纵深感，但上半屏要干净地留给字
 energy: 低

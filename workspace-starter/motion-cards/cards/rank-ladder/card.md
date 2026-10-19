@@ -2,6 +2,8 @@
 id: rank-ladder
 name: 排名换位
 group: 数据与图表
+type: structure
+intents: number,compare
 one_line: 一个五行的排行榜里，下面的一行先亮起来、分数涨上去，然后先向右拉出 260px、在空出来的车道里上移，被它超过的行在它经过时依次让到下面，到位后再并回队列，新名次的数字应一声
 use_when: 旁白在说“原来排第几，现在超到第几”，名次的变化本身就是结论
 energy: 高

@@ -2,6 +2,8 @@
 id: word-punch
 name: 重音词砸字
 group: 字与强调
+type: structure
+intents: keyword,conclusion
 one_line: 整句先平平地到，重音词扣住不出，等旁白念到它的那一帧才带着色块砸进来，整屏跟着挨一下
 use_when: 一句话里有一个词是全句的分量（数字、结论、反转），而且旁白会重读它
 energy: 高

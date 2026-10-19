@@ -20,7 +20,8 @@
 
 | 情况 | 先看哪组 |
 | --- | --- |
-| `shot_semantics.py suggest` 给了 `custom`，要现场做一镜 | 按素材类型和意图 `find` |
+| `shot_semantics.py suggest` 已经按旁白给了卡的候选 | 先看候选的连拍图；不满意再 `find --intent <意图>` 翻同组的其他卡 |
+| suggest 给了 `custom` | 换几个说法 `find`，确认真的没有 |
 | 一句话里有重音、要改口、要划重点 | 字与强调 |
 | 数字、比例、对比、趋势 | 数据与图表 |
 | 录屏、截图、网页、对话、代码要当证据拍 | 证据与界面；要圈、指、框再叠一张标注与手绘 |
@@ -77,7 +78,3 @@ node "$mc/tools/cards.mjs" serve                             # 画廊：http://l
 1. 先确认不是换个词就能找到：`find` 换两三个说法，或在画廊里按分组翻一遍。
 2. 还是没有，就现场做：`shot_semantics.py scaffold` 起品牌风骨架，或照 `motion-cards/SPEC.md` 直接写成一张新卡（照抄 `cards/word-punch/` 的骨架，`cards.mjs lint` 和 `verify` 通过后看 `strip.jpg`）。
 3. 同一个现场做的动法在两期以上用过、成片被用户认可，就按 SPEC 补成正式的卡，`cards.mjs gallery` 更新索引。
-
-## 另一个可以翻的参考
-
-`<工作区>/参考库/video-talkcraft` 是别人的开源仓库，也有一套动效配方卡，用 `vocab.py find / show` 查。它的许可是 PolyForm Noncommercial：只读、只参考动法，不把它的卡片、demo、代码复制进 skill、品牌包、组件库或动效卡库。动效卡库里的卡都是独立写的，日常做片用卡库就够了。

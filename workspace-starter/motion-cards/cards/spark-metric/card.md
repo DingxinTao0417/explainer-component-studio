@@ -2,6 +2,8 @@
 id: spark-metric
 name: 指标带迷你线
 group: 数据与图表
+type: structure
+intents: number,result
 one_line: 一张指标卡里，大数字先站住，涨跌箭头顺着自己的方向冲进来，最后一条迷你趋势线从左画到右、在终点点一个圆点
 use_when: 旁白在报一个指标的现状和变化（现在是多少、比之前涨了还是跌了），需要一个像仪表盘上摘下来的小卡片
 energy: 低

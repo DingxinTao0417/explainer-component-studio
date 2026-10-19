@@ -2,6 +2,8 @@
 id: chapter-numeral
 name: 巨大序号章节
 group: 标题与章节
+type: structure
+intents: chapter
 one_line: 背景里一个顶天立地的半透明序号全程匀速横移，前景的章节标题从遮罩里升起，短线和说明行跟着依次到位
 use_when: 讲解分成几大段，每段开头需要一个安静但有体量的章节页；旁白在说“第二步”“接下来”
 energy: 低

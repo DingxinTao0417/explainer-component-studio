@@ -49,6 +49,8 @@ def steps(workspace):
            '需要 Node.js 22+、Python 3.10+ 和 ffmpeg（在 PATH 里，或设 FFMPEG_PATH / FFPROBE_PATH）', True)
     yield ('1 工作区', kit.is_dir() and cards.is_dir() and bool(env) and Path(env).resolve() == workspace,
            f'把环境变量 SCIENCE_VIDEO_WORKSPACE 设成 {workspace}', True)
+    yield ('1 动效卡库', (workspace / 'motion-cards' / 'index.json').is_file(),
+           'motion-cards/ 不在工作区里：重新运行不带 --check 的这条命令，会从仓库复制过来', True)
     profile = Path(os.environ.get('CODEX_HOME', str(Path.home() / '.codex'))) / 'skills/science-video-director/guide/style-profile.md'
     yield ('2 频道偏好', None, f'人工确认：{profile} 已经改成你自己的频道方向和偏好', True)
     built = {p.stem for p in (kit / 'compositions').glob('*.html')} if (kit / 'compositions').is_dir() else set()

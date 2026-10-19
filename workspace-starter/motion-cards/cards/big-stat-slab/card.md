@@ -2,6 +2,8 @@
 id: big-stat-slab
 name: 大数字压屏
 group: 数据与图表
+type: structure
+intents: number,hook
 one_line: 一个占半屏高的数字带着小得多的单位，从比画面还大的尺寸加速砸到位，压扁一下再弹回，说明行晚 0.32 秒从下面跟上
 use_when: 这一句的全部内容就是一个数字，而且它本身够惊人，不需要图表帮忙
 energy: 高

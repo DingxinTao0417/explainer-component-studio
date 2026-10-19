@@ -2,6 +2,8 @@
 id: blur-resolve
 name: 虚焦变实
 group: 字与强调
+type: structure
+intents: conclusion,definition
 one_line: 一整句话先以一片虚焦的光斑出现，然后一段一段地对上焦：每段先变清、稍微过头又糊一点、再锁实
 use_when: 内容本身在讲“从模糊到清楚”（想法成形、问题被看清、答案浮现），或者需要一个安静、带镜头感的句子入场
 energy: 低

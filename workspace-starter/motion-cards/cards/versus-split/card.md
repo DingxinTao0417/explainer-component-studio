@@ -2,6 +2,8 @@
 id: versus-split
 name: 对决分屏
 group: 结构与流程
+type: structure
+intents: compare
 one_line: 一条斜线把画面劈成两半，两边的标题从两侧加速撞到线前停住，撞击处弹出对比符号，然后两边的要点沿着斜线逐行列出
 use_when: 旁白在比较两种做法、两个方案、两类人，先点出双方名字，再一条条对比
 energy: 高

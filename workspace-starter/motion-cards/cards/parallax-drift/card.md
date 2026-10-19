@@ -2,6 +2,8 @@
 id: parallax-drift
 name: 视差漂移
 group: 镜头运动
+type: metaphor
+intents: metaphor
 one_line: 远、中、近三层内容在整镜里朝同一个方向匀速漂，5 秒里分别走 42、135、300 像素，近的快、远的慢
 use_when: 画面是几张摆好的图或一组并列的素材，旁白要在上面停留几秒，想让平面的排版有前后空间
 energy: 低

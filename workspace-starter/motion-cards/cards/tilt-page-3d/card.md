@@ -2,6 +2,8 @@
 id: tilt-page-3d
 name: 三维倾斜页
 group: 镜头运动
+type: evidence
+intents: software,result
 one_line: 一张长页面向后仰 54 度、斜着躺在画面里，镜头贴着它滑行 2.6 秒，滑到后半程页面立起来转正，和滑行同一帧停住
 use_when: 要带观众“翻到”一篇长文、一份文档、一个长网页里的某一段，而且想先给出“这东西很长”的印象
 energy: 中

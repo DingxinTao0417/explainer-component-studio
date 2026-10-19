@@ -1,15 +1,15 @@
-"""shot_semantics.py — 旁白 → 意图 → 组件候选 / 不用组件 → 槽位草稿 → 卡词时间。skill 调组件的唯一入口。
+"""shot_semantics.py — 旁白 → 意图 → 候选（品牌包组件 / 动效卡）/ 不用组件 → 变量草稿 → 卡词时间。skill 选镜头的唯一入口。
 
 只做确定性的初筛、约束检查和时间换算；最终选哪个由读候选的人决定。不联网、不调模型。
 
 用法（python -X utf8 shot_semantics.py …）：
   suggest --text "旁白句子" [--type structure] [--source real_footage] [--tone C] [--prev chapter-card,keyword-punch]
           [--position open|close|mid] [--scene-start 12.3] [--transcript subtitles/transcript.json] [--limit 3]
-          [--include-hidden] [--out planning/semantics/S05.json]
+          [--out planning/semantics/S05.json]
   suggest --edit planning/EDIT.json --scene S05 --captions subtitles/CAPTIONS.json [--transcript …]   # 从分镜取旁白和上下文
   dataset --project <项目> --out <文件>          # 把 EDIT.json + CAPTIONS.json 对成回放测试集（不含标准答案）
   replay  --dataset <文件> --labels <文件> --out <报告>   # 逐镜跑 suggest 并打分
-  check                                          # 校验意图表、两套库元数据的引用是否一致
+  check                                          # 校验意图表、品牌包和动效卡库的意图引用是否一致
   scaffold --project <项目> --scene S07 --name routes-table [--edit … --captions …]   # 现场做一镜：复制品牌包骨架到 hyperframes/components/
   intents                                        # 打印意图表
 输出 JSON 到 stdout；--out 只新建文件不覆盖。
@@ -22,12 +22,12 @@ import re
 import sys
 from pathlib import Path
 
-from runtime_paths import default_brand_kit, default_library
+from runtime_paths import default_brand_kit, default_motion_cards
 
 HERE = Path(__file__).resolve().parent
 INTENTS_FILE = HERE / 'semantics' / 'intents.json'
 BRAND_DIR = default_brand_kit()
-LIB_DIR = default_library()
+CARDS_DIR = default_motion_cards()
 CLAUSE_SPLIT = re.compile(r'[，,。！!；;：:？?、\n]+')
 NUM_RE = re.compile(r'(\d+(?:[.,]\d+)?|[一二三四五六七八九十百千万亿]{1,6})\s*(秒|分钟|小时|天|年|块|元|万|亿|%|％|个|条|单|次|倍|人|份|页|层|行|字)')
 
@@ -54,21 +54,58 @@ def clauses(text):
     return [c.strip() for c in CLAUSE_SPLIT.split(text or '') if c.strip()]
 
 
+# 动效卡的变量 → 从旁白里取什么。没列的变量（坐标、图片、开关）保留卡的默认值，由人填。
+CARD_VAR_FROM = {
+    'text': {'from': 'sentence', 'max': 18},
+    'title': {'from': 'key_phrase', 'max': 12, 'overflow': 'abbreviate'},
+    'headline': {'from': 'key_phrase', 'max': 12, 'overflow': 'abbreviate'},
+    'key': {'from': 'keyword', 'max': 6},
+    'items': {'from': 'list_items', 'max': 8, 'max_items': 5, 'sep': '|', 'overflow': 'split'},
+    'value': {'from': 'number'},
+    'percent': {'from': 'number'},
+    'unit': {'from': 'unit'},
+    'question': {'from': 'question', 'max': 16},
+    'cues': {'from': 'item_times'},
+    'hit': {'from': 'hit_time'},
+}
+
+
+def card_record(card):
+    """index.json 里的一张卡 → 和品牌包组件同形的候选记录。"""
+    names = {v['id'] for v in card.get('vars', [])}
+    slots = {}
+    for vid in names:
+        spec = CARD_VAR_FROM.get(vid)
+        if spec:
+            spec = dict(spec)
+            if vid == 'key' and 'text' in names:
+                spec['must_be_substring_of'] = 'text'
+            slots[vid] = spec
+    return {'library': 'motion-cards', 'id': card['id'], 'intents': card.get('intents') or [], 'type': card.get('type'),
+            'role': 'overlay' if card.get('overlay') else 'fullscreen', 'status': 'core',
+            'use': f"{card.get('name')}：{card.get('one_line')}（用在：{card.get('use_when')}）", 'avoid': [],
+            'slots': slots, 'energy': card.get('energy'), 'needs': card.get('needs') or [], 'slot': card.get('slot'),
+            'card_vars': {v['id']: v.get('default') for v in card.get('vars', [])}}
+
+
 def load_libraries(include_hidden=False):
+    """品牌包管每期都用的频道版式；动效卡库管其余镜头的动法。include_hidden 保留给旧命令，不再起作用。"""
     intents = load_json(INTENTS_FILE)
-    brand = load_json(BRAND_DIR / 'semantics.json')
-    lib = load_json(LIB_DIR / 'component-semantics.json')
+    # 品牌包可以还没做（新工作区）：那就只从卡库出候选
+    brand_file = BRAND_DIR / 'semantics.json'
+    brand = load_json(brand_file) if brand_file.is_file() else {'components': {}, 'overlap_with_library': {}}
+    cards_file = CARDS_DIR / 'index.json'
+    if not cards_file.is_file():
+        raise SystemExit(f'找不到动效卡库索引：{cards_file}（在卡库目录运行 node tools/cards.mjs index）')
+    cards = load_json(cards_file)
     comps = []
     for cid, rec in brand['components'].items():
         if rec.get('intents'):
             comps.append({'library': 'brand-kit', 'id': cid, **rec})
-    for cid, rec in lib['components'].items():
-        if not rec.get('shot_candidate'):
-            continue
-        if rec.get('status') != 'core' and not include_hidden:
-            continue
-        comps.append({'library': 'component-library', 'id': cid, **rec})
-    return intents, brand, lib, comps
+    for card in cards.get('cards', []):
+        if card.get('intents'):
+            comps.append(card_record(card))
+    return intents, brand, cards, comps
 
 
 # ---------- 意图识别 ----------
@@ -139,8 +176,6 @@ def rank(text, found, comps, brand_meta, context, intents):
                 why.append('主题词 ' + '/'.join(hit[:3]))
             else:
                 why.append('分镜声明意图，跳过主题词门槛')
-        if c['library'] == 'component-library' and not subjects:
-            score *= 0.85
         if c.get('role') == 'overlay':
             score *= 0.9
         if ctx_type and c.get('type') and c['type'] != ctx_type:
@@ -235,8 +270,8 @@ def draft_slots(comp, text, found, cue_words, context):
         return ('', '')
 
     def list_items():
-        parts = re.split(r'第[一二三四五六七八九十]\s*[、,，]?|[①②③④⑤]|(?<=[；;])', text or '')
-        parts = [p.strip(' ，,。：:') for p in parts if p and p.strip(' ，,。：:')]
+        parts = re.split(r'第[一二三四五六七八九十1-9]\s*[步点条个件]?\s*[、,，：:]?|[①②③④⑤]|(?<=[；;])', text or '')
+        parts = [p.strip(' ，,。：:；;') for p in parts if p and p.strip(' ，,。：:；;')]
         if len(parts) >= 2:
             return parts[:5]
         return [c for c in cl if width(c) <= 14][:5]
@@ -244,7 +279,9 @@ def draft_slots(comp, text, found, cue_words, context):
     for name, spec in slots.items():
         src = spec.get('from')
         val = None
-        if src in ('key_phrase',):
+        if src == 'sentence':
+            val = next((c for c in cl if any(w in c for w in kw)), None) or (cl[0] if cl else '')
+        elif src in ('key_phrase',):
             val = pick_key_phrase()
         elif src == 'keyword':
             val = keyword()
@@ -286,8 +323,8 @@ def draft_slots(comp, text, found, cue_words, context):
         elif src in ('hook_short', 'hook_main'):
             val = cl[0] if src == 'hook_short' and cl else (cl[1] if len(cl) > 1 else (cl[0] if cl else ''))
         elif src == 'pointer_label':
-            val = next((h for h in hits.get('point', []) if width(h) <= 8), kw[0] if kw else '')
-        elif src in ('item_times', 'pointer_time'):
+            val = next((h for h in hits.get('point', []) if width(h) <= 8 and h != '分镜声明的意图'), kw[0] if kw else '')
+        elif src in ('item_times', 'pointer_time', 'hit_time'):
             continue  # 由 timing 段处理
         else:
             todo.append(name)
@@ -360,10 +397,15 @@ def draft_timing(comp, draft, found, cue_words, stream, scene_start):
             break
     if first:
         timing['data-start'] = {'word': first[0], 'word_at': first[1], 'suggest': round(max(scene_start, first[1] - 0.2), 2), 'rule': '词被说出的时刻 − 0.2（chapter-card / end-card 用 − 0.3，big-number 用 − 0.3）'}
+        lead = comp.get('card_vars', {}).get('hit')
+        if comp.get('library') == 'motion-cards' and lead is not None:
+            # 重音落在卡内第 hit 秒：片段提前一个默认 hit 开始，让整句先到
+            lead = float(lead or 0.9)
+            timing['data-start'].update({'suggest': round(max(scene_start, first[1] - lead), 2), 'rule': f'卡内第 hit 秒才砸重音：片段从词时刻 − {lead}（卡的默认 hit）开始，整句先出来'})
     base = timing.get('data-start', {}).get('suggest', scene_start)
     for name, spec in (comp.get('slots') or {}).items():
         if spec.get('from') == 'item_times':
-            items = draft.get('steps') or draft.get('leftItems') or ''
+            items = draft.get('steps') or draft.get('leftItems') or draft.get('items') or ''
             items = items.split('|') if isinstance(items, str) else items
             right = draft.get('rightItems', '')
             right = right.split('|') if isinstance(right, str) else right
@@ -372,6 +414,14 @@ def draft_timing(comp, draft, found, cue_words, stream, scene_start):
                 t = find_word(stream, item[:2], base)
                 cues.append(round(t - base, 2) if t is not None else None)
             timing['cues'] = {'values': cues, 'note': 'None = 词没找到，手动定；相对组件 data-start 的秒数'}
+            if comp.get('library') == 'motion-cards' and cues and all(c is not None for c in cues):
+                draft['cues'] = ','.join(str(c) for c in cues)
+        if spec.get('from') == 'hit_time':
+            word = draft.get('key') or (cue_words[0] if cue_words else None)
+            t = find_word(stream, word, base) if word else None
+            timing['hit'] = {'word': word, 'suggest': round(t - base, 2) if t is not None else None, 'note': '重音词被说出的时刻，相对片段 data-start'}
+            if t is not None:
+                draft['hit'] = round(t - base, 2)
         if spec.get('from') == 'pointer_time':
             hit = next((h for it in found if it['id'] == 'point' for h in it['hits']), None)
             t = find_word(stream, hit, base) if hit else None
@@ -381,7 +431,7 @@ def draft_timing(comp, draft, found, cue_words, stream, scene_start):
 
 # ---------- 主流程 ----------
 def suggest(text, context, limit=3, include_hidden=False, transcript=None):
-    intents, brand, lib, comps = load_libraries(include_hidden)
+    intents, brand, cards, comps = load_libraries(include_hidden)
     cue_words = context.get('cue_words') or []
     position = context.get('position') or 'mid'
     found = detect_intents(text, intents, cue_words, position)
@@ -391,10 +441,6 @@ def suggest(text, context, limit=3, include_hidden=False, transcript=None):
     overlays = []
     for it in found:
         for o in by_id[it['id']].get('overlays', []):
-            if o not in overlays:
-                overlays.append(o)
-    for it in found:
-        for o in lib.get('overlays_by_intent', {}).get(it['id'], []):
             if o not in overlays:
                 overlays.append(o)
 
@@ -447,7 +493,14 @@ def suggest(text, context, limit=3, include_hidden=False, transcript=None):
         meta = r.pop('_meta')
         draft, overflow, todo = draft_slots(meta, text, found, cue_words, context)
         timing = draft_timing(meta, draft, found, cue_words, stream, scene_start)
-        candidates.append({**r, 'use': meta.get('use') or meta.get('phrases'), 'slots': draft, 'overflow': overflow, 'todo': todo, 'timing': timing})
+        cand = {**r, 'use': meta.get('use') or meta.get('phrases'), 'slots': draft, 'overflow': overflow, 'todo': todo, 'timing': timing}
+        if meta.get('library') == 'motion-cards':
+            values = {**{k: v for k, v in meta.get('card_vars', {}).items()}, **{k: v for k, v in draft.items() if v not in ('', None, [])}}
+            cand['card'] = {'doc': str(CARDS_DIR / 'cards' / meta['id'] / 'card.md'), 'strip': str(CARDS_DIR / 'cards' / meta['id'] / 'strip.jpg'),
+                            'install': f'node {CARDS_DIR.as_posix()}/tools/cards.mjs use <项目>/hyperframes {meta["id"]}',
+                            'slot_seconds': meta.get('slot'), 'energy': meta.get('energy'), 'needs': meta.get('needs'),
+                            'variable_values': values}
+        candidates.append(cand)
     for r in ranked[limit:]:
         r.pop('_meta', None)
     warnings = [w for c in candidates for w in c['warnings']]
@@ -469,23 +522,21 @@ def suggest(text, context, limit=3, include_hidden=False, transcript=None):
         'candidates': candidates,
         'more': [{'library': r['library'], 'id': r['id'], 'score': r['score']} for r in ranked[limit:limit + 5]],
         'warnings': warnings,
-        'next': '候选不是结论：看预览、按本期内容填槽位，超字数的按 strategy 处理；卡点用 timing 里的建议值再听一遍。decision=custom 时用 scaffold 起骨架现场画。',
+        'next': '候选不是结论：动效卡先看 card.strip 的连拍图和 card.doc 的命门、已知坑，再用 card.install 装进项目，把 card.variable_values 写进 data-variable-values；品牌包组件按槽位填。超字数的按 strategy 处理，卡点用 timing 的建议值再听一遍。decision=custom 时用 scaffold 起骨架现场画。',
     }
 
 
 # ---------- 现场做一镜 ----------
 def custom_brief(text, found, ranked, context, by_id):
-    """两套库都表达不了时的出口。给出为什么、这一镜要画什么（从意图和旁白推），以及骨架命令。"""
+    """品牌包和动效卡库都表达不了时的出口。给出为什么、这一镜要画什么（从意图和旁白推），以及骨架命令。"""
     structural = [it for it in found if not by_id[it['id']].get('no_component_default') and it['score'] >= 0.7]
     top = ranked[0] if ranked else None
     reasons = []
     if structural and not ranked:
-        reasons.append('识别到结构性意图（' + '、'.join(it['name'] for it in structural[:2]) + '）但两套库没有对应组件')
+        reasons.append('识别到结构性意图（' + '、'.join(it['name'] for it in structural[:2]) + '）但品牌包和动效卡库都没有对应的')
     has_brand = any(r['library'] == 'brand-kit' for r in ranked[:3])
     if top and top['score'] < 0.8 and not has_brand:
         reasons.append(f"最好的候选 {top['id']} 也只有 {top['score']} 分（低于 0.8），前三里也没有品牌包组件")
-    if top and not has_brand and top['library'] == 'component-library' and not any('主题词' in w for w in top['why']) and top.get('role') in ('replica', 'fullscreen'):
-        reasons.append(f"{top['id']} 是按意图撞上的，旁白里没有它的主题词")
     if context.get('want') == 'custom':
         reasons.append('分镜写明要定制镜头')
     cl = clauses(text)
@@ -498,7 +549,7 @@ def custom_brief(text, found, ranked, context, by_id):
     }
     cmd = 'python -X utf8 <skill>/scripts/shot_semantics.py scaffold --project <项目> --scene <镜号> --name <英文短名>'
     return {'recommended': bool(reasons), 'why': '；'.join(reasons) if reasons else '现有候选够用；想定制也可以用 scaffold 起骨架', 'brief': brief, 'scaffold': cmd,
-            'promote': '同一种定制镜头在两期以上出现，就做成品牌包 / 组件库的正式组件（补 semantics 元数据）'}
+            'promote': '同一种定制镜头在两期以上出现，就照 motion-cards/SPEC.md 做成卡库里的新卡（写好 intents，lint + verify 通过）'}
 
 
 def scaffold(project, scene, name, text=None, brief=None):
@@ -573,7 +624,7 @@ def build_dataset(project, out):
 def replay(dataset, labels, out, include_hidden=False, with_intent=False):
     data = load_json(dataset)
     lab = load_json(labels)['labels'] if labels else {}
-    intents, brand, lib, comps = load_libraries(include_hidden)
+    intents, brand, cards, comps = load_libraries(include_hidden)
     comp_intents = {c['id']: c['intents'] for c in comps}
     results, used, real, declared = [], [], [], []
     prev = []
@@ -619,7 +670,7 @@ def replay(dataset, labels, out, include_hidden=False, with_intent=False):
 
 
 def check():
-    intents, brand, lib, comps = load_libraries(include_hidden=True)
+    intents, brand, cards, comps = load_libraries()
     ids = {it['id'] for it in intents['intents']}
     errors = []
     for it in intents['intents']:
@@ -628,13 +679,17 @@ def check():
                 re.compile(p)
             except re.error as exc:
                 errors.append(f'intents.json {it["id"]} 正则错误：{p} → {exc}')
-    for lib_name, meta in (('brand-kit', brand), ('component-library', lib)):
-        for cid, rec in meta['components'].items():
-            for i in rec.get('intents', []):
-                if i not in ids:
-                    errors.append(f'{lib_name} {cid} 引用了不存在的意图 {i}')
-            if rec.get('status') not in ('core', 'episode', 'legacy', 'hidden-platform'):
-                errors.append(f'{lib_name} {cid} status 非法：{rec.get("status")}')
+    for cid, rec in brand['components'].items():
+        for i in rec.get('intents', []):
+            if i not in ids:
+                errors.append(f'brand-kit {cid} 引用了不存在的意图 {i}')
+    for card in cards.get('cards', []):
+        for i in card.get('intents') or []:
+            if i not in ids:
+                errors.append(f'motion-cards {card["id"]} 引用了不存在的意图 {i}')
+        if not (CARDS_DIR / 'cards' / card['id'] / 'demo.html').exists():
+            errors.append(f'motion-cards 索引里的 {card["id"]} 没有 demo.html（重跑 cards.mjs index）')
+    covered = {i for c in comps for i in c['intents']}
     for k, v in brand.get('overlap_with_library', {}).items():
         if k.startswith('$'):
             continue
@@ -642,24 +697,15 @@ def check():
             errors.append(f'overlap_with_library 引用了不存在的意图 {k}')
         if v.get('prefer') not in brand['components']:
             errors.append(f'overlap_with_library.{k}.prefer 不是品牌包组件：{v.get("prefer")}')
-    index = load_json(LIB_DIR / 'director-index.json')
-    known = {c['id'] for c in index['components']} | {p['id'] for p in index.get('presentations', [])}
-    for cid in lib['components']:
-        if cid not in known:
-            errors.append(f'component-library 元数据里的 {cid} 不在 director-index.json')
-    for cid in known:
-        if cid not in lib['components']:
-            errors.append(f'director-index 里的 {cid} 没有语义元数据')
-    for f in (BRAND_DIR / 'src' / 'components').glob('*.html'):
+    for f in (BRAND_DIR / 'src' / 'components').glob('*.html') if brand['components'] else []:
         if f.stem not in brand['components']:
             errors.append(f'brand-kit 组件 {f.stem} 没有语义元数据')
     for cid in brand['components']:
         if not (BRAND_DIR / 'src' / 'components' / f'{cid}.html').exists():
             errors.append(f'brand-kit 元数据里的 {cid} 没有源文件')
-    from collections import Counter
     return {'ok': not errors, 'errors': errors, 'intents': len(ids), 'brand_components': len(brand['components']),
-            'library_status': dict(Counter(r.get('status') for r in lib['components'].values())),
-            'shot_candidates': sum(1 for c in comps if c['library'] == 'component-library')}
+            'cards': len(cards.get('cards', [])), 'card_candidates': sum(1 for c in comps if c['library'] == 'motion-cards'),
+            'intents_without_candidates': sorted(ids - covered)}
 
 
 def main():
@@ -683,7 +729,7 @@ def main():
     s.add_argument('--chapter-start', action='store_true', help='分镜里这一镜是章节起点')
     s.add_argument('--intent', help='分镜声明的讲解意图 id（EDIT 镜头的 intent 字段）；声明后排第一')
     s.add_argument('--want', choices=['custom'], help='分镜写明这一镜要定制：直接给 custom 结论和简报')
-    s.add_argument('--include-hidden', action='store_true')
+    s.add_argument('--include-hidden', action='store_true', help=argparse.SUPPRESS)
     s.add_argument('--out')
     sc = sub.add_parser('scaffold', help='现场做一镜：把品牌包 custom-shot 骨架复制成项目组件')
     sc.add_argument('--project', required=True)
@@ -698,7 +744,7 @@ def main():
     r.add_argument('--dataset', required=True)
     r.add_argument('--labels')
     r.add_argument('--out')
-    r.add_argument('--include-hidden', action='store_true')
+    r.add_argument('--include-hidden', action='store_true', help=argparse.SUPPRESS)
     r.add_argument('--with-intent', action='store_true', help='把标准答案组件的主意图当作分镜声明传入（测“分镜标了 intent 时”的命中率）')
     sub.add_parser('check')
     sub.add_parser('intents')

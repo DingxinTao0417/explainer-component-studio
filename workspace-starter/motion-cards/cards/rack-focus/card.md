@@ -2,6 +2,8 @@
 id: rack-focus
 name: 焦点转移
 group: 镜头运动
+type: evidence
+intents: compare,point
 one_line: 前景清楚、后景虚着停一秒，然后 0.7 秒内两层的虚实对调，同时前后层各往相反方向挪一二十像素
 use_when: 旁白的注意力从“谁在看”转到“看的是什么”，或者从一个东西转到它背后的另一个东西，而你不想切镜
 energy: 低

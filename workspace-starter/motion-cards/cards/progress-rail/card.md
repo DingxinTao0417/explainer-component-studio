@@ -2,6 +2,8 @@
 id: progress-rail
 name: 章节进度轨
 group: 标题与章节
+type: structure
+intents: chapter,steps
 one_line: 顶部一条分段的轨道，刚走完的那段先暗下去、标签缩回，当前段再从左到右填满，它的标签放大变亮
 use_when: 一期内容有 3–5 个并列的段落，每次换段时用 2–3 秒告诉观众“走到哪了”；也可以整期常驻在画面顶上
 energy: 低

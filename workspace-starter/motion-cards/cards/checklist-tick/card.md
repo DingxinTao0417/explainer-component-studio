@@ -2,6 +2,8 @@
 id: checklist-tick
 name: 清单逐条勾
 group: 结构与流程
+type: structure
+intents: steps,caution
 one_line: 一列清单先灰着摆好，旁白确认到哪一条，那一条的方框填色、勾一笔画出、文字变白；最后一条勾完整列轻轻顿一下
 use_when: 旁白在逐条确认（做到了哪几件事、检查项、回顾要点），每条是一个短句，条目本身观众已经见过或一眼能懂
 energy: 中

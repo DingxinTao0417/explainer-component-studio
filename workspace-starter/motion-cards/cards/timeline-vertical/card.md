@@ -2,6 +2,8 @@
 id: timeline-vertical
 name: 竖时间线
 group: 结构与流程
+type: structure
+intents: steps,process
 one_line: 一条竖线从上往下长，长到哪个节点，那个节点的圆点就亮起，文字从线里被推出来
 use_when: 旁白按时间或阶段往下讲（第一天、第一周、第一个月；过去、现在、以后），每个阶段一个短语
 energy: 中

@@ -2,6 +2,8 @@
 id: subscribe-cta
 name: 行动号召
 group: 人物与口播
+type: structure
+intents: outro
 one_line: 一行里的三样东西按阅读顺序先后到：图标跳一下并晃几下，一句话滑出，箭头自己画向按钮、按钮随后弹出；两秒后图标、箭头、按钮按同样的顺序再轻轻提醒一遍
 use_when: 片尾或一段讲完的收口，需要一句明确的“接下来请你做什么”
 energy: 中

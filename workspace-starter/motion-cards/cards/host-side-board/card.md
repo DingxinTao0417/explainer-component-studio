@@ -2,6 +2,8 @@
 id: host-side-board
 name: 人旁白板
 group: 人物与口播
+type: host
+intents: host,steps
 one_line: 居中的主持人先向一侧滑开并略微缩小，他刚离开的位置长出一块内容板，板上的条目一条条跟着出现
 use_when: 主持人要一边讲一边列清单（准备什么、分几步、注意哪几点），条目是跟着旁白一条条念出来的
 energy: 中

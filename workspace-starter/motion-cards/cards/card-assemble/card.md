@@ -2,6 +2,8 @@
 id: card-assemble
 name: 信息卡拼装
 group: 结构与流程
+type: structure
+intents: definition,categories
 one_line: 一张信息卡的边框先一笔画出来，里面是灰色的占位条；然后标题、图标、几行要点、底部标签依次落进各自的位置
 use_when: 旁白要介绍一个概念或一个工具的“身份卡”：先报名字，再说两到五个要点，最后给它归个类
 energy: 中

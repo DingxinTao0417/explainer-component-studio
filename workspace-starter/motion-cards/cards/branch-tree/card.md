@@ -2,6 +2,8 @@
 id: branch-tree
 name: 分叉树
 group: 结构与流程
+type: structure
+intents: branch
 one_line: 顶上一个问题，向下一条条画出枝线，每条枝线画到底时它的选项才出现；最后其中一个选项被填亮放大，其余变暗
 use_when: 旁白在说“遇到这种情况，有几条路可走……我们选这一条”，选项二到五个，各是一个短语
 energy: 中

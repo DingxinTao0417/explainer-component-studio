@@ -2,6 +2,8 @@
 id: iris-close
 name: 圈入圈出
 group: 转场
+type: structure
+intents: transition
 one_line: 画面四周的暗幕向指定的一点收成一个越来越小的圆直到全黑，停两帧，再从同一点张开露出下一镜
 use_when: 一段内容讲完要收尾，或者要把注意力先收到画面里的一个点、再从那个点展开下一段
 energy: 中

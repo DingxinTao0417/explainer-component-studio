@@ -2,6 +2,8 @@
 id: reaction-bubble
 name: 反应气泡
 group: 人物与口播
+type: host
+intents: question,host
 one_line: 人物头的两侧接连冒出两三个带尖角的气泡，每个都从自己的尖角里弹出来、晃一下停住，挂一会儿再往上飘着缩没，人物每挨一个就轻轻一沉
 use_when: 主持人刚说了一句反常识的话，要替观众把心里的疑问或吐槽说出来，再接着回答
 energy: 高
