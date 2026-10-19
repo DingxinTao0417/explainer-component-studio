@@ -38,7 +38,7 @@
 | 工作区 | `<工作区>`（放 brand-kit、手法库、projects 的目录） |
 | 每期项目 | `<工作区>/projects/<YYYYMMDD>_<主题简称>/` |
 | skill 脚本 | `<skills目录>/science-video-director/scripts/` |
-| 动效卡库 | `<工作区>/motion-cards`（108 张卡；画廊 `node tools/cards.mjs serve` → `http://localhost:3040/motion-cards/gallery/`；规格 SPEC.md） |
+| 动效卡库 | `<工作区>/motion-cards`（114 张卡；画廊 `node tools/cards.mjs serve` → `http://localhost:3040/motion-cards/gallery/`；规格 SPEC.md） |
 | 品牌包 | `<工作区>/brand-kit`（12 个组件、四种调性、字体、音效映射 sfx-map.json、SOUND.md、插画主持人提示词 assets/host/、角色声音库 voices/） |
 | 手法库 | `<工作区>/手法库`（INDEX.md、cards/T001–T030、拆解/） |
 | 参考视频 | 用户喜欢的视频放 `<工作区>/待拆解视频/`，拆完移到 `已拆解视频/`（frames.py --compare 从这里取参考片） |

@@ -156,7 +156,7 @@ function harness(dir, ids) {
     mkdirSync(join(dir, "motion-cards", "cards", id), { recursive: true });
     cpSync(join(CARDS, id, "demo.html"), join(dir, "motion-cards", "cards", id, "demo.html"));
     clips += `      <div id="x-${id}" class="clip" data-composition-id="${id}" data-composition-src="motion-cards/cards/${id}/demo.html" data-start="${t}" data-duration="${m.slot}" data-track-index="1" data-width="1920" data-height="1080"></div>\n`;
-    plan.push({ id, at: m.frames.map((f) => +(t + f).toFixed(2)), hero: m.frames.indexOf(m.hero) >= 0 ? m.frames.indexOf(m.hero) : 3 });
+    plan.push({ id, start: t, end: t + m.slot, at: m.frames.map((f) => +(t + f).toFixed(2)), hero: m.frames.indexOf(m.hero) >= 0 ? m.frames.indexOf(m.hero) : 3 });
     t += m.slot;
   }
   writeFileSync(join(dir, "index.html"), `<!doctype html>
@@ -167,7 +167,7 @@ function harness(dir, ids) {
     <script src="motion-cards/lib/gsap.min.js"></script>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #000; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #fff; }
       #root { position: relative; width: 100%; height: 100%; overflow: hidden; }
       #root > .clip { position: absolute; inset: 0; }
     </style>
@@ -200,7 +200,12 @@ function verify(arg) {
     const dir = join(work, "b" + i);
     const plan = harness(dir, batch);
     const chk = run(`${CLI} check`, dir).split(/\r?\n/).filter((l) => /✗|⚠/.test(l) && !/Check failed/.test(l));
-    for (const l of chk) { failed++; console.log(l.trim().replace(/ > div:nth-of-type\(1\)/g, "").slice(0, 420)); }
+    // name the card each problem belongs to: the batch time t= falls inside exactly one card's window
+    for (const l of chk) {
+      failed++;
+      const tm = /t=([\d.]+)/.exec(l), hit = tm && plan.find((p) => +tm[1] >= p.start && +tm[1] < p.end);
+      console.log((hit ? `[${hit.id} 卡内 ${(+tm[1] - hit.start).toFixed(2)}s] ` : "") + l.trim().replace(/ > div:nth-of-type\(1\)/g, "").slice(0, 420));
+    }
     const at = "0.5," + plan.flatMap((p) => p.at).join(",");
     run(`${CLI} snapshot --at ${at} --no-end --timeout 30000 -o snapshots`, dir);
     const shots = existsSync(join(dir, "snapshots")) ? readdirSync(join(dir, "snapshots")).filter((f) => /^frame-\d+/.test(f)).sort().slice(1) : [];
@@ -209,7 +214,8 @@ function verify(arg) {
     writeFileSync(join(dir, "jobs.json"), JSON.stringify(jobs));
     try { execFileSync(PY, ["-X", "utf8", join(LIB, "tools", "strip.py"), join(dir, "jobs.json")], { stdio: "inherit" }); } catch (e) { failed++; }
   }
-  if (!process.env.MC_WORK) rmSync(work, { recursive: true, force: true });
+  // Windows can hold a just-closed browser profile for a moment: retry, and never fail the run over the temp folder
+  if (!process.env.MC_WORK) try { rmSync(work, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 }); } catch (e) {}
   console.log(failed ? `\nverify：${failed} 条要处理（上面每一行）` : `verify 通过：${ids.length} 张卡，strip.jpg / thumb.jpg 已更新`);
   return failed;
 }

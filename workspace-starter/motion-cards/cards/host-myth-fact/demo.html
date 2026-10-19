@@ -1,0 +1,140 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"lead","type":"string","label":"引子（可空）","default":"很多人以为"},
+    {"id":"myth","type":"string","label":"错的说法（会被划掉）","default":"AI 在思考"},
+    {"id":"fact","type":"string","label":"对的说法","default":"其实它在猜下一个字"},
+    {"id":"factKey","type":"string","label":"对的说法里标成强调色的一段（可空）","default":"猜下一个字"},
+    {"id":"strike","type":"number","label":"开始划掉的时刻（秒）","default":1.3,"min":1,"max":20,"step":0.05},
+    {"id":"reveal","type":"number","label":"对的说法出现的时刻（秒）","default":2.1,"min":1.5,"max":20,"step":0.05},
+    {"id":"host","type":"string","label":"人物素材（透明底视频或图片，从项目根目录写起）","default":"motion-cards/lib/samples/presenter.png"},
+    {"id":"hostKind","type":"enum","label":"人物素材是什么","default":"auto","options":[{"value":"auto","label":"按扩展名自动判断"},{"value":"video","label":"视频"},{"value":"image","label":"图片"},{"value":"none","label":"不放人（人在别的层，这里只留字）"}]},
+    {"id":"side","type":"enum","label":"人在哪一边","default":"right","options":[{"value":"right","label":"右边，字在左"},{"value":"left","label":"左边，字在右"}]},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>host-myth-fact · 口播纠错</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="host-myth-fact-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .hm { position: absolute; inset: 0; }
+        .hm-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .hm-host { position: absolute; bottom: 0; left: 910px; width: 1100px; height: 900px; object-fit: contain; object-position: 50% 100%; }
+        .hm-txt { position: absolute; left: 140px; top: 300px; width: 760px; }
+        .hm-lead { display: block; font-size: 52px; font-weight: 700; line-height: 1.3; color: var(--k-muted); white-space: nowrap; }
+        .hm-myth { display: block; width: fit-content; margin-top: 14px; font-size: 84px; font-weight: 900; line-height: 1.25; color: var(--k-muted); white-space: nowrap; }
+        .hm-fact { display: block; margin-top: 40px; font-size: 84px; font-weight: 900; line-height: 1.25; white-space: nowrap; }
+        .hm-key { color: var(--k-accent); }
+        .hm-svg { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; }
+        .hm-cut { fill: none; stroke: var(--k-accent); stroke-width: 9; stroke-linecap: round; }
+      </style>
+
+      <div id="root" data-composition-id="host-myth-fact" data-width="1920" data-height="1080">
+        <div class="hm">
+          <div class="hm-bg"></div>
+          <video id="host-myth-fact-host" class="hm-host hm-host-v" data-var-src="host" src="motion-cards/lib/samples/presenter.png" data-start="0" muted playsinline></video>
+          <img class="hm-host hm-host-i" data-var-src="host" src="motion-cards/lib/samples/presenter.png" alt="" />
+          <div class="hm-txt">
+            <span class="hm-lead">很多人以为</span>
+            <span class="hm-myth" data-layout-allow-occlusion>AI 在思考</span>
+            <span class="hm-fact"><span class="hm-pre">其实它在</span><span class="hm-key">猜下一个字</span><span class="hm-post"></span></span>
+          </div>
+          <svg class="hm-svg" viewBox="0 0 1920 1080" aria-hidden="true">
+            <path class="hm-cut" d="M 128 474 Q 340 446 555 452" />
+          </svg>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { leadAt: 0.25, mythAt: 0.55, rise: 0.45, cut: 0.3, over: 12, dim: 0.3, factRise: 0.45, gapMin: 0.5, fsMax: 84,
+            hostW: 1100, hostX: { right: 1460, left: 460 }, txtX: { right: 140, left: 1020 }, txtW: 760, txtTop: 300 };
+          var v = { lead: "很多人以为", myth: "AI 在思考", fact: "其实它在猜下一个字", factKey: "猜下一个字", strike: 1.3, reveal: 2.1,
+            host: "motion-cards/lib/samples/presenter.png", hostKind: "auto", side: "right", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && (got[k] !== "" || k === "lead" || k === "factKey" || k === "host")) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".hm");
+          var q = function (s) { return root.querySelector(s); };
+          var cs = getComputedStyle(root);
+          var tok = function (name, d) { return (cs.getPropertyValue("--k-" + name) || "").trim() || d; };
+          var INK = tok("ink", "#15171c"), MUTED = tok("muted", "#6b7280");
+          if (String(v.backdrop) === "off") q(".hm-bg").style.display = "none";
+
+          // the presenter: a video, a still, or nothing (when the host already runs on its own layer in the project)
+          var src = String(v.host || ""), kind = String(v.hostKind || "auto"), side = String(v.side) === "left" ? "left" : "right";
+          if (kind === "auto") kind = !src ? "none" : /\.(png|jpe?g|webp|gif|avif|svg)([?#]|$)/i.test(src) ? "image" : "video";
+          var vid = q(".hm-host-v"), img = q(".hm-host-i");
+          if (kind !== "video") vid.parentNode.removeChild(vid);
+          if (kind !== "image") img.parentNode.removeChild(img);
+          Array.prototype.forEach.call(root.querySelectorAll(".hm-host"), function (el) { el.style.left = CFG.hostX[side] - CFG.hostW / 2 + "px"; });
+
+          var em = function (s) { var w = 0; for (var c = 0; c < s.length; c++) w += s.charCodeAt(c) > 255 ? 1 : 0.6; return Math.max(w, 1); };
+          var txt = q(".hm-txt"), lead = q(".hm-lead"), myth = q(".hm-myth"), fact = q(".hm-fact");
+          var sLead = String(v.lead || ""), sMyth = String(v.myth), sFact = String(v.fact), sKey = String(v.factKey || "");
+          var at = sKey ? sFact.indexOf(sKey) : -1;
+          if (at < 0) { sKey = ""; at = sFact.length; }
+          var x0 = CFG.txtX[side];
+          txt.style.left = x0 + "px";
+          txt.style.top = CFG.txtTop + "px";
+          lead.textContent = sLead;
+          if (!sLead) lead.style.display = "none";
+          lead.style.fontSize = Math.floor(Math.min(52, CFG.txtW / em(sLead || "x"))) + "px";
+          myth.textContent = sMyth;
+          q(".hm-pre").textContent = sFact.slice(0, at);
+          q(".hm-key").textContent = sKey;
+          q(".hm-post").textContent = sFact.slice(at + sKey.length);
+          // the wrong and the right claim share one size, so the eye compares them line for line
+          var fs = Math.floor(Math.min(CFG.fsMax, CFG.txtW / em(sMyth), CFG.txtW / em(sFact)));
+          myth.style.fontSize = fs + "px";
+          fact.style.fontSize = fs + "px";
+
+          // the cut runs a little past both ends of the wrong claim and climbs slightly, like a quick pen stroke
+          var mx = x0 + myth.offsetLeft, my = CFG.txtTop + myth.offsetTop, mw = myth.offsetWidth, mh = myth.offsetHeight;
+          var r = function (x) { return Math.round(x * 10) / 10; };
+          var s = [mx - CFG.over, my + mh * 0.58], e = [mx + mw + CFG.over, my + mh * 0.47], c = [(s[0] + e[0]) / 2, Math.min(s[1], e[1]) - 0.08 * mh];
+          var cut = q(".hm-cut");
+          cut.setAttribute("d", "M " + r(s[0]) + " " + r(s[1]) + " Q " + r(c[0]) + " " + r(c[1]) + " " + r(e[0]) + " " + r(e[1]));
+          var len = cut.getTotalLength();
+          cut.style.strokeDasharray = len + " " + (len + 40);
+
+          var strike = Math.max(1, Number(v.strike) || 1.3);
+          var reveal = Math.max(strike + CFG.cut + CFG.gapMin, Number(v.reveal) || 2.1);
+          var tl = gsap.timeline({ paused: true });
+          if (sLead) tl.fromTo(lead, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: CFG.rise, ease: "power3.out" }, CFG.leadAt);
+          tl.fromTo(myth, { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: CFG.rise, ease: "power3.out" }, sLead ? CFG.mythAt : CFG.leadAt);
+          // the wrong claim is said in full ink, crossed out in one stroke, and only then steps back to grey
+          tl.fromTo(myth, { color: INK }, { color: MUTED, duration: CFG.dim, ease: "power1.out" }, strike + CFG.cut);
+          tl.fromTo(cut, { strokeDashoffset: len + 20 }, { strokeDashoffset: 0, duration: CFG.cut, ease: "power2.out" }, strike);
+          tl.fromTo(fact, { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: CFG.factRise, ease: "power3.out" }, reveal);
+          window.__timelines["host-myth-fact"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

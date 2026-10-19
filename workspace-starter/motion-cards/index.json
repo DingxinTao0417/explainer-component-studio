@@ -1,5 +1,5 @@
 {
- "count": 108,
+ "count": 114,
  "intents": {
   "hook": "开场钩子",
   "chapter": "章节进入",
@@ -58,7 +58,7 @@
   },
   {
    "name": "人物与口播",
-   "count": 8
+   "count": 14
   },
   {
    "name": "结构与流程",
@@ -1693,7 +1693,7 @@
      "id": "host",
      "type": "string",
      "label": "头像图地址（透明底人物或方形头像）",
-     "default": "motion-cards/lib/samples/host.png"
+     "default": "motion-cards/lib/samples/presenter-bust.png"
     },
     {
      "id": "who",
@@ -1935,6 +1935,324 @@
    ]
   },
   {
+   "id": "host-arrows-focus",
+   "name": "口播双箭头",
+   "group": "人物与口播",
+   "type": "host",
+   "intents": [
+    "host",
+    "point",
+    "keyword"
+   ],
+   "numbers": null,
+   "chart": null,
+   "one_line": "主持人站在一侧说话，另一侧两行字先后升起；说到重点时重点变成强调色，两支手绘箭头从上下两个方向错开一拍画过去，指住它",
+   "use_when": "口播镜头里，旁白一句话里有一个必须被记住的短语（几点、一个数、一个关键词），而且主持人正在画面里",
+   "energy": "中",
+   "needs": [
+    "人",
+    "文"
+   ],
+   "overlay": true,
+   "slot": 4,
+   "hero": 3,
+   "sfx": "draw=draw, hit=pop",
+   "pairs_with": [
+    "host-quote-hold",
+    "host-circle-note"
+   ],
+   "vars": [
+    {
+     "id": "line1",
+     "type": "string",
+     "label": "第一行：铺垫（可空）",
+     "default": "今天只要你"
+    },
+    {
+     "id": "line2",
+     "type": "string",
+     "label": "第二行：带重点的那句",
+     "default": "记住这 3 点就够了"
+    },
+    {
+     "id": "key",
+     "type": "string",
+     "label": "箭头指住的重点（第二行里的一段）",
+     "default": "这 3 点"
+    },
+    {
+     "id": "hit",
+     "type": "number",
+     "label": "箭头画到重点的时刻（秒）",
+     "default": 1.5
+    },
+    {
+     "id": "host",
+     "type": "string",
+     "label": "人物素材（透明底视频或图片，从项目根目录写起）",
+     "default": "motion-cards/lib/samples/presenter.png"
+    },
+    {
+     "id": "hostKind",
+     "type": "enum",
+     "label": "人物素材是什么",
+     "default": "auto"
+    },
+    {
+     "id": "side",
+     "type": "enum",
+     "label": "人在哪一边",
+     "default": "right"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "host-brush-mark",
+   "name": "口播笔刷",
+   "group": "人物与口播",
+   "type": "host",
+   "intents": [
+    "host",
+    "keyword",
+    "point"
+   ],
+   "numbers": null,
+   "chart": null,
+   "one_line": "主持人站在左边说话，右边两行字升起；说到重点时一笔强调色的笔刷从左往右刷在重点底下，盖满后重点一下子翻成反白字，轻轻弹一下",
+   "use_when": "口播镜头里，一句话的重音落在一个短语上，想要比箭头、圈更有力的一下（态度、立场、反常识的那个词），而且主持人正在画面里",
+   "energy": "高",
+   "needs": [
+    "人",
+    "文"
+   ],
+   "overlay": true,
+   "slot": 4,
+   "hero": 3,
+   "sfx": "hit=whoosh, flip=pop",
+   "pairs_with": [
+    "host-quote-hold",
+    "host-corner-frame"
+   ],
+   "vars": [
+    {
+     "id": "line1",
+     "type": "string",
+     "label": "第一行：铺垫（可空）",
+     "default": "真正拉开差距的"
+    },
+    {
+     "id": "line2",
+     "type": "string",
+     "label": "第二行：带重点的那句",
+     "default": "是你提问的方式"
+    },
+    {
+     "id": "key",
+     "type": "string",
+     "label": "刷上笔刷的重点（第二行里的一段）",
+     "default": "提问的方式"
+    },
+    {
+     "id": "hit",
+     "type": "number",
+     "label": "笔刷落下的时刻（秒）",
+     "default": 1.4
+    },
+    {
+     "id": "host",
+     "type": "string",
+     "label": "人物素材（透明底视频或图片，从项目根目录写起）",
+     "default": "motion-cards/lib/samples/presenter.png"
+    },
+    {
+     "id": "hostKind",
+     "type": "enum",
+     "label": "人物素材是什么",
+     "default": "auto"
+    },
+    {
+     "id": "side",
+     "type": "enum",
+     "label": "人在哪一边",
+     "default": "left"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "host-circle-note",
+   "name": "口播圈重点",
+   "group": "人物与口播",
+   "type": "host",
+   "intents": [
+    "host",
+    "keyword",
+    "point"
+   ],
+   "numbers": null,
+   "chart": null,
+   "one_line": "主持人站在一侧说话，另一侧两行字升起；说到重点时一支笔把它圈起来，圈多绕一点收尾，随后在圈下面拖出一笔，写上一句手写批注",
+   "use_when": "口播镜头里，旁白一句话里有一个词要被记住，而且主持人还要顺口补一句旁白（“不是你以为的那个”“占了大头”），主持人正在画面里",
+   "energy": "中",
+   "needs": [
+    "人",
+    "文"
+   ],
+   "overlay": true,
+   "slot": 4,
+   "hero": 3,
+   "sfx": "hit=draw, note=pop",
+   "pairs_with": [
+    "host-arrows-focus",
+    "host-quote-hold"
+   ],
+   "vars": [
+    {
+     "id": "line1",
+     "type": "string",
+     "label": "第一行：铺垫（可空）",
+     "default": "做好一个模型"
+    },
+    {
+     "id": "line2",
+     "type": "string",
+     "label": "第二行：带重点的那句",
+     "default": "最难的其实是数据"
+    },
+    {
+     "id": "key",
+     "type": "string",
+     "label": "被圈住的重点（第二行里的一段）",
+     "default": "数据"
+    },
+    {
+     "id": "note",
+     "type": "string",
+     "label": "圈下面的手写批注（可空，6 个字以内）",
+     "default": "不是算力"
+    },
+    {
+     "id": "hit",
+     "type": "number",
+     "label": "开始圈的时刻（秒）",
+     "default": 1.3
+    },
+    {
+     "id": "host",
+     "type": "string",
+     "label": "人物素材（透明底视频或图片，从项目根目录写起）",
+     "default": "motion-cards/lib/samples/presenter.png"
+    },
+    {
+     "id": "hostKind",
+     "type": "enum",
+     "label": "人物素材是什么",
+     "default": "auto"
+    },
+    {
+     "id": "side",
+     "type": "enum",
+     "label": "人在哪一边",
+     "default": "right"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "host-corner-frame",
+   "name": "口播角框",
+   "group": "人物与口播",
+   "type": "host",
+   "intents": [
+    "host",
+    "definition",
+    "keyword"
+   ],
+   "numbers": null,
+   "chart": null,
+   "one_line": "主持人站在一侧说“这个叫……”，另一侧一个大号术语在说出它的那一刻落下，两只角框沿对角线合拢、带一点咬合地锁住它，随后一行小字解释它是什么",
+   "use_when": "口播镜头里，主持人第一次给一个概念起名字（“这种现象叫幻觉”“这一步叫微调”），要让观众记住这个名词，而且主持人正在画面里",
+   "energy": "中",
+   "needs": [
+    "人",
+    "文"
+   ],
+   "overlay": true,
+   "slot": 4,
+   "hero": 3,
+   "sfx": "lock=tick, gloss=none",
+   "pairs_with": [
+    "host-circle-note",
+    "host-quote-hold"
+   ],
+   "vars": [
+    {
+     "id": "lead",
+     "type": "string",
+     "label": "引子（可空）",
+     "default": "这种现象有个名字"
+    },
+    {
+     "id": "term",
+     "type": "string",
+     "label": "被框住的术语（2–6 个字最好）",
+     "default": "幻觉"
+    },
+    {
+     "id": "gloss",
+     "type": "string",
+     "label": "一句话解释（可空）",
+     "default": "模型把编出来的东西说得像真的"
+    },
+    {
+     "id": "hit",
+     "type": "number",
+     "label": "说出术语的时刻（秒）",
+     "default": 1.1
+    },
+    {
+     "id": "host",
+     "type": "string",
+     "label": "人物素材（透明底视频或图片，从项目根目录写起）",
+     "default": "motion-cards/lib/samples/presenter.png"
+    },
+    {
+     "id": "hostKind",
+     "type": "enum",
+     "label": "人物素材是什么",
+     "default": "auto"
+    },
+    {
+     "id": "side",
+     "type": "enum",
+     "label": "人在哪一边",
+     "default": "right"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
    "id": "host-cutout-pop",
    "name": "人物弹入",
    "group": "人物与口播",
@@ -1966,7 +2284,7 @@
      "id": "host",
      "type": "string",
      "label": "抠像人物图地址（透明底，从项目根目录写起）",
-     "default": "motion-cards/lib/samples/host.png"
+     "default": "motion-cards/lib/samples/presenter-bust.png"
     },
     {
      "id": "side",
@@ -1997,6 +2315,167 @@
      "type": "string",
      "label": "旁边的说明（可空）",
      "default": "从零开始，一步一步来"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "host-myth-fact",
+   "name": "口播纠错",
+   "group": "人物与口播",
+   "type": "host",
+   "intents": [
+    "host",
+    "caution",
+    "compare"
+   ],
+   "numbers": null,
+   "chart": null,
+   "one_line": "主持人站在一侧说“很多人以为……”，另一侧那句错的说法先完整出现，被一笔划掉后退成灰色；停半拍，对的说法在它下面升起，关键几个字是强调色",
+   "use_when": "口播镜头里，主持人先摆出一个常见误解再纠正它（“很多人以为……其实……”），而且主持人正在画面里",
+   "energy": "中",
+   "needs": [
+    "人",
+    "文"
+   ],
+   "overlay": true,
+   "slot": 4,
+   "hero": 3,
+   "sfx": "strike=draw, reveal=pop",
+   "pairs_with": [
+    "host-quote-hold",
+    "host-corner-frame"
+   ],
+   "vars": [
+    {
+     "id": "lead",
+     "type": "string",
+     "label": "引子（可空）",
+     "default": "很多人以为"
+    },
+    {
+     "id": "myth",
+     "type": "string",
+     "label": "错的说法（会被划掉）",
+     "default": "AI 在思考"
+    },
+    {
+     "id": "fact",
+     "type": "string",
+     "label": "对的说法",
+     "default": "其实它在猜下一个字"
+    },
+    {
+     "id": "factKey",
+     "type": "string",
+     "label": "对的说法里标成强调色的一段（可空）",
+     "default": "猜下一个字"
+    },
+    {
+     "id": "strike",
+     "type": "number",
+     "label": "开始划掉的时刻（秒）",
+     "default": 1.3
+    },
+    {
+     "id": "reveal",
+     "type": "number",
+     "label": "对的说法出现的时刻（秒）",
+     "default": 2.1
+    },
+    {
+     "id": "host",
+     "type": "string",
+     "label": "人物素材（透明底视频或图片，从项目根目录写起）",
+     "default": "motion-cards/lib/samples/presenter.png"
+    },
+    {
+     "id": "hostKind",
+     "type": "enum",
+     "label": "人物素材是什么",
+     "default": "auto"
+    },
+    {
+     "id": "side",
+     "type": "enum",
+     "label": "人在哪一边",
+     "default": "right"
+    },
+    {
+     "id": "backdrop",
+     "type": "enum",
+     "label": "底",
+     "default": "on"
+    }
+   ]
+  },
+  {
+   "id": "host-quote-hold",
+   "name": "口播金句",
+   "group": "人物与口播",
+   "type": "host",
+   "intents": [
+    "host",
+    "conclusion",
+    "keyword"
+   ],
+   "numbers": null,
+   "chart": null,
+   "one_line": "主持人站在一侧说话，另一侧两三行字踩着旁白逐行升起；最后的金句更粗更大，落定后一支荧光笔从左往右划过它，铺垫退成次要色，整屏停住",
+   "use_when": "口播镜头里，主持人用一两句铺垫引出一句结论，这句话要观众记下来，而且主持人正在画面里",
+   "energy": "低",
+   "needs": [
+    "人",
+    "文"
+   ],
+   "overlay": true,
+   "slot": 4,
+   "hero": 3.2,
+   "sfx": "pen=draw",
+   "pairs_with": [
+    "host-arrows-focus"
+   ],
+   "vars": [
+    {
+     "id": "lines",
+     "type": "string",
+     "label": "几行字（用 | 分隔，2–3 行，最后一行是金句）",
+     "default": "你现在觉得难受|不是因为你不行|是因为你正在走出舒适区"
+    },
+    {
+     "id": "cues",
+     "type": "string",
+     "label": "每行出现的秒数（逗号分隔，不够就均匀排开）",
+     "default": "0.3,1.1,1.9"
+    },
+    {
+     "id": "mark",
+     "type": "number",
+     "label": "给第几行划荧光笔（0 = 最后一行）",
+     "default": 0
+    },
+    {
+     "id": "host",
+     "type": "string",
+     "label": "人物素材（透明底视频或图片，从项目根目录写起）",
+     "default": "motion-cards/lib/samples/presenter.png"
+    },
+    {
+     "id": "hostKind",
+     "type": "enum",
+     "label": "人物素材是什么",
+     "default": "auto"
+    },
+    {
+     "id": "side",
+     "type": "enum",
+     "label": "人在哪一边",
+     "default": "right"
     },
     {
      "id": "backdrop",
@@ -2038,7 +2517,7 @@
      "id": "host",
      "type": "string",
      "label": "人物图地址（透明底，从项目根目录写起）",
-     "default": "motion-cards/lib/samples/host.png"
+     "default": "motion-cards/lib/samples/presenter-bust.png"
     },
     {
      "id": "side",
@@ -2098,7 +2577,7 @@
      "id": "host",
      "type": "string",
      "label": "人物图地址（透明底，从项目根目录写起）",
-     "default": "motion-cards/lib/samples/host.png"
+     "default": "motion-cards/lib/samples/presenter-bust.png"
     },
     {
      "id": "corner",
@@ -2930,7 +3409,7 @@
      "id": "host",
      "type": "string",
      "label": "人物图地址（透明底；压在实拍上时留空）",
-     "default": "motion-cards/lib/samples/host.png"
+     "default": "motion-cards/lib/samples/presenter-bust.png"
     },
     {
      "id": "who",
@@ -3362,7 +3841,7 @@
      "id": "near",
      "type": "string",
      "label": "近层：透明底前景图地址",
-     "default": "motion-cards/lib/samples/host.png"
+     "default": "motion-cards/lib/samples/presenter-bust.png"
     },
     {
      "id": "dist",
@@ -3858,7 +4337,7 @@
      "id": "front",
      "type": "string",
      "label": "前层图片地址（透明底）",
-     "default": "motion-cards/lib/samples/host.png"
+     "default": "motion-cards/lib/samples/presenter-bust.png"
     },
     {
      "id": "fx",
@@ -3991,7 +4470,7 @@
      "id": "host",
      "type": "string",
      "label": "人物图地址（透明底；压在实拍上时留空）",
-     "default": "motion-cards/lib/samples/host.png"
+     "default": "motion-cards/lib/samples/presenter-bust.png"
     },
     {
      "id": "bubbles",
@@ -4866,7 +5345,7 @@
      "id": "host",
      "type": "string",
      "label": "人物图地址（透明底，从项目根目录写起）",
-     "default": "motion-cards/lib/samples/host.png"
+     "default": "motion-cards/lib/samples/presenter-bust.png"
     },
     {
      "id": "side",

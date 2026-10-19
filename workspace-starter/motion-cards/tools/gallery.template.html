@@ -89,7 +89,7 @@
 
   .tile { position: relative; display: grid; grid-template-rows: auto 1fr; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; min-width: 0; }
   .tile:hover { border-color: var(--muted); }
-  .stage { position: relative; aspect-ratio: 16 / 9; max-width: 100%; background: #0d1016 center / cover no-repeat; cursor: pointer; overflow: hidden; }
+  .stage { position: relative; aspect-ratio: 16 / 9; max-width: 100%; background: #f4f5f7 center / cover no-repeat; cursor: pointer; overflow: hidden; }
   /* color-scheme: normal stops a dark page from painting an opaque white backdrop behind the loading demo */
   .stage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; pointer-events: none; color-scheme: normal; opacity: 0; transition: opacity 0.25s; }
   .stage iframe.on { opacity: 1; }
@@ -128,7 +128,7 @@
   .dl-body { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
   .dl-left { padding: 16px; display: grid; gap: 14px; align-content: start; border-right: 1px solid var(--line); min-width: 0; }
   /* 预览高度 = 16:9 画面 + 34px 播放条 */
-  .dl-stage { position: relative; background: #0d1016; border-radius: 8px; overflow: hidden; }
+  .dl-stage { position: relative; background: #f4f5f7; border-radius: 8px; overflow: hidden; }
   .dl-stage::before { content: ""; display: block; padding-top: calc(56.25% + 34px); }
   .dl-stage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; color-scheme: normal; }
   .strip { margin: 0; }
@@ -197,8 +197,8 @@
       <input id="q" type="search" placeholder="搜卡名、用途、动法，比如：数字、对比、录屏、转场" autocomplete="off">
     </label>
     <div class="seg" role="group" aria-label="卡片预览用哪套皮">
-      <button type="button" id="skin-dark" aria-pressed="true">深色皮</button>
-      <button type="button" id="skin-light" aria-pressed="false">浅色皮</button>
+      <button type="button" id="skin-light" aria-pressed="true">浅色皮</button>
+      <button type="button" id="skin-dark" aria-pressed="false">深色皮</button>
     </div>
     <button type="button" class="filter-toggle" id="filter-toggle" aria-expanded="false" aria-controls="rail">筛选</button>
   </div>
@@ -289,8 +289,8 @@
     c._hay = [c.id, c.name, c.one_line, c.use_when, c.group, c.needs.join(" "), c.intents.map(function (k) { return D.intents[k]; }).join(" ")].join(" ").toLowerCase();
     c._doc = (c.doc || "").toLowerCase();
   });
-  var skin = store.get("skin", "dark");
-  if (skin !== "light") skin = "dark";
+  var skin = store.get("skin", "light");
+  if (skin !== "dark") skin = "light";
   var state = { q: "", group: "", energy: "", need: "", intent: "", overlay: false };
   var basket = store.get("basket", []);
   basket = Array.isArray(basket) ? basket.filter(function (id) { return byId[id]; }) : [];

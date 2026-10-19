@@ -20,13 +20,13 @@
         @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
         @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
         #root {
-          --k-bg: var(--mc-bg, #0d1016);
-          --k-panel: var(--mc-panel, #1a202b);
-          --k-ink: var(--mc-ink, #f3f5f8);
-          --k-muted: var(--mc-muted, #8b93a3);
-          --k-accent: var(--mc-accent, #ffcf33);
-          --k-accent-2: var(--mc-accent-2, #4f8cff);
-          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
           --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
           position: absolute;
           inset: 0;
@@ -43,7 +43,8 @@
         .tr-bar { position: absolute; left: 0; bottom: 0; width: 100%; height: 12px; background: var(--k-accent); }
         .tr-dim { position: absolute; inset: 0; background: #05070b; opacity: 0.6; }
         .tr-tag { position: absolute; left: 32px; bottom: 44px; display: block; }
-        .tr-num { display: block; font: 700 40px/48px Consolas, "Courier New", monospace; color: var(--k-accent); }
+        /* the number sits on its own accent chip: text straight on a photo has no reliable contrast in every skin */
+        .tr-num { display: inline-block; margin-bottom: 8px; padding: 0 12px; border-radius: 8px; font: 700 40px/48px Consolas, "Courier New", monospace; background: var(--k-accent); color: var(--k-on-accent); }
         .tr-txt { display: block; font-size: 52px; line-height: 66px; font-weight: 700; color: #fff; white-space: nowrap; text-shadow: 0 2px 14px rgba(0, 0, 0, 0.6); }
       </style>
 

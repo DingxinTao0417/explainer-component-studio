@@ -3,7 +3,7 @@
 做中文科普 / AI 工具讲解视频的一套 AI 助手技能，加一个通用的 HyperFrames 动效卡库。
 
 - **三套技能**：编导与整期制作（[science-video-director](skills/science-video-director/SKILL.md)）、前期写稿与分镜（[science-video-preproduction](skills/science-video-preproduction/SKILL.md)）、H3 单镜头（[h3-science-video](skills/h3-science-video/SKILL.md)）。安装和用法见 [skills/README.md](skills/README.md)。
-- **动效卡库**：108 张卡，品牌包以外所有镜头的动法都从这里来。
+- **动效卡库**：114 张卡，默认白底，品牌包以外所有镜头的动法都从这里来；其中有一组带真人主持人的口播卡。
 - **工作区骨架**：品牌包、手法库、频道复盘的空模板，和一份一步一步的 [工作区初始化指引](WORKSPACE_SETUP.md)。
 
 ## 动效卡库
@@ -16,6 +16,8 @@
 - `demo.html` 是单文件 HyperFrames 子合成，双击能预览，挂进项目就能用；
 - 颜色和字体通过 `--mc-*` 变量换皮，动作不变。
 
+「人物与口播」组里 `host-` 开头的口播卡自带一个主持人：人站一边，字和箭头、圈、角框、笔刷这些标记在另一边。示例是一张真人静态图，换成你自己抠好的透明底口播视频，人就会动；整段口播怎么接见 [卡库 README](workspace-starter/motion-cards/README.md) 的「人物卡」一节。
+
 ```bash
 cd workspace-starter/motion-cards
 node tools/cards.mjs serve                     # 画廊：http://localhost:3040/motion-cards/gallery/
@@ -26,7 +28,7 @@ node tools/cards.mjs use <你的项目>/hyperframes before-after-wipe,number-rol
 
 编导技能的 `shot_semantics.py` 会按旁白自动推荐卡，并把变量和卡词时间填好。加新卡的规格见 [SPEC.md](workspace-starter/motion-cards/SPEC.md)。
 
-![108 张动效卡总览](workspace-starter/motion-cards/gallery/overview.jpg)
+![114 张动效卡总览](workspace-starter/motion-cards/gallery/overview.jpg)
 
 ## 快速开始
 

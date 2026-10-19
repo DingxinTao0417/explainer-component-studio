@@ -1,0 +1,159 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"line1","type":"string","label":"第一行：铺垫（可空）","default":"做好一个模型"},
+    {"id":"line2","type":"string","label":"第二行：带重点的那句","default":"最难的其实是数据"},
+    {"id":"key","type":"string","label":"被圈住的重点（第二行里的一段）","default":"数据"},
+    {"id":"note","type":"string","label":"圈下面的手写批注（可空，6 个字以内）","default":"不是算力"},
+    {"id":"hit","type":"number","label":"开始圈的时刻（秒）","default":1.3,"min":1,"max":20,"step":0.05},
+    {"id":"host","type":"string","label":"人物素材（透明底视频或图片，从项目根目录写起）","default":"motion-cards/lib/samples/presenter.png"},
+    {"id":"hostKind","type":"enum","label":"人物素材是什么","default":"auto","options":[{"value":"auto","label":"按扩展名自动判断"},{"value":"video","label":"视频"},{"value":"image","label":"图片"},{"value":"none","label":"不放人（人在别的层，这里只留字）"}]},
+    {"id":"side","type":"enum","label":"人在哪一边","default":"right","options":[{"value":"right","label":"右边，字在左"},{"value":"left","label":"左边，字在右"}]},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>host-circle-note · 口播圈重点</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="host-circle-note-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        @font-face { font-family: "KaiTi"; src: local("KaiTi"), local("STKaiti"), local("Kaiti SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .hc { position: absolute; inset: 0; }
+        .hc-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .hc-host { position: absolute; bottom: 0; left: 910px; width: 1100px; height: 900px; object-fit: contain; object-position: 50% 100%; }
+        .hc-txt { position: absolute; left: 140px; top: 330px; width: 760px; }
+        .hc-l1 { display: block; font-size: 56px; font-weight: 700; line-height: 1.3; color: var(--k-muted); white-space: nowrap; }
+        .hc-l2 { display: block; margin-top: 18px; font-size: 95px; font-weight: 900; line-height: 1.25; white-space: nowrap; }
+        .hc-key { display: inline-block; }
+        .hc-svg { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; }
+        .hc-ink { fill: none; stroke: var(--k-accent); stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; }
+        /* the note is written by hand under the loop; it stays inside the text column so it never runs into the presenter */
+        .hc-note { position: absolute; left: 692px; top: 622px; display: block; font-family: "KaiTi", "STKaiti", "Kaiti SC", var(--k-font); font-size: 54px; line-height: 1.3; color: var(--k-accent); white-space: nowrap; }
+      </style>
+
+      <div id="root" data-composition-id="host-circle-note" data-width="1920" data-height="1080">
+        <div class="hc">
+          <div class="hc-bg"></div>
+          <video id="host-circle-note-host" class="hc-host hc-host-v" data-var-src="host" src="motion-cards/lib/samples/presenter.png" data-start="0" muted playsinline></video>
+          <img class="hc-host hc-host-i" data-var-src="host" src="motion-cards/lib/samples/presenter.png" alt="" />
+          <div class="hc-txt">
+            <span class="hc-l1">做好一个模型</span>
+            <span class="hc-l2"><span class="hc-pre">最难的其实是</span><span class="hc-key">数据</span><span class="hc-post"></span></span>
+          </div>
+          <svg class="hc-svg" viewBox="0 0 1920 1080" aria-hidden="true">
+            <path class="hc-ink hc-loop" d="M 0 0" />
+            <path class="hc-ink hc-tail" d="M 0 0" />
+          </svg>
+          <span class="hc-note">不是算力</span>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { l1At: 0.25, l2At: 0.55, rise: 0.45, draw: 0.55, turn: 1.12, tilt: -0.06, padX: 16, padY: 14,
+            tailGap: 64, tail: 0.2, noteRise: 0.35, hostW: 1100, hostX: { right: 1460, left: 460 }, txtX: { right: 140, left: 1020 }, txtW: 760, txtTop: 330 };
+          var v = { line1: "做好一个模型", line2: "最难的其实是数据", key: "数据", note: "不是算力", hit: 1.3,
+            host: "motion-cards/lib/samples/presenter.png", hostKind: "auto", side: "right", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && (got[k] !== "" || k === "line1" || k === "note" || k === "host")) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".hc");
+          var q = function (s) { return root.querySelector(s); };
+          if (String(v.backdrop) === "off") q(".hc-bg").style.display = "none";
+
+          // the presenter: a video, a still, or nothing (when the host already runs on its own layer in the project)
+          var src = String(v.host || ""), kind = String(v.hostKind || "auto"), side = String(v.side) === "left" ? "left" : "right";
+          if (kind === "auto") kind = !src ? "none" : /\.(png|jpe?g|webp|gif|avif|svg)([?#]|$)/i.test(src) ? "image" : "video";
+          var vid = q(".hc-host-v"), img = q(".hc-host-i");
+          if (kind !== "video") vid.parentNode.removeChild(vid);
+          if (kind !== "image") img.parentNode.removeChild(img);
+          Array.prototype.forEach.call(root.querySelectorAll(".hc-host"), function (el) { el.style.left = CFG.hostX[side] - CFG.hostW / 2 + "px"; });
+
+          var em = function (s) { var w = 0; for (var c = 0; c < s.length; c++) w += s.charCodeAt(c) > 255 ? 1 : 0.6; return Math.max(w, 1); };
+          var txt = q(".hc-txt"), l1 = q(".hc-l1"), l2 = q(".hc-l2"), mid = q(".hc-key"), note = q(".hc-note");
+          var line1 = String(v.line1 || ""), line2 = String(v.line2), key = String(v.key), memo = String(v.note || "");
+          var at = key ? line2.indexOf(key) : -1;
+          if (at < 0) { key = line2; at = 0; }
+          var x0 = CFG.txtX[side];
+          txt.style.left = x0 + "px";
+          txt.style.top = CFG.txtTop + "px";
+          l1.textContent = line1;
+          if (!line1) l1.style.display = "none";
+          l1.style.fontSize = Math.floor(Math.min(56, CFG.txtW / em(line1 || "x"))) + "px";
+          q(".hc-pre").textContent = line2.slice(0, at);
+          mid.textContent = key;
+          q(".hc-post").textContent = line2.slice(at + key.length);
+          l2.style.fontSize = Math.floor(Math.min(96, CFG.txtW / em(line2))) + "px";
+
+          // the loop: a little more than one turn, tilted and slightly widening, so its end runs past its start like a real pen
+          var kx = x0 + mid.offsetLeft, ky = CFG.txtTop + mid.offsetTop, kw = mid.offsetWidth, kh = mid.offsetHeight;
+          var cx = kx + kw / 2, cy = ky + kh / 2, rx = kw / 2 + CFG.padX, ry = kh / 2 + CFG.padY;
+          var r = function (x) { return Math.round(x * 10) / 10; };
+          var ct = Math.cos(CFG.tilt), st = Math.sin(CFG.tilt), pts = [], N = 60;
+          for (var i = 0; i <= N; i++) {
+            var u = i / N, a = -0.5 - u * CFG.turn * 2 * Math.PI, g = 1 + 0.03 * Math.sin(3 * a + 0.8) + 0.07 * u;
+            var dx = rx * g * Math.cos(a), dy = ry * g * Math.sin(a);
+            pts.push(r(cx + dx * ct - dy * st) + " " + r(cy + dx * st + dy * ct));
+          }
+          var loop = q(".hc-loop");
+          loop.setAttribute("d", "M " + pts.join(" L "));
+          var loopLen = loop.getTotalLength();
+          loop.style.strokeDasharray = loopLen + " " + (loopLen + 40);
+
+          // the note sits under the loop, centred on it but kept inside the column; a short tail ties the two together
+          var tail = q(".hc-tail"), tailLen = 0;
+          note.textContent = memo;
+          if (memo) {
+            var nw = note.offsetWidth, nh = note.offsetHeight;
+            var nx = Math.max(x0, Math.min(x0 + CFG.txtW - nw, cx - nw / 2)), ny = cy + ry * 1.08 + CFG.tailGap;
+            note.style.left = r(nx) + "px";
+            note.style.top = r(ny) + "px";
+            var s = [cx + rx * 0.2, cy + ry * 1.12], e = [nx + nw / 2, ny - 6], c = [Math.max(s[0], e[0]) + 34, (s[1] + e[1]) / 2];
+            tail.setAttribute("d", "M " + r(s[0]) + " " + r(s[1]) + " Q " + r(c[0]) + " " + r(c[1]) + " " + r(e[0]) + " " + r(e[1]));
+            tailLen = tail.getTotalLength();
+            tail.style.strokeDasharray = tailLen + " " + (tailLen + 40);
+          } else {
+            note.style.display = "none";
+            tail.style.display = "none";
+          }
+
+          var hit = Math.max(1, Number(v.hit) || 1.3), done = hit + CFG.draw;
+          var tl = gsap.timeline({ paused: true });
+          if (line1) tl.fromTo(l1, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: CFG.rise, ease: "power3.out" }, CFG.l1At);
+          tl.fromTo(l2, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: CFG.rise, ease: "power3.out" }, line1 ? CFG.l2At : CFG.l1At);
+          // the pen starts on the spoken word and goes round at an even pace
+          tl.fromTo(loop, { strokeDashoffset: loopLen + 20 }, { strokeDashoffset: 0, duration: CFG.draw, ease: "power1.inOut" }, hit);
+          if (memo) {
+            tl.fromTo(tail, { strokeDashoffset: tailLen + 20 }, { strokeDashoffset: 0, duration: CFG.tail, ease: "power1.out" }, done + 0.05);
+            tl.fromTo(note, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: CFG.noteRise, ease: "power2.out" }, done + 0.15);
+          }
+          window.__timelines["host-circle-note"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

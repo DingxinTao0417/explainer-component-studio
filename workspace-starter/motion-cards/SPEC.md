@@ -7,13 +7,13 @@
 
 `strip.jpg`（五帧连拍）和 `thumb.jpg` 由 `node tools/cards.mjs verify` 生成，不手写。
 
-写新卡时，先照抄 `cards/word-punch/`（纯文字）或 `cards/media-pop/`（带图片）的骨架，再改。
+写新卡时，先照抄 `cards/word-punch/`（纯文字）、`cards/media-pop/`（带图片）或 `cards/host-arrows-focus/`（带主持人）的骨架，再改。
 
 ## 一、一张卡只做一件事
 
 - 一张卡是一个**动法**（“重音词晚到并砸下来”），不是一个场景，也不是一个题材。
 - 能用一句话说清“谁、在什么时刻、怎么动”才算一张卡。说不清就是两张卡，或者只是换皮。
-- 卡是中性的：默认深色底、一个强调色。不出现任何频道、人物、品牌的专属内容。示例文案用泛指的教程、讲解内容。
+- 卡是中性的：默认白底、一个强调色。不出现任何频道、人物、品牌的专属内容。示例文案用泛指的教程、讲解内容。
 
 ## 二、demo.html
 
@@ -32,13 +32,13 @@
 
 ```css
 #root {
-  --k-bg: var(--mc-bg, #0d1016);
-  --k-panel: var(--mc-panel, #1a202b);
-  --k-ink: var(--mc-ink, #f3f5f8);
-  --k-muted: var(--mc-muted, #8b93a3);
-  --k-accent: var(--mc-accent, #ffcf33);
-  --k-accent-2: var(--mc-accent-2, #4f8cff);
-  --k-on-accent: var(--mc-on-accent, #14161a);
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
   --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
   position: absolute; inset: 0; overflow: hidden;
   font-family: var(--k-font); color: var(--k-ink);
@@ -60,9 +60,9 @@
 
 **素材**：
 
-- 不引用网络资源。图片用 `motion-cards/lib/samples/` 里的示例图（`p1.jpg`–`p8.jpg` 横图、`ui.png` 应用截图 1920×1080、`page.png` 长网页 1600×4200、`host.png` 人物剪影 720×900 透明底），地址从**项目根目录**写起：`motion-cards/lib/samples/p1.jpg`。
+- 不引用网络资源。图片用 `motion-cards/lib/samples/` 里的示例图（`p1.jpg`–`p8.jpg` 横图、`ui.png` 应用截图 1920×1080、`page.png` 长网页 1600×4200、`presenter-bust.png` 真人竖版半身 720×900 透明底、`presenter.png` 真人坐姿 1320×1080 透明底、`host.png` 人物剪影 720×900 透明底），地址从**项目根目录**写起：`motion-cards/lib/samples/p1.jpg`。示例真人的来源写在 `lib/samples/CREDITS.md`。
 - 图标、箭头、手绘线用内联 SVG 画。
-- 不用视频文件。要表现“这里是一段视频”时，用示例图加一个缓慢的位移或缩放代替。
+- 不用视频文件。要表现“这里是一段视频”时，用示例图加一个缓慢的位移或缩放代替。例外是「人物与口播」组里自带主持人的卡：主持人可以是透明底视频（公开仓库只带静态示例 `presenter.png`，demo 默认用它），照 `cards/host-arrows-focus/` 写，`<video id="<卡id>-host" data-var-src="host" data-start="0" muted playsinline>` 和一个同样带 `data-var-src="host"` 的 `<img>` 并排放，脚本按 `hostKind`（默认按扩展名判断）留一个，`host` 留空时两个都去掉。
 - 单个 `demo.html` 不超过 24 KB。
 
 ## 三、card.md
@@ -170,3 +170,5 @@ node tools/cards.mjs verify <id,id…>    # 在真实 HyperFrames 里挂载、�
 - `content_overlap` 按字体的整块行框算。很大的字（300px 以上）基线下面有一大块看不见的留白，别的字进了这块也会报，只能从版式上让开。
 - 报错里的秒数是整批的时间。换算成卡内时间：减去 1 秒开头，再减去排在它前面的卡的 `slot` 之和；拿不准就单独跑这一张。
 - 一闪而过的重叠要看采样点碰没碰上，单独跑通过不代表没有。从几何上消掉它，不要靠运气。
+- 子合成里的 `<video>` 只在这张卡第一次挂载时有画面：同一张卡在一个工程里挂第二次，视频是空的（0.8.174 实测，换文件、运行时改 id、`data-var-id` 都不行；不带 id 的 `<video>` 一次都不出画面）。`verify` 每张卡只挂一次，测不出来；带视频的卡在 `card.md` 里写明，需要连续视频时放主时间轴（见 README「人物卡」）。图片不受影响。
+- 字翻成反白（白字压强调色块）的卡：色块在字底下的那一段不能收细，字的每一笔都要落在色块里，否则翻白后那几笔会消失在白底上。

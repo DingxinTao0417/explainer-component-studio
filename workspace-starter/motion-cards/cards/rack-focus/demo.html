@@ -3,7 +3,7 @@
   lang="zh-CN"
   data-composition-variables='[
     {"id":"src","type":"string","label":"后层画面地址（从项目根目录写起）","default":"motion-cards/lib/samples/ui.png"},
-    {"id":"front","type":"string","label":"前层图片地址（透明底）","default":"motion-cards/lib/samples/host.png"},
+    {"id":"front","type":"string","label":"前层图片地址（透明底）","default":"motion-cards/lib/samples/presenter-bust.png"},
     {"id":"fx","type":"number","label":"前层放在哪：横向 0–1","default":0.16,"min":0,"max":1,"step":0.01},
     {"id":"to","type":"enum","label":"焦点最后落在","default":"back","options":[{"value":"back","label":"后层"},{"value":"front","label":"前层"}]},
     {"id":"at","type":"number","label":"开始转焦的时间（秒）","default":1,"min":0,"max":10,"step":0.05},
@@ -22,13 +22,13 @@
         @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
         @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
         #root {
-          --k-bg: var(--mc-bg, #0d1016);
-          --k-panel: var(--mc-panel, #1a202b);
-          --k-ink: var(--mc-ink, #f3f5f8);
-          --k-muted: var(--mc-muted, #8b93a3);
-          --k-accent: var(--mc-accent, #ffcf33);
-          --k-accent-2: var(--mc-accent-2, #4f8cff);
-          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
           --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
           position: absolute;
           inset: 0;
@@ -46,7 +46,7 @@
         <div class="rf" data-layout-allow-overflow>
           <div class="rf-bg"></div>
           <img class="rf-back" src="motion-cards/lib/samples/ui.png" data-var-src="src" alt="" />
-          <img class="rf-front" src="motion-cards/lib/samples/host.png" data-var-src="front" alt="" />
+          <img class="rf-front" src="motion-cards/lib/samples/presenter-bust.png" data-var-src="front" alt="" />
         </div>
       </div>
 

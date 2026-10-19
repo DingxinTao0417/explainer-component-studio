@@ -2,15 +2,20 @@
    A card's demo.html is a HyperFrames sub-composition: everything lives inside <template>, so opening the
    file directly shows nothing. This script (loaded from <head>, which HyperFrames discards) mounts the
    template, loads GSAP, fits the stage to the window and loops the timeline.
-   URL params: ?t=1.2 (freeze at a time) · ?skin=light|dark|<json of --mc-* values> · ?v=<json of variables> · ?bare=1 (no controls) */
+   URL params: ?t=1.2 (freeze at a time) · ?skin=light (default, the cards' own white palette)|dark|<json of --mc-* values> · ?v=<json of variables> · ?bare=1 (no controls) */
 (function () {
   if (window.__hyperframes || window.__timelines) return; // running inside HyperFrames: do nothing
   var here = document.currentScript.src.replace(/[^/]*$/, "");
   var qs = new URLSearchParams(location.search);
   var SKINS = {
-    dark: {},
-    light: { "--mc-bg": "#f6f4ef", "--mc-panel": "#ffffff", "--mc-ink": "#15171c", "--mc-muted": "#6b7280", "--mc-accent": "#ff4d2e", "--mc-accent-2": "#1f6feb", "--mc-on-accent": "#ffffff" },
+    light: {},
+    dark: { "--mc-bg": "#0d1016", "--mc-panel": "#1a202b", "--mc-ink": "#f3f5f8", "--mc-muted": "#8b93a3", "--mc-accent": "#ffcf33", "--mc-accent-2": "#4f8cff", "--mc-on-accent": "#14161a" },
   };
+
+  function skinVars0(name) {
+    if (SKINS[name]) return SKINS[name];
+    try { return JSON.parse(name); } catch (e) { return null; }
+  }
 
   function declared() {
     var out = {};
@@ -28,15 +33,16 @@
     window.__timelines = {};
     window.__hyperframes = { getVariables: function () { return vars; } };
 
-    var skin = qs.get("skin") || "dark";
+    var skin = qs.get("skin") || "light";
+    var darkPage = skin === "dark" || (skinVars0(skin) || {})["--mc-bg"] === "#0d1016";
     var skinVars = SKINS[skin];
     if (!skinVars) { try { skinVars = JSON.parse(skin); } catch (e) { skinVars = {}; } }
 
     var css = document.createElement("style");
     css.textContent =
-      "html,body{margin:0;height:100%;background:#050608;overflow:hidden}" +
+      "html,body{margin:0;height:100%;background:" + (darkPage ? "#050608" : "#e9eaee") + ";overflow:hidden}" +
       "*{box-sizing:border-box}" +
-      "#mc-fit{position:absolute;left:50%;top:50%;transform-origin:0 0;overflow:hidden;background:repeating-conic-gradient(#1b1d22 0 25%,#23262c 0 50%) 0 0/48px 48px}" +
+      "#mc-fit{position:absolute;left:50%;top:50%;transform-origin:0 0;overflow:hidden;background:repeating-conic-gradient(" + (darkPage ? "#1b1d22 0 25%,#23262c 0 50%" : "#f3f4f6 0 25%,#e5e7eb 0 50%") + ") 0 0/48px 48px}" +
       "#mc-bar{position:fixed;left:0;right:0;bottom:0;height:34px;display:flex;align-items:center;gap:10px;padding:0 12px;font:12px/1 ui-monospace,Consolas,monospace;color:#aab;background:rgba(10,12,16,.82)}" +
       "#mc-bar input{flex:1}#mc-bar button{font:inherit;color:#dde;background:#232833;border:0;border-radius:4px;padding:5px 9px;cursor:pointer}";
     document.head.appendChild(css);
@@ -48,6 +54,11 @@
     document.head.appendChild(base);
 
     var frag = document.importNode(tpl.content, true);
+    // data-var-src: HyperFrames fills a media src from a variable at compile time; do the same here
+    Array.prototype.forEach.call(frag.querySelectorAll("[data-var-src]"), function (el) {
+      var val = vars[el.getAttribute("data-var-src")];
+      if (typeof val === "string" && val) el.setAttribute("src", val);
+    });
     var rootEl = frag.querySelector("[data-composition-id]");
     var id = rootEl.getAttribute("data-composition-id");
     var W = +rootEl.getAttribute("data-width") || 1920, H = +rootEl.getAttribute("data-height") || 1080;
@@ -90,9 +101,25 @@
         bar.querySelector("#mc-pp").onclick = function () { paused = !paused; t0 = performance.now() - cur * 1000; };
         range.oninput = function () { paused = true; cur = +range.value; };
       }
+      // videos in the card (the presenter) follow the preview clock: play along, re-sync on scrub and loop, hold the last frame
+      var vids = Array.prototype.slice.call(fit.querySelectorAll("video"));
+      vids.forEach(function (m) { m.muted = true; m.loop = false; m.preload = "auto"; });
+      function syncVideos() {
+        vids.forEach(function (m) {
+          var want = Math.max(0, cur - (parseFloat(m.getAttribute("data-start")) || 0));
+          if (m.duration && want > m.duration - 0.05) want = m.duration - 0.05;
+          var drift = Math.abs(m.currentTime - want);
+          if (paused) { if (!m.paused) m.pause(); if (drift > 0.04) m.currentTime = want; }
+          else {
+            if (drift > 0.3) m.currentTime = want;
+            if (m.paused && (!m.duration || want < m.duration - 0.05)) { var p = m.play(); if (p && p.catch) p.catch(function () {}); }
+          }
+        });
+      }
       (function tick() {
         if (!paused) cur = ((performance.now() - t0) / 1000) % total;
         tl.seek(Math.min(cur, tl.duration()), false);
+        if (vids.length) syncVideos();
         if (range) { if (!paused) range.value = cur; label.textContent = id + "  " + cur.toFixed(2) + "s / " + tl.duration().toFixed(2) + "s"; }
         requestAnimationFrame(tick);
       })();

@@ -18,7 +18,7 @@
     },
     {
       "path": "science-video-director/SKILL.md",
-      "source_sha256": "c3ce3c28e8d5ac95c5fdec7e6155f00ffdf8f58885ef8f4fcf1a50a210578e86"
+      "source_sha256": "ef518fe97644169b12d94984e7793d4d6e5ed586c721d6d3158532de1fe5d8ec"
     },
     {
       "path": "science-video-director/agents/openai.yaml",
@@ -30,7 +30,7 @@
     },
     {
       "path": "science-video-director/guide/components.md",
-      "source_sha256": "5bd31be97c52d19dc6d34a1d61054876f7688ae3f765741f586c9ae5666eceda"
+      "source_sha256": "c136b2607e64af87871fbb294eedd5a00bb5fcc4632b398d7cf5f0a383d6bb1b"
     },
     {
       "path": "science-video-director/guide/ideation.md",
@@ -38,7 +38,7 @@
     },
     {
       "path": "science-video-director/guide/motion-vocabulary.md",
-      "source_sha256": "861db502fe01b3e1f9782a43e2c2d5d8d7d4b60fbdeb0779866984886d6e8ea0"
+      "source_sha256": "9599218b98ef0907f641323e759549e7e5885f5a6868d4461ebb1afa343633db"
     },
     {
       "path": "science-video-director/guide/production.md",
@@ -50,7 +50,7 @@
     },
     {
       "path": "science-video-director/guide/style-profile.md",
-      "source_sha256": "beaba093cec19ee0133febf11e74d4865e84465d3346ab6ec6b8f7424a43fa5c"
+      "source_sha256": "9cad2b1237c6038ef08df4b8356abefb18ebd7323b5af0f8ba00bdef9bd5d12d"
     },
     {
       "path": "science-video-director/guide/visual-grammar.md",

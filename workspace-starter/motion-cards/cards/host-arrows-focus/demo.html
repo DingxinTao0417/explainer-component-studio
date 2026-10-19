@@ -1,0 +1,151 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"line1","type":"string","label":"第一行：铺垫（可空）","default":"今天只要你"},
+    {"id":"line2","type":"string","label":"第二行：带重点的那句","default":"记住这 3 点就够了"},
+    {"id":"key","type":"string","label":"箭头指住的重点（第二行里的一段）","default":"这 3 点"},
+    {"id":"hit","type":"number","label":"箭头画到重点的时刻（秒）","default":1.5,"min":1,"max":20,"step":0.05},
+    {"id":"host","type":"string","label":"人物素材（透明底视频或图片，从项目根目录写起）","default":"motion-cards/lib/samples/presenter.png"},
+    {"id":"hostKind","type":"enum","label":"人物素材是什么","default":"auto","options":[{"value":"auto","label":"按扩展名自动判断"},{"value":"video","label":"视频"},{"value":"image","label":"图片"},{"value":"none","label":"不放人（人在别的层，这里只留字）"}]},
+    {"id":"side","type":"enum","label":"人在哪一边","default":"right","options":[{"value":"right","label":"右边，字在左"},{"value":"left","label":"左边，字在右"}]},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>host-arrows-focus · 口播双箭头</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="host-arrows-focus-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .ha { position: absolute; inset: 0; }
+        .ha-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        /* the presenter stands in a 1100×900 box on the floor of the frame; contain keeps any aspect whole */
+        .ha-host { position: absolute; bottom: 0; left: 910px; width: 1100px; height: 900px; object-fit: contain; object-position: 50% 100%; }
+        .ha-txt { position: absolute; left: 140px; top: 330px; width: 760px; }
+        .ha-l1 { display: block; font-size: 56px; font-weight: 700; line-height: 1.3; color: var(--k-muted); white-space: nowrap; }
+        .ha-l2 { display: block; margin-top: 18px; font-size: 96px; font-weight: 900; line-height: 1.25; white-space: nowrap; }
+        .ha-key { display: inline-block; }
+        .ha-svg { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: visible; }
+        .ha-ink { fill: none; stroke: var(--k-accent); stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; }
+      </style>
+
+      <div id="root" data-composition-id="host-arrows-focus" data-width="1920" data-height="1080">
+        <div class="ha">
+          <div class="ha-bg"></div>
+          <video id="host-arrows-focus-host" class="ha-host ha-host-v" data-var-src="host" src="motion-cards/lib/samples/presenter.png" data-start="0" muted playsinline></video>
+          <img class="ha-host ha-host-i" data-var-src="host" src="motion-cards/lib/samples/presenter.png" alt="" />
+          <div class="ha-txt">
+            <span class="ha-l1">今天只要你</span>
+            <span class="ha-l2"><span class="ha-pre">记住</span><span class="ha-key">这 3 点</span><span class="ha-post">就够了</span></span>
+          </div>
+          <svg class="ha-svg" viewBox="0 0 1920 1080" aria-hidden="true">
+            <g class="ha-a1"><path class="ha-ink ha-s1" d="M 0 0" /><path class="ha-ink ha-t1" d="M 0 0" /></g>
+            <g class="ha-a2"><path class="ha-ink ha-s2" d="M 0 0" /><path class="ha-ink ha-t2" d="M 0 0" /></g>
+          </svg>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { l1At: 0.25, l2At: 0.55, rise: 0.45, keyLead: 0.12, draw: 0.38, stagger: 0.14, head: 28, spread: 28,
+            hostW: 1100, hostX: { right: 1460, left: 460 }, txtX: { right: 140, left: 1020 }, txtW: 760, txtTop: 330 };
+          var v = { line1: "今天只要你", line2: "记住这 3 点就够了", key: "这 3 点", hit: 1.5,
+            host: "motion-cards/lib/samples/presenter.png", hostKind: "auto", side: "right", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && (got[k] !== "" || k === "line1" || k === "host")) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".ha");
+          var q = function (s) { return root.querySelector(s); };
+          var cs = getComputedStyle(root);
+          var tok = function (name, d) { return (cs.getPropertyValue("--k-" + name) || "").trim() || d; };
+          var INK = tok("ink", "#15171c"), ACC = tok("accent", "#e8590c");
+          if (String(v.backdrop) === "off") q(".ha-bg").style.display = "none";
+
+          // the presenter: a video, a still, or nothing (when the host already runs on its own layer in the project)
+          var src = String(v.host || ""), kind = String(v.hostKind || "auto"), side = String(v.side) === "left" ? "left" : "right";
+          if (kind === "auto") kind = !src ? "none" : /\.(png|jpe?g|webp|gif|avif|svg)([?#]|$)/i.test(src) ? "image" : "video";
+          var vid = q(".ha-host-v"), img = q(".ha-host-i");
+          if (kind !== "video") vid.parentNode.removeChild(vid);
+          if (kind !== "image") img.parentNode.removeChild(img);
+          Array.prototype.forEach.call(root.querySelectorAll(".ha-host"), function (el) { el.style.left = CFG.hostX[side] - CFG.hostW / 2 + "px"; });
+
+          // the words live on the free side; line 2 is split around the key so the arrows can find it
+          var em = function (s) { var w = 0; for (var c = 0; c < s.length; c++) w += s.charCodeAt(c) > 255 ? 1 : 0.6; return Math.max(w, 1); };
+          var txt = q(".ha-txt"), l1 = q(".ha-l1"), l2 = q(".ha-l2"), pre = q(".ha-pre"), mid = q(".ha-key"), post = q(".ha-post");
+          var line1 = String(v.line1 || ""), line2 = String(v.line2), key = String(v.key);
+          var at = key ? line2.indexOf(key) : -1;
+          if (at < 0) { key = line2; at = 0; }
+          txt.style.left = CFG.txtX[side] + "px";
+          txt.style.top = CFG.txtTop + "px";
+          l1.textContent = line1;
+          if (!line1) l1.style.display = "none";
+          l1.style.fontSize = Math.floor(Math.min(56, CFG.txtW / em(line1 || "x"))) + "px";
+          pre.textContent = line2.slice(0, at);
+          mid.textContent = key;
+          post.textContent = line2.slice(at + key.length);
+          l2.style.fontSize = Math.floor(Math.min(96, CFG.txtW / em(line2))) + "px";
+
+          // key box in frame pixels: the text block is the key's offset parent, and offsets ignore any preview scaling
+          var kx = CFG.txtX[side] + mid.offsetLeft, ky = CFG.txtTop + mid.offsetTop, kw = mid.offsetWidth, kh = mid.offsetHeight;
+          var lo = CFG.txtX[side] - 70, hi = CFG.txtX[side] + CFG.txtW + 70;
+          var clampX = function (x) { return Math.max(lo, Math.min(hi, x)); };
+          var r = function (x) { return Math.round(x * 10) / 10; };
+          // one arrow drops in from the upper right, the other climbs from the lower left; both stop just short of the key
+          var arrows = [
+            { s: [clampX(kx + kw + 150), ky - 120], c: [kx + kw + 40, ky - 150], e: [kx + kw * 0.72, ky + kh * 0.04] },
+            { s: [clampX(kx - 150), ky + kh + 120], c: [kx - 40, ky + kh + 150], e: [kx + kw * 0.22, ky + kh * 0.96] }
+          ].map(function (a, i) {
+            var stroke = q(".ha-s" + (i + 1)), tip = q(".ha-t" + (i + 1));
+            stroke.setAttribute("d", "M " + r(a.s[0]) + " " + r(a.s[1]) + " Q " + r(a.c[0]) + " " + r(a.c[1]) + " " + r(a.e[0]) + " " + r(a.e[1]));
+            var dx = a.e[0] - a.c[0], dy = a.e[1] - a.c[1], d = Math.sqrt(dx * dx + dy * dy) || 1, ux = dx / d, uy = dy / d;
+            var rad = (CFG.spread * Math.PI) / 180, cos = Math.cos(rad), sin = Math.sin(rad);
+            var b1 = [a.e[0] - CFG.head * (ux * cos - uy * sin), a.e[1] - CFG.head * (uy * cos + ux * sin)];
+            var b2 = [a.e[0] - CFG.head * (ux * cos + uy * sin), a.e[1] - CFG.head * (uy * cos - ux * sin)];
+            tip.setAttribute("d", "M " + r(b1[0]) + " " + r(b1[1]) + " L " + r(a.e[0]) + " " + r(a.e[1]) + " L " + r(b2[0]) + " " + r(b2[1]));
+            var len = stroke.getTotalLength();
+            stroke.style.strokeDasharray = len + " " + (len + 40);
+            return { stroke: stroke, tip: tip, len: len };
+          });
+
+          var hit = Math.max(1, Number(v.hit) || 1.5);
+          var tl = gsap.timeline({ paused: true });
+          if (line1) tl.fromTo(l1, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: CFG.rise, ease: "power3.out" }, CFG.l1At);
+          tl.fromTo(l2, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: CFG.rise, ease: "power3.out" }, line1 ? CFG.l2At : CFG.l1At);
+          // the key lights up a hair before the first arrow arrives, so the arrows point at something already marked
+          tl.fromTo(mid, { color: INK }, { color: ACC, duration: 0.2, ease: "power1.out" }, hit - CFG.keyLead);
+          tl.fromTo(mid, { scale: 1 }, { scale: 1.06, duration: 0.14, ease: "power2.out" }, hit - CFG.keyLead);
+          tl.to(mid, { scale: 1, duration: 0.3, ease: "power2.out" }, hit + 0.02);
+          arrows.forEach(function (a, i) {
+            var done = hit + i * CFG.stagger;
+            tl.fromTo(a.stroke, { strokeDashoffset: a.len + 20 }, { strokeDashoffset: 0, duration: CFG.draw, ease: "power2.inOut" }, done - CFG.draw);
+            tl.fromTo(a.tip, { opacity: 0 }, { opacity: 1, duration: 0.06, ease: "none" }, done - 0.05);
+          });
+          window.__timelines["host-arrows-focus"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

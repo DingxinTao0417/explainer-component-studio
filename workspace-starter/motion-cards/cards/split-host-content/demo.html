@@ -2,7 +2,7 @@
 <html
   lang="zh-CN"
   data-composition-variables='[
-    {"id":"host","type":"string","label":"人物图地址（透明底，从项目根目录写起）","default":"motion-cards/lib/samples/host.png"},
+    {"id":"host","type":"string","label":"人物图地址（透明底，从项目根目录写起）","default":"motion-cards/lib/samples/presenter-bust.png"},
     {"id":"side","type":"enum","label":"人在哪一边","default":"left","options":[{"value":"left","label":"左"},{"value":"right","label":"右"}]},
     {"id":"share","type":"number","label":"人那一块占画面宽度（%）","default":40,"min":30,"max":50,"step":1},
     {"id":"kicker","type":"string","label":"小标题（可空）","default":"第二步"},
@@ -23,13 +23,13 @@
         @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
         @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
         #root {
-          --k-bg: var(--mc-bg, #0d1016);
-          --k-panel: var(--mc-panel, #1a202b);
-          --k-ink: var(--mc-ink, #f3f5f8);
-          --k-muted: var(--mc-muted, #8b93a3);
-          --k-accent: var(--mc-accent, #ffcf33);
-          --k-accent-2: var(--mc-accent-2, #4f8cff);
-          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
           --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
           position: absolute;
           inset: 0;
@@ -58,7 +58,7 @@
           <div class="sp-hostpane">
             <div class="sp-hostin">
               <div class="sp-disc"></div>
-              <div class="sp-fig" style="background-image: url(motion-cards/lib/samples/host.png)"></div>
+              <div class="sp-fig" style="background-image: url(motion-cards/lib/samples/presenter-bust.png)"></div>
             </div>
           </div>
           <div class="sp-textpane">

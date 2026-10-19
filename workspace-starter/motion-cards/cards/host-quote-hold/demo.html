@@ -1,0 +1,129 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"lines","type":"string","label":"几行字（用 | 分隔，2–3 行，最后一行是金句）","default":"你现在觉得难受|不是因为你不行|是因为你正在走出舒适区"},
+    {"id":"cues","type":"string","label":"每行出现的秒数（逗号分隔，不够就均匀排开）","default":"0.3,1.1,1.9"},
+    {"id":"mark","type":"number","label":"给第几行划荧光笔（0 = 最后一行）","default":0,"min":0,"max":3,"step":1},
+    {"id":"host","type":"string","label":"人物素材（透明底视频或图片，从项目根目录写起）","default":"motion-cards/lib/samples/presenter.png"},
+    {"id":"hostKind","type":"enum","label":"人物素材是什么","default":"auto","options":[{"value":"auto","label":"按扩展名自动判断"},{"value":"video","label":"视频"},{"value":"image","label":"图片"},{"value":"none","label":"不放人（人在别的层，这里只留字）"}]},
+    {"id":"side","type":"enum","label":"人在哪一边","default":"right","options":[{"value":"right","label":"右边，字在左"},{"value":"left","label":"左边，字在右"}]},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>host-quote-hold · 口播金句</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="host-quote-hold-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .hq { position: absolute; inset: 0; }
+        .hq-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .hq-host { position: absolute; bottom: 0; left: 910px; width: 1100px; height: 900px; object-fit: contain; object-position: 50% 100%; }
+        .hq-txt { position: absolute; left: 140px; top: 300px; width: 760px; }
+        .hq-row { position: relative; display: block; width: fit-content; margin-bottom: 22px; }
+        .hq-say { position: relative; display: block; font-size: 64px; font-weight: 700; line-height: 1.3; white-space: nowrap; }
+        .hq-gold .hq-say { font-weight: 900; }
+        /* the marker is a light wash of the accent sitting on the lower part of the line, like a real highlighter */
+        .hq-pen { position: absolute; left: -10px; right: -10px; bottom: 6px; height: 46%; border-radius: 10px 4px 12px 6px; background: color-mix(in srgb, var(--k-accent) 32%, transparent); transform-origin: 0 50%; }
+      </style>
+
+      <div id="root" data-composition-id="host-quote-hold" data-width="1920" data-height="1080">
+        <div class="hq">
+          <div class="hq-bg"></div>
+          <video id="host-quote-hold-host" class="hq-host hq-host-v" data-var-src="host" src="motion-cards/lib/samples/presenter.png" data-start="0" muted playsinline></video>
+          <img class="hq-host hq-host-i" data-var-src="host" src="motion-cards/lib/samples/presenter.png" alt="" />
+          <div class="hq-txt">
+            <div class="hq-row"><span class="hq-say">你现在觉得难受</span></div>
+            <div class="hq-row"><span class="hq-say">不是因为你不行</span></div>
+            <div class="hq-row hq-gold"><span class="hq-pen"></span><span class="hq-say">是因为你正在走出舒适区</span></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          var CFG = { first: 0.3, gap: 0.8, minGap: 0.45, rise: 0.45, penLag: 0.3, pen: 0.5, dim: 0.4, fs: 64, gold: 72,
+            hostW: 1100, hostX: { right: 1460, left: 460 }, txtX: { right: 140, left: 1020 }, txtW: 760, txtTop: 300 };
+          var v = { lines: "你现在觉得难受|不是因为你不行|是因为你正在走出舒适区", cues: "0.3,1.1,1.9", mark: 0,
+            host: "motion-cards/lib/samples/presenter.png", hostKind: "auto", side: "right", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && (got[k] !== "" || k === "host")) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".hq");
+          var q = function (s) { return root.querySelector(s); };
+          var cs = getComputedStyle(root);
+          var tok = function (name, d) { return (cs.getPropertyValue("--k-" + name) || "").trim() || d; };
+          var INK = tok("ink", "#15171c"), MUTED = tok("muted", "#6b7280");
+          if (String(v.backdrop) === "off") q(".hq-bg").style.display = "none";
+
+          // the presenter: a video, a still, or nothing (when the host already runs on its own layer in the project)
+          var src = String(v.host || ""), kind = String(v.hostKind || "auto"), side = String(v.side) === "left" ? "left" : "right";
+          if (kind === "auto") kind = !src ? "none" : /\.(png|jpe?g|webp|gif|avif|svg)([?#]|$)/i.test(src) ? "image" : "video";
+          var vid = q(".hq-host-v"), img = q(".hq-host-i");
+          if (kind !== "video") vid.parentNode.removeChild(vid);
+          if (kind !== "image") img.parentNode.removeChild(img);
+          Array.prototype.forEach.call(root.querySelectorAll(".hq-host"), function (el) { el.style.left = CFG.hostX[side] - CFG.hostW / 2 + "px"; });
+
+          // rebuild the lines; the marked line is the punchline: heavier, a touch bigger, and it gets the pen
+          var em = function (s) { var w = 0; for (var c = 0; c < s.length; c++) w += s.charCodeAt(c) > 255 ? 1 : 0.6; return Math.max(w, 1); };
+          var lines = String(v.lines).split("|").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 3);
+          var n = lines.length, markAt = Math.max(1, Math.min(n, Math.round(Number(v.mark)) || n)) - 1;
+          var cues = String(v.cues).split(/[,，\s]+/).map(parseFloat).filter(function (x) { return isFinite(x); }).slice(0, n);
+          var gap = cues.length > 1 ? (cues[cues.length - 1] - cues[0]) / (cues.length - 1) : CFG.gap;
+          if (!cues.length) cues.push(CFG.first);
+          while (cues.length < n) cues.push(cues[cues.length - 1] + gap);
+          for (var i = 1; i < n; i++) cues[i] = Math.max(cues[i], cues[i - 1] + CFG.minGap);
+
+          var txt = q(".hq-txt");
+          txt.style.left = CFG.txtX[side] + "px";
+          txt.style.top = CFG.txtTop + (3 - n) * 50 + "px";
+          txt.innerHTML = "";
+          var rows = lines.map(function (t, j) {
+            var row = document.createElement("div");
+            row.className = "hq-row" + (j === markAt ? " hq-gold" : "");
+            row.innerHTML = (j === markAt ? '<span class="hq-pen"></span>' : "") + '<span class="hq-say"></span>';
+            var say = row.querySelector(".hq-say");
+            say.textContent = t;
+            say.style.fontSize = Math.floor(Math.min(j === markAt ? CFG.gold : CFG.fs, CFG.txtW / em(t))) + "px";
+            txt.appendChild(row);
+            return row;
+          });
+
+          var tl = gsap.timeline({ paused: true });
+          rows.forEach(function (row, j) {
+            tl.fromTo(row, { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: CFG.rise, ease: "power3.out" }, cues[j]);
+          });
+          // the pen goes on once the punchline has settled, left to right; the setup steps back, then the frame simply holds
+          var penAt = cues[markAt] + CFG.penLag;
+          tl.fromTo(rows[markAt].querySelector(".hq-pen"), { scaleX: 0 }, { scaleX: 1, duration: CFG.pen, ease: "power2.out" }, penAt);
+          var rest = rows.filter(function (row, j) { return j !== markAt; }).map(function (row) { return row.querySelector(".hq-say"); });
+          if (rest.length) tl.fromTo(rest, { color: INK }, { color: MUTED, duration: CFG.dim, ease: "power1.out" }, penAt);
+          window.__timelines["host-quote-hold"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

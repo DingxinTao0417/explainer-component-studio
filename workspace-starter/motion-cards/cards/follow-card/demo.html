@@ -2,7 +2,7 @@
 <html
   lang="zh-CN"
   data-composition-variables='[
-    {"id":"host","type":"string","label":"头像图地址（透明底人物或方形头像）","default":"motion-cards/lib/samples/host.png"},
+    {"id":"host","type":"string","label":"头像图地址（透明底人物或方形头像）","default":"motion-cards/lib/samples/presenter-bust.png"},
     {"id":"who","type":"string","label":"名字（8 字以内）","default":"你的名字"},
     {"id":"bio","type":"string","label":"一行简介（14 字以内，可空）","default":"每周一条，把一件事讲明白"},
     {"id":"btn","type":"string","label":"按钮文字：按之前","default":"关注"},
@@ -24,13 +24,13 @@
         @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
         @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
         #root {
-          --k-bg: var(--mc-bg, #0d1016);
-          --k-panel: var(--mc-panel, #1a202b);
-          --k-ink: var(--mc-ink, #f3f5f8);
-          --k-muted: var(--mc-muted, #8b93a3);
-          --k-accent: var(--mc-accent, #ffcf33);
-          --k-accent-2: var(--mc-accent-2, #4f8cff);
-          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
           --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
           position: absolute;
           inset: 0;
@@ -58,7 +58,7 @@
         <div class="fc">
           <div class="fc-bg"></div>
           <div class="fc-card">
-            <div class="fc-ava" data-layout-allow-overflow><div class="fc-face" style="background-image: url(motion-cards/lib/samples/host.png)"></div></div>
+            <div class="fc-ava" data-layout-allow-overflow><div class="fc-face" style="background-image: url(motion-cards/lib/samples/presenter-bust.png)"></div></div>
             <div class="fc-info">
               <span class="fc-name">你的名字</span>
               <span class="fc-bio">每周一条，把一件事讲明白</span>

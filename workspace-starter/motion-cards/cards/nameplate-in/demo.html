@@ -2,7 +2,7 @@
 <html
   lang="zh-CN"
   data-composition-variables='[
-    {"id":"host","type":"string","label":"人物图地址（透明底；压在实拍上时留空）","default":"motion-cards/lib/samples/host.png"},
+    {"id":"host","type":"string","label":"人物图地址（透明底；压在实拍上时留空）","default":"motion-cards/lib/samples/presenter-bust.png"},
     {"id":"who","type":"string","label":"名字","default":"小周"},
     {"id":"role","type":"string","label":"身份一行（可空）","default":"本期主讲 · 做了八年剪辑"},
     {"id":"plateX","type":"number","label":"名字牌左边位置（px）","default":640,"min":60,"max":1500,"step":10},
@@ -23,13 +23,13 @@
         @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
         @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
         #root {
-          --k-bg: var(--mc-bg, #0d1016);
-          --k-panel: var(--mc-panel, #1a202b);
-          --k-ink: var(--mc-ink, #f3f5f8);
-          --k-muted: var(--mc-muted, #8b93a3);
-          --k-accent: var(--mc-accent, #ffcf33);
-          --k-accent-2: var(--mc-accent-2, #4f8cff);
-          --k-on-accent: var(--mc-on-accent, #14161a);
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
           --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
           position: absolute;
           inset: 0;
@@ -52,7 +52,7 @@
         <div class="np">
           <div class="np-bg"></div>
           <div class="np-disc"></div>
-          <div class="np-fig" style="background-image: url(motion-cards/lib/samples/host.png)"></div>
+          <div class="np-fig" style="background-image: url(motion-cards/lib/samples/presenter-bust.png)"></div>
           <div class="np-plate">
             <div class="np-bar"></div>
             <div class="np-box">
@@ -75,7 +75,7 @@
             slide: 64,      // px the lines travel out of the bar
             out: 0.56,      // whole exit, played as the entrance reversed
           };
-          var v = { host: "motion-cards/lib/samples/host.png", who: "小周", role: "本期主讲 · 做了八年剪辑", plateX: 640, plateY: 650, hold: 2, backdrop: "on" };
+          var v = { host: "motion-cards/lib/samples/presenter-bust.png", who: "小周", role: "本期主讲 · 做了八年剪辑", plateX: 640, plateY: 650, hold: 2, backdrop: "on" };
           try {
             var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
             for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];

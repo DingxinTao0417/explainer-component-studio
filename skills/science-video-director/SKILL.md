@@ -41,7 +41,7 @@ description: 把用户的稿件或 SRT、配音和素材做成完整的中文科
 | --- | --- | --- |
 | 品牌包 | `<工作区>/brand-kit` | 13 个频道组件（章节卡、关键词、大数字、对比、步骤、录屏聚焦、取景框、头像、钩子、结尾、转场、字幕…），四种调性一键切换，字体，音效映射，语义元数据 semantics.json，插画主持人提示词，角色声音库 |
 | 手法库 | `<工作区>/手法库` | 从参考片拆出来的 30 张手法卡：具体用什么招、哪个组件、停多久 |
-| 动效卡库 | `<工作区>/motion-cards`（108 张动效卡，11 个分组；每张是一份说明加一个可直接挂载的单文件子合成），用 `node …/tools/cards.mjs find / show / use / serve` | 品牌包以外的镜头都从这里来：字的强调、数据、证据、多图、镜头、转场、标注、人物、结构、幕底；装进项目直接用，换皮不换动作；见 guide/motion-vocabulary.md |
+| 动效卡库 | `<工作区>/motion-cards`（114 张动效卡，11 个分组；每张是一份说明加一个可直接挂载的单文件子合成），用 `node …/tools/cards.mjs find / show / use / serve` | 品牌包以外的镜头都从这里来：字的强调、数据、证据、多图、镜头、转场、标注、人物、结构、幕底；装进项目直接用，换皮不换动作；见 guide/motion-vocabulary.md |
 | 选镜头 | `shot_semantics.py`（旁白 → 意图 → 品牌组件或动效卡候选，或“不用组件” → 变量草稿 → 卡词时间） | 品牌包和卡库的唯一入口，见 guide/components.md |
 | 网页证据 | `pageshot.mjs`（网页 → 全页长图 + 目标的实测坐标） | 官网、文档、榜单这类证据画面，见 guide/assets.md |
 | 眼睛 | `frames.py`（接触表、节奏、`--cues` 卡词帧、`--compare` 和参考片并排）、`npx --yes hyperframes@0.8.174 snapshot` / `compare`、`brand-kit/tools/tone-stills.mjs`（调性静帧） | 看片、比较 |
