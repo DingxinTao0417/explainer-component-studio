@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "",
+  "buildCommand": "node workspace-starter/motion-cards/tools/cards.mjs site public",
+  "outputDirectory": "public",
+  "cleanUrls": false
+}
