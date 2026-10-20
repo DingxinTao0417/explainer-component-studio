@@ -1,0 +1,341 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"name","type":"string","label":"字标：产品或频道名（可以留空，只留标志）","default":"示例应用"},
+    {"id":"logo","type":"string","label":"标志图（从项目根目录写起，透明底的方图最好；留空用示意标志）","default":""},
+    {"id":"icon","type":"string","label":"起始图标（从项目根目录写起，透明底的方图；留空用示意图标）","default":""},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（只留图标、标志和字）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>icon-bloom-mark · 图标翻身成标志</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="icon-bloom-mark-template">
+      <!-- Ported from video-shotcraft demos/outro/ui-to-brand-morph/IconFlipBloomLogo.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds,
+           landscape and portrait (portrait stacks the wordmark under the mark); neutral --k-* palette, system fonts (a declared
+           YaHei Bold for the wordmark); upstream mark (open frame + amber cut) replaced by the library's placeholder mark, whose
+           tile opens from the line while its dot + bar glyph wipes in along 45 degrees as the second beat; smiley-laptop icon
+           redrawn as a laptop with a play sign; wordmark from the name variable; logo and icon image variables added; the shift
+           is measured from the live layout (upstream: fixed -471 / +187 px); 4.33 s shot held to a 4.5 s slot. Kept: wobble
+           keys, power2.in flatten to 0.04, ghosts, contact shadow, both springs, cut 7 frames later, 2.6-frame letter stagger,
+           scale 1.9 + 0.125 em blur. -->
+      <style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+@font-face { font-family: "ib-heavy"; font-weight: 700 900; src: local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"), local("PingFangSC-Semibold"), local("NotoSansSC-Black"); }
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--k-font);
+  color: var(--k-ink);
+}
+/* ==== kit:text@2 ==== */
+.ib-u { display: inline-block; white-space: pre; }
+.ib-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+/* ==== end kit:text ==== */
+/* ==== kit:grain@1 ==== */
+.ib-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+/* ==== kit:backdrop@1 ==== */
+.ib-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+.ib-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+/* ==== end kit:backdrop ==== */
+/* ==== kit:vignette@1 ==== */
+.ib-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--ib-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.ib[data-tone="dark"] .ib-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+/* ==== kit:derived@1 ==== */
+.ib { --ib-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); }
+.ib[data-tone="dark"] { --ib-shade: color-mix(in srgb, var(--k-bg) 30%, black); }
+/* ==== end kit:derived ==== */
+/* the wrapper is the size container; --px is one pixel of a 1080-high landscape frame (1/1080 of the short side) */
+.ib { position: absolute; inset: 0; container-type: size; --px: 0.0925926cqmin; --ib-hv: var(--mc-font, ib-heavy, var(--k-font)); }
+.ib[data-backdrop="off"] .ib-bd { display: none; }
+/* upstream light: key light at 50% 36% plus a faint accent tint low in the frame */
+.ib-backdrop::after { background: radial-gradient(ellipse 55% 60% at 50% 86%, color-mix(in srgb, var(--k-accent) 7%, transparent) 0%, transparent 70%), radial-gradient(ellipse 62% 70% at 50% 36%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+/* dark skins: a yellow accent mixed into a dark ground turns olive, so the low tint uses accent-2 there */
+.ib[data-tone="dark"] .ib-backdrop::after { background: radial-gradient(ellipse 55% 60% at 50% 86%, color-mix(in srgb, var(--k-accent-2) 10%, transparent) 0%, transparent 70%); }
+.ib-vig { --vs: 0.14; }
+/* lockup row = the settled layout: mark, gap, wordmark, centred as one group on the frame's middle line */
+.ib-lock { position: absolute; left: 0; right: 0; top: 50%; height: 0; display: flex; align-items: center; justify-content: center; }
+.ib-ic { position: relative; flex: none; width: calc(280 * var(--px)); height: calc(280 * var(--px)); }
+.ib-icon, .ib-shd { position: absolute; left: 50%; top: 50%; opacity: 0; }
+.ib-icon { width: calc(340 * var(--px)); height: calc(340 * var(--px)); margin: calc(-170 * var(--px)) 0 0 calc(-170 * var(--px)); }
+.ib-icon > div, .ib-mk, .ib-mk > * { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.ib-icon svg, .ib-icon img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.ib-main { transform-origin: 50% 78%; }
+.ib-gh { filter: blur(calc(6 * var(--px))); }
+.ib-mk img { object-fit: contain; }
+/* contact shadow on the floor: 300 x 26, 150 below the icon centre */
+.ib-shd {
+  width: calc(300 * var(--px)); height: calc(26 * var(--px)); margin: calc(150 * var(--px)) 0 0 calc(-150 * var(--px)); border-radius: 50%;
+  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--ib-shade) 22%, transparent) 0%, transparent 70%);
+}
+.ib-word { display: block; flex: none; margin-left: calc(60 * var(--px)); font: 700 calc(112 * var(--px))/1.2 var(--ib-hv); letter-spacing: 0.03em; color: var(--k-ink); }
+.ib-word .ib-u { transform-origin: 50% 78%; }
+/* portrait: mark above the wordmark, the stack centred on the 40% line */
+@container (orientation: portrait) {
+  .ib-lock { top: 40%; flex-direction: column; }
+  .ib-word { margin: calc(56 * var(--px)) 0 0; text-align: center; }
+}
+      </style>
+
+<div id="root" data-composition-id="icon-bloom-mark">
+  <div class="ib">
+    <div class="ib-bd ib-backdrop"></div>
+    <div class="ib-bd ib-vig"></div>
+    <div class="ib-bd ib-grain"></div>
+    <div class="ib-lock">
+      <div class="ib-ic">
+        <div class="ib-shd"></div>
+        <div class="ib-icon">
+          <div class="ib-gh"></div><div class="ib-gh"></div>
+          <div class="ib-main"><svg viewBox="0 0 40 40" aria-hidden="true"><rect x="7" y="6" width="26" height="20" rx="3.5" style="fill:var(--k-bg);stroke:var(--k-ink);stroke-width:3"/><path d="M17.5 11.2v9.6l8-4.8z" style="fill:var(--k-ink)"/><path d="M3.5 31.5h33" style="stroke:var(--k-ink);stroke-width:3.6;stroke-linecap:round"/></svg></div>
+        </div>
+        <!-- neutral mark (the library's placeholder geometry): the tile opens from a line, the dot + bar glyph wipes in after it -->
+        <div class="ib-mk">
+          <svg viewBox="0 0 128 128" aria-hidden="true"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/></svg>
+          <svg class="ib-gl" viewBox="0 0 128 128" aria-hidden="true"><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg>
+        </div>
+      </div>
+      <div class="ib-word">示例应用</div>
+    </div>
+  </div>
+</div>
+
+      <script>
+(function () {
+// timing in seconds (upstream frames / 30), shared by both orientations
+var CFG = {
+  wob: [0.4, 0.6, 0.8, 1.0, 1.133], tilt: [0, -12, 14, -18, 0], // anticipation: two growing swings, sine.inOut per segment
+  flip: [1.133, 0.4], // start, length: scaleX 1 -> 0.04, power2.in (accelerating)
+  swap: 1.533, // the icon becomes the mark at the thinnest frame; the tile springs open from it
+  cut: 1.767, // 7 frames later the glyph wipes in along 45 degrees
+  shade: [1.533, 0.467], // the floor shadow fades once the icon is gone
+  shift: [2.133, 0.6], // the mark slides aside for the wordmark, power2.out
+  word: 2.2, gap: 0.0867, letter: 0.4, fade: 0.167, // char i starts at word + i * gap: scale 1.9 -> 1, blur -> 0
+  slot: 4.5
+};
+// per orientation: the wordmark sits beside the mark (landscape) or under it (portrait; the CSS stacks the row)
+var LAND = { beside: true };
+var PORT = { beside: false };
+var v = { name: "示例应用", logo: "", icon: "", backdrop: "on" };
+try {
+  var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+  for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k]; // "" clears name, logo, icon
+} catch (e) {}
+
+var root = document.querySelector(".ib");
+var q = function (s) { return root.querySelector(s); };
+var FW = root.clientWidth, FH = root.clientHeight;
+if (!FW || !FH) {
+  // not laid out yet: the host clip's declared size, then the window
+  var hc = root.closest("[data-width][data-height]");
+  FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+  FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+}
+var P = FH > FW, L = P ? PORT : LAND;
+root.setAttribute("data-orient", P ? "portrait" : "landscape");
+root.setAttribute("data-backdrop", String(v.backdrop) === "off" ? "off" : "on");
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== end kit:tone ====
+// ==== kit:text@2 ====
+var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+function kWords(s, key) {
+  s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+  var cut = function (x) {
+    if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+    return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+  };
+  var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+  var pre = "";
+  bits.forEach(function (x) {
+    var t = x.trim(), last = out[out.length - 1];
+    if (last && /^ /.test(x)) last.sp = true;
+    if (!t) return;
+    if (!/[\p{L}\p{N}]/u.test(t)) {
+      if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+      else { last.t += t; last.sp = / $/.test(x); }
+      return;
+    }
+    out.push({ t: pre + t, sp: / $/.test(x) });
+    pre = "";
+  });
+  if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+  if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+  if (out.length) out[out.length - 1].sp = false;
+  return out;
+}
+function kSplit(el, by, rise, text) {
+  var s = text != null ? String(text) : el.textContent, units = [];
+  var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+  el.textContent = "";
+  parts.forEach(function (p) {
+    var u = document.createElement("span"), box = u;
+    u.className = "ib-u"; u.textContent = p.t;
+    if (by === "line") u.style.display = "block";
+    if (!p.t.trim()) { el.appendChild(u); return; }
+    if (rise) { box = document.createElement("span"); box.className = "ib-cut"; box.style.display = u.style.display; box.appendChild(u); }
+    el.appendChild(box);
+    if (p.sp) el.appendChild(document.createTextNode(" "));
+    units.push(u);
+  });
+  return units;
+}
+// ==== end kit:text ====
+// ==== kit:fit@1 ====
+function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+      var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+      if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+      row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+      "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+      "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+      "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+      "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+}
+// ==== end kit:grain ====
+
+kTone(root);
+var lock = q(".ib-lock"), ic = q(".ib-ic"), icon = q(".ib-icon"), main = q(".ib-main"), gh = root.querySelectorAll(".ib-gh");
+var mk = q(".ib-mk"), gl = q(".ib-gl"), shd = q(".ib-shd"), word = q(".ib-word");
+var img = function (src) { var i = document.createElement("img"); i.src = src; i.alt = ""; return i.outerHTML; };
+if (String(v.icon).trim()) main.innerHTML = img(String(v.icon).trim());
+if (String(v.logo).trim()) { mk.innerHTML = img(String(v.logo).trim()); gl = null; }
+[].forEach.call(gh, function (g) { g.innerHTML = main.innerHTML; });
+// wordmark: one unit per character, one line, shrinks to fit (beside the mark in landscape, under it in portrait)
+var name = String(v.name).replace(/\|/g, "").trim(), units = [];
+if (name) {
+  var room = FW * 0.8 - (L.beside ? ic.offsetWidth + parseFloat(getComputedStyle(word).marginLeft) : 0);
+  word.style.maxWidth = room + "px";
+  units = kSplit(word, "char", false, name);
+  kFit(word, { lines: 1, min: 72, width: room });
+} else word.style.display = "none";
+var fs = parseFloat(getComputedStyle(word).fontSize) || 112, ip = icon.offsetWidth / 340;
+var grain = kGrain(q(".ib-grain"));
+// the glyph's wipe: everything left of the 45-degree line x - y = c (viewBox units) shows; c -68 hides it, 26 shows it all
+var cutAt = function (c) {
+  var p = function (x, y) { return (x / 1.28).toFixed(2) + "% " + (y / 1.28).toFixed(2) + "%"; };
+  return "polygon(" + p(c - 300, -300) + "," + p(c + 428, 428) + "," + p(-1000, 428) + "," + p(-1000, -300) + ")";
+};
+
+var tl = MT.scene(CFG.slot, function (t) {
+  var inT = MT.spring({ t: t, damping: 13, stiffness: 140, mass: 0.8 });
+  var wob = MT.interpolate(t, CFG.wob, CFG.tilt, { easing: "sine.inOut", extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  var fl = MT.ramp(t, CFG.flip[0], CFG.flip[1], "power2.in"), sx = MT.mix(1, 0.04, fl), on = t < CFG.swap;
+  var mx = on ? 0.04 : MT.mix(0.04, 1, MT.spring({ t: t, delay: CFG.swap, damping: 11, stiffness: 130, mass: 0.9 }));
+  var sh = 1 - MT.ramp(t, CFG.shift[0], CFG.shift[1], "power2.out");
+  // the lockup's settled layout comes from the live layout (late fonts cannot leave it off-centre); before the
+  // shift the whole row is moved so the icon / mark stands at the frame centre (portrait: on the 40% line)
+  var dx = lock.clientWidth / 2 - (ic.offsetLeft + ic.offsetWidth / 2), dy = -(ic.offsetTop + ic.offsetHeight / 2);
+  lock.style.transform = "translate(" + (dx * sh).toFixed(2) + "px," + (dy * sh).toFixed(2) + "px)";
+  icon.style.opacity = on ? 1 : 0;
+  main.style.opacity = Math.min(1, inT);
+  main.style.transform = "scale(" + inT.toFixed(4) + ") rotate(" + wob.toFixed(2) + "deg) scaleX(" + sx.toFixed(4) + ")";
+  main.style.filter = fl > 0.3 ? "blur(" + (fl * 5 * ip).toFixed(2) + "px)" : "";
+  // two blurred trails lag the flatten while it runs (0.12 / 0.24 wider, opacity 0.22 / 0.14)
+  [].forEach.call(gh, function (g, i) {
+    g.style.opacity = on && fl > 0 ? 0.22 - i * 0.08 : 0;
+    g.style.transform = "scaleX(" + Math.min(1, sx + 0.12 * (i + 1)).toFixed(4) + ")";
+  });
+  mk.style.opacity = on ? 0 : 1;
+  mk.style.transform = "scaleX(" + mx.toFixed(4) + ")";
+  if (gl) gl.style.clipPath = cutAt(MT.mix(-68, 26, MT.spring({ t: t, delay: CFG.cut, damping: 16, stiffness: 170 })));
+  shd.style.opacity = Math.min(1, inT) * (1 - MT.ramp(t, CFG.shade[0], CFG.shade[1], "out"));
+  shd.style.transform = "translateX(" + (wob * 2.2 * ip).toFixed(2) + "px) scaleX(" + (on ? sx : mx).toFixed(4) + ")";
+  units.forEach(function (el, i) {
+    var st = CFG.word + i * CFG.gap, c = MT.ramp(t, st, CFG.letter, "snappy");
+    el.style.opacity = MT.ramp(t, st, CFG.fade, "out");
+    el.style.transform = "scale(" + (1.9 - 0.9 * c).toFixed(4) + ")";
+    el.style.filter = c < 0.995 ? "blur(" + ((1 - c) * fs * 0.125).toFixed(2) + "px)" : "";
+  });
+  grain(t);
+});
+window.__timelines["icon-bloom-mark"] = tl;
+})();
+      </script>
+    </template>
+  </body>
+</html>

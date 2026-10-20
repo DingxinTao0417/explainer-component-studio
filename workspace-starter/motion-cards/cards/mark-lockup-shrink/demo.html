@@ -1,0 +1,363 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"name","type":"string","label":"字标：产品或频道名（可以留空，只留标志）","default":"示例应用"},
+    {"id":"tagline","type":"string","label":"标语（可以留空；用 | 切意群）","default":"把复杂的事讲清楚"},
+    {"id":"logo","type":"string","label":"标志图片（从项目根目录写起，透明底的方图最好；留空用示意标志）","default":""},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"暗场"},{"value":"off","label":"透明（只留光环、标志和字）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>mark-lockup-shrink · 霓虹环收成标志</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="mark-lockup-shrink-template">
+      <!-- Ported from video-shotcraft demos/outro/logo-shrink-wordmark-lockup/LogoShrinkWordmarkLockup.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT scene, frames to seconds
+           (normalised t x 131 / 30); neutral --k-* palette with --k-stage (violet neon glow -> accent 62%, pale core
+           #dfe9ff -> on-stage + 10% accent, white O -> on-stage, halo and shock-ring glow -> accent, violet tagline ->
+           accent + 22% on-stage, stage gradient mixed from the stage colour); system fonts (a bold face for both text lines),
+           generic copy; upstream mark replaced by the neutral placeholder mark or an image variable (logo), wordmark and
+           motto by the variables name and tagline (CJK line height 1.15, tagline tracking 0.2em was 0.208em plus a
+           matching left pad so it centres; both shrink to fit, then wrap; both can be empty); a dark contact shadow
+           under the text for backdrop off; the 480 x 270 DesignStage zoom became a unit of 1/270 of the short side, so
+           portrait keeps the same sizes with the row at 37% height; letter stagger min(0.153 s, 1.048 s / n) (TSX:
+           always 1.048 s / n; 0.153 s is the recipe's rate for short words); slot 5 s (was 4.4 s) for a 1.2 s hold.
+           Scale curve, brake, spin, heal, mark swap, ghosts, shock ring, halo, vignette, grain, shift and letter
+           timings and sizes kept frame for frame. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        @font-face { font-family: "lk-heavy"; font-weight: 700 900; src: local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"), local("PingFangSC-Semibold"), local("NotoSansSC-Black"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          --k-stage: var(--mc-stage, #0b0d12);
+          --k-on-stage: var(--mc-on-stage, #f3f5f8);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* ==== kit:text@2 ==== */
+        .lk-u { display: inline-block; white-space: pre; }
+        /* ==== end kit:text ==== */
+        /* ==== kit:mark@1 ==== */
+        .lk-mark { display: block; flex: none; }
+        /* ==== end kit:mark ==== */
+        /* ==== kit:grain@1 ==== */
+        .lk-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+        /* ==== kit:vignette@1 ==== */
+        .lk-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--lk-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        /* ==== end kit:vignette ==== */
+        /* ==== kit:stage@1 ==== */
+        .lk-stage { position: absolute; inset: 0; background: linear-gradient(180deg, color-mix(in srgb, var(--k-stage), white 1.5%) 0%, color-mix(in srgb, var(--k-stage), black 30%) 60%, color-mix(in srgb, var(--k-stage), black 50%) 100%); }
+        .lk-stage ~ .lk-vig { --vs: 0.55; --vin: 40%; --vc: color-mix(in srgb, var(--k-stage) 40%, black); }
+        /* ==== end kit:stage ==== */
+        /* the wrapper is the size container. --u is one unit of upstream's 480 x 270 design grid (1/270 of the short side,
+           4px in both 1920 x 1080 and 1080 x 1920); descendants resolve it, so the static page scales with the frame */
+        .lk {
+          position: absolute; inset: 0; container-type: size; --u: 0.37037cqmin;
+          --lk-shade: color-mix(in srgb, var(--k-stage) 40%, black);
+          --lk-neon: color-mix(in srgb, var(--k-accent) 62%, transparent);
+          --lk-core: color-mix(in srgb, var(--k-on-stage) 90%, var(--k-accent));
+          --lk-hv: var(--mc-font, lk-heavy, var(--k-font));
+          /* dark contact shadow under the text: invisible on the stage, keeps the words readable over a bright host (backdrop off) */
+          --lk-sh: color-mix(in srgb, var(--k-stage) 55%, transparent);
+        }
+        .lk[data-backdrop="off"] .lk-bd { display: none; }
+        /* shock ring: centred on the frame, not on the icon (upstream) */
+        .lk-wave { position: absolute; left: 50%; top: 50%; width: 0; height: 0; }
+        .lk-wv { position: absolute; left: 0; top: 0; display: none; border-radius: 50%; box-sizing: border-box; border: 0 solid color-mix(in srgb, var(--lk-core) 55%, transparent); }
+        /* lockup row: icon + gap + wordmark, centred as one group on the frame's middle line (this is the settled layout) */
+        .lk-lock { position: absolute; left: 0; right: 0; top: 50%; height: 0; display: flex; align-items: center; justify-content: center; }
+        .lk-ic { position: relative; flex: none; width: calc(30 * var(--u)); height: calc(30 * var(--u)); }
+        .lk-ic svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+        /* energy halo: a 150-unit disc scaled down to 34 units, behind the icon */
+        .lk-halo {
+          position: absolute; left: 50%; top: 50%; width: calc(300 * var(--u)); height: calc(300 * var(--u));
+          margin: calc(-150 * var(--u)) 0 0 calc(-150 * var(--u)); border-radius: 50%; opacity: 0.18; transform: scale(0.22667);
+          background: radial-gradient(circle, color-mix(in srgb, var(--k-accent) 42%, transparent) 0%, color-mix(in srgb, var(--k-accent) 12%, transparent) 38%, transparent 70%);
+        }
+        .lk-mk { position: absolute; inset: calc(-1 * var(--u)); }
+        .lk-mk img { position: absolute; inset: calc(2 * var(--u)); width: calc(28 * var(--u)); height: calc(28 * var(--u)); object-fit: contain; }
+        .lk-word {
+          display: block; flex: none; margin-left: calc(9 * var(--u)); font: 700 calc(22 * var(--u))/1.15 var(--lk-hv); letter-spacing: 0.03em;
+          color: var(--k-on-stage); text-shadow: 0 calc(0.5 * var(--u)) calc(3 * var(--u)) var(--lk-sh), 0 0 calc(12 * var(--u)) color-mix(in srgb, var(--k-accent) 18%, transparent);
+        }
+        .lk-tag {
+          position: absolute; left: 11%; right: 11%; top: calc(50% + 34 * var(--u)); font: 700 calc(12.5 * var(--u))/1.25 var(--lk-hv);
+          letter-spacing: 0.2em; padding-left: 0.2em; text-align: center; color: color-mix(in srgb, var(--k-accent) 78%, var(--k-on-stage)); text-shadow: 0 calc(0.5 * var(--u)) calc(3 * var(--u)) var(--lk-sh);
+        }
+        /* portrait: the same lockup, its row at 37% so the row + tagline stack sits on the 40% line */
+        @container (orientation: portrait) {
+          .lk-lock, .lk-wave { top: 37%; }
+          .lk-tag { top: calc(37% + 34 * var(--u)); }
+        }
+      </style>
+
+      <div id="root" data-composition-id="mark-lockup-shrink">
+        <div class="lk">
+          <div class="lk-bd lk-stage"></div>
+          <div class="lk-wave"><div class="lk-wv"></div></div>
+          <div class="lk-bd lk-vig"></div>
+          <div class="lk-bd lk-grain"></div>
+          <div class="lk-lock">
+            <div class="lk-ic">
+              <div class="lk-halo" data-layout-allow-overflow></div>
+              <div class="lk-mk"><svg class="lk-mark" width="100%" height="100%" viewBox="0 0 128 128" aria-hidden="true"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg></div>
+            </div>
+            <div class="lk-word">示例应用</div>
+          </div>
+          <div class="lk-tag">把复杂的事讲清楚</div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing in seconds, shared by both orientations. Upstream runs a normalised t over 132 frames:
+          // seconds = t * 131 / 30 (shrink 0.02-0.28, brake 0.26-0.37, heal 0.10-0.28, mark 0.24-0.32, shift 0.34-0.47 ...)
+          var CFG = {
+            from: 5.4, shrink: [0.087, 1.223],        // ring scale 5.4 -> 1, power2.inOut
+            brake: [1.135, 1.616], bump: 0.06,        // +6% sine bump as it lands
+            spin: [0, 1.31], turn: -150,              // the ring turns while it shrinks, power2.out
+            heal: [0.437, 1.223],                     // neon fades, gaps close into a white O (power1.inOut)
+            mark: [1.048, 1.397],                     // white O -> mark (power1.inOut)
+            wave: [1.223, 2.009],                     // shock ring at the landing, power2.out
+            haloR: [0.087, 1.31], haloA: [1.31, 2.183],
+            shift: [1.485, 2.052],                    // icon slides left to make room, power2.inOut
+            letters: 2.009, span: 1.048, gap: 0.153, letter: 0.437, // letter i at letters + i * min(gap, span / n)
+            tagA: [3.144, 3.668], tagY: [3.144, 3.755],
+            slot: 5
+          };
+          // per orientation: only the floor of the wordmark size differs (portrait titles stay >= 72px)
+          var LAND = { minWord: 56 };
+          var PORT = { minWord: 72 };
+          var v = { name: "示例应用", tagline: "把复杂的事讲清楚", logo: "", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".lk");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND, u = Math.min(FW, FH) / 270;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          root.setAttribute("data-backdrop", String(v.backdrop) === "off" ? "off" : "on");
+
+          // ==== kit:text@2 ====
+          var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "lk-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "lk-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          // ==== end kit:text ====
+
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          // ==== end kit:fit ====
+
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+
+          var lock = q(".lk-lock"), ic = q(".lk-ic"), halo = q(".lk-halo"), mk = q(".lk-mk"), word = q(".lk-word"), tag = q(".lk-tag"), wv = q(".lk-wv");
+          // text: the wordmark splits per character (spaces keep their width and never animate), the tagline per phrase;
+          // both shrink to fit (wordmark: one line beside the icon inside 78% of the frame; tagline: one line)
+          var name = String(v.name).replace(/\|/g, "").trim(), line = String(v.tagline).trim(), units = [];
+          if (name) {
+            var room = FW * 0.78 - 39 * u;
+            word.style.maxWidth = room + "px";
+            units = kSplit(word, "char", false, name);
+            kFit(word, { lines: 1, min: L.minWord, width: room });
+          } else word.style.display = "none";
+          if (line) { kSplit(tag, "word", false, line); kFit(tag, { lines: 1, min: 40 }); } else tag.style.display = "none";
+          var lg = Math.min(CFG.gap, CFG.span / Math.max(1, units.length));
+          if (String(v.logo).trim()) {
+            mk.textContent = "";
+            var im = document.createElement("img");
+            im.src = String(v.logo).trim(); im.alt = "";
+            mk.appendChild(im);
+          }
+
+          // the ring: two 154-degree arcs (gaps at 122-148 and 302-328 deg) in a 30-unit box, r 10.5. Glow = blurred wide
+          // stroke; core = thin pale stroke; O = the healed white ring. Two ghost copies of the glow trail the shrink.
+          var arc = function (a0, a1) {
+            var p = function (a) { a *= Math.PI / 180; return (15 + 10.5 * Math.cos(a)).toFixed(2) + "," + (15 + 10.5 * Math.sin(a)).toFixed(2); };
+            return "M" + p(a0) + " A10.5,10.5 0 0 1 " + p(a1);
+          };
+          var D = arc(-32, 122) + " " + arc(148, 302), fid = "lk-b" + (window.__lkN = (window.__lkN || 0) + 1);
+          var glow = '<path d="' + D + '" filter="url(#' + fid + ')" style="fill:none;stroke:var(--lk-neon);stroke-width:6.5;stroke-linecap:round"/>';
+          mk.insertAdjacentHTML("beforebegin",
+            '<svg class="lk-g2" viewBox="0 0 30 30" aria-hidden="true">' + glow + "</svg>" +
+            '<svg class="lk-g1" viewBox="0 0 30 30" aria-hidden="true">' + glow + "</svg>" +
+            '<svg class="lk-ring" viewBox="0 0 30 30" aria-hidden="true"><defs><filter id="' + fid + '" filterUnits="userSpaceOnUse" x="-10" y="-10" width="50" height="50"><feGaussianBlur stdDeviation="2.5"/></filter></defs>' +
+            glow.replace("<path", '<path class="lk-gl"') +
+            '<path class="lk-co" d="' + D + '" style="fill:none;stroke:var(--lk-core);stroke-width:3.4;stroke-linecap:round"/>' +
+            '<circle class="lk-o" cx="15" cy="15" r="10.5" style="fill:none;stroke:var(--k-on-stage);stroke-width:5.5"/></svg>');
+          var ring = q(".lk-ring"), g1 = q(".lk-g1"), g2 = q(".lk-g2"), gl = q(".lk-gl"), co = q(".lk-co"), oo = q(".lk-o");
+          var grain = kGrain(q(".lk-grain"), { opacity: 0.07, blend: "soft-light" });
+
+          var sg = function (t, r, e) { return MT.ramp(t, r[0], r[1] - r[0], e || "none"); };
+          var sAt = function (t) { return MT.mix(CFG.from, 1, sg(t, CFG.shrink, "power2.inOut")) * (1 + Math.sin(Math.PI * sg(t, CFG.brake)) * CFG.bump); };
+          var tf = function (t) { return "scale(" + sAt(t).toFixed(4) + ") rotate(" + (CFG.turn * sg(t, CFG.spin, "power2.out")).toFixed(2) + "deg)"; };
+          var F = 1 / 30;
+
+          var tl = MT.scene(CFG.slot, function (t) {
+            var s = sAt(t), heal = sg(t, CFG.heal, "power1.inOut"), m = sg(t, CFG.mark, "power1.inOut");
+            // ghosts: one and two frames behind, only while the scale moves fast (upstream: per-frame delta / 0.35)
+            var trail = Math.min(1, Math.abs(s - sAt(t - F)) / 0.35), on = trail > 0.02;
+            // the icon's settled centre comes from the live layout, so late font loading cannot leave it off-centre
+            var dx = ic.offsetLeft + ic.offsetWidth / 2 - lock.clientWidth / 2;
+            ic.style.transform = "translateX(" + ((sg(t, CFG.shift, "power2.inOut") - 1) * dx).toFixed(2) + "px)";
+            ring.style.transform = tf(t);
+            g1.style.transform = tf(t - F); g2.style.transform = tf(t - 2 * F);
+            g1.style.opacity = on ? 0.3 * trail * (1 - heal) : 0;
+            g2.style.opacity = on ? 0.16 * trail * (1 - heal) : 0;
+            gl.style.opacity = 1 - heal;
+            co.style.opacity = (1 - heal * 0.75) * (1 - m);
+            co.style.stroke = heal > 0.5 ? "var(--k-on-stage)" : "var(--lk-core)";
+            oo.style.opacity = heal * (1 - m);
+            mk.style.transform = "scale(" + s.toFixed(4) + ")";
+            mk.style.opacity = m;
+            halo.style.transform = "scale(" + (MT.mix(150, 34, sg(t, CFG.haloR, "power2.inOut")) / 150).toFixed(4) + ")";
+            halo.style.opacity = 0.5 - 0.32 * sg(t, CFG.haloA, "power2.out");
+            var w = sg(t, CFG.wave, "power2.out");
+            if (w > 0 && w < 1) {
+              var d = MT.mix(32, 140, w) * u;
+              wv.style.cssText = "display:block;width:" + d.toFixed(1) + "px;height:" + d.toFixed(1) + "px;margin:" + (-d / 2).toFixed(1) + "px 0 0 " + (-d / 2).toFixed(1) +
+                "px;border-width:" + (MT.mix(0.9, 0.25, w) * u).toFixed(2) + "px;opacity:" + (1 - w).toFixed(3) +
+                ";box-shadow:0 0 " + (MT.mix(4, 10, w) * u).toFixed(1) + "px color-mix(in srgb, var(--k-accent) 45%, transparent)";
+            } else wv.style.cssText = "";
+            // letters: left to right, 8 units in from the right and 2.5 units of blur, power2.out over 0.437 s each
+            units.forEach(function (el, i) {
+              var p = MT.ramp(t, CFG.letters + i * lg, CFG.letter, "power2.out");
+              el.style.opacity = p;
+              el.style.transform = "translateX(" + ((1 - p) * 8 * u).toFixed(2) + "px)";
+              el.style.filter = p < 0.999 ? "blur(" + ((1 - p) * 2.5 * u).toFixed(2) + "px)" : "";
+            });
+            tag.style.opacity = sg(t, CFG.tagA, "power1.out");
+            tag.style.transform = "translateY(" + ((1 - sg(t, CFG.tagY, "power2.out")) * 3 * u).toFixed(2) + "px)";
+            grain(t);
+          });
+          window.__timelines["mark-lockup-shrink"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,483 @@
+<!doctype html>
+<html
+ lang="zh-CN"
+ data-composition-variables='[
+  {"id":"modeA","type":"string","label":"翻色前的模式名","default":"编辑模式"},
+  {"id":"modeB","type":"string","label":"翻色后的模式名","default":"预览模式"},
+  {"id":"name","type":"string","label":"产品名（留空不显示）","default":"示例应用"},
+  {"id":"shotA","type":"string","label":"翻色前的截图（从项目根写起；留空用示意界面）","default":""},
+  {"id":"shotB","type":"string","label":"翻色后的截图（留空沿用 shotA）","default":""},
+  {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（只留色框）"}]}
+ ]'
+>
+ <head>
+  <meta charset="UTF-8" />
+  <title>frame-snap-flip · 色框同帧翻色</title>
+  <script src="../../lib/preview.js"></script>
+ </head>
+ <body>
+  <template id="frame-snap-flip-template">
+ <!-- Ported from video-shotcraft demos/effects/brand-frame-snap/BrandFrameSnap.tsx
+  (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+  Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+  Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+  neutral --k-* palette (blue mode = accent-2, orange mode = accent), system fonts, generic copy; upstream mark and
+  wordmark -> neutral mark + name variable; the design-tool window (layers, inspector, CSS panel, promo card, crumbs,
+  mode icons) -> text-free fake UI, grid in mode A, list + code-bar panel in mode B, or two user screenshots;
+  selection on a card, not a button; 4 redlines -> 3; labels, switch, pills 28-30 px (were 19-22); porcelain stage
+  -> backdrop + vignette 0.07 + grain; portrait 840 x 940 window, band labels as chips above it; 4.667 s -> 4.8 s.
+  Kept: 60 px band in 19 frames, glaze, 22 px hole, rim, floor glow, window spring 15/115 660 px 18 deg 0.88, speed
+  blur 0.28/14, shadow 70-22, cursor arc, flip on frame 84, flash 0.6/0.4/0.2, band bounce, 1.2% knock, 2% push. -->
+ <style>
+  @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+  @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+  @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+  #root {
+   --k-bg: var(--mc-bg, #ffffff);
+   --k-panel: var(--mc-panel, #f4f5f7);
+   --k-ink: var(--mc-ink, #15171c);
+   --k-muted: var(--mc-muted, #6b7280);
+   --k-accent: var(--mc-accent, #e8590c);
+   --k-accent-2: var(--mc-accent-2, #2563eb);
+   --k-on-accent: var(--mc-on-accent, #ffffff);
+   --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+   position: absolute; inset: 0; overflow: hidden;
+   font-family: var(--k-font); color: var(--k-ink);
+  }
+  /* wrapper = size container; --fs-c = the mode colour (accent-2 before the flip, accent after), static = settled */
+  .fs {
+   position: absolute; inset: 0; container-type: size; --fs-c: var(--k-accent);
+   --fs-dk: color-mix(in srgb, var(--k-ink) 94%, var(--k-bg)); --fs-dt: var(--k-bg); --fs-d1: color-mix(in srgb, var(--fs-dt) 72%, transparent);
+   --fs-d2: color-mix(in srgb, var(--fs-dt) 40%, transparent); --fs-d3: color-mix(in srgb, var(--fs-dt) 18%, transparent);
+   /* kit:derived@1 (line, panel-2, shade) */
+   --fs-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+   --fs-panel-2: color-mix(in srgb, var(--k-panel), var(--k-ink) 4%);
+   --fs-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+  }
+  .fs[data-tone="dark"] { --fs-shade: color-mix(in srgb, var(--k-bg) 30%, black); --fs-dk: color-mix(in srgb, var(--k-bg) 45%, black); --fs-dt: var(--k-ink); }
+  .fs-stage, .fs-edge { position: absolute; inset: 60px; border-radius: 22px; overflow: hidden; }
+  .fs-edge { inset: 0; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fs-shade) 10%, transparent), inset 0 4px 14px color-mix(in srgb, var(--fs-shade) 18%, transparent); }
+  /* ==== kit:backdrop@1 ==== */
+  .fs-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+  .fs-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+  /* ==== end kit:backdrop ==== */
+  /* upstream stage: key light top centre; floor glow in the mode colour */
+  .fs .fs-backdrop::after { background: radial-gradient(ellipse 58% 62% at 50% 0%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 70%); }
+  .fs-floor, .fs-band, .fs-flash, .fs-push, .fs-mo, .fs-persp { position: absolute; inset: 0; }
+  .fs-floor { background: radial-gradient(ellipse 70% 40% at 50% 104%, color-mix(in srgb, var(--fs-c) 16%, transparent) 0%, transparent 70%); }
+  /* ==== kit:vignette@1 ==== */
+  .fs-vig {
+   position: absolute; inset: 0; pointer-events: none;
+   --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--fs-shade);
+   background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+  }
+  .fs[data-tone="dark"] .fs-vig { --vs: 0.55; }
+  /* ==== end kit:vignette ==== */
+  .fs .fs-vig { --vs: 0.07; }
+  /* ==== kit:grain@1 ==== */
+  .fs-grain { position: absolute; inset: 0; pointer-events: none; }
+  /* ==== end kit:grain ==== */
+  /* push box 2% inside the hole: the 1.02 push stays in it */
+  .fs-push { inset: 2%; transform-origin: 50% 52%; transform: scale(1.02); }
+  .fs-persp { perspective: 2400px; perspective-origin: 50% 30%; }
+  /* window 1560 x 864, 6 px below the middle (portrait 840 x 940 in the 12-68% band) */
+  .fs-win {
+   position: absolute; left: 50%; top: 50%; width: 1560px; height: 864px; margin: -426px 0 0 -780px; border-radius: 18px; overflow: hidden;
+   background: var(--k-bg); transform-origin: 50% 100%; box-shadow: 0 0 0 1px var(--fs-line), 0 12px 29px -5px color-mix(in srgb, var(--fs-shade) 23%, transparent);
+  }
+  .fs-bar { position: absolute; left: 0; top: 0; right: 0; height: 64px; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--fs-line); background: linear-gradient(var(--k-panel), var(--fs-panel-2)); }
+  .fs-bar i, .fs-bar u { display: block; flex: none; width: 14px; height: 14px; border-radius: 7px; background: color-mix(in srgb, var(--k-ink) 16%, var(--k-panel)); }
+  .fs-bar u { width: 96px; height: 12px; margin-left: 22px; }
+  .fs-bar u + u { width: 150px; margin-left: 6px; background: color-mix(in srgb, var(--k-ink) 34%, var(--k-panel)); }
+  /* the mode switch: the lit half is the current mode */
+  .fs-tog { position: absolute; right: 24px; top: 8px; height: 48px; box-sizing: border-box; padding: 4px; display: flex; gap: 4px; border-radius: 12px; background: color-mix(in srgb, var(--k-ink) 8%, var(--k-panel)); }
+  .fs-tog b { display: block; flex: none; padding: 0 16px; border-radius: 9px; font-size: 28px; line-height: 40px; color: var(--k-muted); }
+  .fs-tog .on { background: var(--fs-c); color: var(--k-on-accent); box-shadow: 0 2px 6px color-mix(in srgb, var(--fs-c) 35%, transparent); }
+  .fs-body, .fs-ua, .fs-ub, .fs-body svg, .fs-body img { position: absolute; left: 0; top: 0; right: 0; bottom: 0; display: block; }
+  .fs-body { top: 64px; }
+  .fs-ua { opacity: 0; }
+  .fs-body img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; }
+  .fs-code { position: absolute; right: 0; top: 0; bottom: 0; width: 400px; background: var(--fs-dk); }
+  .fs-ann { overflow: visible; }
+  .fs-ann * { fill: none; stroke: var(--fs-c); stroke-width: 3; stroke-linecap: round; }
+  .fs-ann .fs-hd { fill: var(--k-bg); transform-box: fill-box; transform-origin: center; }
+  .fs-ann .fs-dash { stroke-width: 2; stroke-dasharray: 7 6; }
+  .fs-pill { position: absolute; padding: 2px 12px; border-radius: 9px; background: var(--fs-c); color: var(--k-on-accent); font-size: 28px; font-weight: 700; line-height: 40px; white-space: nowrap; transform: scale(0); box-shadow: 0 4px 12px color-mix(in srgb, var(--fs-c) 35%, transparent); }
+  .fs-cur { position: absolute; left: 0; top: 0; transform-origin: 7px 4px; opacity: 0; fill: var(--k-ink); stroke: var(--k-bg); stroke-width: 1.6; stroke-linejoin: round; filter: drop-shadow(0 4px 8px color-mix(in srgb, var(--fs-shade) 28%, transparent)); }
+  /* the frame: one board in the mode colour with a lit glaze (bright top, darker bottom); the rounded hole is cut by
+     an even-odd path that the script redraws as the band grows and bounces */
+  .fs-band {
+   background: linear-gradient(color-mix(in srgb, white 14%, transparent), transparent 35%, color-mix(in srgb, black 10%, transparent)), var(--fs-c);
+   clip-path: path(evenodd, "M0 0H1920V1080H0ZM60 82A22 22 0 0 1 82 60H1838A22 22 0 0 1 1860 82V998A22 22 0 0 1 1838 1020H82A22 22 0 0 1 60 998Z");
+  }
+  .fs-flash { opacity: 0; background: radial-gradient(ellipse 75% 75%, color-mix(in srgb, white 30%, transparent) 40%, white); }
+  /* band labels: mode name left, mark + name right */
+  .fs-tags { position: absolute; left: 66px; right: 66px; top: 0; height: 60px; display: flex; align-items: center; justify-content: space-between; color: var(--k-on-accent); font-size: 30px; font-weight: 800; --fs-mb: var(--k-on-accent); --fs-mg: var(--fs-c); }
+  .fs-tag { display: grid; letter-spacing: 0.12em; }
+  .fs-tag span { grid-area: 1 / 1; justify-self: start; }
+  .fs-ta { opacity: 0; }
+  .fs-brand { display: flex; align-items: center; gap: 12px; opacity: 0.92; }
+  .fs-off .fs-backdrop, .fs-off .fs-floor, .fs-off .fs-vig, .fs-off .fs-grain, .fs-off .fs-push, .fs-shot .fs-ann, .fs-shot .fs-pill { display: none; }
+  /* portrait: the top band sits under the platform's top bar, so the labels become chips above the window */
+  @container (orientation: portrait) {
+   .fs-band { clip-path: path(evenodd, "M0 0H1080V1920H0ZM60 82A22 22 0 0 1 82 60H998A22 22 0 0 1 1020 82V1838A22 22 0 0 1 998 1860H82A22 22 0 0 1 60 1838Z"); }
+   .fs-win { width: 840px; height: 940px; margin: -620px 0 0 -420px; }
+   .fs-code { left: 0; top: auto; width: auto; height: 300px; }
+   .fs-tags { top: 244px; left: 120px; right: 120px; height: 64px; color: var(--k-ink); --fs-mb: var(--fs-c); --fs-mg: var(--k-on-accent); }
+   .fs-tag span { padding: 0 22px; border-radius: 14px; line-height: 64px; background: var(--fs-c); color: var(--k-on-accent); }
+  }
+ </style>
+
+ <div id="root" data-composition-id="frame-snap-flip">
+<div class="fs">
+<div class="fs-stage">
+<div class="fs-backdrop"></div>
+<div class="fs-floor"></div>
+<div class="fs-vig"></div>
+<div class="fs-grain"></div>
+<div class="fs-push">
+<div class="fs-mo">
+<div class="fs-persp">
+<div class="fs-win" data-layout-allow-overflow>
+<div class="fs-body">
+<div class="fs-ub"><div class="fs-list"></div><div class="fs-code"></div></div>
+<div class="fs-ua"></div>
+<svg class="fs-ann" width="1" height="1"></svg>
+</div>
+<div class="fs-bar"><i></i><i></i><i></i><u></u><u></u><div class="fs-tog"><b class="fs-ka" data-layout-allow-occlusion>编辑模式</b><b class="fs-kb on" data-layout-allow-occlusion>预览模式</b></div></div>
+<svg class="fs-cur" width="44" height="44" viewBox="0 0 24 24"><path d="M5 3.2 19 12l-6.4 1.3L9.4 19.6z" /></svg>
+</div>
+</div>
+</div>
+</div>
+<div class="fs-edge"></div>
+</div>
+<div class="fs-band"></div>
+<div class="fs-flash"></div>
+<div class="fs-tags">
+<div class="fs-tag"><span class="fs-ta">编辑模式</span><span class="fs-tb">预览模式</span></div>
+<div class="fs-brand"><!-- kit:mark@1 -->
+<svg class="fs-mark" width="40" height="40" viewBox="0 0 128 128"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--fs-mb)" /><circle cx="46" cy="46" r="16" style="fill:var(--fs-mg)" /><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--fs-mg)" /></svg>
+<span class="fs-name">示例应用</span>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+(function () {
+ // seconds = upstream frames / 30 (flip on frame 84), both orientations
+ var CFG = {
+  grow: -0.033, growDur: 0.633, band: 60, bounce: 12, tag: 0.2, tagDur: 0.467, // band from frame -1 over 19 frames
+  drop: 0.333, fall: 660, tilt: 18, scale: 0.88, // window spring from frame 10
+  sel: 1.2, selDur: 0.4, hand: 1.333, pill: 1.533, // selection, handles 1.2 frames apart, size pill
+  curIn: 1.8, cur: 1.867, curDur: 0.8, press: 2.667, flip: 2.8, curOut: 3.333, // cursor; release = flip
+  line: 2.867, lineDur: 0.3, pills: 3, step: 0.1, // measure lines 3 frames apart
+  push: 1.333, pushDur: 3.333, dur: 5 // push to frame 140, hold
+ };
+ // window size / offset as shares of the frame; code panel right (cw) or at the bottom (ch); label widths
+ var LAND = { w: 0.8125, h: 0.8, oy: 0.0056, cw: 400, ch: 0, tag: 0.38, name: 0.3 };
+ var PORT = { w: 0.7778, h: 0.4896, oy: -0.0781, cw: 0, ch: 300, tag: 0.42, name: 0.26 };
+ var v = { modeA: "编辑模式", modeB: "预览模式", name: "示例应用", shotA: "", shotB: "", backdrop: "on" };
+ try {
+  var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+  for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+ } catch (e) {}
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+var p = document.createElement("i");
+p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+el.appendChild(p);
+var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+el.removeChild(p);
+return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+var c = kRGB(wrap, "var(--k-bg)");
+var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+wrap.setAttribute("data-tone", tone);
+return tone;
+}
+// ==== end kit:tone ====
+// ==== kit:fit@1 (kFit, kLines) ====
+function kFit(el, o) {
+o = o || {};
+var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+for (;;) {
+el.style.fontSize = f + "px";
+m = kLines(el);
+if ((m.w <= W && m.n <= n) || f <= min) break;
+f = Math.max(min, f - 2);
+}
+if (m.w > W) {
+[].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+m = kLines(el);
+}
+return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+while ((t = it.nextNode())) {
+if (!t.data.trim()) continue;
+r.selectNodeContents(t);
+[].forEach.call(r.getClientRects(), function (b) {
+var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+});
+}
+return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+// ==== kit:fakeui@1 ====
+function kFakeUI(w, h, kind, seed) {
+var rnd = MT.seeded(seed || 7), out = [], cards = [], u = Math.min(w / 1600, h / 900);
+var ink = "color-mix(in srgb, var(--k-ink) 22%, var(--k-panel))", line = "color-mix(in srgb, var(--k-ink) 9%, var(--k-bg))";
+var R = function (x, y, rw, rh, r, c) { out.push('<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + rw.toFixed(1) + '" height="' + rh.toFixed(1) + '" rx="' + (r * u).toFixed(1) + '" style="fill:' + c + '"/>'); };
+var side = 190 * u, top = 64 * u, pad = 30 * u, gap = 22 * u;
+R(0, 0, w, h, 0, "var(--k-bg)");
+R(0, 0, side, h, 0, "var(--k-panel)");
+for (var i = 0; i < 6; i++) { R(24 * u, (92 + i * 46) * u, 18 * u, 18 * u, 5, i === 1 ? "var(--k-accent)" : ink); R(54 * u, (96 + i * 46) * u, (60 + rnd() * 60) * u, 10 * u, 5, ink); }
+R(side, top - u, w - side, Math.max(1, u), 0, line);
+R(side + pad, 22 * u, 170 * u, 18 * u, 9, ink);
+R(w - pad - 260 * u, 16 * u, 260 * u, 32 * u, 16, "var(--k-panel)");
+var x0 = side + pad, y0 = top + pad, cw = w - x0 - pad, ch = h - y0 - pad;
+if (kind === "list") {
+var rh = (ch - gap * 4) / 5;
+for (var r = 0; r < 5; r++) {
+var y = y0 + r * (rh + gap), m = y + rh / 2;
+cards.push({ x: x0, y: y, w: cw, h: rh });
+R(x0, y, cw, rh, 12, "var(--k-panel)");
+R(x0 + 24 * u, m - 18 * u, 36 * u, 36 * u, 10, r === 0 ? "var(--k-accent)" : ink);
+R(x0 + 80 * u, m - 14 * u, (260 + rnd() * 260) * u, 12 * u, 6, ink);
+R(x0 + 80 * u, m + 6 * u, (140 + rnd() * 160) * u, 9 * u, 4.5, line);
+R(x0 + cw - 150 * u, m - 13 * u, 110 * u, 26 * u, 13, line);
+}
+} else {
+var gw = (cw - gap * 2) / 3, gh = (ch - gap) / 2;
+for (var k = 0; k < 6; k++) {
+var cx = x0 + (k % 3) * (gw + gap), cy = y0 + Math.floor(k / 3) * (gh + gap), base = cy + gh - 24 * u;
+cards.push({ x: cx, y: cy, w: gw, h: gh });
+R(cx, cy, gw, gh, 14, "var(--k-panel)");
+R(cx + 22 * u, cy + 24 * u, (90 + rnd() * 70) * u, 12 * u, 6, ink);
+R(cx + 22 * u, cy + 52 * u, (110 + rnd() * 70) * u, 28 * u, 8, k === 0 ? "var(--k-accent)" : ink);
+if (k % 2) {
+for (var j = 0; j < 7; j++) { var bh = (0.25 + rnd() * 0.75) * gh * 0.4; R(cx + 22 * u + j * (gw - 44 * u) / 7, base - bh, (gw - 44 * u) / 7 - 8 * u, bh, 4, j === 5 ? "var(--k-accent-2)" : ink); }
+} else {
+var pts = [];
+for (var q = 0; q <= 12; q++) pts.push((cx + 22 * u + (q * (gw - 44 * u)) / 12).toFixed(1) + "," + (base - (0.2 + 0.6 * (0.5 + 0.5 * Math.sin(q * 0.7 + k)) * (0.6 + 0.4 * rnd())) * gh * 0.4).toFixed(1));
+out.push('<polyline points="' + pts.join(" ") + '" style="fill:none;stroke:var(--k-accent-2);stroke-width:' + (3 * u).toFixed(1) + ';stroke-linejoin:round;stroke-linecap:round"/>');
+}
+}
+}
+return { svg: '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + " " + h + '" aria-hidden="true">' + out.join("") + "</svg>", cards: cards };
+}
+// ==== end kit:fakeui ====
+// ==== kit:speedblur@1 ====
+function kSpeedBlur(box, prefix, o) {
+o = o || {};
+var amount = o.amount || 0.45, max = o.max || 36;
+var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+var outer = document.createElement("div"), inner = document.createElement("div");
+outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+while (box.firstChild) inner.appendChild(box.firstChild);
+outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+var fe = svg.firstChild.firstChild;
+return function (vx, vy) {
+vy = vy || 0;
+var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+outer.style.filter = "url(#" + id + ")";
+};
+}
+// ==== end kit:speedblur ====
+// ==== kit:shadow@1 ====
+function kShadow(e, strength) {
+e = Math.max(0, e);
+var s = strength == null ? 1 : strength, r = function (x) { return Math.round(x * 10) / 10; };
+var c = function (a) { return "color-mix(in srgb, var(--fs-shade) " + r(Math.min(1, a) * 100) + "%, transparent)"; };
+return "0 " + r(0.5 + e * 0.06) + "px " + r(1 + e * 0.18) + "px " + c((0.12 * s) / (1 + e / 24)) + ", " +
+"0 " + r(e * 0.55) + "px " + r(e * 1.3) + "px " + r(-e * 0.22) + "px " + c((0.08 + (Math.min(e, 64) / 64) * 0.22) * s);
+}
+// ==== end kit:shadow ====
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+o = o || {};
+var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+var dark = tones && tones.getAttribute("data-tone") === "dark";
+var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+var f = "type='linear' slope='2.4' intercept='-0.7'";
+var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+"<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+"<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+"<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+"<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+});
+layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+layer.style.backgroundSize = size + "px " + size + "px";
+return function (t) {
+var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+layer.style.backgroundImage = tiles[k % 6];
+layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+};
+}
+// ==== end kit:grain ====
+
+ var root = document.querySelector(".fs"), q = function (s) { return root.querySelector(s); };
+ // orientation = the box the host clip gave this card
+ var FW = root.clientWidth, FH = root.clientHeight;
+ if (!FW || !FH) {
+  var hc = root.closest("[data-width][data-height]");
+  FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+  FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+ }
+ var P = FH > FW, L = P ? PORT : LAND, M = MT;
+ root.setAttribute("data-orient", P ? "portrait" : "landscape");
+ var dark = kTone(root) === "dark";
+ if (String(v.backdrop) === "off") root.classList.add("fs-off");
+
+ // text slots: whole strings (nothing is split, typed spaces stay), each fitted to its own width, 28 px floor
+ var ta = q(".fs-ta"), tb = q(".fs-tb"), ka = q(".fs-ka"), kb = q(".fs-kb"), nm = q(".fs-name");
+ var name = String(v.name).trim();
+ ta.textContent = ka.textContent = String(v.modeA).trim() || "编辑模式";
+ tb.textContent = kb.textContent = String(v.modeB).trim() || "预览模式";
+ nm.textContent = name;
+ if (!name) q(".fs-brand").style.display = "none";
+ [ta, tb, nm, ka, kb].forEach(function (e, i) { kFit(e, { width: i > 2 ? 200 : FW * (i > 1 ? L.name : L.tag), min: 28 }); });
+
+ // the window; layout A = grid (accent-2 only), B = list + dark code panel (accent only), or the user's screenshots
+ var WW = Math.round(FW * L.w), WH = Math.round(FH * L.h), BH = WH - 64, win = q(".fs-win");
+ win.style.cssText = "width:" + WW + "px;height:" + WH + "px;margin:" + Math.round(FH * L.oy - WH / 2) + "px 0 0 " + -WW / 2 + "px";
+ var ua = q(".fs-ua"), ann = q(".fs-ann"), shA = String(v.shotA).trim(), shB = String(v.shotB).trim() || shA;
+ var gA = kFakeUI(WW, BH, "grid", 7), gB = kFakeUI(WW - L.cw, BH - L.ch, "list", 7), pills = [], RL = [], hds = [], sel, per, c1;
+ var img = function (b, src) { b.innerHTML = ""; b.appendChild(new Image()).src = src; };
+ // code panel: tabs, numbered lines of bars with values in the mode colour, a button
+ var code = function (w, h) {
+  var o = "", rnd = M.seeded(3), n = Math.min(9, Math.floor((h - 170) / 38));
+  var R = function (x, y, rw, rh, c) { o += '<rect x="' + x + '" y="' + y + '" width="' + rw.toFixed(1) + '" height="' + rh + '" rx="' + Math.min(rh / 2, 12) + '" style="fill:var(--fs-' + c + ')"/>'; };
+  R(26, 25, 52, 14, "d1"); R(104, 25, 84, 14, "d3"); R(214, 25, 76, 14, "d3"); R(26, 54, 52, 4, "c"); R(0, 63, w, 1, "d3");
+  for (var i = 0; i < n; i++) {
+   var y = 92 + i * 38, mid = i && i < n - 1, kw = 50 + rnd() * 80;
+   R(26, y, 14, 12, "d3");
+   R(mid ? 88 : 58, y, kw, 12, mid ? "d2" : "d1");
+   if (mid) R(102 + kw, y, 40 + rnd() * 70, 12, "c");
+  }
+  R(26, h - 82, w - 52, 56, "c");
+  return '<svg width="' + w + '" height="' + h + '">' + o + "</svg>";
+ };
+ if (shA) {
+  img(ua, shA); img(q(".fs-ub"), shB);
+  root.classList.add("fs-shot");
+ } else {
+  ua.innerHTML = gA.svg.replace(/var\(--k-accent\)/g, "var(--k-accent-2)");
+  q(".fs-list").innerHTML = gB.svg;
+  q(".fs-code").innerHTML = code(L.cw || WW, L.ch || BH);
+  // A: a selection round the second card; B: the second row measured (width, height, the gap below)
+  c1 = gA.cards[1];
+  var r1 = gB.cards[1], gap = gB.cards[2].y - r1.y - r1.h, gx = r1.x + r1.w * 0.4, hx = r1.x + r1.w * 0.78, rb = r1.y + r1.h;
+  var sx = c1.x - 6, sy = c1.y - 6, sw = c1.w + 12, sh = c1.h + 12, H8 = [0, 0, 0.5, 0, 1, 0, 1, 0.5, 1, 1, 0.5, 1, 0, 1, 0, 0.5];
+  per = 2 * (sw + sh);
+  var s = '<g class="fs-ga"><rect class="fs-sel" x="' + sx + '" y="' + sy + '" width="' + sw + '" height="' + sh + '" rx="20" stroke-dasharray="' + per + " " + per + '"/>';
+  for (var i = 0; i < 16; i += 2) s += '<rect class="fs-hd" x="' + (sx + H8[i] * sw - 7) + '" y="' + (sy + H8[i + 1] * sh - 7) + '" width="14" height="14" rx="3"/>';
+  s += '</g><g class="fs-gb"><rect class="fs-dash" x="' + (r1.x - 1) + '" y="' + (r1.y - 1) + '" width="' + (r1.w + 2) + '" height="' + (r1.h + 2) + '" rx="10"/>';
+  ann.innerHTML = s + "<g><line/><line/><line/></g><g><line/><line/><line/></g><g><line/><line/><line/></g></g>";
+  sel = q(".fs-sel");
+  hds = ann.querySelectorAll(".fs-hd");
+  RL = [[r1.x, r1.y - gap / 2, r1.x + r1.w, r1.y - gap / 2, r1.w, 0], [hx, r1.y, hx, rb, r1.h, 0], [gx, rb, gx, rb + gap, gap, 50]];
+  var pill = function (txt, x, y, o) {
+   var p = document.createElement("div");
+   p.className = "fs-pill"; p.textContent = txt; p.style.cssText = "left:" + x + "px;top:" + y + "px;transform-origin:" + o;
+   q(".fs-body").appendChild(p); pills.push(p);
+  };
+  pill(Math.round(c1.w) + " × " + Math.round(c1.h), sx + sw / 2, sy + sh + 16, "50% 0");
+  RL.forEach(function (l, i) { l.g = ann.lastChild.children[i + 1].children; pill(String(Math.round(l[4])), (l[0] + l[2]) / 2 + l[5], (l[1] + l[3]) / 2, "50% 50%"); });
+ }
+
+ // cursor: from beside the selected card to the middle of the switch's right half (window px)
+ var tog = q(".fs-tog"), DX = tog.offsetLeft + kb.offsetLeft + kb.offsetWidth / 2, DY = 38;
+ var C0x = c1 ? c1.x + c1.w + 60 : WW * 0.62, C0y = c1 ? 24 + c1.y + c1.h : 64 + BH * 0.7;
+ var stage = q(".fs-stage"), band = q(".fs-band"), tags = q(".fs-tags"), push = q(".fs-push"), flash = q(".fs-flash"), cur = q(".fs-cur");
+ var blur = kSpeedBlur(q(".fs-mo"), "fs", { amount: 0.28, max: 14 }), grain = kGrain(q(".fs-grain"));
+ var spring = function (t, at, d, k) { return M.spring({ t: t, delay: at, damping: d, stiffness: k }); };
+ var yAt = function (t) { return CFG.fall * (1 - spring(t, CFG.drop, 15, 115)); };
+ // even-odd board: the frame minus the hole at inset i, 22 px corners
+ var hole = function (i) {
+  var a = "A22 22 0 0 1 ", f = function (n) { return +n.toFixed(2) + " "; }, j = i + 22;
+  return "M0 0H" + FW + "V" + FH + "H0ZM" + f(i) + f(j) + a + f(j) + f(i) + "H" + f(FW - j) + a + f(FW - i) + f(j) +
+   "V" + f(FH - j) + a + f(FW - j) + f(FH - i) + "H" + f(j) + a + f(i) + f(FH - j) + "Z";
+ };
+ var ln = function (e, a, b, c, d) { e.setAttribute("x1", a); e.setAttribute("y1", b); e.setAttribute("x2", c); e.setAttribute("y2", d); };
+
+ var tl = MT.scene(CFG.dur, function (t) {
+  var f = (t - CFG.flip) * 30, dev = f > -1e-4, fr = Math.floor(f + 1e-4); // frames since the flip (frames at 30 fps)
+  // 1 the frame grows in from the edges; on the flip it bounces (e^-0.24f cos 0.95f x 12 px) and changes colour
+  var i = Math.max(0, CFG.band * M.ramp(t, CFG.grow, CFG.growDur, "snappy") + (dev ? Math.exp(-f * 0.24) * Math.cos(f * 0.95) * CFG.bounce : 0));
+  stage.style.inset = i.toFixed(2) + "px";
+  band.style.clipPath = 'path(evenodd, "' + hole(i) + '")';
+  root.style.setProperty("--fs-c", dev ? "var(--k-accent)" : "var(--k-accent-2)");
+  var tg = M.ramp(t, CFG.tag, CFG.tagDur, "snappy");
+  if (!P) tags.style.height = i.toFixed(2) + "px";
+  tags.style.opacity = tg;
+  tags.style.transform = "translateY(" + ((1 - tg) * 16).toFixed(2) + "px)";
+  // 2 the window drops into the frame: spring, 660 px, 18 deg lean, 0.88 scale, vertical speed blur, shadow 70 -> 22
+  var d = spring(t, CFG.drop, 15, 115);
+  win.style.transform = "translateY(" + yAt(t).toFixed(2) + "px) rotateX(" + (CFG.tilt * (1 - d)).toFixed(2) + "deg) scale(" + M.mix(CFG.scale, 1, d).toFixed(4) + ")";
+  win.style.opacity = M.clamp(d * 5, 0, 1);
+  win.style.boxShadow = "0 0 0 1px var(--fs-line), " + kShadow(M.mix(70, 22, M.clamp(d, 0, 1)), dark ? 3.4 : 1.3);
+  blur(0, t > CFG.drop ? (yAt(t + 1 / 60) - yAt(t - 1 / 60)) * 30 : 0);
+  // slow 2% push-in, plus a 1.2% knock on the flip
+  var knock = dev ? Math.exp(-f * 0.35) * Math.sin(Math.min(Math.PI, f * 0.9) + 0.0001) * 0.012 : 0;
+  push.style.transform = "scale(" + (M.mix(1, 1.02, M.ramp(t, CFG.push, CFG.pushDur, "smooth")) + knock).toFixed(5) + ")";
+  // the flip frame: layout, labels, switch and the 3-frame flash change with the colour
+  ua.style.opacity = ta.style.opacity = dev ? 0 : 1;
+  tb.style.opacity = dev ? 1 : 0;
+  ka.className = dev ? "fs-ka" : "fs-ka on";
+  kb.className = dev ? "fs-kb on" : "fs-kb";
+  flash.style.opacity = dev && fr < 3 ? (0.6 - fr * 0.2).toFixed(2) : 0;
+  if (sel) {
+   // 3 A: the selection draws round the card, handles and size pill pop; B: measure lines draw out from their middles
+   sel.style.strokeDashoffset = per * (1 - M.ramp(t, CFG.sel, CFG.selDur, "snappy"));
+   hds.forEach(function (h, k) { h.style.transform = "scale(" + Math.max(0, spring(t, CFG.hand + k * 0.04, 14, 260)).toFixed(4) + ")"; });
+   ann.firstChild.style.opacity = dev ? 0 : 1;
+   ann.lastChild.style.opacity = dev ? 1 : 0;
+   RL.forEach(function (l, k) {
+    var p = M.ramp(t, CFG.line + k * CFG.step, CFG.lineDur, "snappy"), mx = (l[0] + l[2]) / 2, my = (l[1] + l[3]) / 2;
+    var x1 = M.mix(mx, l[0], p), y1 = M.mix(my, l[1], p), x2 = M.mix(mx, l[2], p), y2 = M.mix(my, l[3], p), e = l[0] === l[2] ? 9 : 0, g = 9 - e;
+    ln(l.g[0], x1, y1, x2, y2);
+    ln(l.g[1], x1 - e, y1 - g, x1 + e, y1 + g);
+    ln(l.g[2], x2 - e, y2 - g, x2 + e, y2 + g);
+    l.g[0].parentNode.style.opacity = p > 0 ? 1 : 0;
+   });
+   pills.forEach(function (p, k) {
+    var sc = k ? (dev ? spring(t, CFG.pills + (k - 1) * CFG.step, 13, 240) : 0) : dev ? 0 : spring(t, CFG.pill, 15, 200);
+    p.style.transform = "translate(-50%, " + (k ? "-50%" : "0px") + ") scale(" + Math.max(0, sc).toFixed(4) + ")";
+   });
+  }
+  // 4 cursor: arcs to the switch (swift), presses from frame 80, lets go on the flip, then leaves
+  var cT = M.ramp(t, CFG.cur, CFG.curDur, "swift");
+  var cx = M.mix(C0x, DX, cT), cy = M.mix(C0y, DY, cT) - Math.sin(cT * Math.PI) * 60;
+  var pr = dev ? 1 - M.ramp(t, CFG.flip, 0.2, "out") : t >= CFG.press ? M.ramp(t, CFG.press, 0.1, "out") : 0;
+  cur.style.transform = "translate(" + (cx - 7).toFixed(1) + "px, " + (cy - 4).toFixed(1) + "px) scale(" + (1 - 0.12 * pr).toFixed(4) + ")";
+  cur.style.opacity = M.ramp(t, CFG.curIn, 0.2, "out") * (1 - M.ramp(t, CFG.curOut, 0.333, "exit"));
+  grain(t);
+ });
+ window.__timelines["frame-snap-flip"] = tl;
+})();
+ </script>
+ </template>
+ </body>
+</html>

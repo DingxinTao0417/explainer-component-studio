@@ -1,0 +1,450 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"t0","type":"string","label":"第 0 页（开场页）大字，| 分行，最多两行；留空不要","default":"三步|讲清一个概念"},
+    {"id":"t1","type":"string","label":"第 1 章大字，| 分行，最多两行","default":"先把|结论说清楚"},
+    {"id":"t2","type":"string","label":"第 2 章大字，| 分行，最多两行","default":"再举|一个例子"},
+    {"id":"t3","type":"string","label":"第 3 章大字，| 分行，最多两行；留空只推两次","default":"最后|自己试一遍"},
+    {"id":"names","type":"string","label":"第 0–3 页的眉题，用 | 分隔；某一项留空就不要这一页的眉题","default":"本期内容|结论|例子|动手"},
+    {"id":"subs","type":"string","label":"第 0–3 页的说明，用 | 分隔；某一项留空不要","default":"结论、例子、动手，一步一步来|一句话讲清这一节要解决的问题|用具体的场景把结论落到实处|照着步骤做一遍，记得最牢"},
+    {"id":"imgs","type":"string","label":"第 1–3 章右栏的图，用 | 分隔，从项目根目录写起；某一项留空不要","default":"motion-cards/lib/samples/ui.png|motion-cards/lib/samples/page.png|motion-cards/lib/samples/p8.jpg"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"第 0 页透明（从宿主画面上推起）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>bottom-push-stack-wipe · 底边上推换章</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="bottom-push-stack-wipe-template">
+      <!-- Ported from video-shotcraft demos/transition/bottom-push-stack-wipe/BottomPushStackWipe.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette (opener page on --k-bg instead of near-black; chapter fields accent-2, accent and their
+           oklch longer-hue mix with 12% white / 10% black ends instead of hand-picked hex; ink picked per field by
+           contrast), system fonts, generic copy; upstream mark, wordmark and product copy removed; the three product UI
+           cards and their hold actions (typing, waveform, check-offs) replaced by one 16:9 image window card per chapter
+           (760 x 428); opener title starts settled; grain one layer per page under the text (upstream: over the frame);
+           CJK type: title line-height 0.98 to 1.2, tracking -0.038em to 0, kicker pill 48 to 52px with 30px digits,
+           kicker name 30 to 40px; portrait re-stack added. Kept: push times, 26-frame cubic-bezier(0.12, 0.9, 0.2, 1),
+           rigid stack formula, 56px seam shade and 2px lit edge, speed blur (0.1 per px/frame, max 22), slab light,
+           card shadow, title rise, sub fade and rise, 1.5% tail push-in, 0.06 overlay grain. -->
+      <style>
+  @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+  @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+  @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+  @font-face { font-family: "Consolas"; src: local("Consolas"); }
+  @font-face { font-family: "bp-heavy"; font-weight: 700 900; src: local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"), local("PingFangSC-Semibold"), local("NotoSansSC-Black"); }
+  #root {
+    --k-bg: var(--mc-bg, #ffffff);
+    --k-panel: var(--mc-panel, #f4f5f7);
+    --k-ink: var(--mc-ink, #15171c);
+    --k-muted: var(--mc-muted, #6b7280);
+    --k-accent: var(--mc-accent, #e8590c);
+    --k-accent-2: var(--mc-accent-2, #2563eb);
+    --k-on-accent: var(--mc-on-accent, #ffffff);
+    --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+    --k-mono: var(--mc-mono, Consolas, monospace);
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    font-family: var(--k-font);
+    color: var(--k-ink);
+  }
+  .bp { position: absolute; inset: 0; container-type: size; overflow: hidden; }
+  .bp-cam, .bp-sb, .bp-ch, .bp-slab { position: absolute; inset: 0; }
+  /* one full-frame slab per page: field colour, its lit/shaded variants, the ink on it */
+  .bp-ch {
+    display: none; color: var(--bp-ink);
+    --bp-c: var(--k-bg); --bp-ink: white; --bp-ga: 20%; --bp-sa: 30%;
+    --bp-hi: color-mix(in srgb, var(--bp-c), white 12%); --bp-lo: color-mix(in srgb, var(--bp-c), black 10%);
+    --bp-shade: color-mix(in srgb, var(--bp-c), black 64%);
+  }
+  .bp-ch:last-child { display: block; }
+  .bp-ch[data-i="1"] { --bp-c: var(--k-accent-2); }
+  .bp-ch[data-i="2"] { --bp-c: var(--k-accent); --bp-ink: color-mix(in srgb, var(--bp-c), black 86%); }
+  .bp-ch[data-i="3"] { --bp-c: color-mix(in oklch longer hue, var(--k-accent), var(--k-accent-2)); --bp-ink: color-mix(in srgb, var(--bp-c), black 86%); }
+  .bp-ch[data-ink="light"] { --bp-ink: white; }
+  .bp-ch[data-ink="dark"] { --bp-ink: color-mix(in srgb, var(--bp-c), black 86%); }
+  .bp-ch[data-i="0"] { --bp-hi: var(--bp-c); --bp-lo: color-mix(in srgb, var(--bp-c), var(--k-ink) 6%); --bp-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); --bp-ink: var(--k-ink); --bp-ga: 0%; --bp-sa: 14%; }
+  .bp[data-tone="dark"] .bp-ch[data-i="0"] { --bp-ga: 6%; --bp-sa: 50%; --bp-shade: black; }
+  /* lit top-left, pressed down bottom-right: the same light as the card shadows */
+  .bp-slab { background: linear-gradient(176deg, var(--bp-hi) 0%, var(--bp-c) 44%, var(--bp-lo) 100%); }
+  .bp-slab::before {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 62% 70% at 18% 6%, color-mix(in srgb, white var(--bp-ga), transparent), transparent 70%),
+      radial-gradient(ellipse 70% 70% at 100% 100%, color-mix(in srgb, var(--bp-shade) var(--bp-sa), transparent), transparent 70%);
+  }
+  .bp-grain { position: absolute; inset: 0; pointer-events: none; }
+  .bp-box { position: absolute; inset: 0 120px; display: flex; align-items: center; justify-content: space-between; gap: 72px; }
+  .bp-txt { align-self: flex-start; margin-top: 150px; flex: 1; min-width: 0; }
+  .bp-kick { display: flex; align-items: center; gap: 20px; min-height: 52px; }
+  .bp-num { flex: none; display: flex; align-items: center; height: 52px; padding: 0 20px; border-radius: 26px; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--bp-ink) 50%, transparent); font: 700 30px/1 var(--k-mono); }
+  .bp-name { flex: 1; min-width: 0; font: 700 40px/1.2 bp-heavy, var(--k-font); letter-spacing: 0.12em; }
+  .bp-title { margin-top: 70px; font: 800 116px/1.2 bp-heavy, var(--k-font); }
+  .bp-ch[data-i="0"] .bp-title { font-size: 168px; }
+  .bp-l { display: block; }
+  .bp-sub { margin-top: 36px; max-width: 620px; font-size: 40px; line-height: 1.28; font-weight: 500; color: color-mix(in srgb, var(--bp-ink) 88%, var(--bp-c)); }
+  /* the window card is pinned to its slab: no motion of its own */
+  .bp-win {
+    position: relative; flex: none; width: 760px; aspect-ratio: 16 / 9; border-radius: 36px; overflow: hidden; background: var(--k-bg);
+    box-shadow: 0 3.4px 9.6px color-mix(in srgb, var(--bp-shade) 6.4%, transparent), 0 26.4px 62.4px -10.6px color-mix(in srgb, var(--bp-shade) 39.2%, transparent);
+  }
+  .bp-win::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 1px 0 color-mix(in srgb, white 90%, transparent), inset 0 0 0 1px color-mix(in srgb, var(--bp-shade) 14%, transparent); }
+  .bp-img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; }
+  .bp-ticks { position: absolute; left: 120px; bottom: 96px; display: flex; gap: 10px; }
+  .bp-ticks i { display: block; width: 28px; height: 8px; border-radius: 4px; background: var(--bp-ink); opacity: 0.28; }
+  .bp-ticks i.bp-on { width: 64px; opacity: 0.95; }
+  /* contact shade the incoming slab throws on the old one, and its 2px lit top edge; only while it moves */
+  .bp-seam { position: absolute; left: 0; right: 0; top: -56px; height: 56px; display: none; background: linear-gradient(to top, color-mix(in srgb, var(--bp-shade) 42%, transparent), color-mix(in srgb, var(--bp-shade) 12%, transparent) 40%, transparent); }
+  .bp-seam::after { content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 2px; background: color-mix(in srgb, white 45%, transparent); }
+  .bp-u { display: inline-block; white-space: pre; }
+  .bp-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+  .bp-row { display: block; white-space: nowrap; }
+  /* portrait: title on top, card below, the stack centred on the 40% line inside the 12%-68% band */
+  @container (orientation: portrait) {
+    .bp-box { inset: 12% 11% 32%; flex-direction: column; align-items: stretch; justify-content: center; gap: 48px; }
+    .bp-txt { align-self: auto; margin-top: 0; flex: none; }
+    .bp-title { margin-top: 44px; font-size: 112px; }
+    .bp-ch[data-i="0"] .bp-title { font-size: 120px; }
+    .bp-sub { margin-top: 28px; max-width: none; }
+    .bp-win { width: auto; }
+    .bp-ticks { left: 11%; bottom: 29%; }
+  }
+      </style>
+
+      <div id="root" data-composition-id="bottom-push-stack-wipe">
+    <div class="bp">
+      <div class="bp-cam" data-layout-allow-overflow>
+        <div class="bp-sb">
+          <section class="bp-ch" data-i="0" data-layout-allow-overflow>
+            <div class="bp-slab"><div class="bp-grain"></div></div>
+            <div class="bp-box">
+              <div class="bp-txt">
+                <div class="bp-kick"><span class="bp-num">00</span><span class="bp-name">本期内容</span></div>
+                <div class="bp-title"><span class="bp-l">三步</span><span class="bp-l">讲清一个概念</span></div>
+                <div class="bp-sub">结论、例子、动手，一步一步来</div>
+              </div>
+            </div>
+            <div class="bp-ticks"><i></i><i></i><i></i></div>
+          </section>
+          <section class="bp-ch" data-i="1" data-layout-allow-overflow>
+            <div class="bp-slab"><div class="bp-grain"></div></div>
+            <div class="bp-box">
+              <div class="bp-txt">
+                <div class="bp-kick"><span class="bp-num">01</span><span class="bp-name">结论</span></div>
+                <div class="bp-title"><span class="bp-l">先把</span><span class="bp-l">结论说清楚</span></div>
+                <div class="bp-sub">一句话讲清这一节要解决的问题</div>
+              </div>
+              <div class="bp-win"><img class="bp-img" src="motion-cards/lib/samples/ui.png" alt="" /></div>
+            </div>
+            <div class="bp-ticks"><i class="bp-on"></i><i></i><i></i></div>
+            <div class="bp-seam"></div>
+          </section>
+          <section class="bp-ch" data-i="2" data-layout-allow-overflow>
+            <div class="bp-slab"><div class="bp-grain"></div></div>
+            <div class="bp-box">
+              <div class="bp-txt">
+                <div class="bp-kick"><span class="bp-num">02</span><span class="bp-name">例子</span></div>
+                <div class="bp-title"><span class="bp-l">再举</span><span class="bp-l">一个例子</span></div>
+                <div class="bp-sub">用具体的场景把结论落到实处</div>
+              </div>
+              <div class="bp-win"><img class="bp-img" src="motion-cards/lib/samples/page.png" alt="" /></div>
+            </div>
+            <div class="bp-ticks"><i></i><i class="bp-on"></i><i></i></div>
+            <div class="bp-seam"></div>
+          </section>
+          <section class="bp-ch" data-i="3" data-layout-allow-overflow>
+            <div class="bp-slab"><div class="bp-grain"></div></div>
+            <div class="bp-box">
+              <div class="bp-txt">
+                <div class="bp-kick"><span class="bp-num">03</span><span class="bp-name">动手</span></div>
+                <div class="bp-title"><span class="bp-l">最后</span><span class="bp-l">自己试一遍</span></div>
+                <div class="bp-sub">照着步骤做一遍，记得最牢</div>
+              </div>
+              <div class="bp-win"><img class="bp-img" src="motion-cards/lib/samples/p8.jpg" alt="" /></div>
+            </div>
+            <div class="bp-ticks"><i></i><i></i><i class="bp-on"></i></div>
+            <div class="bp-seam"></div>
+          </section>
+        </div>
+      </div>
+    </div>
+      </div>
+
+      <script>
+(function () {
+  // timing in seconds (upstream frames / 30), shared by both orientations
+  var CFG = {
+    push: [0.733, 2.2, 3.667], dur: 0.867, ease: "cubic-bezier(0.12, 0.9, 0.2, 1)",
+    land: 0.4, each: 0.6, gap: 0.167, subLag: 0.267, subFade: 0.467, subRise: 0.533, subDy: 0.45,
+    blur: 0.1, blurMax: 22, drift: 4.733, driftDur: 0.933, driftAmt: 0.015, slot: 6
+  };
+  // type sizes per orientation (the CSS holds the same numbers for the static page)
+  var LAND = { title: 116, title0: 168, min: 72 };
+  var PORT = { title: 112, title0: 120, min: 72 };
+  var D = { t0: "三步|讲清一个概念", t1: "先把|结论说清楚", t2: "再举|一个例子", t3: "最后|自己试一遍", names: "本期内容|结论|例子|动手",
+    subs: "结论、例子、动手，一步一步来|一句话讲清这一节要解决的问题|用具体的场景把结论落到实处|照着步骤做一遍，记得最牢",
+    imgs: "motion-cards/lib/samples/ui.png|motion-cards/lib/samples/page.png|motion-cards/lib/samples/p8.jpg", backdrop: "on" };
+  var v = {}, k;
+  for (k in D) v[k] = D[k];
+  try {
+    var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    for (k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+  } catch (e) {}
+  // t1 and t2 are required; the other text fields may be left empty on purpose
+  ["t1", "t2"].forEach(function (x) { if (!String(v[x]).trim()) v[x] = D[x]; });
+
+  var root = document.querySelector(".bp");
+  var q = function (s, el) { return (el || root).querySelector(s); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+    // not laid out yet: the host clip's declared size, then the window
+    var hc = root.closest("[data-width][data-height]");
+    FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+    FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND;
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+  // resolved sRGB of any CSS colour (var(), oklch color-mix() included) through a 1px canvas
+  var cv = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
+  var rgb = function (el, c) {
+    var p = document.createElement("i");
+    p.style.color = c; el.appendChild(p);
+    cv.fillStyle = "#000"; cv.fillStyle = getComputedStyle(p).color; el.removeChild(p);
+    cv.clearRect(0, 0, 1, 1); cv.fillRect(0, 0, 1, 1);
+    return cv.getImageData(0, 0, 1, 1).data;
+  };
+  var lum = function (c) {
+    var s = [0, 1, 2].map(function (j) { var x = c[j] / 255; return x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); });
+    return 0.2126 * s[0] + 0.7152 * s[1] + 0.0722 * s[2];
+  };
+  root.setAttribute("data-tone", lum(rgb(root, "var(--k-bg)")) < 0.18 ? "dark" : "light");
+
+  // ==== kit:grain@1 ====
+  function kGrain(layer, o) {
+    o = o || {};
+    var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+    var dark = tones && tones.getAttribute("data-tone") === "dark";
+    var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+      var f = "type='linear' slope='2.4' intercept='-0.7'";
+      var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+        "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+        "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+        "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+        "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+      return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+    });
+    layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+    layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+    layer.style.backgroundSize = size + "px " + size + "px";
+    return function (t) {
+      var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+      layer.style.backgroundImage = tiles[k % 6];
+      layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+    };
+  }
+  // ==== end kit:grain ====
+
+  // ==== kit:speedblur@1 ====
+  function kSpeedBlur(box, prefix, o) {
+    o = o || {};
+    var amount = o.amount || 0.45, max = o.max || 36;
+    var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+    svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+    var outer = document.createElement("div"), inner = document.createElement("div");
+    outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+    while (box.firstChild) inner.appendChild(box.firstChild);
+    outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+    var fe = svg.firstChild.firstChild;
+    return function (vx, vy) {
+      vy = vy || 0;
+      var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+      if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+      var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+      fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+      outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+      inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+      outer.style.filter = "url(#" + id + ")";
+    };
+  }
+  // ==== end kit:speedblur ====
+
+  // ==== kit:text@2 ====
+  var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+  function kWords(s, key) {
+    s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+    var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+    var cut = function (x) {
+      if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+      return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+    };
+    var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+    var pre = "";
+    bits.forEach(function (x) {
+      var t = x.trim(), last = out[out.length - 1];
+      if (last && /^ /.test(x)) last.sp = true;
+      if (!t) return;
+      if (!/[\p{L}\p{N}]/u.test(t)) {
+        if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+        else { last.t += t; last.sp = / $/.test(x); }
+        return;
+      }
+      out.push({ t: pre + t, sp: / $/.test(x) });
+      pre = "";
+    });
+    if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+    if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+    if (out.length) out[out.length - 1].sp = false;
+    return out;
+  }
+  function kSplit(el, by, rise, text) {
+    var s = text != null ? String(text) : el.textContent, units = [];
+    var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+    el.textContent = "";
+    parts.forEach(function (p) {
+      var u = document.createElement("span"), box = u;
+      u.className = "bp-u"; u.textContent = p.t;
+      if (by === "line") u.style.display = "block";
+      if (!p.t.trim()) { el.appendChild(u); return; }
+      if (rise) { box = document.createElement("span"); box.className = "bp-cut"; box.style.display = u.style.display; box.appendChild(u); }
+      el.appendChild(box);
+      if (p.sp) el.appendChild(document.createTextNode(" "));
+      units.push(u);
+    });
+    return units;
+  }
+  function kReveal(tl, units, variant, at, o) {
+    o = o || {};
+    var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+    units.forEach(function (u, i) {
+      var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+      if (variant === "rise") {
+        tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+        tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+      } else if (variant === "blur") {
+        tl.fromTo(u, { opacity: 0, y: fs * 0.25, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: each, ease: ease }, t0);
+      } else if (variant === "drop") {
+        tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each / 3, ease: "none" }, t0);
+        tl.fromTo(u, { y: -fs * 0.6 }, { y: 0, duration: each, ease: "overshoot" }, t0);
+      } else if (variant === "scale") {
+        tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each * 0.1, ease: "power1.out" }, t0);
+        tl.fromTo(u, { scale: 1.6, filter: "blur(8px)" }, { scale: 1, filter: "blur(0px)", duration: each, ease: ease }, t0);
+      } else {
+        tl.fromTo(u, { opacity: 0, marginRight: "0.5em" }, { opacity: 1, marginRight: "0em", duration: each, ease: ease }, t0);
+      }
+    });
+    return tl;
+  }
+  // ==== end kit:text ====
+
+  // ==== kit:fit@1 ====
+  function kFit(el, o) {
+    o = o || {};
+    var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+    var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+    for (;;) {
+      el.style.fontSize = f + "px";
+      m = kLines(el);
+      if ((m.w <= W && m.n <= n) || f <= min) break;
+      f = Math.max(min, f - 2);
+    }
+    if (m.w > W) {
+      [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+      m = kLines(el);
+    }
+    return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+  }
+  function kLines(el) {
+    var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+    var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+    while ((t = it.nextNode())) {
+      if (!t.data.trim()) continue;
+      r.selectNodeContents(t);
+      [].forEach.call(r.getClientRects(), function (b) {
+        var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+        if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+        row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+      });
+    }
+    return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+  }
+  // ==== end kit:fit ====
+
+  // pages: 0 is the opener, 1-3 the chapters; an empty t3 drops the last push
+  var chs = [].slice.call(root.querySelectorAll(".bp-ch"));
+  if (!String(v.t3).trim()) chs.pop().remove();
+  var n = chs.length, list = function (s) { return String(s).split("|").map(function (x) { return x.trim(); }); };
+  var names = list(v.names), subs = list(v.subs), imgs = list(v.imgs);
+  var HV = getComputedStyle(root).getPropertyValue("--mc-font").trim() ? "" : "bp-heavy, ";
+  // a title takes at most two lines: phrases after the second "|" join the second line
+  var two = function (s) {
+    var p = String(s).split("|").map(function (x) { return x.trim(); }).filter(Boolean);
+    return p.length < 3 ? p.join("|") : p[0] + "|" + p.slice(1).reduce(function (a, b) { return a + (/\w$/.test(a) && /^\w/.test(b) ? " " : "") + b; });
+  };
+  var pages = [], ticks;
+  chs.forEach(function (ch, i) {
+    ch.style.display = "block"; // measure every page laid out; render() decides what shows
+    var name = names[i] || "", sub = q(".bp-sub", ch), title = q(".bp-title", ch), win = q(".bp-win", ch);
+    q(".bp-name", ch).textContent = name;
+    q(".bp-kick", ch).style.display = name ? "" : "none";
+    sub.textContent = subs[i] || "";
+    sub.style.display = subs[i] ? "" : "none";
+    if (win) { if (imgs[i - 1]) q(".bp-img", ch).setAttribute("src", imgs[i - 1]); else win.style.display = "none"; }
+    ticks = q(".bp-ticks", ch);
+    ticks.innerHTML = "";
+    for (var j = 1; j < n; j++) ticks.appendChild(document.createElement("i")).className = j === i ? "bp-on" : "";
+    if (!i && !name && !subs[0] && !two(v.t0)) ticks.style.display = "none"; // an empty opener leaves nothing behind
+    if (i) { // ink with the higher contrast on this field: white or the field taken to near-black
+      var c = lum(rgb(ch, "var(--bp-c)")), d = lum(rgb(ch, "color-mix(in srgb, var(--bp-c), black 86%)"));
+      ch.setAttribute("data-ink", 1.05 / (c + 0.05) >= (c + 0.05) / (d + 0.05) ? "light" : "dark");
+    }
+    title.style.fontFamily = q(".bp-name", ch).style.fontFamily = HV + "var(--k-font)";
+    var tt = two(v["t" + i]);
+    title.style.display = tt ? "" : "none";
+    title.style.fontSize = (i ? L.title : L.title0) + "px";
+    var units = kSplit(title, "line", true, tt);
+    kFit(title, { lines: Math.max(1, units.length), min: L.min });
+    kFit(q(".bp-name", ch), { lines: 1, min: 32 });
+    kFit(sub, { lines: 2, min: 40 });
+    pages.push({ ch: ch, units: units, sub: sub, grain: kGrain(q(".bp-grain", ch), { opacity: 0.06, blend: "overlay" }), seam: q(".bp-seam", ch) });
+  });
+  if (String(v.backdrop) === "off") q(".bp-slab", chs[0]).style.display = "none";
+  var blur = kSpeedBlur(q(".bp-sb"), "bp", { amount: CFG.blur, max: CFG.blurMax }), cam = q(".bp-cam");
+
+  // push k (0-based) progress; chapter i rides in on push i-1 and out on push i, rigidly, one formula
+  var E = MT.ease(CFG.ease);
+  var push = function (k, t) { return k < n - 1 ? MT.ramp(t, CFG.push[k], CFG.dur, E) : 0; };
+  var stackY = function (t) { var s = 0; for (var k = 0; k < n - 1; k++) s += push(k, t); return s * FH; };
+  function render(t) {
+    pages.forEach(function (p, i) {
+      var pin = i ? push(i - 1, t) : 1, y = (1 - pin - push(i, t)) * FH;
+      p.ch.style.display = y > -FH && y < FH ? "block" : "none";
+      p.ch.style.transform = "translateY(" + y.toFixed(2) + "px)";
+      if (p.seam) p.seam.style.display = pin < 1 ? "block" : "none";
+      p.grain(t);
+    });
+    blur(0, -MT.velocity(stackY, t));
+    cam.style.transform = "scale(" + (1 + CFG.driftAmt * MT.ramp(t, CFG.drift, CFG.driftDur, "smooth")).toFixed(4) + ")";
+  }
+  var tl = MT.scene(CFG.slot, render);
+  // chapter text waits for its slab: the title rises line by line 12 frames after the push starts (95% in)
+  pages.forEach(function (p, i) {
+    if (!i) return;
+    var land = CFG.push[i - 1] + CFG.land, fs = parseFloat(getComputedStyle(p.sub).fontSize) || 40;
+    kReveal(tl, p.units, "rise", land, { each: CFG.each, gap: CFG.gap });
+    tl.fromTo(p.sub, { opacity: 0 }, { opacity: 1, duration: CFG.subFade, ease: "out" }, land + CFG.subLag);
+    tl.fromTo(p.sub, { y: fs * CFG.subDy }, { y: 0, duration: CFG.subRise, ease: "snappy" }, land + CFG.subLag);
+  });
+  window.__timelines["bottom-push-stack-wipe"] = tl;
+})();
+      </script>
+    </template>
+  </body>
+</html>

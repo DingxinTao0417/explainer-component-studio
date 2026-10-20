@@ -1,0 +1,265 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"titles","type":"string","label":"资料标题（用 | 分隔，最多 11 条，一条一张卡）","default":"如何让模型只读长文里的重点|多步检索为什么会越查越偏|缓存中间结果能让响应更快|偏好打分模型的校准问题|用网格规律设计界面动效|便宜的校验胜过昂贵的采样|受约束的输出也能保持流畅|给实时界面做层次排序|在多个助手之间分配预算|用对比学习理解文档版式|查询时的快速近似重排"},
+    {"id":"meta","type":"string","label":"作者行前缀（后面自动接编号，可留空）","default":"示例作者 · 编号"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底（带下移的横线）"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>research-card-stack-scroll · 资料卡连落叠压</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="research-card-stack-scroll-template">
+      <!-- Ported from video-shotcraft demos/ui-entrance/research-card-stack-scroll/ResearchCardStackScroll.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette (cards from --k-ink on a light skin, from --k-panel on a dark one), system fonts, generic
+           Chinese titles, author line and numbering instead of the English paper titles; DesignStage 480x270 and the 420x250
+           logical canvas replaced by one px-per-unit factor (4.32 landscape, 4 portrait); 13 cards cut to 11 and a 0.2 s lead
+           added so the first card also flies in and the last one is followed by a 1 s hold; the flow stops when the last card
+           lands and its 3% squash is released after 1.6 frames; author line 8 to 9.3 units and portrait gets its own taller
+           190x116 card, gap 20 and x step 6 so type stays at 40 px or more. 12 f beat, 6 f flight, outCubic, -40 / 0.94 entry,
+           depth blur 0 to 4 and brightness 1 to 0.75 over 3 beats, fade 3.2 to 4.8 beats, grid and card drift tied to one beat
+           and the deterministic bar widths kept. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .rs { position: absolute; inset: 0; container-type: size;
+          /* a light skin gets dark paper cards (the depth fade needs dark on light); a dark skin gets raised panel cards */
+          --rs-card: var(--k-ink);
+          --rs-ink: color-mix(in srgb, var(--k-bg) 94%, var(--k-ink));
+          --rs-line: color-mix(in srgb, var(--k-ink) 92%, var(--k-bg));
+          --rs-bar: color-mix(in srgb, var(--k-ink) 86%, var(--k-bg));
+          --rs-meta: color-mix(in srgb, var(--k-accent), white 22%);
+          --rs-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+          --rs-sh: 22%; }
+        .rs[data-tone="dark"] {
+          --rs-card: color-mix(in srgb, var(--k-panel) 88%, white);
+          --rs-ink: var(--k-ink);
+          --rs-line: color-mix(in srgb, var(--k-panel), white 22%);
+          --rs-bar: color-mix(in srgb, var(--k-panel), white 30%);
+          --rs-meta: var(--k-accent);
+          --rs-shade: #000000;
+          --rs-sh: 60%; }
+        .rs-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        /* everything is sized in --u, the px of one design unit (the upstream card is 296 x 96 units) */
+        .rs-box { position: absolute; inset: 0; --u: 4.32px; --gx: 9; --gy: 30; }
+        .rs-grid { position: absolute; left: 0; right: 0; top: -192px; bottom: -192px; background-image: linear-gradient(color-mix(in srgb, var(--k-ink) 5.5%, transparent) calc(var(--u) * 0.9), transparent calc(var(--u) * 0.9)); background-size: 100% calc(var(--u) * 22.2); }
+        .rs-track { position: absolute; left: 50%; top: 50%; width: 0; height: 0; }
+        .rs-card { position: absolute; display: block; left: calc(var(--u) * -148); top: calc(var(--u) * -62); width: calc(var(--u) * 296); min-height: calc(var(--u) * 96); box-sizing: border-box; overflow: hidden; background: var(--rs-card); border: calc(var(--u) * 1) solid var(--rs-line); border-radius: calc(var(--u) * 11); box-shadow: 0 calc(var(--u) * 14) calc(var(--u) * 34) color-mix(in srgb, var(--rs-shade) var(--rs-sh), transparent); padding: calc(var(--u) * 10) calc(var(--u) * 18) 0 calc(var(--u) * 13); }
+        .rs-stripe { position: absolute; left: 0; top: 0; bottom: 0; width: calc(var(--u) * 3); background: var(--rs-line); }
+        .rs-hot .rs-stripe { background: var(--k-accent); }
+        .rs-title { display: block; min-height: 2.7em; font-size: calc(var(--u) * 9.5); font-weight: 700; line-height: 1.35; color: var(--rs-ink); overflow-wrap: anywhere; }
+        .rs-body { display: block; margin-top: calc(var(--u) * 3.35); }
+        .rs-meta { display: block; font-size: calc(var(--u) * 9.3); line-height: 1.15; letter-spacing: calc(var(--u) * 0.3); color: var(--rs-meta); overflow-wrap: anywhere; }
+        .rs-line { display: block; height: calc(var(--u) * 4); margin-top: calc(var(--u) * 5); border-radius: calc(var(--u) * 2); background: var(--rs-bar); }
+        .rs-meta + .rs-line { margin-top: calc(var(--u) * 9); }
+        /* portrait: the same stack on a 1080-wide frame, u = 4px; a taller 190 x 116 card so the type stays at 40px or more */
+        @container (orientation: portrait) {
+          .rs-box { --u: 4px; --gx: 6; --gy: 20; }
+          .rs-grid { background-size: 100% calc(var(--u) * 18); }
+          .rs-track { left: 45.56%; top: 41.46%; }
+          .rs-card { left: calc(var(--u) * -95); top: calc(var(--u) * -72); width: calc(var(--u) * 190); min-height: calc(var(--u) * 116); padding: calc(var(--u) * 10) calc(var(--u) * 14) 0 calc(var(--u) * 14); }
+          .rs-title { font-size: calc(var(--u) * 11); }
+          .rs-meta { font-size: calc(var(--u) * 10); }
+          .rs-line { height: calc(var(--u) * 5); margin-top: calc(var(--u) * 7); border-radius: calc(var(--u) * 2.5); }
+          .rs-meta + .rs-line { margin-top: calc(var(--u) * 12); }
+        }
+                /* ==== kit:fit@1 ==== */
+        .rs-row { display: block; white-space: nowrap; }
+        /* ==== end kit:fit ==== */
+      </style>
+
+      <div id="root" data-composition-id="research-card-stack-scroll">
+        <div class="rs">
+          <div class="rs-bg"></div>
+          <div class="rs-box">
+            <div class="rs-grid" data-layout-allow-overflow></div>
+            <div class="rs-track">
+            <div class="rs-card" data-layout-allow-overflow style="z-index:6;opacity:0.500;transform:translate(calc(var(--u)*var(--gx)*4),calc(var(--u)*var(--gy)*4));filter:blur(calc(var(--u)*4.00)) brightness(0.750)"><i class="rs-stripe"></i></div>
+            <div class="rs-card" data-layout-allow-overflow style="z-index:7;transform:translate(calc(var(--u)*var(--gx)*3),calc(var(--u)*var(--gy)*3));filter:blur(calc(var(--u)*4.00)) brightness(0.750)"><i class="rs-stripe"></i></div>
+            <div class="rs-card" data-layout-allow-overflow style="z-index:8;transform:translate(calc(var(--u)*var(--gx)*2),calc(var(--u)*var(--gy)*2));filter:blur(calc(var(--u)*2.67)) brightness(0.833)"><i class="rs-stripe"></i></div>
+            <div class="rs-card rs-hot" data-layout-allow-overflow style="z-index:9;transform:translate(calc(var(--u)*var(--gx)*1),calc(var(--u)*var(--gy)*1));filter:blur(calc(var(--u)*1.33)) brightness(0.917)"><i class="rs-stripe"></i></div>
+            <div class="rs-card" data-layout-allow-overflow style="z-index:10;transform:translate(calc(var(--u)*var(--gx)*0),calc(var(--u)*var(--gy)*0))"><i class="rs-stripe"></i><div class="rs-title" data-layout-allow-occlusion data-layout-allow-overlap>查询时的快速近似重排</div><div class="rs-body"><div class="rs-meta" data-layout-allow-occlusion data-layout-allow-overlap>示例作者 · 编号 2420.013</div><i class="rs-line" style="width:99.3%"></i><i class="rs-line" style="width:83.4%"></i><i class="rs-line" style="width:77.8%"></i><i class="rs-line" style="width:63.2%"></i></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing in seconds (the upstream numbers are frames at 30 fps), shared by both orientations
+          var CFG = { beat: 0.4, lead: 0.2, fly: 0.2, pop: 0.067, squash: 0.053, cover: 0.067, slot: 5.3, maxCards: 11 };
+          // layout per orientation, in design units (one unit = u px): per-beat drop and right step, entry lift, track origin
+          var LAND = { gap: 30, xoff: 9, lift: 40, ox: 50, oy: 50, tlines: 2 };
+          var PORT = { gap: 20, xoff: 6, lift: 40, ox: 45.56, oy: 41.46, tlines: 2 };
+          var DEF = "如何让模型只读长文里的重点|多步检索为什么会越查越偏|缓存中间结果能让响应更快|偏好打分模型的校准问题|用网格规律设计界面动效|便宜的校验胜过昂贵的采样|受约束的输出也能保持流畅|给实时界面做层次排序|在多个助手之间分配预算|用对比学习理解文档版式|查询时的快速近似重排".split("|");
+          var v = { titles: DEF.join("|"), meta: "示例作者 · 编号", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".rs");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          // px per design unit: the 420 x 250 logical canvas fitted to the frame (landscape), 270 units across (portrait)
+          var U = P ? FW / 270 : Math.min(FW / 420, FH / 250);
+          var GRID = (P ? 18 : 22.2) * U;
+
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+
+          // ==== kit:hash@1 ====
+          function kHash(n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+          // ==== end kit:hash ====
+
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          function kRows(el, cls) {
+            if (!el.children.length) return [];
+            var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+            var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+            kids.forEach(function (c, i) {
+              if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+              if (tops[i] != null) last = tops[i];
+              row.appendChild(c);
+            });
+            return [].slice.call(el.children);
+          }
+          // ==== end kit:fit ====
+
+          kTone(root);
+          if (String(v.backdrop) === "off") { q(".rs-bg").style.display = "none"; q(".rs-grid").style.display = "none"; }
+          var box = q(".rs-box"), track = q(".rs-track"), grid = q(".rs-grid");
+          box.style.setProperty("--u", U + "px");
+          track.style.left = L.ox + "%"; track.style.top = L.oy + "%";
+
+          // one card per title, rebuilt from the variables (the static HTML above is the same stack at rest)
+          var titles = String(v.titles).split("|").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, CFG.maxCards);
+          if (titles.length < 3) titles = DEF.slice(0, CFG.maxCards);
+          var n = titles.length, prefix = String(v.meta).trim();
+          track.innerHTML = "";
+          var cards = titles.map(function (tt, i) {
+            var c = document.createElement("div");
+            c.className = "rs-card" + (i % 4 === 1 ? " rs-hot" : "");
+            c.setAttribute("data-layout-allow-overflow", "");
+            c.style.zIndex = i;
+            var bars = "";
+            for (var j = 0; j < 4; j++) bars += '<i class="rs-line" style="width:' + (100 - j * 11 - kHash(i * 5 + j) * 12).toFixed(1) + '%"></i>';
+            c.innerHTML = '<i class="rs-stripe"></i><div class="rs-title" data-layout-allow-occlusion data-layout-allow-overlap></div>' +
+              '<div class="rs-body"><div class="rs-meta" data-layout-allow-occlusion data-layout-allow-overlap></div>' + bars + "</div>";
+            c.querySelector(".rs-title").textContent = tt;
+            c.querySelector(".rs-meta").textContent = (prefix ? prefix + " " : "") + (2410 + i) + ".0" + (i % 9) + (i % 7);
+            track.appendChild(c);
+            return { el: c, title: c.querySelector(".rs-title"), body: c.querySelector(".rs-body"), tShow: true, bShow: true, on: true };
+          });
+          // one title size for the whole stack: the smallest any title needs (2 lines, 40 px floor), then the author line
+          var fs = 999;
+          cards.forEach(function (c) { fs = Math.min(fs, kFit(c.title, { lines: L.tlines, min: 40 }).size); });
+          cards.forEach(function (c) { c.title.style.fontSize = fs + "px"; kFit(c.body.firstChild, { lines: 1, min: 40 }); });
+
+          var LAST = CFG.lead + (n - 1) * CFG.beat; // the flow stops when the last card lands
+          var tl = MT.scene(CFG.slot, function (t) {
+            var tf = Math.min(t, LAST), beats = Math.max(0, tf - CFG.lead) / CFG.beat;
+            // the grid drops one beat's worth of card travel per beat, wrapped on its own line spacing
+            grid.style.transform = "translate(0px," + ((beats * L.gap * U) % GRID).toFixed(2) + "px)";
+            var focus = Math.min(n - 1, Math.max(0, Math.floor((tf - CFG.lead) / CFG.beat + 1e-6)));
+            cards.forEach(function (c, i) {
+              var es = tf - CFG.lead - i * CFG.beat;      // seconds since this card landed (flow clock)
+              var er = t - CFG.lead - i * CFG.beat;       // same, real clock: only the squash uses it
+              var p = MT.ramp(es + CFG.fly, 0, CFG.fly, "power3.out");
+              var b = Math.max(0, es) / CFG.beat;         // beats since landing
+              var op = es < -CFG.fly ? 0 : Math.min(1, (es + CFG.fly) / CFG.pop) * (1 - Math.max(0, (b - 3.2) / 1.6));
+              var on = op > 0.002;
+              if (on !== c.on) { c.el.style.display = on ? "block" : "none"; c.on = on; }
+              if (!on) return;
+              var depth = Math.min(1, b / 3), sc = 0.94 + 0.06 * p, sq = er >= 0 && er < CFG.squash ? 0.97 : 1;
+              var x = b * L.xoff * U, y = -L.lift * U * (1 - p) + b * L.gap * U;
+              c.el.style.opacity = op.toFixed(3);
+              c.el.style.transform = "translate(" + x.toFixed(2) + "px," + y.toFixed(2) + "px) scale(" + sc.toFixed(4) + "," + (sc * sq).toFixed(4) + ")";
+              c.el.style.filter = depth > 0.0005 ? "blur(" + (depth * 4 * U).toFixed(2) + "px) brightness(" + (1 - depth * 0.25).toFixed(3) + ")" : "none";
+              // only the card on top shows its author line and bars; a title goes once the next card covers it
+              var bs = i === focus, ts = es < CFG.beat + CFG.cover;
+              if (bs !== c.bShow) { c.body.style.display = bs ? "block" : "none"; c.bShow = bs; }
+              if (ts !== c.tShow) { c.title.style.display = ts ? "block" : "none"; c.tShow = ts; }
+            });
+          });
+          window.__timelines["research-card-stack-scroll"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

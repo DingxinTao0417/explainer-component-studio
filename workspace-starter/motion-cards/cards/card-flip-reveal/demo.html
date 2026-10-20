@@ -1,0 +1,481 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+{"id":"kicker","type":"string","label":"眉题，一行（留空不要）","default":"第 3 节 · 用上之后"},
+{"id":"title","type":"string","label":"标题（| 切意群；留空不要）","default":"三个功能，|三个结果"},
+{"id":"names","type":"string","label":"功能名，一张卡一个（| 分隔）","default":"自动整理|一键导出|多人协作"},
+{"id":"descs","type":"string","label":"正面一句说明（| 分隔；留空不要）","default":"收进来就自动分好类|所有格式一次导出|一份文件大家一起改"},
+{"id":"values","type":"string","label":"背面大数字，几个就翻几张卡（| 分隔，1–3 个）","default":"3.2×|−41%|0.2s"},
+{"id":"labels","type":"string","label":"背面结论（| 分隔；留空不要）","default":"出初稿的速度|花在返工上的时间|找到任意一个文件"},
+{"id":"after","type":"string","label":"“之后”条占“之前”条的比例，0–1（| 分隔；留空不要对照条）","default":"0.31|0.59|0.06"},
+{"id":"pair","type":"string","label":"对照条的两个名字（| 分隔）","default":"之前|之后"},
+{"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底（布光的台面和倒影）"},{"value":"off","label":"透明（只留卡和接地影）"}]}
+  ]'
+>
+<head>
+<meta charset="UTF-8" />
+<title>card-flip-reveal · 功能卡翻面</title>
+<script src="../../lib/preview.js"></script>
+</head>
+<body>
+<template id="card-flip-reveal-template">
+<!-- Ported from video-shotcraft demos/transition/card-flip-reveal/CardFlipReveal.tsx
+     (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+     Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+     Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+     neutral --k-* palette, system fonts, generic copy; brand eyebrow, "With <brand>" bar label and unit readouts
+     removed, the three product UIs redrawn as text-free bars. White skin first: front = darker face (ink), back =
+     lighter face; light stage = backdrop + key/fill + floor + vignette 0.16 + grain 0.05, faces get a soft shadow;
+     dark skins keep the graphite stage. Shading via filter: brightness(), reflection via -webkit-box-reflect. Text
+     raised to library minimums (22 > 28, 28-34 > 40), CJK tracking 0, eyebrow blurs in as one unit, number fits down from 158px (136 in YaHei Bold). Portrait: a
+     column of 832 x 248 strips, perspective and lift scaled with width, only the last strip reflects. 150f > 4 s.
+     Flip timing (4f lean -10 deg, 16f to 194, spring 15/190), 12f stagger, lift 60, shading 0.55/0.4, 56-124 deg
+     band, number 1.08 > 1, label +2f, bars +4f, ground shadow and the 1 > 1.03 push unchanged. -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+@font-face { font-family: "Consolas"; src: local("Consolas"); }
+@font-face { font-family: "fr-heavy"; font-weight: 700 900; src: local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"), local("PingFangSC-Semibold"), local("NotoSansSC-Black"); }
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  --k-mono: var(--mc-mono, Consolas, monospace);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--k-font);
+  color: var(--k-ink);
+}
+/* ==== kit:derived@1 ==== */
+.fr { --fr-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); }
+.fr[data-tone="dark"] { --fr-shade: color-mix(in srgb, var(--k-bg) 30%, black); }
+/* ==== end kit:derived ==== */
+/* ==== kit:backdrop@1 ==== */
+.fr-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+.fr-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+/* ==== end kit:backdrop ==== */
+/* ==== kit:vignette@1 ==== */
+.fr-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--fr-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.fr[data-tone="dark"] .fr-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+/* ==== kit:grain@1 ==== */
+.fr-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+/* ==== kit:text@2 ==== */
+.fr-u { display: inline-block; white-space: pre; }
+.fr-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+/* ==== end kit:text ==== */
+/* front = the darker face, back = the lighter one, in both tones (dark: upstream graphite); --fy = floor line */
+.fr{position:absolute;inset:0;container-type:size;--fy:950px;--fr-hv:fr-heavy,var(--k-font);
+--fr-f0:var(--k-ink);--fr-fi:var(--k-bg);--fr-b0:var(--k-bg);--fr-bi:var(--k-ink);
+--fr-f2:color-mix(in srgb,var(--fr-fi) 62%,var(--fr-f0));--fr-f3:color-mix(in srgb,var(--fr-fi) 45%,var(--fr-f0));
+--fr-fd:color-mix(in srgb,var(--fr-fi) 32%,var(--fr-f0));--fr-ff:color-mix(in srgb,var(--fr-fi) 16%,var(--fr-f0));
+--fr-fu:color-mix(in srgb,var(--fr-fi) 7%,var(--fr-f0));--fr-fl:color-mix(in srgb,var(--fr-fi) 14%,transparent);
+--fr-b2:color-mix(in srgb,var(--fr-bi) 62%,var(--fr-b0));--fr-b3:color-mix(in srgb,var(--fr-bi) 50%,var(--fr-b0));
+--fr-fs:0 1.5px 3.9px color-mix(in srgb,var(--fr-shade) 11%,transparent),0 8.8px 20.8px -3.5px color-mix(in srgb,var(--fr-shade) 16%,transparent);
+--fr-gs:30%;--fr-kc:color-mix(in srgb,var(--k-bg) 81%,transparent);--fr-fc:color-mix(in srgb,var(--k-accent-2) 9%,transparent);--fr-hc:color-mix(in srgb,var(--k-bg) 50%,transparent)}
+.fr[data-tone=dark]{--fr-f0:var(--k-panel);--fr-fi:var(--k-ink);--fr-b0:var(--k-ink);--fr-bi:var(--k-bg);--fr-fs:0 0 transparent;--fr-gs:70%;
+--fr-kc:color-mix(in srgb,var(--k-ink) 50%,transparent);--fr-fc:color-mix(in srgb,var(--k-accent-2) 20%,transparent);--fr-hc:color-mix(in srgb,var(--k-ink) 25%,transparent)}
+.fr[data-tone=dark] .fr-backdrop{background:linear-gradient(180deg,color-mix(in srgb,var(--k-bg),white 5%),var(--k-bg) 52%,color-mix(in srgb,var(--k-bg),black 35%))}
+.fr-key,.fr-floor,.fr-hz{position:absolute;inset:0}
+.fr-key{background:radial-gradient(ellipse 58% 62% at 50% -5%,var(--fr-kc),transparent 70%),radial-gradient(ellipse 50% 46% at 50% 110%,var(--fr-fc),transparent 72%)}
+.fr[data-tone=dark] .fr-key{mix-blend-mode:screen}
+.fr-floor{top:var(--fy);background:linear-gradient(180deg,color-mix(in srgb,var(--k-ink) 4%,transparent),transparent 60%);border-top:1px solid color-mix(in srgb,var(--k-ink) 7%,transparent)}
+.fr-hz{left:-10%;right:-10%;top:calc(var(--fy) - 9%);height:18%;background:radial-gradient(ellipse 50% 50% at 50% 50%,var(--fr-hc),transparent 70%);filter:blur(10px)}
+/* landscape: heading ends 68px above the row (its bottom at y 262), cards 480 x 620 from y 330 */
+.fr-cam{position:absolute;inset:0;transform-origin:50% 60%}
+.fr-head{position:absolute;left:10%;right:10%;bottom:calc(100% - 262px)}
+.fr-kick{font-size:40px;font-weight:700;line-height:1.3;letter-spacing:.12em;color:var(--k-accent)}
+.fr-title{margin-top:18px;font:84px/1.2 var(--fr-hv);font-weight:800;color:var(--k-ink)}
+.fr-cards{position:absolute;left:0;right:0;top:330px;height:620px;display:flex;justify-content:center;gap:48px}
+.fr-slot{position:relative;flex:none;width:480px;height:100%}
+.fr-gs{position:absolute;left:30px;right:30px;top:calc(100% - 18px);height:36px;border-radius:50%;background:radial-gradient(ellipse 50% 50% at 50% 50%,color-mix(in srgb,var(--fr-shade) var(--fr-gs),transparent),transparent 70%)}
+.fr-pv{position:absolute;inset:0;perspective:1600px;-webkit-box-reflect:below 6px linear-gradient(transparent 74%,rgba(0,0,0,.2))}
+.fr-card{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateY(180deg)}
+/* no backface-visibility: Chrome culls the back face inside -webkit-box-reflect; the script shows one face at a time */
+.fr-face{position:absolute;inset:0;border-radius:34px;overflow:hidden}
+.fr-front{opacity:0;color:var(--fr-fi);background:linear-gradient(180deg,color-mix(in srgb,var(--fr-f0),white 5%),var(--fr-f0) 48%,color-mix(in srgb,var(--fr-f0),black 22%));
+box-shadow:inset 0 0 0 1.5px color-mix(in srgb,white 9%,transparent),inset 0 2px 0 color-mix(in srgb,white 8%,transparent),var(--fr-fs)}
+.fr-back{transform:rotateY(180deg);color:var(--fr-bi);background:linear-gradient(180deg,color-mix(in srgb,var(--fr-b0),white 40%),color-mix(in srgb,var(--fr-b0),var(--fr-bi) 5%));
+box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--fr-bi) 6%,transparent),inset 0 2px 0 color-mix(in srgb,white 90%,transparent),var(--fr-fs)}
+/* the angle-driven light band, under the face's text */
+.fr-band{position:absolute;inset:0;opacity:0;--p:-20%;background:linear-gradient(100deg,transparent calc(var(--p) - 12%),color-mix(in srgb,white 90%,transparent) var(--p),transparent calc(var(--p) + 12%))}
+.fr-no{position:absolute;left:40px;top:40px;font:700 28px/1.3 var(--k-mono);color:var(--fr-f3)}
+.fr-ui{position:absolute;left:40px;top:112px;width:400px;height:230px}
+.fr-bot,.fr-res{position:absolute;left:40px;right:40px;bottom:40px}
+.fr-nm{font:52px/1.15 var(--fr-hv);font-weight:800}
+.fr-ds{margin-top:10px;font-size:40px;line-height:1.3;color:var(--fr-f2)}
+.fr-tag{position:absolute;left:40px;top:40px;display:flex;align-items:center;gap:14px;font-size:28px;line-height:1.3;letter-spacing:.14em;color:var(--fr-b2)}
+.fr-tag:before{content:"";flex:none;width:12px;height:12px;border-radius:50%;background:var(--k-accent)}
+.fr-cmp{position:absolute;left:40px;right:40px;top:112px;font-size:28px;font-weight:700;line-height:1.3;letter-spacing:.14em;color:var(--fr-b3)}
+.fr-cmp span{display:block}
+.fr-cmp span+i+span{color:var(--fr-bi)}
+.fr-cmp>i{display:block;height:16px;margin:10px 0 26px;border-radius:8px;background:color-mix(in srgb,var(--fr-bi) 6%,transparent)}
+.fr-cmp>i:last-child{margin-bottom:0}
+.fr-cmp i i{display:block;width:100%;height:100%;border-radius:8px;background:color-mix(in srgb,var(--fr-bi) 18%,transparent)}
+.fr-cmp>i:last-child i{background:var(--fr-bi)}
+.fr-res{left:36px;right:30px;bottom:48px}
+.fr-val{font:158px/.9 var(--fr-hv);font-weight:900;letter-spacing:-.06em;transform-origin:0 100%}
+.fr-lab{margin-top:30px;font-size:40px;line-height:1.3;color:color-mix(in srgb,var(--fr-bi) 80%,var(--fr-b0))}
+/* portrait: heading + 832 x 248 strips on the 40% line, 16px inside the 10% margins (room for the 3% push) */
+@container (orientation:portrait){
+.fr{--fy:1277px}
+.fr-cam{left:calc(50% - 416px);right:calc(50% - 416px);height:80%;display:flex;flex-direction:column;justify-content:center;transform-origin:50% 50%}
+.fr-head{position:relative;inset:auto;margin-bottom:48px}
+.fr-kick{letter-spacing:.08em}
+.fr-title{margin-top:14px;font-size:80px}
+.fr-cards{position:relative;inset:auto;height:auto;flex-direction:column;gap:32px}
+.fr-slot{width:100%;height:248px}
+.fr-gs{left:60px;right:60px}
+.fr-pv{-webkit-box-reflect:none}
+.fr-slot:last-child .fr-pv{-webkit-box-reflect:below 6px linear-gradient(transparent 74%,rgba(0,0,0,.2))}
+.fr-face{border-radius:28px}
+.fr-no{left:32px;top:18px;line-height:1.2}
+.fr-ui{left:452px;top:28px;bottom:24px;width:348px;height:auto}
+.fr-bot{right:auto;left:32px;width:400px;bottom:24px}
+.fr-tag{left:452px;top:26px}
+.fr-cmp{left:452px;right:32px;top:auto;bottom:24px}
+.fr-cmp>i{margin:8px 0 16px}
+.fr-res{right:auto;left:32px;width:400px;bottom:24px}
+.fr-val{font-size:130px}
+.fr-lab{margin-top:16px}
+}
+</style>
+
+<div id="root" data-composition-id="card-flip-reveal">
+<div class="fr">
+<div class="fr-backdrop"></div>
+<div class="fr-key"></div>
+<div class="fr-floor"></div>
+<div class="fr-hz"></div>
+<div class="fr-vig"></div>
+<div class="fr-grain"></div>
+<div class="fr-cam">
+<div class="fr-head"><div class="fr-kick">第 3 节 · 用上之后</div><div class="fr-title">三个功能，三个结果</div></div>
+<div class="fr-cards">
+<div class="fr-slot"><i class="fr-gs"></i><div class="fr-pv"><div class="fr-card">
+<div class="fr-face fr-back"><b class="fr-tag">自动整理</b><div class="fr-cmp"><span>之前</span><i><i></i></i><span>之后</span><i><i style="width:31%"></i></i></div><div class="fr-res"><div class="fr-val">3.2×</div><div class="fr-lab">出初稿的速度</div></div></div>
+</div></div></div>
+<div class="fr-slot"><i class="fr-gs"></i><div class="fr-pv"><div class="fr-card">
+<div class="fr-face fr-back"><b class="fr-tag">一键导出</b><div class="fr-cmp"><span>之前</span><i><i></i></i><span>之后</span><i><i style="width:59%"></i></i></div><div class="fr-res"><div class="fr-val">−41%</div><div class="fr-lab">花在返工上的时间</div></div></div>
+</div></div></div>
+<div class="fr-slot"><i class="fr-gs"></i><div class="fr-pv"><div class="fr-card">
+<div class="fr-face fr-back"><b class="fr-tag">多人协作</b><div class="fr-cmp"><span>之前</span><i><i></i></i><span>之后</span><i><i style="width:6%"></i></i></div><div class="fr-res"><div class="fr-val">0.2s</div><div class="fr-lab">找到任意一个文件</div></div></div>
+</div></div></div>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+(function () {
+// seconds = upstream frames / 30 (CardFlipReveal.tsx, 150 f); the card ends at 4 s, 1.07 s after the last bar settles
+var CFG = {
+  slot: 4,
+  kick: 0, kickEach: 0.467, // eyebrow blurs in (14f)
+  title: 0.067, titleEach: 0.6, titleGap: 0.083, // title phrases rise (from 2f, 18f each, 2.5f apart)
+  flip0: 0.733, stagger: 0.4, // card 1 winds up at 22f, then one card every 12f
+  pre: 0.133, tilt: -10, // 4f lean back to -10 deg (out)
+  flip: 0.533, peak: 194, // 16f over to 194 deg, bezier(.55,0,.3,1)
+  damp: 15, stiff: 190, // spring back to 180 deg
+  num: -0.067, numFrom: 1.08, // number: spring 18/160 from 2f before landing, 1.08 > 1
+  lab: 0.067, labDur: 0.467, labRise: 14, // label: 2f after landing, 14f, rises 14px (snappy)
+  bars: 0.133, barsDur: 0.6, // "after" bar shrinks from 4f after landing, 18f (snappy)
+  push: 0.03, pushDur: 5, // camera 1 > 1.03 over upstream's whole 150f (smooth)
+  blink: 9 // caret blink, frames
+};
+// per orientation: perspective and lift (scaled with the card width), text sizes and line counts, strip height
+var LAND = { persp: 1600, lift: 60, head: 84, headMin: 56, val: 158, valMin: 60, nm: 52 };
+var PORT = { persp: 2770, lift: 104, head: 80, headMin: 72, val: 130, valMin: 56, nm: 52, strip: 248, room: 1018 };
+var v = { kicker: "第 3 节 · 用上之后", title: "三个功能，|三个结果", names: "自动整理|一键导出|多人协作", descs: "收进来就自动分好类|所有格式一次导出|一份文件大家一起改", values: "3.2×|−41%|0.2s", labels: "出初稿的速度|花在返工上的时间|找到任意一个文件", after: "0.31|0.59|0.06", pair: "之前|之后", backdrop: "on" };
+try {
+  var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+  for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+} catch (e) {}
+
+var root = document.querySelector(".fr");
+var q = function (s, el) { return (el || root).querySelector(s); };
+var FW = root.clientWidth, FH = root.clientHeight;
+if (!FW || !FH) {
+  // not laid out yet: the host clip's declared size, then the window
+  var hc = root.closest("[data-width][data-height]");
+  FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+  FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+}
+var P = FH > FW, L = P ? PORT : LAND;
+root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== end kit:tone ====
+
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+      "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+      "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+      "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+      "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+}
+// ==== end kit:grain ====
+
+// ==== kit:text@2 ====
+var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+function kWords(s, key) {
+  s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+  var cut = function (x) {
+    if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+    return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+  };
+  var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+  var pre = "";
+  bits.forEach(function (x) {
+    var t = x.trim(), last = out[out.length - 1];
+    if (last && /^ /.test(x)) last.sp = true;
+    if (!t) return;
+    if (!/[\p{L}\p{N}]/u.test(t)) {
+      if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+      else { last.t += t; last.sp = / $/.test(x); }
+      return;
+    }
+    out.push({ t: pre + t, sp: / $/.test(x) });
+    pre = "";
+  });
+  if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+  if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+  if (out.length) out[out.length - 1].sp = false;
+  return out;
+}
+function kSplit(el, by, rise, text) {
+  var s = text != null ? String(text) : el.textContent, units = [];
+  var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+  el.textContent = "";
+  parts.forEach(function (p) {
+    var u = document.createElement("span"), box = u;
+    u.className = "fr-u"; u.textContent = p.t;
+    if (by === "line") u.style.display = "block";
+    if (!p.t.trim()) { el.appendChild(u); return; }
+    if (rise) { box = document.createElement("span"); box.className = "fr-cut"; box.style.display = u.style.display; box.appendChild(u); }
+    el.appendChild(box);
+    if (p.sp) el.appendChild(document.createTextNode(" "));
+    units.push(u);
+  });
+  return units;
+}
+function kReveal(tl, units, variant, at, o) {
+  o = o || {};
+  var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+  units.forEach(function (u, i) {
+    var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+    if (variant === "rise") { // only rise and blur are used here
+      tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+      tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+    } else if (variant === "blur") {
+      tl.fromTo(u, { opacity: 0, y: fs * 0.25, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: each, ease: ease }, t0);
+    }
+  });
+  return tl;
+}
+// ==== end kit:text ====
+
+// ==== kit:fit@1 ====
+function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+      var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+      if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+      row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+
+var dark = kTone(root) === "dark", off = String(v.backdrop) === "off";
+if (getComputedStyle(root).getPropertyValue("--mc-font").trim()) root.style.setProperty("--fr-hv", "var(--k-font)");
+if (off) ["backdrop", "key", "floor", "hz", "vig", "grain"].forEach(function (n) { q(".fr-" + n).style.display = "none"; });
+var grain = kGrain(q(".fr-grain"));
+var list = function (s) { return String(s == null ? "" : s).split("|").map(function (x) { return x.trim(); }); };
+var vals = list(v.values).filter(Boolean).slice(0, 3), names = list(v.names), descs = list(v.descs), labs = list(v.labels), aft = list(v.after), pair = list(v.pair);
+if (!vals.length) vals = ["3.2×"];
+var n = vals.length, slots = [].slice.call(root.querySelectorAll(".fr-slot"));
+slots.slice(n).forEach(function (s) { s.parentNode.removeChild(s); });
+
+// heading: eyebrow as one unit (a spaced " · " stays intact), title by "|" phrases rising out of their line
+var head = q(".fr-head"), kick = q(".fr-kick"), title = q(".fr-title"), ku = [], tu = [];
+if (String(v.kicker).trim()) { ku = kSplit(kick, "line", false, String(v.kicker).trim()); kFit(kick, { min: 40 }); } else kick.style.display = "none";
+if (String(v.title).trim()) {
+  tu = kSplit(title, "word", true, v.title); kFit(title, { max: L.head, min: L.headMin });
+  // a rising phrase sits below its line, hidden by its clip-path cut, over the top of the row: the checker ignores the cut
+  tu.forEach(function (u) { u.setAttribute("data-layout-allow-overlap", ""); u.setAttribute("data-layout-allow-occlusion", ""); });
+} else title.style.display = "none";
+if (!ku.length && !tu.length) head.style.display = "none";
+// landscape: a short row (1-2 cards) gets a centred heading; no heading, the row moves to the middle
+if (!P && n < 3) head.style.textAlign = "center";
+if (!P && head.style.display) q(".fr-cards").style.top = (FH - q(".fr-cards").offsetHeight) / 2 + "px";
+if (P) {
+  // the strips give back what a wrapped title takes, so the column keeps to its 1018px
+  var hh = head.style.display === "none" ? -48 : head.offsetHeight;
+  L.strip = Math.min(L.strip, Math.floor((L.room - 48 - hh - (n - 1) * 32) / 3));
+}
+
+// text-free UI per card, rounded rects "x y w h rx fill [stroke] [caret]" (a circle is a rect with rx = w / 2)
+var C = { a: "var(--k-accent)", i: "var(--fr-fi)", m: "var(--fr-f2)", s: "var(--fr-f3)", d: "var(--fr-fd)", f: "var(--fr-ff)", u: "var(--fr-fu)", l: "var(--fr-fl)", k: "var(--fr-f0)", n: "none" };
+var UI = [
+  "0 6 330 16 8 i;0 50 248 16 8 i;256 40 4 34 2 a n 1;272 50 60 16 8 d;0 94 290 16 8 d;1 151 64 42 10 n l;17 166 32 12 6 i;84 166 120 12 6 s",
+  "2 2 44 44 22 m k;36 2 44 44 22 a k;70 2 44 44 22 s k;104 2 44 44 22 m k;164 18 150 12 6 s;0 87 10 10 5 a;24 85 250 14 7 i;0 135 10 10 5 s;24 133 214 14 7 m;0 183 10 10 5 s;24 181 236 14 7 m",
+  "1 1 398 68 18 u l;21 22 18 18 9 n m;37 38 7 7 3.5 m;60 28 150 14 7 i;6 96 36 44 7 i;58 111 190 14 7 i;340 113 54 10 5 s;6 140 36 44 7 f;58 155 150 14 7 m;340 157 54 10 5 s;6 184 36 44 7 f;58 199 130 14 7 m;340 201 54 10 5 s"
+];
+var svg = function (spec) {
+  return spec.split(";").map(function (e) {
+    var a = e.split(" ");
+    return '<rect x="' + a[0] + '" y="' + a[1] + '" width="' + a[2] + '" height="' + a[3] + '" rx="' + a[4] + '" style="fill:' + C[a[5]] + (a[6] ? ";stroke-width:2.5;stroke:" + C[a[6]] : "") + '"' + (a[7] ? ' class="fr-caret"' : "") + "/>";
+  }).join("");
+};
+// fronts are built here: the static page is the final picture, the backs
+var FRONT = '<div class="fr-face fr-front"><i class="fr-band"></i><b class="fr-no"></b><svg class="fr-ui" viewBox="0 0 400 230"></svg><div class="fr-bot"><div class="fr-nm"></div><div class="fr-ds"></div></div></div>';
+var fill = function (el, s, o) { if (!s) { el.style.display = "none"; return; } kSplit(el, "word", false, s); kFit(el, o); };
+
+var cards = slots.map(function (slot, i) {
+  var c = { pv: q(".fr-pv", slot), card: q(".fr-card", slot), gs: q(".fr-gs", slot), b: q(".fr-back", slot) };
+  c.card.insertAdjacentHTML("afterbegin", FRONT);
+  c.b.insertAdjacentHTML("afterbegin", '<i class="fr-band"></i>');
+  c.f = q(".fr-front", slot);
+  if (P) slot.style.height = L.strip + "px";
+  c.pv.style.perspective = L.persp + "px";
+  if (off) c.pv.style.webkitBoxReflect = "none";
+  c.fb = q(".fr-band", c.f); c.bb = q(".fr-band", c.b);
+  q(".fr-no", c.f).textContent = "0" + (i + 1) + " / 0" + n;
+  q(".fr-ui", c.f).innerHTML = svg(UI[i % 3]);
+  c.caret = q(".fr-caret", c.f);
+  var nm = names[i] || "";
+  fill(q(".fr-nm", c.f), nm, { max: L.nm, min: 40 });
+  fill(q(".fr-ds", c.f), descs[i] || "", { lines: 2 });
+  // a short strip: the index gives way to a two-line description, the back's name tag to the bars
+  if (P && q(".fr-bot", c.f).offsetHeight > L.strip - 80) q(".fr-no", c.f).style.display = "none";
+  q(".fr-tag", c.b).textContent = nm;
+  if (!nm || (P && L.strip < 226)) q(".fr-tag", c.b).style.display = "none";
+  // back: label first (it decides how tall the number may be on a strip), then the number at 1/1.08 of the column
+  var res = q(".fr-res", c.b), lab = q(".fr-lab", c.b), val = q(".fr-val", c.b), max = L.val;
+  fill(lab, labs[i] || "", { lines: 2 });
+  if (P) max = Math.min(max, Math.floor((L.strip - 48 - (labs[i] ? lab.offsetHeight + 16 : 0)) / 0.9));
+  kSplit(val, "word", false, vals[i]);
+  if (kCJK.test(vals[i])) val.style.letterSpacing = "0";
+  c.vs = kFit(val, { max: max, min: Math.min(max, L.valMin), width: res.clientWidth / CFG.numFrom }).size;
+  [].forEach.call(c.b.querySelectorAll(".fr-cmp span"), function (e, k) { e.textContent = pair[k] || ""; });
+  c.val = val; c.lab = labs[i] ? lab : null;
+  c.r = parseFloat(aft[i]);
+  if (isNaN(c.r)) q(".fr-cmp", c.b).style.display = "none";
+  else { c.r = MT.clamp(c.r, 0, 1); c.bar = q(".fr-cmp>i:last-child i", c.b); }
+  return c;
+});
+// one number size for the whole row: the smallest fit
+var vs = Math.min.apply(null, cards.map(function (c) { return c.vs; }));
+cards.forEach(function (c) { c.val.style.fontSize = vs + "px"; });
+// floor line = bottom of the row (landscape 950px; portrait under the last strip)
+var cam = q(".fr-cam"), row = q(".fr-cards");
+root.style.setProperty("--fy", cam.offsetTop + row.offsetTop + row.offsetHeight + "px");
+
+// flip angle: lean back, accelerate over to the peak, spring back to 180
+var FE = MT.bezier(0.55, 0, 0.3, 1);
+var angle = function (t, s) {
+  if (t < s + CFG.pre) return CFG.tilt * MT.ramp(t, s, CFG.pre, "out");
+  if (t < s + CFG.pre + CFG.flip) return MT.mix(CFG.tilt, CFG.peak, MT.ramp(t, s + CFG.pre, CFG.flip, FE));
+  return CFG.peak - (CFG.peak - 180) * MT.spring({ t: t, delay: s + CFG.pre + CFG.flip, damping: CFG.damp, stiffness: CFG.stiff });
+};
+// a face turned a deg from facing us: darker by (1 - |cos a|) * k, and a narrow band of light from 56 to 124 deg
+var light = function (face, band, a, k, bk, on) {
+  face.style.opacity = on ? 1 : 0;
+  face.style.filter = "brightness(" + (1 - (1 - Math.abs(Math.cos((a * Math.PI) / 180))) * k).toFixed(4) + ")";
+  band.style.opacity = (Math.max(0, 1 - Math.abs(a - 90) / 34) * bk).toFixed(3);
+  band.style.setProperty("--p", MT.mix(-20, 120, MT.clamp((a - 56) / 68, 0, 1)).toFixed(2) + "%");
+};
+
+var tl = MT.scene(CFG.slot, function (t) {
+  grain(t);
+  cam.style.transform = "scale(" + (1 + CFG.push * MT.ramp(t, 0, CFG.pushDur, "smooth")).toFixed(5) + ")";
+  cards.forEach(function (c, i) {
+    var s = CFG.flip0 + i * CFG.stagger, land = s + CFG.pre + CFG.flip, a = angle(t, s), cs = Math.cos((a * Math.PI) / 180);
+    var lift = Math.sin((MT.clamp(a, 0, 180) * Math.PI) / 180) * L.lift;
+    c.card.style.transform = "translateZ(" + lift.toFixed(2) + "px) rotateY(" + a.toFixed(3) + "deg)";
+    c.gs.style.transform = "scaleX(" + Math.max(0.12, Math.abs(cs)).toFixed(3) + ")";
+    light(c.f, c.fb, a, 0.55, 0.5, cs > 0);
+    light(c.b, c.bb, 180 - a, 0.4, 0.35, cs < 0);
+    c.val.style.transform = "scale(" + MT.mix(CFG.numFrom, 1, MT.spring({ t: t, delay: land + CFG.num, damping: 18, stiffness: 160 })).toFixed(4) + ")";
+    var p = MT.ramp(t, land + CFG.lab, CFG.labDur, "snappy");
+    if (c.lab) { c.lab.style.opacity = p.toFixed(3); c.lab.style.transform = "translateY(" + ((1 - p) * CFG.labRise).toFixed(2) + "px)"; }
+    if (c.bar) c.bar.style.width = (MT.mix(1, c.r, MT.ramp(t, land + CFG.bars, CFG.barsDur, "snappy")) * 100).toFixed(2) + "%";
+    if (c.caret) c.caret.style.opacity = Math.floor((t * 30) / CFG.blink) % 2 ? 0 : 1; // frames at 30 fps
+  });
+});
+kReveal(tl, ku, "blur", CFG.kick, { each: CFG.kickEach });
+kReveal(tl, tu, "rise", CFG.title, { each: CFG.titleEach, gap: CFG.titleGap });
+window.__timelines["card-flip-reveal"] = tl;
+})();
+</script>
+</template>
+</body>
+</html>

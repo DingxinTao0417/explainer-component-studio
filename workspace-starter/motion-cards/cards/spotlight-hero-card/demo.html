@@ -1,0 +1,514 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"note","type":"string","label":"注记第一行（可以留空）","default":"今天只讲"},
+    {"id":"key","type":"string","label":"注记第二行，压在强调色马克条上（可以留空）","default":"这一个功能"},
+    {"id":"src","type":"string","label":"界面截图（16:9，拉伸铺满页面；留空用内置示意页面）","default":""},
+    {"id":"x","type":"number","label":"主角卡左上角 x（页面像素，按 1920×1080）","default":780},
+    {"id":"y","type":"number","label":"主角卡左上角 y","default":228},
+    {"id":"w","type":"number","label":"主角卡宽","default":360},
+    {"id":"h","type":"number","label":"主角卡高","default":280},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"暗场舞台"},{"value":"off","label":"透明（去掉页面外的暗场底）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>spotlight-hero-card · 剧场聚光主角卡</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="spotlight-hero-card-template">
+<!-- Ported from video-shotcraft demos/opening/spotlight-hero-card/SpotlightHeroCard.tsx
+ (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+ Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+ Changes (2026-10): Remotion/React -> HyperFrames MT sub-composition, frames to seconds; --k-* palette with
+ --k-stage (warm black -> stage, tungsten -> on-stage + 14% accent, champagne -> 70% accent), system fonts; product
+ screenshots (1920x1746 page, card, hi-res card) -> the user's screenshot and box, or a text-free 16:9 palette page
+ drawn once to a bitmap (start shows it all, hero = top row middle card); tagline -> two fitted variable lines,
+ weight 700, CJK tracking 0, line height 1.22, right-aligned beside the card; note backing 6f ahead of the text;
+ SVG-mask dark field (sigma 22 hole, sigma 60 spill) drawn once on a canvas, gradient stand-in without scripts; dust
+ on a canvas, far motes widened, not blurred; page-edge rim strip dropped (off frame upstream); grain under the note;
+ slot 5.8 s (was 5.733). Timing and easing kept frame for frame: lamp, hunt, lock pulse, pools, card-shaped light,
+ push (zoom 0.8 -> 2.6, rotY 34, rotX 8, rotZ 2, persp 1200), rise, bob, reseat, beam laps, note, marker; sizes and
+ hunt stations follow the box (kept on the page); portrait: rotX 20, rotY 18, note under the card. -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+#root {
+ --k-bg: var(--mc-bg, #ffffff);
+ --k-panel: var(--mc-panel, #f4f5f7);
+ --k-ink: var(--mc-ink, #15171c);
+ --k-muted: var(--mc-muted, #6b7280);
+ --k-accent: var(--mc-accent, #e8590c);
+ --k-accent-2: var(--mc-accent-2, #2563eb);
+ --k-on-accent: var(--mc-on-accent, #ffffff);
+ --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+ --k-stage: var(--mc-stage, #0b0d12);
+ --k-on-stage: var(--mc-on-stage, #f3f5f8);
+ position: absolute;
+ inset: 0;
+ overflow: hidden;
+ font-family: var(--k-font);
+ color: var(--k-ink);
+}
+/* ==== kit:text@2 (word units only) ==== */
+.shc-u { display: inline-block; white-space: pre; }
+/* ==== end kit:text ==== */
+/* ==== kit:grain@1 ==== */
+.shc-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+.shc { position: absolute; inset: 0; container-type: size;
+ --shc-warm: color-mix(in srgb, var(--k-on-stage), var(--k-accent) 14%);
+ --shc-gold: color-mix(in srgb, var(--k-accent) 70%, var(--k-on-stage));
+ --shc-shade: color-mix(in srgb, var(--k-stage) 50%, black);
+ --shc-pg: color-mix(in srgb, var(--k-bg), var(--k-ink) 3%); }
+.shc-l { position: absolute; inset: 0; pointer-events: none; }
+.shc-stage { background: linear-gradient(180deg, color-mix(in srgb, var(--k-stage), white 4%), var(--k-stage) 55%, color-mix(in srgb, var(--k-stage), black 35%)); }
+/* camera + page plane (CSS zoom keeps it sharp); static values = the settled frame */
+.shc-view { overflow: hidden; perspective: 3120px; }
+.shc-page { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-style: preserve-3d; zoom: 2.6; transform-origin: 855px 358px; transform: translate(-485.77px, -150.31px) rotateY(34deg) rotateX(8deg) rotateZ(2deg); }
+.shc-page > * { position: absolute; display: block; }
+.shc-pg, .shc-dk { left: 0; top: 0; width: 100%; height: 100%; }
+.shc-pg { background: var(--shc-pg); }
+.shc-dk { transform: translateZ(1px); background: radial-gradient(330px 290px at 960px 368px, transparent 55%, color-mix(in srgb, var(--k-stage) 94%, transparent)); }
+.shc-a { fill: var(--shc-pg); }
+.shc-b, .shc-s { fill: var(--k-bg); }
+.shc-s { stroke: color-mix(in srgb, var(--k-ink) 12%, var(--k-bg)); stroke-width: 1.5; }
+.shc-e { fill: color-mix(in srgb, var(--k-ink) 12%, var(--k-bg)); }
+.shc-c { fill: color-mix(in srgb, var(--k-ink) 16%, var(--k-bg)); }
+.shc-h { fill: color-mix(in srgb, var(--k-ink) 62%, var(--k-bg)); }
+.shc-d { fill: var(--k-accent); }
+.shc-g { fill: color-mix(in srgb, var(--k-accent-2) 22%, var(--k-bg)); }
+.shc-p { fill: none; stroke: color-mix(in srgb, var(--k-ink) 24%, var(--k-bg)); stroke-width: 1.5; }
+.shc-slot, .shc-card { left: 780px; top: 228px; width: 360px; height: 280px; border-radius: 16px; }
+.shc-slot { margin: -2px; padding: 2px; transform: translateZ(1.5px); opacity: 0; }
+.shc-slot i { position: absolute; inset: 0; border-radius: inherit; border: 1.5px solid var(--shc-gold); }
+.shc-card { transform-style: preserve-3d; transform: translateZ(2px); }
+.shc-card > * { position: absolute; }
+.shc-face { inset: 0; border-radius: inherit; overflow: hidden; background: var(--shc-pg); }
+.shc-face > * { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.shc-lit { background: linear-gradient(200deg, color-mix(in srgb, var(--shc-warm) 35%, transparent), transparent 45%, color-mix(in srgb, var(--shc-shade) 8%, transparent)); opacity: 0; }
+.shc-edge { inset: 0; border-radius: inherit; box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--shc-warm) 70%, transparent), 0 0 44px color-mix(in srgb, var(--shc-gold) 18%, transparent); }
+.shc-beam { overflow: visible; opacity: 0; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--shc-gold) 90%, transparent)) drop-shadow(0 0 18px color-mix(in srgb, var(--shc-warm) 55%, transparent)); }
+.shc-beam rect { fill: none; stroke-linecap: round; }
+.shc-b1 { stroke: var(--shc-gold); }
+.shc-b2 { stroke: color-mix(in srgb, var(--shc-warm) 98%, transparent); }
+.shc-trail { inset: -3px; border: 1.5px solid var(--shc-gold); border-radius: 19px; opacity: 0; }
+/* screen-space lamp */
+.shc-pool, .shc-pre { mix-blend-mode: multiply; opacity: 0; }
+.shc-pre { background: var(--k-stage); }
+.shc-warm { mix-blend-mode: soft-light; opacity: 0; }
+.shc-cone { mix-blend-mode: screen; opacity: 0.55; }
+.shc-cone > * { position: absolute; inset: 0; }
+.shc-blur { filter: blur(28px); }
+/* note: same camera, above the lamp */
+.shc-npage > * { position: absolute; }
+.shc-nsh { background: radial-gradient(ellipse at 50% 50%, color-mix(in srgb, var(--shc-shade) 55%, transparent), transparent 70%); filter: blur(12px); opacity: 0; }
+.shc-nbk { left: 473px; top: 199px; width: 306px; height: 250px; transform: translateZ(3px); background: radial-gradient(ellipse 50% 50% at 52% 50%, color-mix(in srgb, var(--k-stage) 97%, transparent), color-mix(in srgb, var(--k-stage) 90%, transparent) 60%, transparent); filter: blur(6px); }
+.shc-note { left: 601px; top: 261px; transform: translateZ(4px); font-size: 33.85px; font-weight: 700; line-height: 1.22; color: var(--k-on-stage); text-shadow: 0 2px 18px color-mix(in srgb, var(--shc-shade) 60%, transparent); }
+.shc-l2 { position: relative; display: inline-block; margin-top: 2px; }
+.shc-mk { position: absolute; left: -6px; top: 8%; bottom: 2%; width: calc(100% + 12px); border-radius: 4px; background: var(--k-accent); }
+.shc-kt { position: relative; display: block; color: var(--k-on-accent); }
+@container (orientation: portrait) {
+ .shc-view { perspective: 2304px; }
+ .shc-page { zoom: 1.92; transform-origin: 942px 560px; transform: translate(-661px, -60px) rotateY(18deg) rotateX(20deg) rotateZ(1deg); }
+ .shc-nbk { left: 701px; top: 512px; width: 469px; height: 224px; }
+ .shc-note { left: 765px; top: 564px; width: 341px; font-size: 41.67px; text-align: center; }
+}
+</style>
+
+<div id="root" data-composition-id="spotlight-hero-card">
+ <div class="shc">
+  <div class="shc-l shc-stage"></div>
+  <div class="shc-l shc-view" data-layout-allow-overflow>
+   <div class="shc-page">
+    <canvas class="shc-pg"></canvas>
+    <canvas class="shc-dk"></canvas>
+    <div class="shc-slot"><i></i></div>
+    <div class="shc-card">
+     <div class="shc-face"><svg class="shc-fs" viewBox="780 228 360 280" preserveAspectRatio="none" aria-hidden="true"><rect x="780" y="228" width="360" height="280" rx="14" class="shc-s"/><rect x="1060" y="252" width="58" height="10" rx="5" class="shc-d"/><rect x="802" y="278" width="201" height="16" rx="8" class="shc-h"/><rect x="802" y="312" width="302" height="10" rx="5" class="shc-c"/><rect x="802" y="331" width="235" height="10" rx="5" class="shc-c"/><rect x="890" y="362" width="91" height="9" rx="4.5" class="shc-h"/><rect x="890" y="381" width="66" height="9" rx="4.5" class="shc-h"/><rect x="890" y="400" width="79" height="9" rx="4.5" class="shc-h"/><rect x="802" y="460" width="92" height="24" rx="12" class="shc-p"/><rect x="902" y="460" width="69" height="24" rx="12" class="shc-p"/></svg><i class="shc-lit"></i></div>
+     <i class="shc-edge"></i>
+     <svg class="shc-beam" aria-hidden="true"><rect class="shc-b1" pathLength="1" stroke-dasharray="0.16 1"/><rect class="shc-b2" pathLength="1" stroke-dasharray="0.16 1"/></svg>
+     <i class="shc-trail"></i>
+    </div>
+   </div>
+  </div>
+  <div class="shc-l shc-pool"></div>
+  <div class="shc-l shc-pre"></div>
+  <div class="shc-l shc-warm"></div>
+  <div class="shc-l shc-cone"><div class="shc-blur"><div class="shc-l shc-ray"></div></div><canvas class="shc-dust"></canvas></div>
+  <div class="shc-l shc-grain"></div>
+  <div class="shc-l shc-view shc-nview" data-layout-allow-overflow>
+   <div class="shc-page shc-npage">
+    <i class="shc-nsh"></i>
+    <i class="shc-nbk"></i>
+    <div class="shc-note"><div class="shc-l1">今天只讲</div><div class="shc-l2"><i class="shc-mk"></i><span class="shc-kt">这一个功能</span></div></div>
+   </div>
+  </div>
+ </div>
+</div>
+
+<script>
+(function () {
+ // seconds = upstream frames / 30, both orientations
+ var CFG={
+  dur:5.8, // upstream 172f = 5.733 s
+  lamp:[0.033,0.1,0.133,0.2], // f1-6 lamp on: 0 -> 1 -> 0.62 -> 1
+  hunt:[0.133,0.333,0.433,0.633,0.733,0.933], // f4-28: 3 stations, hold 6f, move 3f
+  lock:1.133,push0:1.333,push1:1.933, // f34 lock; f40-58 push in
+  rise0:1.867,rise1:2.2,bob:1.333, // f56-66 pop off the page; bob period 40f
+  b1:2.267,b1e:2.733,b2:2.933,b2e:3.6,trail:4.067, // beam f68-82, f88-108, rim to f122
+  note:2.333,noteDur:0.467,lead:0.2,mark:2.8,markDur:0.4, // f70 +14f note (backing 6f ahead); f84 +12f marker
+  reseat:4.133,land:4.733 // f124-142 settle; f142 touchdown
+ };
+ // end camera: card centre at (tx, ty), card within fw x fh of the frame; start: page centre at ay; note px, floor
+ var LAND={ay:0.5,tx:0.6135,ty:0.5311,fw:0.4875,fh:0.75,rx:8,ry:34,rz:2,nfs:88,nmin:44};
+ var PORT={ay:0.4,tx:0.5,ty:0.33,fw:0.64,fh:0.33,rx:20,ry:18,rz:1,nfs:80,nmin:56};
+ var POP=MT.bezier(0.2,1.25,0.3,1),RES=MT.bezier(0.4,0,0.3,1.05),PUSH=MT.bezier(0.35,0,0.2,1);
+ var v={note:"今天只讲",key:"这一个功能",src:"",x:780,y:228,w:360,h:280,backdrop:"on"};
+ try{
+  var got=(window.__hyperframes&&window.__hyperframes.getVariables&&window.__hyperframes.getVariables())||{};
+  for(var k in got)if(got[k]!==undefined&&got[k]!==null)v[k]=got[k]; // "" clears note / key
+ }catch(e){}
+
+ var root=document.querySelector(".shc");
+ var q=function(s){return root.querySelector(s);};
+ var FW=root.clientWidth,FH=root.clientHeight;
+ if(!FW||!FH){
+  // not laid out yet: the host clip's declared size, then the window
+  var hc=root.closest("[data-width][data-height]");
+  FW=hc?+hc.getAttribute("data-width"):window.innerWidth;
+  FH=hc?+hc.getAttribute("data-height"):window.innerHeight;
+ }
+ var P=FH>FW,L=P?PORT:LAND,S=Math.min(FW,FH)/1.08e3;
+ root.setAttribute("data-orient",P?"portrait":"landscape");
+
+ // ==== kit:tone@1 (kRGB) ====
+ function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+ }
+ // ==== end kit:tone ====
+ // ==== kit:text@2 (kWords, kSplit) ====
+ var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+ function kWords(s, key) {
+  s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+  var cut = function (x) {
+   if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+   return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+  };
+  var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+  var pre = "";
+  bits.forEach(function (x) {
+   var t = x.trim(), last = out[out.length - 1];
+   if (last && /^ /.test(x)) last.sp = true;
+   if (!t) return;
+   if (!/[\p{L}\p{N}]/u.test(t)) {
+    if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+    else { last.t += t; last.sp = / $/.test(x); }
+    return;
+   }
+   out.push({ t: pre + t, sp: / $/.test(x) });
+   pre = "";
+  });
+  if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+  if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+  if (out.length) out[out.length - 1].sp = false;
+  return out;
+ }
+ function kSplit(el, by, rise, text) {
+  var s = text != null ? String(text) : el.textContent, units = [];
+  var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+  el.textContent = "";
+  parts.forEach(function (p) {
+   var u = document.createElement("span"), box = u;
+   u.className = "shc-u"; u.textContent = p.t;
+   if (by === "line") u.style.display = "block";
+   if (!p.t.trim()) { el.appendChild(u); return; }
+   if (rise) { box = document.createElement("span"); box.className = "shc-cut"; box.style.display = u.style.display; box.appendChild(u); }
+   el.appendChild(box);
+   if (p.sp) el.appendChild(document.createTextNode(" "));
+   units.push(u);
+  });
+  return units;
+ }
+ // ==== end kit:text ====
+ // ==== kit:fit@1 (kFit, kLines) ====
+ function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+   el.style.fontSize = f + "px";
+   m = kLines(el);
+   if ((m.w <= W && m.n <= n) || f <= min) break;
+   f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+   [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+   m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+ }
+ function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+   if (!t.data.trim()) continue;
+   r.selectNodeContents(t);
+   [].forEach.call(r.getClientRects(), function (b) {
+    var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+    if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+    row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+   });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+ }
+ // ==== end kit:fit ====
+ // ==== kit:grain@1 ====
+ function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+   var f = "type='linear' slope='2.4' intercept='-0.7'";
+   var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+    "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+    "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+    "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+    "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+   return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+   var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+   layer.style.backgroundImage = tiles[k % 6];
+   layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+ }
+ // ==== end kit:grain ====
+
+ var view=q(".shc-view"),page=q(".shc-page"),nview=q(".shc-nview"),npage=q(".shc-npage");
+ var PW=page.offsetWidth,PH=page.offsetHeight,f2=function(x){return x.toFixed(2);};
+ var ip=function(t,a,b,e){return MT.interpolate(t,a,b,{easing:e,extrapolateLeft:"clamp",extrapolateRight:"clamp"});};
+ var off=String(v.backdrop)==="off",grain=off?null:kGrain(q(".shc-grain"),{opacity:0.07,blend:"soft-light"});
+ if(off)q(".shc-stage").style.display=q(".shc-grain").style.display="none";
+
+ // hero box (page px); U scales upstream's page px (set for a 360 x 280 card)
+ var bw=MT.clamp(+v.w||360,40,PW),bh=MT.clamp(+v.h||280,40,PH);
+ var bx=MT.clamp(+v.x||0,0,PW-bw),by=MT.clamp(+v.y||0,0,PH-bh),hx=bx+bw/2,hy=by+bh/2;
+ var U=Math.sqrt((bw*bh)/100800),px=function(n){return f2(n*U)+"px";};
+ var attr=function(e,a){for(var n in a)e.setAttribute(n,a[n]);return e;};
+ var css=function(e,l,t,w,h,x){e.style.cssText="left:"+l+"px;top:"+t+"px;width:"+w+"px;height:"+h+"px;"+x;};
+
+ // page: the screenshot, or built-in bars as a 1.5x bitmap (cheap per frame); face: the same, cropped to the box
+ var fs=q(".shc-fs"),src=String(v.src).trim(),pc=q(".shc-pg");
+ if(src){
+  var img=document.createElement("img");
+  img.className="shc-pg";img.alt="";img.src=src;
+  page.replaceChild(img,pc);
+  fs.parentNode.style.background="url("+JSON.stringify(src)+") "+ -bx+"px "+ -by+"px/"+PW+"px "+PH+"px";
+  fs.remove();
+ }else{
+  var o={a:"",b:"",s:"",e:"",c:"",h:"",d:"",g:"",p:""},F=Object.assign({},o),rnd=MT.seeded(7),R=function(x,y,w,h,r,c){
+   w=Math.round(w);var a=" a"+r+" "+r+" 0 0 1 ",d="M"+(x+r)+" "+y+"h"+(w-2*r)+a+r+" "+r+"v"+(h-2*r)+a+-r+" "+r+"h"+(2*r-w)+a+-r+" "+-r+"v"+(2*r-h)+a+r+" "+-r+"z";
+   o[c]+=d;if(x<bx+bw&&x+w>bx&&y<by+bh&&y+h>by)F[c]+=d;
+  };
+  R(0,0,PW,PH,0,"a");R(0,0,PW,64,0,"b");R(0,64,PW,1,0,"e");
+  R(408,20,24,24,6,"d");R(444,26,132,12,6,"h");R(596,27,40,10,5,"c");R(648,27,40,10,5,"c");
+  R(408,90,72,10,5,"c");R(1452,90,60,10,5,"c");
+  R(408,116,1016,44,10,"s");R(436,133,260,10,5,"c");R(1436,116,76,44,10,"s");R(1456,133,36,10,5,"h");
+  [3,3,2].forEach(function(n,r){
+   var y=188+r*344;
+   R(408,y,110+60*rnd(),10,5,"c");R(1456,y,56,10,5,"c");R(408,y+22,1104,1,0,"e");
+   for(var c=0;c<n;c++){
+    var x=408+c*372,t=y+40,a=Math.round(70+30*rnd());
+    R(x,t,360,280,14,"s");
+    if(!r&&c==2)R(x+22,t+20,52,20,10,"g");
+    R(x+280,t+24,58,10,5,c==1?"d":"c");
+    R(x+22,t+50,170+120*rnd(),16,8,"h");
+    R(x+22,t+84,300+16*rnd(),10,5,"c");R(x+22,t+103,120+150*rnd(),10,5,"c");
+    for(var j=0;j<3;j++){
+     R(x+22,t+134+19*j,40,9,4.5,"c");R(x+110,t+134+19*j,50+80*rnd(),9,4.5,"h");
+     R(x+22+82*j,t+204,44,9,4.5,"c");R(x+70+82*j,t+204,10,9,3,"h");
+    }
+    R(x+22,t+232,a,24,12,"p");R(x+30+a,t+232,60+30*rnd(),24,12,"p");
+   }
+  });
+  var H=function(m){var x="";for(var k in m)x+='<path class="shc-'+k+'" d="'+m[k]+'"/>';return x;},pg2=pc.getContext("2d");
+  fs.innerHTML=H(o);pc.width=PW*1.5;pc.height=PH*1.5;pg2.scale(1.5,1.5);
+  [].forEach.call(fs.children,function(e){
+   var s=getComputedStyle(e),d=new Path2D(e.getAttribute("d"));
+   if(s.fill!="none"){pg2.fillStyle=s.fill;pg2.fill(d);}
+   if(s.stroke!="none"){pg2.lineWidth=1.5;pg2.strokeStyle=s.stroke;pg2.stroke(d);}
+  });
+  fs.innerHTML=H(F);
+  fs.setAttribute("viewBox",[bx,by,bw,bh].join(" "));
+ }
+
+ // card, patch, beam
+ var card=q(".shc-card"),slot=q(".shc-slot"),beam=q(".shc-beam"),dk=q(".shc-dk");
+ [card,slot].forEach(function(e){css(e,bx,by,bw,bh,"border-radius:"+px(16));});
+ attr(beam,{width:bw+6*U,height:bh+6*U,viewBox:[bx-3*U,by-3*U,bw+6*U,bh+6*U].join(" ")});
+ beam.style.left=beam.style.top=px(-3);
+ [].forEach.call(beam.children,function(r){attr(r,{x:bx-U,y:by-U,width:bw+2*U,height:bh+2*U,rx:16*U});});
+ q(".shc-trail").style.cssText="inset:"+px(-3)+";border-radius:"+px(19)+";border-width:"+px(1.5);
+
+ // camera as upstream PageCam2D: (cx, cy) on the frame centre, zoom z, perspective persp * z
+ var PERSP=1200*U,z0=(0.8*FW)/PW,rad=Math.PI/180;
+ var C0={cx:PW/2,cy:PH/2+(FH/2-L.ay*FH)/z0,z:z0,rx:0,ry:0,rz:0};
+ var C1={cx:hx,cy:hy,z:Math.max(z0*1.3,Math.min((L.fw*FW)/bw,(L.fh*FH)/bh)),rx:L.rx,ry:L.ry,rz:L.rz};
+ // screen x, y and scale of page point (x, y) lifted zz
+ var proj=function(x,y,zz,c){
+  var X=(x-c.cx)*c.z,Y=(y-c.cy)*c.z,Z=zz*c.z,a=c.rz*rad,b=c.rx*rad,g=c.ry*rad;
+  var x1=X*Math.cos(a)-Y*Math.sin(a),y1=X*Math.sin(a)+Y*Math.cos(a);
+  var y2=y1*Math.cos(b)-Z*Math.sin(b),z2=y1*Math.sin(b)+Z*Math.cos(b);
+  var x3=x1*Math.cos(g)+z2*Math.sin(g),z3=-x1*Math.sin(g)+z2*Math.cos(g),D=PERSP*c.z,s=D/(D-z3);
+  return[FW/2+x3*s,FH/2+y2*s,s];
+ };
+ for(var i=0;i<8;i++){var pp=proj(hx,hy,0,C1);C1.cx+=(pp[0]-L.tx*FW)/C1.z/pp[2];C1.cy+=(pp[1]-L.ty*FH)/C1.z/pp[2];}
+ var camAt=function(t){
+  var p=MT.ramp(t,CFG.push0,CFG.push1-CFG.push0,PUSH),c={};
+  for(var n in C0)c[n]=MT.mix(C0[n],C1[n],p);
+  return c;
+ };
+ var place=function(vw,pg,c){
+  vw.style.perspective=f2(PERSP*c.z)+"px";
+  vw.style.perspectiveOrigin=FW/2+"px "+FH/2+"px";
+  pg.style.zoom=c.z.toFixed(4);
+  pg.style.transformOrigin=f2(c.cx)+"px "+f2(c.cy)+"px";
+  pg.style.transform="translate("+f2(FW/2/c.z-c.cx)+"px,"+f2(FH/2/c.z-c.cy)+"px) rotateY("+f2(c.ry)+"deg) rotateX("+f2(c.rx)+"deg) rotateZ("+f2(c.rz)+"deg)";
+ };
+
+ // note: fitted beside the card (6% / 11% margins; landscape at rest, portrait hovering), placed, backed
+ var note=q(".shc-note"),l1=q(".shc-l1"),l2=q(".shc-l2"),kt=q(".shc-kt"),nbk=q(".shc-nbk"),nsh=q(".shc-nsh"),mk=q(".shc-mk");
+ var t1=String(v.note).trim(),t2=String(v.key).trim(),ny=P?by+bh+100*U:by+0.27*bh;
+ npage.style.transform="none";npage.style.zoom=1;
+ note.style.cssText="font-size:"+f2(L.nfs/C1.z)+"px;left:0;top:0;width:"+PW+"px";
+ var lim=function(x0,d,edge){
+  for(var a=x0,b=x0+d*PW,i=0;i<24;i++){var m=(a+b)/2;(proj(m,ny,(P?95:4)*U,C1)[0]-edge)*d<0?(a=m):(b=m);}
+  return Math.abs(a-x0);
+ };
+ var NW=P?2*Math.min(lim(hx,-1,0.11*FW),lim(hx,1,0.89*FW)):lim(bx-10*U,-1,0.06*FW);
+ var fit=function(el,s,w){if(!s)return 1e3;kSplit(el,"word",false,s);return kFit(el,{width:w,min:L.nmin/C1.z}).size;};
+ var fz=Math.min(fit(l1,t1,NW),fit(kt,t2,NW-12*U));
+ l1.style.display=t1?"":"none";l2.style.display=t2?"":"none";
+ l1.style.fontSize=kt.style.fontSize=fz+"px";
+ note.style.cssText="font-size:"+fz+"px;width:"+(P?NW+"px":"max-content")+";max-width:"+NW+"px";
+ mk.style.left=px(-6);
+ var NWd=note.offsetWidth,NH=note.offsetHeight,nt=P?by+bh+56*U:by+0.27*bh-NH/2,nl=P?hx-NWd/2:bx-10*U-NWd;
+ for(i=0;P&&i<6;i++)nl+=(L.tx*FW-proj(nl+NWd/2,nt+NH/2,4*U,C1)[0])/C1.z; // centre its projection under the card
+ note.style.left=nl+"px";note.style.top=nt+"px";
+ if(P)css(nbk,nl-64*U,by+bh+4*U,NWd+128*U,NH+120*U,"");
+ else css(nbk,nl-128*U,nt-62*U,bx+127*U-nl,NH+165*U,"");
+ nbk.style.filter="blur("+px(6)+")";
+ css(nsh,nl-8*U,nt+NH+23*U,NWd,70*U,"filter:blur("+px(12)+")");
+ if(!t1&&!t2)nview.style.display="none";
+
+ var rgb=function(c){return kRGB(root,c).map(Math.round).join(",");};
+ var ST=rgb("var(--k-stage)"),WA=rgb("var(--shc-warm)"),GO=rgb("var(--shc-gold)"),SH=rgb("var(--shc-shade)"),ON=rgb("var(--k-on-stage)");
+ var rg=function(c,a){return "rgba("+c+","+a.toFixed(3)+")";};
+ // dark field drawn once: stage minus a sigma 60 spill (85%) and a sigma 22 card-shaped hole
+ var kz=Math.min(1,0.4/U),dg=dk.getContext("2d");
+ dk.width=PW*kz;dk.height=PH*kz;dk.style.background="none";
+ dg.fillStyle="rgb("+ST+")";dg.fillRect(0,0,PW,PH);dg.scale(kz,kz);dg.globalCompositeOperation="destination-out";
+ [[60,50,70,60,0.851],[14,14,30,22,1]].forEach(function(a){
+  dg.filter="blur("+a[3]*U*kz+"px)";dg.globalAlpha=a[4];dg.beginPath();
+  dg.roundRect(bx-a[0]*U,by-a[1]*U,bw+2*a[0]*U,bh+2*a[1]*U,a[2]*U);dg.fill();
+ });
+
+ // hunt: upstream's stations in card sizes, kept on the page; lock, then ride the push
+ var sc=function(dx,dy){return proj(MT.clamp(hx+dx*bw,0.08*PW,0.92*PW),MT.clamp(hy+dy*bh,0.18*PH,0.85*PH),0,C0);};
+ var hs=[sc(-1.746,-1.417),sc(1.478,-0.984),sc(-0.806,-0.032),proj(hx,hy+0.054*bh,0,C0),proj(hx,hy,0,C1)];
+ var SS=function(k){return[0,0,1,1,2,2,3,4].map(function(j){return hs[j][k];});},SX=SS(0),SY=SS(1);
+ // pool radii: upstream screen px at zoom 0.8, scaled by card and start zoom
+ var STT=CFG.hunt.concat([CFG.lock,CFG.push1]),PS=(U*z0)/0.8;
+
+ var cv=q(".shc-dust"),g=cv.getContext("2d");
+ cv.width=FW;cv.height=FH;
+ var hsh=function(n){var x=Math.sin(n*91.345+47.853)*43758.5453;return x-Math.floor(x);};
+ var pool=q(".shc-pool"),pre=q(".shc-pre"),warm=q(".shc-warm"),cone=q(".shc-cone"),ray=q(".shc-ray");
+ var face=q(".shc-face"),lit=q(".shc-lit"),edge=q(".shc-edge"),trail=q(".shc-trail"),b1=beam.children[0],b2=beam.children[1];
+ var si=slot.firstChild;
+
+ var render=function(t){
+  var f=t*30,c=camAt(t),E=CFG.land; // f: frames at 30 fps
+  place(view,page,c);place(nview,npage,c);
+  // lamp, pool, lock pulse, breathing
+  var lamp=ip(t,CFG.lamp,[0,1,0.62,1]),x0=ip(t,STT,SX,"smooth"),y0=ip(t,STT,SY,"smooth"),at=f2(x0)+"px "+f2(y0)+"px";
+  var pulse=ip(t,[CFG.lock,CFG.lock+0.133,CFG.lock+0.333],[0,0.06,0]),amb=Math.sin((f-E*30)/14)*MT.ramp(t,E,0.667,"out");
+  var rx=ip(t,[CFG.hunt[4],CFG.lock,CFG.push1],[400,300,470],"swift")*PS*(1+pulse)*(1+0.015*amb),ry=rx*ip(t,[CFG.push0,CFG.push1],[0.8,0.92]);
+  var dark=ip(t,[0,CFG.lock,CFG.push1],[0.9,0.92,0.94]),cl=MT.ramp(t,CFG.lock+0.133,0.667,"smooth");
+  pool.style.background="radial-gradient("+f2(rx*1.35)+"px "+f2(ry*1.35)+"px at "+at+","+rg(ST,0)+" 26%,"+rg(ST,dark*0.25)+" 44%,"+rg(ST,dark*0.62)+" 62%,"+rg(ST,dark*0.9)+" 80%,"+rg(ST,dark)+")";
+  warm.style.background="radial-gradient("+f2(rx*1.2)+"px "+f2(ry*1.2)+"px at "+at+","+rg(WA,0.24)+","+rg(WA,0.12)+" 50%,"+rg(WA,0)+" 80%)";
+  pool.style.opacity=warm.style.opacity=f2(lamp*(1-cl));
+  pre.style.opacity=f2(0.84*(1-lamp));
+  // then the card-shaped light takes over
+  dk.style.opacity=(cl*Math.min(0.97,0.94*(1+0.012*amb))).toFixed(3);
+  // cone from 420px right of the pool, 720px above the frame
+  var sx=x0+420*S,sy=-720*S,cw=rx*0.6,poly=[[sx-26*S,sy],[sx+26*S,sy],[x0+cw,y0],[x0-cw,y0]];
+  cone.style.opacity=f2(lamp*(1-0.45*MT.ramp(t,CFG.push0,0.6,"smooth")));
+  ray.style.clipPath="polygon("+poly.map(function(p){return f2(p[0])+"px "+f2(p[1])+"px";})+")";
+  ray.style.background="linear-gradient("+f2(Math.atan2(y0-sy,x0-sx)/rad-90)+"deg,"+rg(WA,0.34)+","+rg(WA,0.16)+" 60%,"+rg(WA,0.06)+")";
+  // dust (upstream Look.Dust: 36 motes, seed 4, drift 0.3) in the cone
+  g.clearRect(0,0,FW,FH);
+  g.save();g.beginPath();poly.forEach(function(p){g.lineTo(p[0],p[1]);});g.clip();
+  for(var i=0,sw=FW+200,sh=FH+100;i<36;i++){
+   var zd=hsh(124+i*7.1),d=2+zd*zd*16,x=((((hsh(52+i*3.7)*sw+f*0.3*(0.4+zd))%sw)+sw)%sw)-100+d/2;
+   var y=((((hsh(68+i*5.3)*FH-f*0.09*(0.5+zd))%sh)+sh)%sh)-50+d/2,r=d*0.495,R=r+(zd>0.7?(zd-0.7)*15:0),gr=g.createRadialGradient(x,y,0,x,y,R);
+   gr.addColorStop(0,rg(WA,0.9));gr.addColorStop(1,rg(WA,0));
+   // far motes: a wider, fainter dot instead of a canvas blur (~90 ms a frame)
+   g.globalAlpha=0.6*(0.625+0.375*Math.sin(f/(14+zd*20)+i))*(0.3+zd*0.7)*(r/R)*(r/R);
+   g.fillStyle=gr;g.fillRect(x-R,y-R,2*R,2*R);
+  }
+  g.restore();
+  // card: rise -> hover, bob -> reseat, press; shadow down-left, grows with height
+  var rise=ip(t,[CFG.rise0,CFG.rise1],[0,1],POP),res=ip(t,[CFG.reseat,E],[0,1],RES),lift=rise*(1-res);
+  var zc=110*lift+Math.sin(((t-CFG.rise1)/CFG.bob)*2*Math.PI)*4*lift,L1=function(k){return px(k*lift);};
+  card.style.transform="translateZ("+px(zc+2)+") scale("+ip(t,[E-0.133,E-0.033,E],[1,0.997,1]).toFixed(4)+")";
+  face.style.boxShadow=t>=E?"none":L1(-10)+" "+L1(10)+" "+px(12+12*lift)+" "+rg(SH,0.35*lift)+","+L1(-36)+" "+L1(48)+" "+L1(90)+" "+rg(SH,0.42*lift);
+  lit.style.opacity=f2(lift);
+  edge.style.boxShadow="inset 0 0 0 "+px(1)+" "+rg(ON,0.7*lift)+",0 0 0 "+px(1.5)+" "+rg(WA,0.7*cl)+",0 0 "+px(44)+" "+rg(GO,0.18*cl);
+  // patch, touchdown ring
+  var sv=Math.min(1,rise*2)*(1-res),lp=ip(t,[E-0.133,E,E+0.467],[0,1,0]),se=Math.min(1,0.45*(1-res))+lp*0.5;
+  slot.style.opacity=f2(Math.max(sv,lp));
+  slot.style.background=sv>0.02?"var(--shc-pg)":"transparent";
+  slot.style.boxShadow="inset 0 0 "+px(26)+" "+rg(GO,0.14*se);
+  si.style.cssText="opacity:"+f2(Math.min(1,se))+";border-width:"+px(1.5)+";box-shadow:"+(lp>0.02?"0 0 "+px(24*lp)+" "+rg(GO,0.8):"none");
+  // beam: lap 1 fast and bright, lap 2 slower and weaker, then a fading rim
+  var on1=f>=66.99&&f<=83.01,on2=f>=86.99&&f<=109.01;
+  var bp=on1?ip(t,[CFG.b1,CFG.b1e],[0,1]):ip(t,[CFG.b2,CFG.b2e],[0,1],"swift");
+  beam.style.opacity=(on1||on2)&&lift>0.4?(on1?1:0.62):0;
+  b1.style.strokeWidth=px(on1?5:3.5);b2.style.strokeWidth=px(on1?2.5:1.75);
+  b1.style.strokeDashoffset=b2.style.strokeDashoffset=(-bp).toFixed(4);
+  trail.style.opacity=f2(ip(t,[CFG.b2e,CFG.trail],[0.4,0]));
+  // note: rises out of a blur, sways, settles with the card; marker grows
+  var ni=MT.ramp(t,CFG.note,CFG.noteDur,"out"),ns=ip(t,[CFG.reseat-0.133,E],[0,1],RES),up=") translateY("+px((1-ni)*26)+")";
+  var nz=4+(88+Math.sin(((t-CFG.note)/1.467)*2*Math.PI)*3)*(1-ns),hl=MT.ramp(t,CFG.mark,CFG.markDur,"swift");
+  nview.style.opacity=t>=CFG.note-CFG.lead?1:0;
+  note.style.transform="translateZ("+px(nz)+up;
+  nbk.style.transform="translateZ("+px(nz-1)+up;
+  note.style.opacity=f2(ni);nbk.style.opacity=f2(MT.ramp(t,CFG.note-CFG.lead,CFG.lead,"smooth")); // backing first
+  note.style.filter=ni<1?"blur("+px((1-ni)*4)+")":"none";
+  nsh.style.transform="translateZ("+px(2)+")";
+  nsh.style.opacity=f2(0.5*ni*(1-ns));
+  mk.style.width="calc("+hl.toFixed(4)+" * (100% + "+px(12)+"))";
+  kt.style.color=hl>0.55?"var(--k-on-accent)":"var(--k-on-stage)";
+  if(grain)grain(t);
+ };
+ var tl=MT.scene(CFG.dur,render);
+ window.__timelines["spotlight-hero-card"]=tl;
+})();
+</script>
+    </template>
+  </body>
+</html>

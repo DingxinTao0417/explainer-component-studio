@@ -1,0 +1,479 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"标题（钉在画框上不动，用 | 切意群）","default":"六步|做出一条视频"},
+    {"id":"sub","type":"string","label":"副句（可留空，用 | 标换行处）","default":"先整体扫一遍，|再停在最容易出错的一步"},
+    {"id":"kicker","type":"string","label":"眉题（可留空）","default":"第 2 章 · 流程总览"},
+    {"id":"name","type":"string","label":"眉题前的名字（可留空）","default":"示例应用"},
+    {"id":"items","type":"string","label":"卡片标题（用 | 分隔，3–8 张）","default":"整理素材|写好脚本|录制旁白|剪出粗剪|配乐调色|导出发布"},
+    {"id":"focus","type":"number","label":"镜头停在第几张（从 1 数）","default":4},
+    {"id":"badge","type":"string","label":"主角角标（可留空）","default":"重点"},
+    {"id":"tags","type":"string","label":"前景虚化胶囊上的字（用 | 分隔，最多 4 个，可留空）","default":"素材|脚本|剪辑|导出"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>multiplane-slide · 多层视差滑轨</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="multiplane-slide-template">
+<!-- Ported from video-shotcraft demos/camera/depth-layer-moves/MultiplaneReal.tsx
+  (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+  Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+  Changes (2026-10): Remotion/React re-implemented as a HyperFrames MT sub-composition, frames to seconds; --k-*
+  palette for the "sand" look, system fonts, generic Chinese copy; upstream mark, wordmark, kicker, title, sub and
+  "In focus" -> neutral mark and name / kicker / title / sub / badge slots. Far: page screenshot -> CSS grid of
+  text-free cards; mid: 10 screenshot cards -> 3-8 DOM cards from `items` (number, 40px title, bars), landing card
+  set by `focus` (rail length kept, row placed to land it; upstream solved the drive for card 4: same numbers);
+  near: screenshot tags -> `tags` as CSS content, the never-visible 5th capsule dropped. Eyebrow 22/26 -> 32px, sub
+  34 -> 40px, badge 22 -> 32px (plate 44 -> 56px), title line-height 0.94 -> 1.2, no negative tracking; badge words
+  cut in at half opacity. Portrait layout added; slot 5.8 s (5.5) for a 1 s hold. Kept: rates .35/.7/1.4, 1020px
+  mid travel on bezier(.45,0,.18,1) f6-136, 4-unit drift f136-165, far blur 5 / saturate .7 / opacity .75, haze
+  82/62/55%, desk band, capsules 128/60px blur 7 .92 + shadow, speed blur .2 per px/frame max 10, lift 6->26 /
+  -14px / 1.035 out f122+22, ring 2.5px snappy f128+16, eyebrow f4+20 tracking .5->.18em, title words f8/20/4, sub
+  f26+18, vignette .16, grain .06. -->
+<style>
+ @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+ @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+ @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+ #root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--k-font);
+  color: var(--k-ink);
+ }
+ /* ==== kit:derived@1 ==== */
+ .mpl {
+  --mpl-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+  --mpl-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+ }
+ .mpl[data-tone="dark"] {
+  --mpl-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+ }
+ /* ==== end kit:derived ==== */
+ /* ==== kit:vignette@1 ==== */
+ .mpl-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--mpl-shade);
+  background:
+   radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+   radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+ }
+ .mpl[data-tone="dark"] .mpl-vig { --vs: 0.55; }
+ /* ==== end kit:vignette ==== */
+ /* ==== kit:grain@1 ==== */
+ .mpl-grain { position: absolute; inset: 0; pointer-events: none; }
+ /* ==== end kit:grain ==== */
+ /* ==== kit:text@2 ==== */
+ .mpl-u { display: inline-block; white-space: pre; }
+ .mpl-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+ /* ==== end kit:text ==== */
+
+ /* stage (upstream Look.Stage, light): 3-stop gradient, key light top-left, accent-2 fill bottom-right */
+ .mpl { position: absolute; inset: 0; container-type: size; --mpl-card: var(--k-bg); --mpl-key: var(--k-bg); --mpl-fl: 10%;
+  --mpl-s0: color-mix(in srgb, var(--k-bg), var(--k-ink) 4%); --mpl-s1: color-mix(in srgb, var(--k-bg), var(--k-ink) 7%); --mpl-s2: color-mix(in srgb, var(--k-bg), var(--k-ink) 12%); }
+ .mpl[data-tone="dark"] { --mpl-card: var(--k-panel); --mpl-key: color-mix(in srgb, white 8%, transparent); --mpl-fl: 22%;
+  --mpl-s0: color-mix(in srgb, var(--k-bg), white 5%); --mpl-s1: var(--k-bg); --mpl-s2: color-mix(in srgb, var(--k-bg), black 35%); }
+ .mpl-stage, .mpl-fill, .mpl-haze, .mpl-near, .mpl-nrow, .mpl-bbg { position: absolute; inset: 0; }
+ .mpl-stage { background: linear-gradient(180deg, var(--mpl-s0), var(--mpl-s1) 52%, var(--mpl-s2)); }
+ .mpl-stage::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 58% 62% at 30% 0%, color-mix(in srgb, var(--mpl-key) 90%, transparent), transparent 70%); }
+ .mpl-fill { background: radial-gradient(ellipse 50% 46% at 85% 100%, color-mix(in srgb, var(--k-accent-2) var(--mpl-fl), transparent), transparent 72%); }
+ /* far 0.35x: a page of text-free cards (410 x 430 tiles), blurred, desaturated */
+ .mpl-far { position: absolute; left: -104px; top: 100px; width: 1640px; height: 1290px; opacity: 0.75; filter: blur(5px) saturate(0.7);
+  --b: color-mix(in srgb, var(--k-ink) 20%, var(--mpl-card)); --d: color-mix(in srgb, var(--k-ink) 45%, var(--mpl-card));
+  background: conic-gradient(at 60px 12px, #0000 75%, color-mix(in srgb, var(--k-accent) 55%, var(--mpl-card)) 0) 306px 30px,
+   conic-gradient(at 240px 18px, #0000 75%, var(--d) 0) 24px 66px, conic-gradient(at 330px 10px, #0000 75%, var(--b) 0) 24px 108px,
+   conic-gradient(at 290px 10px, #0000 75%, var(--b) 0) 24px 130px, conic-gradient(at 190px 10px, #0000 75%, var(--b) 0) 24px 152px,
+   conic-gradient(at 170px 10px, #0000 75%, var(--b) 0) 24px 206px, conic-gradient(at 150px 10px, #0000 75%, var(--b) 0) 24px 228px,
+   conic-gradient(at 160px 24px, #0000 75%, var(--b) 0) 24px 286px, conic-gradient(at 390px 341px, #0000 75%, var(--mpl-card) 0) 0 0;
+  background-size: 410px 430px; }
+ /* haze over the far page (denser at the top); desk: where the mid shadows fall */
+ .mpl-haze { background: linear-gradient(180deg, color-mix(in srgb, var(--mpl-s0) 82%, transparent), color-mix(in srgb, var(--mpl-s1) 62%, transparent) 50%, color-mix(in srgb, var(--mpl-s2) 55%, transparent)); }
+ .mpl-desk { position: absolute; left: 0; right: 0; top: 740px; height: 340px; background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--mpl-shade) 6%, transparent) 40%, color-mix(in srgb, var(--mpl-shade) 2%, transparent)); }
+ /* mid 0.7x: the sharp reading layer; static = landed on card 4 (card 1 off-frame) */
+ .mpl-mid { position: absolute; left: 0; right: 0; top: 410px; height: 384px; }
+ .mpl-card { position: absolute; top: 0; width: 440px; height: 384px; box-sizing: border-box; padding: 30px 36px; display: flex; flex-direction: column;
+  border-radius: 12px; border: 1px solid var(--mpl-line); background: var(--mpl-card);
+  box-shadow: 0 0.9px 2.1px color-mix(in srgb, var(--mpl-shade) 11.5%, transparent), 0 3.3px 7.8px -1.3px color-mix(in srgb, var(--mpl-shade) 12.1%, transparent); }
+ .mpl-hd { display: flex; align-items: center; justify-content: space-between; height: 40px; flex: none; }
+ /* the number is accent darkened 22%: a passing capsule's shadow lies over it (3.6:1 fell to 2.89:1) */
+ .mpl-no { font-size: 32px; font-weight: 700; color: color-mix(in srgb, var(--k-accent), var(--k-ink) 22%); font-variant-numeric: tabular-nums; }
+ .mpl-tm { display: block; width: 88px; height: 12px; border-radius: 6px; background: color-mix(in srgb, var(--k-accent) 35%, transparent); }
+ .mpl[data-tone="dark"] .mpl-tm { background: color-mix(in srgb, var(--k-accent) 55%, white); }
+ .mpl-ct { margin-top: 14px; font-size: 40px; font-weight: 700; line-height: 1.25; }
+ .mpl-tx { display: block; flex: none; height: 12px; margin-top: 14px; border-radius: 6px; background: var(--mpl-line); }
+ .mpl-ct + .mpl-tx { margin-top: 20px; }
+ .mpl-tx:nth-of-type(2) { width: 86%; }
+ .mpl-tx:nth-of-type(3) { width: 58%; }
+ .mpl-sr { display: flex; gap: 30px; margin-top: auto; }
+ .mpl-sr i { display: block; width: 74px; height: 14px; border-radius: 7px; background: color-mix(in srgb, var(--k-ink) 26%, transparent); }
+ .mpl-tg { display: flex; gap: 12px; margin-top: 26px; }
+ .mpl-tg i { display: block; width: 96px; height: 34px; box-sizing: border-box; border-radius: 17px; border: 2px solid var(--mpl-line); }
+ .mpl-tg i + i { width: 124px; }
+ .mpl-hero { transform: translateY(-14px) scale(1.035);
+  box-shadow: 0 0 0 2.5px color-mix(in srgb, var(--k-accent) 90%, transparent), 0 2.1px 5.7px color-mix(in srgb, var(--mpl-shade) 6.9%, transparent), 0 14.3px 33.8px -5.7px color-mix(in srgb, var(--mpl-shade) 20.3%, transparent); }
+ .mpl-bdg { position: absolute; top: -76px; height: 56px; padding: 0 24px; display: flex; align-items: center; gap: 12px; transform: translateY(-14px);
+  font-size: 32px; font-weight: 700; letter-spacing: 0.14em; white-space: nowrap; color: var(--k-on-accent); }
+ .mpl-bbg { border-radius: 28px; background: var(--k-accent); box-shadow: 0 1px 2.4px color-mix(in srgb, var(--mpl-shade) 9%, transparent), 0 4.4px 10.4px -1.8px color-mix(in srgb, var(--mpl-shade) 10.8%, transparent); }
+ .mpl-bdot { position: relative; display: block; flex: none; width: 10px; height: 10px; border-radius: 5px; background: var(--k-on-accent); }
+ .mpl-btx { position: relative; display: block; }
+ /* near 1.4x: big blurred tag capsules (decorative words via content) */
+ .mpl-pill { position: absolute; height: 128px; padding: 0 56px; display: flex; align-items: center; border-radius: 64px; font-size: 60px; font-weight: 700; white-space: nowrap;
+  background: var(--k-accent); color: var(--k-on-accent); filter: blur(7px); opacity: 0.92; box-shadow: 0 40px 70px -10px color-mix(in srgb, var(--mpl-shade) 35%, transparent); }
+ .mpl-pill::before { content: attr(data-t); }
+ .mpl-pk { background: var(--k-ink); }
+ .mpl-pp { background: var(--mpl-card); color: var(--k-ink); }
+ .mpl-p1 { left: -840px; top: 880px; } .mpl-p2 { left: -400px; top: 296px; } .mpl-p3 { left: 560px; top: 905px; } .mpl-p5 { left: 1680px; top: 860px; }
+ /* 0x: the head is pinned to the frame while the world slides */
+ .mpl-head { position: absolute; left: 120px; right: 120px; top: 96px; }
+ .mpl-eb { display: flex; align-items: center; gap: 14px; min-height: 44px; font-size: 32px; font-weight: 700; white-space: nowrap; color: var(--k-accent); }
+ .mpl-eb svg, .mpl-dash, .mpl-nm { display: block; flex: none; }
+ .mpl-kk { display: block; flex: 0 1 auto; }
+ .mpl-nm { color: var(--k-ink); letter-spacing: 0.03em; }
+ .mpl-dash { width: 28px; height: 3px; background: var(--k-accent); }
+ .mpl-kk { letter-spacing: 0.18em; }
+ .mpl-tt { max-width: 1120px; margin-top: 18px; font-size: 120px; font-weight: 800; line-height: 1.2; }
+ .mpl-sub { position: absolute; right: 120px; top: 196px; width: 520px; text-align: right; font-size: 40px; line-height: 1.35; color: var(--k-muted); }
+ /* portrait: same rail and beats, another layout */
+ @container (orientation: portrait) {
+  .mpl-head { top: 250px; }
+  .mpl-tt { max-width: none; font-size: 100px; }
+  .mpl-sub { left: 120px; right: auto; top: 456px; width: 840px; text-align: left; }
+  .mpl-mid { top: 800px; }
+  .mpl-desk { top: 1130px; }
+  .mpl-far { left: -550px; top: 60px; height: 2150px; }
+  .mpl-p1 { left: -1500px; top: 1176px; } .mpl-p2 { left: -1240px; top: 650px; } .mpl-p3 { left: 60px; top: 1176px; } .mpl-p5 { left: 830px; top: 1150px; }
+ }
+</style>
+
+<div id="root" data-composition-id="multiplane-slide">
+ <div class="mpl">
+  <div class="mpl-stage"></div>
+  <div class="mpl-fill"></div>
+  <div class="mpl-far" data-layout-allow-overflow></div>
+  <div class="mpl-haze"></div>
+  <div class="mpl-desk"></div>
+  <div class="mpl-vig"></div>
+  <div class="mpl-grain"></div>
+  <div class="mpl-mid" data-layout-allow-overflow>
+   <div class="mpl-card" style="left: calc(50% - 1220px)"><div class="mpl-hd"><span class="mpl-no">02</span><i class="mpl-tm"></i></div><div class="mpl-ct">写好脚本</div><i class="mpl-tx"></i><i class="mpl-tx"></i><i class="mpl-tx"></i><div class="mpl-sr"><i></i><i></i><i></i></div><div class="mpl-tg"><i></i><i></i></div></div>
+   <div class="mpl-card" style="left: calc(50% - 720px)"><div class="mpl-hd"><span class="mpl-no">03</span><i class="mpl-tm"></i></div><div class="mpl-ct">录制旁白</div><i class="mpl-tx"></i><i class="mpl-tx"></i><i class="mpl-tx"></i><div class="mpl-sr"><i></i><i></i><i></i></div><div class="mpl-tg"><i></i><i></i></div></div>
+   <div class="mpl-card mpl-hero" style="left: calc(50% - 220px)"><div class="mpl-hd"><span class="mpl-no">04</span><i class="mpl-tm"></i></div><div class="mpl-ct">剪出粗剪</div><i class="mpl-tx"></i><i class="mpl-tx"></i><i class="mpl-tx"></i><div class="mpl-sr"><i></i><i></i><i></i></div><div class="mpl-tg"><i></i><i></i></div></div>
+   <div class="mpl-card" style="left: calc(50% + 280px)"><div class="mpl-hd"><span class="mpl-no">05</span><i class="mpl-tm"></i></div><div class="mpl-ct">配乐调色</div><i class="mpl-tx"></i><i class="mpl-tx"></i><i class="mpl-tx"></i><div class="mpl-sr"><i></i><i></i><i></i></div><div class="mpl-tg"><i></i><i></i></div></div>
+   <div class="mpl-card" style="left: calc(50% + 780px)"><div class="mpl-hd"><span class="mpl-no">06</span><i class="mpl-tm"></i></div><div class="mpl-ct">导出发布</div><i class="mpl-tx"></i><i class="mpl-tx"></i><i class="mpl-tx"></i><div class="mpl-sr"><i></i><i></i><i></i></div><div class="mpl-tg"><i></i><i></i></div></div>
+   <div class="mpl-bdg" style="left: calc(50% - 218px)"><i class="mpl-bbg"></i><i class="mpl-bdot"></i><span class="mpl-btx">重点</span></div>
+  </div>
+  <div class="mpl-near" data-layout-allow-overflow><div class="mpl-nrow">
+   <b class="mpl-pill mpl-p1" data-t="素材"></b><b class="mpl-pill mpl-pk mpl-p2" data-t="脚本"></b><b class="mpl-pill mpl-pp mpl-p3" data-t="剪辑"></b><b class="mpl-pill mpl-p5" data-t="导出"></b>
+  </div></div>
+  <div class="mpl-head">
+   <div class="mpl-eb"><svg width="40" height="40" viewBox="0 0 128 128" aria-hidden="true"><rect x="8" y="8" width="112" height="112" rx="30" style="fill: var(--k-accent)" /><circle cx="46" cy="46" r="16" style="fill: var(--k-on-accent)" /><rect x="30" y="78" width="68" height="16" rx="8" style="fill: var(--k-on-accent)" /></svg><span class="mpl-nm">示例应用</span><i class="mpl-dash"></i><span class="mpl-kk">第 2 章 · 流程总览</span></div>
+   <div class="mpl-tt">六步做出一条视频</div>
+  </div>
+  <div class="mpl-sub"><span class="mpl-u">先整体扫一遍，</span><span class="mpl-u">再停在最容易出错的一步</span></div>
+ </div>
+</div>
+
+<script>
+(function () {
+ // s = upstream frame / 30. rail: drive start + length (f6 + 130); drift: f136 + 29, 4 drive units; kick: eyebrow
+ // (f4 + 20); word: title rise start / each / gap (f8, 20, 4); sub: f26 + 18; lift: hero (f122 + 22); ring: f128 + 16
+ var CFG = { dur: 5.8, rail: [0.2, 4.333], drift: [4.533, 0.967, 4], kick: [0.133, 0.667], word: [0.267, 0.667, 0.133], sub: [0.867, 0.6],
+  lift: [4.067, 0.733], ring: [4.267, 0.533], travel: 1020, rate: [0.35, 0.7, 1.4], w: 440, gap: 500, rise: 14, grow: 0.035, e: [6, 26] };
+ // title fit per orientation: [largest, smallest] for one line, then the two-line size
+ var LAND = { t1: [120, 84], t2: [72, 72] };
+ var PORT = { t1: [100, 100], t2: [100, 72] };
+ var v = { title: "六步|做出一条视频", sub: "先整体扫一遍，|再停在最容易出错的一步", kicker: "第 2 章 · 流程总览", name: "示例应用",
+  items: "整理素材|写好脚本|录制旁白|剪出粗剪|配乐调色|导出发布", focus: 4, badge: "重点", tags: "素材|脚本|剪辑|导出", backdrop: "on" };
+ try {
+  var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+  for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+ } catch (e) {}
+
+ var root = document.querySelector(".mpl");
+ var q = function (s) { return root.querySelector(s); };
+ var FW = root.clientWidth, FH = root.clientHeight;
+ if (!FW || !FH) {
+  // not laid out yet: the host clip's declared size, then the window
+  var hc = root.closest("[data-width][data-height]");
+  FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+  FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+ }
+ var P = FH > FW, L = P ? PORT : LAND, U = Math.min(FW, FH) / 1.08e3;
+ root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+ // ==== kit:tone@1 ====
+ function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+ }
+ function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+ }
+ // ==== end kit:tone ====
+
+ // ==== kit:grain@1 ====
+ function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+   var f = "type='linear' slope='2.4' intercept='-0.7'";
+   var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+    "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+    "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+    "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+    "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+   return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+   var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+   layer.style.backgroundImage = tiles[k % 6];
+   layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+ }
+ // ==== end kit:grain ====
+
+ // ==== kit:speedblur@1 ====
+ function kSpeedBlur(box, prefix, o) {
+  o = o || {};
+  var amount = o.amount || 0.45, max = o.max || 36;
+  var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+  var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+  svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+  var outer = document.createElement("div"), inner = document.createElement("div");
+  outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+  while (box.firstChild) inner.appendChild(box.firstChild);
+  outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+  var fe = svg.firstChild.firstChild;
+  return function (vx, vy) {
+   vy = vy || 0;
+   var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+   if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+   var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+   fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+   outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+   inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+   outer.style.filter = "url(#" + id + ")";
+  };
+ }
+ // ==== end kit:speedblur ====
+
+ // ==== kit:text@2 ====
+ var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+ function kWords(s, key) {
+  s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+  var cut = function (x) {
+   if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+   return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+  };
+  var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+  var pre = "";
+  bits.forEach(function (x) {
+   var t = x.trim(), last = out[out.length - 1];
+   if (last && /^ /.test(x)) last.sp = true;
+   if (!t) return;
+   if (!/[\p{L}\p{N}]/u.test(t)) {
+    if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+    else { last.t += t; last.sp = / $/.test(x); }
+    return;
+   }
+   out.push({ t: pre + t, sp: / $/.test(x) });
+   pre = "";
+  });
+  if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+  if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+  if (out.length) out[out.length - 1].sp = false;
+  return out;
+ }
+ function kSplit(el, by, rise, text) {
+  var s = text != null ? String(text) : el.textContent, units = [];
+  var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+  el.textContent = "";
+  parts.forEach(function (p) {
+   var u = document.createElement("span"), box = u;
+   u.className = "mpl-u"; u.textContent = p.t;
+   if (by === "line") u.style.display = "block";
+   if (!p.t.trim()) { el.appendChild(u); return; }
+   if (rise) { box = document.createElement("span"); box.className = "mpl-cut"; box.style.display = u.style.display; box.appendChild(u); }
+   el.appendChild(box);
+   if (p.sp) el.appendChild(document.createTextNode(" "));
+   units.push(u);
+  });
+  return units;
+ }
+ function kReveal(tl, units, variant, at, o) {
+  o = o || {};
+  var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+  units.forEach(function (u, i) {
+   var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+   if (variant === "rise") { // the only variant this card uses
+    tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+    tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+   }
+  });
+  return tl;
+ }
+ // ==== end kit:text ====
+
+ // ==== kit:fit@1 ====
+ function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+   el.style.fontSize = f + "px";
+   m = kLines(el);
+   if ((m.w <= W && m.n <= n) || f <= min) break;
+   f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+   [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+   m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+ }
+ function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+   if (!t.data.trim()) continue;
+   r.selectNodeContents(t);
+   [].forEach.call(r.getClientRects(), function (b) {
+    var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+    if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+    row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+   });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+ }
+ // ==== end kit:fit ====
+
+ // ==== kit:shadow@1 ====
+ function kShadow(e, strength) {
+  e = Math.max(0, e);
+  var s = strength == null ? 1 : strength, r = function (x) { return Math.round(x * 10) / 10; };
+  var c = function (a) { return "color-mix(in srgb, var(--mpl-shade) " + r(Math.min(1, a) * 100) + "%, transparent)"; };
+  return "0 " + r(0.5 + e * 0.06) + "px " + r(1 + e * 0.18) + "px " + c((0.12 * s) / (1 + e / 24)) + ", " +
+   "0 " + r(e * 0.55) + "px " + r(e * 1.3) + "px " + r(-e * 0.22) + "px " + c((0.08 + (Math.min(e, 64) / 64) * 0.22) * s);
+ }
+ // ==== end kit:shadow ====
+
+ var dark = kTone(root) === "dark", S = 1.2 * (dark ? 2.6 : 1);
+ if (String(v.backdrop) === "off") ["stage", "fill", "far", "haze", "desk", "vig", "grain"].forEach(function (c) { q(".mpl-" + c).style.display = "none"; });
+ // label slots take the text as typed ("|" joins, with a space only between two Latin or digit ends)
+ var lab = function (el, s) { el.textContent = String(s).split("|").map(function (x) { return x.trim(); }).reduce(function (a, b) { return a + (/\w$/.test(a) && /^\w/.test(b) ? " " : "") + b; }, ""); };
+ var list = function (s) { s = String(s).trim(); return s ? (/\|/.test(s) ? kWords(s) : [{ t: s }]) : []; };
+
+ // mid row: one card per item, placed so card `focus` lands centred
+ var mid = q(".mpl-mid"), bdg = q(".mpl-bdg"), proto = mid.querySelector(".mpl-card");
+ [].slice.call(mid.querySelectorAll(".mpl-card")).forEach(function (c) { mid.removeChild(c); });
+ var items = list(v.items).slice(0, 8);
+ if (!items.length) items = list("整理素材|写好脚本|录制旁白|剪出粗剪");
+ var h = Math.max(0, Math.min(items.length - 1, Math.round(+v.focus || 4) - 1)), x0 = FW / 2 - CFG.w / 2;
+ var cards = items.map(function (u, i) {
+  var c = proto.cloneNode(true), ct = c.querySelector(".mpl-ct");
+  c.className = "mpl-card" + (i === h ? " mpl-hero" : "");
+  if (i !== h) c.setAttribute("data-layout-allow-caption-zone", "");
+  c.style.left = x0 + (i - h) * CFG.gap + "px";
+  c.style.boxShadow = kShadow(CFG.e[0], S);
+  mid.insertBefore(c, bdg);
+  c.querySelector(".mpl-no").textContent = (i < 9 ? "0" : "") + (i + 1);
+  kSplit(ct, "word", 0, u.t);
+  kFit(ct, { lines: 2, min: 40 });
+  return c;
+ });
+ var hero = cards[h], hs = hero.style;
+ bdg.style.left = x0 + 2 + "px";
+ q(".mpl-bbg").style.boxShadow = kShadow(8, dark ? 2.6 : 1);
+ var btx = q(".mpl-btx");
+ lab(btx, v.badge);
+ kFit(btx, { min: 28, width: 400 });
+ if (!String(v.badge).trim()) bdg.style.display = "none";
+
+ // near capsules: up to four words, reused in turn
+ var tags = list(v.tags);
+ [].forEach.call(root.querySelectorAll(".mpl-pill"), function (p, i) { p.setAttribute("data-t", tags.length ? tags[i % tags.length].t : ""); });
+
+ // pinned head: eyebrow (mark, name, dash, kicker), title, sub; empty slots drop out
+ var eb = q(".mpl-eb"), nm = q(".mpl-nm"), kk = q(".mpl-kk"), tt = q(".mpl-tt"), sub = q(".mpl-sub"), head = q(".mpl-head");
+ var hasN = !!String(v.name).trim(), hasK = !!String(v.kicker).trim();
+ lab(nm, v.name);
+ lab(kk, v.kicker);
+ if (!hasN) nm.style.display = "none";
+ if (!hasN || !hasK) q(".mpl-dash").style.display = "none";
+ if (!hasK) kk.style.display = "none";
+ if (!hasN && !hasK) eb.style.display = "none";
+ if (hasN) kFit(nm, { min: 28, width: head.clientWidth * 0.4 });
+ var trk = !hasK || kFit(kk, { min: 28, width: head.clientWidth - kk.offsetLeft }).fits;
+ if (!trk) kk.style.whiteSpace = "normal";
+ var units = kSplit(tt, "word", 1, v.title);
+ units.forEach(function (u) { u.setAttribute("data-layout-allow-occlusion", ""); });
+ if (!kFit(tt, { max: L.t1[0], min: L.t1[1] }).fits) kFit(tt, { max: L.t2[0], min: L.t2[1], lines: 2 });
+ if (!String(v.title).trim()) tt.style.display = "none";
+ kSplit(sub, "word", 0, v.sub);
+ kFit(sub, { lines: 2, min: 40 });
+ if (!String(v.sub).trim()) sub.style.display = "none";
+ if (P) sub.style.top = head.offsetTop + head.offsetHeight + 24 + "px";
+
+ // one drive feeds every layer: far 0.35x, mid 0.7x, near 1.4x; D drive units move the mid row CFG.travel px
+ var far = q(".mpl-far").style, ms = mid.style, nrow = q(".mpl-nrow");
+ var blur = kSpeedBlur(q(".mpl-near"), "mpl", { amount: 0.2, max: 10 }), ns = nrow.style;
+ var D = (CFG.travel * U) / CFG.rate[1], rail = MT.bezier(0.45, 0, 0.18, 1);
+ var drive = function (t) { return D * MT.ramp(t, CFG.rail[0], CFG.rail[1], rail) + CFG.drift[2] * U * MT.ramp(t, CFG.drift[0], CFG.drift[1], "smooth"); };
+ var es = eb.style, ks = kk.style, ss = sub.style, bs = bdg.style, bg = q(".mpl-bbg").style, bin = [q(".mpl-bdot").style, btx.style];
+ var grain = kGrain(q(".mpl-grain"), dark ? {} : { opacity: 0.06 });
+ var render = function (t) {
+  var d = D - drive(t), r = CFG.rise * U;
+  far.transform = "translateX(" + (CFG.rate[0] * d).toFixed(2) + "px)";
+  ms.transform = "translateX(" + (CFG.rate[1] * d).toFixed(2) + "px)";
+  ns.transform = "translateX(" + (CFG.rate[2] * d).toFixed(2) + "px)";
+  blur(CFG.rate[2] * MT.velocity(drive, t));
+  var kc = MT.ramp(t, CFG.kick[0], CFG.kick[1], "snappy");
+  es.opacity = kc;
+  if (trk) ks.letterSpacing = MT.mix(0.5, 0.18, kc).toFixed(3) + "em";
+  var s = MT.ramp(t, CFG.sub[0], CFG.sub[1], "out");
+  ss.opacity = s;
+  ss.transform = "translateY(" + ((1 - s) * r).toFixed(1) + "px)";
+  // landed: the hero lifts (6 -> 26 elevation, 1.035x) a beat after the rail settles; the ring and badge follow
+  var lf = MT.ramp(t, CFG.lift[0], CFG.lift[1], "out"), rg = MT.ramp(t, CFG.ring[0], CFG.ring[1], "snappy");
+  hs.transform = "translateY(" + (-r * lf).toFixed(2) + "px) scale(" + (1 + CFG.grow * lf).toFixed(4) + ")";
+  hs.boxShadow = "0 0 0 " + (2.5 * rg).toFixed(2) + "px color-mix(in srgb, var(--k-accent) 90%, transparent), " + kShadow(MT.mix(CFG.e[0], CFG.e[1], lf), S);
+  bs.transform = "translateY(" + ((1 - rg - lf) * r).toFixed(2) + "px)";
+  bg.opacity = rg;
+  // the badge's words cut in once its plate is half opaque (a half-faded plate fails the contrast check)
+  bin[0].opacity = bin[1].opacity = rg < 0.5 ? 0 : 1;
+  grain(t);
+ };
+ var tl = MT.scene(CFG.dur, render);
+ kReveal(tl, units, "rise", CFG.word[0], { each: CFG.word[1], gap: CFG.word[2] });
+ window.__timelines["multiplane-slide"] = tl;
+})();
+</script>
+</template>
+  </body>
+</html>

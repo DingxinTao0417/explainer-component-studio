@@ -1,0 +1,454 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"面板标题（用 | 切意群）","default":"每天完成的|练习"},
+    {"id":"kicker","type":"string","label":"眉题（留空不要）","default":"本周数据"},
+    {"id":"values","type":"string","label":"柱子的数值（用 | 分隔，2–7 个，最后一根是主角）","default":"14k|18k|16k|22k|20k|26k|31k"},
+    {"id":"days","type":"string","label":"柱子下的标签（用 | 分隔，和数值一一对应）","default":"周一|周二|周三|周四|周五|周六|周日"},
+    {"id":"total","type":"number","label":"右上角计数器的终值（0–999999）","default":147260},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>bullet-time-freeze-orbit · 子弹时间环绕</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="bullet-time-freeze-orbit-template">
+      <!-- Ported from video-shotcraft demos/camera/tension-camera-moves/BulletTimeFreezeOrbit.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette on a white stage (backdrop, vignette, grain; dark-skin values under data-tone="dark"),
+           system fonts, generic copy and data from variables (2-7 bars), neutral mark, render-farm copy dropped; light
+           skin: sparks, floor (15 %, upstream 22 %), dots and glow from the accent, chill 30 % (dark 55 %); slot 6 s
+           (upstream 5.67); rig and vanishing point at 45 % (upstream 48 / 46 %) so the near corner stays in frame at the
+           apex; portrait re-laid out (panel 852 x 960, counter under the title); labels 40 / ticks 30 / kicker
+           32 px (upstream 36 / 26 / 26); odometer strips as CSS ::before text, window mask clear to 10 % (upstream 0-16 %).
+           Kept: speed ramps and freeze, content clock, bar stagger and growth, spark formulas, odometer blur, orbit
+           -52 / -3 / 6 deg and 160 px dolly with their eases, perspective 1800, floor and wall depths, chill timing. -->
+      <style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--k-font);
+  color: var(--k-ink);
+}
+/* ==== kit:derived@1 ==== */
+.bt {
+  --bt-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+  --bt-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+  --bt-hi: color-mix(in srgb, white 80%, transparent);
+}
+.bt[data-tone="dark"] {
+  --bt-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+  --bt-hi: color-mix(in srgb, white 6%, transparent);
+}
+/* ==== end kit:derived ==== */
+/* ==== kit:vignette@1 ==== */
+.bt-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--bt-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.bt[data-tone="dark"] .bt-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+/* ==== kit:backdrop@1 ==== */
+.bt-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+.bt-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+/* ==== end kit:backdrop ==== */
+/* ==== kit:grain@1 ==== */
+.bt-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+/* ==== kit:text@2 (rise mask not used) ==== */
+.bt-u { display: inline-block; white-space: pre; }
+/* ==== end kit:text ==== */
+/* ==== kit:mark@1 ==== */
+.bt-mark { display: block; flex: none; }
+/* ==== end kit:mark ==== */
+
+.bt { position: absolute; inset: 0; container-type: size;
+  --bt-dim: color-mix(in srgb, var(--k-ink) 20%, var(--k-panel));
+  --bt-b1: color-mix(in srgb, var(--k-ink) 15%, var(--k-panel)); --bt-b2: color-mix(in srgb, var(--k-ink) 27%, var(--k-panel));
+  --bt-kn: color-mix(in srgb, var(--k-accent) 70%, white); --bt-glint: color-mix(in srgb, var(--k-accent-2) 12%, transparent);
+  --bt-sc: color-mix(in srgb, var(--k-accent) 62%, var(--k-bg)); --bt-sh: var(--k-accent);
+  --bt-grid: color-mix(in srgb, var(--k-accent) 15%, transparent); --bt-dot: color-mix(in srgb, var(--k-accent) 35%, transparent);
+  --bt-pool: color-mix(in srgb, var(--k-accent) 16%, transparent); --bt-chs: 30%; --bt-ps: 26%; }
+.bt[data-tone="dark"] { --bt-kn: color-mix(in srgb, var(--k-accent) 15%, white); --bt-glint: color-mix(in srgb, white 16%, transparent);
+  --bt-sc: color-mix(in srgb, var(--k-accent) 40%, white); --bt-sh: white; --bt-grid: color-mix(in srgb, var(--k-accent) 22%, transparent); --bt-pool: color-mix(in srgb, var(--k-accent) 32%, transparent); --bt-chs: 55%; --bt-ps: 90%; }
+/* stage lights (upstream Look.Stage): key at the top centre, fill from accent-2 below; the script sets opacity */
+.bt-key { position: absolute; inset: 0; --kc: color-mix(in srgb, white 90%, transparent); --kf: 10%;
+  background: radial-gradient(ellipse 58% 62% at 50% 4%, var(--kc) 0%, transparent 70%), radial-gradient(ellipse 50% 46% at 50% 100%, color-mix(in srgb, var(--k-accent-2) var(--kf), transparent) 0%, transparent 72%); }
+.bt[data-tone="dark"] .bt-key { mix-blend-mode: screen; --kc: color-mix(in srgb, var(--k-accent) 72%, transparent); --kf: 22%; }
+/* camera: perspective 1800, the rig (orbit centre = panel centre) and vanishing point at 45% of the frame */
+.bt-cam { position: absolute; inset: 0; perspective: 1800px; perspective-origin: 50% 45%;
+  --pw: 1180px; --ph: 640px; --x: 90px; --y: 250px; --w: 1000px; --h: 300px; --bw: 96px; }
+.bt-rig { position: absolute; left: 50%; top: 45%; width: 0; height: 0; transform-style: preserve-3d; transform: rotateX(-3deg); }
+.bt-wall { position: absolute; left: -2600px; top: -1500px; width: 5200px; height: 3000px; transform: translateZ(-1200px); opacity: 0.55;
+  background-image: radial-gradient(circle at 3px 3px, var(--bt-dot) 2px, transparent 3px); background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 40% 42% at 50% 50%, black 0%, transparent 100%); }
+.bt-floor { position: absolute; left: -1800px; top: calc(var(--ph) / 2 + 70px - 1800px); width: 3600px; height: 3600px; transform: rotateX(90deg);
+  background-image: radial-gradient(ellipse 22% 14% at 50% 50%, var(--bt-pool) 0%, transparent 100%), linear-gradient(var(--bt-grid) 2px, transparent 2px), linear-gradient(90deg, var(--bt-grid) 2px, transparent 2px);
+  background-size: 100% 100%, 120px 120px, 120px 120px; background-position: 0 0, -1px -1px, -1px -1px;
+  mask-image: radial-gradient(circle at 50% 50%, black 0%, transparent 46%); }
+.bt-panel { position: absolute; left: calc(var(--pw) / -2); top: calc(var(--ph) / -2); width: var(--pw); height: var(--ph); box-sizing: border-box; border-radius: 32px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--k-bg) 94%, transparent) 0%, color-mix(in srgb, var(--k-panel) 96%, transparent) 100%);
+  border: 1.5px solid var(--bt-line); box-shadow: inset 0 1.5px 0 var(--bt-hi), 0 50px 120px -30px color-mix(in srgb, var(--bt-shade) var(--bt-ps), transparent); }
+/* a cold glint that slides across the panel with the camera angle (the script moves --go) */
+.bt-glint { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; --go: 0%;
+  background: linear-gradient(105deg, transparent calc(30% + var(--go)), var(--bt-glint) calc(45% + var(--go)), transparent calc(60% + var(--go))); }
+.bt-head { position: absolute; left: 64px; right: 64px; top: 52px; }
+.bt-kick { max-width: 560px; display: flex; align-items: center; gap: 14px; font-size: 32px; font-weight: 700; line-height: 1.25; letter-spacing: 0.16em; color: color-mix(in srgb, var(--k-accent), var(--k-ink) 25%); }
+.bt-kt { flex: 1; min-width: 0; }
+.bt-title { display: block; max-width: 560px; margin-top: 14px; font-size: 52px; font-weight: 700; line-height: 1.2; }
+/* odometer: six digit windows; each strip is ::before text (0-9, 0) moved by --d em, blurred by --b */
+.bt-cnt { --bt-win: linear-gradient(180deg, transparent 10%, black 24%, black 84%, transparent 100%); position: absolute; right: 0; top: -6px; display: flex; font-size: 112px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.bt-d { display: block; position: relative; font-style: normal; width: 0.62em; height: 1.24em; margin: -0.12em 0; overflow: hidden;
+  mask-image: var(--bt-win); }
+.bt-d::before { content: "0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9\A 0"; white-space: pre; position: absolute; left: 0; top: 0.12em; width: 100%; text-align: center;
+  transform: translateY(calc(var(--d) * -1em)); filter: blur(var(--b, 0px)); opacity: var(--o, 1); color: var(--k-ink); }
+.bt-d.bt-dim::before { color: var(--bt-dim); }
+.bt-comma { display: block; width: 0.28em; text-align: center; color: var(--k-muted); }
+.bt-comma.bt-dim { color: var(--bt-dim); }
+.bt-chart { position: absolute; left: var(--x); top: calc(var(--y) - 64px); width: var(--w); height: calc(var(--h) + 120px); --n: 7;
+  --pitch: calc((var(--w) - var(--bw)) / (var(--n) - 1)); --lw: min(var(--pitch), 170px); }
+.bt-gl { position: absolute; left: 0; right: 0; height: 1px; top: calc(64px + var(--h) * var(--j) / 3); background: var(--bt-line); }
+.bt-gl:nth-child(4) { background: color-mix(in srgb, var(--k-ink) 25%, transparent); }
+.bt-bar { position: absolute; bottom: 56px; font-style: normal; left: calc(var(--i) * var(--pitch)); width: var(--bw); height: calc(var(--h) * var(--v) * var(--g, 1)); border-radius: 14px 14px 4px 4px;
+  background: linear-gradient(180deg, var(--bt-b1), var(--bt-b2)); box-shadow: inset 0 2px 0 color-mix(in srgb, white 18%, transparent); }
+.bt-bar.bt-hero { background: linear-gradient(180deg, color-mix(in srgb, var(--k-accent) 55%, white) 0%, var(--k-accent) 30%, color-mix(in srgb, var(--k-accent), black 20%) 100%);
+  box-shadow: inset 0 2px 0 color-mix(in srgb, white 50%, transparent), 0 0 40px color-mix(in srgb, var(--k-accent) 50%, transparent); }
+/* the growing bar's lit edge */
+.bt-bar::before { content: ""; position: absolute; left: -6px; right: -6px; top: -3px; height: 6px; border-radius: 3px; opacity: var(--kn, 0);
+  background: var(--bt-kn); box-shadow: 0 0 18px color-mix(in srgb, var(--k-accent) 90%, transparent); }
+.bt-val, .bt-day { position: absolute; left: calc(var(--i) * var(--pitch) + (var(--bw) - var(--lw)) / 2); width: var(--lw); text-align: center; font-weight: 700; line-height: 1.2; }
+.bt-val { bottom: calc(56px + var(--h) * var(--v) + 10px); font-size: 40px; color: var(--k-muted); }
+.bt-day { top: calc(64px + var(--h) + 16px); font-size: 30px; color: var(--k-muted); }
+.bt-val.bt-hero { color: color-mix(in srgb, var(--k-accent), var(--k-ink) 25%); }
+.bt-day.bt-hero { color: var(--k-ink); }
+.bt-sparks { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-style: preserve-3d; }
+.bt-s { position: absolute; left: 0; top: 0; background: linear-gradient(180deg, var(--bt-sc), transparent); box-shadow: 0 0 var(--gs) color-mix(in srgb, var(--k-accent) 80%, transparent); }
+.bt-s.bt-hot { background: linear-gradient(180deg, var(--bt-sh), transparent); }
+/* screen-space chill while time is frozen: the edges close in */
+.bt-chill { position: absolute; inset: 0; pointer-events: none; opacity: 0;
+  background: radial-gradient(ellipse 64% 64% at 50% 48%, transparent 50%, color-mix(in srgb, var(--bt-shade) var(--bt-chs), transparent) 100%); }
+/* portrait: a taller panel at the 40% line, the counter under the title */
+@container (orientation: portrait) {
+  .bt-cam { perspective-origin: 50% 38%; --pw: 852px; --ph: 960px; --x: 56px; --y: 440px; --w: 740px; --h: 410px; --bw: 80px; }
+  .bt-rig { top: 40%; }
+  .bt-head { left: 56px; right: 56px; }
+  .bt-kick, .bt-title { max-width: none; }
+  .bt-title { font-size: 56px; }
+  .bt-cnt { position: relative; top: 0; margin-top: 22px; }
+}
+      </style>
+
+<div id="root" data-composition-id="bullet-time-freeze-orbit">
+ <div class="bt">
+  <div class="bt-backdrop"></div>
+  <div class="bt-key"></div>
+  <div class="bt-vig"></div>
+  <div class="bt-grain"></div>
+  <div class="bt-cam">
+   <div class="bt-rig">
+    <div class="bt-wall" data-layout-allow-overflow></div>
+    <div class="bt-floor" data-layout-allow-overflow></div>
+    <div class="bt-panel">
+     <div class="bt-glint"></div>
+     <div class="bt-head">
+      <div class="bt-kick"><svg class="bt-mark" width="40" height="40" viewBox="0 0 128 128" aria-hidden="true"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg><span class="bt-kt">本周数据</span></div>
+      <div class="bt-title">每天完成的练习</div>
+      <div class="bt-cnt"><i class="bt-d" style="--d:1"></i><i class="bt-d" style="--d:4"></i><i class="bt-d" style="--d:7"></i><span class="bt-comma">,</span><i class="bt-d" style="--d:2"></i><i class="bt-d" style="--d:6"></i><i class="bt-d" style="--d:0"></i></div>
+     </div>
+     <div class="bt-chart">
+      <i class="bt-gl" style="--j:0"></i><i class="bt-gl" style="--j:1"></i><i class="bt-gl" style="--j:2"></i><i class="bt-gl" style="--j:3"></i>
+      <i class="bt-bar" style="--i:0;--v:.452"></i><i class="bt-bar" style="--i:1;--v:.581"></i><i class="bt-bar" style="--i:2;--v:.516"></i><i class="bt-bar" style="--i:3;--v:.71"></i><i class="bt-bar" style="--i:4;--v:.645"></i><i class="bt-bar" style="--i:5;--v:.839"></i><i class="bt-bar bt-hero" style="--i:6;--v:1"></i>
+      <b class="bt-val" style="--i:0;--v:.452">14k</b><b class="bt-val" style="--i:1;--v:.581">18k</b><b class="bt-val" style="--i:2;--v:.516">16k</b><b class="bt-val" style="--i:3;--v:.71">22k</b><b class="bt-val" style="--i:4;--v:.645">20k</b><b class="bt-val" style="--i:5;--v:.839">26k</b><b class="bt-val bt-hero" style="--i:6;--v:1">31k</b>
+      <b class="bt-day" style="--i:0">周一</b><b class="bt-day" style="--i:1">周二</b><b class="bt-day" style="--i:2">周三</b><b class="bt-day" style="--i:3">周四</b><b class="bt-day" style="--i:4">周五</b><b class="bt-day" style="--i:5">周六</b><b class="bt-day bt-hero" style="--i:6">周日</b>
+     </div>
+    </div>
+    <div class="bt-sparks" data-layout-allow-overflow></div>
+   </div>
+  </div>
+  <div class="bt-chill"></div>
+ </div>
+</div>
+
+      <script>
+(function () {
+  // timing (s). Real clock: brake / resume, camera, chill. Content clock (stops in the freeze): bars, labels, counter
+  var CFG = { dur: 6, brake: 1.333, ramp: 0.267, resume: 3.333,
+    orbit: [1.533, 0.867], hang: [2.4, 0.4], back: [2.8, 0.733], ry: -52, ryHang: -3, rx: -3, lift: -6, dolly: 160,
+    chill: [1.333, 0.333, 3.267, 0.4],
+    first: 0.067, step: 0.167, grow: 1.333, pop: 1.267, count: [0.133, 2.267], sparks: 20 };
+  // layout per orientation (px, panel coordinates; keep in step with the CSS vars on .bt-cam)
+  var LAND = { pw: 1180, ph: 640, x: 90, y: 250, w: 1000, h: 300, bw: 96, tl: 1 };
+  var PORT = { pw: 852, ph: 2 * 480, x: 56, y: 440, w: 740, h: 410, bw: 80, tl: 2 };
+  var D = { title: "每天完成的|练习", kicker: "本周数据", values: "14k|18k|16k|22k|20k|26k|31k", days: "周一|周二|周三|周四|周五|周六|周日", total: 147260, backdrop: "on" };
+  var v = {}, k;
+  for (k in D) v[k] = D[k];
+  try {
+    var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    for (k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+  } catch (e) {}
+
+  var root = document.querySelector(".bt");
+  var q = function (s) { return root.querySelector(s); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+    // not laid out yet: the host clip's declared size, then the window
+    var hc = root.closest("[data-width][data-height]");
+    FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+    FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND;
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+  // ==== kit:tone@1 ====
+  function kRGB(el, color) {
+    var p = document.createElement("i");
+    p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+    el.appendChild(p);
+    var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+    el.removeChild(p);
+    return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+  }
+  function kTone(wrap) {
+    var c = kRGB(wrap, "var(--k-bg)");
+    var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+    wrap.setAttribute("data-tone", tone);
+    return tone;
+  }
+  // ==== end kit:tone ====
+  // ==== kit:hash@1 ====
+  function kHash(n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+  // ==== end kit:hash ====
+  // ==== kit:grain@1 ====
+  function kGrain(layer, o) {
+    o = o || {};
+    var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+    var dark = tones && tones.getAttribute("data-tone") === "dark";
+    var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+      var f = "type='linear' slope='2.4' intercept='-0.7'";
+      var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+        "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+        "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+        "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+        "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+      return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+    });
+    layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+    layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+    layer.style.backgroundSize = size + "px " + size + "px";
+    return function (t) {
+      var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+      layer.style.backgroundImage = tiles[k % 6];
+      layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+    };
+  }
+  // ==== end kit:grain ====
+  // ==== kit:fit@1 (kRows not used) ====
+  function kFit(el, o) {
+    o = o || {};
+    var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+    var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+    for (;;) {
+      el.style.fontSize = f + "px";
+      m = kLines(el);
+      if ((m.w <= W && m.n <= n) || f <= min) break;
+      f = Math.max(min, f - 2);
+    }
+    if (m.w > W) {
+      [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+      m = kLines(el);
+    }
+    return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+  }
+  function kLines(el) {
+    var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+    var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+    while ((t = it.nextNode())) {
+      if (!t.data.trim()) continue;
+      r.selectNodeContents(t);
+      [].forEach.call(r.getClientRects(), function (b) {
+        var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+        if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+        row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+      });
+    }
+    return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+  }
+  // ==== end kit:fit ====
+  // ==== kit:text@2 (kReveal not used) ====
+  var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+  function kWords(s, key) {
+    s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+    var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+    var cut = function (x) {
+      if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+      return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+    };
+    var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+    var pre = "";
+    bits.forEach(function (x) {
+      var t = x.trim(), last = out[out.length - 1];
+      if (last && /^ /.test(x)) last.sp = true;
+      if (!t) return;
+      if (!/[\p{L}\p{N}]/u.test(t)) {
+        if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+        else { last.t += t; last.sp = / $/.test(x); }
+        return;
+      }
+      out.push({ t: pre + t, sp: / $/.test(x) });
+      pre = "";
+    });
+    if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+    if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+    if (out.length) out[out.length - 1].sp = false;
+    return out;
+  }
+  function kSplit(el, by, rise, text) {
+    var s = text != null ? String(text) : el.textContent, units = [];
+    var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+    el.textContent = "";
+    parts.forEach(function (p) {
+      var u = document.createElement("span"), box = u;
+      u.className = "bt-u"; u.textContent = p.t;
+      if (by === "line") u.style.display = "block";
+      if (!p.t.trim()) { el.appendChild(u); return; }
+      if (rise) { box = document.createElement("span"); box.className = "bt-cut"; box.style.display = u.style.display; box.appendChild(u); }
+      el.appendChild(box);
+      if (p.sp) el.appendChild(document.createTextNode(" "));
+      units.push(u);
+    });
+    return units;
+  }
+  // ==== end kit:text ====
+
+  kTone(root);
+  if (String(v.backdrop) === "off") ["backdrop", "key", "vig", "grain"].forEach(function (c) { q(".bt-" + c).style.display = "none"; });
+  var grain = kGrain(q(".bt-grain"));
+
+  // text slots: measured fit, 2 px steps, never under the floor (kicker 28, title 40, labels 28)
+  var kt = q(".bt-kt"), title = q(".bt-title");
+  if (String(v.kicker).trim()) { kt.textContent = String(v.kicker).trim(); kFit(kt, { min: 28 }); } else q(".bt-kick").style.display = "none";
+  kSplit(title, "word", false, String(v.title).trim() ? v.title : D.title);
+  kFit(title, { lines: L.tl, min: 40 });
+
+  // bars from the variables (2-7); the last one is the hero
+  var list = function (s) { return kWords(s).map(function (u) { return u.t; }); };
+  var vals = list(v.values).slice(0, 7);
+  if (vals.length < 2) vals = list(D.values);
+  var days = list(v.days), n = vals.length;
+  var num = vals.map(function (s) { return Math.max(0, parseFloat(String(s).replace(/,/g, "")) || 0); });
+  var mx = Math.max.apply(null, num) || 1, nv = num.map(function (x) { return x / mx; });
+  var chart = q(".bt-chart"), pitch = (L.w - L.bw) / (n - 1);
+  chart.style.setProperty("--n", n);
+  [].slice.call(chart.querySelectorAll(".bt-bar, .bt-val, .bt-day")).forEach(function (e) { chart.removeChild(e); });
+  var mk = function (tag, cls, i) {
+    var e = document.createElement(tag);
+    e.className = cls + (i === n - 1 ? " bt-hero" : "");
+    e.style.setProperty("--i", i); e.style.setProperty("--v", nv[i].toFixed(4));
+    return chart.appendChild(e);
+  };
+  var bars = vals.map(function (s, i) { return mk("i", "bt-bar", i); });
+  var labs = vals.map(function (s, i) { var e = mk("b", "bt-val", i); e.textContent = s; kFit(e, { min: 28 }); return e; });
+  days.slice(0, n).forEach(function (s, i) { var e = mk("b", "bt-day", i); e.textContent = s; kFit(e, { min: 28 }); });
+  // sparks, the comma and the vignettes pass over the panel text on purpose
+  [].forEach.call(root.querySelectorAll(".bt-panel span, .bt-panel b"), function (e) { e.setAttribute("data-layout-allow-occlusion", ""); });
+
+  // sparks: 20 per bar from the bar top at their birth (content frames), upstream hash and constants
+  var box = q(".bt-sparks"), SP = [];
+  for (var i = 0; i < n; i++) for (var j = 0; j < CFG.sparks; j++) {
+    var r = function (m) { return kHash(i * 97.1 + j * 13.7 + m); };
+    var s = { bar: i, born: (CFG.first + i * CFG.step) * 30 + 1 + j * 1.9 + r(1) * 2, dx: (r(2) - 0.5) * L.bw * 1.1, vx: (r(3) - 0.5) * 5,
+      v0: 12 + r(4) * 14, tau: 8 + r(5) * 9, z: (r(6) - 0.35) * 900, size: 4 + r(7) * 7, life: 30 + r(8) * 22, el: document.createElement("i") };
+    s.el.className = "bt-s" + (r(9) < 0.35 ? " bt-hot" : "");
+    s.el.style.cssText = "display:none;width:" + s.size.toFixed(1) + "px;border-radius:" + s.size.toFixed(1) + "px;--gs:" + (s.size * 2).toFixed(1) + "px";
+    box.appendChild(s.el);
+    SP.push(s);
+  }
+
+  // content clock: speed 1, smooth brake to 0, frozen, smooth restart; EFF[f] = content frames at real frame f (4 samples/frame)
+  var S = MT.EASE.smooth, R = MT.ramp;
+  var speed = function (s) { var a = CFG.brake, b = a + CFG.ramp, c = CFG.resume, d = c + CFG.ramp; return s < a ? 1 : s < b ? 1 - S((s - a) / CFG.ramp) : s < c ? 0 : s < d ? S((s - c) / CFG.ramp) : 1; };
+  var EFF = [0], acc = 0;
+  for (var f = 0; f < CFG.dur * 30 + 2; f++) { for (var u = 0; u < 4; u++) acc += speed((f + (u + 0.5) / 4) / 30) / 4; EFF.push(acc); }
+  var eff = function (x) { var i = Math.max(0, Math.min(EFF.length - 2, Math.floor(x))); return EFF[i] + (EFF[i + 1] - EFF[i]) * (x - i); };
+  var grow = function (i, c) { return R(c, CFG.first + i * CFG.step, CFG.grow, "swift"); };
+  var top = function (i, c) { return L.y + L.h - L.h * nv[i] * grow(i, c); };
+  var TOT = Math.max(0, Math.min(999999, Math.round(+v.total) || 0)), FS = 112;
+  var value = function (c) { return TOT * R(c, CFG.count[0], CFG.count[1], "out"); };
+  var dpos = function (x, k) { var p = Math.pow(10, k); if (!k) return x % 10; var d = Math.floor(x / p) % 10, lo = x % p; return d + Math.min(1, Math.max(0, lo - (p - 1))); };
+  var digs = [].slice.call(root.querySelectorAll(".bt-d")), comma = q(".bt-comma");
+  var rig = q(".bt-rig"), chill = q(".bt-chill"), key = q(".bt-key"), glint = q(".bt-glint");
+
+  var render = function (t) {
+    var f = t * 30, e = eff(f), c = e / 30; // frames at 30 fps: f real, e content
+    // camera, real clock: out to -52 deg (smooth), 3 deg linear drift at the apex, back (swift); lift and dolly ride along
+    var out = R(t, CFG.orbit[0], CFG.orbit[1], "smooth"), back = R(t, CFG.back[0], CFG.back[1], "swift");
+    var orb = out * (1 - back), ry = CFG.ry * orb + CFG.ryHang * R(t, CFG.hang[0], CFG.hang[1], "linear") * (1 - back);
+    rig.style.transform = "translateZ(" + (CFG.dolly * orb).toFixed(2) + "px) rotateX(" + (CFG.rx + CFG.lift * orb).toFixed(3) + "deg) rotateY(" + ry.toFixed(3) + "deg)";
+    var ch = R(t, CFG.chill[0], CFG.chill[1], "out") * (1 - R(t, CFG.chill[2], CFG.chill[3], "smooth"));
+    chill.style.opacity = ch.toFixed(3);
+    key.style.opacity = (((1 + 0.25 * ch) * (1 + 0.06 * Math.sin(f / 38))) / 1.33).toFixed(3);
+    glint.style.opacity = (0.5 * orb).toFixed(3);
+    glint.style.setProperty("--go", (50 * orb).toFixed(2) + "%");
+    // bars, lit edges and labels, content clock
+    bars.forEach(function (b, i) {
+      var g = grow(i, c), lk = MT.spring({ t: c, delay: CFG.pop + i * CFG.step, damping: 15, stiffness: 200 });
+      b.style.setProperty("--g", g.toFixed(4));
+      b.style.setProperty("--kn", g > 0 && g < 1 ? 1 : 0);
+      labs[i].style.opacity = Math.min(1, lk * 1.4).toFixed(3);
+      labs[i].style.transform = "translateY(" + ((1 - lk) * 14).toFixed(2) + "px) scale(" + (0.8 + 0.2 * lk).toFixed(3) + ")";
+    });
+    // odometer: digit speed from the content clock, so the blur freezes with the count
+    var V = value(c), V2 = value(c + 0.5 / 30), V1 = value(c - 0.5 / 30);
+    digs.forEach(function (d, ci) {
+      var k = 5 - ci, sp = Math.abs(dpos(V2, k) - dpos(V1, k)), bl;
+      sp = sp > 5 ? 10 - sp : sp;
+      bl = Math.min(9, sp * FS * 0.1);
+      d.style.setProperty("--d", dpos(V, k).toFixed(4));
+      d.style.setProperty("--b", bl > 0.3 ? (bl * 0.35).toFixed(2) + "px" : "0px");
+      d.style.setProperty("--o", bl > 0.3 ? (1 - Math.min(0.45, bl / 30)).toFixed(3) : 1);
+      d.classList.toggle("bt-dim", !(V >= Math.pow(10, k) || !k));
+    });
+    comma.classList.toggle("bt-dim", V < 100);
+    // sparks: rise and slow from the bar top, trail = content-clock speed, so frozen ones keep their trails
+    var br = 0.85 + 0.15 * (1 + 0.05 * Math.sin(f / 26));
+    SP.forEach(function (s) {
+      var age = e - s.born, st = s.el.style;
+      if (age < 0 || age > s.life) { st.display = "none"; return; }
+      var kk = 1 - Math.exp(-age / s.tau), vel = s.v0 * Math.exp(-age / s.tau);
+      var x = L.x + s.bar * pitch + L.bw / 2 + s.dx + s.vx * age - L.pw / 2 - s.size / 2;
+      var y = top(s.bar, s.born / 30) - s.v0 * s.tau * kk - L.ph / 2;
+      st.display = "";
+      st.height = (s.size + vel * 3.2).toFixed(1) + "px";
+      st.transform = "translate3d(" + x.toFixed(1) + "px," + y.toFixed(1) + "px," + (s.z * kk).toFixed(1) + "px)";
+      st.opacity = (Math.min(1, age / 3) * (1 - Math.pow(age / s.life, 2)) * br).toFixed(3);
+    });
+    grain(t);
+  };
+  var tl = MT.scene(CFG.dur, render);
+  window.__timelines["bullet-time-freeze-orbit"] = tl;
+})();
+      </script>
+    </template>
+  </body>
+</html>

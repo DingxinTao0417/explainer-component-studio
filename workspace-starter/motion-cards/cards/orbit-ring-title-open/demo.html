@@ -1,0 +1,428 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"lead","type":"string","label":"上行小标题（可空）","default":"从选题到发布"},
+    {"id":"title","type":"string","label":"主标题，荧光块整行扫过（5 个字最好，最多 11 个字）","default":"整套工作流"},
+    {"id":"name","type":"string","label":"副行名字，前带示意标志（可空）","default":"示例应用"},
+    {"id":"tag","type":"string","label":"副行等宽代号（可空）","default":"EPISODE 01"},
+    {"id":"images","type":"string","label":"卡上的图（可空，用 | 分隔，从正上方起顺时针）","default":""},
+    {"id":"exit","type":"enum","label":"结尾","default":"hold","options":[{"value":"hold","label":"停在完整画面"},{"value":"blur","label":"标题失焦淡出，环继续转"}]},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+<head>
+<meta charset="UTF-8" />
+<title>orbit-ring-title-open · 环形卡阵开场</title>
+<script src="../../lib/preview.js"></script>
+</head>
+<body>
+<template id="orbit-ring-title-open-template">
+<!-- Ported from video-shotcraft demos/opening/orbit-ring-title-open/OrbitRingTitleOpen.tsx
+     (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+     Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+     Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+     neutral --k-* palette on a lit light backdrop (the lime graphite stage, its key light, 0.62 vignette and dark fog
+     only on dark skins), system fonts, generic copy; upstream mark, wordmark and product code replaced by a neutral
+     mark and name / tag variables (40 / 30 px, were 30 / 26). Tiles redrawn as SVG with their text as bars (metric
+     number, "GO LIVE", terminal and list strings). Title 64 / 156 px at weight 700, line 1 line-height 1.15, block
+     centred and fitted to 960 px; marker band .03em / -.03em (was .1em / .04em) to cover YaHei glyphs; the reversed
+     copy carries its own accent fill; scrim fades in with line 1; marker start follows the title length; images,
+     exit and backdrop variables. Ring, timings, springs, depth, freeze, blur-slide, push and exit values unchanged. -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+/* ==== kit:fonts@2 (mono only) ==== */
+@font-face{font-family:"Consolas";src:local("Consolas");}
+/* ==== end kit:fonts ==== */
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  --k-mono: var(--mc-mono, Consolas, monospace);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--k-font);
+  color: var(--k-ink);
+}
+/* tile surfaces: white cards and one dark terminal on light skins, panel-coloured cards on dark skins */
+.ot{position:absolute;inset:0;--c1:var(--k-bg);--c2:color-mix(in srgb,var(--k-bg),var(--k-ink) 4%);--c3:color-mix(in srgb,var(--k-ink) 92%,var(--k-bg));--dim:color-mix(in srgb,var(--k-ink) 14%,transparent);--tx:color-mix(in srgb,var(--k-bg) 82%,transparent);--sk:.32;--gl:18%;--kk:0%}
+.ot[data-tone="dark"]{--c1:var(--k-panel);--c2:color-mix(in srgb,var(--k-panel),black 22%);--c3:color-mix(in srgb,var(--k-bg),black 45%);--tx:color-mix(in srgb,var(--k-ink) 82%,transparent);--sk:1;--gl:28%;--kk:27.5%}
+/* ==== kit:derived@1 (line, shade, hi) ==== */
+.ot{--ot-line:color-mix(in srgb,var(--k-ink) 12%,transparent);--ot-shade:color-mix(in srgb,var(--k-ink) 85%,var(--k-accent-2));--ot-hi:color-mix(in srgb,white 80%,transparent);}.ot[data-tone="dark"]{--ot-shade:color-mix(in srgb,var(--k-bg) 30%,black);--ot-hi:color-mix(in srgb,white 6%,transparent);}
+/* ==== end kit:derived ==== */
+/* ==== kit:backdrop@1 ==== */
+.ot-backdrop{position:absolute;inset:0;background:linear-gradient(180deg,var(--k-bg) 0%,color-mix(in srgb,var(--k-bg),var(--k-ink) 4%) 55%,color-mix(in srgb,var(--k-bg),var(--k-ink) 7%) 100%);}.ot-backdrop::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 62% 70% at 32% 18%,color-mix(in srgb,var(--k-bg) 95%,transparent) 0%,transparent 72%);}
+/* ==== end kit:backdrop ==== */
+/* key light at upstream's spot (top centre); its accent tint only on dark skins */
+.ot-backdrop::after{background:radial-gradient(ellipse 58% 62% at 50% 0%,color-mix(in srgb,var(--k-bg) 95%,transparent),transparent 70%)}
+.ot-key{position:absolute;inset:0;background:radial-gradient(ellipse 58% 62% at 50% 0%,color-mix(in srgb,var(--k-accent) var(--kk),transparent),transparent 70%)}
+/* ==== kit:light@1 ==== */
+.ot-light{mix-blend-mode:multiply;}.ot[data-tone="dark"] .ot-light{mix-blend-mode:screen;}
+/* ==== end kit:light ==== */
+.ot-cs{position:absolute;left:360px;top:300px;width:1200px;height:480px;background:radial-gradient(closest-side,color-mix(in srgb,var(--k-bg) 75%,transparent),transparent 70%)}
+/* ==== kit:vignette@1 ==== */
+.ot-vig{position:absolute;inset:0;pointer-events:none;--vs:0.16;--vin:45%;--vx:50%;--vy:46%;--vc:var(--ot-shade);background:radial-gradient(ellipse 72% 72% at var(--vx) var(--vy),transparent var(--vin),color-mix(in srgb,var(--vc) calc(var(--vs) * 32%),transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55),color-mix(in srgb,var(--vc) calc(var(--vs) * 100%),transparent) 100%),radial-gradient(ellipse 100% 100% at var(--vx) var(--vy),transparent 60%,color-mix(in srgb,var(--vc) calc(var(--vs) * 60%),transparent) 100%);}.ot[data-tone="dark"] .ot-vig{--vs:0.55;}
+/* ==== end kit:vignette ==== */
+.ot[data-tone="dark"] .ot-vig{--vs:.62}
+/* ==== kit:grain@1 ==== */
+.ot-grain{position:absolute;inset:0;pointer-events:none;}
+/* ==== end kit:grain ==== */
+.ot-push{position:absolute;inset:0}
+.ot-trk{position:absolute;left:0;top:0}
+.ot-trk ellipse{fill:none;stroke:color-mix(in srgb,var(--k-accent) 16%,transparent);stroke-width:1.5}
+/* a 400 x 225 card, translate + scale only. --d = sin(theta), +1 near (bottom), -1 far: blur, fog and shadow follow it */
+.ot-cd{position:absolute;left:0;top:0;width:400px;height:225px;border-radius:14px;overflow:hidden;background:var(--c1);box-shadow:inset 0 1px 0 var(--ot-hi),0 0 0 1px var(--ot-line),0 calc(8.4px + 7.2px * var(--d)) calc(22.4px + 19.2px * var(--d)) color-mix(in srgb,var(--ot-shade) calc((45% + 20% * var(--d)) * var(--sk)),transparent);filter:blur(calc(max(0, -1 * var(--d)) * 1.6px))}
+.ot-cd svg{position:absolute;left:0;top:0;width:100%;height:100%}
+.ot-fog,.ot-im{position:absolute;inset:0}
+.ot-fog{background:linear-gradient(color-mix(in srgb,white calc(max(0, var(--d)) * 4%),transparent),color-mix(in srgb,var(--k-bg) calc(max(0, -1 * var(--d)) * 50%),transparent)),color-mix(in srgb,var(--k-bg) calc(max(0, -1 * var(--d)) * 25%),transparent)}
+.ot-im{background:center/cover}
+.ot-t2{background-color:var(--c2)}
+.ot-t3{background-color:var(--c3)}
+.ot-gr{background-image:linear-gradient(var(--dim) 1px,transparent 1px),linear-gradient(90deg,var(--dim) 1px,transparent 1px);background-size:8.333% 14.815%}
+.ot-dp{background-image:radial-gradient(circle,var(--dim) 1px,transparent 1.3px);background-size:4.167% 7.407%}
+/* tile art in a 960 x 540 box: its text is texture, so it is drawn as bars (the title is what gets read) */
+.ot-a{fill:var(--k-accent)}
+.ot-i{fill:var(--k-ink)}
+.ot-m{fill:var(--dim)}
+.ot-o{fill:var(--k-on-accent)}
+.ot-x{fill:var(--tx)}
+.ot-p{fill:var(--c1);stroke:var(--ot-line);stroke-width:2}
+.ot-c{fill:var(--c2);stroke:var(--k-accent);stroke-width:6}
+.ot-s,.ot-n,.ot-g{fill:none;stroke:var(--k-accent);stroke-width:var(--sw,8);stroke-linecap:round;stroke-linejoin:round}
+.ot-n{stroke:var(--k-ink)}
+.ot-g{stroke:var(--dim)}
+.ot-k{fill:none;stroke:var(--dim);stroke-width:3}
+.ot-k.on{fill:var(--k-accent);stroke:var(--k-accent)}
+.ot-tk{fill:none;stroke:var(--k-on-accent);stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round}
+.ot-sc{position:absolute;left:260px;top:250px;width:1400px;height:560px;z-index:25;background:radial-gradient(closest-side,color-mix(in srgb,var(--k-bg) 82%,transparent),color-mix(in srgb,var(--k-bg) 55%,transparent) 45%,transparent 72%)}
+.ot-ttl{position:absolute;inset:0 0 44px;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+/* ==== kit:text@2 (unit) ==== */
+.ot-u{display:inline-block;white-space:pre;}
+/* ==== end kit:text ==== */
+.ot-l1{max-width:960px;font-size:64px;line-height:1.15;letter-spacing:.02em;color:var(--k-muted)}
+.ot-l2{position:relative;max-width:960px;margin-top:30px;font-size:156px;font-weight:700;line-height:1.12;letter-spacing:.01em}
+/* marker pad 0.14em wider than the words each side; the reversed copy is cut to the pad's band and front edge */
+.ot-mk{position:absolute;left:-.14em;right:-.14em;top:.03em;bottom:-.03em;border-radius:8px;background:var(--k-accent);transform-origin:0 50%;box-shadow:0 0 60px color-mix(in srgb,var(--k-accent) var(--gl),transparent)}
+.ot-ink{position:relative;display:inline-block;white-space:nowrap;vertical-align:top;clip-path:inset(-20% 0 -20% 100%)}
+.ot-rev{position:absolute;left:0;top:0;white-space:nowrap;color:var(--k-on-accent);clip-path:inset(.03em 0 -.03em 0)}
+.ot-rev .ot-u{background:var(--k-accent)}
+.ot-sub{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:16px;max-width:960px;margin-top:40px;font-size:40px;line-height:1}
+/* ==== kit:mark@1 ==== */
+.ot-mark{display:block;flex:none;}
+/* ==== end kit:mark ==== */
+.ot-nm{font-weight:700;letter-spacing:.03em}
+.ot-dt,.ot-tg{font:.75em/1 var(--k-mono);color:var(--k-muted)}
+.ot-tg{letter-spacing:.2em;margin-right:-.2em}
+.ot-tw{display:flex;align-items:center;gap:16px}
+</style>
+
+<div id="root" data-composition-id="orbit-ring-title-open" data-width="1920" data-height="1080">
+<div class="ot">
+<div class="ot-backdrop"></div>
+<div class="ot-key ot-light"></div>
+<div class="ot-cs"></div>
+<div class="ot-vig"></div>
+<div class="ot-grain"></div>
+<div class="ot-push" style="transform:scale(1.0195)">
+<svg class="ot-trk" width="1920" height="1080"><ellipse cx="960" cy="540" rx="720" ry="380" pathLength="1" stroke-dasharray="1 2"/></svg>
+<div class="ot-cd" style="transform:translate(1395px,248px) scale(.943);z-index:8;--d:-.47"><svg viewBox="0 0 960 540"><rect class="ot-m" x="60" y="60" width="230" height="20" rx="10"/><rect class="ot-a" data-k="hl" x="44" y="114" width="660" height="88" rx="10"/><rect class="ot-o" data-k="hd" x="64" y="136" width="600" height="44" rx="22"/><rect class="ot-m" x="60" y="252" width="760" height="24" rx="12"/><rect class="ot-m" x="60" y="300" width="640" height="24" rx="12"/><rect class="ot-m" x="60" y="348" width="700" height="24" rx="12"/></svg><i class="ot-fog"></i></div>
+<div class="ot-cd ot-t2" style="transform:translate(1449px,538px) scale(1.035);z-index:11;--d:.29"><svg viewBox="0 0 960 540"><rect class="ot-p" data-k="pn" x="60" y="60" width="150" height="78" rx="46"/><g data-k="pc" opacity="0"><rect class="ot-m" x="100" y="100" width="220" height="20" rx="10"/><rect class="ot-i" x="100" y="140" width="420" height="40" rx="20"/><rect class="ot-m" x="100" y="200" width="500" height="20" rx="10"/></g><rect class="ot-a" data-k="pl" x="95" y="90" width="80" height="18" rx="9"/><g data-k="pr"><rect class="ot-i" x="260" y="150" width="400" height="46" rx="23"/><rect class="ot-m" x="260" y="222" width="300" height="20" rx="10"/><rect class="ot-m" x="260" y="256" width="220" height="20" rx="10"/></g></svg><i class="ot-fog"></i></div>
+<div class="ot-cd" style="transform:translate(1099px,763px) scale(1.106);z-index:14;--d:.88"><svg viewBox="0 0 960 540"><rect class="ot-m" x="60" y="66" width="250" height="20" rx="10"/><g data-k="ch"><rect class="ot-a" x="336" y="55" width="132" height="42" rx="21"/><rect class="ot-o" x="362" y="70" width="80" height="12" rx="6"/></g><rect class="ot-i" data-k="vl" x="60" y="130" width="420" height="96" rx="18"/><defs><linearGradient id="ot-ag" x2="0" y2="1"><stop offset="0" style="stop-color:var(--k-accent);stop-opacity:.28"/><stop offset="1" style="stop-color:var(--k-accent);stop-opacity:0"/></linearGradient></defs><g transform="translate(60 286)"><path data-k="ar" fill="url(#ot-ag)" d="M8 118L118 92L228 104L338 56L448 68L558 20L632 34L632 140L8 140Z"/><path class="ot-s" data-k="sp" pathLength="1" stroke-dasharray="1 2" d="M8 118L118 92L228 104L338 56L448 68L558 20L632 34"/></g></svg><i class="ot-fog"></i></div>
+<div class="ot-cd ot-t2 ot-gr" style="transform:translate(551px,791px) scale(1.115);z-index:15;--d:.96"><svg viewBox="0 0 960 540"><g transform="translate(60 60)" style="--sw:10"><path class="ot-s" data-k="rt" pathLength="1" stroke-dasharray="1 2" d="M40 380C200 380 190 210 340 200C500 190 500 90 700 70"/><circle class="ot-c" cx="40" cy="380" r="14"/><g data-k="pin" transform="translate(700 70)"><circle class="ot-a" r="36" opacity=".2"/><circle class="ot-a" r="24"/><circle class="ot-o" r="9"/></g></g><g data-k="tg"><rect class="ot-p" x="470" y="64" width="200" height="60" rx="12"/><rect class="ot-i" x="494" y="85" width="140" height="18" rx="9"/></g></svg><i class="ot-fog"></i></div>
+<div class="ot-cd ot-t2" style="transform:translate(125px,607px) scale(1.057);z-index:12;--d:.47"><svg viewBox="0 0 960 540"><g data-k="s0"><circle class="ot-k on" cx="83" cy="83" r="21.5"/><path class="ot-tk" d="M75.4 83.5L80.8 88.4L90.6 78.1"/><rect class="ot-i" x="132" y="73" width="380" height="20" rx="10"/></g><g data-k="s1" transform="translate(0 78)"><circle class="ot-k on" cx="83" cy="83" r="21.5"/><path class="ot-tk" d="M75.4 83.5L80.8 88.4L90.6 78.1"/><rect class="ot-i" x="132" y="73" width="290" height="20" rx="10"/></g><g data-k="s2" transform="translate(0 156)"><circle class="ot-k on" cx="83" cy="83" r="21.5"/><path class="ot-tk" d="M75.4 83.5L80.8 88.4L90.6 78.1"/><rect class="ot-i" x="132" y="73" width="340" height="20" rx="10"/></g><g data-k="s3" transform="translate(0 234)"><circle class="ot-k on" cx="83" cy="83" r="21.5"/><path class="ot-tk" d="M75.4 83.5L80.8 88.4L90.6 78.1"/><rect class="ot-i" x="132" y="73" width="290" height="20" rx="10"/></g></svg><i class="ot-fog"></i></div>
+<div class="ot-cd ot-t3" style="transform:translate(71px,317px) scale(.965);z-index:9;--d:-.29"><svg viewBox="0 0 960 540"><circle class="ot-x" cx="70" cy="70" r="10" opacity=".5"/><circle class="ot-x" cx="104" cy="70" r="10" opacity=".3"/><circle class="ot-x" cx="138" cy="70" r="10" opacity=".2"/><rect class="ot-a" x="60" y="114" width="190" height="22" rx="11"/><rect class="ot-x" data-k="t0" x="60" y="170" width="560" height="22" rx="11"/><rect class="ot-a" data-k="t1" x="60" y="225" width="330" height="22" rx="11"/><rect class="ot-x" data-k="t2" x="60" y="280" width="470" height="22" rx="11" opacity=".45"/><rect class="ot-a" data-k="t3" x="60" y="335" width="420" height="22" rx="11"/></svg><i class="ot-fog"></i></div>
+<div class="ot-cd ot-dp" style="transform:translate(421px,92px) scale(.894);z-index:6;--d:-.88"><svg viewBox="0 0 960 540"><g transform="translate(60 60)" style="--sw:7"><path class="ot-n" data-k="k0" pathLength="1" stroke-dasharray="1 2" d="M80 380L768 380"/><path class="ot-s" data-k="k1" pathLength="1" stroke-dasharray="1 2" d="M140 380L200 90L648 90L708 380"/><path class="ot-n" data-k="k2" pathLength="1" stroke-dasharray="1 2" d="M280 90L280 380"/><path class="ot-n" data-k="k3" pathLength="1" stroke-dasharray="1 2" d="M500 90L500 380"/></g></svg><i class="ot-fog"></i></div>
+<div class="ot-cd" style="transform:translate(969px,64px) scale(.885);z-index:5;--d:-.96"><svg viewBox="0 0 960 540"><rect class="ot-a" x="380" y="186" width="200" height="22" rx="11"/><g data-k="im"><rect class="ot-i" x="226" y="232" width="300" height="118" rx="22"/><rect class="ot-i" x="550" y="232" width="184" height="118" rx="22"/></g></svg><i class="ot-fog"></i></div>
+<div class="ot-sc"></div>
+<div class="ot-ttl">
+<div class="ot-l1">从选题到发布</div>
+<div class="ot-l2"><span class="ot-mk"></span><span class="ot-ink">整套工作流</span><span class="ot-rev" aria-hidden="true">整套工作流</span></div>
+<div class="ot-sub"><svg class="ot-mark" width="52" height="52" viewBox="0 0 128 128"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg><b class="ot-nm">示例应用</b><span class="ot-tw"><i class="ot-dt">·</i><span class="ot-tg">EPISODE 01</span></span></div>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+(function () {
+// timing (s) = upstream frames / 30
+var CFG = { dur: 5, ringIn: 0.8, ringFrom: 0.62, track: 1, spin: 0.3, depth: 0.12, cardAt: 0.067, cardStep: 0.05, cardDur: 0.367,
+  play: 0.8, l1At: 0.333, l1Step: 0.033, l1Dur: 0.9, l2At: 0.6, l2Step: 0.067, l2Dur: 1.067, markLag: 0.8, subLag: 0.333,
+  subDur: 0.533, pushAt: 1.333, pushDur: 3.667, push: 0.025, exitAt: 3.933, exitDur: 0.333 };
+// ring in the 1920 x 1080 frame: radii, card size, centre
+var RX = 720, RY = 380, CW = 400, CH = 225, CX = 960, CY = 540;
+var v = { lead: "从选题到发布", title: "整套工作流", name: "示例应用", tag: "EPISODE 01", images: "", exit: "hold", backdrop: "on" };
+try {
+  var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+  for (var key in got) if (got[key] !== undefined && got[key] !== null) v[key] = got[key];
+} catch (e) {}
+
+var root = document.querySelector(".ot");
+var q = function (s) { return root.querySelector(s); };
+var qa = function (s) { return [].slice.call(root.querySelectorAll(s)); };
+var at = function (e, o) { for (var k in o) e.setAttribute(k, o[k]); };
+var R = MT.ramp;
+var hide = function (e, h) { e.style.display = h ? "none" : ""; };
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+var p = document.createElement("i");
+p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+el.appendChild(p);
+var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+el.removeChild(p);
+return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+var c = kRGB(wrap, "var(--k-bg)");
+var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+wrap.setAttribute("data-tone", tone);
+return tone;
+}
+// ==== end kit:tone ====
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+o = o || {};
+var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+var dark = tones && tones.getAttribute("data-tone") === "dark";
+var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+var f = "type='linear' slope='2.4' intercept='-0.7'";
+var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+"<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+"<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+"<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+"<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+});
+layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+layer.style.backgroundSize = size + "px " + size + "px";
+return function (t) {
+var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+layer.style.backgroundImage = tiles[k % 6];
+layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+};
+}
+// ==== end kit:grain ====
+// ==== kit:fit@1 (kFit, kLines) ====
+function kFit(el, o) {
+o = o || {};
+var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+for (;;) {
+el.style.fontSize = f + "px";
+m = kLines(el);
+if ((m.w <= W && m.n <= n) || f <= min) break;
+f = Math.max(min, f - 2);
+}
+if (m.w > W) {
+[].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+m = kLines(el);
+}
+return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+while ((t = it.nextNode())) {
+if (!t.data.trim()) continue;
+r.selectNodeContents(t);
+[].forEach.call(r.getClientRects(), function (b) {
+var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+});
+}
+return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+// ==== kit:text@2 (kWords, kSplit) ====
+var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+function kWords(s, key) {
+s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+var cut = function (x) {
+if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+};
+var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+var pre = "";
+bits.forEach(function (x) {
+var t = x.trim(), last = out[out.length - 1];
+if (last && /^ /.test(x)) last.sp = true;
+if (!t) return;
+if (!/[\p{L}\p{N}]/u.test(t)) {
+if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+else { last.t += t; last.sp = / $/.test(x); }
+return;
+}
+out.push({ t: pre + t, sp: / $/.test(x) });
+pre = "";
+});
+if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+if (out.length) out[out.length - 1].sp = false;
+return out;
+}
+function kSplit(el, by, rise, text) {
+var s = text != null ? String(text) : el.textContent, units = [];
+var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+el.textContent = "";
+parts.forEach(function (p) {
+var u = document.createElement("span"), box = u;
+u.className = "ot-u"; u.textContent = p.t;
+if (by === "line") u.style.display = "block";
+if (!p.t.trim()) { el.appendChild(u); return; }
+if (rise) { box = document.createElement("span"); box.className = "ot-cut"; box.style.display = u.style.display; box.appendChild(u); }
+el.appendChild(box);
+if (p.sp) el.appendChild(document.createTextNode(" "));
+units.push(u);
+});
+return units;
+}
+// ==== end kit:text ====
+kTone(root);
+var off = String(v.backdrop) === "off";
+qa(".ot-backdrop,.ot-key,.ot-cs,.ot-vig,.ot-grain").forEach(function (e) { hide(e, off); });
+var grain = off ? null : kGrain(q(".ot-grain"));
+
+// an undrawn ghost under every stroke that draws on (covered once drawn, so the static page needs none)
+qa(".ot-cd [stroke-dasharray]").forEach(function (p) {
+  var g = document.createElementNS(p.namespaceURI, "path");
+  at(g, { "class": "ot-g", d: p.getAttribute("d") });
+  p.parentNode.insertBefore(g, p);
+});
+var K = {}, ag = "ot-ag" + (window.__otAg = (window.__otAg || 0) + 1);
+qa("[data-k]").forEach(function (e) { K[e.getAttribute("data-k")] = e; });
+q("#ot-ag").id = ag;
+K.ar.setAttribute("fill", "url(#" + ag + ")");
+var cards = qa(".ot-cd"), imgs = String(v.images).split("|"), ims = [];
+cards.forEach(function (c, i) {
+  var s = (imgs[i] || "").trim(), im = document.createElement("i");
+  if (!s) return;
+  im.className = "ot-im";
+  im.style.backgroundImage = 'url("' + s + '")';
+  im.setAttribute("data-layout-allow-overflow", "");
+  c.insertBefore(im, c.lastChild);
+  hide(c.querySelector("svg"), 1);
+  ims.push(im);
+});
+
+// text slots: typed spaces kept, | cuts resolved by kWords; then one span per character
+var slot = function (el, s) {
+  s = String(s == null ? "" : s);
+  var t = s.indexOf("|") < 0 ? s.replace(/\s+/g, " ").trim() : kWords(s).map(function (u) { return u.t + (u.sp ? " " : ""); }).join("");
+  hide(el, !t);
+  return t;
+};
+var l1 = q(".ot-l1"), l2 = q(".ot-l2"), ink = q(".ot-ink"), rev = q(".ot-rev"), sub = q(".ot-sub"), nm = q(".ot-nm"), tg = q(".ot-tg");
+var c1 = kSplit(l1, "char", false, slot(l1, v.lead));
+kFit(l1, { lines: 1, min: 40, width: 960 });
+var t2 = slot(l2, v.title), c2 = kSplit(ink, "char", false, t2), c3 = kSplit(rev, "char", false, t2);
+// the ink copy sits under the reversed one on purpose (each is cut at the marker's front edge)
+c2.concat(c3).forEach(function (u, i) {
+  u.setAttribute("data-layout-allow-overlap", "");
+  if (i < c2.length) u.setAttribute("data-layout-allow-occlusion", "");
+});
+kFit(l2, { lines: 1, min: 80, width: 960 });
+var W2 = ink.offsetWidth || 1, F1 = parseFloat(getComputedStyle(l1).fontSize), F2 = parseFloat(getComputedStyle(l2).fontSize);
+var N = (nm.textContent = slot(nm, v.name)), T = (tg.textContent = slot(tg, v.tag));
+hide(q(".ot-mark"), !N);
+hide(q(".ot-dt"), !(N && T));
+hide(q(".ot-tw"), !T);
+hide(sub, !(N || T));
+kFit(sub, { lines: 1, min: 40, width: 960 });
+if (q(".ot-tw").offsetTop > nm.offsetTop + 9) hide(q(".ot-dt"), 1);
+// the marker starts when the last big character has landed (0.8 s after it starts), the sub line 10 frames later
+var mark = CFG.l2At + CFG.l2Step * Math.max(0, (c2.length || 5) - 1) + CFG.markLag, subAt = mark + CFG.subLag;
+var sc = q(".ot-sc"), push = q(".ot-push"), ell = q(".ot-trk ellipse"), ttl = q(".ot-ttl"), mk = q(".ot-mk"), exit = String(v.exit) === "blur";
+var TW = [560, 330, 470, 420], TN = [26, 17, 23, 21];
+// one character: focus takes the whole duration, the drop only its first third
+var chr = function (u, t, a, dur, fs) {
+  var p = R(t, a, dur, "out"), m = R(t, a, dur / 3, "out");
+  u.style.opacity = p;
+  u.style.filter = p < 1 ? "blur(" + ((1 - p) * fs / 6).toFixed(2) + "px)" : "none";
+  u.style.transform = "translateY(" + ((1 - m) * fs * 0.22).toFixed(2) + "px)";
+};
+var sp = function (f, d, k, m) { return MT.spring({ t: f / 30, delay: d / 30, damping: k, stiffness: 170, mass: m }); };
+var mv = function (e, o, y) { at(e, { opacity: o, transform: "translate(" + y + ")" }); };
+// the tiles' own animations; f = frames since they started playing (frozen on frame 0 until CFG.play)
+var tiles = function (f) {
+  var F = function (a, b, e) { return R(f, a, b - a, e || "power2.out"); };
+  var s = F(14, 32, "snappy"), p = F(16, 44, "smooth"), c = F(28, 50), d = F(10, 46, "smooth"), h = F(34, 46), g = F(42, 54), b = sp(f, 8, 13, 0.7);
+  K.hl.setAttribute("width", 660 * s);
+  K.hd.setAttribute("class", s > 0.6 ? "ot-o" : "ot-i");
+  at(K.pn, { width: 840 - 690 * p, height: 420 - 342 * p, rx: 16 + 30 * p });
+  K.pc.setAttribute("opacity", Math.max(0, 1 - p / 0.6));
+  K.pl.setAttribute("opacity", Math.max(0, (p - 0.6) / 0.4));
+  mv(K.pr, c, (1 - c) * 24 + " 0");
+  K.vl.setAttribute("width", 220 + 200 * F(8, 40, "power1.out"));
+  K.ar.setAttribute("opacity", d);
+  K.sp.style.strokeDashoffset = 1 - d;
+  mv(K.ch, h, "0 " + (1 - h) * 8);
+  K.rt.style.strokeDashoffset = 1 - F(6, 42, "smooth");
+  K.pin.setAttribute("transform", "translate(700 70) scale(" + sp(f, 36, 12, 1) + ")");
+  mv(K.tg, g, "0 " + (1 - g) * 10);
+  for (var i = 0; i < 4; i++) {
+    var on = F(8 + 9 * i, 22 + 9 * i) > 0.6, r = K["s" + i].children;
+    r[0].setAttribute("class", on ? "ot-k on" : "ot-k");
+    r[1].setAttribute("transform", "translate(83 83) scale(" + F(12 + 9 * i, 22 + 9 * i, "overshoot") + ") translate(-83 -83)");
+    r[2].setAttribute("class", on ? "ot-i" : "ot-m");
+    // terminal rows type at an even rate, one character step at a time
+    K["t" + i].setAttribute("width", (TW[i] * Math.round(TN[i] * F(8 + 11 * i, 20 + 11 * i, "none"))) / TN[i]);
+    K["k" + i].style.strokeDashoffset = 1 - F(6 + 10 * i, 24 + 10 * i, "smooth");
+  }
+  at(K.im, { opacity: Math.min(1, b), transform: "translate(480 291) scale(" + (0.72 + 0.28 * b) + ") translate(-480 -291)" });
+};
+
+var tl = MT.scene(CFG.dur, function (t) {
+  if (grain) grain(t);
+  // the ring opens from 62% of its size, then turns clockwise at 0.3 rad/s; size, z order, blur and fog follow sin(theta)
+  var rs = CFG.ringFrom + (1 - CFG.ringFrom) * R(t, 0, CFG.ringIn, "snappy"), f = Math.max(0, t - CFG.play) * 30;
+  push.style.transform = "scale(" + (1 + CFG.push * R(t, CFG.pushAt, CFG.pushDur, "smooth")).toFixed(5) + ")";
+  at(ell, { rx: RX * rs, ry: RY * rs });
+  ell.style.strokeDashoffset = 1 - R(t, 0, CFG.track, "out");
+  cards.forEach(function (c, i) {
+    var a = -Math.PI / 2 + (i * Math.PI) / 4 + t * CFG.spin, d = Math.sin(a), op = R(t, CFG.cardAt + i * CFG.cardStep, CFG.cardDur, "out");
+    c.style.transform = "translate(" + (CX + Math.cos(a) * RX * rs - CW / 2).toFixed(1) + "px," + (CY + d * RY * rs - CH / 2).toFixed(1) + "px) scale(" + ((1 + CFG.depth * d) * (0.9 + 0.1 * op)).toFixed(4) + ")";
+    c.style.opacity = op;
+    c.style.zIndex = 10 + Math.round(d * 5);
+    c.style.setProperty("--d", d.toFixed(3));
+  });
+  tiles(f);
+  ims.forEach(function (im) { im.style.transform = "scale(" + (1 + (0.06 * f) / (30 * (CFG.dur - CFG.play))).toFixed(4) + ")"; });
+  sc.style.opacity = R(t, CFG.l1At, CFG.l1Dur, "out");
+  c1.forEach(function (u, i) { chr(u, t, CFG.l1At + i * CFG.l1Step, CFG.l1Dur, F1); });
+  c2.forEach(function (u, i) {
+    chr(u, t, CFG.l2At + i * CFG.l2Step, CFG.l2Dur, F2);
+    chr(c3[i], t, CFG.l2At + i * CFG.l2Step, CFG.l2Dur, F2);
+  });
+  // marker: spring (damping 20, stiffness 190) capped at 1.03; its front edge is where the words turn over
+  var m = Math.min(1.03, MT.spring({ t: t, delay: mark, damping: 20, stiffness: 190, mass: 1 }));
+  var e = MT.clamp((Math.min(1, m) * (W2 + 0.28 * F2) - 0.14 * F2) / W2, 0, 1);
+  mk.style.transform = "scaleX(" + m.toFixed(4) + ")";
+  ink.style.clipPath = "inset(-20% 0 -20% " + (e * 100).toFixed(2) + "%)";
+  rev.style.clipPath = "inset(.03em " + ((1 - e) * 100).toFixed(2) + "% -.03em 0)";
+  var k = R(t, subAt, CFG.subDur, "out");
+  sub.style.opacity = k;
+  sub.style.transform = "translateY(" + ((1 - k) * 12).toFixed(2) + "px)";
+  if (exit) {
+    var x = R(t, CFG.exitAt, CFG.exitDur, "exit");
+    ttl.style.opacity = 1 - x;
+    ttl.style.filter = x > 0.01 ? "blur(" + (x * 6.5).toFixed(2) + "px)" : "none";
+  }
+});
+window.__timelines["orbit-ring-title-open"] = tl;
+})();
+</script>
+</template>
+</body>
+</html>

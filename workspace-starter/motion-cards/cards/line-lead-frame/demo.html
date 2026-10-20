@@ -1,0 +1,508 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"steps","type":"string","label":"两步的名字（前一步|后一步，各自可留空）","default":"导出|发布"},
+    {"id":"task","type":"string","label":"进度卡上的任务名","default":"示例视频.mp4"},
+    {"id":"meta","type":"string","label":"任务名下的小字（可留空）","default":"MP4 · 30 fps"},
+    {"id":"title","type":"string","label":"新场景的标题（用 | 分行，1–2 行）","default":"成片|正式上线"},
+    {"id":"sub","type":"string","label":"新场景的副题（可留空）","default":"第 2 节 · 约 3 分钟"},
+    {"id":"poster","type":"string","label":"画框里海报上的字（用 | 分行，可留空）","default":"先看懂|再动手"},
+    {"id":"to","type":"string","label":"画框里换成一张图（从项目根目录写起；留空画海报）","default":""},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>line-lead-frame · 跟线横移成框</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="line-lead-frame-template">
+<!-- Ported from video-shotcraft demos/transition/line-carry-transition/LineCarryTransition.tsx
+     (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+     Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+     Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+     neutral --k-* palette (sand look, cream and navy from palette mixes), system fonts, generic copy; render card,
+     premiere caption, upstream name and poster slogan replaced by variables; the dasharray SVG polyline is five 8px
+     divs (same square caps and miters); world two frames wide, pan one frame width, geometry from CSS; portrait
+     layout (680x720 card with banner thumbnail, tip pinned at 85% not 77%, caption above the frame); text raised
+     (eyebrow 26 to 28px, status 30 to 40, sub 32 to 40, tick labels 22 to 28 as pseudo-element text); ruler shown by
+     a 40px mask sweep, not per-tick ramps; optional image in the frame. Kept: all phase times (fill 4-40f out, check
+     spring 14/220 at 40f, shoot 46-56f swift, pan 56-112f smooth with drawn = lead + cam, close 112-136f smooth, tip
+     out 136-142f, caption 100f + 6f steps, poster 136-172f), 8px ink line, tip r14 + 16% halo r30, 720x480 frame,
+     sun and hills geometry, multiply overprint, speed blur 0.28 per px/frame up to 16 on the world only, shadow
+     heights 22 and 26, grain 0.05, vignette 0.16. -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+@font-face { font-family: "Consolas"; src: local("Consolas"); }
+@font-face { font-family: "lf-heavy"; font-weight: 700 900; src: local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"), local("PingFangSC-Semibold"), local("NotoSansSC-Black"); }
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  --k-mono: var(--mc-mono, Consolas, monospace);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--k-font);
+  color: var(--k-ink);
+}
+/* ==== kit:derived@1 (+ --s shadow strength, card face, poster paper, fill light) ==== */
+.lf{position:absolute;inset:0;container-type:size;--s:1;--fl:10%;--lf-hv:lf-heavy,var(--k-font);--lf-card:var(--k-bg);
+--lf-paper:color-mix(in srgb,var(--k-bg),var(--k-accent) 7%);
+--lf-line:color-mix(in srgb,var(--k-ink) 12%,transparent);
+--lf-shade:color-mix(in srgb,var(--k-ink) 85%,var(--k-accent-2));
+--lf-hi:color-mix(in srgb,white 80%,transparent)}
+.lf[data-tone="dark"]{--s:2.6;--fl:16%;--lf-card:var(--k-panel);
+--lf-paper:color-mix(in srgb,var(--k-panel),white 5%);
+--lf-shade:color-mix(in srgb,var(--k-bg) 30%,black);
+--lf-hi:color-mix(in srgb,white 6%,transparent)}
+/* ==== end kit:derived ==== */
+/* ==== kit:backdrop@1 (key light at 28% 2%, accent-2 fill light at 90% 95%, as upstream) ==== */
+.lf-bd,.lf-blur,.lf-backdrop,.lf-backdrop::after,.lf-vig,.lf-grain,.lf-dots,.lf-in,.lf-img{position:absolute;inset:0}
+.lf-backdrop{background:linear-gradient(180deg,var(--k-bg) 0%,color-mix(in srgb,var(--k-bg),var(--k-ink) 4%) 55%,color-mix(in srgb,var(--k-bg),var(--k-ink) 7%) 100%)}
+.lf-backdrop::after{content:"";background:radial-gradient(ellipse 50% 46% at 90% 95%,color-mix(in srgb,var(--k-accent-2) var(--fl),transparent) 0%,transparent 72%),radial-gradient(ellipse 58% 62% at 28% 2%,color-mix(in srgb,var(--k-bg) 90%,transparent) 0%,transparent 70%)}
+/* ==== end kit:backdrop ==== */
+/* ==== kit:vignette@1 ==== */
+.lf-vig{pointer-events:none;--vs:0.16;--vin:42%;--vx:50%;--vy:46%;--vc:var(--lf-shade);
+background:radial-gradient(ellipse 72% 72% at var(--vx) var(--vy),transparent var(--vin),color-mix(in srgb,var(--vc) calc(var(--vs) * 32%),transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55),color-mix(in srgb,var(--vc) calc(var(--vs) * 100%),transparent) 100%),
+radial-gradient(ellipse 100% 100% at var(--vx) var(--vy),transparent 60%,color-mix(in srgb,var(--vc) calc(var(--vs) * 60%),transparent) 100%)}
+.lf[data-tone="dark"] .lf-vig{--vs:0.55}
+/* ==== end kit:vignette ==== */
+/* ==== kit:grain@1 ==== */
+.lf-grain{pointer-events:none}
+/* ==== end kit:grain ==== */
+/* ==== kit:text@2 ==== */
+.lf-u{display:inline-block;white-space:pre}
+.lf-cut{display:inline-block;vertical-align:top;clip-path:inset(-0.06em -0.04em -0.22em -0.04em)}
+/* ==== end kit:text ==== */
+.lf[data-bare] .lf-bd,.lf[data-bare] .lf-dots{display:none}
+/* geometry in px, read by the script too: x0 / ly = left end and centre line of the progress track; cw / ch =
+   progress card (left x0 - 56, bottom ly + 40); fx = frame left inside page B; fw / fh = frame (bottom on ly);
+   t0 / t1 / ts = ruler. On the wrapper's children: @container rules never reach the container itself */
+.lf>*{--x0:336px;--ly:760px;--cw:760px;--ch:500px;--fx:960px;--fw:720px;--fh:480px;--t0:1200px;--t1:2760px;--ts:120px}
+/* the world is two frames wide, page A at 0 and page B at one frame width. Static page = settled, camera on B */
+.lf-world{position:absolute;left:0;top:0;width:200cqw;height:100cqh;transform:translateX(-100cqw)}
+.lf-dots{background:radial-gradient(circle,color-mix(in srgb,var(--k-ink) 13%,transparent) 1.7px,transparent 2.3px) 6px 10px/60px 60px;
+-webkit-mask-image:linear-gradient(180deg,transparent 6%,#000 28%,#000 80%,transparent 97%);mask-image:linear-gradient(180deg,transparent 6%,#000 28%,#000 80%,transparent 97%)}
+.lf-eye{display:flex;gap:18px;align-items:baseline;font-size:28px;font-weight:700;line-height:1.3;letter-spacing:0.24em;color:var(--k-muted)}
+.lf-eye b{flex:none;color:var(--k-accent)}
+.lf-eye span{min-width:0;flex:1}
+.lf-ea,.lf-card{position:absolute;left:calc(var(--x0) - 56px);width:var(--cw)}
+.lf-ea{top:calc(var(--ly) - var(--ch) - 46px)}
+/* page A: the progress card */
+.lf-card{top:calc(var(--ly) + 40px - var(--ch));height:var(--ch);box-sizing:border-box;padding:48px 56px;border-radius:28px;
+background:linear-gradient(180deg,var(--lf-card),color-mix(in srgb,var(--lf-card),var(--k-ink) 3%));
+box-shadow:inset 0 1px 0 var(--lf-hi),inset 0 0 0 1px var(--lf-line),0 1.8px 5px color-mix(in srgb,var(--lf-shade) calc(var(--s) * 5.6%),transparent),0 12.1px 28.6px -4.8px color-mix(in srgb,var(--lf-shade) calc(var(--s) * 14%),transparent)}
+.lf-head{display:flex;align-items:center;gap:26px}
+.lf-thumb{position:relative;flex:none;width:120px;height:80px;border-radius:8px;overflow:hidden;box-shadow:0 0 0 1px var(--lf-line);background:var(--lf-paper)}
+.lf-htx{flex:1;min-width:0}
+.lf-name{font-size:40px;font-weight:700;line-height:1.2}
+.lf-meta{margin-top:8px;font-size:30px;line-height:1.3;color:var(--k-muted)}
+.lf-info{position:absolute;left:56px;right:56px;bottom:64px;display:flex;align-items:flex-end}
+.lf-stat{display:flex;align-items:center;gap:12px;font-size:40px;font-weight:600;line-height:1.3;color:var(--k-muted)}
+.lf-ck{display:none;flex:none;width:40px;height:40px}
+.lf-done .lf-stat{color:var(--k-accent)}
+.lf-done .lf-ck{display:block}
+.lf-pct{margin-top:4px;font:800 170px/0.94 var(--lf-hv);letter-spacing:-0.04em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.lf-pc{margin-left:6px;font-size:60px;font-weight:700;letter-spacing:-0.03em;color:var(--k-muted)}
+.lf-mb{margin-left:auto;padding-bottom:34px;font:30px/1.3 var(--k-mono);color:var(--k-muted);white-space:nowrap}
+.lf-trk{position:absolute;left:56px;right:56px;bottom:36px;height:8px;background:color-mix(in srgb,var(--k-ink) 10%,transparent)}
+/* page B: caption beside (portrait: above) the frame the line draws */
+.lf-cap{position:absolute;left:calc(100cqw + 160px);top:300px;width:720px}
+.lf-title{margin-top:26px;font:800 120px/1.15 var(--lf-hv)}
+.lf-sub{margin-top:30px;font-size:40px;line-height:1.3;color:var(--k-muted)}
+.lf-frame{position:absolute;left:calc(100cqw + var(--fx));top:calc(var(--ly) - var(--fh));width:var(--fw);height:var(--fh)}
+.lf-in{overflow:hidden;background:var(--lf-paper)}
+.lf-art{position:absolute;left:0;top:0;width:100%;height:100%}
+.lf-sun{fill:var(--k-accent)}
+.lf-h0{fill:var(--k-accent-2);mix-blend-mode:multiply}
+.lf[data-tone="dark"] .lf-h0{mix-blend-mode:screen}
+.lf-h1,.lf-bnd{fill:var(--k-ink)}
+.lf-pw{position:absolute;left:44px;top:38px;width:300px;clip-path:inset(-5px -40px -16px -40px)}
+.lf-ptx{font:900 72px/1.15 var(--lf-hv)}
+.lf-no{position:absolute;left:44px;bottom:12px;font:600 28px/1.2 var(--k-mono);letter-spacing:0.08em;color:var(--lf-paper)}
+.lf-no::before,.lf-rul i::before{content:attr(data-t)}
+.lf-img{display:none;background:center/cover no-repeat}
+.lf[data-img] .lf-img{display:block}
+.lf[data-img] .lf-art,.lf[data-img] .lf-pw,.lf[data-img] .lf-no{display:none}
+/* the sharp layer: ruler, the five line segments (8px, square caps), the tip */
+.lf-rul{position:absolute;left:calc(var(--t0) - 1px);top:calc(var(--ly) + 10px);width:calc(var(--t1) - var(--t0) + 2px);height:56px;--rv:9999px;
+background:linear-gradient(90deg,color-mix(in srgb,var(--k-ink) 55%,transparent) 0 2px,transparent 0) 0 0/calc(var(--ts) * 4) 24px repeat-x,linear-gradient(90deg,color-mix(in srgb,var(--k-ink) 30%,transparent) 0 2px,transparent 0) 0 0/var(--ts) 10px repeat-x;
+-webkit-mask-image:linear-gradient(90deg,#000 calc(var(--rv) - 40px),transparent var(--rv));mask-image:linear-gradient(90deg,#000 calc(var(--rv) - 40px),transparent var(--rv))}
+.lf-rul i{position:absolute;left:calc(var(--k) * 4 * var(--ts) + 9px);top:28px;font:600 28px/1 var(--k-mono);color:color-mix(in srgb,var(--k-ink) 45%,transparent);white-space:nowrap}
+.lf-s{position:absolute;background:var(--k-ink)}
+.lf-s0{left:calc(var(--x0) - 4px);top:calc(var(--ly) - 4px);width:calc(100cqw + var(--fx) - var(--x0) + 8px);height:8px}
+.lf-s1,.lf-s2,.lf-s3,.lf-s4{left:calc(100cqw + var(--fx) - 4px);top:calc(var(--ly) - var(--fh) - 4px);width:8px;height:calc(var(--fh) + 8px)}
+.lf-s3{left:calc(100cqw + var(--fx) + var(--fw) - 4px)}
+.lf-s2,.lf-s4{width:calc(var(--fw) + 8px);height:8px}
+.lf-s4{top:calc(var(--ly) - 4px)}
+.lf-tip{position:absolute;left:-30px;top:-30px;width:60px;height:60px;border-radius:50%;opacity:0;
+background:radial-gradient(circle,var(--k-accent) 0 13.6px,color-mix(in srgb,var(--k-accent) 16%,transparent) 14.4px 29.6px,transparent 30.4px)}
+/* portrait: taller card with a banner thumbnail, a shorter pan, caption above the frame; same times */
+@container (orientation: portrait) {
+.lf>*{--x0:164px;--ly:1200px;--cw:680px;--ch:720px;--fx:180px;--t0:848px;--t1:1208px;--ts:60px}
+.lf-head{flex-direction:column;align-items:stretch;gap:22px}
+.lf-thumb{width:auto;height:200px;border-radius:12px}
+.lf-cap{left:calc(100cqw + var(--fx));top:auto;bottom:calc(100cqh - var(--ly) + var(--fh) + 36px);width:var(--fw)}
+.lf-title{margin-top:22px;font-size:100px}
+.lf-sub{margin-top:24px}
+.lf-rul i:nth-child(n+2){display:none}
+}
+</style>
+
+<div id="root" data-composition-id="line-lead-frame">
+<div class="lf">
+<div class="lf-bd"><div class="lf-backdrop"></div><div class="lf-vig"></div><div class="lf-grain"></div></div>
+<div class="lf-blur">
+<div class="lf-world" data-layout-allow-overflow>
+<div class="lf-dots"></div>
+<div class="lf-a">
+<div class="lf-eye lf-ea"><b>01</b><span>导出</span></div>
+<div class="lf-card lf-done">
+<div class="lf-head">
+<div class="lf-thumb"><svg class="lf-art" viewBox="0 0 720 480" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><circle class="lf-sun" cx="468" cy="226" r="142"/><path class="lf-h0" d="M250 480Q540 250 830 480Z"/><path class="lf-h1" d="M-60 480Q150 300 420 480Z"/><rect class="lf-bnd" x="0" y="420" width="720" height="60"/></svg><div class="lf-img"></div></div>
+<div class="lf-htx"><div class="lf-name">示例视频.mp4</div><div class="lf-meta">MP4 · 30 fps</div></div>
+</div>
+<div class="lf-info">
+<div>
+<div class="lf-stat"><svg class="lf-ck" viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="15" style="fill:var(--k-accent)"/><path d="M8.5 15.5 13 20l8.5-9" style="fill:none;stroke:var(--k-on-accent);stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round"/></svg><span class="lf-st">已完成</span></div>
+<div class="lf-pct"><span class="lf-num">100</span><span class="lf-pc">%</span></div>
+</div>
+<div class="lf-mb">48.0 / 48 MB</div>
+</div>
+<i class="lf-trk"></i>
+</div>
+</div>
+<div class="lf-cap">
+<div class="lf-eye lf-eb"><b>02</b><span>发布</span></div>
+<div class="lf-title"><span class="lf-u" style="display:block">成片</span><span class="lf-u" style="display:block">正式上线</span></div>
+<div class="lf-sub">第 2 节 · 约 3 分钟</div>
+</div>
+<div class="lf-frame">
+<div class="lf-in">
+<svg class="lf-art" viewBox="0 0 720 480" aria-hidden="true"><circle class="lf-sun" cx="468" cy="226" r="142"/><path class="lf-h0" d="M250 480Q540 250 830 480Z"/><path class="lf-h1" d="M-60 480Q150 300 420 480Z"/><rect class="lf-bnd" x="0" y="420" width="720" height="60"/></svg>
+<div class="lf-pw"><div class="lf-ptx"><span class="lf-u" style="display:block">先看懂</span><span class="lf-u" style="display:block">再动手</span></div></div>
+<i class="lf-no" data-t="NO.02"></i>
+<div class="lf-img"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="lf-world lf-ink" data-layout-allow-overflow>
+<div class="lf-rul"><i style="--k:0" data-t="12 cm"></i><i style="--k:1" data-t="24 cm"></i><i style="--k:2" data-t="36 cm"></i><i style="--k:3" data-t="48 cm"></i></div>
+<i class="lf-s lf-s0"></i><i class="lf-s lf-s1"></i><i class="lf-s lf-s2"></i><i class="lf-s lf-s3"></i><i class="lf-s lf-s4"></i>
+<i class="lf-tip"></i>
+</div>
+</div>
+</div>
+
+<script>
+(function () {
+// timing (s) = upstream frames / 30, shared by both orientations
+var CFG = {
+fill: 0.133, fillDur: 1.2, check: 1.333, // bar 4-40f (out), tick spring at 40f
+shoot: 1.533, shootDur: 0.333, // line leaves the card, 46-56f (swift): zero speed at both ends
+pan: 1.867, panDur: 1.867, // camera moves one frame width, 56-112f (smooth); drawn = lead + cam
+close: 3.733, closeDur: 0.8, // rest of the frame, 112-136f (smooth)
+tipOut: 4.533, tipDur: 0.2, // tip fades and is gone, 136-142f
+cap: 3.333, capGap: 0.2, capDur: 0.667, // caption rows at 100f + 6f per step, 20f each (snappy)
+paper: 4.467, paperDur: 0.333, // frame face 134f, 10f (out), shown once the line has closed the frame
+sun: 4.667, sunDur: 0.733, hill: 4.867, hillGap: 0.2, hillDur: 0.667, txt: 5.067, txtDur: 0.6,
+end: 6.8, blur: 0.28, blurMax: 16
+};
+// tip: where the line head stays pinned on screen while the camera pans (fraction of frame width)
+var LAND = { tip: 0.771 };
+var PORT = { tip: 0.85 };
+var v = { steps: "导出|发布", task: "示例视频.mp4", meta: "MP4 · 30 fps", title: "成片|正式上线", sub: "第 2 节 · 约 3 分钟", poster: "先看懂|再动手", to: "", backdrop: "on" };
+try {
+var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+} catch (e) {}
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+var p = document.createElement("i");
+p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+el.appendChild(p);
+var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+el.removeChild(p);
+return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+var c = kRGB(wrap, "var(--k-bg)");
+var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+wrap.setAttribute("data-tone", tone);
+return tone;
+}
+// ==== end kit:tone ====
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+o = o || {};
+var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+var dark = tones && tones.getAttribute("data-tone") === "dark";
+var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+var f = "type='linear' slope='2.4' intercept='-0.7'";
+var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+"<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+"<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+"<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+"<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+});
+layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+layer.style.backgroundSize = size + "px " + size + "px";
+return function (t) {
+var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+layer.style.backgroundImage = tiles[k % 6];
+layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+};
+}
+// ==== end kit:grain ====
+// ==== kit:shadow@1 ====
+function kShadow(e, strength) {
+e = Math.max(0, e);
+var s = strength == null ? 1 : strength, r = function (x) { return Math.round(x * 10) / 10; };
+var c = function (a) { return "color-mix(in srgb, var(--lf-shade) " + r(Math.min(1, a) * 100) + "%, transparent)"; };
+return "0 " + r(0.5 + e * 0.06) + "px " + r(1 + e * 0.18) + "px " + c((0.12 * s) / (1 + e / 24)) + ", " +
+"0 " + r(e * 0.55) + "px " + r(e * 1.3) + "px " + r(-e * 0.22) + "px " + c((0.08 + (Math.min(e, 64) / 64) * 0.22) * s);
+}
+// ==== end kit:shadow ====
+// ==== kit:speedblur@1 ====
+function kSpeedBlur(box, prefix, o) {
+o = o || {};
+var amount = o.amount || 0.45, max = o.max || 36;
+var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+var outer = document.createElement("div"), inner = document.createElement("div");
+outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+while (box.firstChild) inner.appendChild(box.firstChild);
+outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+var fe = svg.firstChild.firstChild;
+return function (vx, vy) {
+vy = vy || 0;
+var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+outer.style.filter = "url(#" + id + ")";
+};
+}
+// ==== end kit:speedblur ====
+// ==== kit:text@2 (kWords, kSplit) ====
+var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+function kWords(s, key) {
+s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+var cut = function (x) {
+if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+};
+var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+var pre = "";
+bits.forEach(function (x) {
+var t = x.trim(), last = out[out.length - 1];
+if (last && /^ /.test(x)) last.sp = true;
+if (!t) return;
+if (!/[\p{L}\p{N}]/u.test(t)) {
+if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+else { last.t += t; last.sp = / $/.test(x); }
+return;
+}
+out.push({ t: pre + t, sp: / $/.test(x) });
+pre = "";
+});
+if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+if (out.length) out[out.length - 1].sp = false;
+return out;
+}
+function kSplit(el, by, rise, text) {
+var s = text != null ? String(text) : el.textContent, units = [];
+var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+el.textContent = "";
+parts.forEach(function (p) {
+var u = document.createElement("span"), box = u;
+u.className = "lf-u"; u.textContent = p.t;
+if (by === "line") u.style.display = "block";
+if (!p.t.trim()) { el.appendChild(u); return; }
+if (rise) { box = document.createElement("span"); box.className = "lf-cut"; box.style.display = u.style.display; box.appendChild(u); }
+el.appendChild(box);
+if (p.sp) el.appendChild(document.createTextNode(" "));
+units.push(u);
+});
+return units;
+}
+// ==== end kit:text ====
+// ==== kit:fit@1 (kFit, kLines) ====
+function kFit(el, o) {
+o = o || {};
+var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+for (;;) {
+el.style.fontSize = f + "px";
+m = kLines(el);
+if ((m.w <= W && m.n <= n) || f <= min) break;
+f = Math.max(min, f - 2);
+}
+if (m.w > W) {
+[].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+m = kLines(el);
+}
+return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+while ((t = it.nextNode())) {
+if (!t.data.trim()) continue;
+r.selectNodeContents(t);
+[].forEach.call(r.getClientRects(), function (b) {
+var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+});
+}
+return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+
+var root = document.querySelector(".lf");
+var q = function (s) { return root.querySelector(s); };
+var FW = root.clientWidth, FH = root.clientHeight;
+if (!FW || !FH) {
+// not laid out yet: the host clip's declared size, then the window
+var hc = root.closest("[data-width][data-height]");
+FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+}
+var P = FH > FW, L = P ? PORT : LAND;
+root.setAttribute("data-orient", P ? "portrait" : "landscape");
+var DARK = kTone(root) === "dark";
+if (String(v.backdrop) === "off") root.setAttribute("data-bare", "");
+if (getComputedStyle(root).getPropertyValue("--mc-font").trim()) root.style.setProperty("--lf-hv", "var(--k-font)");
+
+// text slots: kSplit by "|" rows (white-space: pre keeps every typed space; word mode drops the one after a lone
+// "·"), then kFit to the box; an empty optional slot disappears
+var put = function (el, text, o) {
+var s = String(text == null ? "" : text).replace(/\s+/g, " ").replace(/ ?\| ?/g, "|").trim();
+el.style.display = s ? "" : "none";
+if (!s) return [];
+var u = kSplit(el, "line", o.rise, s);
+kFit(el, { lines: Math.max(o.lines || 1, u.length), min: o.min, width: o.width });
+return u;
+};
+var st = String(v.steps).split("|"); // a positional pair: either side may be empty
+[".lf-ea", ".lf-eb"].forEach(function (s, i) {
+var e = q(s), txt = String(st[i] || "").trim();
+e.style.display = txt ? "" : "none";
+if (txt) put(e.querySelector("span"), txt, { min: 28 });
+});
+put(q(".lf-name"), v.task, { min: 40 });
+put(q(".lf-meta"), v.meta, { min: 28 });
+var rows = put(q(".lf-title"), v.title, { rise: 1, min: 72 });
+put(q(".lf-sub"), v.sub, { lines: 2, min: 40 });
+var ptx = q(".lf-ptx");
+put(ptx, v.poster, { min: 40, width: 300 });
+var src = String(v.to).trim();
+if (src) {
+root.setAttribute("data-img", "");
+[].forEach.call(root.querySelectorAll(".lf-img"), function (e) { e.style.backgroundImage = 'url("' + src.replace(/"/g, "%22") + '")'; });
+}
+
+// geometry from this orientation's CSS (px), in world coordinates: page B starts at x = FW
+var cs = getComputedStyle(q(".lf-ink")), g = function (n) { return parseFloat(cs.getPropertyValue("--" + n)) || 0; };
+var X0 = g("x0"), LY = g("ly"), BAR = g("cw") - 112, FX0 = FW + g("fx"), FX1 = FX0 + g("fw"), FY0 = LY - g("fh"), T0 = g("t0");
+var LEAD = FW * L.tip - X0;
+// the polyline: out to the frame's lower left corner, up, across, down, back along the bottom
+var PTS = [[X0, LY], [FX0, LY], [FX0, FY0], [FX1, FY0], [FX1, LY], [FX0, LY]], SEG = [], TOT = 0, i;
+for (i = 0; i < 5; i++) {
+var a = PTS[i], b = PTS[i + 1], len = Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]);
+SEG.push({ a: a, b: b, at: TOT, len: len });
+TOT += len;
+}
+var segs = root.querySelectorAll(".lf-s"), tip = q(".lf-tip"), rul = q(".lf-rul"), worlds = root.querySelectorAll(".lf-world");
+var aSide = q(".lf-a"), aRight = X0 - 56 + g("cw") + 60, card = q(".lf-card"), num = q(".lf-num"), mb = q(".lf-mb"), stx = q(".lf-st"), ck = q(".lf-ck");
+var eb = q(".lf-eb"), sub = q(".lf-sub"), face = q(".lf-in"), sun = q(".lf-in .lf-sun"), h0 = q(".lf-in .lf-h0"), h1 = q(".lf-in .lf-h1"), band = q(".lf-in .lf-bnd"), no = q(".lf-in .lf-no"), img = q(".lf-in .lf-img");
+var rise = rows.map(function (u) { return u.offsetHeight * 1.05 + parseFloat(getComputedStyle(u).fontSize) * 0.3; });
+var ptxRise = ptx.offsetHeight * 1.05 + parseFloat(getComputedStyle(ptx).fontSize) * 0.3;
+var SH = DARK ? 0.8 * 2.6 : 0.8; // frame face shadow strength (x2.6 on dark skins)
+var blur = kSpeedBlur(q(".lf-blur"), "lf", { amount: CFG.blur, max: CFG.blurMax });
+var grain = kGrain(q(".lf-grain"));
+
+var cam = function (t) { return FW * MT.ramp(t, CFG.pan, CFG.panDur, "smooth"); };
+// drawn length along the polyline. While the camera moves it grows by exactly the camera offset, so the head
+// stays at FW * tip on screen until it turns the first corner
+var drawn = function (t) {
+if (t < CFG.shoot) return BAR * MT.ramp(t, CFG.fill, CFG.fillDur, "out");
+if (t < CFG.pan) return MT.mix(BAR, LEAD, MT.ramp(t, CFG.shoot, CFG.shootDur, "swift"));
+if (t < CFG.close) return LEAD + cam(t);
+return MT.mix(LEAD + FW, TOT, MT.ramp(t, CFG.close, CFG.closeDur, "smooth"));
+};
+var capIn = function (t, k) { return MT.ramp(t, CFG.cap + k * CFG.capGap, CFG.capDur, "snappy"); };
+
+function render(t) {
+var c = cam(t), d = drawn(t), head = PTS[0], i;
+for (i = 0; i < worlds.length; i++) worlds[i].style.transform = "translateX(" + (-c).toFixed(2) + "px)";
+blur(-MT.velocity(cam, t), 0);
+grain(t);
+// segments: an 8px box from the start to the drawn end, 4px past both ends (square caps; overlapping corners = miter)
+for (i = 0; i < 5; i++) {
+var s = SEG[i], r = Math.min(s.len, d - s.at), el = segs[i];
+if (r <= 0 || d <= 0.5) { el.style.opacity = 0; continue; }
+var e = [s.a[0] + ((s.b[0] - s.a[0]) * r) / s.len, s.a[1] + ((s.b[1] - s.a[1]) * r) / s.len];
+el.style.cssText = "opacity:1;left:" + (Math.min(s.a[0], e[0]) - 4).toFixed(2) + "px;top:" + (Math.min(s.a[1], e[1]) - 4).toFixed(2) + "px;width:" + (Math.abs(e[0] - s.a[0]) + 8).toFixed(2) + "px;height:" + (Math.abs(e[1] - s.a[1]) + 8).toFixed(2) + "px";
+head = e;
+}
+var tipO = 1 - MT.ramp(t, CFG.tipOut, CFG.tipDur, "linear");
+tip.style.opacity = tipO > 0.001 ? tipO.toFixed(3) : 0;
+tip.style.transform = "translate(" + head[0].toFixed(2) + "px," + head[1].toFixed(2) + "px)";
+// ruler ticks fade in over the 40px behind the head while it runs along the first stretch
+rul.style.setProperty("--rv", (X0 + Math.min(d, SEG[0].len) - T0 + 1).toFixed(1) + "px");
+// page A: the bar is the first stretch of the line, the readout counts with it
+var pct = Math.min(100, (Math.min(d, BAR) / BAR) * 100), done = pct >= 99.95;
+num.textContent = Math.round(pct);
+mb.textContent = (pct * 0.48).toFixed(1) + " / 48 MB";
+card.classList.toggle("lf-done", done);
+stx.textContent = done ? "已完成" : "进行中…";
+ck.style.transform = "scale(" + MT.spring({ t: t, delay: CFG.check, damping: 14, stiffness: 220 }).toFixed(3) + ")";
+aSide.style.opacity = c > aRight ? 0 : 1;
+// page B: caption rows rise out of their own line (the opacity gate keeps hidden rows out of the checks)
+eb.style.opacity = capIn(t, 0).toFixed(3);
+rows.forEach(function (u, k) { var p = capIn(t, k + 0.5); u.style.opacity = p > 0 ? 1 : 0; u.style.transform = "translateY(" + ((1 - p) * rise[k]).toFixed(2) + "px)"; });
+sub.style.opacity = capIn(t, 2.2).toFixed(3);
+// the frame's face only once the line has closed it; then sun, hills, words
+var fi = MT.ramp(t, CFG.paper, CFG.paperDur, "out");
+face.style.opacity = t >= CFG.tipOut ? fi.toFixed(3) : 0;
+face.style.boxShadow = kShadow(26 * fi, SH);
+var hl = function (k) { return MT.ramp(t, CFG.hill + k * CFG.hillGap, CFG.hillDur, "snappy"); }, tx = MT.ramp(t, CFG.txt, CFG.txtDur, "snappy");
+sun.setAttribute("cy", MT.mix(480, 226, MT.ramp(t, CFG.sun, CFG.sunDur, "snappy")).toFixed(2));
+h0.setAttribute("d", "M250 480Q540 " + MT.mix(620, 250, hl(0)).toFixed(2) + " 830 480Z");
+h1.setAttribute("d", "M-60 480Q150 " + MT.mix(600, 300, hl(1)).toFixed(2) + " 420 480Z");
+band.style.opacity = hl(1).toFixed(3);
+ptx.style.opacity = tx > 0 ? 1 : 0;
+ptx.style.transform = "translateY(" + ((1 - tx) * ptxRise).toFixed(2) + "px)";
+no.style.opacity = tx.toFixed(3);
+img.style.transform = "scale(" + MT.mix(1.08, 1, MT.ramp(t, CFG.sun, CFG.sunDur + 0.333, "snappy")).toFixed(4) + ")";
+}
+
+var tl = MT.scene(CFG.end, render);
+window.__timelines["line-lead-frame"] = tl;
+})();
+</script>
+    </template>
+  </body>
+</html>

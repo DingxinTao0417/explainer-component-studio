@@ -1,0 +1,441 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"kicker","type":"string","label":"眉题（留空不要）","default":"第 3 节 · 工作台导览"},
+    {"id":"title","type":"string","label":"标题（用 | 分行，留空不要）","default":"常用功能|都在手边"},
+    {"id":"sub","type":"string","label":"副标题（用 | 分行，留空不要）","default":"最常去的页面，|一步就能打开"},
+    {"id":"items","type":"string","label":"菜单项（用 | 分隔，2–7 项，最后一项排在分隔线下）","default":"首页|任务|作品|消息|设置|退出"},
+    {"id":"keys","type":"string","label":"快捷键（用 | 分隔，按菜单项顺序，不要的留空）","default":"Ctrl+1|Ctrl+2|Ctrl+3||Ctrl+,|"},
+    {"id":"badge","type":"string","label":"角标数字（留空不要）","default":"3"},
+    {"id":"badgeItem","type":"number","label":"角标挂在第几项","default":4,"min":1,"max":7,"step":1},
+    {"id":"active","type":"number","label":"高亮第几项","default":1,"min":1,"max":7,"step":1},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>list-reveal · 菜单逐项找位</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="list-reveal-template">
+      <!-- Ported from video-shotcraft demos/ui-entrance/list-reveal/ListReveal.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette (white first: the highlighted row is an ink bar with an accent icon tile, the upstream
+           porcelain bar turned around; a dark skin gives the graphite look), system fonts, generic Chinese copy,
+           upstream menu names and tagline removed, shortcuts as Ctrl+key text, title block above the list in portrait,
+           kit screen sheen (upstream soft-light), highlighted row opaque by 20% of its travel and badge pill popping
+           in (a half-faded light-on-dark row fails contrast). Row timing (2f start, 10f stagger, 24f window, icon +2f,
+           shortcut +4f), 44px / 0.82 / 8px start, soft-back curve, 96px linear drift, sheen at +20f, title at 46f,
+           subtitle at 66f are as upstream. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        @font-face { font-family: "Consolas"; src: local("Consolas"); }
+        #root { --k-mono: var(--mc-mono, Consolas, monospace); }
+        /* ==== kit:derived@1 ==== */
+        .lr {
+          --lr-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+          --lr-panel-2: color-mix(in srgb, var(--k-panel), var(--k-ink) 4%);
+          --lr-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+          --lr-hi: color-mix(in srgb, white 80%, transparent);
+        }
+        .lr[data-tone="dark"] {
+          --lr-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+          --lr-hi: color-mix(in srgb, white 6%, transparent);
+        }
+        /* ==== end kit:derived ==== */
+
+        /* ==== kit:backdrop@1 ==== */
+        .lr-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .lr-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        /* ==== end kit:backdrop ==== */
+
+        /* ==== kit:vignette@1 ==== */
+        .lr-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--lr-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .lr[data-tone="dark"] .lr-vig { --vs: 0.55; }
+        /* ==== end kit:vignette ==== */
+
+        /* ==== kit:grain@1 ==== */
+        .lr-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+
+        /* ==== kit:text@2 ==== */
+        .lr-u { display: inline-block; white-space: pre; }
+        .lr-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+        /* ==== end kit:text ==== */
+
+        /* ==== kit:sheen@2 ==== */
+        .lr-sheen {
+          position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen; --sp: -30%;
+          background: linear-gradient(115deg, transparent calc(var(--sp) - 30%), color-mix(in srgb, white 14%, transparent) calc(var(--sp) - 12%), color-mix(in srgb, white 50%, transparent) var(--sp), color-mix(in srgb, white 14%, transparent) calc(var(--sp) + 12%), transparent calc(var(--sp) + 30%));
+        }
+        /* ==== end kit:sheen ==== */
+
+        .lr { position: absolute; inset: 0; container-type: size; --lr-sa: 0.26; --lr-k: 9%; --lr-f: 5%; --lr-kc: var(--k-accent); }
+        .lr[data-tone="dark"] { --lr-sa: 0.8; --lr-k: 27%; --lr-f: 11%; --lr-kc: color-mix(in srgb, var(--k-accent) 18%, #c8ccd6); }
+        /* key light (26%, 2%) and fill light (85%, 90%) as upstream; the script breathes the opacity */
+        .lr-light { position: absolute; inset: 0; background: radial-gradient(ellipse 58% 62% at 26% 2%, color-mix(in srgb, var(--lr-kc) var(--lr-k), transparent) 0%, transparent 70%), radial-gradient(ellipse 50% 46% at 85% 90%, color-mix(in srgb, var(--k-accent-2) var(--lr-f), transparent) 0%, transparent 72%); }
+        .lr-dust, .lr-dust i { position: absolute; pointer-events: none; }
+        .lr-dust { inset: 0; opacity: 0.5; }
+        .lr-dust i { display: block; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--k-accent) 90%, transparent) 0%, transparent 70%); }
+        .lr[data-tone="dark"] .lr-dust { opacity: 0.3; }
+        .lr[data-tone="dark"] .lr-dust i { background: radial-gradient(circle, color-mix(in srgb, var(--k-ink) 90%, transparent) 0%, transparent 70%); }
+        /* landscape: list left (700px), copy right, a little below the middle as upstream */
+        .lr-col { position: absolute; top: 36px; bottom: 0; left: 170px; right: 130px; display: flex; align-items: center; gap: 140px; }
+        .lr-col[data-solo] { justify-content: center; }
+        .lr-list { position: relative; order: -1; flex: none; width: 700px; display: flex; flex-direction: column; gap: 14px; }
+        .lr-item { position: relative; display: flex; align-items: center; gap: 26px; height: 92px; padding: 0 34px 0 30px; box-sizing: border-box; border-radius: 24px; overflow: hidden; transform-origin: 30% 50%; background: var(--k-panel); box-shadow: inset 0 0 0 1px var(--lr-line), inset 0 1px 0 var(--lr-hi), 0 14px 30px -14px color-mix(in srgb, var(--lr-shade) calc(var(--lr-sa) * 100%), transparent); }
+        .lr-last { margin-top: 22px; }
+        .lr-div { position: absolute; left: 24px; right: 24px; top: 534px; height: 1px; background: var(--lr-line); transform-origin: 0% 50%; }
+        .lr-on { background: linear-gradient(180deg, var(--k-ink), color-mix(in srgb, var(--k-ink), var(--k-bg) 8%)); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--k-bg) 28%, transparent), 0 18px 40px -14px color-mix(in srgb, var(--lr-shade) 75%, transparent), 0 0 60px -10px color-mix(in srgb, var(--k-ink) 16%, transparent); }
+        .lr-on .lr-sheen { opacity: 0.5; }
+        .lr-on > :not(.lr-sheen) { position: relative; z-index: 1; }
+        .lr-ic { display: flex; align-items: center; justify-content: center; flex: none; width: 56px; height: 56px; border-radius: 16px; color: color-mix(in srgb, var(--k-ink) 72%, transparent); background: color-mix(in srgb, var(--k-ink) 5%, transparent); }
+        .lr-ic svg { display: block; width: 34px; height: 34px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+        .lr-lb { flex: 1; min-width: 0; font-size: 46px; font-weight: 600; line-height: 1.15; color: var(--k-ink); }
+        .lr-ky { flex: none; margin-left: auto; font-family: var(--k-mono); font-size: 28px; line-height: 1.2; white-space: nowrap; color: color-mix(in srgb, var(--k-ink) 62%, var(--k-panel)); }
+        .lr-bd { display: flex; align-items: center; justify-content: center; flex: none; margin-left: auto; box-sizing: border-box; min-width: 50px; height: 40px; padding: 0 14px; border-radius: 20px; background: var(--k-accent-2); color: var(--k-on-accent); font-size: 28px; font-weight: 700; line-height: 1; box-shadow: 0 0 24px -4px color-mix(in srgb, var(--k-accent-2) 70%, transparent); }
+        .lr-on .lr-lb { font-weight: 700; color: var(--k-bg); }
+        .lr-on .lr-ic { color: var(--k-on-accent); background: var(--k-accent); }
+        .lr-on .lr-ky { color: color-mix(in srgb, var(--k-bg) 78%, var(--k-ink)); }
+        .lr-last:not(.lr-on) .lr-lb, .lr-last:not(.lr-on) .lr-ic { color: var(--k-muted); }
+        .lr-copy { flex: 1; min-width: 0; }
+        .lr-kick { font-size: 30px; font-weight: 700; line-height: 1.3; letter-spacing: 0.12em; color: var(--k-accent); }
+        .lr-h1 { margin-top: 24px; font-size: 120px; font-weight: 800; line-height: 1.2; color: var(--k-ink); }
+        .lr-sub { margin-top: 30px; font-size: 40px; font-weight: 400; line-height: 1.4; color: var(--k-muted); }
+        .lr-h1 .lr-u, .lr-sub .lr-u { display: block; }
+        /* portrait: copy on top, list below; the pair fills the 12%-68% band and stays 12% off each side */
+        @container (orientation: portrait) {
+          .lr-col { top: 12%; bottom: 32%; left: 12%; right: 12%; flex-direction: column; align-items: stretch; justify-content: center; gap: 88px; }
+          .lr-list { order: 0; width: 100%; gap: 10px; }
+          .lr-item { height: 76px; gap: 22px; padding: 0 28px 0 24px; border-radius: 22px; }
+          .lr-last { margin-top: 18px; }
+          .lr-div { top: 429px; }
+          .lr-ic { width: 52px; height: 52px; border-radius: 14px; }
+          .lr-lb { font-size: 44px; }
+          .lr-copy { flex: none; }
+          .lr-kick { font-size: 34px; }
+          .lr-h1 { margin-top: 18px; font-size: 88px; }
+          .lr-sub { margin-top: 24px; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="list-reveal">
+        <div class="lr">
+          <div class="lr-bg"><div class="lr-backdrop"></div><div class="lr-light"></div></div>
+          <div class="lr-dust"></div>
+          <div class="lr-vig"></div>
+          <div class="lr-grain"></div>
+          <div class="lr-col">
+            <div class="lr-copy">
+              <div class="lr-kick">第 3 节 · 工作台导览</div>
+              <div class="lr-h1"><div class="lr-u">常用功能</div><div class="lr-u">都在手边</div></div>
+              <div class="lr-sub"><div class="lr-u">最常去的页面，</div><div class="lr-u">一步就能打开</div></div>
+            </div>
+            <div class="lr-list">
+              <div class="lr-item lr-on"><span class="lr-ic"><svg viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19Z"/><path d="M9.5 20.5v-6h5v6"/></svg></span><span class="lr-lb">首页</span><span class="lr-ky">Ctrl+1</span></div>
+              <div class="lr-item"><span class="lr-ic"><svg viewBox="0 0 24 24"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.2h7a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"/></svg></span><span class="lr-lb">任务</span><span class="lr-ky">Ctrl+2</span></div>
+              <div class="lr-item"><span class="lr-ic"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="2.5"/><path d="M10.2 9.2v5.6l4.6-2.8Z"/></svg></span><span class="lr-lb">作品</span><span class="lr-ky">Ctrl+3</span></div>
+              <div class="lr-item"><span class="lr-ic"><svg viewBox="0 0 24 24"><path d="M4 6.5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2V14a2 2 0 0 1-2 2h-7l-4.5 3.5V16H6a2 2 0 0 1-2-2Z"/></svg></span><span class="lr-lb">消息</span><span class="lr-bd">3</span></div>
+              <div class="lr-item"><span class="lr-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/></svg></span><span class="lr-lb">设置</span><span class="lr-ky">Ctrl+,</span></div>
+              <div class="lr-item lr-last"><span class="lr-ic"><svg viewBox="0 0 24 24"><path d="M14 4h3.5A1.5 1.5 0 0 1 19 5.5v13a1.5 1.5 0 0 1-1.5 1.5H14"/><path d="M10 8l-4 4 4 4M6 12h9"/></svg></span><span class="lr-lb">退出</span></div>
+              <div class="lr-div"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing (seconds = upstream frames / 30), shared by both orientations
+          var CFG = {
+            dur: 4,                                       // scene length (120 frames)
+            start: 0.067, each: 0.333, win: 0.8,          // first row at 2f, 10f stagger, 24f window
+            iconLag: 0.067, keyLag: 0.133, keyDur: 0.667, // icon +2f, shortcut +4f (20f window)
+            rise: 44, from: 0.82, blur: 8,                // start offset px, start scale, start blur px (scaled by the short side)
+            drift: 96, driftEnd: 3.967,                   // linear drift +48 -> -48 px over frames 0-119
+            kick: 1.333, kickDur: 0.533,                  // eyebrow: 40f, 16f
+            title: 1.533, titleEach: 0.733, titleGap: 0.233, // title lines from 46f, 22f window, 7f apart
+            sub: 2.2, subDur: 0.6, subRise: 16,           // subtitle: 66f, 18f, 16px
+            sheenAt: 0.667, sheenDur: 0.867               // sheen on the highlighted row: 20f after it starts, 26f long
+          };
+          // per orientation (sizes are in the CSS): row height, row gap, extra gap above the last row, title floor
+          var LAND = { rowH: 92, gap: 14, extra: 22, titleMin: 72 };
+          var PORT = { rowH: 76, rowH7: 70, gap: 10, extra: 18, titleMin: 72 };
+          var v = { kicker: "第 3 节 · 工作台导览", title: "常用功能|都在手边", sub: "最常去的页面，|一步就能打开", items: "首页|任务|作品|消息|设置|退出", keys: "Ctrl+1|Ctrl+2|Ctrl+3||Ctrl+,|", badge: "3", badgeItem: 4, active: 1, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".lr");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND, S = Math.min(FW, FH) / (3 * 360);
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+
+          // ==== kit:hash@1 ====
+          function kHash(n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+          // ==== end kit:hash ====
+
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+
+          // ==== kit:text@2 (line mode and the rise variant only; kWords and the other reveal variants left out) ====
+          function kSplit(el, by, rise, text) {
+            var units = [], s = String(text != null ? text : el.textContent);
+            el.textContent = "";
+            s.split(/\n|\|/).forEach(function (t) {
+              var u = document.createElement("span"), box = u;
+              u.className = "lr-u"; u.textContent = t; u.style.display = "block";
+              if (!t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "lr-cut"; box.style.display = "block"; box.appendChild(u); }
+              el.appendChild(box);
+              units.push(u);
+            });
+            return units;
+          }
+          function kReveal(tl, units, variant, at, o) {
+            o = o || {};
+            units.forEach(function (u, i) {
+              var t0 = at + i * (o.gap != null ? o.gap : 0.053), fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+              tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+              tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: o.each || 0.6, ease: o.ease || "snappy" }, t0);
+            });
+            return tl;
+          }
+          // ==== end kit:text ====
+
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          function kRows(el, cls) {
+            if (!el.children.length) return [];
+            var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+            var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+            kids.forEach(function (c, i) {
+              if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+              if (tops[i] != null) last = tops[i];
+              row.appendChild(c);
+            });
+            return [].slice.call(el.children);
+          }
+          // ==== end kit:fit ====
+
+          var dark = kTone(root) === "dark";
+          var off = String(v.backdrop) === "off";
+          var grain = null;
+          if (off) [".lr-bg", ".lr-dust", ".lr-vig", ".lr-grain"].forEach(function (s) { q(s).style.display = "none"; });
+          else grain = kGrain(q(".lr-grain"), { opacity: dark ? 0.09 : 0.06 }); // upstream grain 0.09
+
+          // ---- the copy block: eyebrow, title lines (each rises out of its own line), subtitle ----
+          var kick = q(".lr-kick"), h1 = q(".lr-h1"), sub = q(".lr-sub"), copy = q(".lr-copy");
+          var kt = String(v.kicker).trim(), tt = String(v.title).trim(), st = String(v.sub).trim();
+          var titleUnits = [];
+          if (kt) { kSplit(kick, "line", false, kt); kFit(kick, { lines: 1, min: 28 }); } else kick.style.display = "none";
+          if (tt) { titleUnits = kSplit(h1, "line", true, tt); kFit(h1, { lines: titleUnits.length, min: L.titleMin }); } else h1.style.display = "none";
+          if (st) { var su = kSplit(sub, "line", false, st); kFit(sub, { lines: su.length, min: 40 }); } else sub.style.display = "none";
+          if (!kt && !tt && !st) { copy.style.display = "none"; q(".lr-col").setAttribute("data-solo", ""); }
+          if (!tt && !kt) sub.style.marginTop = "0";
+
+          // ---- the list: rebuilt from the variables (the static HTML shows the defaults) ----
+          var ICONS = [
+            '<path d="M4 10.5 12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19Z"/><path d="M9.5 20.5v-6h5v6"/>',
+            '<path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.2h7a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"/>',
+            '<rect x="3.5" y="5" width="17" height="14" rx="2.5"/><path d="M10.2 9.2v5.6l4.6-2.8Z"/>',
+            '<path d="M4 6.5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2V14a2 2 0 0 1-2 2h-7l-4.5 3.5V16H6a2 2 0 0 1-2-2Z"/>',
+            '<circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/>',
+            '<path d="M7 4h10a1 1 0 0 1 1 1v15l-6-4-6 4V5a1 1 0 0 1 1-1Z"/>',
+            '<path d="M14 4h3.5A1.5 1.5 0 0 1 19 5.5v13a1.5 1.5 0 0 1-1.5 1.5H14"/><path d="M10 8l-4 4 4 4M6 12h9"/>'
+          ];
+          var labels = String(v.items).split("|").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 7);
+          if (labels.length < 2) labels = ["首页", "任务", "作品", "消息", "设置", "退出"];
+          var n = labels.length, keys = String(v.keys).split("|").map(function (s) { return s.trim(); });
+          var act = Math.max(0, Math.min(n - 1, Math.round(+v.active || 1) - 1)), bdAt = Math.round(+v.badgeItem || 4) - 1;
+          var bd = String(v.badge).trim(), rowH = n > 6 && L.rowH7 ? L.rowH7 : L.rowH;
+          var list = q(".lr-list"), div = q(".lr-div");
+          list.innerHTML = "";
+          var rows = labels.map(function (t, i) {
+            var el = document.createElement("div"), last = i === n - 1;
+            el.className = "lr-item" + (i === act ? " lr-on" : "") + (last ? " lr-last" : "");
+            el.style.height = rowH + "px";
+            el.innerHTML = (i === act ? '<span class="lr-sheen"></span>' : "") + '<span class="lr-ic"><svg viewBox="0 0 24 24">' + ICONS[last ? 6 : i] + '</svg></span><span class="lr-lb"></span>' +
+              (i === bdAt && bd ? '<span class="lr-bd"></span>' : keys[i] ? '<span class="lr-ky"></span>' : "");
+            list.appendChild(el);
+            el.querySelector(".lr-lb").textContent = t;
+            var kyEl = el.querySelector(".lr-ky"), bdEl = el.querySelector(".lr-bd");
+            if (kyEl) kyEl.textContent = keys[i];
+            if (bdEl) bdEl.textContent = bd;
+            return { el: el, ic: el.querySelector(".lr-ic"), lb: el.querySelector(".lr-lb"), ky: kyEl || bdEl, pill: !!bdEl, sheen: el.querySelector(".lr-sheen"), t0: CFG.start + i * CFG.each };
+          });
+          list.appendChild(div);
+          // a label that still needs two lines at 40px is cut with an ellipsis instead (two lines do not fit the row)
+          rows.forEach(function (r) {
+            var lb = r.el.querySelector(".lr-lb");
+            if (kFit(lb, { lines: 1, min: 40 }).lines > 1) lb.style.cssText += ";white-space:nowrap;overflow:hidden;text-overflow:ellipsis";
+          });
+          // the divider sits in the middle of the extra gap above the last row
+          div.style.top = (n - 1) * (rowH + L.gap) + L.extra - (L.gap + L.extra) / 2 + "px";
+          if (n < 3) div.style.display = "none";
+
+          // ---- dust: 22 soft motes (upstream hash), drifting slowly across and up ----
+          var dustBox = q(".lr-dust"), dots = [];
+          for (var d = 0; d < 22; d++) {
+            var z = kHash(7 * 31 + d * 7.1), mote = document.createElement("i"), sz = (2 + z * z * 16) * S;
+            mote.style.width = mote.style.height = sz.toFixed(1) + "px";
+            if (z > 0.7) mote.style.filter = "blur(" + ((z - 0.7) * 10).toFixed(1) + "px)";
+            dustBox.appendChild(mote);
+            dots.push({ el: mote, z: z, x0: kHash(7 * 13 + d * 3.7), y0: kHash(7 * 17 + d * 5.3), i: d });
+          }
+
+          var softBack = MT.bezier(0.3, 1.18, 0.5, 1); // upstream soft overshoot, about 1.5%
+          var light = q(".lr-light");
+          function render(t) {
+            var f = t * 30; // frames at 30 fps, for the upstream periods below
+            // layer 2: the whole list drifts at constant speed, unrelated to the per-row curves
+            list.style.transform = "translateY(" + ((CFG.drift / 2 - (CFG.drift * t) / CFG.driftEnd) * S).toFixed(3) + "px)";
+            rows.forEach(function (r) {
+              var lin = MT.ramp(t, r.t0, CFG.win, "linear"), p = softBack(lin);
+              var pi = softBack(MT.ramp(t, r.t0 + CFG.iconLag, CFG.win, "linear")), pk = MT.ramp(t, r.t0 + CFG.keyLag, CFG.keyDur, "out");
+              var bl = (1 - MT.EASE.out(lin)) * CFG.blur * S;
+                  var on = !!r.sheen, ok = lin >= 0.2;
+              r.el.style.opacity = Math.min(1, lin * (on ? 5 : 2.2)).toFixed(3);
+              if (on) r.lb.style.opacity = ok ? 1 : 0;
+              r.el.style.filter = bl > 0.3 ? "blur(" + bl.toFixed(2) + "px)" : "none";
+              r.el.style.transform = "translateY(" + ((1 - p) * CFG.rise * S).toFixed(2) + "px) scale(" + (CFG.from + (1 - CFG.from) * p).toFixed(4) + ")";
+              r.ic.style.opacity = Math.min(1, Math.max(0, pi) * 2).toFixed(3);
+              r.ic.style.transform = "scale(" + (0.72 + 0.28 * pi).toFixed(4) + ")";
+              if (r.ky) {
+                var pop = r.pill ? (lin * 2.2 >= 1 && pk > 0 ? 1 : 0) : on && !ok ? 0 : pk;
+                r.ky.style.opacity = pop.toFixed(3);
+                r.ky.style.transform = "translateX(" + ((1 - pk) * 14 * S).toFixed(2) + "px)" + (r.pill ? " scale(" + (0.6 + 0.4 * pk).toFixed(4) + ")" : "");
+              }
+              if (r.sheen) {
+                var sp = MT.ramp(t, r.t0 + CFG.sheenAt, CFG.sheenDur, "swift");
+                r.sheen.style.display = sp > 0 && sp < 1 ? "block" : "none";
+                r.sheen.style.setProperty("--sp", (-30 + 160 * sp).toFixed(2) + "%");
+              }
+            });
+            div.style.transform = "scaleX(" + MT.ramp(t, rows[n - 1].t0, CFG.win, "snappy").toFixed(4) + ")";
+            if (light) light.style.opacity = ((1 + 0.06 * Math.sin(f / 38)) / 1.06).toFixed(4);
+            if (grain) grain(t);
+            dots.forEach(function (m) {
+              var W = FW + 200, Hh = FH + 100, tw = 0.5 + 0.5 * Math.sin(f / (14 + m.z * 20) + m.i);
+              m.el.style.left = ((((m.x0 * W + f * 0.12 * (0.4 + m.z)) % W) + W) % W - 100).toFixed(1) + "px";
+              m.el.style.top = ((((m.y0 * FH - f * 0.12 * 0.3 * (0.5 + m.z)) % Hh) + Hh) % Hh - 50).toFixed(1) + "px";
+              m.el.style.opacity = ((0.25 + 0.75 * tw) * (0.3 + m.z * 0.7)).toFixed(3);
+            });
+          }
+
+          var tl = MT.timeline({ duration: CFG.dur });
+          tl.each(render);
+          if (kt) tl.fromTo(kick, { opacity: 0 }, { opacity: 1, duration: CFG.kickDur, ease: "out" }, CFG.kick);
+          if (titleUnits.length) kReveal(tl, titleUnits, "rise", CFG.title, { each: CFG.titleEach, gap: CFG.titleGap });
+          if (st) {
+            tl.fromTo(sub, { opacity: 0 }, { opacity: 1, duration: CFG.subDur, ease: "out" }, CFG.sub);
+            tl.fromTo(sub, { y: CFG.subRise * S }, { y: 0, duration: CFG.subDur, ease: "snappy" }, CFG.sub);
+          }
+          window.__timelines["list-reveal"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

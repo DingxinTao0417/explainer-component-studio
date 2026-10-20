@@ -1,0 +1,399 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"pills","type":"string","label":"三张药丸的名字（用 | 分隔，1–3 个）","default":"整理目录|合并重复|归档旧件"},
+    {"id":"cap1","type":"string","label":"第一张药丸下的字幕（用 | 切成逐词加深的词组，可空）","default":"重复文件|占了|一半空间"},
+    {"id":"cap2","type":"string","label":"第二张的字幕（可空）","default":"合并后|只留|最新版本"},
+    {"id":"cap3","type":"string","label":"第三张的字幕（可空）","default":"旧文件|统一|进归档夹"},
+    {"id":"scores","type":"string","label":"药丸右端的小读数（用 | 分隔，可空）","default":"92%|88%|95%"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>doc-park-left-pill-deal · 文档靠左结论发牌</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="doc-park-left-pill-deal-template">
+      <!-- Ported from video-shotcraft demos/ui-entrance/doc-park-left-pill-deal/DocParkLeftPillDeal.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition (one MT.scene), frames to seconds;
+           neutral --k-* palette, system fonts, generic copy; the brief's 26 lines of small English text became rounded bars,
+           the three shot-recipe pills became three generic suggestion pills with the same line icons, captions word by word in
+           the card's text kit; white faces follow the skin (panel on dark); portrait re-laid out (document 800px wide parks
+           further left, pills 572px wide at x 400, same clock). Park window, deal times, spring/fade windows, caption
+           four-stage timing, highlight and tie timing and the 120px scroll kept. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* --d: one design pixel of the document (the upstream canvas is 480 wide, shown 4x); the pills use their own px.
+           --dp-face: the white face of the document and pills (panel on a dark skin) */
+        .dp { position: absolute; inset: 0; container-type: size; --d: 4px; --dp-face: var(--k-bg); --dp-bar: color-mix(in srgb, var(--k-ink) 15%, var(--dp-face)); }
+        .dp[data-tone="dark"] { --dp-face: var(--k-panel); }
+        .dp { --dp-line: color-mix(in srgb, var(--k-ink) 12%, transparent); --dp-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); --dp-hi: color-mix(in srgb, white 80%, transparent); }
+        .dp[data-tone="dark"] { --dp-shade: color-mix(in srgb, var(--k-bg) 30%, black); --dp-hi: color-mix(in srgb, white 6%, transparent); }
+        /* backdrop: a pale vertical gradient, key light at 60% / 24%, a faint accent tint low left */
+        .dp-bd { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .dp-bd::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 55% 60% at 40% 90%, color-mix(in srgb, var(--k-accent) 7%, transparent) 0%, transparent 70%), radial-gradient(ellipse 62% 70% at 60% 24%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        .dp-vig { --vs: 0.12; }
+        .dp-doc { position: absolute; left: 216px; top: 160px; width: 1000px; height: 760px; transform-origin: 0% 50%; transform: translateX(-550px) scale(0.92); }
+        .dp-face { position: absolute; inset: 0; box-sizing: border-box; overflow: hidden; background: var(--dp-face); border: calc(var(--d) * 0.5) solid var(--dp-line); border-radius: calc(var(--d) * 10);
+          box-shadow: inset 0 2px 0 var(--dp-hi), 0 3.4px 8.3px color-mix(in srgb, var(--dp-shade) 6.7%, transparent), 0 13.2px 31.2px -5.3px color-mix(in srgb, var(--dp-shade) 7%, transparent); }
+        .dp-scroll { position: absolute; left: 0; top: 0; right: 0; height: calc(var(--d) * 330); }
+        .dp-scroll:empty { left: calc(var(--d) * 14); right: calc(var(--d) * 14); background: repeating-linear-gradient(180deg, transparent 0, transparent calc(var(--d) * 3.8), var(--dp-bar) calc(var(--d) * 3.8), var(--dp-bar) calc(var(--d) * 6.4), transparent calc(var(--d) * 6.4), transparent calc(var(--d) * 10)); }
+        .dp-sep { position: absolute; left: calc(var(--d) * 14); right: calc(var(--d) * 14); top: calc(var(--d) * 41.5); height: calc(var(--d) * 0.5); background: var(--dp-line); }
+        .dp-b { position: absolute; left: calc(var(--d) * 14); border-radius: 999px; background: var(--dp-bar); --m: 0; }
+        .dp-b[data-k="t"] { background: color-mix(in srgb, var(--k-ink) 78%, var(--dp-face)); }
+        .dp-b[data-k="m"], .dp-b[data-k="h"] { background: color-mix(in srgb, var(--k-ink) 28%, var(--dp-face)); }
+        .dp-b[data-m] { background: color-mix(in srgb, var(--k-accent) calc(var(--m) * 85%), var(--dp-bar)); }
+        .dp-hl { position: absolute; left: calc(var(--d) * 12); height: calc(var(--d) * 7.6); width: 0; border-radius: calc(var(--d) * 2); background: color-mix(in srgb, var(--k-accent) 14%, transparent); }
+        .dp-ties { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+        .dp-tg { opacity: 0; }
+        .dp-tp { fill: none; stroke: var(--k-accent); stroke-width: 3px; stroke-linecap: round; stroke-dasharray: 1 2; }
+        .dp-td { fill: var(--k-accent); }
+        .dp-pill { position: absolute; left: 936px; top: calc(276px + var(--i) * 192px); width: 688px; height: 136px; box-sizing: border-box; display: flex; align-items: center; gap: 32px; padding: 0 48px 0 28px;
+          border-radius: 999px; border: 2px solid var(--dp-line); background: linear-gradient(180deg, var(--dp-face) 0%, color-mix(in srgb, var(--dp-face), var(--k-ink) 2%) 100%);
+          box-shadow: inset 0 2px 0 var(--dp-hi), 0 2.96px 6.9px color-mix(in srgb, var(--dp-shade) 7.7%, transparent), 0 8.8px 20.8px -3.5px color-mix(in srgb, var(--dp-shade) 7%, transparent); }
+        .dp-ic { display: flex; align-items: center; justify-content: center; flex: none; width: 84px; height: 84px; box-sizing: border-box; border-radius: 50%; background: color-mix(in srgb, var(--k-accent) 10%, transparent); border: 2px solid color-mix(in srgb, var(--k-accent) 16%, transparent); }
+        .dp-ic svg { display: block; width: 48px; height: 48px; fill: none; stroke: var(--k-accent); stroke-width: 1.35; stroke-linecap: round; stroke-linejoin: round; }
+        .dp-name { flex: 1; min-width: 0; font-size: 50px; font-weight: 600; line-height: 1.2; color: var(--k-ink); }
+        .dp-sc { flex: none; max-width: 26%; font-size: 32px; font-weight: 500; line-height: 1.2; text-align: right; color: var(--k-muted); font-variant-numeric: tabular-nums; }
+        .dp-cap { position: absolute; left: 952px; top: calc(440px + var(--i) * 192px); width: 888px; font-size: 44px; font-weight: 600; line-height: 1.25; opacity: 0; color: var(--k-ink); }
+        /* portrait: the document is 800px wide and parks further left; the pills (572px) stack in the 12%-68% band around the 40% line */
+        @container (orientation: portrait) {
+          .dp { --d: 3.2px; }
+          .dp-doc { left: 140px; top: 464px; width: 800px; height: 608px; transform: translateX(-546px) scale(0.92); }
+          .dp-pill { left: 400px; top: calc(468px + var(--i) * 236px); width: 572px; height: 128px; gap: 22px; padding: 0 32px 0 24px; }
+          .dp-ic { width: 76px; height: 76px; }
+          .dp-ic svg { width: 42px; height: 42px; }
+          .dp-name { font-size: 46px; }
+          .dp-sc { font-size: 28px; }
+          .dp-cap { left: 416px; top: calc(620px + var(--i) * 236px); width: 556px; }
+        }
+        /* ==== kit:vignette@1 ==== */
+        .dp-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--dp-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .dp[data-tone="dark"] .dp-vig { --vs: 0.55; }
+        /* ==== end kit:vignette ==== */
+
+        /* ==== kit:grain@1 ==== */
+        .dp-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+
+        /* ==== kit:text@2 ==== */
+        .dp-u { display: inline-block; white-space: pre; }
+        .dp-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+        /* ==== end kit:text ==== */
+
+        /* ==== kit:fit@1 ==== */
+        .dp-row { display: block; white-space: nowrap; }
+        /* ==== end kit:fit ==== */
+      </style>
+
+      <div id="root" data-composition-id="doc-park-left-pill-deal">
+        <div class="dp">
+          <div class="dp-bd"></div>
+          <div class="dp-vig"></div>
+          <div class="dp-grain"></div>
+          <div class="dp-doc" data-layout-allow-overflow><div class="dp-face"><div class="dp-scroll"></div></div></div>
+          <svg class="dp-ties" aria-hidden="true">
+            <g class="dp-tg"><path class="dp-tp" pathLength="1" d="M0 0"/><circle class="dp-td" r="6.4" cx="0" cy="0"/></g>
+            <g class="dp-tg"><path class="dp-tp" pathLength="1" d="M0 0"/><circle class="dp-td" r="6.4" cx="0" cy="0"/></g>
+            <g class="dp-tg"><path class="dp-tp" pathLength="1" d="M0 0"/><circle class="dp-td" r="6.4" cx="0" cy="0"/></g>
+          </svg>
+          <div class="dp-pill" style="--i:0"><span class="dp-ic"><svg viewBox="0 0 16 16"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10"/><circle cx="8" cy="8" r="1.6"/></svg></span><span class="dp-name">整理目录</span><span class="dp-sc">92%</span></div>
+          <div class="dp-pill" style="--i:1"><span class="dp-ic"><svg viewBox="0 0 16 16"><rect x="4.5" y="2.5" width="9" height="7" rx="1.4"/><path d="M2.5 6.2v5.9c0 .8.6 1.4 1.4 1.4h7.4"/></svg></span><span class="dp-name">合并重复</span><span class="dp-sc">88%</span></div>
+          <div class="dp-pill" style="--i:2"><span class="dp-ic"><svg viewBox="0 0 16 16"><path d="M8 2.2 9.3 6.7 13.8 8 9.3 9.3 8 13.8 6.7 9.3 2.2 8 6.7 6.7Z"/></svg></span><span class="dp-name">归档旧件</span><span class="dp-sc">95%</span></div>
+          <div class="dp-cap" style="--i:0">重复文件占了一半空间</div>
+          <div class="dp-cap" style="--i:1">合并后只留最新版本</div>
+          <div class="dp-cap" style="--i:2">旧文件统一进归档夹</div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // seconds. Upstream runs on t = frame / 173 over 174 frames; every window below is that t times 5.767 s
+          var CFG = {
+            dur: 5.8, span: 5.767,
+            park0: 0.346, park1: 1.384,                 // document slides left and shrinks (inOutCubic)
+            deal: [1.499, 2.768, 4.037],                // pill start times, one short narration sentence apart
+            fade: 0.202, drop: 0.358,                   // pill opacity window (outQuad) and rise window (outBack)
+            capLag: 0.288, capIn: 0.115, capOut: 0.288, // caption starts after the pill lands; fade-in; fade-out window
+            capGap: 0.173, capEnd: 5.652,               // caption clears this long before the next pill; last caption's end
+            hl0: 0.346, hlLen: 0.404,                   // evidence line highlighted after the pill lands
+            tie0: 0.231, tieLen: 0.404, tieOut: 0.346, tieOutLen: 0.288, // tie draws, then leaves with the caption
+            scroll: 20.809                              // document drift, design px per second (120 px over the clip)
+          };
+          var LAND = { park: -0.55 };                   // park shift as a fraction of the document width
+          var PORT = { park: -0.6825 };
+          var v = { pills: "整理目录|合并重复|归档旧件", cap1: "重复文件|占了|一半空间", cap2: "合并后|只留|最新版本", cap3: "旧文件|统一|进归档夹", scores: "92%|88%|95%", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+
+          // ==== kit:hash@1 ====
+          function kHash(n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+          // ==== end kit:hash ====
+
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+
+          // ==== kit:text@2 ====
+          var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "dp-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "dp-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          // ==== end kit:text ====
+
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          function kRows(el, cls) {
+            if (!el.children.length) return [];
+            var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+            var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+            kids.forEach(function (c, i) {
+              if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+              if (tops[i] != null) last = tops[i];
+              row.appendChild(c);
+            });
+            return [].slice.call(el.children);
+          }
+          // ==== end kit:fit ====
+          var root = document.querySelector(".dp");
+          var q = function (s) { return root.querySelector(s); };
+          var qa = function (s) { return [].slice.call(root.querySelectorAll(s)); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          var tone = kTone(root), dark = tone === "dark";
+          if (String(v.backdrop) === "off") qa(".dp-bd, .dp-vig, .dp-grain").forEach(function (n) { n.style.display = "none"; });
+          var U = Math.min(FW, FH) / 270;               // one upstream design pixel for the pills and their motion (4 px)
+
+          // the document: rounded bars for the brief's lines; three of them are the evidence lines the pills point at
+          var doc = q(".dp-doc"), face = q(".dp-face"), scroll = q(".dp-scroll");
+          var DW = doc.offsetWidth, DH = doc.offsetHeight, d = DW / 250;
+          var LINES = "17t 30m 53h 63p 73p 83p 97h 107p0 117p 127p 141h 151p1 161p 171p 185h 195p2 205p 215p 229h 239p 249p 259p 273h 283p 293p 303p".split(" ");
+          var HH = { t: 3.4, m: 1.8, h: 1.8, p: 2.6 }, evid = [];
+          scroll.innerHTML = '<div class="dp-sep"></div>';
+          LINES.forEach(function (s, i) {
+            var y = parseFloat(s), r = s.replace(/^[\d.]+/, ""), kind = r.charAt(0), mk = r.length > 1 ? +r.slice(1) : -1;
+            var w = kind === "t" ? 0.58 : kind === "m" ? 0.46 : kind === "h" ? 0.2 : mk >= 0 ? 1 : 0.88 + 0.12 * kHash(i * 5 + 2);
+            var b = document.createElement("div"), h = HH[kind] * d;
+            b.className = "dp-b"; b.setAttribute("data-k", kind);
+            b.style.cssText = "top:" + (y * d - h / 2) + "px;height:" + h + "px;width:" + w * 222 * d + "px";
+            if (mk >= 0) {
+              var hl = document.createElement("div");
+              hl.className = "dp-hl"; hl.style.top = (y - 3.8) * d + "px";
+              b.setAttribute("data-m", ""); scroll.appendChild(hl); evid[mk] = { b: b, hl: hl, y: y };
+            }
+            scroll.appendChild(b);
+          });
+          var shade = function (e, s) {
+            var c = function (a) { return "color-mix(in srgb, var(--dp-shade) " + (a * 100).toFixed(1) + "%, transparent)"; }, f = function (x) { return (x * U).toFixed(1) + "px"; };
+            s *= dark ? 2.6 : 1;
+            return "inset 0 " + f(0.5) + " 0 var(--dp-hi), 0 " + f(0.5 + 0.06 * e) + " " + f(1 + 0.18 * e) + " " + c(0.12 * s / (1 + e / 24)) + ", 0 " + f(0.55 * e) + " " + f(1.3 * e) + " " + f(-0.22 * e) + " " + c((0.08 + Math.min(e, 64) / 64 * 0.22) * s);
+          };
+          face.style.boxShadow = shade(6, 0.7);
+
+          // pills, readouts and captions: every text slot goes kSplit -> kFit
+          var names = String(v.pills).split("|").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 3);
+          if (!names.length) names = ["整理目录", "合并重复", "归档旧件"];
+          var NN = names.length, scores = String(v.scores).split("|").map(function (s) { return s.trim(); });
+          var pills = qa(".dp-pill"), caps = qa(".dp-cap"), cu = [];
+          pills.forEach(function (p, k) {
+            var cap = caps[k], ctext = String(v["cap" + (k + 1)]).trim(), sc = p.querySelector(".dp-sc"), nm = p.querySelector(".dp-name");
+            if (k >= NN) { p.style.display = "none"; cap.style.display = "none"; return; }
+            kSplit(nm, "word", 0, names[k]);
+            if (scores[k]) { kSplit(sc, "word", 0, scores[k]); kFit(sc, { lines: 1, min: 28, width: p.clientWidth * 0.26 }); } else sc.style.display = "none";
+            kFit(nm, { lines: 1, min: 40 });
+            if (ctext) { cu[k] = kSplit(cap, "word", 0, ctext); kFit(cap, { lines: 1, min: 40 }); kRows(cap, "dp-row"); } else cap.style.display = "none";
+          });
+          var inkC = kRGB(root, "var(--k-ink)"), bgC = kRGB(root, "var(--k-bg)");
+          var dimC = inkC.map(function (x, i) { return bgC[i] + (x - bgC[i]) * 0.6; });   // the dim placeholder stage keeps 3:1 on the backdrop, also on the darker lower backdrop
+          var grain = kGrain(q(".dp-grain"));
+          var ties = qa(".dp-tg"), clamp = MT.clamp;
+          var cs = function (k) { return CFG.deal[k] + CFG.capLag; };
+          var ce = function (k) { return k < 2 ? CFG.deal[k + 1] - CFG.capGap : CFG.capEnd; };
+
+          function render(t) {
+            grain(t);
+            // document: park (translate then scale about the left-middle), plus the slow drift
+            var park = MT.ramp(t, CFG.park0, CFG.park1 - CFG.park0, "power2.inOut");
+            var tx = park * L.park * DW, sc = 1 - 0.08 * park, sy = -Math.min(t, CFG.span) * CFG.scroll * d;
+            doc.style.transform = "translate(" + tx + "px,0px) scale(" + sc + ")";
+            scroll.style.transform = "translateY(" + sy + "px)";
+            for (var k = 0; k < NN; k++) {
+              var f = CFG.deal[k], o = MT.ramp(t, f, CFG.fade, "power1.out"), b = MT.ramp(t, f, CFG.drop, "back.out(1.70158)");
+              var p = pills[k];
+              p.style.opacity = o;
+              p.style.transform = "translateY(" + 14 * U * (1 - b) + "px) scale(" + (0.94 + 0.06 * b) + ")";
+              p.style.boxShadow = shade(MT.mix(clamp(b, 0, 1), 14, 4), 0.75);
+              // evidence line: highlighter wipe, bar turns to the accent
+              var ev = evid[k], mk = MT.ramp(t, f + CFG.hl0, CFG.hlLen, "out");
+              ev.hl.style.width = mk * 222 * d + 4 * d + "px"; ev.hl.style.opacity = mk > 0 ? 1 : 0; ev.b.style.setProperty("--m", mk);
+              // tie from the end of that line to the pill's left edge
+              var dr = MT.ramp(t, f + CFG.tie0, CFG.tieLen, "out"), fd = 1 - MT.ramp(t, ce(k) - CFG.tieOut, CFG.tieOutLen, "out"), g = ties[k];
+              if (dr > 0 && fd > 0) {
+                var ax = doc.offsetLeft + tx + sc * (DW - 6 * d), ay = doc.offsetTop + DH / 2 + sc * (ev.y * d + sy - DH / 2);
+                var bx = p.offsetLeft - 3 * U, by = p.offsetTop + p.offsetHeight / 2, mx = (ax + bx) / 2;
+                g.style.opacity = 0.9 * fd;
+                g.firstChild.setAttribute("d", "M" + ax + "," + ay + " C" + mx + "," + ay + " " + mx + "," + by + " " + bx + "," + by);
+                g.firstChild.style.strokeDashoffset = 1 - dr;
+                g.lastChild.setAttribute("cx", ax); g.lastChild.setAttribute("cy", ay); g.lastChild.style.opacity = Math.min(1, dr * 3);
+              } else g.style.opacity = 0;
+              // caption: dim words darken one by one, then fade back and clear before the next pill
+              if (!cu[k]) continue;
+              var c0 = cs(k), c1 = ce(k), n = cu[k].length, st = 0.78 / n, win = st * 1.5, stw = 0.55 / n;
+              var inn = MT.ramp(t, c0, (c1 - c0) * 0.7, "linear"), out = MT.ramp(t, c1 - CFG.capOut, CFG.capOut, "power1.out");
+              caps[k].style.opacity = out > 0 ? clamp(1 - (out - 0.7) / 0.3, 0, 1) : MT.ramp(t, c0, CFG.capIn, "linear");
+              cu[k].forEach(function (u, i) {
+                var qd = clamp((inn - i * st) / win, 0, 1), m = qd;
+                if (out > 0) m = 1 - clamp((out - i * stw) / (stw * 1.4), 0, 1);
+                u.style.color = "rgb(" + inkC.map(function (x, j) { return Math.round(dimC[j] + (x - dimC[j]) * m); }).join(",") + ")";
+                if (!kCJK.test(u.textContent)) u.style.letterSpacing = (-0.03 * (1 - qd)).toFixed(4) + "em";   // upstream's tightening, Latin words only
+              });
+            }
+          }
+          window.__timelines["doc-park-left-pill-deal"] = MT.scene(CFG.dur, render);
+        })();
+      </script>
+    </template>
+  </body>
+</html>

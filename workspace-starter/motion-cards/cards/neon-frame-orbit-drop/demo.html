@@ -1,0 +1,483 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"页面标题（可留空；横屏一行 11 字，竖屏一行 9 字、最多 3 行）","default":"本周概览"},
+    {"id":"name","type":"string","label":"应用名（可留空；横屏每行 4 字，竖屏每行 8 字，长了折行）","default":"示例应用"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"暗场舞台"},{"value":"off","label":"透明（只留面板和霓虹）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8"/>
+    <title>neon-frame-orbit-drop · 霓虹框环绕齐落</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="neon-frame-orbit-drop-template">
+      <!-- Ported from video-shotcraft demos/ui-entrance/neon-frame-orbit-drop/NeonFrameForerunOrbit.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette with --k-stage (dim gradient and shadows too), system fonts, upstream mark and wordmark
+           removed; neon, rim and tube hues mixed in oklch from accent-2 to accent (upstream violet to amber); the page
+           is a neutral fake UI: its 11-28px copy became bars, names, initials and the menu chevron dropped; only the
+           app name (40px, in a pill) and the page title (64px, in a header card) are text, cut in once the page
+           is 50% lit; the dimmed layer reaches 180px past the page so hovering parts dim too; shadow copies
+           share one layer under all floaters; vignette and grain sit under the panel; dark skin: page on --k-panel,
+           copies x2.2; portrait: an 800x940 phone page (nav as a bottom bar, spaces dropped, search above the title,
+           4 cards, 5 rows, title 72px), perspective 1100; slot 5.3 s (upstream 4.67 s) for a 1 s hold. Kept: every
+           timing and curve (trace 14f, lit 8-30f, orbit 0-128f, one fall window 33.8-66.2f), angles, scale,
+           perspective 1500 and its origin, lift heights, floating and shadow-copy constants, rim / line / tube
+           keyframes, the tube field (seed 20260718, 18 tubes), strokes 14 / 3.5 / 6 px with blur 10 / 3. -->
+      <style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  --k-stage: var(--mc-stage, #0b0d12);
+  --k-on-stage: var(--mc-on-stage, #f3f5f8);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--k-font);
+  color: var(--k-ink);
+}
+/* ==== kit:grain@1 ==== */
+.nd-grain{position:absolute;inset:0;pointer-events:none}
+/* ==== kit:text@2 (word units only) ==== */
+.nd-u{display:inline-block;white-space:pre}
+/* ==== kit:vignette@1 ==== */
+.nd-vig {
+  position:absolute;inset:0;pointer-events:none;
+  --vs:0.16;--vin:45%;--vx:50%;--vy:46%;--vc:var(--nd-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy),transparent var(--vin),color-mix(in srgb,var(--vc) calc(var(--vs) * 32%),transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55),color-mix(in srgb,var(--vc) calc(var(--vs) * 100%),transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy),transparent 60%,color-mix(in srgb,var(--vc) calc(var(--vs) * 60%),transparent) 100%);
+}
+/* ==== end kit ==== */
+/* page / sidebar / cards (a dark skin swaps them); m1/m2: neon mid stops in oklch */
+.nd {
+  position:absolute;inset:0;container-type:size;
+  --nd-pg:color-mix(in srgb,var(--k-bg),var(--k-ink) 3%);--nd-sb:var(--k-panel);--nd-card:var(--k-bg);
+  --nd-line:color-mix(in srgb,var(--k-ink) 10%,transparent);
+  --nd-t1:color-mix(in srgb,var(--k-ink) 34%,transparent);
+  --nd-t2:color-mix(in srgb,var(--k-ink) 16%,transparent);
+  --nd-m1:color-mix(in oklch,var(--k-accent-2) 52%,var(--k-accent));
+  --nd-m2:color-mix(in oklch,var(--k-accent-2) 16%,var(--k-accent));
+  --nd-shade:color-mix(in srgb,var(--k-stage) 40%,black);
+}
+.nd[data-tone="dark"]{--nd-pg:var(--k-panel);--nd-sb:var(--k-bg);--nd-card:color-mix(in srgb,var(--k-panel),var(--k-ink) 7%)}
+.nd-stage{position:absolute;inset:0;background:var(--k-stage)}
+.nd-tubes{position:absolute;inset:0;width:100%;height:100%}
+.nd .nd-vig{--vs:0.5}
+/* camera: static values = the settled frame */
+.nd-cam{position:absolute;inset:0;perspective:1500px;perspective-origin:64% 44%}
+.nd-rig{position:absolute;left:50%;top:50%;width:1330px;height:790px;margin:-405px 0 0 -665px;transform:scale(0.9) rotateY(-26deg) rotateX(3.5deg) rotateZ(-4.5deg)}
+.nd-drop,.nd-dim,.nd-page{position:absolute;inset:0;border-radius:6px}
+/* dim layer 180px past the page: a filter only darkens its own box */
+.nd-lit{position:absolute;inset:-180px;isolation:isolate}
+.nd-lit > *{inset:180px}
+.nd-drop{box-shadow:0 30px 90px -10px color-mix(in srgb,var(--nd-shade) 75%,transparent),0 8px 24px color-mix(in srgb,var(--nd-shade) 45%,transparent)}
+.nd-dim{z-index:3;pointer-events:none;opacity:0;background:linear-gradient(150deg,color-mix(in srgb,color-mix(in srgb,var(--k-stage),var(--k-accent-2) 22%) 50%,transparent),color-mix(in srgb,var(--k-stage) 78%,transparent))}
+.nd-rim{position:absolute;inset:-10px;border-radius:12px;opacity:0.5;box-shadow:-18px -8px 42px 6px color-mix(in srgb,var(--k-accent-2) 42%,transparent),22px 24px 56px 12px color-mix(in srgb,var(--k-accent) 30%,transparent),0 14px 80px 22px color-mix(in srgb,var(--nd-m1) 20%,transparent)}
+.nd-frame{position:absolute;left:-40px;top:-40px;width:calc(100% + 80px);height:calc(100% + 80px);overflow:visible}
+.nd-fp{d:path("M0 395V0H1330V790H0Z");fill:none}
+.nd-g{stroke-width:14px;opacity:0.3}
+.nd-c{stroke-width:3.5px;opacity:0.33}
+.nd-h{stroke-width:6px;stroke-linecap:round;stroke:var(--k-on-stage)}
+/* the page (upstream workbench home, 1330x790): bars stand in for small copy */
+.nd-page{display:flex;background:var(--nd-pg)}
+.nd-sh{position:absolute;inset:0;z-index:1;pointer-events:none}
+.nd-f{position:relative;z-index:2;display:flex;align-items:center;flex:none}
+.nd-page i{display:block;flex:none;height:9px;border-radius:5px;background:var(--nd-t2)}
+.nd-page b{display:block;flex:none}
+.nd-i{display:block;flex:none;width:18px;height:18px;fill:none;stroke:color-mix(in srgb,var(--k-ink) 58%,transparent);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.nd-on .nd-i{stroke:var(--k-accent)}
+.nd-side{flex:none;width:290px;box-sizing:border-box;padding:128px 22px 0;border-radius:6px 0 0 6px;background:var(--nd-sb);box-shadow:inset -1px 0 0 var(--nd-line)}
+.nd-main{flex:1;min-width:0;padding:46px 40px 30px}
+.nd-brand,.nd-head,.nd-search,.nd-chip,.nd-nav.nd-on{border-radius:12px;background:var(--nd-card);box-shadow:0 0 0 1px var(--nd-line),0 1px 2px var(--nd-line)}
+.nd-brand{position:absolute;left:22px;top:46px;width:246px;box-sizing:border-box;padding:6px 12px 6px 6px;gap:12px}
+.nd-mark{display:block;flex:none;width:44px;height:44px}
+.nd-name,.nd-title{flex:1;min-width:0;font-size:40px;font-weight:700;line-height:1.3;opacity:var(--nd-to,1)}
+.nd-nav{height:36px;padding:0 10px;gap:11px}
+.nd-page .nd-nav{border-radius:8px}
+.nd-nav.nd-on i,.nd-chip span i:first-child,.nd-n,.nd-st i,.nd-tabs .nd-on{background-color:var(--nd-t1)}
+.nd-bd{width:22px;height:17px;margin-left:auto;border-radius:9px;background:var(--k-accent)}
+.nd-lab{margin:26px 10px 12px}
+.nd-lab i{height:7px}
+.nd-sp{height:34px;padding:0 10px;gap:11px}
+.nd-page .nd-sp b,.nd-page .nd-av b{width:18px;height:18px;border-radius:5px;background:color-mix(in oklch,var(--k-accent) var(--m),var(--k-accent-2))}
+.nd-head{margin-bottom:20px;padding:12px 24px;gap:18px}
+.nd-title{font-size:64px;line-height:1.25}
+.nd-search{height:46px;margin-bottom:24px;padding:0 16px;gap:12px}
+.nd-kbd{width:34px;height:20px;margin-left:auto;border-radius:6px;background:var(--nd-sb);box-shadow:inset 0 0 0 1px var(--nd-line)}
+.nd-chips{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:28px}
+.nd-chip{width:228px;height:74px;box-sizing:border-box;padding:13px 14px;gap:11px;align-items:flex-start;border-radius:10px;box-shadow:0 0 0 1px var(--nd-line),0 1px 2px var(--nd-line),0 6px 14px -8px var(--nd-t2)}
+.nd-chip b{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:var(--nd-sb);box-shadow:inset 0 0 0 1px var(--nd-line)}
+.nd-chip span{display:block}
+.nd-chip span i:first-child{height:10px;margin:4px 0 9px}
+.nd-chip span i + i{height:8px}
+.nd-tabs{gap:26px;margin-bottom:6px;align-items:flex-start;box-shadow:inset 0 -1px 0 var(--nd-line)}
+.nd-tabs i{width:64px;padding-bottom:12px;background-clip:content-box}
+.nd-tabs .nd-on{width:70px;padding-bottom:10px;border-bottom:2px solid var(--k-accent)}
+.nd-row{height:44px;gap:14px;box-shadow:inset 0 -1px 0 var(--nd-line)}
+.nd-n{height:10px}
+.nd-pri{width:16px;height:16px;box-sizing:border-box;border-radius:50%;border:2px solid color-mix(in oklch,var(--k-accent) var(--m),var(--k-accent-2))}
+.nd-st{display:flex;align-items:center;height:24px;margin-left:auto;padding:0 10px;border-radius:6px;background:var(--nd-line)}
+.nd-page .nd-st i{width:54px;height:8px}
+.nd-av{display:flex;width:62px;justify-content:flex-end}
+.nd-page .nd-av b{width:24px;height:24px;border-radius:50%;box-shadow:0 0 0 2px var(--nd-pg)}
+.nd-page .nd-av b + b{margin-left:-4px;--m:70%}
+.nd-due{width:44px;margin-left:34px}
+.nd-row.nd-on .nd-st{background:color-mix(in srgb,var(--k-accent) 14%,transparent)}
+.nd-row.nd-on .nd-st i,.nd-row.nd-on .nd-due{background:var(--k-accent)}
+/* portrait: 800x940 phone page on the 40% line, nav as a bottom bar; search parts name and title (hovering
+   text rows skew into each other) */
+@container (orientation:portrait) {
+  .nd-cam{perspective:1100px;perspective-origin:64% 37%}
+  .nd-rig{top:40%;width:800px;height:940px;margin:-470px 0 0 -400px}
+  .nd-fp{d:path("M0 470V0H800V940H0Z")}
+  .nd-page{display:block}
+  .nd-side{position:absolute;left:0;right:0;bottom:0;width:auto;height:100px;padding:0 40px;display:flex;align-items:center;justify-content:space-between;border-radius:0 0 6px 6px;box-shadow:inset 0 1px 0 var(--nd-line)}
+  .nd-nav{height:60px;padding:0 22px}
+  .nd-nav .nd-i{zoom:1.7}
+  .nd-nav i,.nd-head i,.nd-lab,.nd-sp,.nd-bd,.nd-chip:nth-child(n+5),.nd-rows > :nth-child(n+6){display:none}
+  .nd-main{display:flex;flex-direction:column;padding:36px 40px}
+  .nd-brand{position:static;order:-2;width:420px;margin-bottom:26px}
+  .nd-search{order:-1}
+  .nd-title{font-size:72px}
+  .nd-chip{width:352px}
+  .nd-row{height:54px}
+}
+      </style>
+
+      <div id="root" data-composition-id="neon-frame-orbit-drop">
+<div class="nd">
+<div class="nd-stage"></div>
+<svg class="nd-tubes" data-layout-allow-overflow><defs><filter id="nd-ft" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="7"/></filter></defs></svg>
+<div class="nd-vig"></div>
+<div class="nd-grain"></div>
+<div class="nd-cam"><div class="nd-rig">
+<div class="nd-drop"></div>
+<div class="nd-lit">
+<div class="nd-page">
+<div class="nd-sh" data-layout-ignore></div>
+<div class="nd-side">
+<div class="nd-f nd-nav nd-on"><svg class="nd-i"><path d="M3 8l6-5 6 5v7H3zm4.5 7v-4h3v4"/></svg><i style="width:52px"></i></div>
+<div class="nd-f nd-nav"><svg class="nd-i"><path d="M2.5 10l2-6h9l2 6v4.5h-13zm0 0h4l1 1.5h3l1-1.5h4"/></svg><i style="width:44px"></i><b class="nd-bd"></b></div>
+<div class="nd-f nd-nav"><svg class="nd-i"><circle cx="9" cy="9" r="6.2"/><path d="M6.2 9.2l2 2L12 7"/></svg><i style="width:70px"></i></div>
+<div class="nd-f nd-nav"><svg class="nd-i"><path d="M4.5 2.5h6L14 6v9.5H4.5zm6 0V6H14M7 9.5h4.5M7 12.5h4.5"/></svg><i style="width:62px"></i></div>
+<div class="nd-f nd-nav"><svg class="nd-i"><rect x="2.5" y="2.5" width="13" height="13" rx="2"/><path d="M6 12.5v-3M9 12.5V6M12 12.5V8"/></svg><i style="width:58px"></i></div>
+<div class="nd-f nd-nav"><svg class="nd-i"><circle cx="9" cy="9" r="6.2"/><circle cx="9" cy="9" r="2.6"/></svg><i style="width:46px"></i></div>
+<div class="nd-f nd-lab"><i style="width:56px"></i></div>
+<div class="nd-f nd-sp"><b style="--m:20%"></b><i style="width:88px"></i></div>
+<div class="nd-f nd-sp"><b style="--m:62%"></b><i style="width:76px"></i></div>
+<div class="nd-f nd-sp"><b style="--m:0%"></b><i style="width:82px"></i></div>
+<div class="nd-f nd-sp"><b style="--m:100%"></b><i style="width:98px"></i></div>
+<div class="nd-f nd-sp"><b style="--m:40%"></b><i style="width:104px"></i></div>
+</div>
+<div class="nd-main">
+<div class="nd-f nd-brand"><svg class="nd-mark" viewBox="0 0 128 128"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg><span class="nd-name">示例应用</span></div>
+<div class="nd-f nd-head"><span class="nd-title">本周概览</span><i style="width:120px"></i></div>
+<div class="nd-f nd-search"><svg class="nd-i"><circle cx="8" cy="8" r="5.2"/><path d="M12 12l3.5 3.5"/></svg><i style="width:250px"></i><b class="nd-kbd"></b></div>
+<div class="nd-chips">
+<div class="nd-f nd-chip nd-on"><b><svg class="nd-i"><path d="M4.5 2.5h6L14 6v9.5H4.5zm6 0V6H14M7 9.5h4.5M7 12.5h4.5"/></svg></b><span><i style="width:118px"></i><i style="width:92px"></i></span></div>
+<div class="nd-f nd-chip"><b><svg class="nd-i"><circle cx="9" cy="9" r="6.2"/><path d="M6.2 9.2l2 2L12 7"/></svg></b><span><i style="width:74px"></i><i style="width:80px"></i></span></div>
+<div class="nd-f nd-chip"><b><svg class="nd-i"><rect x="2.5" y="2.5" width="13" height="13" rx="2"/><path d="M6 12.5v-3M9 12.5V6M12 12.5V8"/></svg></b><span><i style="width:104px"></i><i style="width:126px"></i></span></div>
+<div class="nd-f nd-chip"><b><svg class="nd-i"><path d="M4.5 2.5h6L14 6v9.5H4.5zm6 0V6H14M7 9.5h4.5M7 12.5h4.5"/></svg></b><span><i style="width:136px"></i><i style="width:100px"></i></span></div>
+<div class="nd-f nd-chip"><b><svg class="nd-i"><circle cx="9" cy="9" r="6.2"/><path d="M6.2 9.2l2 2L12 7"/></svg></b><span><i style="width:70px"></i><i style="width:84px"></i></span></div>
+<div class="nd-f nd-chip"><b><svg class="nd-i"><circle cx="9" cy="9" r="6.2"/><circle cx="9" cy="9" r="2.6"/></svg></b><span><i style="width:96px"></i><i style="width:112px"></i></span></div>
+<div class="nd-f nd-chip"><b><svg class="nd-i"><circle cx="9" cy="9" r="6.2"/><circle cx="9" cy="9" r="2.6"/></svg></b><span><i style="width:112px"></i><i style="width:96px"></i></span></div>
+</div>
+<div class="nd-f nd-tabs"><i class="nd-on"></i><i></i><i style="width:84px"></i><i style="width:44px"></i></div>
+<div class="nd-rows">
+<div class="nd-f nd-row"><b class="nd-pri" style="--m:100%"></b><i class="nd-n" style="width:250px"></i><span class="nd-st"><i></i></span><span class="nd-av"><b style="--m:20%"></b><b></b></span><i class="nd-due"></i></div>
+<div class="nd-f nd-row"><b class="nd-pri" style="--m:62%"></b><i class="nd-n" style="width:290px"></i><span class="nd-st"><i style="width:68px"></i></span><span class="nd-av"><b style="--m:0%"></b><b></b></span><i class="nd-due"></i></div>
+<div class="nd-f nd-row nd-on"><b class="nd-pri" style="--m:100%"></b><i class="nd-n" style="width:218px"></i><span class="nd-st"><i style="width:44px"></i></span><span class="nd-av"><b style="--m:40%"></b><b></b></span><i class="nd-due"></i></div>
+<div class="nd-f nd-row"><b class="nd-pri" style="--m:0%"></b><i class="nd-n" style="width:236px"></i><span class="nd-st"><i style="width:68px"></i></span><span class="nd-av"><b style="--m:100%"></b><b></b></span><i class="nd-due"></i></div>
+<div class="nd-f nd-row"><b class="nd-pri" style="--m:0%"></b><i class="nd-n" style="width:262px"></i><span class="nd-st"><i style="width:40px"></i></span><span class="nd-av"><b style="--m:62%"></b><b></b></span><i class="nd-due"></i></div>
+<div class="nd-f nd-row"><b class="nd-pri" style="--m:30%"></b><i class="nd-n" style="width:206px"></i><span class="nd-st"><i style="width:40px"></i></span><span class="nd-av"><b style="--m:20%"></b><b></b></span><i class="nd-due"></i></div>
+</div>
+</div>
+</div>
+<div class="nd-dim"></div>
+</div>
+<div class="nd-rim"></div>
+<svg class="nd-frame">
+<defs>
+<linearGradient id="nd-gr" x2="1" y2="1"><stop offset="0" style="stop-color:var(--k-accent-2)"/><stop offset="0.38" style="stop-color:var(--nd-m1)"/><stop offset="0.72" style="stop-color:var(--nd-m2)"/><stop offset="1" style="stop-color:var(--k-accent)"/></linearGradient>
+<filter id="nd-fb" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="10"/></filter>
+<filter id="nd-fh" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="3"/></filter>
+</defs>
+<g transform="translate(40 40)">
+<path class="nd-fp nd-g" pathLength="1000" stroke="url(#nd-gr)" filter="url(#nd-fb)"/>
+<path class="nd-fp nd-c" pathLength="1000" stroke="url(#nd-gr)"/>
+</g>
+</svg>
+</div></div>
+</div>
+</div>
+
+<script>
+(function () {
+// seconds = upstream frames / 30, both orientations: trace 0-14f, lit 8-30f, orbit 0-128f, one fall window for
+// all floaters 33.8-66.2f, line fade 96-130f; rim / bg: keyframe times
+var CFG = { trace: 0.467, lit: [0.267, 1], orbit: 4.267, fall: [1.125, 2.205], line: [3.2, 4.333], rim: [0, 0.667, 3.6, 4.6], bg: [0, 1, 3.333, 4.533], dur: 5.3 };
+// per orientation: vanishing point height (% of frame; perspective is in the CSS), title lines, title fit floor (px)
+var LAND = { oy: 44, tl: 1, tm: 40 }, PORT = { oy: 37, tl: 2, tm: 72 };
+// lift (px) by floater kind, upstream H (x 1.7 below)
+var LIFT = { brand: 84, nav: 66, lab: 62, sp: 66, head: 90, search: 80, chip: 76, tabs: 60, row: 64 };
+var v = { title: "本周概览", name: "示例应用", backdrop: "on" };
+try {
+  var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+  for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+} catch (e) {}
+
+var root = document.querySelector(".nd");
+var q = function (s) { return root.querySelector(s); };
+var FW = root.clientWidth, FH = root.clientHeight;
+if (!FW || !FH) {
+  // not laid out yet: the host clip's declared size, then the window
+  var hc = root.closest("[data-width][data-height]");
+  FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+  FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+}
+var P = FH > FW, L = P ? PORT : LAND;
+root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+var p = document.createElement("i");
+p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+el.appendChild(p);
+var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+el.removeChild(p);
+return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+var c = kRGB(wrap, "var(--k-bg)");
+var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+wrap.setAttribute("data-tone", tone);
+return tone;
+}
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+o = o || {};
+var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+var dark = tones && tones.getAttribute("data-tone") === "dark";
+var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+  var f = "type='linear' slope='2.4' intercept='-0.7'";
+  var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+    "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+    "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+    "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+    "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+  return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+});
+layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+layer.style.backgroundSize = size + "px " + size + "px";
+return function (t) {
+  var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+  layer.style.backgroundImage = tiles[k % 6];
+  layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+};
+}
+// ==== kit:text@2 (kWords + kSplit only) ====
+var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+function kWords(s, key) {
+s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+var cut = function (x) {
+  if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+  return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+};
+var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+var pre = "";
+bits.forEach(function (x) {
+  var t = x.trim(), last = out[out.length - 1];
+  if (last && /^ /.test(x)) last.sp = true;
+  if (!t) return;
+  if (!/[\p{L}\p{N}]/u.test(t)) {
+    if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+    else { last.t += t; last.sp = / $/.test(x); }
+    return;
+  }
+  out.push({ t: pre + t, sp: / $/.test(x) });
+  pre = "";
+});
+if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+if (out.length) out[out.length - 1].sp = false;
+return out;
+}
+function kSplit(el, by, rise, text) {
+var s = text != null ? String(text) : el.textContent, units = [];
+var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+el.textContent = "";
+parts.forEach(function (p) {
+  var u = document.createElement("span"), box = u;
+  u.className = "nd-u"; u.textContent = p.t;
+  if (by === "line") u.style.display = "block";
+  if (!p.t.trim()) { el.appendChild(u); return; }
+  if (rise) { box = document.createElement("span"); box.className = "nd-cut"; box.style.display = u.style.display; box.appendChild(u); }
+  el.appendChild(box);
+  if (p.sp) el.appendChild(document.createTextNode(" "));
+  units.push(u);
+});
+return units;
+}
+// ==== kit:fit@1 (kFit + kLines only) ====
+function kFit(el, o) {
+o = o || {};
+var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+for (;;) {
+  el.style.fontSize = f + "px";
+  m = kLines(el);
+  if ((m.w <= W && m.n <= n) || f <= min) break;
+  f = Math.max(min, f - 2);
+}
+if (m.w > W) {
+  [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+  m = kLines(el);
+}
+return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+while ((t = it.nextNode())) {
+  if (!t.data.trim()) continue;
+  r.selectNodeContents(t);
+  [].forEach.call(r.getClientRects(), function (b) {
+    var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+    if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+    row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+  });
+}
+return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit ====
+
+var dark = kTone(root) === "dark";
+if (String(v.backdrop) === "off") ["stage", "tubes", "vig", "grain"].forEach(function (c) { q(".nd-" + c).style.display = "none"; });
+var cam = q(".nd-cam"), rig = q(".nd-rig"), lit = q(".nd-lit"), dim = q(".nd-dim"), drop = q(".nd-drop"), rim = q(".nd-rim"), page = q(".nd-page");
+// SVG ids get a per-mount number: two mounts of the card never share a filter
+var N = "-" + (window.__nodN = (window.__nodN || 0) + 1);
+[].forEach.call(root.querySelectorAll("[id]"), function (e) { e.id += N; });
+[].forEach.call(root.querySelectorAll("[stroke^=url],[filter]"), function (e) {
+  ["stroke", "filter"].forEach(function (a) { var x = e.getAttribute(a); if (x) e.setAttribute(a, x.replace(")", N + ")")); });
+});
+
+// text slots: empty hides one; kFit shrinks to the floor, then wraps. It measures on screen: unrotate the rig first
+rig.style.transform = "none";
+[["name", 2, 40], ["title", L.tl, L.tm]].forEach(function (s) {
+  var el = q(".nd-" + s[0]), t = String(v[s[0]]).trim();
+  if (!t) return (el.parentNode.style.display = "none"); // its whole block
+  kSplit(el, "word", false, t);
+  kFit(el, { lines: s[1], min: s[2] });
+});
+// sidebar list under the pill; rows past the bottom bar / page foot drop from the end (2 stay), then chip row 2
+if (!P) q(".nd-side").style.paddingTop = q(".nd-brand").offsetHeight + 68 + "px";
+var rw = q(".nd-rows"), ch = q(".nd-chips").children, foot = P ? q(".nd-side").offsetTop - 16 : page.offsetHeight - 24;
+var cut = [].slice.call(rw.children, 2).reverse().concat(P ? [ch[3], ch[2]] : []);
+for (var j = 0; j < cut.length && rw.offsetTop + rw.offsetHeight > foot; j++) cut[j].style.display = "none";
+
+// floaters (upstream FloatWrap): a shadow copy at each slot, all copies in one layer under all floaters
+var sh = q(".nd-sh"), F = [];
+[].forEach.call(root.querySelectorAll(".nd-f"), function (e) {
+  if (!e.offsetParent) return; // hidden in this orientation
+  var x = 0, y = 0, n = e, c = e.cloneNode(true);
+  for (; n !== page; n = n.offsetParent) { x += n.offsetLeft; y += n.offsetTop; }
+  c.style.cssText = "position:absolute;margin:0;box-sizing:border-box;left:" + x + "px;top:" + y + "px;width:" + e.offsetWidth + "px;height:" + e.offsetHeight + "px";
+  sh.appendChild(c);
+  e.setAttribute("data-layout-allow-overflow", ""); // hovering past the page edge is the effect
+  F.push({ e: e, c: c.style, h: 1.7 * LIFT[e.classList[1].slice(3)] });
+});
+
+// tube frames: upstream seed and draw order, positions as frame fractions
+var r = MT.seeded(20260718), HUE = [30, 60, 95, 0, 70, 15, 35], u = Math.min(FW, FH) * 0.000926, T = [], svg = q(".nd-tubes");
+for (var i = 0; i < 18; i++) {
+  var b = { x: (r() * 1.0417 - 0.0625) * FW, y: (r() * 1.0185 - 0.0556) * FH, w: ((160 + r() * 480) * u).toFixed(1), h: ((70 + r() * 220) * u).toFixed(1), hue: HUE[Math.floor(r() * 7)], ph: r() * 90, pe: 55 + r() * 70, sk: -14 + r() * 10 };
+  var g = document.createElementNS("http://www.w3.org/2000/svg", "g"), wh = '" width="' + b.w + '" height="' + b.h + '" rx="4" fill="none" ';
+  g.setAttribute("transform", "translate(" + b.x.toFixed(1) + " " + b.y.toFixed(1) + ") skewY(" + (b.sk * 0.4).toFixed(2) + ") skewX(" + b.sk.toFixed(2) + ")");
+  g.innerHTML = '<rect stroke-width="7' + wh + 'opacity="0.8" filter="url(#nd-ft' + N + ')"/><rect stroke-width="1.6' + wh + '/>';
+  g.style.stroke = "color-mix(in oklch, var(--k-accent) " + b.hue + "%, var(--k-accent-2))";
+  svg.appendChild(g);
+  T.push([g.style, b]);
+}
+var grain = kGrain(q(".nd-grain"), { opacity: 0.07, blend: "soft-light" });
+// frame paths [glow, line, white-hot head] x [up from the left edge's middle, down]; the page holds the settled two
+var g0 = q(".nd-g"), c0 = q(".nd-c");
+var mk = function (src, head) {
+  var c = src.cloneNode();
+  if (head) c.setAttribute("class", "nd-fp nd-h"), c.setAttribute("filter", "url(#nd-fh" + N + ")");
+  src.parentNode.appendChild(c);
+  return c.style;
+};
+var fp = [g0.style, mk(g0), c0.style, mk(c0), mk(c0, 1), mk(c0, 1)];
+
+var C = function (x) { return MT.clamp(x, 0, 1); };
+var I = function (t, a, b) { return MT.interpolate(t, a, b, { extrapolate: "clamp" }); };
+var eTr = MT.bezier(0.3, 0.1, 0.3, 1), eLit = MT.bezier(0.35, 0, 0.3, 1), eOrb = MT.bezier(0.42, 0.05, 0.32, 1);
+var eFall = MT.bezier(0.5, 0.05, 0.6, 1); // falls faster and faster, lands softly (upstream easeFall)
+var SH = dark ? 2.2 : 1; // black copies need more density on a dark page
+var render = function (t) {
+  var tr = eTr(C(t / CFG.trace)), hp = tr * 500, o = eOrb(C(t / CFG.orbit));
+  var li = 0.25 + 0.75 * eLit(C((t - CFG.lit[0]) / (CFG.lit[1] - CFG.lit[0])));
+  var ln = I(t, CFG.line, [1, 0.35]), rg = I(t, CFG.rim, [0.7, 1, 0.75, 0.5]), bg = I(t, CFG.bg, [0.3, 1, 0.85, 0.1]);
+  // camera: from a left view to a right view, the vanishing point sliding with it
+  cam.style.perspectiveOrigin = (30 + 34 * o).toFixed(2) + "% " + L.oy + "%";
+  rig.style.transform = "scale(" + (0.8 + 0.08 * Math.sin(o * Math.PI) + 0.1 * o).toFixed(4) + ") rotateY(" + (38 - 64 * o).toFixed(3) + "deg) rotateX(" + (6 - 2.5 * o).toFixed(3) + "deg) rotateZ(" + (3 - 7.5 * o).toFixed(3) + "deg)";
+  lit.style.opacity = tr > 0.4 ? 1 : 0;
+  lit.style.filter = li < 1 ? "brightness(" + Math.max(0.05, li).toFixed(3) + ")" : "";
+  dim.style.opacity = (1 - li).toFixed(3);
+  dim.style.display = li < 1 ? "" : "none";
+  // dark text on a light card cuts in, never fades: at 50% page brightness (frame 15), darker it sits on a near-black card
+  root.style.setProperty("--nd-to", li < 0.5 ? 0 : 1);
+  drop.style.opacity = Math.min(1, tr * 1.4).toFixed(3);
+  rim.style.opacity = (rg * Math.min(1, tr * 1.6)).toFixed(3);
+  for (var d = 0; d < 6; d++) {
+    var s = fp[d], rev = d % 2, kind = d >> 1;
+    if (kind < 2) {
+      s.strokeDasharray = hp.toFixed(2) + " 1000";
+      s.strokeDashoffset = rev ? -(1000 - hp) : 0;
+      s.opacity = kind ? 0.95 * ln : 0.6 * rg;
+    } else {
+      s.strokeDasharray = "8 1000";
+      s.strokeDashoffset = rev ? -(1000 - hp) : -Math.max(0, hp - 8);
+      s.opacity = tr < 1 ? 0.95 : 0;
+    }
+  }
+  // one lift for every floater, h px: body up-left (key light top-left), slightly larger; its copy at the slot
+  // down-right, larger, blurrier and fainter with height
+  var k = 1 - eFall(C((t - CFG.fall[0]) / (CFG.fall[1] - CFG.fall[0])));
+  F.forEach(function (f) {
+    var h = k * f.h, c = f.c;
+    f.e.style.transform = h > 0.01 ? "translate(" + (-0.36 * h).toFixed(2) + "px," + (-0.82 * h).toFixed(2) + "px) scale(" + (1 + 0.0007 * h).toFixed(4) + ")" : "";
+    c.display = h > 1 ? "" : "none";
+    c.transform = "translate(" + (0.26 * h).toFixed(2) + "px," + (0.48 * h).toFixed(2) + "px) scale(" + (1 + 0.0012 * h).toFixed(4) + ")";
+    c.filter = "brightness(0) blur(" + (1.5 + 0.11 * h).toFixed(2) + "px)";
+    c.opacity = Math.min(1, Math.max(0.08, 0.3 - 0.0011 * h) * SH).toFixed(3);
+  });
+  // tubes breathe on their own periods (frames at 30 fps)
+  var f30 = t * 30;
+  T.forEach(function (x) { x[0].opacity = (bg * (0.18 + 0.4 * (0.5 + 0.5 * Math.sin(((f30 + x[1].ph) / x[1].pe) * Math.PI * 2)))).toFixed(3); });
+  grain(t);
+};
+var tl = MT.scene(CFG.dur, render);
+window.__timelines["neon-frame-orbit-drop"] = tl;
+})();
+      </script>
+    </template>
+  </body>
+</html>

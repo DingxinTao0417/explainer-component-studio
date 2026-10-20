@@ -1,0 +1,452 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"标题（用 | 切意群；括号拉开时从中间露出）","default":"写好|第一个|函数"},
+    {"id":"kicker","type":"string","label":"眉题（等宽注释，留空不要）","default":"// 第 3 节 · 基础语法"},
+    {"id":"sub","type":"string","label":"副标题（用 | 切意群，留空不要）","default":"先跑通，|再优化"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>brace-expand · 括号拉幕</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="brace-expand-template">
+      <!-- Ported from video-shotcraft demos/typography/brace-expand/BraceExpand.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette, system fonts (Consolas braces, YaHei Bold title), generic Chinese copy, upstream wordmark
+           and tagline removed; white-first stage (midnight key light, dot grid, horizon band and under-brace reflection
+           kept as light layers that multiply on light skins and screen on dark ones); landscape and portrait layouts;
+           the brace half-gap follows the measured title width (upstream fixed HALF 676) and the brace inner edge is
+           measured from the font (upstream 64 px at 300 px); braces drawn by ::before; CJK tracking relaxes 0 -> 0.02em
+           (Latin keeps -0.05 -> -0.03em). Caret blink, 6f hard cut, 14f spring (damping 14 / stiffness 130), sc = mix(0.4, 1, ex),
+           clip bound to the brace inner edges with a 14 px feather, speed blur 0.22 / 16, glow decay, eyebrow, word blur
+           subtitle and the 1.2% push keep upstream frames. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        @font-face { font-family: "Consolas"; src: local("Consolas"); }
+        @font-face { font-family: "be-heavy"; font-weight: 700 900; src: local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"), local("PingFangSC-Semibold"), local("NotoSansSC-Black"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          --k-mono: var(--mc-mono, Consolas, "Microsoft YaHei", monospace);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* ==== kit:derived@1 — shade only ==== */
+        .be { --be-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); }
+        .be[data-tone="dark"] { --be-shade: color-mix(in srgb, var(--k-bg) 30%, black); }
+        /* ==== end kit:derived ==== */
+        /* ==== kit:backdrop@1 ==== */
+        .be-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .be-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        /* ==== end kit:backdrop ==== */
+        /* ==== kit:vignette@1 ==== */
+        .be-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--be-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .be[data-tone="dark"] .be-vig { --vs: 0.55; }
+        /* ==== end kit:vignette ==== */
+        /* ==== kit:grain@1 ==== */
+        .be-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+        /* ==== kit:light@1 ==== */
+        .be-light { mix-blend-mode: multiply; }
+        .be[data-tone="dark"] .be-light { mix-blend-mode: screen; }
+        /* ==== end kit:light ==== */
+        /* ==== kit:text@2 ==== */
+        .be-u { display: inline-block; white-space: pre; }
+        /* ==== end kit:text ==== */
+        /* ==== kit:fit@1 ==== */
+        .be-row { display: block; white-space: nowrap; }
+        /* ==== end kit:fit ==== */
+
+        /* --cy is the title's middle line: 520 of 1080 in landscape (upstream CY), the 40% anchor in portrait */
+        .be { position: absolute; inset: 0; container-type: size; --cy: 48.15%; }
+        .be-bg, .be-cam, .be-sb { position: absolute; inset: 0; }
+        /* static layout = the default copy as measured at run time (156px title, 285px braces; portrait 106 / 242px) */
+        /* the stage: key light from the top centre (accent-2, upstream's cool key), editor dot grid, horizon band */
+        .be-key { position: absolute; inset: 0; background: radial-gradient(ellipse 58% 62% at 50% 2%, color-mix(in srgb, var(--k-accent-2) 10%, transparent) 0%, transparent 70%); }
+        .be[data-tone="dark"] .be-key { background: radial-gradient(ellipse 58% 62% at 50% 2%, color-mix(in srgb, var(--k-accent-2) 45%, transparent) 0%, transparent 70%); }
+        .be-dots {
+          position: absolute; inset: 0; background-image: radial-gradient(circle, color-mix(in srgb, var(--k-ink) 16%, transparent) 1.4px, transparent 1.8px);
+          background-size: 32px 32px; background-position: 16px 8px;
+          -webkit-mask-image: radial-gradient(ellipse 60% 55% at 50% 48%, #000 0%, rgba(0,0,0,0.35) 55%, transparent 85%);
+          mask-image: radial-gradient(ellipse 60% 55% at 50% 48%, #000 0%, rgba(0,0,0,0.35) 55%, transparent 85%);
+        }
+        .be-hz { position: absolute; left: -10%; right: -10%; top: 57%; height: 18%; filter: blur(10px); background: radial-gradient(ellipse 50% 50% at 50% 50%, color-mix(in srgb, var(--k-accent-2) 12%, transparent) 0%, transparent 70%); }
+        .be[data-tone="dark"] .be-hz { background: radial-gradient(ellipse 50% 50% at 50% 50%, color-mix(in srgb, var(--k-accent-2) 28%, transparent) 0%, transparent 70%); }
+        /* cold reflection under the braces; the script widens it with the gap */
+        .be-refl { position: absolute; left: 30%; width: 40%; top: calc(var(--cy) + 150px); height: 90px; background: radial-gradient(ellipse 50% 50% at 50% 50%, color-mix(in srgb, var(--k-accent) 22%, transparent) 0%, transparent 70%); }
+        /* braces are decorative glyphs drawn by ::before, so the layout checker never counts them as text */
+        .be-br { position: absolute; top: var(--cy); font-family: var(--k-mono); font-size: 285px; font-weight: 500; line-height: 1; color: var(--k-accent); transform: translate(-50%, -52%); }
+        .be-br::before { content: attr(data-c); }
+        .be-bl { left: calc(50% - 652px); }
+        .be-brr { left: calc(50% + 652px); }
+        .be-caret { position: absolute; left: 50%; top: var(--cy); width: 8px; height: 120px; margin: -60px 0 0 -4px; border-radius: 2px; background: var(--k-accent); opacity: 0; }
+        /* the title sits in a full-frame layer whose mask is the curtain: only the span between the inner brace edges shows */
+        .be-tm { position: absolute; inset: 0; }
+        .be-title {
+          position: absolute; left: 50%; top: var(--cy); width: 1172px; transform: translate(-50%, -54%);
+          font-family: var(--mc-font, be-heavy), var(--k-font); font-size: 156px; font-weight: 800; line-height: 1.15; letter-spacing: 0.02em; text-align: center;
+        }
+        /* a white-to-cool fill per line, as upstream's title gradient, mixed from the palette */
+        .be-title, .be-row { background-image: linear-gradient(180deg, var(--k-ink) 0%, var(--k-ink) 50%, color-mix(in srgb, var(--k-ink) 72%, var(--k-accent-2)) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .be-kick, .be-sub { position: absolute; left: 11%; right: 11%; text-align: center; }
+        .be-kick { bottom: calc(100% - var(--cy) + 206px); font-family: var(--k-mono); font-size: 40px; font-weight: 500; line-height: 1.3; letter-spacing: 0.08em; color: var(--k-accent-2); }
+        .be-sub { top: calc(var(--cy) + 170px); font-size: 44px; font-weight: 400; line-height: 1.35; color: var(--k-muted); }
+        @container (orientation: portrait) {
+          .be { --cy: 40%; }
+          .be-br { font-size: 242px; }
+          .be-bl { left: calc(50% - 343px); }
+          .be-brr { left: calc(50% + 343px); }
+          .be-title { width: 569px; font-size: 106px; }
+          .be-kick { bottom: calc(100% - var(--cy) + 200px); }
+          .be-sub { top: calc(var(--cy) + 180px); }
+        }
+      </style>
+
+      <div id="root" data-composition-id="brace-expand">
+        <div class="be">
+          <div class="be-bg"><div class="be-backdrop"></div><div class="be-key be-light"></div><div class="be-dots"></div><div class="be-hz be-light"></div></div>
+          <div class="be-refl be-light"></div>
+          <div class="be-vig"></div>
+          <div class="be-grain"></div>
+          <div class="be-cam">
+            <div class="be-kick">// 第 3 节 · 基础语法</div>
+            <div class="be-tm"><div class="be-title">写好第一个函数</div></div>
+            <div class="be-sb"><div class="be-br be-bl" data-c="{"></div></div>
+            <div class="be-sb"><div class="be-br be-brr" data-c="}"></div></div>
+            <div class="be-caret"></div>
+            <div class="be-sub">先跑通，再优化</div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing (seconds = upstream frames / 30), shared by both orientations
+          var CFG = {
+            dur: 4,                       // 120 frames
+            blink: 0.1,                   // caret on/off every 3 frames until the braces cut in
+            appear: 0.2,                  // 6f: the closed "{}" replaces the caret, hard cut
+            expand: 0.467,                // 14f: spring starts
+            spring: { damping: 14, stiffness: 130 },
+            sc0: 0.4,                     // brace and title scale at ex = 0
+            feather: 14,                  // curtain edge softness, px at brace 300px
+            blur: { amount: 0.22, max: 16 },
+            glowFade: 1.133, glowFadeDur: 1,   // glow falls from its peak, 34f-64f, out
+            relax: 1.333, relaxDur: 0.8,  // tracking breathes out, 40f-64f, smooth
+            kick: 1.467, kickTrack: 0.667, kickFade: 0.467, // eyebrow tracking 0.5em -> 0.08em (snappy), fade (out)
+            sub: 1.8, subEach: 0.533, subGap: 0.1,          // subtitle words, blur reveal: 54f, 16f each, 3f apart
+            push: 2.333, pushDur: 1.667, pushTo: 1.012       // whole picture 1 -> 1.012, 70f-120f, smooth
+          };
+          // per orientation: brace size cap, title size cap and floor, title lines, middle line (fraction of height)
+          var LAND = { brace: 300, title: 164, min: 80, lines: 1, cy: 0.4815 };
+          var PORT = { brace: 256, title: 112, min: 72, lines: 2, cy: 0.4 };
+          var v = { title: "写好|第一个|函数", kicker: "// 第 3 节 · 基础语法", sub: "先跑通，|再优化", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".be");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+          // ==== kit:speedblur@1 ====
+          function kSpeedBlur(box, prefix, o) {
+            o = o || {};
+            var amount = o.amount || 0.45, max = o.max || 36;
+            var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+            var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+            svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+            var outer = document.createElement("div"), inner = document.createElement("div");
+            outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+            while (box.firstChild) inner.appendChild(box.firstChild);
+            outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+            var fe = svg.firstChild.firstChild;
+            return function (vx, vy) {
+              vy = vy || 0;
+              var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+              if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+              var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+              fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+              outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+              inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+              outer.style.filter = "url(#" + id + ")";
+            };
+          }
+          // ==== end kit:speedblur ====
+          // ==== kit:glow@1 (text-shadow half only) ====
+          function kGlow(c, s) {
+            s = s == null ? 0.6 : s;
+            var a = function (k) { return "color-mix(in srgb, " + c + " " + Math.round(k * s * 100) + "%, transparent)"; };
+            return "0 0 " + (6 * s).toFixed(1) + "px " + a(0.55) + ", 0 0 " + (24 * s).toFixed(1) + "px " + a(0.45) + ", 0 0 " + (70 * s).toFixed(1) + "px " + a(0.3);
+          }
+          // ==== end kit:glow ====
+          // ==== kit:text@2 ====
+          var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "be-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "be-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          function kReveal(tl, units, variant, at, o) {
+            o = o || {};
+            var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+            units.forEach(function (u, i) {
+              var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+              tl.fromTo(u, { opacity: 0, y: fs * 0.25, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: each, ease: ease }, t0);
+            });
+            return tl;
+          }
+          // ==== end kit:text (blur variant only) ====
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n, w: m.w };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          function kRows(el, cls) {
+            if (!el.children.length) return [];
+            var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+            var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+            kids.forEach(function (c, i) {
+              if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+              if (tops[i] != null) last = tops[i];
+              row.appendChild(c);
+            });
+            return [].slice.call(el.children);
+          }
+          // ==== end kit:fit ====
+
+          kTone(root);
+          if (String(v.backdrop) === "off") ["bg", "vig", "grain"].forEach(function (n) { q(".be-" + n).style.display = "none"; });
+          var grain = kGrain(q(".be-grain"));
+          var bl = q(".be-bl"), brr = q(".be-brr"), title = q(".be-title"), tm = q(".be-tm"), caret = q(".be-caret");
+          var kick = q(".be-kick"), sub = q(".be-sub"), cam = q(".be-cam"), refl = q(".be-refl"), key = q(".be-key");
+          var CX = FW / 2, CY = FH * L.cy, edge = FW * 0.4; // braces' outer edges stay inside the 10% side margins
+
+          // brace glyph geometry in em, measured from the real mono font: advance and the gap centre -> inner ink edge
+          // (upstream: 64px at 300px for its mono). Falls back to 0.55 / 0.2 em when canvas cannot measure.
+          var adv = 0.55, inner = 0.2;
+          try {
+            var cx = document.createElement("canvas").getContext("2d"), bcs = getComputedStyle(bl);
+            cx.font = "500 100px " + bcs.fontFamily;
+            var mm = cx.measureText("{");
+            if (mm.width > 30 && mm.actualBoundingBoxRight > 0) { adv = mm.width / 100; inner = MT.clamp((mm.actualBoundingBoxRight - mm.width / 2) / 100, 0.08, 0.3); }
+          } catch (e) {}
+
+          // title: phrases from the variable, measured at its final tracking, frozen into lines (tracking moves later)
+          var latin = !kCJK.test(String(v.title));
+          var LS = latin ? [-0.05, -0.03] : [0, 0.02];
+          var pad = 0.287; // upstream: 47px of air per side at 164px, between the title and the inner edge
+          var maxW = 2 * (edge - L.brace * (adv / 2 + inner) - pad * L.title);
+          title.style.width = maxW + "px";
+          title.style.letterSpacing = LS[1] + "em";
+          kSplit(title, "word", false, v.title);
+          var fit = kFit(title, { max: L.title, min: L.min, lines: L.lines, width: maxW });
+          kRows(title, "be-row");
+          var fs = fit.size, lines = Math.max(1, fit.lines), tw = Math.min(maxW, fit.w);
+          var BFS = Math.min(L.brace, 1.83 * fs * (lines > 1 ? 1.25 : 1)), K = BFS / 300;
+          var IN = inner * BFS;
+          // half-distance of the brace centres at rest: the title plus its air, never tighter than 4 em of title
+          var HALF = Math.min(edge - (adv / 2) * BFS, Math.max(tw / 2 + pad * fs, 2 * fs) + IN);
+          var TH = title.offsetHeight;
+          [bl, brr].forEach(function (b) { b.style.fontSize = BFS + "px"; b.style.top = CY + "px"; });
+          title.style.top = CY + "px";
+          caret.style.cssText += ";top:" + CY + "px;width:" + 8 * K + "px;height:" + 120 * K + "px;margin:" + -60 * K + "px 0 0 " + -4 * K + "px;box-shadow:" + kGlow("var(--k-accent)", 0.6);
+          refl.style.top = CY + 150 * K + "px"; refl.style.height = 90 * K + "px";
+          cam.style.transformOrigin = "50% " + CY + "px";
+
+          // eyebrow and subtitle sit off the brace block (upstream: 206px above, 170px below the middle at brace 300px)
+          var upper = Math.max(206 * K, TH / 2 + 0.2 * BFS), lower = Math.max(170 * K, TH / 2 + 0.12 * BFS);
+          var hasKick = String(v.kicker).trim() !== "", hasSub = String(v.sub).trim() !== "";
+          kick.style.display = hasKick ? "" : "none";
+          sub.style.display = hasSub ? "" : "none";
+          kick.style.bottom = FH - CY + upper + "px";
+          sub.style.top = CY + lower + "px";
+          var tl = MT.scene(CFG.dur, render);
+          if (hasKick) {
+            kick.style.letterSpacing = "0.5em"; // fit at the widest tracking, so the closing move never leaves the frame
+            kSplit(kick, "line", false, v.kicker); // one unit: a code comment keeps every typed space ("// x")
+            kFit(kick, { lines: 2, min: 40, width: FW * 0.78 });
+            tl.fromTo(kick, { letterSpacing: "0.5em" }, { letterSpacing: "0.08em", duration: CFG.kickTrack, ease: "snappy" }, CFG.kick);
+            tl.fromTo(kick, { opacity: 0 }, { opacity: 1, duration: CFG.kickFade, ease: "out" }, CFG.kick);
+          }
+          if (hasSub) {
+            var su = kSplit(sub, "word", false, v.sub);
+            kFit(sub, { lines: 2, min: 40, width: FW * 0.78 });
+            kReveal(tl, su, "blur", CFG.sub, { each: CFG.subEach, gap: CFG.subGap });
+          }
+
+          var sbL = kSpeedBlur(q(".be-sb"), "be", CFG.blur), sbR = kSpeedBlur(root.querySelectorAll(".be-sb")[1], "be", CFG.blur);
+          var exAt = function (t) { return t < CFG.expand ? 0 : MT.spring({ t: t, delay: CFG.expand, damping: CFG.spring.damping, stiffness: CFG.spring.stiffness }); };
+          // curtain half-width: displacement times scale, so growing also pushes the braces apart; 0 = inner edges touch
+          var xAt = function (t) { var ex = exAt(t); return (HALF - IN) * ex * MT.mix(CFG.sc0, 1, ex); };
+
+          function render(t) {
+            var f = t * 30; // frames at 30 fps
+            var on = t >= CFG.appear, ex = exAt(t), sc = MT.mix(CFG.sc0, 1, ex), x = xAt(t), bx = x + IN * sc;
+            var vx = MT.velocity(xAt, t);
+            var glowK = Math.min(1, ex) * (1 - MT.ramp(t, CFG.glowFade, CFG.glowFadeDur, "out"));
+            grain(t);
+            key.style.opacity = (1 + 0.048 * Math.sin(f / 38)).toFixed(3); // upstream breathe 0.4 on the key light
+            caret.style.opacity = !on && Math.floor(f / 3) % 2 === 0 ? 1 : 0;
+            [[bl, -bx, sbL, -vx], [brr, bx, sbR, vx]].forEach(function (b) {
+              b[0].style.opacity = on ? 1 : 0;
+              b[0].style.left = CX + b[1] + "px";
+              b[0].style.transform = "translate(-50%, -52%) scale(" + sc.toFixed(4) + ")";
+              b[0].style.textShadow = on ? kGlow("var(--k-accent)", 0.5 + 0.5 * glowK) : "none";
+              b[2](on ? b[3] : 0, 0);
+            });
+            // the title is revealed only between the inner brace edges, with a feather that narrows when the gap does
+            var w = Math.max(0, 2 * x), fe = Math.min(CFG.feather * K, w / 4), a = CX - x, z = CX + x;
+            var m = "linear-gradient(90deg, transparent " + a + "px, #000 " + (a + fe) + "px, #000 " + (z - fe) + "px, transparent " + z + "px)";
+            tm.style.webkitMaskImage = tm.style.maskImage = m;
+            tm.style.opacity = on && w > 0.5 ? 1 : 0;
+            title.style.transform = "translate(-50%, -54%) scale(" + sc.toFixed(4) + ")";
+            title.style.letterSpacing = MT.mix(LS[0], LS[1], MT.ramp(t, CFG.relax, CFG.relaxDur, "smooth")).toFixed(4) + "em";
+            refl.style.left = CX - (x + 120 * K) + "px";
+            refl.style.width = 2 * (x + 120 * K) + "px";
+            refl.style.opacity = Math.min(1, ex);
+            cam.style.transform = "scale(" + (1 + (CFG.pushTo - 1) * MT.ramp(t, CFG.push, CFG.pushDur, "smooth")).toFixed(5) + ")";
+          }
+          window.__timelines["brace-expand"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

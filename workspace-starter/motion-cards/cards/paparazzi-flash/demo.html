@@ -1,0 +1,477 @@
+<!doctype html>
+<html
+ lang="zh-CN"
+ data-composition-variables='[
+  {"id":"kicker","type":"string","label":"眉题（可空）","default":"第 3 节 · 实验记录"},
+  {"id":"title","type":"string","label":"标题（可空）","default":"本周最好的一次"},
+  {"id":"key","type":"string","label":"特写大字（越短越好）","default":"92%"},
+  {"id":"note","type":"string","label":"说明（| 分行，1–3 行，可空）","default":"准确率|一次|跑通。"},
+  {"id":"name","type":"string","label":"名字（可空）","default":"示例应用"},
+  {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+ ]'
+>
+ <head>
+  <meta charset="UTF-8" />
+  <title>paparazzi-flash · 连闪定格</title>
+  <script src="../../lib/preview.js"></script>
+ </head>
+ <body>
+  <template id="paparazzi-flash-template">
+   <!-- Ported from video-shotcraft demos/rhythm/beat-cut-moves/PaparazziFlash.tsx
+     (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+     Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+     Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+     neutral --k-* palette (light wall and card; the graphite look only under a dark skin, vignette 0.5-0.62 and
+     grain 0.1 soft-light there, x0.28 and 0.05 overlay on light skins), system fonts; upstream mark / wordmark wall
+     -> neutral mark and bars; award copy and footer -> five text variables ("Take" and the motto dropped); HUD
+     words in Chinese, ink with accent dot / ring / tick, kicker and HUD 22-24 -> 28 px; note line height 1.15;
+     key 280 px shrinks to fit (186 by default, 90 floor); crops measured from the laid-out card (a tall card
+     rises in the wide shot, a tall block zooms in less); portrait: taller plaque (name on top, key over note),
+     wide 0.5433x, crops at 40% / 38%. Kept: flashes 30 / 52 / 70f, 0.95 -> 0 in 4f, +-2 px jitter, 1.03 -> 1
+     and 16 px settle in 6f, 7f bloom and still look, 1 / 1.6 / 2.8 crops, live creep 1.04 -> 1.1 with six far
+     flashes, brackets 8f (9f) ahead locking 3f early, 1.012 overscan, 1.015 hold push, 16f recharge, saved 84f. -->
+   <style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+@font-face { font-family: "Consolas"; src: local("Consolas"); }
+@font-face { font-family: "pf-heavy"; font-weight: 700 900; src: local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"), local("PingFangSC-Semibold"), local("NotoSansSC-Black"); }
+#root {
+ --k-bg: var(--mc-bg, #ffffff);
+ --k-panel: var(--mc-panel, #f4f5f7);
+ --k-ink: var(--mc-ink, #15171c);
+ --k-muted: var(--mc-muted, #6b7280);
+ --k-accent: var(--mc-accent, #e8590c);
+ --k-accent-2: var(--mc-accent-2, #2563eb);
+ --k-on-accent: var(--mc-on-accent, #ffffff);
+ --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+ --k-mono: var(--mc-mono, Consolas, monospace);
+ position: absolute;
+ inset: 0;
+ overflow: hidden;
+ font-family: var(--k-font);
+ color: var(--k-ink);
+}
+/* colours mixed from the palette; [data-tone=dark] is the upstream graphite look */
+.pf {
+ position: absolute; inset: 0; container-type: size; overflow: hidden;
+ --pf-hv: pf-heavy, var(--k-font);
+ --pf-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+ --pf-w0: color-mix(in srgb, var(--k-bg), var(--k-ink) 4%);
+ --pf-w1: color-mix(in srgb, var(--k-bg), var(--k-ink) 9%);
+ --pf-w2: color-mix(in srgb, var(--k-bg), var(--k-ink) 16%);
+ --pf-glow: color-mix(in srgb, var(--k-bg) 75%, transparent);
+ --pf-c0: var(--k-bg); --pf-c1: color-mix(in srgb, var(--k-bg), var(--k-panel) 55%); --pf-c2: var(--k-panel);
+ --pf-sheen: color-mix(in srgb, var(--k-bg) 60%, transparent);
+ --pf-edge: color-mix(in srgb, var(--k-ink) 9%, transparent);
+ --pf-lip: rgba(255,255,255,.9);
+ --pf-drop: color-mix(in srgb, var(--pf-shade) 34%, transparent);
+ --pf-rim: color-mix(in srgb, var(--k-ink) 6%, transparent);
+ --pf-vc: var(--pf-shade);
+}
+.pf[data-tone="dark"] {
+ --pf-w0: color-mix(in srgb, var(--k-bg), white 11%); --pf-w1: color-mix(in srgb, var(--k-bg), white 4%); --pf-w2: color-mix(in srgb, var(--k-bg), black 40%);
+ --pf-glow: rgba(255,250,240,.12);
+ --pf-c0: color-mix(in srgb, var(--k-panel), white 7%); --pf-c1: var(--k-panel); --pf-c2: color-mix(in srgb, var(--k-panel), var(--k-bg) 60%);
+ --pf-sheen: rgba(255,255,255,.08); --pf-edge: rgba(255,255,255,.12); --pf-lip: rgba(255,255,255,.22);
+ --pf-drop: rgba(0,0,0,.95); --pf-rim: rgba(0,0,0,.6); --pf-vc: #000;
+}
+/* shot = filter + settle / jitter / push; cam = one of the three crops. Static = the last frame */
+.pf-shot, .pf-cam, .pf-wall, .pf-glow, .pf-vig, .pf-grain, .pf-hud, .pf-af, .pf-flash { position: absolute; inset: 0; }
+.pf-shot { transform-origin: 50% 50%; transform: scale(1.02718); filter: contrast(1.06) saturate(0.82); }
+.pf-cam { transform-origin: 0 0; transform: translate(-1728px, -1114.56px) scale(2.8); }
+/* scene in design px; portrait wide shot = 0.5433x */
+.pf-scene { --pf-b: 1; position: absolute; left: 0; top: 0; width: calc(100% / var(--pf-b)); height: calc(100% / var(--pf-b)); }
+.pf-wall { background: radial-gradient(ellipse 60% 70% at 50% 28%, var(--pf-w0), var(--pf-w1) 55%, var(--pf-w2)); }
+.pf-wall svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; color: var(--k-ink); }
+.pf-glow { background: radial-gradient(ellipse 34% 60% at 50% 40%, var(--pf-glow), transparent 70%); }
+/* far flashes of other cameras (live part only) */
+.pf-pop { position: absolute; width: 240px; height: 240px; margin: -120px 0 0 -120px; opacity: 0; background: radial-gradient(circle, rgba(255,255,255,.95), rgba(230,240,255,.35) 18%, rgba(255, 255, 255, 0) 60%); }
+.pf-pop::before, .pf-pop::after { content: ""; position: absolute; }
+.pf-pop::before { left: 0; right: 0; top: 118px; height: 4px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.9), transparent); }
+.pf-pop::after { top: 30px; bottom: 30px; left: 118px; width: 4px; background: linear-gradient(transparent, rgba(255,255,255,.8), transparent); }
+/* the award card, 700 design px wide */
+.pf-card {
+ position: absolute; left: 50%; top: 16.3%; width: 700px; margin-left: -350px; box-sizing: border-box; padding: 50px 56px 60px;
+ display: flex; flex-direction: column; border-radius: 40px;
+ background: radial-gradient(ellipse 80% 40% at 30% 0%, var(--pf-sheen), transparent 70%), linear-gradient(165deg, var(--pf-c0), var(--pf-c1) 45%, var(--pf-c2));
+ box-shadow: inset 0 0 0 1.5px var(--pf-edge), inset 0 1.5px 0 var(--pf-lip), 0 60px 120px -40px var(--pf-drop), 0 0 0 1px var(--pf-rim);
+}
+.pf-card > * { flex: none; }
+.pf-head, .pf-id { display: flex; align-items: center; gap: 20px; min-height: 52px; }
+.pf-laurel { display: block; flex: none; width: 83px; height: 52px; fill: none; stroke: var(--k-accent); stroke-width: 3; stroke-linecap: round; }
+.pf-leaf { fill: color-mix(in srgb, var(--k-accent) 25%, transparent); }
+.pf-star { fill: var(--k-accent); stroke: none; }
+.pf-kick { font-size: 28px; font-weight: 700; letter-spacing: 0.12em; line-height: 1.3; color: var(--k-accent); }
+.pf-title { margin-top: 22px; font: 700 72px/1.2 var(--pf-hv); }
+.pf-rule { display: block; height: 1.5px; margin-top: 18px; background: color-mix(in srgb, var(--k-ink) 12%, transparent); }
+.pf-band { position: relative; height: 370px; display: flex; align-items: center; }
+.pf-blk { display: flex; align-items: flex-end; gap: 34px; }
+.pf-key { flex: none; font: 800 186px/0.86 var(--pf-hv); }
+.pf-note { flex: none; margin-bottom: 18px; font-size: 44px; font-weight: 600; line-height: 1.15; color: var(--k-muted); }
+.pf-note .pf-u:last-child { color: var(--k-accent); }
+.pf-id { min-height: 80px; margin-top: 38px; gap: 22px; }
+.pf-mark { display: block; flex: none; }
+.pf-name { font-size: 44px; font-weight: 700; line-height: 1.3; }
+/* screen layers: vignette, grain, viewfinder HUD, flash */
+.pf-vig { background: radial-gradient(ellipse 72% 72% at 50% 46%, transparent 42%, color-mix(in srgb, var(--pf-vc) 5.6%, transparent) 73.9%, color-mix(in srgb, var(--pf-vc) 17.4%, transparent)), radial-gradient(ellipse 100% 100% at 50% 46%, transparent 60%, color-mix(in srgb, var(--pf-vc) 10.4%, transparent)); }
+.pf-vig, .pf-grain, .pf-hud, .pf-flash { pointer-events: none; }
+.pf-vf { position: absolute; inset: 84px 96px; opacity: 0.5; }
+.pf-vf i { position: absolute; width: 70px; height: 70px; border: 0 solid var(--k-ink); }
+.pf-vf i:nth-child(1) { left: 0; top: 0; border-width: 3px 0 0 3px; }
+.pf-vf i:nth-child(2) { right: 0; top: 0; border-width: 3px 3px 0 0; }
+.pf-vf i:nth-child(3) { right: 0; bottom: 0; border-width: 0 3px 3px 0; }
+.pf-vf i:nth-child(4) { left: 0; bottom: 0; border-width: 0 0 3px 3px; }
+.pf-af path { fill: none; stroke: var(--k-ink); stroke-width: 3; opacity: 0.85; stroke-linecap: square; }
+.pf-af path.pf-lk { stroke: var(--k-accent); stroke-width: 4; opacity: 1; }
+.pf-tl, .pf-tr, .pf-bl, .pf-br { position: absolute; display: flex; align-items: center; font: 700 28px/1.3 var(--k-mono); color: var(--k-ink); white-space: nowrap; }
+.pf-tl { left: 130px; top: 112px; gap: 12px; letter-spacing: 0.08em; }
+.pf-dot { display: block; width: 12px; height: 12px; border-radius: 50%; background: var(--k-accent); }
+.pf-tr { right: 130px; top: 106px; gap: 14px; font-family: var(--k-font); }
+.pf-ring { display: block; width: 30px; height: 30px; fill: none; stroke-width: 3; stroke-linecap: round; }
+.pf-ring circle { stroke: color-mix(in srgb, var(--k-ink) 20%, transparent); }
+.pf-ring .pf-arc { stroke: var(--k-ink); }
+.pf-tr[data-on="1"] .pf-arc { stroke: var(--k-accent); }
+.pf-bl { left: 130px; bottom: 108px; gap: 40px; font-weight: 600; letter-spacing: 0.04em; }
+.pf-br { right: 130px; bottom: 102px; gap: 22px; }
+.pf-ok { display: flex; align-items: center; gap: 8px; font-family: var(--k-font); letter-spacing: 0.1em; }
+.pf-ok svg { display: block; width: 28px; height: 28px; fill: none; stroke: var(--k-accent); stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
+.pf-n { font-size: 40px; font-variant-numeric: tabular-nums; }
+.pf-flash { opacity: 0; background: radial-gradient(ellipse 80% 90% at 50% 45%, #fff, #fff 45%, rgba(250,250,255,.86)); }
+/* portrait: taller plaque (name row on top, key over note) so the 2.8x close-up holds only the key */
+@container (orientation: portrait) {
+ .pf-cam { transform: translate(-972.11px, -1849.9px) scale(1.52124); }
+ .pf-shot { transform-origin: 540px 729.6px; }
+ .pf-scene { --pf-b: 0.5433; }
+ .pf-card { top: 40%; transform: translateY(-50%); padding: 56px 76px 0; }
+ .pf-id { order: -1; margin: 0 0 28px; }
+ .pf-band { height: 760px; display: block; }
+ .pf-blk { position: absolute; left: 0; top: 490px; transform: translateY(-50%); flex-direction: column; align-items: flex-start; gap: 24px; }
+ .pf-key { font-size: 242px; }
+ .pf-note { margin: 0; }
+ .pf-pop:nth-of-type(4) { top: 57% !important; }
+ .pf-rule2 { display: none; }
+ .pf-vf { inset: 212px 84px 590px; }
+ .pf-tl { left: 118px; top: 244px; }
+ .pf-tr { right: 118px; top: 238px; }
+ .pf-bl { left: 118px; bottom: 622px; gap: 26px; }
+ .pf-br { right: 118px; bottom: 616px; }
+}
+/* ==== kit:grain@1 ==== */
+.pf-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+/* ==== kit:text@2 ==== */
+.pf-u { display: inline-block; white-space: pre; }
+/* ==== end kit:text ==== */
+   </style>
+
+   <div id="root" data-composition-id="paparazzi-flash">
+    <div class="pf">
+     <div class="pf-shot" data-layout-allow-overflow>
+      <div class="pf-cam">
+       <div class="pf-scene">
+        <div class="pf-wall"><svg><defs><pattern id="pf-tile" width="680" height="248" patternUnits="userSpaceOnUse"><path fill-rule="evenodd" d="M99 23h22a12 12 0 0 1 12 12v22a12 12 0 0 1-12 12h-22a12 12 0 0 1-12-12v-22a12 12 0 0 1 12-12zM96 39a6.5 6.5 0 1 0 13 0a6.5 6.5 0 1 0-13 0zM99 52h22a3.25 3.25 0 0 1 0 6.5h-22a3.25 3.25 0 0 1 0-6.5zM269 147h22a12 12 0 0 1 12 12v22a12 12 0 0 1-12 12h-22a12 12 0 0 1-12-12v-22a12 12 0 0 1 12-12zM266 163a6.5 6.5 0 1 0 13 0a6.5 6.5 0 1 0-13 0zM269 176h22a3.25 3.25 0 0 1 0 6.5h-22a3.25 3.25 0 0 1 0-6.5z"/><rect x="350" y="37" width="200" height="18" rx="9"/><rect x="520" y="161" width="200" height="18" rx="9"/><rect x="-160" y="161" width="200" height="18" rx="9"/></pattern></defs><rect class="pf-tiles" width="100%" height="100%" fill="url(#pf-tile)" opacity=".09"/></svg></div>
+        <div class="pf-glow"></div>
+        <i class="pf-pop" style="left:15.6%;top:27.8%"></i><i class="pf-pop" style="left:84.4%;top:20.4%"></i><i class="pf-pop" style="left:21.9%;top:72.2%"></i><i class="pf-pop" style="left:78.1%;top:64.8%"></i><i class="pf-pop" style="left:11.5%;top:48.1%"></i><i class="pf-pop" style="left:91.7%;top:44.4%"></i>
+        <div class="pf-card">
+         <div class="pf-head"><svg class="pf-laurel" viewBox="0 0 112 70"><g id="pf-lf"><path d="M44 64C24 58 12 42 12 18"/><path class="pf-leaf" d="M30 56q-12-2-14-12q12 0 14 12M25.5 44q-12-2-14-12q12 0 14 12M21 32q-12-2-14-12q12 0 14 12M16.5 20q-12-2-14-12q12 0 14 12"/></g><use href="#pf-lf" transform="translate(112 0) scale(-1 1)"/><path class="pf-star" d="M56 22l4 8 9 1-7 6 2 9-8-5-8 5 2-9-7-6 9-1z"/></svg><span class="pf-kick">第 3 节 · 实验记录</span></div>
+         <div class="pf-title">本周最好的一次</div>
+         <i class="pf-rule"></i>
+         <div class="pf-band"><div class="pf-blk"><div class="pf-key">92%</div><div class="pf-note"><span class="pf-u" style="display:block">准确率</span><span class="pf-u" style="display:block">一次</span><span class="pf-u" style="display:block">跑通。</span></div></div></div>
+         <i class="pf-rule pf-rule2"></i>
+         <div class="pf-id"><svg class="pf-mark" width="80" height="80" viewBox="0 0 128 128"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg><span class="pf-name">示例应用</span></div>
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="pf-vig"></div>
+     <div class="pf-grain"></div>
+     <div class="pf-hud">
+      <div class="pf-vf"><i></i><i></i><i></i><i></i></div>
+      <svg class="pf-af" width="100%" height="100%" data-layout-allow-overflow><path d=""/></svg>
+      <div class="pf-tl"><i class="pf-dot"></i><span>RAW · 45MP</span></div>
+      <div class="pf-tr" data-on="1"><svg class="pf-ring" viewBox="0 0 30 30"><circle cx="15" cy="15" r="12"/><circle class="pf-arc" cx="15" cy="15" r="12" stroke-dasharray="75.4 76" transform="rotate(-90 15 15)"/></svg><span class="pf-st">闪光就绪</span></div>
+      <div class="pf-bl"><span>1/250</span><span>F2.8</span><span>ISO 1600</span><span>±0.0</span></div>
+      <div class="pf-br"><span class="pf-ok"><svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg><span>已保存</span></span><span class="pf-n">026</span></div>
+     </div>
+     <div class="pf-flash"></div>
+    </div>
+   </div>
+
+   <script>
+(function () {
+ // seconds = upstream frames / 30, shared by both orientations (only LAND / PORT differ)
+ var CFG = {
+  dur: 4.667, flash: [1, 1.733, 2.333], // 140f; flashes at 30 / 52 / 70f (gap 22f -> 18f)
+  decay: 0.133, settle: 0.2, bloom: 0.233, settleK: 0.03, drop: 16, jit: 2, // 4f flash, 6f 1.03 -> 1 + 16 px sink, 7f bloom, +-2 px
+  zoom: [1, 1.6, 2.8], live: [1.04, 1.1], // the crops; the live wide shot creeps over 30f
+  af0: 0.3, af: 0.267, afIn: 0.2, lock: 0.1, // brackets 9f / 8f ahead, 6f snap, lock 3f early
+  charge: 0.533, hold: 2.533, holdDur: 2.133, push: 0.015, saved: 2.8, savedDur: 0.4, // 16f recharge; push from 76f for 64f; saved 84f + 12f
+  pops: [0.1, 0.3, 0.433, 0.6, 0.767, 0.9] // far flashes at 3 / 9 / 13 / 18 / 23 / 27f, 3f each
+ };
+ // b: wide-shot scale of the design px; fy / ay2: card-crop centre on the card / on screen; ay3: close-up anchor;
+ // blockW: widest key block that stays inside the 10% margins at 2.8x; bh: tallest close-up block (between the HUD rows);
+ // lim: lowest foot of the key block in the card crop (above the bottom HUD row)
+ var LAND = { b: 1, fy: 0.372, ay2: 0.5, ay3: 0.5, blockW: 588, bh: 0.685, lim: 0.82 };
+ var PORT = { b: 0.5433, fy: 0.5, ay2: 0.4, ay3: 0.38, blockW: 548, bh: 0.448, lim: 0.65 };
+ var v = { kicker: "第 3 节 · 实验记录", title: "本周最好的一次", key: "92%", note: "准确率|一次|跑通。", name: "示例应用", backdrop: "on" };
+ try {
+  var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+  for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+ } catch (e) {}
+
+ var root = document.querySelector(".pf");
+ var q = function (s) { return root.querySelector(s); };
+ var FW = root.clientWidth, FH = root.clientHeight;
+ if (!FW || !FH) {
+  // not laid out yet: the host clip's declared size, then the window
+  var hc = root.closest("[data-width][data-height]");
+  FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+  FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+ }
+ var P = FH > FW, L = P ? PORT : LAND;
+ root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+var p = document.createElement("i");
+p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+el.appendChild(p);
+var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+el.removeChild(p);
+return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+var c = kRGB(wrap, "var(--k-bg)");
+var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+wrap.setAttribute("data-tone", tone);
+return tone;
+}
+// ==== end kit:tone ====
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+o = o || {};
+var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+var dark = tones && tones.getAttribute("data-tone") === "dark";
+var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+var f = "type='linear' slope='2.4' intercept='-0.7'";
+var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+  "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+  "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+  "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+  "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+});
+layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+layer.style.backgroundSize = size + "px " + size + "px";
+return function (t) {
+var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+layer.style.backgroundImage = tiles[k % 6];
+layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+};
+}
+// ==== end kit:grain ====
+// ==== kit:text@2 ====
+var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+function kWords(s, key) {
+s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+var cut = function (x) {
+if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+};
+var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+var pre = "";
+bits.forEach(function (x) {
+var t = x.trim(), last = out[out.length - 1];
+if (last && /^ /.test(x)) last.sp = true;
+if (!t) return;
+if (!/[\p{L}\p{N}]/u.test(t)) {
+  if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+  else { last.t += t; last.sp = / $/.test(x); }
+  return;
+}
+out.push({ t: pre + t, sp: / $/.test(x) });
+pre = "";
+});
+if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+if (out.length) out[out.length - 1].sp = false;
+return out;
+}
+function kSplit(el, by, rise, text) {
+var s = text != null ? String(text) : el.textContent, units = [];
+var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+el.textContent = "";
+parts.forEach(function (p) {
+var u = document.createElement("span"), box = u;
+u.className = "pf-u"; u.textContent = p.t;
+if (by === "line") u.style.display = "block";
+if (!p.t.trim()) { el.appendChild(u); return; }
+if (rise) { box = document.createElement("span"); box.className = "pf-cut"; box.style.display = u.style.display; box.appendChild(u); }
+el.appendChild(box);
+if (p.sp) el.appendChild(document.createTextNode(" "));
+units.push(u);
+});
+return units;
+}
+// ==== end kit:text ====
+// ==== kit:fit@1 ====
+function kFit(el, o) {
+o = o || {};
+var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+for (;;) {
+el.style.fontSize = f + "px";
+m = kLines(el);
+if ((m.w <= W && m.n <= n) || f <= min) break;
+f = Math.max(min, f - 2);
+}
+if (m.w > W) {
+[].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+m = kLines(el);
+}
+return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+while ((t = it.nextNode())) {
+if (!t.data.trim()) continue;
+r.selectNodeContents(t);
+[].forEach.call(r.getClientRects(), function (b) {
+  var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+  if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+  row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+});
+}
+return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+
+ if (getComputedStyle(root).getPropertyValue("--mc-font").trim()) root.style.setProperty("--pf-hv", "var(--k-font)");
+ var dark = kTone(root) === "dark", u = Math.min(FW, FH) / 1.08e3, b = L.b;
+ if (String(v.backdrop) === "off") [".pf-wall", ".pf-glow", ".pf-vig", ".pf-grain"].forEach(function (s) { q(s).style.display = "none"; });
+ var cam = q(".pf-cam"), shot = q(".pf-shot"), scene = q(".pf-scene"), card = q(".pf-card");
+ cam.style.transform = "none";
+
+ // empty optional slot: its whole row goes; every slot shrinks to fit, then wraps
+ var S = function (x) { return String(x == null ? "" : x).trim(); };
+ var slot = function (sel, by, text, row) {
+  var el = q(sel);
+  if (!S(text)) { q(row || sel).style.display = "none"; return null; }
+  kSplit(el, by, 0, text);
+  return el;
+ };
+ var IN = 700 - (P ? 152 : 112);
+ var kick = slot(".pf-kick", "line", v.kicker, ".pf-head"), title = slot(".pf-title", "word", v.title);
+ var name = slot(".pf-name", "word", v.name, ".pf-id"), note = slot(".pf-note", "line", v.note);
+ var key = slot(".pf-key", "word", S(v.key) || "92%");
+ if (kick) kFit(kick, { min: 24, width: IN - 103 });
+ if (title) kFit(title, { min: 56, width: IN });
+ if (name) kFit(name, { min: 32, width: IN - 102 });
+ var nw = 0;
+ if (note) { kFit(note, { lines: note.children.length, min: 34, width: P ? IN : 260 }); nw = P ? 0 : note.offsetWidth + 34; }
+ var fit = function (w) { key.style.maxWidth = w + "px"; return kFit(key, { max: 280, min: 90, width: w }); }, fk = fit(L.blockW - nw);
+ // landscape: a key too long to sit beside its note goes on top of it, as in portrait
+ if (!fk.fits && nw) { q(".pf-blk").setAttribute("style", "flex-direction:column;align-items:flex-start;gap:24px"); note.style.margin = 0; fk = fit(L.blockW); }
+ if (fk.lines > 1 || kCJK.test(key.textContent)) key.style.lineHeight = "1.2";
+ if (!kick && !title) q(".pf-rule").style.display = "none";
+ if (!name) q(".pf-rule2").style.display = "none";
+ // the flash whites out every word for 2 frames on purpose
+ [].forEach.call(root.querySelectorAll(".pf-u, .pf-hud span"), function (e) { e.setAttribute("data-layout-allow-occlusion", ""); });
+
+ // the wall pattern id is per mount
+ var M = (window.__pfMounts = (window.__pfMounts || 0) + 1);
+ q("pattern").id = "pf-tile-" + M;
+ q("#pf-lf").id = "pf-lf-" + M;
+ q("use").setAttribute("href", "#pf-lf-" + M);
+ q(".pf-tiles").setAttribute("fill", "url(#pf-tile-" + M + ")");
+
+ // crops from the measured card / key block (design px, camera off): scale s, scene (cx, cy) at screen (ax, ay)
+ var r0 = scene.getBoundingClientRect(), K = r0.width / (scene.offsetWidth || 1) || 1;
+ var box = function (el) { var r = el.getBoundingClientRect(); return { x: (r.left - r0.left) / K, y: (r.top - r0.top) / K, w: r.width / K, h: r.height / K }; };
+ var C = box(card), B = box(q(".pf-blk")), SW = FW / b, SH = FH / b, z3 = Math.min(CFG.zoom[2], (L.bh * FH) / (B.h * b * 1.03));
+ // a tall landscape block zooms in less: the band grows with the view so the title and the name row stay out of it
+ if (!P && z3 < CFG.zoom[2]) { q(".pf-band").style.height = FH / z3 / 1.03 + 40 + "px"; C = box(card); B = box(q(".pf-blk")); }
+ // a tall landscape card rises so its foot stays 50 px inside the wide shot
+ if (!P && card.offsetTop + card.offsetHeight > SH - 50) { card.style.top = Math.max(30, SH - 50 - card.offsetHeight) + "px"; C = box(card); B = box(q(".pf-blk")); }
+ // card crop: the key block ends above the bottom HUD row (lim); a taller card zooms in less
+ var ccx = C.x + C.w / 2, z2 = CFG.zoom[1], cy2 = C.y + C.h * L.fy, Bb = B.y + B.h;
+ if ((Bb - cy2) * z2 * b > (L.lim - L.ay2) * FH) { z2 = Math.min(z2, ((L.lim - 0.04) * FH) / ((Bb - C.y) * b)); cy2 = Bb - ((L.lim - L.ay2) * FH) / (z2 * b); }
+ var view = function (z, cx, cy, ay) { return { s: z * b, cx: cx, cy: cy, ax: FW / 2, ay: ay * FH }; };
+ var V = [view(CFG.zoom[0], SW / 2, SH / 2, 0.5), view(z2, ccx, cy2, L.ay2), view(z3, ccx, B.y + B.h / 2, L.ay3)];
+ var proj = function (r, w) { return { x: (r.x - w.cx) * w.s + w.ax, y: (r.y - w.cy) * w.s + w.ay, w: r.w * w.s, h: r.h * w.s }; };
+ var vrect = function (w) { return { x: w.cx - w.ax / w.s, y: w.cy - w.ay / w.s, w: FW / w.s, h: FH / w.s }; };
+ var n1 = function (z) { return z.toFixed(1); };
+ var brk = function (x, y, w, h, a) {
+  a = Math.min(a, w / 3, h / 3);
+  return [[x, y, 1, 1], [x + w, y, -1, 1], [x + w, y + h, -1, -1], [x, y + h, 1, -1]].map(function (c) {
+   return "M" + n1(c[0]) + " " + n1(c[1] + c[3] * a) + "V" + n1(c[1]) + "H" + n1(c[0] + c[2] * a);
+  }).join("");
+ };
+ var hash = function (i) { var s = Math.sin(i * 127.3 + 11.7) * 43758.5453; return s - Math.floor(s); };
+ var F = CFG.flash, pad = 30 / b, VS = [0.5, 0.5, 0.56, 0.62], vk = dark ? 1 : 0.28, lastSeg = -9;
+ var rgb = kRGB(root, "var(--pf-vc)").map(Math.round).join(",");
+ var vig = q(".pf-vig"), flash = q(".pf-flash"), af = q(".pf-af path"), arc = q(".pf-arc"), tr = q(".pf-tr");
+ var st = q(".pf-st"), cnt = q(".pf-n"), ok = q(".pf-ok"), pops = root.querySelectorAll(".pf-pop");
+ var grain = kGrain(q(".pf-grain"), { opacity: dark ? 0.1 : 0.05 });
+
+ var tl = MT.scene(CFG.dur, function (t) {
+  var seg = -1, i, fl = 0, jit = false, lift = 0;
+  for (i = 0; i < 3; i++) if (t >= F[i]) seg = i;
+  // after a cut: settle and over-exposure fall-off
+  var sk = seg < 0 ? 0 : 1 - MT.ramp(t, F[seg], CFG.settle, "out"), bl = seg < 0 ? 0 : 1 - MT.ramp(t, F[seg], CFG.bloom, "out");
+  F.forEach(function (x) {
+   if (t >= x && t <= x + CFG.decay) fl = Math.max(fl, 0.95 * (1 - MT.ramp(t, x, CFG.decay, "out")));
+   if (t >= x && t < x + CFG.decay) jit = true;
+  });
+  var fi = Math.floor(t * 30 + 1e-6); // frame number: jitter changes once a frame
+  var jx = jit ? CFG.jit * u * (hash(fi * 7 + 1) * 2 - 1) : 0, jy = jit ? CFG.jit * u * (hash(fi * 13 + 5) * 2 - 1) : 0;
+  for (i = 0; i < 6; i++) {
+   var d = (t - CFG.pops[i]) * 30, on = seg < 0 && d >= 0 && d <= 3;
+   pops[i].style.opacity = on ? (1 - d / 3).toFixed(3) : 0;
+   if (on && d <= 2) lift = Math.max(lift, 0.06 * (1 - d / 3));
+  }
+  var cur = seg < 0 ? view(MT.mix(CFG.live[0], CFG.live[1], MT.ramp(t, 0, F[0], "smooth")), SW / 2, SH / 2, 0.5) : V[seg];
+  var push = seg === 2 ? MT.mix(1, 1 + CFG.push, MT.ramp(t, CFG.hold, CFG.holdDur, "smooth")) : 1;
+  // hard cut: no in-between frame
+  cam.style.transform = "translate(" + (cur.ax - cur.cx * cur.s).toFixed(2) + "px," + (cur.ay - cur.cy * cur.s).toFixed(2) + "px) scale(" + cur.s.toFixed(5) + ")";
+  shot.style.transformOrigin = cur.ax + "px " + cur.ay + "px";
+  shot.style.transform = "translate(" + jx.toFixed(2) + "px," + (jy - CFG.drop * u * sk).toFixed(2) + "px) scale(" + ((1 + CFG.settleK * sk) * push * 1.012).toFixed(5) + ")";
+  // a still is a photo: a little desaturated, a little more contrast
+  shot.style.filter = seg >= 0 ? "brightness(" + (1 + 0.22 * bl).toFixed(3) + ") contrast(" + (1.06 - 0.14 * bl).toFixed(3) + ") saturate(" + (0.82 - 0.2 * bl).toFixed(3) + ")" : lift > 0 ? "brightness(" + (1 + lift).toFixed(3) + ")" : "none";
+  if (seg !== lastSeg) {
+   lastSeg = seg;
+   var s = VS[seg + 1] * vk, c = function (a) { return "rgba(" + rgb + "," + a.toFixed(3) + ")"; };
+   vig.style.background = "radial-gradient(ellipse 72% 72% at 50% 46%," + c(0) + " 42%," + c(s * 0.32) + " 73.9%," + c(s) + "),radial-gradient(ellipse 100% 100% at 50% 46%," + c(0) + " 60%," + c(s * 0.6) + ")";
+  }
+  // focus brackets: 1.3x down onto the next crop, accent when locked
+  var nx = seg + 1, path = "";
+  if (nx < 3) {
+   var t0 = F[nx] - (nx ? CFG.af : CFG.af0);
+   if (t >= t0 && t < F[nx]) {
+    var r = proj(nx ? vrect(V[nx]) : { x: C.x - pad, y: C.y - pad, w: C.w + 2 * pad, h: C.h + 2 * pad }, cur);
+    var kk = MT.mix(1.3, 1, MT.ramp(t, t0, CFG.afIn, "snappy"));
+    path = brk(r.x + (r.w * (1 - kk)) / 2, r.y + (r.h * (1 - kk)) / 2, r.w * kk, r.h * kk, 60 * u);
+    af.setAttribute("class", t >= F[nx] - CFG.lock ? "pf-lk" : "");
+   }
+  }
+  af.setAttribute("d", path);
+  // HUD: count +1, recharge, "saved" in the hold
+  var ch = Math.min(1, (t - (seg < 0 ? -1.333 : F[seg])) / CFG.charge);
+  cnt.textContent = String(23 + Math.max(0, seg + 1)).padStart(3, "0");
+  st.textContent = ch >= 1 ? "闪光就绪" : "充电中";
+  tr.setAttribute("data-on", ch >= 1 ? "1" : "");
+  arc.setAttribute("stroke-dasharray", (ch * 75.4).toFixed(1) + " 76");
+  ok.style.opacity = MT.ramp(t, CFG.saved, CFG.savedDur, "out").toFixed(3);
+  flash.style.opacity = fl > 0.004 ? fl.toFixed(3) : 0;
+  grain(t);
+ });
+ window.__timelines["paparazzi-flash"] = tl;
+})();
+   </script>
+  </template>
+ </body>
+</html>

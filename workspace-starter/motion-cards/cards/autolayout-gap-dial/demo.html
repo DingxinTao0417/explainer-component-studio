@@ -1,0 +1,438 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"items","type":"string","label":"导航项（用 | 分隔，2–6 项，第一项是选中项；竖屏只排前 3 项）","default":"首页|全部课程|工具|案例库|关于"},
+    {"id":"param","type":"string","label":"读数上方的参数名（留空不显示）","default":"自动布局 · 间距"},
+    {"id":"layer","type":"string","label":"框选图层名（留空只显示尺寸）","default":"导航栏"},
+    {"id":"rest","type":"number","label":"起始间距（px，也是落定值）","default":12,"min":0,"max":40,"step":1},
+    {"id":"peak","type":"number","label":"拉到的最大间距（px）","default":104,"min":32,"max":300,"step":1},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>autolayout-gap-dial · 间距拨盘</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+<template id="autolayout-gap-dial-template">
+  <!-- Ported from video-shotcraft demos/interaction/autolayout-gap-dial/AutolayoutGapDial.tsx
+       (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+       Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+       Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+       neutral --k-* palette (measuring gold -> --k-accent, selection white -> --k-ink 88%), white lit canvas first
+       (graphite key, fill and horizon band only on dark skins, the floor pool folded into the band), system fonts (light YaHei readout, Consolas
+       ruler and size); generic Chinese nav, eyebrow and layer copy instead of the upstream site nav; the row is a
+       real flex row whose spacers take the gap, so blocks, measures and badges follow one number by construction;
+       ruler as a CSS tick tape; badge and ruler digits as pseudo-element text; block widths from their labels (60px
+       padding, upstream fixed 206-278px); labels 40, eyebrow 32, layer name 30, size and ruler digits 28px
+       (upstream 36 / 22 / 26 / 22 / 22); readout heat mixed in oklab, its glow capped at 10% on light skins; layer
+       name outside the frame box (follows its entrance offset); gap clamped at 0; long rows zoom to fit;
+       rest, peak, items, names as variables; portrait: first 3 items, same timeline.
+       Kept: gap curve (12 -> 6 swift f22-32, -> 104 swift f32-66, spring 9/80/1.1 from f86, overshoot x0.45),
+       step-2 readout, tick pulse, 6-frame heat, per-block horizontal blur, selection and handle springs,
+       entrance offsets, 2.5% push-in, dot canvas, vignette and grain. -->
+ <style>
+  @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+  @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+  @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+  @font-face { font-family: "Consolas"; src: local("Consolas"); }
+  @font-face { font-family: "ag-light"; font-weight: 300; src: local("Microsoft YaHei Light"), local("MicrosoftYaHeiLight"), local("PingFangSC-Light"), local("NotoSansSC-Light"); }
+  #root {
+   --k-bg: var(--mc-bg, #ffffff);
+   --k-panel: var(--mc-panel, #f4f5f7);
+   --k-ink: var(--mc-ink, #15171c);
+   --k-muted: var(--mc-muted, #6b7280);
+   --k-accent: var(--mc-accent, #e8590c);
+   --k-accent-2: var(--mc-accent-2, #2563eb);
+   --k-on-accent: var(--mc-on-accent, #ffffff);
+   --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+   --k-mono: var(--mc-mono, Consolas, monospace);
+   position: absolute;
+   inset: 0;
+   overflow: hidden;
+   font-family: var(--k-font);
+   color: var(--k-ink);
+  }
+  /* kit:derived@1 (card-local mixes; dark skins switch to the upstream graphite values) */
+  .ag { position: absolute; inset: 0; container-type: size;
+   --ag-sel: color-mix(in srgb, var(--k-ink) 88%, transparent); --ag-hl: color-mix(in srgb, var(--k-ink) 10%, transparent);
+   --ag-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); --ag-hi: color-mix(in srgb, white 80%, transparent);
+   --ag-ss: 1; --ag-b1: var(--k-bg); --ag-b2: color-mix(in srgb, var(--k-panel), var(--k-bg) 30%); }
+  .ag[data-tone="dark"] { --ag-hl: color-mix(in srgb, white 9%, transparent); --ag-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+   --ag-hi: color-mix(in srgb, white 8%, transparent); --ag-ss: 2.4; --ag-b1: color-mix(in srgb, var(--k-panel), white 5%); --ag-b2: var(--k-panel); }
+  .ag-stage, .ag-stage > *, .ag-cam { position: absolute; inset: 0; }
+  .ag-stage { --ag-hy: 62%; }
+  /* kit:backdrop@1 (key light moved to the top centre, upstream keyLight 0.5, 0) */
+  .ag-bg { background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+  .ag-bg::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 58% 62% at 50% 0%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 70%); }
+  /* dark skins only: key light, warm fill from below, the horizon band the row stands on (upstream Stage, screen) */
+  .ag-key { display: none; mix-blend-mode: screen; background:
+   radial-gradient(ellipse 58% 62% at 50% 0%, color-mix(in srgb, var(--k-ink) 30%, transparent), transparent 70%),
+   radial-gradient(ellipse 50% 46% at 50% 105%, color-mix(in srgb, var(--k-accent) 20%, transparent), transparent 72%),
+   radial-gradient(ellipse 55% 10% at 50% var(--ag-hy), color-mix(in srgb, var(--k-ink) 16%, transparent), transparent 70%); }
+  .ag[data-tone="dark"] .ag-key { display: block; }
+  /* the canvas: a dot grid that is clear around the row and fades out towards the edges */
+  .ag-dots { background: radial-gradient(color-mix(in srgb, var(--k-ink) 13%, transparent) 1.4px, transparent 1.7px) 6px 16px / 36px 36px;
+   mask-image: radial-gradient(ellipse 52% 40% at 50% var(--ag-hy), #000 20%, transparent 100%); }
+  /* kit:vignette@1 */
+  .ag-vig { pointer-events: none; --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--ag-shade);
+   background: radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%); }
+  .ag[data-tone="dark"] .ag-vig { --vs: 0.55; }
+  /* kit:grain@1 */
+  .ag-grain { pointer-events: none; }
+  .ag-fx { position: absolute; }
+  .ag i { font-style: normal; }
+  .ag-cam { transform-origin: 50% 52%; }
+
+  /* readout: eyebrow, the big number with its unit, the dial ruler under a fixed pin */
+  .ag-eb { position: absolute; left: 0; right: 0; bottom: 900px; display: flex; justify-content: center; align-items: center; gap: 16px; color: var(--k-muted); }
+  .ag-eb svg, .ag-ln svg { display: block; flex: none; width: 30px; height: 30px; }
+  .ag-ebt { display: block; font-size: 32px; line-height: 1.25; letter-spacing: 0.28em; }
+  .ag-nb { position: absolute; z-index: 1; left: 0; right: 0; top: 186px; height: 220px; display: flex; justify-content: center; align-items: flex-end; clip-path: inset(0); }
+  .ag-ng { display: flex; align-items: baseline; gap: 18px; }
+  .ag-num { display: block; min-width: 1.9em; text-align: right; font: 300 196px/0.94 ag-light, var(--k-font); letter-spacing: -0.05em; font-variant-numeric: tabular-nums; transform-origin: 100% 80%; }
+  .ag-px { display: block; width: 1.9em; font-size: 60px; line-height: 1.05; color: var(--k-muted); }
+  .ag-rl { position: absolute; left: 50%; top: 414px; width: 760px; height: 76px; margin-left: -380px; }
+  .ag-win { position: absolute; left: 0; right: 0; top: -10px; bottom: 0; mask-image: linear-gradient(90deg, transparent, #000 150px, #000 calc(100% - 150px), transparent); }
+  .ag-st { position: absolute; left: 0; bottom: 0; width: 1562px; height: 86px; transform: translateX(-89px); }
+  /* ticks every 2 units (13px), majors every 10 (65px); units below 0 are faint. 36% over 22% reads as upstream's 50% */
+  .ag-tk { position: absolute; left: 0; bottom: 0; width: 390px; height: 30px; --a: 8%; --b: 8%;
+   background: linear-gradient(90deg, color-mix(in srgb, var(--k-ink) var(--a), transparent) 0 2px, transparent 0) 0 100% / 65px 30px repeat-x,
+    linear-gradient(90deg, color-mix(in srgb, var(--k-ink) var(--b), transparent) 0 2px, transparent 0) 0 100% / 13px 14px repeat-x; }
+  .ag-tk + .ag-tk { left: 390px; width: auto; right: 0; --a: 36%; --b: 22%; }
+  .ag-lb { position: absolute; bottom: 40px; width: 0; display: flex; justify-content: center; font: 28px/1.2 var(--k-mono); color: var(--k-muted); }
+  .ag-lb::before { content: attr(data-n); }
+  .ag-base { position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--k-ink) 18%, transparent) 20% 80%, transparent); }
+  .ag-pin { position: absolute; left: 50%; bottom: -6px; width: 3px; height: 50px; margin-left: -1.5px; border-radius: 2px; background: var(--k-accent); box-shadow: 0 0 8px color-mix(in srgb, var(--k-accent) 35%, transparent); }
+  .ag-pin::before { content: ""; position: absolute; left: -6.5px; top: -10px; border: solid transparent; border-width: 10px 8px 0; border-top-color: var(--k-accent); }
+
+  /* the selected auto-layout row: frame, 8 handles, layer name; spacers between the blocks are the gap */
+  .ag-lay { position: absolute; left: 0; right: 0; top: 594px; display: flex; justify-content: center; transform-origin: 50% 90px; }
+  .ag-sel { position: relative; padding: 30px; }
+  .ag-fr { position: absolute; inset: 0; border: 2px solid var(--ag-sel); border-radius: 6px; }
+  .ag-h { position: absolute; width: 16px; height: 16px; margin: -8px 0 0 -8px; box-sizing: border-box; border: 2px solid var(--ag-sel); border-radius: 3px; background: var(--k-bg); }
+  .ag-ln { position: absolute; left: 0; bottom: calc(100% + 10px); transform-origin: 0 100%; display: flex; align-items: center; gap: 10px; white-space: nowrap; font-size: 30px; line-height: 1.25; color: var(--ag-sel); }
+  .ag-ln svg { width: 26px; height: 26px; }
+  .ag-lnt { display: block; white-space: normal; }
+  .ag-dm { display: block; margin-left: 8px; font: 28px/1.25 var(--k-mono); color: var(--k-muted); }
+  .ag-nav { position: relative; display: flex; height: 120px; --ag-g: 12; --ag-n: "12"; }
+  .ag-b { position: relative; flex: none; display: flex; align-items: center; gap: 14px; padding: 0 60px; border-radius: 24px; font-size: 40px; font-weight: 400; line-height: 1.25; white-space: nowrap;
+   color: color-mix(in srgb, var(--k-ink) 86%, transparent); background: linear-gradient(180deg, var(--ag-b1), var(--ag-b2)); border: 1px solid var(--ag-hl);
+   box-shadow: inset 0 1px 0 var(--ag-hi), 0 1.2px 3.2px color-mix(in srgb, var(--ag-shade) calc(8% * var(--ag-ss)), transparent), 0 6.6px 15.6px -2.6px color-mix(in srgb, var(--ag-shade) calc(12.1% * var(--ag-ss)), transparent); }
+  .ag-b.on { color: var(--k-bg); border-color: transparent; background: linear-gradient(180deg, var(--k-ink), color-mix(in srgb, var(--k-ink), var(--k-bg) 12%));
+   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--k-bg) 30%, transparent), 0 1.6px 4.2px color-mix(in srgb, var(--ag-shade) calc(6.9% * var(--ag-ss)), transparent), 0 9.9px 23.4px -4px color-mix(in srgb, var(--ag-shade) calc(14.2% * var(--ag-ss)), transparent); }
+  .ag-b.on::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: currentColor; }
+  .ag-s { position: relative; flex: none; width: calc(var(--ag-g) * 1px); }
+  .ag-m { position: absolute; left: -50px; right: -50px; top: 0; height: 260px; }
+  /* measure (its box is 50px wider than the gap on each side so the badge stays inside it): dashed extension lines on both edges, the line with end ticks, the value badge (all accent) */
+  .ag-x { position: absolute; left: 49.25px; right: 49.25px; top: 154px; height: 58px; opacity: 0.7;
+   background: linear-gradient(var(--k-accent) 55%, transparent 0) 0 0 / 1.5px 7px repeat-y, linear-gradient(var(--k-accent) 55%, transparent 0) 100% 0 / 1.5px 7px repeat-y; }
+  .ag-ml { position: absolute; left: 50px; right: 50px; top: 193px; height: 2px; background: var(--k-accent); box-shadow: 0 0 10px color-mix(in srgb, var(--k-accent) 40%, transparent); }
+  .ag-ml::before, .ag-ml::after { content: ""; position: absolute; top: -7px; left: -1px; width: 2px; height: 16px; background: var(--k-accent); }
+  .ag-ml::after { left: auto; right: -1px; }
+  .ag-bd { position: absolute; left: 50%; top: 214px; min-width: 64px; padding: 6px 14px; box-sizing: border-box; border-radius: 10px; background: var(--k-accent); color: var(--k-on-accent);
+   font-size: 28px; font-weight: 700; line-height: 1.1; text-align: center; white-space: nowrap; transform: translateX(-50%);
+   box-shadow: inset 0 1px 0 color-mix(in srgb, white 45%, transparent), 0 6px 18px -6px color-mix(in srgb, var(--k-accent) 60%, transparent); }
+  .ag-bd::before { content: var(--ag-n); }
+  /* portrait: the same stack centred on the 40% line (eyebrow 398 to badges 1139), first three items, tighter blocks */
+  @container (orientation: portrait) {
+   .ag-stage { --ag-hy: 49%; }
+   .ag-cam { transform-origin: 50% 40%; }
+   .ag-eb { bottom: 1482px; }
+   .ag-nb { top: 444px; }
+   .ag-rl { top: 672px; width: 680px; margin-left: -340px; }
+   .ag-st { transform: translateX(-129px); }
+   .ag-lay { top: 852px; }
+   .ag-b { padding: 0 34px; }
+   .ag-nav > :nth-child(n+6) { display: none; }
+  }
+ </style>
+
+ <div id="root" data-composition-id="autolayout-gap-dial">
+  <div class="ag">
+   <div class="ag-stage"><div class="ag-bg"></div><div class="ag-key"></div><div class="ag-dots"></div><div class="ag-vig"></div><div class="ag-grain"></div></div>
+   <svg class="ag-fx" width="0" height="0" aria-hidden="true"></svg>
+   <div class="ag-cam">
+    <div class="ag-eb"><svg viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><rect x="1" y="3" width="3.4" height="8" rx="1"/><rect x="5.3" y="3" width="3.4" height="8" rx="1" opacity=".7"/><rect x="9.6" y="3" width="3.4" height="8" rx="1" opacity=".45"/></svg><span class="ag-ebt">自动布局 · 间距</span></div>
+    <div class="ag-rl">
+     <div class="ag-win" data-layout-allow-overflow><div class="ag-st"><i class="ag-tk"></i><i class="ag-tk"></i></div></div>
+     <i class="ag-base"></i><i class="ag-pin"></i>
+    </div>
+    <div class="ag-nb"><div class="ag-ng"><span class="ag-num">12</span><span class="ag-px">px</span></div></div>
+    <div class="ag-lay">
+     <div class="ag-sel">
+      <div class="ag-ln"><svg viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><rect x="1" y="3" width="3.4" height="8" rx="1"/><rect x="5.3" y="3" width="3.4" height="8" rx="1" opacity=".7"/><rect x="9.6" y="3" width="3.4" height="8" rx="1" opacity=".45"/></svg><span class="ag-lnt">导航栏</span><span class="ag-dm">1204 × 120</span></div>
+      <div class="ag-fr">
+       <i class="ag-h" style="left:0;top:0"></i><i class="ag-h" style="left:50%;top:0"></i><i class="ag-h" style="left:100%;top:0"></i><i class="ag-h" style="left:0;top:50%"></i>
+       <i class="ag-h" style="left:100%;top:50%"></i><i class="ag-h" style="left:0;top:100%"></i><i class="ag-h" style="left:50%;top:100%"></i><i class="ag-h" style="left:100%;top:100%"></i>
+      </div>
+      <div class="ag-nav"><b class="ag-b on">首页</b><i class="ag-s"><i class="ag-m" data-layout-allow-overflow><i class="ag-x"></i><i class="ag-ml"></i><i class="ag-bd"></i></i></i><b class="ag-b">全部课程</b><i class="ag-s"><i class="ag-m" data-layout-allow-overflow><i class="ag-x"></i><i class="ag-ml"></i><i class="ag-bd"></i></i></i><b class="ag-b">工具</b><i class="ag-s"><i class="ag-m" data-layout-allow-overflow><i class="ag-x"></i><i class="ag-ml"></i><i class="ag-bd"></i></i></i><b class="ag-b">案例库</b><i class="ag-s"><i class="ag-m" data-layout-allow-overflow><i class="ag-x"></i><i class="ag-ml"></i><i class="ag-bd"></i></i></i><b class="ag-b">关于</b></div>
+     </div>
+    </div>
+   </div>
+  </div>
+ </div>
+
+ <script>
+ (function () {
+  // timing in seconds (upstream frames / 30), shared by both orientations
+  var CFG = { dur: 5, pre: 0.733, preLen: 0.333, grow: 1.067, growLen: 1.133, rel: 2.867, recall: 0.065, over: 0.45,
+   sel: 0.133, hd: 0.233, hdStep: 0.04, eb: 0.133, ebLen: 0.6, num: 0.267, numLen: 0.6, rl: 0.4, rlLen: 0.533,
+   ms: 0.467, msLen: 0.333, bd: 0.467, bdStep: 0.067, bdLen: 0.4, bk: 0.033, bkStep: 0.067, bkLen: 0.533, rise: 34, unit: 6.5 };
+  // per orientation: nav items shown, share of the frame width the widest row may take, label slot widths
+  var LAND = { max: 6, fit: 0.88, ebW: 0.8, lnW: 640 };
+  var PORT = { max: 3, fit: 0.8, ebW: 0.76, lnW: 420 };
+  var DEF = "首页|全部课程|工具|案例库|关于";
+  var v = { items: DEF, param: "自动布局 · 间距", layer: "导航栏", rest: 12, peak: 104, backdrop: "on" };
+  try {
+   var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+   // empty values pass: param and layer hide, items and numbers fall back to their defaults below
+   for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+  } catch (e) {}
+
+  var root = document.querySelector(".ag");
+  var q = function (s) { return root.querySelector(s); }, qa = function (s) { return [].slice.call(root.querySelectorAll(s)); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+   // not laid out yet: the host clip's declared size, then the window
+   var hc = root.closest("[data-width][data-height]");
+   FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+   FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND;
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+  // ==== kit:tone@1 ====
+  function kRGB(el, color) {
+   var p = document.createElement("i");
+   p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+   el.appendChild(p);
+   var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+   el.removeChild(p);
+   return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+  }
+  function kTone(wrap) {
+   var c = kRGB(wrap, "var(--k-bg)");
+   var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+   wrap.setAttribute("data-tone", tone);
+   return tone;
+  }
+  // ==== end kit:tone ====
+  // ==== kit:grain@1 ====
+  function kGrain(layer, o) {
+   o = o || {};
+   var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+   var dark = tones && tones.getAttribute("data-tone") === "dark";
+   var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+     "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+     "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+     "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+     "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+   });
+   layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+   layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+   layer.style.backgroundSize = size + "px " + size + "px";
+   return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+   };
+  }
+  // ==== end kit:grain ====
+  // ==== kit:fit@1 (kFit, kLines) ====
+  function kFit(el, o) {
+   o = o || {};
+   var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+   var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+   for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+   }
+   if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+   }
+   return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+  }
+  function kLines(el) {
+   var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+   var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+   while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+     var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+     if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+     row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+   }
+   return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+  }
+  // ==== end kit:fit ====
+  // ==== kit:text@2 (kWords only) ====
+  var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+  function kWords(s, key) {
+   s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+   var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+   var cut = function (x) {
+    if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+    return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+   };
+   var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+   var pre = "";
+   bits.forEach(function (x) {
+    var t = x.trim(), last = out[out.length - 1];
+    if (last && /^ /.test(x)) last.sp = true;
+    if (!t) return;
+    if (!/[\p{L}\p{N}]/u.test(t)) {
+     if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+     else { last.t += t; last.sp = / $/.test(x); }
+     return;
+    }
+    out.push({ t: pre + t, sp: / $/.test(x) });
+    pre = "";
+   });
+   if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+   if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+   if (out.length) out[out.length - 1].sp = false;
+   return out;
+  }
+  // ==== end kit:text ====
+
+  var tone = kTone(root);
+  var grain = kGrain(q(".ag-grain"));
+  if (String(v.backdrop) === "off") q(".ag-stage").style.display = "none";
+
+  // the one parameter: rest and peak gap (px), the pre-dial recall is 6.5% of the travel (12 -> 6 by default)
+  var R = Math.round(parseFloat(v.rest)), M = Math.round(parseFloat(v.peak));
+  if (!(R >= 0)) R = 12;
+  R = Math.min(40, R);
+  if (!(M > 0)) M = 104;
+  M = Math.max(R + 20, Math.min(300, M));
+  var PRE = Math.max(0, R - (M - R) * CFG.recall);
+
+  // nav row: one block per item (portrait keeps the first three), a gap spacer between neighbours
+  var names = kWords(v.items).map(function (u) { return u.t; });
+  if (names.length < 2) names = kWords(DEF).map(function (u) { return u.t; });
+  names = names.slice(0, L.max);
+  var n = names.length, nav = q(".ag-nav"), h = "", i;
+  for (i = 0; i < n; i++) h += (i ? '<i class="ag-s"><i class="ag-m" data-layout-allow-overflow><i class="ag-x"></i><i class="ag-ml"></i><i class="ag-bd"></i></i></i>' : "") + '<b class="ag-b' + (i ? "" : " on") + '"></b>';
+  nav.innerHTML = h;
+  var blocks = qa(".ag-b"), ms = qa(".ag-m"), bds = qa(".ag-bd"), sumW = 0;
+  blocks.forEach(function (b, j) { b.textContent = names[j]; sumW += b.offsetWidth; });
+  // canvas zoom: the row at its widest (peak gap, 2.5% push-in) stays inside the frame; layer name and badges keep their size
+  var z = Math.min(1, (FW * L.fit) / ((sumW + (n - 1) * M + 60) * 1.025)), iz = 1 / z;
+  if (z < 1) q(".ag-lay").style.transform = "scale(" + z.toFixed(4) + ")";
+
+  // text slots: eyebrow and layer name shrink to fit (floor 24px), then wrap; empty hides them
+  var eb = q(".ag-eb"), ebt = q(".ag-ebt"), lnt = q(".ag-lnt"), XS = 0.4;
+  ebt.textContent = String(v.param).trim();
+  if (!ebt.textContent) eb.style.display = "none";
+  else {
+   ebt.style.maxWidth = FW * L.ebW + "px";
+   // bottom-anchored: a label that still wraps at 24px grows upwards, away from the readout, and skips the tracking
+   if (kFit(ebt, { width: FW * L.ebW, min: 24 }).fits) ebt.style.whiteSpace = "nowrap";
+   else XS = 0;
+   // the closing tracking starts 0.4em wider: less when that would push a long eyebrow out of the frame
+   var cs = ebt.textContent.length * parseFloat(ebt.style.fontSize);
+   XS = Math.max(0, Math.min(XS, (FW * 0.9 - ebt.offsetWidth) / cs));
+  }
+  lnt.textContent = String(v.layer).trim();
+  if (!lnt.textContent) lnt.style.display = "none";
+  else { lnt.style.maxWidth = L.lnW + "px"; kFit(lnt, { width: L.lnW, min: 24 }); }
+
+  // readout: light face unless the host swaps the font; ink -> accent while the dial moves
+  var num = q(".ag-num"), ng = q(".ag-ng"), GL = tone === "dark" ? 35 : 10;
+  var mixA = function (p) { return "color-mix(in srgb, var(--k-accent) " + p.toFixed(1) + "%, transparent)"; };
+  if (getComputedStyle(root).getPropertyValue("--mc-font").trim()) num.style.fontFamily = "var(--k-font)";
+
+  // ruler: a tick tape from -60 to past the peak, slid under the fixed pin; digits every 10 units
+  var rl = q(".ag-rl"), st = q(".ag-st"), pin = q(".ag-pin"), RW = rl.clientWidth, U = CFG.unit, U0 = -60;
+  var U1 = Math.max(180, Math.ceil((M + 70) / 10) * 10), lh = "";
+  st.style.width = (U1 - U0) * U + 2 + "px";
+  for (i = 0; i <= U1; i += 10) lh += '<i class="ag-lb" data-n="' + i + '" style="left:' + ((i - U0) * U + 1) + 'px"></i>';
+  st.insertAdjacentHTML("beforeend", lh);
+  var lbs = qa(".ag-lb");
+
+  // one horizontal blur filter per block, ids unique per mount
+  var N = (window.__agN = (window.__agN || 0) + 1), fh = "";
+  for (i = 0; i < n; i++) fh += '<filter id="ag' + N + "b" + i + '" x="-20%" y="-10%" width="140%" height="120%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+  q(".ag-fx").innerHTML = fh;
+  var fe = qa(".ag-fx feGaussianBlur"), hds = qa(".ag-h"), fr = q(".ag-fr"), ln = q(".ag-ln"), dm = q(".ag-dm"), cam = q(".ag-cam");
+
+  // gap(t): recall (swift), dial out (swift), hold, then an underdamped spring home with its overshoot x0.45
+  function gapAt(t) {
+   if (t < CFG.grow) return R + (PRE - R) * MT.ramp(t, CFG.pre, CFG.preLen, "swift");
+   if (t < CFG.rel) return PRE + (M - PRE) * MT.ramp(t, CFG.grow, CFG.growLen, "swift");
+   var s = MT.spring({ t: t - CFG.rel, damping: 9, stiffness: 80, mass: 1.1 });
+   return Math.max(0, M + (R - M) * (s > 1 ? 1 + (s - 1) * CFG.over : s));
+  }
+  // px per frame (30 fps), central difference as upstream
+  var vel = function (t) { return gapAt(t + 1 / 60) - gapAt(t - 1 / 60); };
+  var sp = function (t, d, damping, stiffness) { return MT.spring({ t: t, delay: d, damping: damping, stiffness: stiffness }); };
+
+  var tl = MT.scene(CFG.dur, function (t) {
+   var g = gapAt(t), vv = vel(t), mv = Math.min(1, Math.abs(vv) / 1.2), hot = 0, k;
+   // heat: the fastest of the last 6 frames, fading by frame (the readout keeps its colour a moment)
+   for (k = 0; k <= 6; k++) hot = Math.max(hot, Math.min(1, Math.abs(vel(t - k / 30)) / 1.5) * (1 - k / 7));
+   var pulse = 1 + 0.06 * Math.abs(Math.sin((Math.PI * g) / 2)) * mv;
+   var sh = R + Math.round((g - R) / 2) * 2;
+   if (Math.abs(g - M) < 1) sh = M;
+   sh = Math.max(0, sh);
+   grain(t);
+   cam.style.transform = "scale(" + (1 + 0.025 * MT.ramp(t, 0, CFG.dur, "smooth")).toFixed(5) + ")";
+
+   var e = MT.ramp(t, CFG.eb, CFG.ebLen, "snappy"), ni = MT.ramp(t, CFG.num, CFG.numLen, "snappy");
+   eb.style.opacity = e;
+   ebt.style.letterSpacing = (0.28 + (1 - e) * XS).toFixed(3) + "em";
+   ng.style.transform = "translateY(" + ((1 - ni) * 105).toFixed(2) + "%)";
+   ng.style.opacity = ni > 0 ? 1 : 0;
+   num.textContent = sh;
+   num.style.color = "color-mix(in oklab, var(--k-accent) " + (hot * 100).toFixed(1) + "%, var(--k-ink))";
+   num.style.transform = "scale(" + pulse.toFixed(4) + ")";
+   num.style.textShadow = hot > 0.05 ? "0 0 " + (40 * hot).toFixed(1) + "px " + mixA(GL * hot) : "none";
+   rl.style.opacity = MT.ramp(t, CFG.rl, CFG.rlLen, "out");
+   st.style.transform = "translateX(" + (RW / 2 - (g - U0) * U - 1).toFixed(2) + "px)";
+   lbs.forEach(function (l) { l.style.opacity = MT.clamp((Math.abs(l.getAttribute("data-n") - g) * U - 26) / 26, 0, 1); });
+   pin.style.boxShadow = "0 0 " + (8 + hot * 14).toFixed(1) + "px " + mixA(35 + hot * 40);
+
+   var si = sp(t, CFG.sel, 16, 140);
+   var gr = (1 - si) * 26;
+   fr.style.inset = (-gr).toFixed(2) + "px";
+   fr.style.opacity = ln.style.opacity = Math.min(1, si * 1.4);
+   ln.style.transform = "translate(" + (-gr).toFixed(2) + "px," + (-gr).toFixed(2) + "px) scale(" + iz.toFixed(4) + ")";
+   hds.forEach(function (d, j) { d.style.transform = "scale(" + sp(t, CFG.hd + j * CFG.hdStep, 13, 240).toFixed(4) + ")"; });
+   dm.textContent = Math.round(sumW + (n - 1) * g) + " × 120";
+
+   // everything below reads the same g: spacer widths (so block positions), measures, badge digits
+   nav.style.setProperty("--ag-g", g.toFixed(3));
+   nav.style.setProperty("--ag-n", '"' + sh + '"');
+   blocks.forEach(function (b, j) {
+    var p = MT.ramp(t, CFG.bk + j * CFG.bkStep, CFG.bkLen, "snappy"), bl = Math.min(9, Math.abs((j - (n - 1) / 2) * vv) * 0.5);
+    b.style.opacity = p;
+    b.style.transform = "translateY(" + ((1 - p) * CFG.rise).toFixed(2) + "px)";
+    fe[j].setAttribute("stdDeviation", bl.toFixed(2) + " 0");
+    b.style.filter = bl > 0.5 ? "url(#ag" + N + "b" + j + ")" : "";
+   });
+   var mo = MT.ramp(t, CFG.ms, CFG.msLen, "out");
+   ms.forEach(function (m, j) {
+    var p = MT.ramp(t, CFG.bd + j * CFG.bdStep, CFG.bdLen, "snappy");
+    m.style.opacity = mo;
+    bds[j].style.opacity = p;
+    bds[j].style.transform = "translateX(-50%) translateY(" + ((1 - p) * 10).toFixed(1) + "px) scale(" + (pulse * (0.7 + 0.3 * p) * iz).toFixed(3) + ")";
+   });
+  });
+  window.__timelines["autolayout-gap-dial"] = tl;
+ })();
+</script>
+</template>
+  </body>
+</html>

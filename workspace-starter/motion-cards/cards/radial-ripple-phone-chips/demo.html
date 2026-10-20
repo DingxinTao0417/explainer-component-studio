@@ -1,0 +1,448 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"left","type":"string","label":"左侧标签：先弹出（可用 | 切词，可留空）","default":"自动整理"},
+    {"id":"right","type":"string","label":"右侧标签：后弹出（可用 | 切词，可留空）","default":"一键导出"},
+    {"id":"screen","type":"string","label":"手机截图地址（从项目根目录写起，竖长图；留空用示意界面）","default":""},
+    {"id":"dur","type":"number","label":"镜头长度（秒）","default":5.6,"min":5,"max":12,"step":0.1},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底（同心圆）"},{"value":"off","label":"透明（只留手机和标签）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>radial-ripple-phone-chips · 波纹手机标签</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="radial-ripple-phone-chips-template">
+<!-- Ported from video-shotcraft demos/effects/radial-ripple-phone-chips/RadialRipplePhoneChips.tsx
+     (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+     Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+     Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+     neutral --k-* palette (rings mixed from it, darker outward; metal frame, screen and feed follow the skin; dark
+     tiles from accent-2 and black; shadows x1.8 on dark skins), system fonts, generic copy; upstream mark, wordmark,
+     tagline and closing poster removed; stage gradient and key light (hidden under the rings) replaced by one flat
+     mix; feed redrawn as text-free bars, cover art as CSS gradients; dynamic island -> punch-hole camera, "9:41" ->
+     a bar; chips 36px/650/-0.02em -> 40px/700/0, text and icon cut in at half fade (the 5-frame fade is the chip
+     body only); screenshot and length variables; portrait layout (phone on the 40% line, chips on the safe edges,
+     over the phone). Ring sizes, 1 +- 0.06 breath, 1.7 rad step, centre glow, rise 90px / 26 frames snappy, linear
+     560px scroll, mini-player waveform, chip spring 13/190, 28px slide, float 8px / 2 cycles after 18 + 24 frames,
+     frames 37 / 67, 5.6 s length, vignette 0.2, grain 0.05 kept. -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--k-font);
+  color: var(--k-ink);
+}
+/* ==== kit:derived@1 (line, shade, hi) ==== */
+.rr {
+  --rr-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+  --rr-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+  --rr-hi: color-mix(in srgb, white 80%, transparent);
+}
+.rr[data-tone="dark"] {
+  --rr-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+  --rr-hi: color-mix(in srgb, white 6%, transparent);
+}
+/* ==== end kit:derived ==== */
+/* ==== kit:vignette@1 (strength 0.2 as upstream; centre follows --cy) ==== */
+.rr-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.2; --vin: 42%; --vx: 50%; --vy: var(--cy); --vc: var(--rr-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.rr[data-tone="dark"] .rr-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+/* ==== kit:grain@1 ==== */
+.rr-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+/* ==== kit:text@2 (units only) ==== */
+.rr-u { display: inline-block; white-space: pre; }
+/* ==== end kit:text ==== */
+
+/* --cy: the phone's centre line (50% landscape, 40% portrait). Light tone: rings darken outward with the shade;
+   dark tone: they lighten inward with the ink. --rr-sk scales shadow strength on dark skins */
+.rr { position: absolute; inset: 0; container-type: size; --cy: 50%; --rr-sk: 1; --rr-rc: var(--rr-shade); --rr-p0: 14%;
+  --rr-lit: rgba(255,255,255,.42); --rr-hair: rgba(255,255,255,.55); --rr-glow: rgba(255,255,255,.4);
+  --rr-cgc: color-mix(in srgb, var(--k-bg) 70%, transparent);
+  --rr-night: color-mix(in srgb, var(--k-accent-2) 22%, black);
+  --rr-scr: color-mix(in srgb, var(--k-panel) 55%, var(--k-bg)); --rr-card: var(--k-bg);
+  --rr-bar: color-mix(in srgb, var(--k-ink) 72%, transparent); --rr-bar2: color-mix(in srgb, var(--k-muted) 55%, transparent);
+  --rr-p2: color-mix(in srgb, var(--k-panel), var(--k-ink) 7%);
+  --rr-m1: color-mix(in srgb, var(--k-bg), var(--k-ink) 21%); --rr-m2: color-mix(in srgb, var(--k-bg), var(--k-ink) 47%);
+  --rr-m3: color-mix(in srgb, var(--k-bg), var(--k-ink) 29%); --rr-m4: color-mix(in srgb, var(--k-bg), var(--k-ink) 61%);
+  --rr-m5: color-mix(in srgb, var(--k-bg), var(--k-ink) 37%); }
+.rr[data-tone="dark"] { --rr-sk: 1.8; --rr-rc: var(--k-ink); --rr-p0: 0%; --rr-lit: rgba(255,255,255,.05); --rr-hair: rgba(255,255,255,.07);
+  --rr-glow: rgba(255,255,255,.04); --rr-cgc: color-mix(in srgb, var(--k-ink) 6%, transparent); --rr-scr: var(--k-bg); --rr-card: var(--k-panel); }
+.rr i, .rr b { display: block; }
+.rr-st { position: absolute; inset: 0; background: color-mix(in srgb, var(--k-bg), var(--rr-rc) var(--rr-p0)); }
+.rr-rings, .rr-cg { position: absolute; inset: 0; }
+.rr-ring { position: absolute; left: 50%; top: var(--cy); width: var(--s); height: var(--s); margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2); border-radius: 50%;
+  background: linear-gradient(180deg, var(--rr-lit), transparent 40%), color-mix(in srgb, var(--k-bg), var(--rr-rc) var(--pp, var(--p)));
+  box-shadow: inset 0 2px 0 var(--rr-hi), 0 0 0 1.5px var(--rr-hair), 0 -4px 22px var(--rr-glow), 0 10px 40px color-mix(in srgb, var(--rr-shade) calc(var(--q) * var(--rr-sk)), transparent); }
+.rr-r1 { --s: 2240px; --p: 12%; --q: 6%; }
+.rr-r2 { --s: 1760px; --p: 9%; --q: 7.5%; }
+.rr-r3 { --s: 1280px; --p: 6%; --q: 9%; }
+.rr-r4 { --s: 840px; --p: 3%; --q: 10.5%; }
+/* dark tone: 3 / 5 / 7 / 9% from the outer ring in */
+.rr[data-tone="dark"] .rr-ring { --pp: calc(11% - var(--p) * 2 / 3); }
+.rr-cg { background: radial-gradient(ellipse 500px 475px at 50% var(--cy), var(--rr-cgc), transparent); }
+
+/* phone 430 x 900: frame 12px, bezel 9px, screen 388 x 858 */
+.rr-ph { position: absolute; left: calc(50% - 215px); top: calc(var(--cy) - 450px); width: 430px; height: 900px; }
+.rr-sh { position: absolute; inset: 0; border-radius: 70px;
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--rr-shade) calc(20% * var(--rr-sk)), transparent), 0 40px 80px -20px color-mix(in srgb, var(--rr-shade) calc(42% * var(--rr-sk)), transparent), 0 90px 140px -40px color-mix(in srgb, var(--rr-shade) calc(25% * var(--rr-sk)), transparent); }
+.rr-key { position: absolute; width: 5px; border-radius: 3px; background: linear-gradient(90deg, var(--rr-m2), var(--rr-m1), var(--rr-m2)); }
+.rr-fr { position: absolute; inset: 0; border-radius: 70px; padding: 12px; box-sizing: border-box;
+  background: linear-gradient(145deg, var(--rr-m1) 0%, var(--rr-m2) 30%, var(--rr-m3) 55%, var(--rr-m4) 80%, var(--rr-m5) 100%);
+  box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.35), inset 0 0 0 3px color-mix(in srgb, var(--rr-shade) 25%, transparent); }
+.rr-bz { position: relative; height: 100%; border-radius: 58px; padding: 9px; box-sizing: border-box; background: color-mix(in srgb, var(--k-ink) 6%, black); }
+.rr-sc { position: relative; height: 100%; border-radius: 50px; overflow: hidden; background: var(--rr-scr); }
+.rr-feed { position: absolute; left: 0; top: 0; width: 100%; padding: 76px 16px 0; box-sizing: border-box; }
+.rr-shot { width: 100%; min-height: 858px; object-fit: cover; object-position: 50% 0; }
+.rr-k { width: 170px; height: 11px; margin: 5px 0 4px 4px; border-radius: 6px; background: var(--rr-bar2); }
+.rr-t { width: 236px; height: 30px; margin: 12px 0 0 2px; border-radius: 10px; background: var(--rr-bar); }
+.rr-hero { position: relative; height: 210px; margin-top: 28px; border-radius: 26px;
+  background: radial-gradient(circle 115px at calc(100% - 75px) 65px, color-mix(in srgb, var(--k-accent), white 35%), color-mix(in srgb, var(--k-accent) 60%, transparent) 45%, transparent 70%),
+    linear-gradient(150deg, var(--rr-night), color-mix(in srgb, var(--rr-night), var(--k-accent-2) 40%)); }
+.rr-hero i { position: absolute; left: 22px; border-radius: 6px; background: rgba(255,255,255,.6); }
+.rr-sec { width: 110px; height: 16px; margin: 31px 4px 17px; border-radius: 8px; background: var(--rr-bar); }
+.rr-it { display: flex; align-items: center; gap: 14px; padding: 12px; margin-bottom: 12px; border-radius: 22px; background: var(--rr-card);
+  box-shadow: 0 0 0 1px var(--rr-line), 0 2px 6px color-mix(in srgb, var(--rr-shade) 5%, transparent); }
+.rr-it b { flex: 1; }
+.rr-it b i:nth-child(1) { width: 72%; height: 13px; margin: 6px 0 9px; border-radius: 7px; background: var(--rr-bar); }
+.rr-it b i:nth-child(2) { width: 46%; height: 10px; margin-bottom: 15px; border-radius: 5px; background: var(--rr-bar2); }
+.rr-pg { width: 150px; height: 5px; border-radius: 3px; --g: 0%; background: linear-gradient(90deg, var(--k-accent) var(--g), var(--rr-p2) 0); }
+.rr-pl { position: relative; flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--rr-p2); }
+.rr-pl::after { content: ""; position: absolute; left: 15px; top: 12px; width: 13px; height: 16px; background: var(--k-ink); clip-path: polygon(0 0, 100% 50%, 0 100%); }
+.rr .rr-on { background: var(--k-accent); }
+.rr-on::after { background: var(--k-on-accent); }
+/* cover art: sun over a hill / contour rings / a dome / a night horizon */
+.rr-art { flex: none; width: 76px; height: 76px; border-radius: 15px; }
+.rr-a0 { background: radial-gradient(circle at 50% 46%, color-mix(in srgb, var(--k-accent), white 85%) 26%, transparent 27%), radial-gradient(ellipse 70% 35% at 50% 97%, var(--rr-night) 97%, transparent 100%), linear-gradient(160deg, var(--k-accent), color-mix(in srgb, var(--k-accent), white 30%)); }
+.rr-a1 { background: radial-gradient(ellipse 45% 36% at 62% 54%, transparent 40%, rgba(255,255,255,.75) 40% 47%, transparent 47% 66%, rgba(255,255,255,.55) 66% 73%, transparent 73% 93%, rgba(255,255,255,.35) 93% 100%, transparent 100%), linear-gradient(160deg, var(--k-accent-2), color-mix(in srgb, var(--k-accent-2), white 40%)); }
+.rr-a2 { background: linear-gradient(transparent 78%, color-mix(in srgb, var(--k-accent), var(--k-ink) 30%) 78%), radial-gradient(circle at 50% 78%, color-mix(in srgb, var(--k-accent), var(--k-bg) 25%) 34%, transparent 35%), linear-gradient(160deg, color-mix(in srgb, var(--k-bg), var(--k-ink) 9%), color-mix(in srgb, var(--k-bg), var(--k-ink) 20%)); }
+.rr-a3 { background: radial-gradient(circle at 70% 24%, rgba(255,240,220,.9) 8%, transparent 8.5%), linear-gradient(transparent 56%, var(--k-accent) 56% 62%, transparent 62% 68%, rgba(255,240,220,.5) 68% 71%, transparent 71%), linear-gradient(160deg, var(--rr-night), color-mix(in srgb, var(--rr-night), white 14%)); }
+/* fixed screen chrome: status bar, punch-hole camera, bottom fade, mini player, home bar, glass */
+.rr-top { position: absolute; left: 0; right: 0; top: 0; height: 70px; background: linear-gradient(180deg, var(--rr-scr) 55%, transparent); }
+.rr-tm { position: absolute; left: 38px; top: 25px; width: 42px; height: 13px; border-radius: 6px; background: var(--k-ink); }
+.rr-sig { position: absolute; right: 32px; top: 23px; display: flex; gap: 3px; align-items: flex-end; }
+.rr-sig i { width: 4px; border-radius: 1px; background: var(--k-ink); }
+.rr .rr-bat { width: 26px; height: 13px; margin-left: 6px; padding: 1.5px; box-sizing: border-box; border-radius: 4px; border: 1.5px solid color-mix(in srgb, var(--k-ink) 45%, transparent); background: linear-gradient(90deg, var(--k-ink) 74%, transparent 0) content-box; }
+.rr-cam { position: absolute; left: 50%; top: 16px; width: 24px; height: 24px; margin-left: -12px; border-radius: 50%; background: radial-gradient(circle at 38% 36%, rgba(120,140,190,.55) 0 18%, transparent 30%), #050608; }
+.rr-bot { position: absolute; left: 0; right: 0; bottom: 0; height: 170px; background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--rr-scr) 92%, transparent) 40%, var(--rr-scr) 70%); }
+.rr-mp { position: absolute; left: 14px; right: 14px; bottom: 34px; height: 92px; border-radius: 26px; overflow: hidden; display: flex; align-items: center; gap: 14px; padding: 0 16px; box-sizing: border-box;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--rr-night), white 8%), var(--rr-night)); box-shadow: 0 14px 30px -10px color-mix(in srgb, var(--rr-shade) calc(50% * var(--rr-sk)), transparent); }
+.rr-mp .rr-art { width: 62px; height: 62px; border-radius: 12px; }
+.rr-mt { flex: 1; }
+.rr-mt > i { width: 170px; height: 13px; margin-bottom: 10px; border-radius: 6px; background: rgba(255,255,255,.85); }
+/* the flat stripes stand in for the waveform on the no-script page */
+.rr-wv { display: flex; align-items: center; gap: 3px; height: 22px; background: repeating-linear-gradient(90deg, rgba(255,255,255,.3) 0 3px, transparent 0 6px) 0 50% / 132px 10px no-repeat; }
+.rr-wv i { width: 3px; flex: none; border-radius: 2px; }
+.rr-ps { flex: none; width: 50px; height: 50px; border-radius: 50%;
+  background: linear-gradient(90deg, transparent 17px, var(--rr-night) 17px 22px, transparent 22px 28px, var(--rr-night) 28px 33px, transparent 33px) 0 16px / 100% 18px no-repeat, rgba(255,255,255,.94); }
+.rr-pb { position: absolute; left: 0; bottom: 0; height: 3px; width: 34%; background: var(--k-accent); }
+.rr-home { position: absolute; left: 50%; bottom: 10px; width: 140px; height: 5px; margin-left: -70px; border-radius: 3px; background: color-mix(in srgb, var(--k-ink) 75%, transparent); }
+.rr-gl { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(118deg, transparent 32%, rgba(255,255,255,.14) 44%, transparent 56%); }
+
+/* chips: top is the chip's centre line (translateY(-50%)); landscape they sit 64px off the phone's sides,
+   scaling from the phone side. .rr-cb is the chip body that fades; icon and text cut in at half fade */
+.rr-chip { position: absolute; display: flex; align-items: center; gap: 20px; padding: 14px 34px 14px 14px; border-radius: 999px; transform: translateY(-50%); }
+.rr-cl { right: calc(50% + 279px); top: calc(var(--cy) - 166px); transform-origin: 100% 50%; }
+.rr-cr { left: calc(50% + 279px); top: calc(var(--cy) + 114px); transform-origin: 0 50%; }
+.rr .rr-cb { position: absolute; inset: 0; border-radius: inherit;
+  background: linear-gradient(180deg, var(--k-bg), color-mix(in srgb, var(--k-bg), var(--k-panel) 70%));
+  box-shadow: inset 0 1px 0 var(--rr-hi), 0 0 0 1px color-mix(in srgb, var(--rr-shade) 6%, transparent), 0 3px 6px color-mix(in srgb, var(--rr-shade) calc(8% * var(--rr-sk)), transparent), 0 26px 50px -16px color-mix(in srgb, var(--rr-shade) calc(32% * var(--rr-sk)), transparent); }
+.rr-ic { position: relative; flex: none; display: flex; align-items: center; justify-content: center; width: 60px; height: 60px; border-radius: 50%; background: var(--k-accent); box-shadow: inset 0 1px 0 rgba(255,255,255,.3); }
+.rr-ic svg { display: block; width: 30px; height: 30px; fill: none; stroke: var(--k-on-accent); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.rr-ic circle { fill: var(--k-on-accent); stroke: none; }
+.rr-tx { position: relative; display: block; max-width: 360px; font-size: 40px; font-weight: 700; line-height: 1.2; }
+
+/* portrait: phone centre on the 40% line, chips anchored to the 11% safe edges and reaching over the phone */
+@container (orientation: portrait) {
+  .rr-st, .rr-ph, .rr-chip { --cy: 40%; }
+  .rr-cl { right: auto; left: 11.2%; }
+  .rr-cr { left: auto; right: 11.2%; }
+  .rr-tx { max-width: 290px; }
+}
+</style>
+
+<div id="root" data-composition-id="radial-ripple-phone-chips">
+  <div class="rr">
+    <div class="rr-st">
+      <div class="rr-rings" data-layout-allow-overflow><i class="rr-ring rr-r1"></i><i class="rr-ring rr-r2"></i><i class="rr-ring rr-r3"></i><i class="rr-ring rr-r4"></i></div>
+      <div class="rr-cg"></div>
+      <div class="rr-vig"></div>
+      <div class="rr-grain"></div>
+    </div>
+    <div class="rr-ph">
+      <div class="rr-sh"></div>
+      <i class="rr-key" style="left: -3.5px; top: 190px; height: 64px"></i>
+      <i class="rr-key" style="left: -3.5px; top: 272px; height: 64px"></i>
+      <i class="rr-key" style="left: 428.5px; top: 230px; height: 104px"></i>
+      <div class="rr-fr"><div class="rr-bz"><div class="rr-sc">
+        <div class="rr-feed" data-layout-allow-overflow>
+          <i class="rr-k"></i><i class="rr-t"></i>
+          <div class="rr-hero"><i style="top: 26px; width: 120px; height: 11px"></i><i style="bottom: 56px; width: 220px; height: 22px; background: rgba(255,255,255,.92)"></i><i style="bottom: 24px; width: 210px; height: 11px"></i></div>
+          <i class="rr-sec"></i>
+          <div class="rr-it"><i class="rr-art rr-a0"></i><b><i></i><i></i><i class="rr-pg" style="--g: 62%"></i></b><i class="rr-pl rr-on"></i></div>
+          <div class="rr-it"><i class="rr-art rr-a1"></i><b><i></i><i></i><i class="rr-pg"></i></b><i class="rr-pl"></i></div>
+          <div class="rr-it"><i class="rr-art rr-a2"></i><b><i></i><i></i><i class="rr-pg" style="--g: 18%"></i></b><i class="rr-pl rr-on"></i></div>
+          <div class="rr-it"><i class="rr-art rr-a3"></i><b><i></i><i></i><i class="rr-pg"></i></b><i class="rr-pl"></i></div>
+          <div class="rr-it"><i class="rr-art rr-a0"></i><b><i></i><i></i><i class="rr-pg"></i></b><i class="rr-pl"></i></div>
+          <div class="rr-it"><i class="rr-art rr-a1"></i><b><i></i><i></i><i class="rr-pg" style="--g: 40%"></i></b><i class="rr-pl rr-on"></i></div>
+          <div class="rr-it"><i class="rr-art rr-a3"></i><b><i></i><i></i><i class="rr-pg"></i></b><i class="rr-pl"></i></div>
+          <div class="rr-it"><i class="rr-art rr-a2"></i><b><i></i><i></i><i class="rr-pg"></i></b><i class="rr-pl"></i></div>
+        </div>
+        <div class="rr-top"><i class="rr-tm"></i><div class="rr-sig"><i style="height: 6px"></i><i style="height: 9px"></i><i style="height: 12px"></i><i class="rr-bat"></i></div></div>
+        <i class="rr-cam"></i>
+        <div class="rr-bot"></div>
+        <div class="rr-mp"><i class="rr-art rr-a0"></i><div class="rr-mt"><i></i><div class="rr-wv"></div></div><i class="rr-ps"></i><i class="rr-pb"></i></div>
+        <i class="rr-home"></i>
+        <i class="rr-gl"></i>
+      </div></div></div>
+    </div>
+    <div class="rr-chip rr-cl"><i class="rr-cb"></i><span class="rr-ic"><svg viewBox="0 0 24 24"><path d="M9 6H20M9 12H20M9 18H16" /><circle cx="4.5" cy="6" r="1.2" /><circle cx="4.5" cy="12" r="1.2" /><circle cx="4.5" cy="18" r="1.2" /></svg></span><span class="rr-tx">自动整理</span></div>
+    <div class="rr-chip rr-cr"><i class="rr-cb"></i><span class="rr-ic"><svg viewBox="0 0 24 24"><path d="M12 4V15M7 10.5L12 15.5L17 10.5M5 19.5H19" /></svg></span><span class="rr-tx">一键导出</span></div>
+  </div>
+</div>
+
+<script>
+(function () {
+// seconds at 30 fps. Ring breath: 1.5 cycles over upstream's 167 frames = 1.6931 rad/s, phase step 1.7 rad;
+// chip float: 2 cycles over 167 frames = 2.2575 rad/s. Feed scroll: linear from s0 to (dur - s1)
+var CFG = { rise: 0.8667, lift: 90, amp: 0.06, ringW: 1.6931, step: 1.7, s0: 0.4453, s1: 0.1447, scroll: 560,
+  c1: 1.2333, c2: 2.2333, fade: 0.1667, slide: 0.6667, out: 28, damp: 13, stiff: 190,
+  flLag: 0.6, flDur: 0.8, fl: 8, flW: 2.2575, ph2: 1.8, play: 0.34, playW: 0.00898 };
+// widest chip text per orientation (px): 9 CJK characters at 40px landscape, 7 portrait; longer text wraps
+var LAND = { tw: 360 };
+var PORT = { tw: 290 };
+var v = { left: "自动整理", right: "一键导出", screen: "", dur: 5.6, backdrop: "on" };
+try {
+  var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+  for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+} catch (e) {}
+
+var root = document.querySelector(".rr");
+var q = function (s) { return root.querySelector(s); };
+var FW = root.clientWidth, FH = root.clientHeight;
+if (!FW || !FH) {
+  // not laid out yet: the host clip's declared size, then the window
+  var hc = root.closest("[data-width][data-height]");
+  FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+  FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+}
+var P = FH > FW, L = P ? PORT : LAND;
+root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== end kit:tone ====
+
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+      "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+      "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+      "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+      "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+}
+// ==== end kit:grain ====
+
+// ==== kit:text@2 (kWords, kSplit) ====
+var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+function kWords(s, key) {
+  s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+  var cut = function (x) {
+    if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+    return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+  };
+  var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+  var pre = "";
+  bits.forEach(function (x) {
+    var t = x.trim(), last = out[out.length - 1];
+    if (last && /^ /.test(x)) last.sp = true;
+    if (!t) return;
+    if (!/[\p{L}\p{N}]/u.test(t)) {
+      if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+      else { last.t += t; last.sp = / $/.test(x); }
+      return;
+    }
+    out.push({ t: pre + t, sp: / $/.test(x) });
+    pre = "";
+  });
+  if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+  if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+  if (out.length) out[out.length - 1].sp = false;
+  return out;
+}
+function kSplit(el, by, rise, text) {
+  var s = text != null ? String(text) : el.textContent, units = [];
+  var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+  el.textContent = "";
+  parts.forEach(function (p) {
+    var u = document.createElement("span"), box = u;
+    u.className = "rr-u"; u.textContent = p.t;
+    if (by === "line") u.style.display = "block";
+    if (!p.t.trim()) { el.appendChild(u); return; }
+    if (rise) { box = document.createElement("span"); box.className = "rr-cut"; box.style.display = u.style.display; box.appendChild(u); }
+    el.appendChild(box);
+    if (p.sp) el.appendChild(document.createTextNode(" "));
+    units.push(u);
+  });
+  return units;
+}
+// ==== end kit:text ====
+
+// ==== kit:fit@1 (kFit, kLines) ====
+function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+      var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+      if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+      row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+
+kTone(root);
+if (String(v.backdrop) === "off") q(".rr-st").style.display = "none";
+var grain = kGrain(q(".rr-grain"));
+var dur = Math.min(12, Math.max(5, Number(v.dur) || 5.6));
+
+// chips: an empty label hides its chip; text goes through kSplit + kFit (40px floor, then it wraps)
+var chips = [[".rr-cl", v.left, CFG.c1, 0, -1], [".rr-cr", v.right, CFG.c2, CFG.ph2, 1]].map(function (c) {
+  var el = q(c[0]), tx = el.querySelector(".rr-tx");
+  if (!String(c[1] == null ? "" : c[1]).trim()) { el.style.display = "none"; return null; }
+  kSplit(tx, "word", false, c[1]);
+  kFit(tx, { lines: 1, min: 40, width: L.tw });
+  return { el: el, bg: el.querySelector(".rr-cb"), fg: [el.querySelector(".rr-ic"), tx], t0: c[2], ph: c[3], side: c[4] };
+}).filter(Boolean);
+
+// screen: an optional screenshot replaces the drawn feed and its app chrome; it fills the screen at least and
+// scrolls by at most CFG.scroll, never past its own bottom
+var feed = q(".rr-feed"), sc = q(".rr-sc"), shot = null;
+if (String(v.screen || "").trim()) {
+  feed.innerHTML = "";
+  feed.style.padding = "0";
+  shot = document.createElement("img");
+  shot.className = "rr-shot";
+  shot.setAttribute("src", String(v.screen).trim());
+  shot.setAttribute("alt", "");
+  feed.appendChild(shot);
+  [".rr-top", ".rr-bot", ".rr-mp"].forEach(function (s) { q(s).style.display = "none"; });
+}
+var travel = function () { return shot ? MT.clamp(shot.offsetHeight - sc.clientHeight, 0, CFG.scroll) : CFG.scroll; };
+
+var rings = [].slice.call(root.querySelectorAll(".rr-ring"));
+var ph = q(".rr-ph"), sh = q(".rr-sh"), pb = q(".rr-pb"), wv = q(".rr-wv");
+var bars = [];
+wv.style.background = "none";
+for (var b = 0; b < 22; b++) bars.push(wv.appendChild(document.createElement("i")));
+var tint = function (a) { return "color-mix(in srgb, var(--rr-shade) calc(" + a + "% * var(--rr-sk)), transparent)"; };
+
+var tl = MT.scene(dur, function (t) {
+  var f = t * 30; // frames at 30 fps, for the waveform's per-frame constants
+  // rings breathe out of phase: neighbours 1.7 rad apart read as a ripple, not one zoom
+  rings.forEach(function (r, i) { r.style.transform = "scale(" + (1 + CFG.amp * Math.sin(t * CFG.ringW + i * CFG.step)).toFixed(5) + ")"; });
+  // phone rises 90px into place; the far shadow tightens as it lands
+  var u = 1 - MT.ramp(t, 0, CFG.rise, "snappy");
+  ph.style.transform = "translateY(" + (u * CFG.lift).toFixed(2) + "px)";
+  ph.style.opacity = Math.min(1, (1 - u) * 2.2);
+  sh.style.boxShadow = "0 4px 10px " + tint(20) + ", 0 " + (40 + u * 30).toFixed(1) + "px " + (80 + u * 40).toFixed(1) + "px -20px " + tint(42) + ", 0 90px 140px -40px " + tint(25);
+  // feed scrolls at constant speed (no ease: autoplay, not a swipe)
+  var sp = MT.clamp((t - CFG.s0) / (dur - CFG.s1 - CFG.s0), 0, 1);
+  feed.style.transform = "translateY(" + (-sp * travel()).toFixed(2) + "px)";
+  // chips: spring pop 0.8 -> 1 with one overshoot, slide 28px out from the phone, then the float eases in
+  chips.forEach(function (c) {
+    var s = MT.spring({ t: t, delay: c.t0, damping: CFG.damp, stiffness: CFG.stiff });
+    var sl = MT.ramp(t, c.t0, CFG.slide, "snappy");
+    var fl = Math.sin(t * CFG.flW + c.ph) * CFG.fl * MT.ramp(t, c.t0 + CFG.flLag, CFG.flDur, "smooth");
+    var op = MT.clamp((t - c.t0) / CFG.fade, 0, 1);
+    c.el.style.transform = "translate(" + (c.side * (1 - sl) * -CFG.out).toFixed(2) + "px, calc(-50% + " + fl.toFixed(2) + "px)) scale(" + (0.8 + 0.2 * s).toFixed(4) + ")";
+    c.bg.style.opacity = op;
+    c.fg.forEach(function (n) { n.style.opacity = op >= 0.5 ? 1 : 0; });
+  });
+  // mini player: progress creeps, the waveform jitters deterministically
+  var pp = CFG.play + CFG.playW * t;
+  pb.style.width = (pp * 100).toFixed(2) + "%";
+  bars.forEach(function (el, k) {
+    var a = 0.35 + 0.65 * Math.abs(Math.sin(k * 1.37 + f * 0.21) * Math.cos(k * 0.53 - f * 0.09));
+    el.style.height = (4 + a * 16).toFixed(1) + "px";
+    el.style.background = k / 22 < pp ? "color-mix(in srgb, var(--k-accent), white 35%)" : "rgba(255,255,255,.3)";
+  });
+  grain(t);
+});
+window.__timelines["radial-ripple-phone-chips"] = tl;
+})();
+</script>
+    </template>
+  </body>
+</html>

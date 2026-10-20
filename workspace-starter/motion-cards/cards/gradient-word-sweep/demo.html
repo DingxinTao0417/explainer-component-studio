@@ -1,0 +1,369 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"word","type":"string","label":"充能词（被彩光扫过的那个词，2–6 字）","default":"自动生成"},
+    {"id":"rest","type":"string","label":"第一行其余的字（可留空）","default":"讲解动画"},
+    {"id":"line2","type":"string","label":"第二行（可留空）","default":"三分钟看懂一个概念"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"暗场实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>gradient-word-sweep · 渐变充能词</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="gradient-word-sweep-template">
+      <!-- Ported from video-shotcraft demos/typography/gradient-word-sweep/GradientWordSweep.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette with --k-stage (gradient = accent-2 to accent in oklch increasing hue, bolts = their
+           magenta midpoint), system bold face instead of italic Avenir, generic Chinese copy in three variables,
+           upstream product name removed; text 92px -> 128px landscape / 108px portrait with glow blur, halo pad,
+           entrance travel and bolt geometry scaled by font size / 92 and word width / 600 (bolt stroke widths kept);
+           glow layers drawn as ::before text. Kept: entrance 0-18f,
+           fill 12-30f out-quad, trail 34%, head and trail fades, 4 glow layers at 0.55 / 0.62 / 0.72, mulberry32 seed
+           20260718 bolts and 7 scheduled flashes, push-in 1 -> 1.025, vignette 0.5 and grain 0.07 soft-light. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        @font-face { font-family: "gw-heavy"; font-weight: 700 900; src: local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"), local("PingFangSC-Semibold"), local("NotoSansSC-Black"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          --k-stage: var(--mc-stage, #0b0d12);
+          --k-on-stage: var(--mc-on-stage, #f3f5f8);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* derived colours: the sweep runs accent-2 -> accent the long way round (through violet and pink, as upstream's
+           cyan > violet > pink > amber), the bolts take the magenta middle of that arc */
+        .gw {
+          position: absolute; inset: 0; container-type: size;
+          --gw-c1: color-mix(in oklch, var(--k-accent-2), white 32%);
+          --gw-c2: color-mix(in oklch, var(--k-accent), white 22%);
+          --gw-grad: linear-gradient(92deg in oklch increasing hue, var(--gw-c1), var(--gw-c2));
+          --gw-bolt: color-mix(in oklch increasing hue, var(--k-accent-2), var(--k-accent));
+          --gw-violet: color-mix(in oklch increasing hue, var(--k-accent-2) 72%, var(--k-accent));
+          --gw-shade: color-mix(in srgb, var(--k-stage), black 70%);
+        }
+        .gw-bg { position: absolute; inset: 0; background: radial-gradient(ellipse 70% 70% at 50% 48%, color-mix(in srgb, var(--k-stage), var(--gw-violet) 4%) 0%, color-mix(in srgb, var(--k-stage), black 40%) 60%, color-mix(in srgb, var(--k-stage), black 65%) 100%); }
+        /* ==== kit:vignette@1 ==== */
+        .gw-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.5; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--gw-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        /* ==== end kit:vignette ==== */
+        /* ==== kit:grain@1 ==== */
+        .gw-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+        /* ==== kit:text@2 ==== */
+        .gw-u { display: inline-block; white-space: pre; }
+        /* ==== end kit:text ==== */
+        /* landscape: two centred lines inside x 10%-90%; portrait: the 12%-68% band, 11% off each side (centre at 40%) */
+        .gw-box { position: absolute; top: 0; bottom: 0; left: 10%; right: 10%; display: flex; flex-direction: column; justify-content: center; }
+        .gw-push { display: block; width: 100%; }
+        .gw-l { display: block; width: 100%; text-align: center; font-family: var(--mc-font, "gw-heavy", var(--k-font)); font-weight: 700; font-size: 128px; line-height: 1.28; color: var(--k-on-stage); isolation: isolate; --s: 1.391; }
+        /* the charged word: the real (white) text plus decorative layers that only paint ::before copies of it */
+        .gw-w { display: inline-block; position: relative; white-space: nowrap; --pad: calc(90px * var(--s)); }
+        .gw-amb { position: absolute; left: 50%; top: 50%; width: 146%; height: 270%; transform: translate(-50%, -50%); border-radius: 50%; z-index: -1; pointer-events: none; opacity: 0.5; filter: blur(calc(38px * var(--s))); background: radial-gradient(closest-side, color-mix(in srgb, var(--gw-violet) 60%, transparent), color-mix(in srgb, var(--gw-bolt) 25%, transparent) 55%, transparent 78%); }
+        /* halo boxes reach --pad past the word so a mask never cuts the blur into a rectangle */
+        .gw-h { position: absolute; inset: calc(-1 * var(--pad)); padding: var(--pad); pointer-events: none; }
+        .gw-h > i, .gw-b { display: block; position: relative; width: 100%; height: 100%; }
+        .gw-b { position: absolute; inset: 0; pointer-events: none; }
+        .gw-h > i::before, .gw-b::before { content: attr(data-t); position: absolute; inset: 0; white-space: nowrap; background-image: var(--gw-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .gw-h1 { opacity: 0.5; } .gw-h1 > i { filter: blur(calc(46px * var(--s))) saturate(1.6); transform: scale(1.05); }
+        .gw-h2 { opacity: 0.56; } .gw-h2 > i { filter: blur(calc(18px * var(--s))) saturate(1.4) brightness(1.15); }
+        .gw-h3 { opacity: 0.72; } .gw-h3 > i { filter: blur(calc(6px * var(--s))) brightness(1.25); }
+        .gw-tr { opacity: 0; } .gw-tr > i { filter: blur(calc(9px * var(--s))) saturate(1.7) brightness(1.7); }
+        .gw-hd { opacity: 0; } .gw-hd > i { filter: blur(calc(3px * var(--s))); }
+        .gw-hd > i::before { background: none; color: var(--k-on-stage); text-shadow: 0 0 calc(22px * var(--s)) color-mix(in srgb, var(--k-on-stage) 90%, transparent), 0 0 calc(55px * var(--s)) color-mix(in srgb, var(--gw-violet), white 40%); }
+        .gw-z { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+        .gw-z path { fill: none; stroke-linejoin: miter; }
+        .gw-z path:nth-child(1) { stroke: color-mix(in srgb, var(--gw-bolt) 65%, transparent); filter: blur(6px); }
+        .gw-z path:nth-child(2) { stroke: color-mix(in srgb, color-mix(in oklch, var(--gw-bolt), white 28%) 90%, transparent); filter: blur(1.5px); }
+        .gw-z path:nth-child(3) { stroke: color-mix(in oklch, var(--gw-bolt), white 80%); }
+        @container (orientation: portrait) {
+          .gw-box { top: 12%; bottom: 32%; left: 11%; right: 11%; }
+          .gw-l { font-size: 88px; --s: 0.957; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="gradient-word-sweep">
+        <div class="gw">
+          <div class="gw-bg"></div>
+          <div class="gw-vig"></div>
+          <div class="gw-grain"></div>
+          <div class="gw-box">
+            <div class="gw-push">
+              <div class="gw-l gw-l1"><span class="gw-w"><span class="gw-t">自动生成</span><i class="gw-amb" data-layout-allow-overflow></i><span class="gw-h gw-h1" data-layout-allow-overflow><i data-t="自动生成"></i></span><span class="gw-h gw-h2" data-layout-allow-overflow><i data-t="自动生成"></i></span><span class="gw-h gw-h3" data-layout-allow-overflow><i data-t="自动生成"></i></span><span class="gw-b" data-t="自动生成"></span><span class="gw-h gw-tr" data-layout-allow-overflow><i data-t="自动生成"></i></span><span class="gw-h gw-hd" data-layout-allow-overflow><i data-t="自动生成"></i></span><svg class="gw-z"><g><path /><path /><path /></g></svg></span><span class="gw-r">讲解动画</span></div>
+              <div class="gw-l gw-l2">三分钟看懂一个概念</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing in seconds (upstream frames / 30), shared by both orientations
+          var CFG = {
+            dur: 3.5,         // 105 f
+            in1: 0, in2: 0.133, inDur: 0.467, // two lines blur-slide in, 4 f apart, 14 f each
+            fill: 0.4, fillEnd: 1.0,          // 12 -> 30 f, out-quad: fast enough not to read as a progress bar
+            headOut: 0.2, trailOut: 0.333,    // head core fades in 6 f, wave-front trail in 10 f after the fill
+            trail: 34,        // trail length, % of word width
+            lightAt: 1.1,     // 33 f: bolts are scheduled from here
+            flashAt: [2, 12, 22, 33, 43, 52, 56], // frames after lightAt
+            push: 0.025       // whole-shot push-in over 104 f
+          };
+          // layout per orientation: largest size, then one line down to min1, else two lines down to min2
+          // (the portrait CSS size is the default copy's fitted 88 px, so the no-script page matches)
+          var LAND = { max: 128, min1: 88, min2: 72 };
+          var PORT = { max: 108, min1: 84, min2: 72 };
+          var v = { word: "自动生成", rest: "讲解动画", line2: "三分钟看懂一个概念", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".gw");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND, K = Math.min(FW, FH) / 1.08e3; // stroke scale against a 1080 p frame
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          var off = String(v.backdrop) === "off";
+          if (off) [".gw-bg", ".gw-vig", ".gw-grain"].forEach(function (s) { q(s).style.display = "none"; });
+
+          // ==== kit:text@2 ====
+          var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "gw-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "gw-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          // ==== end kit:text ====
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          // ==== end kit:fit ====
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+
+          // ---- text: every slot through kWords / kSplit, then measured with kFit ----
+          var join = function (s) { return kWords(s).map(function (u) { return u.t + (u.sp ? " " : ""); }).join(""); };
+          var word = join(v.word) || "自动生成", rest = String(v.rest).trim(), two = String(v.line2).trim();
+          var l1 = q(".gw-l1"), l2 = q(".gw-l2"), w = q(".gw-w"), r = q(".gw-r");
+          q(".gw-t").textContent = word;
+          [].forEach.call(w.querySelectorAll("[data-t]"), function (n) { n.setAttribute("data-t", word); });
+          kSplit(r, "word", false, rest);
+          // a Latin word followed by Latin text keeps a real space between them
+          if (rest && !kCJK.test(word.slice(-1)) && !kCJK.test(rest.charAt(0))) r.insertBefore(document.createTextNode(" "), r.firstChild);
+          if (two) kSplit(l2, "word", false, two); else l2.style.display = "none";
+          var lines = two ? [l1, l2] : [l1];
+          var fit = function (el) {
+            var a = kFit(el, { lines: 1, min: L.min1, max: L.max });
+            return a.fits ? a.size : kFit(el, { lines: 2, min: L.min2, max: L.max }).size;
+          };
+          var fs = Math.min.apply(null, lines.map(fit)), s = fs / 92;
+          lines.forEach(function (el) { el.style.fontSize = fs + "px"; el.style.setProperty("--s", s.toFixed(3)); });
+
+          // ---- bolts: upstream's seeded generator (mulberry32, seed 20260718), drawn for a 600 px wide word at 92 px ----
+          var seed = 20260718;
+          var rand = function () {
+            var t = (seed += 0x6d2b79f5);
+            t = Math.imul(t ^ (t >>> 15), t | 1);
+            t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+          };
+          var FLICKER = [];
+          for (var i = 0; i < 160; i++) FLICKER.push(rand());
+          var WW = w.offsetWidth || fs * word.length, sx = WW / 600;
+          var pt = function (x, y) { return ((x - 25) * sx).toFixed(1) + " " + ((y - 62) * s).toFixed(1); };
+          var BOLTS = [];
+          for (i = 0; i < 16; i++) {
+            var d, n, j, x0, x1, yB, y0, y1, xs;
+            if (i % 3) { // long arc over the word: a jagged line arching across several characters
+              x0 = 30 + rand() * 220; x1 = x0 + 160 + rand() * 320; yB = 38 + rand() * 42; n = 7 + Math.floor(rand() * 4);
+              d = "M " + pt(x0, yB + 26 + rand() * 20);
+              for (j = 1; j <= n; j++) {
+                xs = x0 + ((x1 - x0) * j) / n + (rand() - 0.5) * 22;
+                d += " L " + pt(xs, yB + Math.sin((j / n) * Math.PI) * -22 + (rand() - 0.5) * 30 + (j === n ? 30 + rand() * 18 : 0));
+              }
+            } else { // short vertical zigzag between two characters
+              xs = 60 + rand() * (600 - 60); y0 = 72 + rand() * 24; y1 = y0 + 55 + rand() * 45; n = 4 + Math.floor(rand() * 3);
+              d = "M " + pt(xs, y0);
+              for (j = 1; j <= n; j++) { var yy = y0 + ((y1 - y0) * j) / n; d += " L " + pt(xs + (rand() - 0.5) * 30, yy); }
+            }
+            BOLTS.push({ d: d, long: i % 3 !== 0 });
+          }
+          // scheduled, not random: one bolt at a time, the last one out at frame 92
+          var FLASHES = CFG.flashAt.map(function (df, k) {
+            return { at: CFG.lightAt * 30 + df, life: k === CFG.flashAt.length - 1 ? 3 : 3 + Math.floor(rand() * 2), bolt: (k * 5 + 1) % BOLTS.length };
+          });
+          var g = q(".gw-z g"), paths = g.querySelectorAll("path");
+          var WIDE = [[6, 4.5], [2.4, 1.9], [1.4, 1.1]];
+
+          var amb = q(".gw-amb"), h1 = q(".gw-h1"), h2 = q(".gw-h2"), h3 = q(".gw-h3"), body = q(".gw-b"), tr = q(".gw-tr"), hd = q(".gw-hd");
+          var push = q(".gw-push");
+          var grain = off ? function () {} : kGrain(q(".gw-grain"), { opacity: 0.07, blend: "soft-light" });
+          var PADPX = 90 * s;
+          // a stop at x % of the word, written inside a halo box that is PADPX larger on each side
+          var at = function (x) { return "calc(" + PADPX.toFixed(1) + "px + (100% - " + (2 * PADPX).toFixed(1) + "px) * " + (Math.max(-20, Math.min(120, x)) / 100).toFixed(4) + ")"; };
+          var mask = function (el, m) { el.style.webkitMaskImage = m; el.style.maskImage = m; };
+          var lin = function (t, a, b, from, to) { return MT.interpolate(t, [a, b], [from, to], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }); };
+
+          var render = function (t) {
+            var f = t * 30;
+            // entrance: each line blurs and slides up 36 px (at 92 px type) on one snappy progress
+            [CFG.in1, CFG.in2].forEach(function (a, k) {
+              var el = lines[k]; if (!el) return;
+              var e = MT.ramp(t, a, CFG.inDur, "snappy");
+              el.style.opacity = e;
+              el.style.transform = "translateY(" + ((1 - e) * 36 * s).toFixed(2) + "px)";
+              el.style.filter = e < 0.999 ? "blur(" + ((1 - e) * 10 * s).toFixed(2) + "px)" : "none";
+            });
+            push.style.transform = "scale(" + (1 + CFG.push * MT.ramp(t, 0, 104 / 30, "smooth")).toFixed(5) + ")";
+
+            var p = MT.interpolate(t, [CFG.fill, CFG.fillEnd], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: "power1.out" });
+            var pc = p * 100;
+            var fi = Math.min(159, Math.floor(f + 1e-6));
+            var act = FLASHES.filter(function (x) { return f >= x.at && f < x.at + x.life; })[0];
+            var lvl = lin(t, CFG.fill, CFG.fillEnd, 0, 1) * (0.82 + 0.18 * FLICKER[fi]) + (act ? 0.35 : 0);
+            var soft = function (sf) { return p >= 1 ? "none" : "linear-gradient(90deg, #000 0%, #000 " + at(pc - sf) + ", transparent " + at(pc + sf * 0.6) + ")"; };
+            // four glow layers follow the fill edge with soft masks, then breathe with the flicker
+            amb.style.opacity = (0.55 * lvl).toFixed(3);
+            h1.style.opacity = (0.55 * lvl).toFixed(3); mask(h1, soft(14));
+            h2.style.opacity = (0.62 * lvl).toFixed(3); mask(h2, soft(10));
+            h3.style.opacity = (0.72 * Math.min(1, lvl + 0.1)).toFixed(3); mask(h3, soft(7));
+            body.style.clipPath = "inset(-25% " + (100 - pc).toFixed(2) + "% -25% 0)";
+            // wave-front trail: brightest at the edge, fading 34% back; fades out over 10 f after the fill
+            var tf = lin(t, CFG.fillEnd, CFG.fillEnd + CFG.trailOut, 1, 0);
+            tr.style.opacity = (0.95 * tf).toFixed(3);
+            mask(tr, "linear-gradient(90deg, transparent 0%, transparent " + at(pc - CFG.trail) + ", rgba(0,0,0,0.9) " + at(pc - 3) + ", rgba(0,0,0,0.9) " + at(pc + 1) + ", transparent " + at(pc + 6) + ")");
+            // over-exposed head: the glyphs right at the edge, only while filling
+            var hf = t >= CFG.fill && p < 1 ? lin(t, CFG.fillEnd, CFG.fillEnd + CFG.headOut, 1, 0) : 0;
+            hd.style.opacity = (0.9 * hf).toFixed(3);
+            mask(hd, "linear-gradient(90deg, transparent 0%, transparent " + at(pc - 12) + ", #000 " + at(pc - 6) + ", #000 " + at(pc - 1) + ", transparent " + at(pc + 2) + ")");
+            // bolts: one scheduled flash at a time, three strokes, decaying over its 3-4 frames
+            if (act) {
+              var b = BOLTS[act.bolt], wi = b.long ? 0 : 1;
+              g.style.opacity = Math.min(1, 1.1 * (1 - (f - act.at) / act.life)).toFixed(3);
+              [].forEach.call(paths, function (pa, k) { pa.setAttribute("d", b.d); pa.setAttribute("stroke-width", (WIDE[k][wi] * K).toFixed(2)); });
+            } else g.style.opacity = 0;
+            grain(t);
+          };
+          var tl = MT.scene(CFG.dur, render);
+          window.__timelines["gradient-word-sweep"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

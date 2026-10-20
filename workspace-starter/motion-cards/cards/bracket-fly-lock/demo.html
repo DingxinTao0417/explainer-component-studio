@@ -1,0 +1,452 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"label","type":"string","label":"标签文字（可留空）","default":"关键数据"},
+    {"id":"code","type":"string","label":"标签右侧的编号（可留空）","default":"LOCK 02"},
+    {"id":"x","type":"number","label":"目标左上角 x（横屏 1920×1080、竖屏 1080×1920 坐标）","default":240,"min":0,"max":1920,"step":1},
+    {"id":"y","type":"number","label":"目标左上角 y","default":340,"min":0,"max":1920,"step":1},
+    {"id":"w","type":"number","label":"目标宽","default":640,"min":120,"max":1800,"step":1},
+    {"id":"h","type":"number","label":"目标高","default":420,"min":120,"max":1200,"step":1},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"垫示例界面（目标是其中一张卡片）"},{"value":"off","label":"透明（压在画面上，只留框、标签和轻压暗）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>bracket-fly-lock · 飞入咬合框</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="bracket-fly-lock-template">
+      <!-- Ported from video-shotcraft demos/effects/fui-hud-moves/ReticleLockOn.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette, system fonts, generic copy; upstream fixture and label text replaced by a brand-free fake
+           UI whose card grid is anchored on the target (x / y / w / h variables, not a fixed 524x454 card); opening hold
+           14 -> 6 frames (later times 8 frames earlier); label 30 -> 40px, code chip 18 -> 28px, L stroke 5 -> 6px, arm
+           58 -> 60px; fly distance, 2.2x -> 0.94x -> 1x shrink, bite, glow, focus dim, label pop, camera push and speed blur kept. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* ==== kit:grain@1 ==== */
+        .bf-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+
+        /* ==== kit:fit@1 ==== */
+        /* ==== end kit:fit ==== */
+
+        /* ==== kit:text@2 ==== */
+        .bf-u { display: inline-block; white-space: pre; }
+        .bf-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+        /* ==== end kit:text ==== */
+
+        /* ==== kit:fonts@2 ==== */
+        @font-face { font-family: "Noto Serif SC"; src: local("Noto Serif SC"), local("Noto Serif CJK SC"), local("Source Han Serif SC"); }
+        @font-face { font-family: "Songti SC"; src: local("Songti SC"), local("STSong"), local("SimSun"); }
+        @font-face { font-family: "Consolas"; src: local("Consolas"); }
+        #root {
+          --k-serif: var(--mc-serif, "Noto Serif SC", "Songti SC", serif);
+          --k-mono: var(--mc-mono, Consolas, monospace);
+        }
+        /* ==== end kit:fonts ==== */
+
+        /* ==== kit:derived@1 ==== */
+        .bf {
+          --bf-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+          --bf-panel-2: color-mix(in srgb, var(--k-panel), var(--k-ink) 4%);
+          --bf-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+          --bf-hi: color-mix(in srgb, white 80%, transparent);
+        }
+        .bf[data-tone="dark"] {
+          --bf-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+          --bf-hi: color-mix(in srgb, white 6%, transparent);
+        }
+        /* ==== end kit:derived ==== */
+        /* size container; the target rectangle sits in custom properties so the static page is the settled frame */
+        .bf { position: absolute; inset: 0; container-type: size; --tx: 240px; --ty: 340px; --tw: 640px; --th: 420px; --pad: 16px;
+          --bf-b1: color-mix(in srgb, var(--k-ink) 17%, var(--k-bg)); --bf-b2: color-mix(in srgb, var(--k-ink) 9%, var(--k-bg));
+          --bf-pill: color-mix(in srgb, var(--k-ink) 94%, var(--k-accent-2)); --bf-pill-ink: var(--k-bg);
+          --bf-gw: color-mix(in srgb, white 82%, var(--k-accent)); }
+        .bf[data-tone="dark"] { --bf-pill: color-mix(in srgb, var(--k-bg) 80%, white); --bf-pill-ink: var(--k-ink); --bf-gw: white; }
+        .bf-cam { position: absolute; inset: 0; transform-origin: calc(var(--tx) + var(--tw) / 2) calc(var(--ty) + var(--th) / 2); }
+        .bf-scene { position: absolute; inset: 0; background: var(--bf-panel-2); }
+        .bf-scene::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 70%, transparent) 0%, transparent 72%); }
+        .bf-side { position: absolute; left: 0; top: 0; bottom: 0; width: 168px; background: var(--k-panel); border-right: 1px solid var(--bf-line); }
+        .bf-side::before { content: ""; position: absolute; left: 28px; top: 112px; width: 92px; height: 14px; border-radius: 7px; background: var(--bf-b1);
+          box-shadow: 0 46px 0 var(--bf-b2), 0 92px 0 var(--bf-b2), 0 138px 0 var(--bf-b2), 0 184px 0 var(--bf-b2); }
+        .bf-top { position: absolute; left: 0; right: 0; top: 0; height: 72px; background: var(--k-bg); border-bottom: 1px solid var(--bf-line); }
+        .bf-top::before { content: ""; position: absolute; left: 200px; top: 28px; width: 180px; height: 16px; border-radius: 8px; background: var(--bf-b1); }
+        .bf-top::after { content: ""; position: absolute; right: 48px; top: 18px; width: 36px; height: 36px; border-radius: 50%; background: var(--bf-b2); }
+        .bf-card, .bf-hero { position: absolute; display: block; overflow: hidden; box-sizing: border-box; border-radius: 14px; background-color: var(--k-bg); border: 1px solid var(--bf-line);
+          box-shadow: inset 0 1px 0 var(--bf-hi), 0 1px 2px color-mix(in srgb, var(--bf-shade) 8%, transparent), 0 4px 12px -4px color-mix(in srgb, var(--bf-shade) 12%, transparent);
+          background-image: radial-gradient(circle 8px at 36px calc(100% - 34px), var(--bf-b1) 96%, transparent 100%), linear-gradient(var(--bf-b2), var(--bf-b2));
+          background-size: 100% 100%, 100px 10px; background-position: 0 0, 62px calc(100% - 39px); background-repeat: no-repeat; }
+        .bf-hero { left: var(--tx); top: var(--ty); width: var(--tw); height: var(--th); }
+        .bf-card::before, .bf-hero::before { content: ""; position: absolute; left: 28px; top: 28px; width: 40%; height: 16px; border-radius: 8px; background: var(--bf-b1); }
+        .bf-card::after, .bf-hero::after { content: ""; position: absolute; left: 28px; top: 68px; width: 62%; height: 11px; border-radius: 6px; background: var(--bf-b2);
+          box-shadow: 0 26px 0 var(--bf-b2), 0 52px 0 var(--bf-b2); }
+        .bf-dim, .bf-glow { position: absolute; left: var(--tx); top: var(--ty); width: var(--tw); height: var(--th); border-radius: 14px; pointer-events: none; }
+        .bf-dim { box-shadow: 0 0 0 3000px color-mix(in srgb, var(--bf-shade) 10%, transparent); }
+        .bf-glow { overflow: hidden; box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--k-accent) 55%, transparent), 0 18px 48px -16px color-mix(in srgb, var(--k-accent) 35%, transparent); }
+        .bf-glow i { position: absolute; inset: 0; opacity: 0.28;
+          background: linear-gradient(180deg, var(--bf-gw) 0%, color-mix(in srgb, var(--bf-gw) 55%, transparent) 60%, color-mix(in srgb, var(--bf-gw) 35%, transparent) 100%); }
+        .bf-ret, .bf-fly { position: absolute; inset: 0; }
+        /* one L: white underlay stroke plus accent core, drawn from the corner point inward */
+        .bf-k { position: absolute; display: block; overflow: visible; transform-origin: 0 0; fill: none; stroke-linecap: round; stroke-linejoin: round;
+          filter: drop-shadow(0 2px 3px color-mix(in srgb, var(--bf-shade) 24%, transparent)); }
+        .bf-ku { stroke: rgba(255, 255, 255, 0.92); stroke-width: 10; }
+        .bf-kc { stroke: var(--k-accent); stroke-width: 6; }
+        .bf-k0 { left: calc(var(--tx) - var(--pad)); top: calc(var(--ty) - var(--pad)); }
+        .bf-k1 { left: calc(var(--tx) + var(--tw) + var(--pad)); top: calc(var(--ty) - var(--pad)); transform: scaleX(-1); }
+        .bf-k2 { left: calc(var(--tx) - var(--pad)); top: calc(var(--ty) + var(--th) + var(--pad)); transform: scaleY(-1); }
+        .bf-k3 { left: calc(var(--tx) + var(--tw) + var(--pad)); top: calc(var(--ty) + var(--th) + var(--pad)); transform: scale(-1, -1); }
+        /* centre cross: fades out at the lock (static page = locked) */
+        .bf-xh { position: absolute; display: block; border-radius: 2px; background: var(--k-accent); box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85); opacity: 0; }
+        .bf-xa { left: calc(var(--tx) + var(--tw) / 2 - 14px); top: calc(var(--ty) + var(--th) / 2 - 1.5px); width: 28px; height: 3px; }
+        .bf-xb { left: calc(var(--tx) + var(--tw) / 2 - 1.5px); top: calc(var(--ty) + var(--th) / 2 - 14px); width: 3px; height: 28px; }
+        /* label: the pill is ::before so it can fade alone (--a); the text cuts in at half */
+        .bf-tag { position: absolute; left: calc(var(--tx) - var(--pad) + 2px); top: calc(var(--ty) - var(--pad) - 14px); transform: translateY(-100%); transform-origin: 0 100%;
+          display: flex; align-items: center; gap: 16px; box-sizing: border-box; padding: 12px 18px 12px 22px; white-space: nowrap; color: var(--bf-pill-ink); }
+        .bf-tag::before { content: ""; position: absolute; inset: 0; border-radius: 16px; opacity: var(--a, 1);
+          background: linear-gradient(180deg, color-mix(in srgb, var(--bf-pill), white 8%) 0%, var(--bf-pill) 100%);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.25), 0 2px 4px color-mix(in srgb, var(--bf-shade) 18%, transparent), 0 16px 32px -10px color-mix(in srgb, var(--bf-shade) 45%, transparent); }
+        .bf-tag > * { position: relative; z-index: 1; }
+        .bf-dot { display: block; flex: none; width: 14px; height: 14px; border-radius: 50%; background: var(--k-accent); box-shadow: 0 0 0 5px color-mix(in srgb, var(--k-accent) 24%, transparent); }
+        .bf-name { display: block; white-space: normal; font-size: 40px; font-weight: 600; line-height: 1.2; }
+        .bf-code { display: block; flex: none; max-width: 280px; padding: 4px 10px; border-radius: 8px; font-family: var(--k-mono); font-size: 28px; line-height: 1.2; letter-spacing: 0.08em;
+          color: color-mix(in srgb, var(--bf-pill-ink) 66%, transparent); background: color-mix(in srgb, var(--bf-pill-ink) 9%, transparent); }
+        /* portrait: no sidebar, taller top bar (scenery only) */
+        @container (orientation: portrait) {
+          .bf-side { display: none; }
+          .bf-top { height: 120px; }
+          .bf-top::before { left: 108px; top: 52px; }
+          .bf-top::after { top: 42px; right: 108px; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="bracket-fly-lock">
+        <div class="bf">
+          <div class="bf-cam">
+            <div class="bf-scene" data-layout-allow-overflow>
+              <i class="bf-hero"></i>
+              <i class="bf-side"></i>
+              <i class="bf-top"></i>
+            </div>
+            <div class="bf-dim"></div>
+            <div class="bf-glow"><i></i></div>
+            <div class="bf-grain" data-layout-allow-overflow></div>
+            <div class="bf-ret"><div class="bf-fly" data-layout-allow-overflow>
+              <svg class="bf-k bf-k0" width="60" height="60" viewBox="0 0 60 60" aria-hidden="true"><path class="bf-ku" d="M3 57V3H57"/><path class="bf-kc" d="M3 57V3H57"/></svg>
+              <svg class="bf-k bf-k1" width="60" height="60" viewBox="0 0 60 60" aria-hidden="true"><path class="bf-ku" d="M3 57V3H57"/><path class="bf-kc" d="M3 57V3H57"/></svg>
+              <svg class="bf-k bf-k2" width="60" height="60" viewBox="0 0 60 60" aria-hidden="true"><path class="bf-ku" d="M3 57V3H57"/><path class="bf-kc" d="M3 57V3H57"/></svg>
+              <svg class="bf-k bf-k3" width="60" height="60" viewBox="0 0 60 60" aria-hidden="true"><path class="bf-ku" d="M3 57V3H57"/><path class="bf-kc" d="M3 57V3H57"/></svg>
+              <i class="bf-xh bf-xa"></i><i class="bf-xh bf-xb"></i>
+            </div></div>
+            <div class="bf-tag"><i class="bf-dot"></i><span class="bf-name">关键数据</span><span class="bf-code">LOCK 02</span></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // seconds = upstream frames / 30, minus 8 frames (opening hold cut to 6f): fly 6-16f, shrink 12-32f (2.2x -> 0.94x
+          // swift, then -> 1x out to the lock), lock 38f, label pop 40-50f, slot 90f
+          var CFG = { flyIn: 0.2, flyEnd: 0.5333, shrink0: 0.4, under: 1.0667, lock: 1.2667, label0: 1.3333, labelEnd: 1.6667, dur: 3,
+            big: 2.2, low: 0.94, bite: 6, pad: 16, arm: 60, glow: 0.55, hold: 0.28, dim: 0.1, cam: 0.035, blur: 0.3, max: 22, gap: 28 };
+          // frame start offset from the settled spot (landscape = upstream 1100 / 620)
+          var LAND = { fx: 1100, fy: 620 };
+          var PORT = { fx: 640, fy: 1000 };
+          var v = { label: "关键数据", code: "LOCK 02", x: 240, y: 340, w: 640, h: 420, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".bf");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+
+          // ==== kit:speedblur@1 ====
+          function kSpeedBlur(box, prefix, o) {
+            o = o || {};
+            var amount = o.amount || 0.45, max = o.max || 36;
+            var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+            var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+            svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+            var outer = document.createElement("div"), inner = document.createElement("div");
+            outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+            while (box.firstChild) inner.appendChild(box.firstChild);
+            outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+            var fe = svg.firstChild.firstChild;
+            return function (vx, vy) {
+              vy = vy || 0;
+              var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+              if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+              var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+              fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+              outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+              inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+              outer.style.filter = "url(#" + id + ")";
+            };
+          }
+          // ==== end kit:speedblur ====
+
+          // ==== kit:fit@1 (kRows dropped: unused) ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          // ==== end kit:fit ====
+
+          // ==== kit:text@2 (kReveal dropped: unused) ====
+          var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "bf-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "bf-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          // ==== end kit:text ====
+          var tone = kTone(root);
+
+          // ---- target rectangle (defaults when a value is missing)
+          var num = function (x, d, lo) { x = parseFloat(x); return isFinite(x) && x >= lo ? x : d; };
+          var TX = num(v.x, 240, 0), TY = num(v.y, 340, 0), TW = num(v.w, 640, 40), TH = num(v.h, 420, 40);
+          var CX = TX + TW / 2, CY = TY + TH / 2, PAD = CFG.pad, F = 1 / 30;
+          root.style.setProperty("--tx", TX + "px"); root.style.setProperty("--ty", TY + "px");
+          root.style.setProperty("--tw", TW + "px"); root.style.setProperty("--th", TH + "px");
+          var cam = q(".bf-cam"), scene = q(".bf-scene"), off = String(v.backdrop) === "off";
+          cam.style.transformOrigin = CX + "px " + CY + "px";
+          if (off) { scene.style.display = "none"; q(".bf-grain").style.display = "none"; }
+
+          // ---- scenery: a card grid anchored on the target
+          if (!off) {
+            var cards = "", n = 0, i0 = -Math.ceil(TX / (TW + CFG.gap)) - 1, i1 = Math.ceil((FW - TX) / (TW + CFG.gap)) + 1;
+            var j0 = -Math.ceil(TY / (TH + CFG.gap)) - 1, j1 = Math.ceil((FH - TY) / (TH + CFG.gap)) + 1;
+            for (var i = i0; i <= i1; i++) for (var j = j0; j <= j1; j++) {
+              var cx0 = TX + i * (TW + CFG.gap), cy0 = TY + j * (TH + CFG.gap);
+              if ((!i && !j) || n > 60 || cx0 > FW + 60 || cx0 + TW < -60 || cy0 > FH + 60 || cy0 + TH < -60) continue;
+              n++;
+              cards += '<i class="bf-card" style="left:' + cx0 + "px;top:" + cy0 + "px;width:" + TW + "px;height:" + TH + 'px"></i>';
+            }
+            scene.insertAdjacentHTML("afterbegin", cards);
+          }
+
+          // ---- label slots: shrink to the floor, then wrap
+          var tag = q(".bf-tag"), nameEl = q(".bf-name"), codeEl = q(".bf-code"), dot = q(".bf-dot");
+          var lab = String(v.label == null ? "" : v.label).trim(), cod = String(v.code == null ? "" : v.code).trim();
+          nameEl.style.display = lab ? "" : "none";
+          codeEl.style.display = cod ? "" : "none";
+          var showTag = !!(lab || cod);
+          tag.style.display = showTag ? "" : "none";
+          var tagW = 0, tagH = 0, above = true;
+          var RIGHT = FW * (P ? 0.9 : 0.95);
+          if (showTag) {
+            if (cod) { codeEl.textContent = cod; kFit(codeEl, { lines: 1, min: 28, width: 280 }); }
+            if (lab) {
+              kSplit(nameEl, "word", false, lab);
+              var room = RIGHT - (TX - PAD + 2) - (tag.offsetWidth - nameEl.offsetWidth);
+              room = Math.max(160, room); nameEl.style.maxWidth = room + "px";
+              kFit(nameEl, { lines: 1, min: 40, width: room });
+            }
+            tagW = tag.offsetWidth; tagH = tag.offsetHeight;
+            // above the frame unless that hits the top zone; then below
+            var topLimit = P ? FH * 0.12 : 8;
+            above = TY - PAD - 14 - tagH >= topLimit || TY + TH + PAD + 14 + tagH > (P ? FH * 0.68 : FH - 8);
+            tag.style.transformOrigin = above ? "0 100%" : "0 0";
+          }
+          var tagU = [dot, nameEl, codeEl];
+
+          // ---- frame, centre cross, camera
+          var ks = [].slice.call(root.querySelectorAll(".bf-k")), fly = q(".bf-fly");
+          var xh = [].slice.call(root.querySelectorAll(".bf-xh")), glow = q(".bf-glow"), glowFill = glow.firstChild, dim = q(".bf-dim");
+          var ARM = Math.max(28, Math.min(CFG.arm, Math.round(Math.min(TW, TH) * 0.4)));
+          ks.forEach(function (k) {
+            k.setAttribute("width", ARM); k.setAttribute("height", ARM); k.setAttribute("viewBox", "0 0 " + ARM + " " + ARM);
+            [].forEach.call(k.querySelectorAll("path"), function (p) { p.setAttribute("d", "M3 " + (ARM - 3) + "V3H" + (ARM - 3)); });
+            k.style.left = k.style.top = "0px";
+          });
+          var blur = kSpeedBlur(q(".bf-ret"), "bf", { amount: CFG.blur, max: CFG.max });
+          var grain = kGrain(q(".bf-grain"), { opacity: tone === "dark" ? 0.06 : 0.035 });
+          var clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" };
+          // fly offset (px), out cubic
+          var flyAt = function (t) {
+            var p = MT.interpolate(t, [CFG.flyIn, CFG.flyEnd], [0, 1], { easing: "power3.out", extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+            return [(1 - p) * L.fx, (1 - p) * L.fy];
+          };
+          // frame scale: 2.2 -> 0.94 (swift) -> 1 (out)
+          var shrinkAt = function (t) {
+            return t < CFG.under ? MT.mix(CFG.big, CFG.low, MT.ramp(t, CFG.shrink0, CFG.under - CFG.shrink0, "swift"))
+              : MT.mix(CFG.low, 1, MT.ramp(t, CFG.under, CFG.lock - CFG.under, "out"));
+          };
+
+          var tl = MT.scene(CFG.dur, function (t) {
+            var f = flyAt(t), f0 = flyAt(t - F / 2), f1 = flyAt(t + F / 2), s = shrinkAt(t);
+            var bite = MT.interpolate(t, [CFG.lock, CFG.lock + F, CFG.lock + 5 * F], [0, 1, 0], clamp);
+            var hw = (TW / 2 + PAD) * s - CFG.bite * bite, hh = (TH / 2 + PAD) * s - CFG.bite * bite;
+            var focus = MT.ramp(t, CFG.lock - 2 * F, 12 * F, "power3.out");
+            var glo = MT.interpolate(t, [CFG.lock, CFG.lock + 3 * F, CFG.lock + 10 * F], [0, CFG.glow, CFG.hold], clamp);
+            // camera: slow push toward the target (not with backdrop off)
+            cam.style.transform = "scale(" + (off ? 1 : MT.mix(1, 1 + CFG.cam, MT.ramp(t, 0, CFG.dur - F, "smooth"))).toFixed(5) + ")";
+            // focus dim and lock glow
+            dim.style.boxShadow = "0 0 0 3000px color-mix(in srgb, var(--bf-shade) " + (CFG.dim * 100 * focus).toFixed(2) + "%, transparent)";
+            var on = t >= CFG.lock;
+            glow.style.display = on ? "block" : "none";
+            glow.style.boxShadow = "0 0 0 1.5px color-mix(in srgb, var(--k-accent) " + (55 * focus).toFixed(2) + "%, transparent), 0 18px 48px -16px color-mix(in srgb, var(--k-accent) " + (35 * focus).toFixed(2) + "%, transparent)";
+            glowFill.style.opacity = glo.toFixed(3);
+            // four mirrored L corners; the group flies in blurred along its path
+            var cs = [[CX - hw, CY - hh, 1, 1], [CX + hw, CY - hh, -1, 1], [CX - hw, CY + hh, 1, -1], [CX + hw, CY + hh, -1, -1]];
+            ks.forEach(function (k, i) {
+              k.style.transform = "translate(" + cs[i][0].toFixed(2) + "px," + cs[i][1].toFixed(2) + "px) scale(" + cs[i][2] + "," + cs[i][3] + ")";
+            });
+            fly.style.transform = "translate(" + f[0].toFixed(2) + "px," + f[1].toFixed(2) + "px)";
+            fly.style.opacity = MT.interpolate(t, [CFG.flyIn, CFG.flyIn + 3 * F], [0, 1], clamp).toFixed(3);
+            xh.forEach(function (e) { e.style.opacity = (0.8 * (1 - focus)).toFixed(3); });
+            blur((f1[0] - f0[0]) / F, (f1[1] - f0[1]) / F);
+            // label: scale pop; pill fades over 3 frames, text cuts in at half
+            if (showTag) {
+              var lp = MT.interpolate(t, [CFG.label0, CFG.labelEnd], [0, 1], { easing: "back.out(1.8)", extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+              var ta = MT.clamp((t - CFG.label0) / (3 * F), 0, 1), sc = Math.max(0.001, lp);
+              tag.style.setProperty("--a", ta.toFixed(3));
+              tagU.forEach(function (u) { u.style.opacity = ta >= 0.5 ? 1 : 0; });
+              tag.style.left = Math.min(CX - hw + 2, RIGHT - tagW).toFixed(2) + "px";
+              tag.style.top = (above ? CY - hh - 14 : CY + hh + 14).toFixed(2) + "px";
+              tag.style.transform = (above ? "translateY(-100%) " : "") + "scale(" + sc.toFixed(4) + ")";
+            }
+            grain(t);
+          });
+          window.__timelines["bracket-fly-lock"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

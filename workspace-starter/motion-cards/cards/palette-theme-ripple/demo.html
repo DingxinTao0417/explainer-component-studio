@@ -1,0 +1,424 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"query","type":"string","label":"命令面板里打的字（1–8 个字最好）","default":"深色模式"},
+    {"id":"command","type":"string","label":"选中的第一条命令（打的字按顺序出现在里面时会加粗）","default":"切换到深色模式"},
+    {"id":"title","type":"string","label":"界面里的大标题","default":"素材库"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底（画出整个界面）"},{"value":"off","label":"透明（只留命令面板、亮点和涟漪环）"}]}
+  ]'
+>
+<head>
+<meta charset="UTF-8" />
+<title>palette-theme-ripple · 命令涟漪换肤</title>
+<script src="../../lib/preview.js"></script>
+</head>
+<body>
+<template id="palette-theme-ripple-template">
+<!-- Ported from video-shotcraft demos/interaction/theme-switch-moves/PaletteThemeRipple.tsx
+     (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+     Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+     Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds,
+     slot 5.0 s (upstream 5.2 s, the last 0.2 s of hold cut); neutral --k-* palette (old theme = host skin, new theme =
+     the skin inside out, so a dark skin swaps to light), system fonts, generic Chinese copy, upstream mark, nav, footer
+     and gallery copy removed; procedural cover art replaced by the library sample images, cover glows by a blurred copy
+     of each image; one UI cloned for the second theme; text raised to 28-52 px (rows 40 px), keys spelled Ctrl / Enter;
+     one radial layer for the dim and the vignette; portrait added (no sidebar, three covers a row, palette on the 40%
+     line). Kept: dim + blur, palette spring, typing rhythm, select, Enter press, CRT squash, 5-frame pinned dot with its
+     streak, ripple curve and radius rule (1.1 x farthest corner), ring + echo, dark settle 1.035 -> 1, camera breath,
+     cover glows, grain. -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--k-font);
+  color: var(--k-ink);
+}
+.pr {position:absolute;inset:0;container-type:size;overflow:hidden;--ox:50%;--oy:41.85%;--pw:980px}
+.pr-cam,.pr-app,.pr-clip,.pr-dimo,.pr-vig,.pr-grain {position:absolute;left:0;top:0;width:100%;height:100%}
+/* A = the host skin, B = the skin inside out; lighting by how light a copy is */
+.pr-A {--pr-bg:var(--k-bg);--pr-pan:var(--k-panel);--pr-ink:var(--k-ink);--pr-mut:var(--k-muted)}
+.pr-B {--pr-bg:color-mix(in srgb,var(--k-ink) 92%,var(--k-accent-2));--pr-pan:color-mix(in srgb,var(--pr-bg),var(--k-bg) 7%);--pr-ink:var(--k-bg);--pr-mut:color-mix(in srgb,var(--k-muted),var(--k-bg) 35%)}
+.pr-lite {--pr-side:var(--pr-pan);--pr-chip:color-mix(in srgb,var(--pr-pan),var(--pr-ink) 5%);--pr-shade:color-mix(in srgb,black 80%,var(--k-accent-2));--pr-bar:color-mix(in srgb,var(--pr-bg) 94%,var(--pr-pan))}
+.pr-dark {--pr-side:color-mix(in srgb,var(--pr-bg),black 35%);--pr-chip:var(--pr-pan);--pr-shade:color-mix(in srgb,var(--pr-bg),black 80%);--pr-bar:color-mix(in srgb,var(--pr-bg),black 22%)}
+.pr-app {background:var(--pr-bg);color:var(--pr-ink);--pr-line:color-mix(in srgb,var(--pr-ink) 8%,transparent);--pr-glow:1}
+.pr-side {position:absolute;left:0;top:0;bottom:0;width:350px;box-sizing:border-box;padding:172px 34px 0 86px;background:var(--pr-side);border-right:1px solid var(--pr-line)}
+.pr-side p {display:flex;align-items:center;gap:18px;height:64px;margin:0;padding-left:18px;border-radius:14px;font-size:28px;color:var(--pr-mut)}
+.pr-side .on {background:color-mix(in srgb,var(--pr-ink) 7%,transparent);color:var(--pr-ink);font-weight:700}
+.pr-side .on .pr-ic {color:var(--k-accent)}
+.pr-ic {display:block;flex:none;width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.pr-brand {position:absolute;left:104px;top:64px;display:flex;align-items:center;gap:14px;font-size:34px;font-weight:700}
+.pr-mark {display:block;flex:none}
+.pr-title {position:absolute;left:430px;top:62px;width:1000px;font-size:112px;font-weight:800;line-height:1.1}
+.pr-chips {position:absolute;left:430px;top:208px;display:flex;gap:12px}
+.pr-chips i {padding:8px 24px;border-radius:999px;font-size:28px;font-style:normal;line-height:1.3;background:var(--pr-chip);color:var(--pr-mut)}
+.pr-chips .on {background:var(--pr-ink);color:var(--pr-bg);font-weight:700}
+.pr-meta {position:absolute;right:112px;top:218px;font-size:28px;color:var(--pr-mut)}
+.pr-grid {position:absolute;left:430px;top:300px;display:grid;grid-template-columns:repeat(5,246.8px);grid-auto-rows:376.8px;column-gap:36px}
+.pr-grid figure {position:relative;margin:0}
+.pr-im,.pr-gl {position:absolute;left:0;top:0;width:100%;aspect-ratio:1;border-radius:18px;background:var(--im) 50%/cover}
+.pr-im {box-shadow:0 18px 36px -18px color-mix(in srgb,var(--pr-shade) 35%,transparent),0 0 0 1px var(--pr-line)}
+.pr-gl {display:none;transform:scale(1.25,1.4);filter:blur(40px);opacity:calc(0.5 * var(--pr-glow))}
+.pr-dark .pr-gl {display:block}
+.pr-grid b {position:absolute;left:0;top:calc(100% - 108px);font-size:32px;line-height:1.2}
+.pr-grid span {position:absolute;left:0;top:calc(100% - 68px);font-size:28px;line-height:1.2;color:var(--pr-mut)}
+.pr-grid figure:nth-child(n+6) :is(b,span) {display:none}
+.pr-bar {position:absolute;left:0;right:0;bottom:0;height:124px;box-sizing:border-box;padding:0 104px;display:flex;align-items:center;background:var(--pr-bar);border-top:1px solid var(--pr-line);font-size:28px;color:var(--pr-mut)}
+.pr-th {width:76px;height:76px;border-radius:12px;flex:none;background:var(--im) 50%/cover}
+.pr-np {margin-left:22px;width:330px;line-height:1.25}
+.pr-np b {display:block;font-size:30px;color:var(--pr-ink)}
+.pr-ctl {display:flex;align-items:center;gap:34px;margin-left:110px;color:var(--pr-mut)}
+.pr-ctl i {width:66px;height:66px;border-radius:33px;background:var(--pr-ink);display:flex;align-items:center;justify-content:center;gap:8px}
+.pr-ctl i::before,.pr-ctl i::after {content:"";width:7px;height:24px;border-radius:2px;background:var(--pr-bg)}
+.pr-tm {margin-left:70px;flex:1;display:flex;align-items:center;gap:20px}
+.pr-prog {flex:1;height:6px;border-radius:3px;background:var(--pr-chip)}
+.pr-prog i {display:block;height:100%;width:40%;border-radius:3px;background:var(--k-accent)}
+.pr-dark .pr-prog i {box-shadow:0 0 12px color-mix(in srgb,var(--k-accent) 60%,transparent)}
+/* the command palette sits on the old theme (host skin colours) */
+.pr-pal {position:absolute;left:var(--ox);top:var(--oy);width:var(--pw);opacity:0;border-radius:22px;overflow:hidden;color:var(--k-ink);background:color-mix(in srgb,var(--k-bg),var(--k-panel) 25%);
+  box-shadow:inset 0 1px 0 color-mix(in srgb,white 70%,transparent),0 0 0 1px color-mix(in srgb,var(--k-ink) 8%,transparent),0 50px 100px -30px color-mix(in srgb,black 60%,transparent),0 18px 40px -12px color-mix(in srgb,black 35%,transparent)}
+.pr-in {height:112px;box-sizing:border-box;padding:0 34px;display:flex;align-items:center;gap:22px;border-bottom:1px solid color-mix(in srgb,var(--k-ink) 7%,transparent)}
+.pr-in .pr-ic {width:34px;height:34px;color:var(--k-muted)}
+.pr-q {display:flex;align-items:center;min-width:0;max-width:640px;font-size:52px;font-weight:600;line-height:1.2;white-space:nowrap}
+.pr-q i {font-style:normal;display:inline-block}
+.pr-q u {width:3px;height:56px;margin-left:4px;border-radius:2px;background:var(--k-accent)}
+.pr-ph {margin-left:12px;font-weight:400;color:var(--k-muted)}
+.pr-k {display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 12px;border-radius:10px;font-size:28px;font-weight:600;font-style:normal;color:var(--k-muted);background:var(--k-panel);box-shadow:inset 0 -2px 0 color-mix(in srgb,var(--k-ink) 8%,transparent)}
+.pr-in .pr-k {margin-left:auto}
+.pr-rows {padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.pr-row {min-height:92px;box-sizing:border-box;padding:0 20px;border-radius:16px;display:flex;align-items:center;gap:22px;font-size:40px;line-height:1.2}
+.pr-ib {width:56px;height:56px;flex:none;border-radius:14px;display:flex;align-items:center;justify-content:center;background:var(--k-panel);color:var(--k-muted)}
+.pr-lab {flex:1;min-width:0}
+.pr-lab b {font-weight:inherit}
+.pr-hint {margin-left:auto;display:flex;gap:8px;font-size:28px;color:var(--k-muted);white-space:nowrap}
+.pr-foot {height:60px;box-sizing:border-box;padding:0 34px;display:flex;align-items:center;gap:26px;font-size:28px;color:var(--k-muted);background:var(--k-panel);border-top:1px solid color-mix(in srgb,var(--k-ink) 6%,transparent)}
+.pr-foot :last-child {margin-left:auto}
+/* collapse point, ripple rings: borders and shadows only, never a backdrop over text */
+.pr-fx {position:absolute;left:0;top:0;opacity:0}
+.pr-ring {border-radius:50%;box-sizing:border-box;border:3px solid color-mix(in srgb,white 95%,var(--k-accent));box-shadow:0 0 34px 6px color-mix(in srgb,var(--k-accent) 55%,transparent),0 0 90px 20px color-mix(in srgb,var(--k-accent) 22%,transparent),inset 0 0 30px color-mix(in srgb,white 30%,transparent)}
+.pr-echo {border-radius:50%;box-sizing:border-box;border:1.5px solid color-mix(in srgb,color-mix(in srgb,var(--k-accent),white 60%) 50%,transparent)}
+.pr-dot {width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:13px;background:white;box-shadow:0 0 0 5px color-mix(in srgb,white 35%,transparent),0 0 36px 14px color-mix(in srgb,var(--k-accent) 75%,transparent),0 0 120px 40px color-mix(in srgb,white 40%,transparent)}
+.pr-streak {width:840px;height:6px;margin:-3px 0 0 -420px;border-radius:3px;filter:blur(1.5px)}
+/* static frame: the dark-side vignette */
+.pr-vig {background:radial-gradient(ellipse 72% 72% at 50% 46%,transparent 50%,color-mix(in srgb,color-mix(in srgb,black 94%,var(--k-accent-2)) 42%,transparent))}
+.pr-bare .pr-app,.pr-bare .pr-vig,.pr-bare .pr-grain {display:none}
+/* ==== kit:grain@1 ==== */
+.pr-grain {position:absolute;inset:0;pointer-events:none}
+/* ==== end kit:grain ==== */
+/* portrait: no sidebar, three covers a row inset 132 px (camera lean x dark settle, 1.043, stays in the safe area), palette on the 40% line, no words in the player bar */
+@container (orientation: portrait) {
+  .pr {--oy:40%;--pw:864px}
+  .pr-side,.pr-meta,.pr-np,.pr-tm span,.pr-grid figure:nth-child(10) {display:none}
+  .pr-brand {left:132px;top:258px}
+  .pr-title {left:132px;top:318px;width:816px}
+  .pr-chips {left:132px;top:460px}
+  .pr-grid {left:132px;top:540px;grid-template-columns:repeat(3,248px);grid-auto-rows:384px}
+  .pr-grid figure:nth-child(n+6) :is(b,span) {display:block}
+  .pr-grid figure:nth-child(n+7) :is(b,span) {display:none}
+  .pr-bar {padding:0 132px}
+  .pr-ctl {margin-left:60px}
+  .pr-tm {margin-left:60px}
+}
+</style>
+
+<div id="root" data-composition-id="palette-theme-ripple">
+<div class="pr" data-layout-allow-overflow>
+<div class="pr-cam">
+<div class="pr-dimo"></div>
+<div class="pr-clip">
+<div class="pr-app pr-B pr-dark">
+<div class="pr-side">
+<p><svg class="pr-ic" viewBox="0 0 16 16"><path d="M2.5 7.5 8 3l5.5 4.5V13h-11z"/></svg>首页</p>
+<p><svg class="pr-ic" viewBox="0 0 16 16"><path d="M2.5 2.5h4.5v4.5h-4.5zM9 2.5h4.5v4.5H9zM2.5 9h4.5v4.5h-4.5zM9 9h4.5v4.5H9z"/></svg>课程</p>
+<p><svg class="pr-ic" viewBox="0 0 16 16"><path d="M3 4h10M3 8h10M3 12h6"/></svg>笔记</p>
+<p class="on"><svg class="pr-ic" viewBox="0 0 16 16"><path d="M3 2.5v11M6 2.5v11M9 3l3.5 10"/></svg>素材库</p>
+<p><svg class="pr-ic" viewBox="0 0 16 16"><path d="M8 2.5v8M5 7.5l3 3 3-3M3 13.5h10"/></svg>导出</p>
+</div>
+<div class="pr-brand"><!-- kit:mark@1: kMark(44), inlined --><svg class="pr-mark" width="44" height="44" viewBox="0 0 128 128" aria-hidden="true"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg>示例应用</div>
+<b class="pr-title">素材库</b>
+<div class="pr-chips"><i class="on">全部</i><i>截图</i><i>录屏</i><i>为你推荐</i></div>
+<span class="pr-meta">按最近排序</span>
+<div class="pr-grid">
+<figure style="--im:url(motion-cards/lib/samples/p1.jpg)"><i class="pr-gl"></i><i class="pr-im"></i><b>晨光</b><span>封面</span></figure>
+<figure style="--im:url(motion-cards/lib/samples/p2.jpg)"><i class="pr-gl"></i><i class="pr-im"></i><b>深海</b><span>片头</span></figure>
+<figure style="--im:url(motion-cards/lib/samples/p3.jpg)"><i class="pr-gl"></i><i class="pr-im"></i><b>青山</b><span>转场</span></figure>
+<figure style="--im:url(motion-cards/lib/samples/p4.jpg)"><i class="pr-gl"></i><i class="pr-im"></i><b>麦田</b><span>背景</span></figure>
+<figure style="--im:url(motion-cards/lib/samples/p5.jpg)"><i class="pr-gl"></i><i class="pr-im"></i><b>晚霞</b><span>片尾</span></figure>
+<figure style="--im:url(motion-cards/lib/samples/p6.jpg)"><i class="pr-gl"></i><i class="pr-im"></i><b>星夜</b><span>插图</span></figure>
+<figure style="--im:url(motion-cards/lib/samples/p7.jpg)"><i class="pr-gl"></i><i class="pr-im"></i><b>草地</b><span>背景</span></figure>
+<figure style="--im:url(motion-cards/lib/samples/p8.jpg)"><i class="pr-gl"></i><i class="pr-im"></i><b>晴空</b><span>封面</span></figure>
+<figure style="--im:url(motion-cards/lib/samples/p1.jpg)"><i class="pr-gl"></i><i class="pr-im"></i><b>晨光</b><span>备用</span></figure>
+<figure style="--im:url(motion-cards/lib/samples/p3.jpg)"><i class="pr-gl"></i><i class="pr-im"></i><b>青山</b><span>备用</span></figure>
+</div>
+<div class="pr-bar">
+<i class="pr-th" style="--im:url(motion-cards/lib/samples/p3.jpg)"></i>
+<div class="pr-np"><b>演示视频</b>预览 · 第 4 镜</div>
+<div class="pr-ctl"><svg class="pr-ic" viewBox="0 0 16 16"><path d="M4 3.5v9M12.5 3.5v9L6 8z"/></svg><i></i><svg class="pr-ic" viewBox="0 0 16 16"><path d="M12 3.5v9M3.5 3.5v9L10 8z"/></svg></div>
+<div class="pr-tm"><span class="pr-t0">0:22</span><div class="pr-prog"><i></i></div><span>0:48</span></div>
+</div>
+</div>
+</div>
+<div class="pr-fx pr-echo"></div>
+<div class="pr-fx pr-ring"></div>
+<div class="pr-fx pr-streak"></div>
+<div class="pr-fx pr-dot"></div>
+<div class="pr-pal">
+<div class="pr-in"><svg class="pr-ic" viewBox="0 0 16 16"><path d="M7 11.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zm3.5-1 3 3"/></svg><span class="pr-q"><u></u><span class="pr-ph">搜索命令…</span></span><i class="pr-k">Esc</i></div>
+<div class="pr-rows">
+<div class="pr-row pr-r1"><span class="pr-ib"><svg class="pr-ic" viewBox="0 0 16 16"><path d="M13 9.6A5.5 5.5 0 1 1 6.4 3a4.4 4.4 0 0 0 6.6 6.6z"/></svg></span><span class="pr-lab">切换到深色模式</span><span class="pr-hint"><i class="pr-k">Ctrl+D</i><i class="pr-k pr-ent">Enter</i></span></div>
+<div class="pr-row pr-dim"><span class="pr-ib"><svg class="pr-ic" viewBox="0 0 16 16"><path d="M8 2.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11zM8 2.5v11"/></svg></span><span class="pr-lab">跟随系统外观</span><span class="pr-hint">主题</span></div>
+<div class="pr-row pr-dim"><span class="pr-ib"><svg class="pr-ic" viewBox="0 0 16 16"><path d="M8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM8 1.8v1.6M8 12.6v1.6M1.8 8h1.6M12.6 8h1.6M3.6 3.6l1.1 1.1M11.3 11.3l1.1 1.1M3.6 12.4l1.1-1.1M11.3 4.7l1.1-1.1"/></svg></span><span class="pr-lab">外观设置…</span><span class="pr-hint">设置</span></div>
+</div>
+<div class="pr-foot"><span>↑↓ 选择</span><span>Enter 执行</span><span>命令面板</span></div>
+</div>
+</div>
+<div class="pr-vig"></div>
+<div class="pr-grain"></div>
+</div>
+</div>
+
+<script>
+(function () {
+// seconds = upstream frames / 30 (156 frames, slot cut to 5.0 s)
+var CFG = {
+  slot: 5,
+  dim: 0.333, dimDur: 0.267,           // old theme dims and blurs (out); clears while the panel collapses (swift)
+  panel: 0.4,                          // palette springs down (damping 17, stiffness 190), fades in over 4 frames
+  keys: [0.8, 0.933, 1.033, 1.233],    // keystroke rhythm (24/28/31/37f); more or fewer characters spread over the same span
+  enter: 1.533,                        // first row flashes, the Enter key goes down
+  squash: 1.6, line: 1.733, dot: 1.867, // CRT off: squash to a line (exit), then to a point (exit)
+  ripple: 2.033, rippleEnd: 3.167,     // dot pinned 5 frames, then the ripple opens: cubic-bezier(.2,.55,.3,1)
+  glow: 0.567                          // cover glows after the ripple (out)
+};
+// palette centre = collapse point = ripple centre, share of the frame; the ripple reaches 1.1 x the farthest corner
+var LAND = { ox: 0.5, oy: 0.4185 };
+var PORT = { ox: 0.5, oy: 0.4 };
+var v = { query: "深色模式", command: "切换到深色模式", title: "素材库", backdrop: "on" };
+try {
+  var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+  for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+} catch (e) {}
+
+var root = document.querySelector(".pr");
+var q = function (s, el) { return (el || root).querySelector(s); };
+var FW = root.clientWidth, FH = root.clientHeight;
+if (!FW || !FH) {
+  // not laid out yet: the host clip's declared size, then the window
+  var hc = root.closest("[data-width][data-height]");
+  FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+  FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+}
+var P = FH > FW, L = P ? PORT : LAND;
+root.setAttribute("data-orient", P ? "portrait" : "landscape");
+var bare = String(v.backdrop) === "off";
+if (bare) root.classList.add("pr-bare");
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== end kit:tone ====
+// ==== kit:fit@1 (kFit, kLines) ====
+function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+      var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+      if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+      row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+      "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+      "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+      "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+      "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+}
+// ==== end kit:grain ====
+
+var darkSkin = kTone(root) === "dark";
+var B = q(".pr-B"), clip = q(".pr-clip"), cam = q(".pr-cam"), pal = q(".pr-pal"), dimo = q(".pr-dimo");
+B.className = "pr-app pr-B " + (darkSkin ? "pr-lite" : "pr-dark");
+
+// text: the gallery title as typed, fitted to one line before the copy is made
+q(".pr-title").textContent = String(v.title).trim();
+kFit(q(".pr-title"), { lines: 1, min: 72 });
+// the typed query, one span per character; the command gets the matched characters as <b> in order
+var qs = Array.from(String(v.query).trim()).slice(0, 12), cmd = Array.from(String(v.command).trim()), qi = 0;
+var qbox = q(".pr-q"), caret = q("u", qbox), ph = q(".pr-ph");
+var chars = qs.map(function (c) { var s = document.createElement("i"); s.textContent = c; qbox.insertBefore(s, caret); return s; });
+q(".pr-lab").innerHTML = "";
+var hits = cmd.map(function (c) {
+  var on = qi < qs.length && c.toLowerCase() === qs[qi].toLowerCase(), n = document.createElement(on ? "b" : "span");
+  if (on) qi++;
+  n.textContent = c; q(".pr-lab").appendChild(n);
+  return on ? n : null;
+}).filter(Boolean);
+var KW = (P ? 864 : 980) - 400;
+kFit(q(".pr-lab"), { lines: 1, min: 32, width: KW });
+ph.style.display = "none";
+kFit(qbox, { lines: 1, min: 36, width: KW + 60 });
+// keystroke times: the upstream rhythm stretched over however many characters there are
+var keyAt = qs.map(function (c, i) { var u = qs.length < 2 ? 0 : (i / (qs.length - 1)) * 3, j = Math.min(2, Math.floor(u)); return MT.mix(CFG.keys[j], CFG.keys[j + 1], u - j); });
+var lastKey = keyAt.length ? keyAt[keyAt.length - 1] : CFG.keys[3];
+
+// the old theme: the same DOM cloned under the new one (its text sits under the new text by design)
+var A = B.cloneNode(true);
+A.className = "pr-app pr-A " + (darkSkin ? "pr-dark" : "pr-lite");
+[].forEach.call(A.querySelectorAll("*"), function (e) {
+  for (var c = e.firstChild; c; c = c.nextSibling) if (c.nodeType === 3 && c.data.trim()) { e.setAttribute("data-layout-allow-occlusion", ""); e.setAttribute("data-layout-allow-overlap", ""); break; }
+});
+cam.insertBefore(A, dimo);
+var t0s = [q(".pr-t0", A), q(".pr-t0", B)], progs = [q(".pr-prog i", A), q(".pr-prog i", B)];
+var r1 = q(".pr-r1"), ent = q(".pr-ent"), dims = [].slice.call(pal.querySelectorAll(".pr-dim :is(.pr-lab,.pr-ib)")), cont = [q(".pr-in"), q(".pr-rows"), q(".pr-foot")];
+var ring = q(".pr-ring"), echo = q(".pr-echo"), dot = q(".pr-dot"), streak = q(".pr-streak"), vig = q(".pr-vig");
+var grain = kGrain(q(".pr-grain"), { opacity: 0.05, blend: "overlay" });
+
+// overlays above text use rgba(): the layout check reads color-mix() gradients as opaque
+var rgba = function (c, a) { return "rgba(" + c.map(Math.round).join(",") + "," + a.toFixed(3) + ")"; };
+var ACC = kRGB(root, "var(--k-accent)"), INK = kRGB(root, "var(--k-ink)"), ON = kRGB(root, "var(--k-on-accent)");
+var NIGHT = kRGB(root, "color-mix(in srgb, black 88%, var(--k-accent-2))"), WH = [255, 250, 245];
+dimo.style.background = "radial-gradient(ellipse 70% 70% at 50% 42%, " + rgba(NIGHT, 0.3) + ", " + rgba(NIGHT, 0.55) + ")";
+streak.style.background = "linear-gradient(90deg, " + rgba(ACC, 0) + ", " + rgba(ACC, 0.5) + " 30%, " + rgba(WH, 0.95) + ", " + rgba(ACC, 0.5) + " 70%, " + rgba(ACC, 0) + ")";
+var VS = darkSkin ? [0.12, 0.16] : [0.12, 0.42], PAN = kRGB(pal, "color-mix(in srgb, var(--k-bg), var(--k-panel) 25%)");
+// text on the selected row: ink or on-accent, whichever reads better on the row colour of this frame
+var lum = function (c) { return c.reduce(function (s, x, i) { x /= 255; return s + [0.2126, 0.7152, 0.0722][i] * (x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4)); }, 0); };
+var con = function (a, b) { var x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+
+var OX = L.ox * FW, OY = L.oy * FH, MAXR = 1.1 * Math.max(Math.hypot(OX, OY), Math.hypot(FW - OX, OY), Math.hypot(OX, FH - OY), Math.hypot(FW - OX, FH - OY));
+cam.style.transformOrigin = B.style.transformOrigin = OX + "px " + OY + "px";
+[ring, echo, dot, streak].forEach(function (e) { e.style.left = OX + "px"; e.style.top = OY + "px"; });
+var R = MT.ramp, mix = MT.mix, RIP = MT.bezier(0.2, 0.55, 0.3, 1), F = function (n) { return n / 30; };
+
+var render = function (t) {
+  var f = t * 30; // frames at 30 fps (pulse, caret blink, play head)
+  // old theme dims and blurs while the palette is up, clears as it collapses
+  var dim = R(t, CFG.dim, CFG.dimDur, "out") * (1 - R(t, CFG.squash, CFG.dot - CFG.squash, "swift"));
+  A.style.filter = dim > 0.01 ? "blur(" + (dim * 7).toFixed(2) + "px) saturate(" + (1 - 0.25 * dim).toFixed(3) + ")" : "none";
+  dimo.style.opacity = bare ? 0 : dim.toFixed(3);
+
+  // palette: spring drop, then the CRT switch-off: squash to a line, shrink to a point
+  var drop = t < CFG.panel ? 0 : MT.spring({ t: t, delay: CFG.panel, damping: 17, stiffness: 190 }), col = t >= CFG.squash;
+  var sy = col ? mix(1, 0.012, R(t, CFG.squash, CFG.line - CFG.squash, "exit")) : mix(0.94, 1, drop);
+  var sx = t >= CFG.line ? mix(1, 0.008, R(t, CFG.line, CFG.dot - CFG.line, "exit")) : col ? 1 : sy;
+  var glare = R(t, CFG.squash, CFG.line - CFG.squash, "linear");
+  pal.style.display = t >= CFG.panel && t < CFG.dot ? "" : "none";
+  pal.style.opacity = R(t, CFG.panel, F(4), "linear").toFixed(3);
+  pal.style.transform = "translate(-50%,-50%) translateY(" + (col ? 0 : mix(-46, 0, drop)).toFixed(2) + "px) scale(" + sx.toFixed(4) + "," + sy.toFixed(4) + ")";
+  pal.style.borderRadius = (22 * Math.min(1, sy * 6)).toFixed(2) + "px";
+  pal.style.background = col ? rgba(WH, 1) : "";
+  pal.style.boxShadow = col ? "0 0 " + (30 + 60 * glare).toFixed(1) + "px " + (6 + 10 * glare).toFixed(1) + "px " + rgba(WH, 0.4 + 0.4 * glare) + ", 0 0 120px 20px " + rgba(ACC, 0.35 * glare) : "";
+  // the content shows once the box is opaque (no half-transparent text), and goes dark first when it squashes
+  cont.forEach(function (e) { e.style.opacity = t < CFG.panel + F(4) ? 0 : (1 - R(t, CFG.squash, F(3), "linear")).toFixed(3); });
+
+  // typing: each key drops in 10 px; the matched characters of the command go bold; the first row is then selected
+  var typed = 0;
+  chars.forEach(function (c, i) { var p = R(t, keyAt[i], F(4), "snappy"); if (t >= keyAt[i]) typed++; c.style.display = t >= keyAt[i] ? "" : "none"; c.style.opacity = p.toFixed(3); c.style.transform = "translateY(" + ((1 - p) * 10).toFixed(2) + "px)"; });
+  ph.style.display = typed ? "none" : "";
+  caret.style.opacity = t < lastKey + F(2) || Math.floor((f - lastKey * 30) / 8) % 2 === 0 ? 1 : 0;
+  var sel = R(t, lastKey, F(5), "out"), press = R(t, CFG.enter, F(2), "linear") * (1 - R(t, CFG.enter + F(2), F(4), "out"));
+  hits.forEach(function (b, i) { b.style.fontWeight = i < typed ? 800 : ""; });
+  r1.style.background = sel > 0 ? rgba(ACC, sel * (0.94 + 0.06 * press)) : "";
+  var rowC = PAN.map(function (c, i) { return mix(c, ACC[i], sel * 0.94); });
+  r1.style.color = sel > 0 && con(ON, rowC) > con(INK, rowC) ? rgba(ON, 1) : "";
+  dims.forEach(function (e) { e.style.opacity = (1 - 0.4 * Math.min(1, typed / Math.max(1, qs.length))).toFixed(3); });
+  r1.style.boxShadow = sel > 0.5 ? "0 10px 24px -10px " + rgba(ACC, 0.7) + (press > 0 ? ", 0 0 0 " + (4 * press).toFixed(1) + "px " + rgba(ACC, 0.25) : "") : "";
+  ent.style.transform = "translateY(" + (press * 2).toFixed(2) + "px)";
+
+  // the point: pinned on the collapse point for 5 frames with a horizontal afterglow, then the ripple takes over
+  var dA = t < CFG.dot ? R(t, CFG.line + F(2), CFG.dot - CFG.line - F(2), "linear") : 1 - R(t, CFG.ripple, F(4), "linear");
+  var on = t >= CFG.line + F(2) && t < CFG.ripple + F(4);
+  dot.style.opacity = on ? dA.toFixed(3) : 0;
+  dot.style.transform = "scale(" + (1 + 0.18 * Math.sin(Math.max(0, f - CFG.dot * 30) * 0.9) * (t >= CFG.dot && t < CFG.ripple ? 1 : 0)).toFixed(3) + ")";
+  streak.style.opacity = on ? (dA * 0.8).toFixed(3) : 0;
+  streak.style.transform = "scaleX(" + (0.4 + 0.6 * (1 - R(t, CFG.dot, CFG.ripple - CFG.dot + F(4), "out"))).toFixed(3) + ")";
+
+  // ripple: the new theme opens as a circle from that point, a white-hot ring and an echo 4 frames behind
+  var rAt = function (s) { return mix(6, MAXR, R(t, s, CFG.rippleEnd - CFG.ripple, RIP)); };
+  var r = rAt(CFG.ripple), r2 = rAt(CFG.ripple + F(4)) * 0.96, rip = t >= CFG.ripple && t < CFG.rippleEnd, ro = 1 - R(t, CFG.ripple + F(6), CFG.rippleEnd - CFG.ripple - F(6), "out");
+  clip.style.display = t >= CFG.ripple ? "" : "none";
+  A.style.display = t >= CFG.rippleEnd ? "none" : "";
+  clip.style.clipPath = rip ? "circle(" + r.toFixed(1) + "px at " + OX + "px " + OY + "px)" : "none";
+  B.style.transform = "scale(" + mix(1.035, 1, R(t, CFG.ripple, F(26), "snappy")).toFixed(4) + ")";
+  [[ring, r, ro], [echo, r2, ro * 0.6]].forEach(function (e) { e[0].style.opacity = rip ? e[2].toFixed(3) : 0; e[0].style.width = e[0].style.height = (e[1] * 2).toFixed(1) + "px"; e[0].style.margin = (-e[1]).toFixed(1) + "px 0 0 " + (-e[1]).toFixed(1) + "px"; });
+  B.style.setProperty("--pr-glow", R(t, CFG.rippleEnd, CFG.glow, "out").toFixed(3));
+
+  // camera: leans in while typing, breathes out with the ripple, then a very slow push
+  var z = 1 + 0.03 * R(t, CFG.panel, CFG.enter - CFG.panel, "swift") * (1 - R(t, CFG.ripple, 1, "smooth")) + 0.012 * R(t, CFG.rippleEnd, CFG.slot - CFG.rippleEnd, "swift");
+  cam.style.transform = "scale(" + z.toFixed(4) + ")";
+  var vs = mix(VS[0], VS[1], R(t, CFG.ripple, F(24), "out"));
+  vig.style.background = "radial-gradient(ellipse 72% 72% at 50% 46%, transparent 50%, " + rgba(NIGHT, vs) + ")";
+
+  // the player keeps running underneath, in both themes
+  [0, 1].forEach(function (i) { t0s[i].textContent = "0:" + (22 + Math.floor(f / 30)); progs[i].style.width = ((0.34 + f * 0.0009) * 100).toFixed(2) + "%"; });
+  grain(t);
+};
+var tl = MT.scene(CFG.slot, render);
+window.__timelines["palette-theme-ripple"] = tl;
+})();
+</script>
+</template>
+</body>
+</html>

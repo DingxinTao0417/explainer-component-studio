@@ -1,0 +1,419 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"标题第一行（粗，| 切成逐段升起的词组）","default":"所有|项目，"},
+    {"id":"sub","type":"string","label":"标题第二行（细，留空不要）","default":"一页|看全。"},
+    {"id":"unit","type":"string","label":"计数后面的字（留空不要计数行）","default":"个示例项目"},
+    {"id":"total","type":"number","label":"计数最后停在几（0 不要计数行，最大 9999）","default":26},
+    {"id":"srcs","type":"string","label":"卡面图片（可空，用 | 分隔，按发牌顺序循环）","default":""},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底（桌面）"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>deck-deal-flyin · 牌堆发牌入网格</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="deck-deal-flyin-template">
+      <!-- Ported from video-shotcraft demos/ui-entrance/deck-deal-flyin/DeckDealFlyin.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette (grey brushed table, pale board and white cards on light skins; graphite table, dark board
+           and cards on dark ones), system fonts, generic Chinese copy; upstream mark, wordmark, tagline, counter label and
+           the page and card screenshots removed: the board and the 26 cards are drawn text-free (optional srcs images); the
+           counter counts to a variable total behind an accent dot (40px, was 30px mono caps); title = two variable lines at
+           120px (portrait 104px), weights 700/400 (were 800/300), Chinese line height, same bottom edge; table cut to
+           5200x7200, its distance mask replaced by a gradient into a flat stage of the same colour (no stage key light), a
+           veil over the brushed tile as the camera pulls out (moire); light skins: board shade 0.2 (0.88 kept on dark),
+           far-end shade x0.45, shadows x0.6, vignette 0.16 (0.55 kept on dark); ghosts are plain blurred cards; portrait:
+           new camera keys at the same times; 0.2 s more hold. Kept: landscape camera keys and the Hermite spline, cue
+           formula, 8f dive, 4f settle, press, arc 110, hover 40, peak 1.06, ghost offset and fade, pile jitter,
+           anticipation 48 / 30px, light-up 34-64f, far shade 80-114f, shadow formulas, title rise 16f / 4f from 100f and
+           106f. -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--k-font);
+  color: var(--k-ink);
+}
+/* ==== kit:fonts@2 (mono only) ==== */
+@font-face { font-family: "Consolas"; src: local("Consolas"); }
+#root { --k-mono: var(--mc-mono, Consolas, monospace); }
+/* ==== end kit:fonts ==== */
+/* ==== kit:derived@1 (line, shade) ==== */
+.dkf { --dkf-line: color-mix(in srgb, var(--k-ink) 12%, transparent); --dkf-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); }
+.dkf[data-tone="dark"] { --dkf-shade: color-mix(in srgb, var(--k-bg) 30%, black); }
+/* ==== end kit:derived ==== */
+/* per tone: a grey brushed table, pale board and white cards on light skins; upstream's graphite table on dark ones.
+   st = the stage the table fades into, t0/t1 = table bands, bd = board, dim = the board's shade before the light, k = shadow strength */
+.dkf { position: absolute; inset: 0; container-type: size; --dkf-st: color-mix(in srgb, var(--k-bg), var(--k-ink) 9%); --dkf-t0: color-mix(in srgb, var(--k-bg), var(--k-ink) 13%); --dkf-t1: color-mix(in srgb, var(--k-bg), var(--k-ink) 18%); --dkf-bd: var(--k-panel); --dkf-card: var(--k-bg); --dkf-dim: color-mix(in srgb, var(--k-ink) 70%, var(--k-bg)); --dkf-k: 1; }
+.dkf[data-tone="dark"] { --dkf-st: color-mix(in srgb, var(--k-bg), black 45%); --dkf-t0: color-mix(in srgb, var(--k-bg), white 4%); --dkf-t1: color-mix(in srgb, var(--k-bg), black 18%); --dkf-bd: color-mix(in srgb, var(--k-bg), white 9%); --dkf-card: color-mix(in srgb, var(--k-panel), white 5%); --dkf-dim: color-mix(in srgb, var(--k-bg), black 40%); --dkf-k: 1.55; }
+/* flat on purpose: it must equal the colour the table fades into, or the table's far edge shows as a horizon */
+.dkf-bg { position: absolute; inset: 0; background: var(--dkf-st); }
+.dkf-sh, .dkf-view { position: absolute; inset: 0; }
+/* static = the landed frame: camera at 150f (board px = upstream page x - 352; CSS zoom = camera zoom) */
+.dkf-sh { transform: translateX(300px); }
+.dkf-view { perspective: 1676.4px; }
+.dkf-pg { position: absolute; left: 0; top: 0; width: 1216px; height: 3782px; transform-style: preserve-3d; zoom: 0.508; transform-origin: 608px 2160px; transform: translate(1281.8px, -1097px) rotateY(-6deg) rotateX(52deg) rotateZ(-26deg); }
+/* the table: key light (.dkf-key), wide highlight band, brushed tile, banded base; it fades into the stage where upstream masked it */
+.dkf-tab, .dkf-key { position: absolute; left: -1992px; top: -1709px; width: 5200px; height: 7200px; }
+.dkf-tab { background: radial-gradient(ellipse 50% 50% at 50% 50%, transparent 40%, var(--dkf-st) 100%),
+  linear-gradient(104deg, transparent 2268px, color-mix(in srgb, white 7%, transparent) 3368px, color-mix(in srgb, white 11%, transparent) 3868px, color-mix(in srgb, white 5%, transparent) 4468px, transparent 5668px),
+  url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='640' height='640'><filter id='b' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'><feTurbulence type='fractalNoise' baseFrequency='0.0018 0.62' numOctaves='3' seed='11' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0.4 0.4 0.4 0 -0.5'/></filter><rect width='100%' height='100%' filter='url(%23b)'/></svg>") 0 0 / 640px 640px,
+  linear-gradient(115deg, var(--dkf-t0), color-mix(in srgb, var(--dkf-t0), white 6%) 30%, var(--dkf-t1) 56%, var(--dkf-t0) 80%, var(--dkf-t1)); }
+.dkf-bd { position: absolute; inset: 0; overflow: hidden; border-radius: 18px; background: var(--dkf-bd); box-shadow: 0 0 0 1px var(--dkf-line), 0 60px 160px color-mix(in srgb, var(--dkf-shade) calc(var(--dkf-k) * 45%), transparent), 0 12px 40px color-mix(in srgb, var(--dkf-shade) calc(var(--dkf-k) * 32%), transparent); }
+.dkf-bd svg { position: absolute; left: 0; top: 0; }
+.dkf-h { fill: color-mix(in srgb, var(--dkf-card) 70%, transparent); }
+.dkf-l { fill: var(--dkf-line); }
+.dkf-s { fill: var(--dkf-card); stroke: var(--dkf-line); }
+.dkf-a { fill: color-mix(in srgb, var(--k-ink) 20%, transparent); }
+.dkf-b { fill: color-mix(in srgb, var(--k-ink) 35%, transparent); }
+.dkf-i { fill: color-mix(in srgb, var(--k-ink) 72%, transparent); }
+.dkf-dim, .dkf-fog { position: absolute; inset: 0; pointer-events: none; }
+.dkf-fog { inset: -2px; border-radius: 18px; transform: translateZ(1px); }
+.dkf-cs { position: absolute; left: 56px; top: 247px; display: grid; grid-template-columns: repeat(3, 357.33px); grid-template-rows: 288px repeat(8, 312px); gap: 81px 16px; transform-style: preserve-3d; }
+.dkf-cs > i { position: relative; transform-style: preserve-3d; }
+.dkf-cs > i:nth-child(3) { grid-column: 1; }
+.dkf-cs > i:empty, .dkf-cs > i > * { border-radius: 16px; background: var(--dkf-card) center / cover; }
+.dkf-cs > i:empty { box-shadow: 0 2px 6px color-mix(in srgb, var(--dkf-shade) 10%, transparent), 0 0 0 1px var(--dkf-line); }
+.dkf-cs > i > * { position: absolute; inset: 0; }
+.dkf-f { overflow: hidden; box-shadow: 0 2px 6px color-mix(in srgb, var(--dkf-shade) 10%, transparent), 0 0 0 1px var(--dkf-line); }
+.dkf-f i { position: absolute; inset: 0; }
+.dkf-g { filter: blur(7px); opacity: 0; }
+.dkf-vig { position: absolute; inset: 0; pointer-events: none; --vs: 16%; background: radial-gradient(ellipse 75% 75% at 58% 46%, transparent 45%, color-mix(in srgb, var(--dkf-shade) var(--vs), transparent) 100%); }
+.dkf[data-tone="dark"] .dkf-vig { --vs: 55%; }
+/* lower left (portrait: top): counter row, then two title lines, the second one light. The empty padding below them
+   keeps a word that is still under its rise mask inside this box: outside it, check reads the masked word as hidden
+   beneath the vignette (any radial gradient counts as opaque there) */
+.dkf-head { position: absolute; left: 120px; bottom: 26px; padding-bottom: 160px; width: 760px; }
+.dkf-cnt { display: flex; align-items: center; gap: 18px; margin: 0 0 12px 4px; font-size: 40px; line-height: 1.3; color: var(--k-muted); }
+.dkf-dot { display: block; flex: none; width: 14px; height: 14px; border-radius: 50%; background: var(--k-accent); }
+.dkf-n { display: block; flex: none; font-family: var(--k-mono); font-weight: 700; color: var(--k-ink); font-variant-numeric: tabular-nums; }
+.dkf-unit { display: block; flex: 1; min-width: 0; }
+.dkf-title, .dkf-sub { display: block; font-size: 120px; line-height: 1.2; }
+.dkf-title { font-weight: 700; }
+.dkf-sub { color: var(--k-muted); }
+@container (orientation: portrait) {
+  .dkf-sh { transform: translate(-8px, -168px); }
+  .dkf-view { perspective: 1118.7px; }
+  .dkf-pg { zoom: 0.339; transform-origin: 608px 1900px; transform: translate(984.9px, 931.9px) rotateY(-4deg) rotateX(66deg) rotateZ(-4deg); }
+  .dkf-head { left: 11%; right: 11%; top: 250px; bottom: auto; padding-bottom: 170px; width: auto; }
+  .dkf-title, .dkf-sub { font-size: 104px; }
+}
+/* ==== kit:text@2 ==== */
+.dkf-u { display: inline-block; white-space: pre; }
+.dkf-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+/* ==== end kit:text ==== */
+</style>
+
+<div id="root" data-composition-id="deck-deal-flyin">
+ <div class="dkf">
+  <div class="dkf-bg"></div>
+  <div class="dkf-sh">
+   <div class="dkf-view" data-layout-allow-overflow>
+    <div class="dkf-pg">
+     <div class="dkf-tab"></div>
+     <div class="dkf-key"></div>
+     <div class="dkf-bd">
+      <svg width="1216" height="1800" aria-hidden="true"><rect width="1216" height="61" class="dkf-h" /><rect y="61" width="1216" height="1" class="dkf-l" /><rect x="56" y="17" width="28" height="28" rx="8" style="fill:var(--k-accent)" /><rect x="96" y="25" width="128" height="12" rx="6" class="dkf-i" /><rect x="872" y="26" width="64" height="10" rx="5" class="dkf-a" /><rect x="956" y="26" width="64" height="10" rx="5" class="dkf-a" /><rect x="1040" y="18" width="120" height="26" rx="13" class="dkf-i" /><rect x="56" y="93" width="58" height="14" rx="7" class="dkf-i" /><rect x="56" y="130" width="1016" height="44" rx="12" class="dkf-s" /><rect x="76" y="147" width="180" height="10" rx="5" class="dkf-a" /><rect x="1084" y="130" width="76" height="44" rx="12" class="dkf-s" /><rect x="56" y="206" width="150" height="14" rx="7" class="dkf-b" /><rect x="56" y="575" width="130" height="14" rx="7" class="dkf-b" /><rect x="56" y="968" width="164" height="14" rx="7" class="dkf-b" /><rect x="56" y="1361" width="117" height="14" rx="7" class="dkf-b" /><rect x="56" y="1752" width="1104" height="1" class="dkf-l" /></svg>
+      <i class="dkf-dim"></i>
+     </div>
+     <div class="dkf-cs"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+     <i class="dkf-fog"></i>
+    </div>
+   </div>
+  </div>
+  <div class="dkf-vig"></div>
+  <div class="dkf-head">
+   <div class="dkf-cnt"><i class="dkf-dot"></i><b class="dkf-n">26</b><span class="dkf-unit">个示例项目</span></div>
+   <div class="dkf-title">所有项目，</div>
+   <div class="dkf-sub">一页看全。</div>
+  </div>
+ </div>
+</div>
+
+<script>
+(function () {
+  // timing in seconds (upstream frames / 30), shared by both orientations
+  var CFG = {
+    dur: 5.2, camT: [0, 1, 2.067, 2.867, 3.667, 5], // camera keys at 0, 30, 62, 86, 110, 150f
+    deal: 1.2, step: 0.1333, squeeze: 0.00264, // card k leaves at deal + step*k - squeeze*k*(k-1): 4f apart, shrinking to 0.2f
+    dive: 0.267, settle: 0.133, press: 0.333, // 8f dive, 4f overshooting settle, 2f press from 10f
+    ant: 0.867, antLen: 0.333, release: 1.267, pileDown: 48, topPull: 30, // anticipation 26-36f, the pile lets go at 38f
+    lit: 1.133, litLen: 1, fog: 2.667, fogLen: 1.133, // board light 34-64f, far-end shade 80-114f
+    stat: 3, statLen: 0.4, title: 3.333, sub: 3.533, word: 0.533, gap: 0.133, // counter 90-102f; words from 100f / 106f, 16f each, 4f apart
+    arc: 110, hover: 40, peak: 0.06, layer: 3, // dive arc and hover height (px), scale peak, pile layer height
+    veil: 60 // % of table colour laid over the brushed tile once the camera zoom is down to 0.5
+  };
+  // camera keys per orientation: [cx, cy, zoom, rotX, rotY, rotZ, perspective, shift x, shift y] (board px, deg); same times
+  var LAND = { cam: [[1426.7, 466, 1.9, 48, -30, 9, 1100, 0, 0], [1486.7, 446, 1.8, 42, 24, -6, 1100, 0, 0], [728, 760, 0.8, 22, 0, 2, 1700, 0, 0],
+    [628, 1720, 0.56, 38, -4, -10, 2500, 120, 0], [608, 2150, 0.5, 52, -6, -26, 3300, 300, 0], [608, 2160, 0.508, 52, -6, -26, 3300, 300, 0]], lines: 1 };
+  var PORT = { cam: [[1426.7, 466, 1.7, 48, -30, 9, 1100, 0, 0], [1486.7, 446, 1.6, 42, 24, -6, 1100, 0, 0], [700, 900, 0.68, 30, 0, 0, 1700, 0, 0],
+    [620, 1700, 0.45, 48, -3, -3, 2500, 0, -60], [608, 1891, 0.334, 66, -4, -4, 3300, -8, -168], [608, 1900, 0.339, 66, -4, -4, 3300, -8, -168]], lines: 1 };
+  var v = { title: "所有|项目，", sub: "一页|看全。", unit: "个示例项目", total: 26, srcs: "", backdrop: "on" };
+  try {
+    var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    for (var key in got) if (got[key] !== undefined && got[key] !== null) v[key] = got[key];
+  } catch (e) {}
+
+  var root = document.querySelector(".dkf");
+  var q = function (s) { return root.querySelector(s); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+    // not laid out yet: the host clip's declared size, then the window
+    var hc = root.closest("[data-width][data-height]");
+    FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+    FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND, U = Math.min(FW, FH) / 1.08e3; // U: 1 on a 1080-px short side
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== end kit:tone ====
+// ==== kit:hash@1 ====
+function kHash(n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+// ==== end kit:hash ====
+// ==== kit:text@2 (kReveal: rise only) ====
+var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+function kWords(s, key) {
+  s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+  var cut = function (x) {
+    if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+    return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+  };
+  var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+  var pre = "";
+  bits.forEach(function (x) {
+    var t = x.trim(), last = out[out.length - 1];
+    if (last && /^ /.test(x)) last.sp = true;
+    if (!t) return;
+    if (!/[\p{L}\p{N}]/u.test(t)) {
+      if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+      else { last.t += t; last.sp = / $/.test(x); }
+      return;
+    }
+    out.push({ t: pre + t, sp: / $/.test(x) });
+    pre = "";
+  });
+  if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+  if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+  if (out.length) out[out.length - 1].sp = false;
+  return out;
+}
+function kSplit(el, by, rise, text) {
+  var s = text != null ? String(text) : el.textContent, units = [];
+  var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+  el.textContent = "";
+  parts.forEach(function (p) {
+    var u = document.createElement("span"), box = u;
+    u.className = "dkf-u"; u.textContent = p.t;
+    if (by === "line") u.style.display = "block";
+    if (!p.t.trim()) { el.appendChild(u); return; }
+    if (rise) { box = document.createElement("span"); box.className = "dkf-cut"; box.style.display = u.style.display; box.appendChild(u); }
+    el.appendChild(box);
+    if (p.sp) el.appendChild(document.createTextNode(" "));
+    units.push(u);
+  });
+  return units;
+}
+function kReveal(tl, units, variant, at, o) {
+  o = o || {};
+  var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+  units.forEach(function (u, i) {
+    var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+    tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+    tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+  });
+  return tl;
+}
+// ==== end kit:text ====
+// ==== kit:fit@1 (kRows not needed) ====
+function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+      var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+      if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+      row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+
+  var dark = kTone(root) === "dark";
+  var sh = q(".dkf-sh"), view = q(".dkf-view"), pg = q(".dkf-pg"), lamp = q(".dkf-key"), dim = q(".dkf-dim"), fog = q(".dkf-fog");
+  if (String(v.backdrop) === "off") [".dkf-bg", ".dkf-tab", ".dkf-key", ".dkf-vig"].forEach(function (s) { q(s).style.display = "none"; });
+
+  // monotone cubic Hermite through the keys, one curve per camera parameter: the speed is continuous at every key
+  function herm(xs, ys) {
+    var n = xs.length, d = [], m = [], i;
+    for (i = 0; i < n - 1; i++) d.push((ys[i + 1] - ys[i]) / (xs[i + 1] - xs[i]));
+    for (i = 0; i < n; i++) m.push(!i ? d[0] : i === n - 1 ? 0 : d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2);
+    for (i = 0; i < n - 1; i++) {
+      if (!d[i]) { m[i] = m[i + 1] = 0; continue; }
+      var a = m[i] / d[i], b = m[i + 1] / d[i], h = a * a + b * b;
+      if (h > 9) { h = 3 / Math.sqrt(h); m[i] = h * a * d[i]; m[i + 1] = h * b * d[i]; }
+    }
+    return function (x) {
+      if (x <= xs[0]) return ys[0];
+      if (x >= xs[n - 1]) return ys[n - 1];
+      for (var j = 0; j < n - 2 && x > xs[j + 1]; j++);
+      var w = xs[j + 1] - xs[j], s = (x - xs[j]) / w, s2 = s * s, s3 = s2 * s;
+      return (2 * s3 - 3 * s2 + 1) * ys[j] + (s3 - 2 * s2 + s) * w * m[j] + (-2 * s3 + 3 * s2) * ys[j + 1] + (s3 - s2) * w * m[j + 1];
+    };
+  }
+  var CAM = L.cam[0].map(function (x, p) { return herm(CFG.camT, L.cam.map(function (a) { return a[p]; })); });
+
+  // 26 cards in reading order (row 1 has two, the rest three); the pile sits on the table right of the board
+  var N = 26, PX = 1288, PY = 250, CW = 357.33, PCX = PX + CW / 2, PCY = PY + 156;
+  var R = function (x, y, w, h, c) { return '<rect x="' + x + '" y="' + y + '" width="' + w.toFixed(0) + '" height="' + h + '" rx="' + h / 2 + '" style="fill:' + c + '"/>'; };
+  var INK = function (p) { return "color-mix(in srgb,var(--k-ink) " + p + "%,var(--dkf-card))"; };
+  // a project card without text: title, tag, two lines, three label/value rows, three counts, two chips
+  function face(f, h) {
+    var a = function (n) { return kHash(f * 7 + n); }, o = R(22, 24, 150 + a(1) * 100, 18, INK(80)) + R(272, 25, 62, 14, "var(--k-accent)") + R(22, 60, 296, 10, INK(20)) + R(22, 78, 140 + a(2) * 130, 10, INK(20));
+    for (var r = 0; r < 3; r++) o += R(22, 112 + r * 24, 42, 10, INK(26)) + R(78, 112 + r * 24, 50 + a(3 + r) * 80, 10, INK(62));
+    for (r = 0; r < 3; r++) o += R(22 + r * 104, h - 106, 52, 10, INK(26)) + R(80 + r * 104, h - 107, 12, 12, INK(70));
+    o += R(22, h - 56, 88, 30, INK(9)) + R(36, h - 46, 60, 10, f % 3 ? INK(40) : "var(--k-accent-2)") + R(120, h - 56, 40, 30, INK(9));
+    return '<svg width="100%" height="100%" viewBox="0 0 357 ' + h + '" aria-hidden="true">' + o + "</svg>";
+  }
+  var imgs = String(v.srcs).split("|").map(function (s) { return s.trim(); }).filter(Boolean);
+  // the slots are the static grid (.dkf-cs): columns 373.33px apart, rows 288 / 312px tall with 81px between them
+  var els = q(".dkf-cs").children, cards = [];
+  for (var k = 0; k < N; k++) {
+    var row = k < 2 ? 0 : 1 + Math.floor((k - 2) / 3), x = 56 + 373.33 * (k < 2 ? k : (k - 2) % 3), h = row ? 312 : 288, y = row ? 223 + 393 * row : 247;
+    var el = els[k], img = imgs.length ? "background-image:url('" + imgs[k % imgs.length].replace(/'/g, "%27") + "')" : "";
+    // upstream's 10 card faces, then the 16 extras reuse them (face (i * 3 + 2) % 10)
+    el.innerHTML = '<i class="dkf-g" style="' + img + '"></i><div class="dkf-f" style="' + img + '">' + (img ? "" : face(k < 10 ? k : ((k - 10) * 3 + 2) % 10, h)) + "<i></i></div>";
+    cards.push({ g: el.firstChild, f: el.lastChild, s: el.lastChild.lastChild, cue: CFG.deal + CFG.step * k - CFG.squeeze * k * (k - 1),
+      // offset from the grid slot to the card's place in the pile (deterministic jitter), its tilt and height there
+      px: PX + ((k * 7) % 9 - 4) * 2 - x, py: PY + ((k * 5) % 7 - 3) * 2 - y, pr: (k * 11) % 7 - 3, pz: (N - k) * CFG.layer,
+      d: Math.hypot(x + CW / 2 - PCX, y + h / 2 - PCY) });
+  }
+
+  // text: both title lines rise phrase by phrase; the counter follows the landed cards
+  var tEl = q(".dkf-title"), sEl = q(".dkf-sub"), cnt = q(".dkf-cnt"), nEl = q(".dkf-n"), uEl = q(".dkf-unit");
+  var tU = kSplit(tEl, "word", true, v.title), subOn = String(v.sub).trim() !== "", sU = subOn ? kSplit(sEl, "word", true, v.sub) : [];
+  kFit(tEl, { lines: L.lines, min: 72 });
+  if (subOn) kFit(sEl, { lines: L.lines, min: 72 }); else sEl.style.display = "none";
+  var total = Math.max(0, Math.min(9999, Math.round(+v.total || 0))), digits = Math.max(2, String(total).length);
+  nEl.textContent = ("000" + total).slice(-digits);
+  uEl.textContent = String(v.unit).trim();
+  if (!uEl.textContent || !total) cnt.style.display = "none"; else kFit(uEl);
+
+  var DIVE = MT.bezier(0.3, 0, 0.2, 1), SETTLE = MT.bezier(0.3, 0, 0.25, 1.15), LIT = MT.bezier(0.5, 0, 0.6, 1);
+  var DA = dark ? 0.88 : 0.2, SA = dark ? 1 : 0.6, FA = dark ? 1 : 0.45; // per tone: board shade, shadow and far-shade strength
+  var shade = function (a) { return "color-mix(in srgb,var(--dkf-shade) " + (Math.min(1, a * SA) * 100).toFixed(1) + "%,transparent)"; };
+  var PILE = "0 1px 2px " + shade(0.35), BOTTOM = "0 1px 3px " + shade(0.4) + ",0 26px 60px " + shade(0.75);
+
+  function render(t) {
+    var c = CAM.map(function (f) { return f(t); }), z = c[2] * U;
+    pg.style.zoom = z.toFixed(4);
+    pg.style.transformOrigin = c[0].toFixed(1) + "px " + c[1].toFixed(1) + "px";
+    pg.style.transform = "translate(" + (FW / 2 / z - c[0]).toFixed(2) + "px," + (FH / 2 / z - c[1]).toFixed(2) + "px) rotateY(" + c[4].toFixed(3) + "deg) rotateX(" + c[3].toFixed(3) + "deg) rotateZ(" + c[5].toFixed(3) + "deg)";
+    view.style.perspective = (c[6] * z).toFixed(1) + "px";
+    sh.style.transform = "translate(" + (c[7] * U).toFixed(1) + "px," + (c[8] * U).toFixed(1) + "px)";
+    // light: the key light on the pile widens over the board; the board's shade opens from the pile outwards
+    var lu = MT.ramp(t, CFG.lit, CFG.litLen, LIT), hole = 4200 * lu, fe = 600 + 1000 * lu, dc = "color-mix(in srgb,var(--dkf-dim) " + DA * 100 + "%,transparent)";
+    // + a veil of the table colour over the brushed tile as the camera pulls out (the tile turns to moire below zoom 0.8)
+    lamp.style.background = "radial-gradient(" + (1100 + 1400 * lu).toFixed(0) + "px " + (800 + 1600 * lu).toFixed(0) + "px at " + (PCX + 1992 - 600 * lu).toFixed(0) + "px " + (PCY + 1709 + 900 * lu).toFixed(0) +
+      "px, color-mix(in srgb,white " + (20 - 8 * lu).toFixed(1) + "%,transparent), color-mix(in srgb,white 5%,transparent) 45%, transparent 70%), radial-gradient(ellipse 50% 50%, color-mix(in srgb,var(--dkf-t0) " + (CFG.veil * MT.clamp((0.8 - c[2]) / 0.3)).toFixed(1) + "%,transparent) 40%, transparent)";
+    dim.style.background = lu >= 1 ? "none" : lu <= 0 ? dc : "radial-gradient(circle at " + PCX + "px " + PCY + "px, transparent " + hole.toFixed(0) + "px, " + dc + " " + (hole + fe).toFixed(0) + "px)";
+    var fo = MT.ramp(t, CFG.fog, CFG.fogLen, "smooth") * FA;
+    fog.style.background = fo ? "linear-gradient(180deg, color-mix(in srgb,var(--dkf-dim) " + (62 * fo).toFixed(1) + "%,transparent), color-mix(in srgb,var(--dkf-dim) " + (30 * fo).toFixed(1) + "%,transparent) 35%, transparent 70%)" : "none";
+    var ant = MT.ramp(t, CFG.ant, CFG.antLen, "power1.out"), landed = 0;
+    cards.forEach(function (cd, k) {
+      var d = t - cd.cue, dv = DIVE(MT.clamp(d / CFG.dive)), st = SETTLE(MT.clamp((d - CFG.dive) / CFG.settle)), s = Math.sin(dv * Math.PI), tr, bs, go = 0;
+      var dk = lu < 1 ? MT.clamp((cd.d - hole) / fe) * DA : 0; // a card in the still-unlit part of the board is shaded with it
+      if (d >= CFG.dive) landed++;
+      if (d < 0) {
+        // in the pile: pressed down during the anticipation, the top card nudged out by the dealer's thumb
+        tr = "translate3d(" + (cd.px - (k ? 0 : CFG.topPull * ant)).toFixed(2) + "px," + (cd.py + (t < CFG.release ? CFG.pileDown * ant : 0)).toFixed(2) + "px," + cd.pz + "px) rotateZ(" + cd.pr + "deg)";
+        bs = k === N - 1 ? BOTTOM : PILE;
+        dk = (0.08 * (1 - lu) * DA) / 0.88;
+      } else if (d < CFG.dive + CFG.settle) {
+        // dive along an arc (+110px at the top, 1.06x), then settle onto the board with a small overshoot and a press
+        var zz = (MT.mix(cd.pz, CFG.hover, dv) + s * CFG.arc) * (1 - st), sc = (1 + s * CFG.peak) * MT.interpolate(d, [CFG.press, CFG.press + 0.033, CFG.press + 0.067], [1, 0.996, 1], { extrapolate: "clamp" });
+        var rz = "px," + zz.toFixed(2) + "px) rotateZ(" + (cd.pr * (1 - dv)).toFixed(3) + "deg) scale(" + sc.toFixed(4) + ")";
+        tr = "translate3d(" + (cd.px * (1 - dv)).toFixed(2) + "px," + (cd.py * (1 - dv)).toFixed(2) + rz;
+        bs = "0 " + (36 - 24 * st).toFixed(1) + "px " + (70 - 50 * st).toFixed(1) + "px " + shade(0.45 - 0.25 * st);
+        if (dv > 0.02 && dv < 0.98) {
+          // ghost: a blurred copy 6% of the path back towards the pile, fading as the dive ends
+          go = 0.28 * (1 - dv);
+          cd.g.style.transform = "translate3d(" + (cd.px * (1.06 - dv)).toFixed(2) + "px," + (cd.py * (1.06 - dv)).toFixed(2) + rz;
+        }
+        dk = dv > 0.6 ? dk * Math.min(1, (dv - 0.6) / 0.4) : 0;
+      } else {
+        // landed: flat on the board; the contact shadow tightens 3f behind the card
+        var lg = 1 - MT.ramp(d, CFG.dive, 0.233, "out");
+        tr = "none";
+        bs = "0 " + (2 + 14 * lg).toFixed(1) + "px " + (6 + 30 * lg).toFixed(1) + "px " + shade(0.1 + 0.12 * lg);
+      }
+      cd.f.style.transform = tr;
+      cd.f.style.boxShadow = bs + ",0 0 0 1px var(--dkf-line)";
+      cd.g.style.opacity = go.toFixed(3);
+      cd.s.style.background = dk > 0.005 ? "color-mix(in srgb,var(--dkf-dim) " + (dk * 100).toFixed(1) + "%,transparent)" : "none";
+    });
+    nEl.textContent = ("000" + Math.round((total * landed) / N)).slice(-digits);
+    cnt.style.opacity = MT.ramp(t, CFG.stat, CFG.statLen, "out").toFixed(3);
+  }
+
+  var tl = MT.scene(CFG.dur, render);
+  kReveal(tl, tU, "rise", CFG.title, { each: CFG.word, gap: CFG.gap });
+  kReveal(tl, sU, "rise", CFG.sub, { each: CFG.word, gap: CFG.gap });
+  window.__timelines["deck-deal-flyin"] = tl;
+})();
+</script>
+    </template>
+  </body>
+</html>

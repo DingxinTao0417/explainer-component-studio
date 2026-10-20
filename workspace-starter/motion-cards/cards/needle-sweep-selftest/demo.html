@@ -1,0 +1,318 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"卡头标题","default":"模型评测结果"},
+    {"id":"items","type":"string","label":"指标名（用 | 分隔，1–3 个，和读数对应）","default":"准确率|召回率|稳定性"},
+    {"id":"values","type":"string","label":"读数（0–100，用 | 分隔）","default":"70|44|87"},
+    {"id":"unit","type":"string","label":"读数单位（填一个空格就不显示）","default":"%"},
+    {"id":"status","type":"string","label":"状态胶囊（检测中|检测完成）","default":"检测中…|检测完成"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>needle-sweep-selftest · 满弧扫针</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="needle-sweep-selftest-template">
+      <!-- Ported from video-shotcraft demos/data/gauge-readout-moves/NeedleSweepSelftest.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette on white (upstream: dark stage), system fonts, generic copy, upstream mark removed;
+           1-3 gauges, portrait rows; sweep, stagger, lit ticks, 8 deg spring, value pop and lock times kept. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* ==== kit:derived@1 — card-local colours mixed from the palette (upstream Look fields we do not have as tokens) ====
+           line: hairlines; panel-2: inputs and inner fills; shade: shadows and vignettes (tinted, never pure black);
+           hi: the 1px lit top edge of a panel. [data-tone] comes from kTone() in helpers.js. */
+        .ns {
+          --ns-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+          --ns-panel-2: color-mix(in srgb, var(--k-panel), var(--k-ink) 4%);
+          --ns-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+          --ns-hi: color-mix(in srgb, white 80%, transparent);
+        }
+        .ns[data-tone="dark"] {
+          --ns-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+          --ns-hi: color-mix(in srgb, white 6%, transparent);
+        }
+        /* ==== end kit:derived ==== */
+        /* ==== kit:backdrop@1 — white-first card background with some life (upstream Polish.Backdrop, light) ====
+           a barely-there vertical gradient from --k-bg plus a soft key light; put .ns-vig and .ns-grain after it */
+        .ns-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .ns-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        /* ==== end kit:backdrop ==== */
+        /* ==== kit:vignette@1 — edges pressed down with a palette-tinted shade (upstream Polish.Vignette) ====
+           --vs strength (light 0.16, dark 0.55; MT can tween it as "--vs"), --vin clear centre, --vx / --vy light centre */
+        .ns-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--ns-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .ns[data-tone="dark"] .ns-vig { --vs: 0.55; }
+        /* ==== end kit:vignette ==== */
+
+        /* redline zone: the accent pushed toward black */
+        .ns { position: absolute; inset: 0; container-type: size; --ns-red: color-mix(in srgb, var(--k-accent) 62%, black); }
+        /* card on the middle line; portrait: on the 40% line of the 12%-68% band */
+        .ns-stage { position: absolute; inset: 20px 0 0; display: flex; align-items: center; justify-content: center; }
+        /* lit top edge + kit:shadow kShadow(40) (dark skins 2.6) */
+        .ns-card { position: relative; flex: none; background: var(--k-bg); border: 1px solid var(--ns-line); border-radius: 26px; box-sizing: border-box; --ns-s1: 4.5%; --ns-s2: 21.8%;
+          box-shadow: inset 0 1px 0 var(--ns-hi), 0 2.9px 8.2px color-mix(in srgb, var(--ns-shade) var(--ns-s1), transparent), 0 22px 52px -8.8px color-mix(in srgb, var(--ns-shade) var(--ns-s2), transparent); }
+        .ns[data-tone="dark"] .ns-card { --ns-s1: 11.7%; --ns-s2: 56.6%; }
+        .ns-head { position: relative; height: 128px; display: flex; align-items: center; justify-content: space-between; padding: 0 44px; }
+        .ns-title { display: block; font-size: 48px; font-weight: 700; line-height: 1.25; white-space: nowrap; }
+        .ns-pill { display: flex; flex: none; align-items: center; gap: 12px; height: 56px; padding: 0 22px 0 18px; border-radius: 28px; box-sizing: border-box; font-size: 34px; font-weight: 600; line-height: 1.2; white-space: nowrap; color: var(--k-ink); }
+        .ns-dot { display: block; flex: none; width: 12px; height: 12px; border-radius: 50%; }
+        .ns-rule { position: absolute; left: 44px; right: 44px; top: 127px; height: 1px; background: var(--ns-line); }
+        .ns-row { display: flex; justify-content: center; }
+        .ns-g { position: relative; flex: none; width: 520px; height: 536px; }
+        .ns-dial { position: absolute; left: 0; top: 0; overflow: visible; }
+        /* reading 8px under the face circle (y 376) */
+        .ns-val { position: absolute; left: 0; right: 0; top: 362px; text-align: center; white-space: nowrap; font-size: 80px; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
+        .ns-val i { font-style: normal; font-size: 40px; font-weight: 600; margin-left: 6px; color: var(--k-muted); }
+        .ns-name { position: absolute; left: 0; right: 0; top: 468px; text-align: center; white-space: nowrap; overflow-wrap: anywhere; text-wrap: balance; font-size: 40px; font-weight: 600; line-height: 1.2; color: var(--k-muted); }
+        /* portrait: gauges stack as rows in the 12%-68% band */
+        @container (orientation: portrait) {
+          .ns-stage { inset: 12% 0 32%; }
+          .ns-row { flex-direction: column; }
+          .ns-g { width: 780px; height: 300px; }
+          .ns-dial { left: 32px; }
+          .ns-val { left: 360px; right: auto; top: 54px; text-align: left; font-size: 104px; transform-origin: 0 50%; }
+          .ns-val i { font-size: 48px; }
+          .ns-name { left: 364px; right: auto; top: 190px; text-align: left; font-size: 44px; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="needle-sweep-selftest">
+        <div class="ns">
+          <div class="ns-backdrop"></div>
+          <div class="ns-vig"></div>
+          <div class="ns-stage">
+            <div class="ns-card">
+              <div class="ns-head">
+                <div class="ns-title">模型评测结果</div>
+                <div class="ns-pill"><span class="ns-dot"></span><span class="ns-st">检测完成</span></div>
+              </div>
+              <div class="ns-rule"></div>
+              <div class="ns-row">
+                <div class="ns-g"><svg class="ns-dial"></svg><div class="ns-val"><b>70</b><i>%</i></div><div class="ns-name">准确率</div></div>
+                <div class="ns-g"><svg class="ns-dial"></svg><div class="ns-val"><b>44</b><i>%</i></div><div class="ns-name">召回率</div></div>
+                <div class="ns-g"><svg class="ns-dial"></svg><div class="ns-val"><b>87</b><i>%</i></div><div class="ns-name">稳定性</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing (s) = upstream frames / 30, both orientations. Per gauge: lit onLead before firing, 270 deg sweep in go,
+          // spring back (damping solved for `over` deg), reading pops at settle, pinned at lock
+          var CFG = { cardIn: 0.4, start: 0.4, stagger: 0.1333, onLead: 0.1333, onDur: 0.3333, go: 0.4, calm: 0.8, stiff: 120, over: 8, settle: 1.0667, lock: 1.5333, done: 1.3333 };
+          // dial geometry (px); HTML parts are sized in CSS
+          var LAND = { w: 520, h: 400, cx: 260, cy: 196, r: 160, lab: 56, labEvery: 3, cellH: 536 };
+          var PORT = { w: 300, h: 300, cx: 150, cy: 150, r: 118, lab: 50, labEvery: 15, rowH: 300, cardW: 780 };
+          var v = { title: "模型评测结果", items: "准确率|召回率|稳定性", values: "70|44|87", unit: "%", status: "检测中…|检测完成", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          // ==== kit:tone@1 — light or dark skin, read from --k-bg; sets data-tone on the wrapper ====
+          // [r, g, b] (0-255) of any CSS colour as the browser resolves it inside el (var(), color-mix() included)
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          // "dark" when --k-bg is dark (a dark skin): CSS keyed on [data-tone="dark"] switches the dark-tuned values
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+
+          var root = document.querySelector(".ns");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          kTone(root);
+          if (String(v.backdrop) === "off") { q(".ns-backdrop").style.display = "none"; q(".ns-vig").style.display = "none"; }
+
+          // ---- 1-3 gauges; a reading is 0-100, shown as typed
+          var split = function (s) { return String(s).split("|").map(function (x) { return x.trim(); }); };
+          var vals = split(v.values).filter(Boolean).slice(0, 3), names = split(v.items), st = split(v.status);
+          if (!vals.length) vals = ["70"];
+          var n = vals.length;
+          var card = q(".ns-card"), cells = [].slice.call(root.querySelectorAll(".ns-g"));
+          cells.forEach(function (c, i) { if (i >= n) c.parentNode.removeChild(c); });
+          cells = cells.slice(0, n);
+          card.style.width = (P ? L.cardW : Math.max(2, n) * L.w) + "px";
+          var em = function (s) { var w = 0; for (var c = 0; c < s.length; c++) w += s.charCodeAt(c) > 255 ? 1 : 0.6; return w; };
+          var title = q(".ns-title");
+          title.textContent = String(v.title);
+          // shrink to fit (40px at least); a title still too long wraps
+          var fit = function (el, w, max) { var f = Math.floor(w / Math.max(1, em(el.textContent))); el.style.fontSize = Math.max(40, Math.min(max, f)) + "px"; return f >= 40; };
+          var stRun = st[0] || "检测中…", stDone = st[1] || st[0] || "检测完成", stEl = q(".ns-st"), dot = q(".ns-dot"), pill = q(".ns-pill");
+          var tW = parseFloat(card.style.width) - 112 - 34 * Math.max(em(stRun), em(stDone)) - 60, tE = em(title.textContent);
+          if (!fit(title, tW, 48)) { title.style.whiteSpace = "normal"; title.style.width = tW + "px"; title.style.fontSize = Math.max(32, Math.min(40, Math.floor((tW * 2) / (tE + 1)))) + "px"; }
+
+          // ---- dials: built once, only attributes change per frame
+          var SVGNS = "http://www.w3.org/2000/svg", uid = "ns" + (window.__nsMount = (window.__nsMount || 0) + 1);
+          var mk = function (tag, at, parent) { var e = document.createElementNS(SVGNS, tag); for (var a in at) e.setAttribute(a, at[a]); if (parent) parent.appendChild(e); return e; };
+          // dial angle d (0-270) -> SVG angle 135 + d
+          var polar = function (a, r) { var x = (a * Math.PI) / 180; return [L.cx + r * Math.cos(x), L.cy + r * Math.sin(x)]; };
+          var arc = function (d0, d1, r) {
+            var p0 = polar(135 + d0, r), p1 = polar(135 + Math.max(d0 + 0.01, d1), r);
+            return "M " + p0[0].toFixed(2) + " " + p0[1].toFixed(2) + " A " + r + " " + r + " 0 " + (d1 - d0 > 180 ? 1 : 0) + " 1 " + p1[0].toFixed(2) + " " + p1[1].toFixed(2);
+          };
+          var tip = L.r - 13;
+          var needlePath = "M " + (L.cx - 34) + " " + (L.cy - 5) + " L " + (L.cx + tip) + " " + (L.cy - 1.6) + " Q " + (L.cx + tip + 3.5) + " " + L.cy + " " + (L.cx + tip) + " " + (L.cy + 1.6) + " L " + (L.cx - 34) + " " + (L.cy + 5) + " Z";
+          // a name too long for one 40px line wraps to two (32-40px), then gets an ellipsis
+          var nameW = P ? L.cardW - 404 : L.w - 40, wrapped = false;
+          var fitName = function (el) {
+            if (fit(el, nameW, P ? 44 : 40)) return;
+            var s = el.textContent, f = Math.floor((2 * nameW) / (em(s) + 1));
+            if (f < 32) { while (s.length > 1 && (em(s) + 2) * 32 > 2 * nameW) s = s.slice(0, -1); el.textContent = s + "…"; }
+            el.style.cssText += ";white-space:normal;font-size:" + Math.max(32, Math.min(40, f)) + "px;" + (P ? "width:" + nameW + "px" : "left:20px;right:20px");
+            wrapped = true;
+          };
+          var gauges = cells.map(function (cell, i) {
+            var raw = vals[i], num = Math.max(0, Math.min(100, parseFloat(raw) || 0)), tgt = (num / 100) * 270;
+            // damping from overshoot ratio p: zeta = -ln p / sqrt(pi^2 + ln^2 p); overshoot capped at the reading (never under 0)
+            var p = Math.min(0.5, Math.max(1e-4, Math.min(CFG.over, tgt) / Math.max(1e-6, 270 - tgt))), lp = Math.log(p);
+            var damp = 2 * (-lp / Math.sqrt(Math.PI * Math.PI + lp * lp)) * Math.sqrt(CFG.stiff);
+            cell.querySelector("b").textContent = raw;
+            cell.querySelector("i").textContent = String(v.unit).trim();
+            var nm = cell.querySelector(".ns-name");
+            nm.textContent = names[i] || "";
+            fitName(nm);
+            var svg = cell.querySelector("svg"), id = uid + "-" + i;
+            svg.setAttribute("width", L.w); svg.setAttribute("height", L.h); svg.setAttribute("aria-hidden", "true");
+            var defs = mk("defs", {}, svg);
+            defs.innerHTML =
+              '<linearGradient id="' + id + 'n" x1="0" y1="0" x2="1" y2="0"><stop offset="0" style="stop-color:color-mix(in srgb, var(--k-accent), black 32%)"/><stop offset="0.55" style="stop-color:var(--k-accent)"/><stop offset="1" style="stop-color:color-mix(in srgb, var(--k-accent), white 42%)"/></linearGradient>' +
+              '<radialGradient id="' + id + 'h" cx="0.38" cy="0.32" r="0.7"><stop offset="0" style="stop-color:color-mix(in srgb, var(--ns-shade), white 40%)"/><stop offset="1" style="stop-color:var(--ns-shade)"/></radialGradient>' +
+              '<filter id="' + id + 'g" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>';
+            var face = mk("circle", { cx: L.cx, cy: L.cy, r: L.r + 20, style: "fill:color-mix(in srgb, var(--k-ink) 3%, transparent);stroke:var(--k-ink);stroke-width:1" }, svg);
+            mk("path", { d: arc(0, 270, L.r), style: "fill:none;stroke:var(--k-ink);stroke-opacity:0.08;stroke-width:8;stroke-linecap:round" }, svg);
+            var red = mk("path", { d: arc(225, 270, L.r), style: "fill:none;stroke:var(--ns-red);stroke-width:8;stroke-linecap:round" }, svg);
+            var arcG = mk("path", { filter: "url(#" + id + "g)", style: "fill:none;stroke:var(--k-accent);stroke-opacity:0.45;stroke-width:10;stroke-linecap:round" }, svg);
+            var arcS = mk("path", { style: "fill:none;stroke:var(--k-accent);stroke-width:8;stroke-linecap:round" }, svg);
+            var ticks = [], labs = [];
+            for (var k = 0; k <= 30; k++) {
+              var dd = k * 9, major = k % 3 === 0, a = 135 + dd, p0 = polar(a, L.r - 10), p1 = polar(a, major ? L.r - 30 : L.r - 20);
+              ticks.push({ dd: dd, red: dd >= 225, el: mk("line", { x1: p0[0].toFixed(2), y1: p0[1].toFixed(2), x2: p1[0].toFixed(2), y2: p1[1].toFixed(2), "stroke-width": major ? 3 : 1.6, "stroke-linecap": "round", style: "stroke:" + (dd >= 225 ? "var(--ns-red)" : "var(--k-ink)") }, svg) });
+              if (k % L.labEvery === 0) {
+                var pl = polar(a, L.r - L.lab), tx = mk("text", { x: pl[0].toFixed(2), y: pl[1].toFixed(2), "text-anchor": "middle", "dominant-baseline": "central", style: "font-size:28px;font-weight:500;font-variant-numeric:tabular-nums" }, svg);
+                tx.textContent = String((k / 3) * 10);
+                labs.push({ dd: dd, red: dd >= 225, el: tx });
+              }
+            }
+            // 4 after-images, glow, body; an unpainted circle (r >= needle length) keeps each group's box centred on the pivot
+            var needle = function (g) { mk("circle", { cx: L.cx, cy: L.cy, r: tip + 4, fill: "none" }, g); mk("path", { d: needlePath, fill: "url(#" + id + "n)" }, g); return g; };
+            var ghosts = [1, 2, 3, 4].map(function () { return needle(mk("g", {}, svg)); });
+            var glow = mk("g", { filter: "url(#" + id + "g)", opacity: 0.55 }, svg);
+            needle(glow);
+            var body = mk("g", {}, svg);
+            needle(body);
+            mk("circle", { cx: L.cx, cy: L.cy, r: 19, fill: "url(#" + id + "h)", style: "stroke:var(--ns-line);stroke-width:1" }, svg);
+            mk("circle", { cx: L.cx, cy: L.cy, r: 6, style: "fill:var(--k-accent)" }, svg);
+            return { s: CFG.start + i * CFG.stagger, tgt: tgt, damp: damp, face: face, red: red, arcG: arcG, arcS: arcS, ticks: ticks, labs: labs, ghosts: ghosts, glow: glow, body: body, val: cell.querySelector(".ns-val"), name: cell.querySelector(".ns-name") };
+          });
+          // landscape: a two-line name adds 48px
+          card.style.height = (P ? 128 + n * L.rowH + 24 : 128 + L.cellH + (wrapped ? 48 : 0) + 16) + "px";
+
+          var angle = function (t, g) {
+            if (t <= g.s) return 0;
+            if (t <= g.s + CFG.go) return 270 * MT.ramp(t, g.s, CFG.go, "power2.out");
+            if (t >= g.s + CFG.lock) return g.tgt;
+            return Math.max(0, MT.mix(270, g.tgt, MT.spring({ t: t - g.s - CFG.go, stiffness: CFG.stiff, damping: g.damp, mass: 1 })));
+          };
+          var last = gauges[n - 1].s;
+          var render = function (t) {
+            var inP = MT.ramp(t, 0, CFG.cardIn, "snappy");
+            card.style.opacity = inP.toFixed(4);
+            card.style.transform = "translateY(" + (18 * (1 - inP)).toFixed(2) + "px)";
+            gauges.forEach(function (g) {
+              var d = angle(t, g), dv = d - angle(t - 1 / 30, g);
+              var on = MT.ramp(t, g.s - CFG.onLead, CFG.onDur, "out");
+              var swept = t <= g.s + CFG.go ? d : 270, calm = MT.ramp(t, g.s + CFG.go, CFG.calm, "smooth");
+              g.face.style.opacity = on;
+              g.face.style.strokeOpacity = 0.1 * on;
+              g.red.style.strokeOpacity = 0.45 * on;
+              var path = d > 0.5 ? arc(0, d, L.r) : "";
+              g.arcG.setAttribute("d", path); g.arcS.setAttribute("d", path);
+              g.ticks.forEach(function (k) {
+                var lit = swept >= k.dd - 0.5 ? 1 - calm : 0;
+                k.el.style.strokeOpacity = (((k.red ? 0.55 : 0.22) + (k.red ? 0.4 : 0.6) * lit) * on).toFixed(3);
+              });
+              // labels: ink when lit, muted at rest (faded ink fails contrast)
+              g.labs.forEach(function (k) {
+                var lit = swept >= k.dd - 0.5 ? 1 - calm : 0;
+                k.el.style.fill = k.red ? "var(--ns-red)" : "color-mix(in srgb, var(--k-ink) " + Math.round(lit * 100) + "%, var(--k-muted))";
+                k.el.style.opacity = on;
+              });
+              var rot = function (deg) { return "rotate(" + (135 + deg).toFixed(3) + " " + L.cx + " " + L.cy + ")"; };
+              g.body.setAttribute("transform", rot(d)); g.glow.setAttribute("transform", rot(d));
+              g.ghosts.forEach(function (gh, j) {
+                var fast = Math.abs(dv) > 4;
+                gh.setAttribute("transform", rot(d - (dv * (j + 1)) / 4));
+                gh.setAttribute("opacity", fast ? (0.16 * (1 - (j + 1) / 5)).toFixed(3) : 0);
+              });
+              var settle = g.s + CFG.settle, pop = MT.ramp(t, settle, 0.3, "overshoot"), nm = MT.ramp(t, settle + 0.1, 0.3333, "out");
+              g.val.style.opacity = MT.ramp(t, settle, 0.1333, "out").toFixed(4);
+              g.val.style.transform = "scale(" + MT.mix(0.4, 1, pop).toFixed(4) + ")";
+              g.name.style.opacity = nm.toFixed(4);
+              g.name.style.transform = "translateY(" + (6 * (1 - nm)).toFixed(2) + "px)";
+            });
+            // status pill: accent pulse while testing, accent-2 once every needle is home
+            var done = MT.ramp(t, last + CFG.done, 0.2667, "out") > 0.5, pulse = 0.5 + 0.5 * Math.cos((t * 30 / 14) * Math.PI);
+            var c = done ? "var(--k-accent-2)" : "var(--k-accent)";
+            stEl.textContent = done ? stDone : stRun;
+            dot.style.background = c;
+            dot.style.opacity = done ? 1 : (0.45 + 0.55 * pulse).toFixed(3);
+            pill.style.background = "color-mix(in srgb, " + c + " 10%, transparent)";
+            pill.style.border = "1px solid color-mix(in srgb, " + c + " 25%, transparent)";
+          };
+          var tl = MT.scene(last + CFG.lock + 0.2, render);
+          window.__timelines["needle-sweep-selftest"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

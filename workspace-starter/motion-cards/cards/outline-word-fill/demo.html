@@ -1,0 +1,456 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"word","type":"string","label":"主词（一个短词，空心落位后一帧点亮）","default":"更快"},
+    {"id":"kicker","type":"string","label":"眉题（圆内、词上方；留空不要）","default":"实测结果"},
+    {"id":"sub","type":"string","label":"副行（圆内、词下方；留空不要）","default":"原来一周的活，现在一个下午"},
+    {"id":"before","type":"string","label":"左读数（第一个空格前是标签；留空不要）","default":"以前 1 周"},
+    {"id":"after","type":"string","label":"右读数（点亮时变强调色；留空不要）","default":"现在 4 小时"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>outline-word-fill · 空心字点亮</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="outline-word-fill-template">
+      <!-- Ported from video-shotcraft demos/typography/outline-word-fill/OutlineWordFill.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           white-first neutral --k-* palette instead of the ember dark look (warm-grey stroke -> --k-muted, white-hot
+           fill -> --k-ink, orange lock/glow -> --k-accent, key light multiplied on light skins, screened on dark);
+           Helvetica Neue 500 -> system YaHei regular; generic Chinese copy; upstream mark + wordmark eyebrow replaced
+           by a plain kicker, "BEFORE 1 week / AFTER 4 hrs" by two readout variables; the word fits its own width
+           (220px max, 96px min) instead of a fixed size; portrait layout (r 340 on the 40% line, readouts under the
+           circle); slot 3.0s -> 3.5s so the hold after the last rise is 1.07s (was 0.57s); push 1.5% over the whole
+           slot. Kept as upstream: 3.2x snappy shrink over 11f with speed blur, circle 2.8x over 44f, r 410, dash
+           22/18 and 14/12, 72-tick inner ring, 0.22 deg/f spin with a 6 deg brake, lines stopping 28px outside the
+           circle, 9f stroke pre-warm, hard cut on frame 54, 8f flash, 14f shock ring +160px, dust, grain, vignette. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        @font-face { font-family: "Consolas"; src: local("Consolas"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          --k-mono: var(--mc-mono, Consolas, "Microsoft YaHei", monospace);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* ==== kit:derived@1 — shade only ==== */
+        .ow { --ow-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); }
+        .ow[data-tone="dark"] { --ow-shade: color-mix(in srgb, var(--k-bg) 30%, black); }
+        /* ==== end kit:derived ==== */
+        /* ==== kit:backdrop@1 ==== */
+        .ow-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .ow-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        /* ==== end kit:backdrop ==== */
+        /* ==== kit:vignette@1 ==== */
+        .ow-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--ow-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .ow[data-tone="dark"] .ow-vig { --vs: 0.55; }
+        /* ==== end kit:vignette ==== */
+        /* ==== kit:light@1 ==== */
+        .ow-light { mix-blend-mode: multiply; }
+        .ow[data-tone="dark"] .ow-light { mix-blend-mode: screen; }
+        /* ==== end kit:light ==== */
+        /* ==== kit:grain@1 ==== */
+        .ow-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+        /* ==== kit:text@2 ==== */
+        .ow-u { display: inline-block; white-space: pre; }
+        /* ==== end kit:text ==== */
+        .ow { position: absolute; inset: 0; container-type: size; --ow-cy: 50%; }
+        .ow-bg, .ow-cam, .ow-dust { position: absolute; inset: 0; }
+        /* key light on the word + a fill from below; --ki is the stage intensity (upstream 0.45, pulses at the cut) */
+        .ow-key { position: absolute; inset: 0; --ki: 0.45; --kk: 12%; --kf: 5%; background:
+          radial-gradient(ellipse 58% 62% at 50% var(--ow-cy), color-mix(in srgb, var(--k-accent) calc(var(--ki) * var(--kk)), transparent) 0%, transparent 70%),
+          radial-gradient(ellipse 50% 46% at 50% 110%, color-mix(in srgb, var(--k-accent-2) calc(var(--ki) * var(--kf)), transparent) 0%, transparent 72%); }
+        .ow[data-tone="dark"] .ow-key { --kk: 55%; --kf: 22%; }
+        .ow-mote { position: absolute; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--k-muted) 90%, transparent) 0%, transparent 70%); }
+        .ow[data-tone="dark"] .ow-mote { background: radial-gradient(circle, color-mix(in srgb, var(--k-accent) 90%, transparent) 0%, transparent 70%); }
+        .ow-hud { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+        /* the word: one node; before the cut a 2px stroke over a 9% fill, from the cut on solid ink (same node, no second layer) */
+        .ow-word { position: absolute; left: 50%; top: var(--ow-cy); width: 640px; transform: translate(-50%, -54%); font-size: 220px; font-weight: 400; line-height: 1; text-align: center; color: var(--k-ink); }
+        .ow-kick { position: absolute; left: 50%; top: calc(var(--ow-cy) - 200px); width: 560px; transform: translateX(-50%); display: flex; justify-content: center; align-items: center; gap: 14px; font-size: 30px; letter-spacing: 0.16em; line-height: 1.3; color: var(--k-ink); }
+        .ow-kick i { display: block; flex: none; width: 14px; height: 14px; border-radius: 4px; background: var(--k-accent); }
+        .ow-sub { position: absolute; left: 50%; top: calc(var(--ow-cy) + 128px); width: 620px; transform: translateX(-50%); font-size: 40px; line-height: 1.3; text-align: center; color: var(--k-muted); }
+        .ow-ro { position: absolute; top: calc(var(--ow-cy) - 74px); font-size: 32px; letter-spacing: 0.06em; line-height: 1.3; white-space: nowrap; color: var(--k-muted); }
+        .ow-ro b { font-family: var(--k-mono); font-weight: 400; color: var(--k-ink); margin-left: 0.4em; letter-spacing: 0; }
+        .ow-l { left: 120px; }
+        .ow-r { right: 120px; text-align: right; }
+        .ow-r b { color: var(--k-accent); }
+        /* portrait: everything on the 40% line, circle r 360, readouts in a row under the circle */
+        @container (orientation: portrait) {
+          .ow { --ow-cy: 40%; }
+          .ow-word { width: 500px; font-size: 180px; }
+          .ow-kick { top: calc(var(--ow-cy) - 164px); width: 500px; }
+          .ow-sub { top: calc(var(--ow-cy) + 98px); width: 520px; }
+          .ow-ro { top: calc(var(--ow-cy) + 368px); font-size: 40px; }
+          .ow-l { left: 124px; }
+          .ow-r { right: 124px; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="outline-word-fill">
+        <div class="ow">
+          <div class="ow-bg">
+            <div class="ow-backdrop"></div>
+            <div class="ow-key ow-light"></div>
+            <div class="ow-dust"></div>
+            <div class="ow-vig"></div>
+            <div class="ow-grain"></div>
+          </div>
+          <div class="ow-cam">
+            <svg class="ow-hud" aria-hidden="true" data-layout-allow-overflow></svg>
+            <div class="ow-ro ow-l">以前<b>1 周</b></div>
+            <div class="ow-ro ow-r">现在<b>4 小时</b></div>
+            <div class="ow-kick"><i></i><span>实测结果</span></div>
+            <div class="ow-sub">原来一周的活，现在一个下午</div>
+            <div class="ow-word" data-layout-allow-overflow>更快</div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing in seconds (= upstream frames / 30), shared by both orientations
+          var CFG = {
+            dur: 3.5,                         // upstream 90f; +15f so the hold after the last rise is 1.07s
+            born: 0.067, bornDur: 0.2,        // word fades in, 2-8f
+            shrink: 0.067, shrinkDur: 0.367, s0: 3.2, // 3.2x -> 1, 2-13f, snappy
+            ring: 0.267, ringIn: 0.333, ringDur: 1.467, r0: 2.8, // circle fades 8-18f, 2.8x -> 1 over 8-52f, out
+            spin: 6.6, brake: 6, spinIn: -4.2, // deg/s (0.22 and -0.14 deg/f); the main ring slides 6 deg more and stops
+            ext: 0.933, extDur: 0.6,          // side lines reach in, 28-46f
+            warm: 1.467, warmDur: 0.3,        // stroke pre-warm, 44-53f, swift
+            pop: 1.8,                         // frame 54: hard cut, no in-between
+            flash: 0.267, shock: 0.467, shockGrow: 160, // 8f glow, 14f shock ring
+            kick: 1.867, subLag: 0.1, rise: 0.467, riseY: 16, // 56-70f and 59-73f, snappy
+            push: 0.015, blurMax: 6
+          };
+          // layout per orientation, px at a 1.08k short side; cy = share of FH
+          var LAND = { cy: 0.5, R: 410, fs: 220, wordW: 640, kickY: -200, kickW: 560, subY: 128, subW: 620, subLines: 1, roFs: 32, roY: -74 };
+          var PORT = { cy: 0.4, R: 340, fs: 180, wordW: 500, kickY: -164, kickW: 500, subY: 98, subW: 520, subLines: 2, roFs: 40, roY: 368 };
+          var v = { word: "更快", kicker: "实测结果", sub: "原来一周的活，现在一个下午", before: "以前 1 周", after: "现在 4 小时", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && (got[k] !== "" || k !== "word")) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".ow");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          var s = Math.min(FW, FH) / 1.08e3, CX = FW / 2, CY = FH * L.cy, R = L.R * s;
+          var px = function (n) { return n.toFixed(2) + "px"; };
+
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+          // ==== kit:text@2 ====
+          var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "ow-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "ow-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          // ==== end kit:text ====
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          // ==== end kit:fit ====
+
+          var dark = kTone(root) === "dark";
+          if (String(v.backdrop) === "off") q(".ow-bg").style.display = "none";
+          var grain = kGrain(q(".ow-grain"));
+
+          // colours as numbers so the stroke, lines and lock can be mixed per frame
+          var MUTED = kRGB(root, "var(--k-muted)"), ACC = kRGB(root, "var(--k-accent)"), INK = kRGB(root, "var(--k-ink)");
+          var mixc = function (a, b, p) { return "rgb(" + a.map(function (x, i) { return Math.round(x + (b[i] - x) * p); }).join(",") + ")"; };
+          var rgba = function (c, a) { return "rgba(" + c.map(Math.round).join(",") + "," + a.toFixed(3) + ")"; };
+          var LINE_W = MUTED.map(function (x, i) { return x + (ACC[i] - x) * 0.25; }); // pre-warm tint of the drafting lines
+          var HOT = dark ? INK : ACC; // tight glow layer: white-hot on dark, accent on light (white is invisible there)
+
+          // ---- text slots: kSplit -> kFit; empty optional slots disappear ----
+          var word = q(".ow-word");
+          word.style.width = px(L.wordW * s);
+          word.style.fontSize = px(L.fs * s);
+          kSplit(word, "word", false, String(v.word));
+          var FS = kFit(word, { lines: 1, min: Math.round(96 * s), width: L.wordW * s }).size;
+          var k2 = FS / 220; // upstream amounts were tuned at 220px
+          var place = function (el, y, w) { el.style.top = px(CY + y * s); el.style.left = px(CX); el.style.width = px(w * s); };
+          word.style.left = px(CX); word.style.top = px(CY);
+          var kick = q(".ow-kick"), sub = q(".ow-sub");
+          place(kick, L.kickY, L.kickW); place(sub, L.subY, L.subW);
+          kick.style.fontSize = px(30 * s); sub.style.fontSize = px(40 * s);
+          var kt = kick.querySelector("span");
+          if (String(v.kicker).trim()) { kSplit(kt, "word", false, String(v.kicker)); kFit(kt, { lines: 1, min: Math.round(28 * s), width: L.kickW * s - 28 * s }); }
+          else kick.style.display = "none";
+          if (String(v.sub).trim()) { kSplit(sub, "word", false, String(v.sub)); kFit(sub, { lines: L.subLines, min: Math.round(40 * s), width: L.subW * s }); }
+          else sub.style.display = "none";
+          // readouts: text before the first space is the label, the rest the value (spaces inside the value kept)
+          var ros = [q(".ow-l"), q(".ow-r")].map(function (el, i) {
+            var t = String(i ? v.after : v.before).replace(/\s+/g, " ").trim(), cut = t.indexOf(" ");
+            if (!t) { el.style.display = "none"; return el; }
+            el.innerHTML = "<span></span><b></b>";
+            el.firstChild.textContent = cut > 0 ? t.slice(0, cut) : "";
+            el.lastChild.textContent = cut > 0 ? t.slice(cut + 1) : t;
+            if (cut <= 0) el.lastChild.style.marginLeft = "0";
+            el.style.top = px(CY + L.roY * s);
+            el.style[i ? "right" : "left"] = px(124 * s);
+            el.style.fontSize = px(L.roFs * s);
+            var room = P ? FW / 2 - 144 * s : CX - R - 28 * s - 150 * s;
+            kFit(el, { lines: 1, min: Math.round(28 * s), width: room, max: L.roFs * s });
+            return el;
+          });
+          var roVal = ros[1].querySelector("b");
+
+          // ---- HUD (data-drawn): dashed circle + 4 registration ticks, 72-tick inner ring, side lines, shock ring ----
+          var NS = "http://www.w3.org/2000/svg";
+          var mk = function (tag, at, parent) { var e = document.createElementNS(NS, tag); for (var a in at) e.setAttribute(a, at[a]); (parent || hud).appendChild(e); return e; };
+          var hud = q(".ow-hud");
+          var shockC = mk("circle", { cx: CX, cy: CY, r: R, fill: "none", opacity: 0 });
+          var ringG = mk("g", {}), spinG = mk("g", {}, ringG), innerG = mk("g", {}, ringG), lines = [];
+          lines.push(mk("circle", { r: R, fill: "none", "stroke-width": 2 * s, "stroke-dasharray": 22 * s + " " + 18 * s }, spinG));
+          [0, 90, 180, 270].forEach(function (a) {
+            lines.push(mk("line", { x1: 0, y1: -R - 22 * s, x2: 0, y2: -R + 10 * s, "stroke-width": 2.5 * s, "stroke-linecap": "round", transform: "rotate(" + a + ")" }, spinG));
+          });
+          lines.push(mk("circle", { r: R - 34 * s, fill: "none", "stroke-width": s, opacity: 0.35 }, innerG));
+          for (var i = 0; i < 72; i++) {
+            var major = i % 6 === 0;
+            lines.push(mk("line", { x1: 0, y1: -(R - 34 * s), x2: 0, y2: -(R - (major ? 58 : 44) * s), "stroke-width": (major ? 2 : 1.2) * s, opacity: major ? 0.7 : 0.32, transform: "rotate(" + i * 5 + ")" }, innerG));
+          }
+          var lineEnd = CX - R - 28 * s;
+          var side = [0, 1].map(function (k) {
+            var ln = mk("line", { x1: k ? FW : 0, y1: CY, x2: k ? FW : 0, y2: CY, "stroke-width": 2 * s, "stroke-dasharray": 14 * s + " " + 12 * s });
+            var dot = mk("circle", { cx: 0, cy: CY, r: 5 * s });
+            lines.push(ln); return { ln: ln, dot: dot, k: k };
+          });
+
+          // ---- dust: upstream Dust(count 22, seed 3, drift 0.12, opacity 0.4) with its own sin hash ----
+          var hsh = function (n) { var x = Math.sin(n * 91.345 + 47.853) * 43758.5453; return x - Math.floor(x); };
+          var dustL = q(".ow-dust"), motes = [];
+          dustL.style.opacity = 0.4;
+          for (var d = 0; d < 22; d++) {
+            var z = hsh(3 * 31 + d * 7.1), m = document.createElement("div");
+            m.className = "ow-mote";
+            m.style.width = m.style.height = px((2 + z * z * 16) * s);
+            if (z > 0.7) m.style.filter = "blur(" + ((z - 0.7) * 10).toFixed(1) + "px)";
+            dustL.appendChild(m);
+            motes.push({ el: m, z: z, x0: hsh(3 * 13 + d * 3.7), y0: hsh(3 * 17 + d * 5.3), i: d });
+          }
+
+          var cam = q(".ow-cam");
+          cam.style.transformOrigin = px(CX) + " " + px(CY);
+          var wsAt = function (t) { return MT.mix(CFG.s0, 1, MT.ramp(t, CFG.shrink, CFG.shrinkDur, "snappy")); };
+
+          var tl = MT.scene(CFG.dur, function (t) {
+            var f = t * 30; // frames at 30 fps for the per-frame drift / twinkle constants
+            grain(t);
+            motes.forEach(function (o) {
+              var W2 = FW + 200 * s, H2 = FH + 100 * s, dr = 0.12 * s;
+              var x = (((o.x0 * W2 + f * dr * (0.4 + o.z)) % W2) + W2) % W2 - 100 * s;
+              var y = o.y0 * FH - f * dr * 0.3 * (0.5 + o.z);
+              var tw = 0.5 + 0.5 * Math.sin(f / (14 + o.z * 20) + o.i);
+              o.el.style.transform = "translate(" + px(x) + "," + px((((y % H2) + H2) % H2) - 50 * s) + ")";
+              o.el.style.opacity = ((0.25 + 0.75 * tw) * (0.3 + o.z * 0.7)).toFixed(3);
+            });
+
+            var born = MT.ramp(t, CFG.born, CFG.bornDur, "out");
+            var ws = wsAt(t);
+            var zb = Math.min(CFG.blurMax, Math.abs(wsAt(t + 1 / 60) - wsAt(t - 1 / 60)) * 9) * k2;
+            var cin = MT.ramp(t, CFG.ring, CFG.ringIn, "out");
+            var shrink = MT.ramp(t, CFG.ring, CFG.ringDur, "out");
+            var ext = MT.ramp(t, CFG.ext, CFG.extDur, "out");
+            var warm = MT.ramp(t, CFG.warm, CFG.warmDur, "swift");
+            var lit = t >= CFG.pop - 1e-4 ? 1 : 0; // hard cut: no in-between state
+            var flash = lit * (1 - MT.ramp(t, CFG.pop, CFG.flash, "out"));
+            var lock = lit * (0.55 + 0.45 * flash);
+            var shock = MT.ramp(t, CFG.pop, CFG.shock, "out");
+            var rot = CFG.spin * Math.min(t, CFG.pop) + (t > CFG.pop ? CFG.brake * MT.ramp(t, CFG.pop, CFG.shock, "out") : 0);
+            var push = 1 + CFG.push * MT.ramp(t, 0, CFG.dur, "swift");
+
+            cam.style.transform = "scale(" + push.toFixed(5) + ")";
+            q(".ow-key").style.setProperty("--ki", (0.45 + 0.5 * flash + 0.15 * lit).toFixed(3));
+
+            // drafting colour: grey warming slightly, then locked to the accent at the cut (half strength after the flash)
+            var lineC = lit ? mixc(LINE_W, ACC, lock) : mixc(MUTED, LINE_W, warm);
+            lines.forEach(function (e) { e.setAttribute("stroke", lineC); });
+            ringG.setAttribute("transform", "translate(" + CX + " " + CY + ") scale(" + MT.mix(CFG.r0, 1, shrink).toFixed(5) + ")");
+            ringG.setAttribute("opacity", cin.toFixed(3));
+            spinG.setAttribute("transform", "rotate(" + rot.toFixed(3) + ")");
+            innerG.setAttribute("transform", "rotate(" + (CFG.spinIn * t).toFixed(3) + ")");
+            side.forEach(function (o) {
+              var x = o.k ? FW - lineEnd * ext : lineEnd * ext;
+              o.ln.setAttribute("x2", x.toFixed(2)); o.ln.setAttribute("opacity", ext.toFixed(3));
+              o.dot.setAttribute("cx", x.toFixed(2)); o.dot.setAttribute("fill", lineC); o.dot.setAttribute("opacity", ext.toFixed(3));
+            });
+            var sk = lit && shock < 1;
+            shockC.setAttribute("opacity", sk ? 1 : 0);
+            shockC.setAttribute("r", (R + shock * CFG.shockGrow * s).toFixed(2));
+            shockC.setAttribute("stroke", rgba(ACC, 0.55 * (1 - shock)));
+            shockC.setAttribute("stroke-width", ((2 + 10 * (1 - shock)) * s).toFixed(2));
+
+            ros.forEach(function (el, i) {
+              el.style.opacity = ext.toFixed(3);
+              el.style.transform = "translateX(" + px((1 - ext) * 30 * s * (i ? 1 : -1)) + ")";
+            });
+            roVal.style.color = lit ? "" : "var(--k-ink)";
+            roVal.style.textShadow = lit && flash > 0.02 ? "0 0 " + px(18 * flash * s) + " " + rgba(ACC, 0.8) : "none";
+
+            [kick, sub].forEach(function (el, i) {
+              var p = MT.ramp(t, CFG.kick + i * CFG.subLag, CFG.rise, "snappy");
+              el.style.opacity = p.toFixed(3);
+              el.style.transform = "translate(-50%, " + px((1 - p) * CFG.riseY * s) + ")";
+            });
+
+            word.style.opacity = born.toFixed(3);
+            word.style.transform = "translate(-50%, -54%) scale(" + ws.toFixed(5) + ")";
+            if (lit) {
+              word.style.color = "var(--k-ink)";
+              word.style.webkitTextStroke = "0px transparent";
+              word.style.filter = "none";
+              word.style.textShadow = flash > 0.01
+                ? "0 0 " + px(14 * flash * k2) + " " + rgba(HOT, 0.7 * flash) + ", 0 0 " + px(60 * flash * k2) + " " + rgba(ACC, 0.65 * flash)
+                : "0 0 " + px(40 * k2) + " " + rgba(ACC, dark ? 0.18 : 0.1);
+            } else {
+              word.style.color = rgba(INK, 0.09); // a 9% fill: reads hollow, and the checker still sees painted text
+              word.style.webkitTextStroke = px(2 * s) + " " + mixc(MUTED, HOT, warm);
+              word.style.textShadow = "none";
+              word.style.filter = zb > 0.05 ? "blur(" + (zb / ws).toFixed(2) + "px)" : warm > 0.01 ? "drop-shadow(0 0 " + px(10 * warm * k2) + " " + rgba(ACC, 0.5 * warm) + ")" : "none";
+            }
+          });
+          window.__timelines["outline-word-fill"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,412 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"标题（逐字从天上砸下来；用 | 标出可以换行的地方）","default":"把复杂的事|讲清楚"},
+    {"id":"sub","type":"string","label":"副标题（归位后浮出，可留空）","default":"三分钟看懂一个概念"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>letter-drop-physics · 字符坠落</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="letter-drop-physics-template">
+      <!-- Ported from video-shotcraft demos/typography/type-entrance-moves/LetterDropPhysics.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette, system fonts (the bold YaHei face for upstream's weight 800), a generic Chinese title
+           and subtitle instead of the upstream brand name and tagline; tracking 0.02em (upstream -0.04em, Latin);
+           the ground is each row's measured ink bottom (CJK: baseline + 0.13em), so a title may wrap to two rows,
+           each on its own floor; the drop starts 0.7em above the frame (upstream 720px from a floor at 600px), the
+           bounce heights are 1.227em / 0.368em (upstream 30% / 9% of 720px at 176px), the tilt lift uses half the
+           measured glyph width (upstream a fixed 48px), shadow size, blur and lift height and the speed-blur cap scale
+           with the font size; the vertical speed blur is one SVG filter per glyph (no rotate wrappers: the motion is
+           straight down); a glyph is hidden until its drop starts (it is above the frame then anyway); subtitle 40px
+           (upstream 36px); slot 5.5 s (upstream 5 s) so the subtitle holds 1.1 s; on dark skins the contact shadow
+           is 2.6x and the floor highlight 8%. The start curve 4 + 36(1-(1-i/(n-1))^1.5) f, the 24f fall, 16f / 8f
+           bounces, the squash impulses (1 / 0.45 / 0.18, exp(-d/2.6) cos(0.85d)), stretch 0.1, the +-6deg seeded
+           tilt (same sin hash), the 2f inhale to 1.06 and the 6f snappy snap at 110f with the 8f overshoot on the
+           tilt, the subtitle at 114f over 18f, the hairline floor with its highlight and the light backdrop (light at
+           50% / 16%, vignette 0.16, grain 0.05) are as upstream. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        /* a dropped letter is a heavy object: a real bold face, not the browser's synthetic bold */
+        @font-face { font-family: "lp-heavy"; font-weight: 700 900; src: local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"), local("PingFangSC-Semibold"), local("NotoSansSC-Bold"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* ==== kit:derived@1 (shade only) ==== */
+        .lp { --lp-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); }
+        .lp[data-tone="dark"] { --lp-shade: color-mix(in srgb, var(--k-bg) 30%, black); }
+        /* ==== end kit:derived ==== */
+        /* ==== kit:backdrop@1 ==== */
+        .lp-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .lp-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 50% 16%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        /* ==== end kit:backdrop ==== */
+        /* ==== kit:vignette@1 ==== */
+        .lp-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--lp-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .lp[data-tone="dark"] .lp-vig { --vs: 0.55; }
+        /* ==== end kit:vignette ==== */
+        /* ==== kit:grain@1 ==== */
+        .lp-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+        /* ==== kit:text@2 ==== */
+        .lp-u { display: inline-block; white-space: pre; }
+        /* ==== end kit:text ==== */
+
+        /* the wrapper is the size container (SPEC 五). --lp-fa: floor tint, --lp-hi: the lit edge under the hairline */
+        .lp { position: absolute; inset: 0; container-type: size; --lp-hv: lp-heavy, var(--k-font); --lp-fa: 3.5%; --lp-hi: 70%; }
+        .lp[data-tone="dark"] { --lp-fa: 9%; --lp-hi: 8%; }
+        /* the stage top below the floor: darkest at the floor, gone 64% of the way down (top set by the script) */
+        .lp-floor { position: absolute; left: 0; right: 0; top: 56.7%; bottom: 0;
+          background: linear-gradient(180deg, color-mix(in srgb, var(--lp-shade) var(--lp-fa), transparent) 0%, color-mix(in srgb, var(--lp-shade) calc(var(--lp-fa) * 0.34), transparent) 30%, transparent 64%); }
+        /* the stack (title rows, subtitle) centred a little below the middle as upstream (floor near y 600); portrait:
+           centred on the 40% line inside the 12%-68% band */
+        .lp-box { position: absolute; inset: 0; padding: 6.5cqh 10cqw 0; display: flex; flex-direction: column; justify-content: center; }
+        .lp-word { position: relative; width: 100%; text-align: center; font-family: var(--lp-hv); font-size: 176px; font-weight: 800; line-height: 1.2; letter-spacing: 0.02em; color: var(--k-ink); }
+        /* every row stands on a hairline floor at its own ink bottom (--lp-fl, measured; 1.13em is YaHei's CJK bottom) */
+        .lp-row { position: relative; display: block; white-space: nowrap; }
+        .lp-row::before, .lp-word.lp-row::after { content: ""; position: absolute; left: 50%; width: 83.4cqw; margin-left: -41.7cqw; top: var(--lp-fl, 1.13em); height: 1px;
+          background: linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--k-ink) 16%, transparent) 22%, color-mix(in srgb, var(--k-ink) 16%, transparent) 78%, transparent 100%);
+          box-shadow: 0 1px 0 color-mix(in srgb, white var(--lp-hi), transparent); }
+        .lp-word.lp-row::after { display: none; }
+        .lp-s { position: relative; display: inline-block; }
+        .lp-g { position: relative; display: inline-block; white-space: pre; }
+        .lp-sh { position: absolute; left: 8%; width: 84%; border-radius: 50%; background: var(--lp-shade); opacity: 0.2; }
+        .lp-sub { margin-top: 56px; text-align: center; font-size: 40px; font-weight: 500; line-height: 1.4; color: var(--k-muted); }
+        @container (orientation: portrait) {
+          .lp-box { padding: 12cqh 10cqw 32cqh; }
+          .lp-word { font-size: 160px; }
+          .lp-word.lp-row { white-space: normal; }
+          .lp-row::before, .lp-word.lp-row::after { width: 80cqw; margin-left: -40cqw; }
+          .lp-word.lp-row::after { display: block; top: calc(1.2em + var(--lp-fl, 1.13em)); }
+          .lp-floor { top: 46.5%; }
+          .lp-sub { margin-top: 48px; font-size: 44px; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="letter-drop-physics">
+        <div class="lp">
+          <div class="lp-bg"><div class="lp-backdrop"></div></div>
+          <div class="lp-floor"></div>
+          <div class="lp-vig"></div>
+          <div class="lp-grain"></div>
+          <div class="lp-box">
+            <div class="lp-word lp-row">把复杂的事讲清楚</div>
+            <div class="lp-sub">三分钟看懂一个概念</div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing: upstream frames at 30 fps (seconds = f / 30), shared by both orientations
+          var CFG = {
+            dur: 5.5,                // scene length (upstream 150f = 5 s; +0.5 s so the subtitle holds 1.1 s)
+            first: 4, spread: 36,    // char i starts at 4 + 36(1-(1-i/(n-1))^1.5) f: 0.133 s ... 1.333 s, ever denser
+            fall: 24, b1: 16, b2: 8, // gravity fall, first bounce, second bounce (frames)
+            h1: 1.227, h2: 0.368,    // bounce heights in em (upstream 30% / 9% of a 720px drop at 176px)
+            above: 0.7,              // a drop starts this many em above the frame top (upstream: 720px from y 600)
+            tilt: 12, settle: 6,     // seeded tilt +-6 deg, eased in over 6f on landing
+            stretch: 0.1,            // vertical stretch at full fall speed (0.6x while bouncing)
+            snap: 110, snapDur: 6, inhale: 2, pulse: 0.06, rotOver: 8, // the all-together snap
+            sub: 114, subDur: 18     // subtitle fades up after the snap
+          };
+          // largest size, smallest size that still takes one line, two-row floor; portrait goes to two rows of
+          // display type at once rather than shrinking a long title into one thin line
+          var LAND = { fs: 176, one: 120, min: 72, sub: 40 };
+          var PORT = { fs: 160, one: 160, min: 72, sub: 44 };
+          var v = { title: "把复杂的事|讲清楚", sub: "三分钟看懂一个概念", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".lp");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+          // ==== kit:text@2 (kWords, kSplit) ====
+          var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "lp-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "lp-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          // ==== end kit:text ====
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          function kRows(el, cls) {
+            if (!el.children.length) return [];
+            var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+            var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+            kids.forEach(function (c, i) {
+              if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+              if (tops[i] != null) last = tops[i];
+              row.appendChild(c);
+            });
+            return [].slice.call(el.children);
+          }
+          // ==== end kit:fit ====
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+
+          var dark = kTone(root) === "dark", grain = null, off = String(v.backdrop) === "off";
+          if (off) [".lp-bg", ".lp-floor", ".lp-vig", ".lp-grain"].forEach(function (s) { q(s).style.display = "none"; });
+          else grain = kGrain(q(".lp-grain"));
+          // a host font replaces the bold face as well
+          if (getComputedStyle(root).getPropertyValue("--mc-font").trim()) root.style.setProperty("--lp-hv", "var(--k-font)");
+
+          // title -> phrases -> size by measuring (one line first, then two rows) -> rows frozen -> one slot a character
+          var word = q(".lp-word"), sub = q(".lp-sub"), title = String(v.title).trim();
+          word.classList.remove("lp-row");
+          kSplit(word, "word", false, title);
+          if (!kFit(word, { lines: 1, min: L.one, max: L.fs }).fits) kFit(word, { lines: 2, min: L.min, max: L.fs });
+          var rows = kRows(word, "lp-row"), fs = parseFloat(getComputedStyle(word).fontSize), u = fs / 176;
+          if (String(v.sub).trim()) {
+            kSplit(sub, "word", false, String(v.sub).trim());
+            if (!kFit(sub, { lines: 1, min: 40, max: L.sub }).fits) kFit(sub, { lines: 2, min: 40, max: L.sub });
+          } else sub.style.display = "none";
+
+          var bb = root.getBoundingClientRect(), sc = bb.width / FW || 1, cjk = kCJK.test(title), chars = [], floorY = 0;
+          var N = (window.__lpN = (window.__lpN || 0) + 1), defs = [];
+          rows.forEach(function (row) {
+            [].forEach.call(row.querySelectorAll(".lp-u"), function (un) {
+              var s = un.textContent;
+              un.textContent = "";
+              Array.from(s).forEach(function (ch) {
+                var sl = document.createElement("span"), g = document.createElement("span"), sh = document.createElement("i");
+                sl.className = "lp-s"; g.className = "lp-g"; sh.className = "lp-sh"; g.textContent = ch;
+                if (ch.trim()) {
+                  sl.appendChild(sh);
+                  // falls in from above the frame: outside the canvas by design for its first frames
+                  g.setAttribute("data-layout-allow-overflow", "");
+                  chars.push({ s: sl, g: g, sh: sh });
+                }
+                sl.appendChild(g);
+                un.appendChild(sl);
+              });
+            });
+            // the row's floor: its baseline (a zero-size probe), plus 0.13em when the title is CJK (YaHei's ink bottom)
+            var pr = row.appendChild(document.createElement("span")), rt = row.getBoundingClientRect();
+            pr.style.cssText = "display:inline-block;width:0;height:0;vertical-align:baseline";
+            var fl = (pr.getBoundingClientRect().bottom - rt.top) / sc + (cjk ? 0.13 * fs : 0);
+            row.removeChild(pr);
+            row.style.setProperty("--lp-fl", fl.toFixed(1) + "px");
+            row._fl = fl; row._top = (rt.top - bb.top) / sc;
+            floorY = row._top + fl;
+          });
+          q(".lp-floor").style.top = floorY.toFixed(1) + "px";
+
+          // per character: start frame, drop height, pivot at the floor, seeded tilt and its blur filter
+          var h = function (n) { var s = Math.sin(n * 127.3) * 43758.5453; return s - Math.floor(s); };
+          var n = chars.length;
+          chars.forEach(function (c, i) {
+            var row = c.s.closest(".lp-row"), rt = row.getBoundingClientRect(), gr = c.g.getBoundingClientRect(), sr = c.s.getBoundingClientRect();
+            var gTop = (gr.top - rt.top) / sc, sTop = (sr.top - rt.top) / sc, shH = 0.08 * fs;
+            c.st = CFG.first + CFG.spread * (1 - Math.pow(1 - (n > 1 ? i / (n - 1) : 0), 1.5));
+            c.D = row._top + row._fl + CFG.above * fs;
+            c.hw = gr.width / sc / 2;
+            c.tilt = (h(i + 1) - 0.5) * CFG.tilt;
+            c.g.style.transformOrigin = "50% " + (row._fl - gTop).toFixed(1) + "px";
+            c.sh.style.top = (row._fl - sTop - shH / 2).toFixed(1) + "px";
+            c.sh.style.height = shH.toFixed(1) + "px";
+            c.id = "lp-b" + N + "-" + i;
+            defs.push('<filter id="' + c.id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>');
+          });
+          var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+          svg.innerHTML = defs.join("");
+          root.appendChild(svg);
+          chars.forEach(function (c) { c.fe = svg.querySelector("#" + c.id + " feGaussianBlur"); });
+
+          // vertical offset from the floor (negative = above) d frames into a character's drop
+          var B1 = CFG.fall + CFG.b1, B2 = B1 + CFG.b2;
+          var dropY = function (d, D) {
+            if (d <= 0) return -D;
+            if (d < CFG.fall) return -D + D * Math.pow(d / CFG.fall, 2);
+            if (d < B1) { var a = (d - CFG.fall) / CFG.b1; return -CFG.h1 * fs * 4 * a * (1 - a); }
+            if (d < B2) { var b = (d - B1) / CFG.b2; return -CFG.h2 * fs * 4 * b * (1 - b); }
+            return 0;
+          };
+          // squash at the three touchdowns: damped wobble, strength 1 / 0.45 / 0.18 (frames)
+          var hits = [[CFG.fall, 1], [B1, 0.45], [B2, 0.18]];
+          var squash = function (d) {
+            var s = 0;
+            hits.forEach(function (p) { var e = d - p[0]; if (e >= 0 && e <= 16) s += p[1] * Math.exp(-e / 2.6) * Math.cos(e * 0.85); });
+            return s;
+          };
+          var shK = dark ? 0.52 : 0.2, F = function (f) { return f / 30; };
+
+          var tl = MT.scene(CFG.dur, function (t) {
+            var f = t * 30; // frames at 30 fps
+            var inhale = MT.ramp(t, F(CFG.snap - CFG.inhale), F(CFG.inhale), "out");
+            var snap = MT.ramp(t, F(CFG.snap), F(CFG.snapDur), "snappy");
+            var snapRot = MT.ramp(t, F(CFG.snap), F(CFG.rotOver), "overshoot");
+            var pulse = CFG.pulse * inhale * (1 - snap);
+            chars.forEach(function (c) {
+              var d = f - c.st, y = dropY(d, c.D), vy = dropY(d + 0.5, c.D) - dropY(d - 0.5, c.D), air = -y;
+              var rot = c.tilt * MT.ramp(t, F(c.st + CFG.fall), F(CFG.settle), "out") * (1 - snapRot);
+              // standing tilted on one bottom corner: lifted by sin|rot| x half the glyph width so it never sinks in
+              var jit = -Math.sin((Math.abs(rot) * Math.PI) / 180) * c.hw;
+              var st = Math.min(1, Math.abs(vy) / ((2 * c.D) / CFG.fall)) * CFG.stretch * (d < CFG.fall ? 1 : 0.6);
+              var sq = squash(d), sy = (1 + st) * (1 - 0.2 * sq) + pulse, sx = (1 - st * 0.55) * (1 + 0.15 * sq) + pulse;
+              c.g.style.opacity = d < 0 ? 0 : 1;
+              c.g.style.transform = d < 0 ? "" : "translateY(" + (y + jit).toFixed(2) + "px) rotate(" + rot.toFixed(3) + "deg) scale(" + sx.toFixed(4) + "," + sy.toFixed(4) + ")";
+              // vertical speed blur: full while falling, reduced while bouncing (no smear at the touchdowns)
+              var sd = Math.min(16 * u, Math.abs(vy) * (d < CFG.fall ? 0.26 : 0.12));
+              if (sd < 0.35 || d < 0) c.g.style.filter = "";
+              else { c.fe.setAttribute("stdDeviation", "0 " + sd.toFixed(2)); c.g.style.filter = "url(#" + c.id + ")"; }
+              // contact shadow: small and firm on the floor, wide, soft and faint the higher the glyph is
+              var lift = MT.clamp(air / (2.386 * fs), 0, 1);
+              c.sh.style.opacity = d < 0 ? 0 : (shK * (1 - lift * 0.85) * MT.clamp((d + 2) / 8, 0, 1)).toFixed(3);
+              c.sh.style.transform = "scaleX(" + (MT.mix(0.74, 1.3, lift) * (1 + 0.12 * Math.max(0, sq))).toFixed(3) + ")";
+              c.sh.style.filter = "blur(" + (MT.mix(7, 28, lift) * u).toFixed(1) + "px)";
+            });
+            var p = MT.ramp(t, F(CFG.sub), F(CFG.subDur), "out");
+            sub.style.opacity = p.toFixed(3);
+            sub.style.transform = "translateY(" + ((1 - p) * 0.25 * L.sub).toFixed(2) + "px)";
+            if (grain) grain(t);
+          });
+          window.__timelines["letter-drop-physics"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

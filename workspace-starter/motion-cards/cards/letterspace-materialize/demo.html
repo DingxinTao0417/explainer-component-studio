@@ -1,0 +1,336 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"name","type":"string","label":"字标（英文小写字母和连字符，约 30 个字母以内）","default":"creative-video"},
+    {"id":"backdrop","type":"enum","label":"底（湖景氛围）","default":"on","options":[{"value":"on","label":"实底（暮色湖景）"},{"value":"off","label":"透明（只留字标，压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>letterspace-materialize · 大字距字标结晶</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="letterspace-materialize-template">
+      <!-- Ported from video-shotcraft demos/opening/letterspace-materialize/LetterspaceMaterialize.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition (MT.scene), frames to seconds;
+           neutral --k-* palette (light-first dawn lake; a dark skin gives the original dusk look), system fonts, upstream wordmark
+           replaced by a generic word ("creative-video") drawn from the same 13 skeleton glyphs plus 14 new ones (a-z, hyphen);
+           the word is sized to a share of the frame width instead of the fixed 1.3x scale and 30px gap, portrait breaks it into
+           two rows; 52-frame draw, bezier(0.5,0,0.3,1), synchronous finish, glow rise and fall, ridges, glints, reflection,
+           push-in, dawn lift and grain kept; scenery colours are mixed from the palette. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .ls { position: absolute; inset: 0; container-type: size; --hz: 59.26cqh; }
+        .ls-scene, .ls-far, .ls-near, .ls-sky, .ls-water { position: absolute; inset: 0; }
+        .ls-far, .ls-near { pointer-events: none; }
+        /* scenery colours, light skin: a pale dawn lake mixed from the palette */
+        .ls {
+          --ls-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+          --ls-sky0: color-mix(in srgb, var(--k-bg), var(--k-accent-2) 16%);
+          --ls-sky1: color-mix(in srgb, var(--k-bg), var(--k-accent-2) 9%);
+          --ls-sky2: color-mix(in srgb, var(--k-bg), var(--k-accent) 8%);
+          --ls-sky3: color-mix(in srgb, var(--k-bg), var(--k-accent) 15%);
+          --ls-sky4: color-mix(in srgb, var(--k-bg), var(--k-accent) 24%);
+          --ls-base: color-mix(in srgb, var(--k-bg), var(--k-ink) 14%);
+          --ls-rf0: color-mix(in srgb, color-mix(in srgb, var(--k-bg), var(--k-accent-2) 22%), var(--k-ink) 6%);
+          --ls-rf1: color-mix(in srgb, color-mix(in srgb, var(--k-bg), var(--k-accent-2) 22%), var(--k-ink) 14%);
+          --ls-rn: color-mix(in srgb, color-mix(in srgb, var(--k-bg), var(--k-accent-2) 18%), var(--k-ink) 26%);
+          --ls-w0: color-mix(in srgb, color-mix(in srgb, var(--k-bg), var(--k-accent-2) 10%), var(--k-ink) 12%);
+          --ls-w1: color-mix(in srgb, color-mix(in srgb, var(--k-bg), var(--k-accent-2) 12%), var(--k-ink) 22%);
+          --ls-w2: color-mix(in srgb, color-mix(in srgb, var(--k-bg), var(--k-accent-2) 14%), var(--k-ink) 30%);
+          --ls-dawn: color-mix(in srgb, var(--k-accent) 46%, transparent);
+          --ls-dawn2: color-mix(in srgb, var(--k-accent) 24%, transparent);
+          --ls-dawn3: color-mix(in srgb, var(--k-accent-2) 10%, transparent);
+          --ls-refl: color-mix(in srgb, var(--k-accent) 26%, transparent);
+          --ls-hline: color-mix(in srgb, var(--k-accent) 55%, transparent);
+          --ls-glint: var(--k-accent-2);
+          --ls-glow: var(--k-accent);
+        }
+        .ls[data-tone="dark"] {
+          --ls-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+          --ls-sky0: color-mix(in srgb, color-mix(in srgb, var(--k-bg), var(--k-accent-2) 22%), black 25%);
+          --ls-sky1: color-mix(in srgb, color-mix(in srgb, var(--k-bg), var(--k-accent-2) 20%), black 5%);
+          --ls-sky2: color-mix(in srgb, color-mix(in srgb, var(--k-bg), var(--k-accent-2) 30%), var(--k-accent) 10%);
+          --ls-sky3: color-mix(in srgb, color-mix(in srgb, var(--k-bg), var(--k-accent-2) 24%), var(--k-accent) 22%);
+          --ls-sky4: color-mix(in srgb, color-mix(in srgb, var(--k-bg), var(--k-accent-2) 20%), var(--k-accent) 30%);
+          --ls-base: color-mix(in srgb, var(--k-bg), black 45%);
+          --ls-rf0: color-mix(in srgb, color-mix(in srgb, var(--k-bg), var(--k-accent-2) 30%), black 5%);
+          --ls-rf1: color-mix(in srgb, color-mix(in srgb, var(--k-bg), var(--k-accent-2) 24%), black 15%);
+          --ls-rn: color-mix(in srgb, color-mix(in srgb, var(--k-bg), var(--k-accent-2) 14%), black 30%);
+          --ls-w0: color-mix(in srgb, color-mix(in srgb, var(--k-bg), var(--k-accent-2) 18%), black 10%);
+          --ls-w1: color-mix(in srgb, var(--k-bg), black 35%);
+          --ls-w2: color-mix(in srgb, var(--k-bg), black 60%);
+          --ls-dawn: color-mix(in srgb, var(--k-accent) 32%, transparent);
+          --ls-dawn2: color-mix(in srgb, var(--k-accent) 14%, transparent);
+          --ls-dawn3: color-mix(in srgb, var(--k-accent-2) 6%, transparent);
+          --ls-refl: color-mix(in srgb, var(--k-accent) 13%, transparent);
+          --ls-hline: color-mix(in srgb, var(--k-accent) 32%, var(--k-ink) 16%);
+          --ls-glint: var(--k-ink);
+          --ls-glow: var(--k-ink);
+        }
+        .ls-sky { background: linear-gradient(180deg, var(--ls-sky0) 0%, var(--ls-sky1) 24%, var(--ls-sky2) 42%, var(--ls-sky3) 53%, var(--ls-sky4) calc(var(--hz) - 14px), var(--ls-base) var(--hz), var(--ls-w2) 100%); }
+        .ls-dawn { position: absolute; left: -25%; right: -25%; top: calc(var(--hz) - 260px); height: 520px; opacity: 0.85; background: radial-gradient(ellipse 50% 50% at 54% 50%, var(--ls-dawn) 0%, var(--ls-dawn2) 35%, var(--ls-dawn3) 65%, transparent 80%); }
+        .ls-ridge { position: absolute; left: 0; top: 0; }
+        .ls-ridge-far { opacity: 0.75; filter: blur(1.2px); }
+        .ls-water { top: var(--hz); background: radial-gradient(ellipse 46% 40% at 54% 0%, var(--ls-refl) 0%, transparent 80%), linear-gradient(180deg, var(--ls-w0) 0%, var(--ls-w1) 30%, var(--ls-w2) 100%); }
+        .ls-hline { position: absolute; left: 0; right: 0; top: calc(var(--hz) - 1px); height: 2px; background: linear-gradient(90deg, transparent 8%, var(--ls-hline) 54%, transparent 92%); }
+        .ls-gl { position: absolute; left: 0; height: 1.5px; border-radius: 1px; background: linear-gradient(90deg, transparent, var(--ls-glint), transparent); opacity: 0; }
+        .ls-refl { position: absolute; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; transform: scaleY(-1); opacity: 0.12; filter: blur(2.4px); -webkit-mask-image: linear-gradient(0deg, #000 0%, rgba(0,0,0,0.2) 100%); mask-image: linear-gradient(0deg, #000 0%, rgba(0,0,0,0.2) 100%); }
+        .ls-word { position: absolute; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; }
+        .ls-row { display: flex; align-items: center; justify-content: center; }
+        .ls-g { display: block; flex: none; overflow: visible; }
+        .ls-g path { fill: none; stroke: var(--k-ink); stroke-width: 4.23px; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1 2; stroke-dashoffset: 1; opacity: 0; }
+        /* the page without its script: scenery plus a plain placeholder for the word (the script removes it and draws the glyphs) */
+        .ls-ph { position: absolute; left: 6%; right: 6%; top: 43.5cqh; transform: translateY(-50%); text-align: center; font-size: 96px; font-weight: 300; letter-spacing: 0.36em; padding-left: 0.36em; line-height: 1.2; }
+        @container (orientation: portrait) {
+          .ls { --hz: 52cqh; }
+          .ls-ph { top: 40cqh; left: 10%; right: 10%; font-size: 84px; }
+        }
+        .ls-grain { position: absolute; inset: 0; pointer-events: none; }
+        .ls-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--ls-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .ls[data-tone="dark"] .ls-vig { --vs: 0.45; --vin: 50%; }
+      </style>
+
+      <div id="root" data-composition-id="letterspace-materialize">
+        <div class="ls">
+          <div class="ls-scene">
+            <div class="ls-far" data-layout-allow-overflow><div class="ls-sky"></div><div class="ls-dawn"></div></div>
+            <div class="ls-near" data-layout-allow-overflow><div class="ls-water"></div><div class="ls-hline"></div></div>
+            <div class="ls-refl"></div>
+            <div class="ls-vig"></div>
+            <div class="ls-grain"></div>
+          </div>
+          <div class="ls-word"></div>
+          <div class="ls-ph">creative-video</div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing (seconds, = upstream frames / 30), shared by both orientations
+          var CFG = { start: 0.533, dur: 1.733, glowFall: 0.467, push: 3.5, farPush: 0.02, nearPush: 0.035, total: 3.5 };
+          // layout per orientation: hz = water line and mark = word block centre (fractions of the frame height),
+          // fill = share of the frame width the widest row takes, min / max = glyph scale limits (viewBox 64 high),
+          // rows = rows allowed, single = lowest scale at which portrait keeps one row, ridge = ridge height factor,
+          // gx / gw = spread and length of the water glints
+          var LAND = { hz: 0.5926, mark: 0.4352, fill: 0.62, min: 0.8, max: 1.7, rows: 1, single: 0, ridge: 1, gap: 0, gx: 1, gw: 1 };
+          var PORT = { hz: 0.52, mark: 0.4, fill: 0.8, min: 1, max: 2, rows: 2, single: 1.5, ridge: 1.25, gap: 0.45, gx: 0.9, gw: 0.8 };
+          var v = { name: "creative-video", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".ls");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+          // kit:tone@1
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // kit:grain@1
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+
+          var tone = kTone(root), dark = tone === "dark";
+          var HZ = Math.round(FH * L.hz);
+          root.style.setProperty("--hz", HZ + "px");
+          var ph = q(".ls-ph"); ph.parentNode.removeChild(ph);
+
+          // skeleton glyphs: single-line lowercase, 64 high (baseline 59, x-height 22, ascender 5), [advance width, path].
+          // Sub-strokes are listed in drawing order; pathLength is normalised, so every letter finishes on the same frame.
+          // The first 13 are the upstream set; the other 14 are drawn to match (round bowls r 18.5).
+          var BOWL = "A 18.5 18.5 0 0 0 4.5 40.5 A 18.5 18.5 0 0 0 41.5 40.5";
+          var BR = "M 5 40.5 A 18.5 18.5 0 0 1 42 40.5 A 18.5 18.5 0 0 1 5 40.5";
+          var G = {
+            v: [42, "M 4 22 L 21 59 L 38 22"], i: [14, "M 7 22 L 7 59 M 7 9.5 L 7 10"],
+            d: [46, "M 41.5 40.5 " + BOWL + " M 41.5 5 L 41.5 59"],
+            e: [46, "M 4.5 40.5 L 41.5 40.5 A 18.5 18.5 0 1 0 37.2 52.4"], o: [46, "M 23 22 A 18.5 18.5 0 0 0 23 59 A 18.5 18.5 0 0 0 23 22"],
+            "-": [28, "M 5 41 L 23 41"],
+            s: [39, "M 32.6 27.5 C 26.4 21.3, 7.9 20.6, 6.2 28.9 C 4.6 36.4, 14.1 38.4, 19.7 39.8 C 25.8 41.2, 34.8 43.9, 33.1 51.5 C 31.4 59, 9.6 60.4, 4 52.8"],
+            h: [41, "M 5 5 L 5 59 M 5 38 C 5 27, 12 22, 20.5 22 C 30 22, 36 27, 36 37 L 36 59"], t: [26, "M 12 8 L 12 59 M 3 22 L 23 22"],
+            c: [42, "M 37.2 28.6 A 18.5 18.5 0 1 0 37.2 52.4"], r: [28, "M 5 22 L 5 59 M 5 38 C 5 27, 13 22, 24 23"],
+            a: [46, "M 41.5 40.5 " + BOWL + " M 41.5 22 L 41.5 59"], f: [26, "M 23 7 C 17 4, 11 6, 11 14 L 11 59 M 3 22 L 22 22"],
+            b: [47, "M 5 5 L 5 59 " + BR], p: [47, "M 5 22 L 5 74 " + BR],
+            q: [46, "M 41.5 40.5 " + BOWL + " M 41.5 22 L 41.5 74"],
+            g: [46, "M 41.5 40.5 " + BOWL + " M 41.5 22 L 41.5 62 C 41.5 72, 33 76, 22 76 C 15 76, 10 74, 7 70"],
+            j: [18, "M 10 22 L 10 62 C 10 70, 6 74, 1 74 M 10 9.5 L 10 10"], k: [41, "M 5 5 L 5 59 M 35 22 L 5 45 M 16 38 L 36 59"],
+            l: [14, "M 7 5 L 7 59"],
+            m: [64, "M 5 22 L 5 59 M 5 38 C 5 27, 11 22, 19 22 C 28 22, 32 27, 32 37 L 32 59 M 32 37 C 32 27, 38 22, 46 22 C 55 22, 59 27, 59 37 L 59 59"],
+            n: [41, "M 5 22 L 5 59 M 5 38 C 5 27, 12 22, 20.5 22 C 30 22, 36 27, 36 37 L 36 59"],
+            u: [41, "M 5 22 L 5 44 C 5 54, 12 59, 20.5 59 C 30 59, 36 54, 36 44 M 36 22 L 36 59"],
+            w: [56, "M 4 22 L 16 59 L 28 30 L 40 59 L 52 22"], x: [42, "M 5 22 L 37 59 M 37 22 L 5 59"],
+            y: [42, "M 4 22 L 21 58 M 38 22 L 14 73"], z: [42, "M 5 22 L 37 22 L 5 59 L 37 59"], " ": [24, ""]
+          };
+          var TK = 30 / 1.3; // letter gap per unit of glyph scale (upstream: 30px at 1.3x)
+          var mk = function (c) { return { c: c, w: G[c][0], d: G[c][1] }; };
+
+          // word -> rows of glyphs; portrait breaks a long word at its hyphen (or the middle) when one row would get too small
+          var glyphs = Array.from(String(v.name).toLowerCase()).filter(function (c) { return G[c]; }).map(mk);
+          while (glyphs.length && glyphs[0].c === " ") glyphs.shift();
+          while (glyphs.length && glyphs[glyphs.length - 1].c === " ") glyphs.pop();
+          if (!glyphs.length) glyphs = Array.from("creative-video").map(mk);
+          var units = function (a) { return a.reduce(function (s, g) { return s + g.w; }, 0) + TK * (a.length - 1); };
+          var rows = [glyphs];
+          if (L.rows > 1 && glyphs.length > 1 && (FW * L.fill) / units(glyphs) < L.single) {
+            var best = -1, bd = 1e9, pick = function (hard) {
+              for (var i = 1; i < glyphs.length; i++) {
+                var cut = glyphs[i - 1].c === "-" || glyphs[i - 1].c === " " || glyphs[i].c === " ";
+                if (hard && !cut) continue;
+                var d = Math.abs(units(glyphs.slice(0, i)) - units(glyphs.slice(i)));
+                if (d < bd) { bd = d; best = i; }
+              }
+            };
+            pick(true); if (best < 0) pick(false);
+            rows = [glyphs.slice(0, best), glyphs.slice(best)].map(function (r) { return r.filter(function (g, i) { return !(g.c === " " && (i === 0 || i === r.length - 1)); }); });
+          }
+          var GS = Math.max(L.min, Math.min(L.max, (FW * L.fill) / Math.max.apply(null, rows.map(units)))), ROWH = 64 * GS, GAP = L.gap * ROWH;
+          var BH = rows.length * ROWH + (rows.length - 1) * GAP, TOP = FH * L.mark - BH / 2;
+          var wordHTML = rows.map(function (r) {
+            return '<div class="ls-row" style="gap:' + (TK * GS).toFixed(1) + 'px">' + r.map(function (g) {
+              return '<svg class="ls-g" width="' + (g.w * GS).toFixed(1) + '" height="' + ROWH.toFixed(1) + '" viewBox="0 0 ' + g.w + ' 64">' + (g.d ? '<path d="' + g.d + '" pathLength="1"/>' : "") + "</svg>";
+            }).join("") + "</div>";
+          }).join("");
+          var word = q(".ls-word"), refl = q(".ls-refl");
+          [word, refl].forEach(function (el, i) {
+            el.innerHTML = wordHTML;
+            el.style.height = BH.toFixed(1) + "px";
+            el.style.gap = GAP.toFixed(1) + "px";
+            el.style.top = (i ? 2 * HZ - TOP - BH : TOP).toFixed(1) + "px";
+          });
+          var pathsMain = [].slice.call(word.querySelectorAll("path")), pathsRefl = [].slice.call(refl.querySelectorAll("path"));
+          var sig = GS / 1.3; // the glow blur grows with the word
+
+          // scenery: ridges (deterministic sine sums), far one with a vertical gradient, near one flat
+          var scene = q(".ls-scene"), far = q(".ls-far"), near = q(".ls-near"), dawn = q(".ls-dawn");
+          var mount = (window.__lsN = (window.__lsN || 0) + 1);
+          var ridge = function (seed, base, amp) {
+            var pts = [];
+            for (var x = -60; x <= FW + 60; x += 20) {
+              var y = base - amp * L.ridge * (0.55 * Math.sin(x / 233 + seed) + 0.3 * Math.sin(x / 97 + seed * 2.1) + 0.15 * Math.sin(x / 41 + seed * 3.7) + 0.6);
+              pts.push(x + "," + y.toFixed(1));
+            }
+            return "M -60 " + (HZ + 2) + " L " + pts.join(" L ") + " L " + (FW + 60) + " " + (HZ + 2) + " Z";
+          };
+          var svgRidge = function (cls, inner) { return '<svg class="ls-ridge ' + cls + '" width="' + FW + '" height="' + FH + '" aria-hidden="true">' + inner + "</svg>"; };
+          var gid = "ls-fg" + mount;
+          far.insertAdjacentHTML("beforeend", svgRidge("ls-ridge-far", '<defs><linearGradient id="' + gid + '" x1="0" y1="' + (HZ - 120) + '" x2="0" y2="' + HZ + '" gradientUnits="userSpaceOnUse"><stop offset="0" style="stop-color:var(--ls-rf0)"/><stop offset="1" style="stop-color:var(--ls-rf1)"/></linearGradient></defs><path d="' + ridge(1.3, HZ, 70) + '" fill="url(#' + gid + ')"/>'));
+          near.insertAdjacentHTML("afterbegin", svgRidge("", '<path d="' + ridge(4.1, HZ + 2, 34) + '" style="fill:var(--ls-rn)"/>'));
+          // water glints: 22 short lines, positions from upstream's sin hash (a light skin shows them stronger: no screen blend on white)
+          var glints = [], gain = dark ? 1 : 2.4;
+          for (var i = 0; i < 22; i++) {
+            var s = Math.sin(i * 91.7) * 43758.5453, r = s - Math.floor(s), s2 = Math.sin(i * 47.3 + 5) * 24634.6345, r2 = s2 - Math.floor(s2), dp = (i + 0.5) / 22;
+            var gw = (40 + r2 * 120 + dp * 160) * L.gw, el = document.createElement("div");
+            el.className = "ls-gl";
+            el.style.top = (HZ + 8 + dp * dp * 0.926 * (FH - HZ - 8)).toFixed(1) + "px";
+            el.style.width = gw.toFixed(1) + "px";
+            el.style.left = (FW / 2 + (r - 0.5) * (500 + dp * 1100) * L.gx - gw / 2).toFixed(1) + "px";
+            near.appendChild(el);
+            glints.push({ el: el, a: 0.05 + (1 - dp) * 0.12, ph: r * 6.28 });
+          }
+          far.style.transformOrigin = near.style.transformOrigin = "50% " + HZ + "px";
+          var grain = kGrain(q(".ls-grain"), { opacity: dark ? 0.08 : 0.05 });
+          if (String(v.backdrop) === "off") scene.style.display = "none";
+
+          var strokeEase = MT.bezier(0.5, 0, 0.3, 1);
+          var render = function (t) {
+            // every letter shares one progress: same start frame, same finish frame
+            var e = MT.ramp(t, CFG.start, CFG.dur, strokeEase);
+            // brightens over the last 30% of the draw, falls back after the finish
+            var rise = MT.ramp(t, CFG.start + CFG.dur * 0.7, CFG.dur * 0.3, "swift");
+            var fall = 1 - MT.ramp(t, CFG.start + CFG.dur, CFG.glowFall, "out");
+            var g = e >= 1 ? fall : rise;
+            var off = (1 - e).toFixed(4), op = e > 0 ? 1 : 0;
+            var glow = function (k) {
+              return "drop-shadow(0 0 " + ((5 + g * k * 10) * sig).toFixed(2) + "px color-mix(in srgb, var(--ls-glow) " + ((0.3 + g * k * 0.38) * 100).toFixed(1) + "%, transparent))";
+            };
+            var fm = glow(1), fr = glow(0.5);
+            pathsMain.forEach(function (p) { p.style.strokeDashoffset = off; p.style.opacity = op; p.style.filter = fm; });
+            pathsRefl.forEach(function (p) { p.style.strokeDashoffset = off; p.style.opacity = op; p.style.filter = fr; });
+            // slow push-in: far layer 1 -> 1.02, near layer 1 -> 1.035; the word does not move
+            var push = MT.ramp(t, 0, CFG.push, "smooth");
+            far.style.transform = "scale(" + (1 + CFG.farPush * push).toFixed(5) + ")";
+            near.style.transform = "scale(" + (1 + CFG.nearPush * push).toFixed(5) + ")";
+            // the dawn glow lifts while the word finishes
+            dawn.style.opacity = (0.85 + 0.15 * MT.ramp(t, CFG.start + CFG.dur * 0.5, CFG.dur, "out")).toFixed(4);
+            var f = t * 30; // frames at 30 fps, as upstream's glint drift
+            glints.forEach(function (gl) {
+              gl.el.style.transform = "translateX(" + (Math.sin(f / 38 + gl.ph) * 14).toFixed(1) + "px)";
+              gl.el.style.opacity = Math.min(1, gl.a * gain * (0.75 + 0.25 * Math.sin(f / 23 + gl.ph))).toFixed(3);
+            });
+            grain(t);
+          };
+          var tl = MT.scene(CFG.total, render);
+          window.__timelines["letterspace-materialize"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

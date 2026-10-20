@@ -1,0 +1,307 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"内置示意页的标题（用 | 切意群；可以留空）","default":"本周任务"},
+    {"id":"src","type":"string","label":"界面截图（从项目根目录写起，铺满画面、左上对齐；留空用内置示意页）","default":""},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"暗场和界面"},{"value":"off","label":"只留暗幕和光（压在下一镜上当转场）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>corner-spotlight-reveal · 角落聚光显影</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="corner-spotlight-reveal-template">
+<!-- Ported from video-shotcraft demos/effects/spotlight-sweep-moves/CornerSpotlightReveal.tsx
+ (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+ Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+ Changes (2026-10): Remotion/React -> HyperFrames MT scene, frames to seconds; --k-* palette with --k-stage (black ->
+ stage, white-hot glow -> on-stage, page #f6f6f5 -> panel), system fonts; the upstream shot-library page (title
+ "Shots", English tabs, purple accents) -> a neutral task page (variable title fitted 118 -> 72 px, five generic
+ Chinese tabs, accent-2 bars) or the user's screenshot; page left padding 120 -> 200 px so the title clears the edge;
+ the page mask became a stage-coloured veil in frame px (same pixels; it also serves backdrop off, which drops the
+ page and keeps veil + glow over the host); film grain added against banding; portrait: page re-laid (title at
+ 160/256 page px, three tabs, six rows), light path in frame fractions, end radius scaled to the frame's far corner
+ (1248). Kept as upstream: radius 160 -> 1300 linear over 100f,
+ feather 0.85 r, centre 140,90 -> 420,260 over 96f, drift scale 1.75 - 0.28 d / translate / rotate unclamped, origin
+ 18% 12%, glow 1.4 r blur 26 with opacity 0 / .9 / .55 / 0 at 0 / 10 / 60 / 90f, 130f long. -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+#root {
+ --k-bg: var(--mc-bg, #ffffff);
+ --k-panel: var(--mc-panel, #f4f5f7);
+ --k-ink: var(--mc-ink, #15171c);
+ --k-muted: var(--mc-muted, #6b7280);
+ --k-accent: var(--mc-accent, #e8590c);
+ --k-accent-2: var(--mc-accent-2, #2563eb);
+ --k-on-accent: var(--mc-on-accent, #ffffff);
+ --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+ --k-stage: var(--mc-stage, #0b0d12);
+ --k-on-stage: var(--mc-on-stage, #f3f5f8);
+ position: absolute;
+ inset: 0;
+ overflow: hidden;
+ font-family: var(--k-font);
+ color: var(--k-ink);
+}
+/* ==== kit:text@2 (kSplit only) ==== */
+.csr-u { display: inline-block; white-space: pre; }
+/* ==== end kit:text ==== */
+.csr { position: absolute; inset: 0; container-type: size;
+ --csr-pg: var(--k-panel);
+ --csr-ln: color-mix(in srgb, var(--k-ink) 20%, var(--csr-pg));
+ --csr-dk: color-mix(in srgb, var(--k-ink) 78%, var(--csr-pg)); }
+.csr-l { position: absolute; inset: 0; }
+/* camera layer: the page in its own px; the script writes its transform every frame (static = the last frame) */
+.csr-cam { transform-origin: 18% 12%; transform: scale(1.386) translate(51px, 35px) rotate(0.36deg); }
+.csr-page { background: var(--csr-pg) 0 0 / cover no-repeat; padding: 90px 0 0 200px; display: flex; flex-direction: column; align-items: flex-start; overflow: hidden; }
+.csr-head { display: flex; align-items: center; gap: 26px; }
+.csr-title { display: block; font-size: 118px; font-weight: 700; line-height: 1.2; color: var(--k-ink); }
+.csr-caret { display: block; flex: none; width: 0; height: 0; margin-top: 26px; border: 16px solid transparent; border-bottom: 0; border-top: 20px solid var(--csr-dk); }
+.csr-tabs { display: flex; gap: 64px; margin-top: 90px; font-size: 44px; line-height: 1.3; color: var(--k-muted); white-space: nowrap; }
+.csr-tabs > * { display: block; padding: 10px 0; font-weight: 400; }
+.csr-tabs > b { padding: 10px 34px; border-radius: 14px; font-weight: 600; color: var(--k-accent-2); background: color-mix(in srgb, var(--k-accent-2) 12%, var(--csr-pg)); }
+.csr-list > div { display: flex; align-items: center; gap: 30px; margin-top: 64px; }
+.csr-list > div:first-child { margin-top: 96px; }
+.csr-list > div:nth-child(n+4) { display: none; }
+.csr-list i { display: block; flex: none; height: 18px; border-radius: 9px; }
+.csr-list p { display: flex; align-items: center; gap: 22px; margin: 0; }
+.csr-list p + p { gap: 14px; margin-top: 16px; }
+.csr-list .ck { width: 42px; height: 42px; border: 3px solid var(--csr-ln); border-radius: 10px; box-sizing: border-box; }
+.csr-list .dt { width: 14px; height: 14px; border-radius: 7px; background: var(--k-accent-2); }
+.csr-list .av { width: 56px; height: 56px; border-radius: 28px; background: color-mix(in srgb, var(--k-accent) 14%, var(--csr-pg)); }
+.csr-list .b1 { height: 22px; border-radius: 11px; background: var(--csr-dk); }
+.csr-list .sd { width: 8px; height: 8px; border-radius: 4px; background: var(--csr-ln); }
+.csr-list .b2 { width: 260px; background: var(--csr-ln); }
+.csr-list .b3 { width: 300px; background: color-mix(in srgb, var(--k-accent-2) 55%, var(--csr-pg)); opacity: 0.75; }
+.csr-list .b4 { background: color-mix(in srgb, var(--k-ink) 13%, var(--csr-pg)); }
+/* the dark: a stage-coloured veil with the light cut out, in frame px (upstream masked the page; same pixels) */
+.csr-veil { background: radial-gradient(circle 3333px at 518px 359px, transparent 42.57%, var(--k-stage)); }
+/* white-hot glow at the light centre, above the page */
+.csr-glow { position: absolute; left: 0; top: 0; width: 0; height: 0; border-radius: 50%; opacity: 0; filter: blur(26px); pointer-events: none;
+ background: radial-gradient(closest-side, color-mix(in srgb, var(--k-on-stage) 85%, transparent), color-mix(in srgb, var(--k-on-stage) 25%, transparent) 45%, transparent 75%); }
+/* ==== kit:grain@1 ==== */
+.csr-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+@container (orientation: portrait) {
+ .csr-veil { background: radial-gradient(circle 3199px at 321px 600px, transparent 42.57%, var(--k-stage)); }
+ .csr-page { padding: 256px 0 0 160px; }
+ .csr-tabs { gap: 50px; }
+ .csr-tabs > b { padding: 10px 28px; }
+ .csr-tabs > :nth-child(n+4) { display: none; }
+ .csr-list > div:nth-child(n+4) { display: flex; }
+}
+</style>
+
+<div id="root" data-composition-id="corner-spotlight-reveal">
+ <div class="csr">
+  <div class="csr-l csr-cam" data-layout-allow-overflow>
+   <div class="csr-l csr-page">
+    <div class="csr-head"><span class="csr-title" data-layout-allow-occlusion>本周任务</span><i class="csr-caret"></i></div>
+    <div class="csr-tabs"><b data-layout-allow-occlusion>全部</b><span data-layout-allow-occlusion>进行中</span><span data-layout-allow-occlusion>待审核</span><span data-layout-allow-occlusion>已完成</span><span data-layout-allow-occlusion>归档</span></div>
+    <div class="csr-list">
+     <div><i class="ck"></i><i class="dt"></i><i class="av"></i><div><p><i class="b1" style="width:220px"></i><i class="sd"></i><i class="b2"></i></p><p><i class="b3"></i><i class="b4" style="width:340px"></i></p></div></div>
+     <div><i class="ck"></i><i class="dt"></i><i class="av"></i><div><p><i class="b1" style="width:287px"></i><i class="sd"></i><i class="b2"></i></p><p><i class="b3"></i><i class="b4" style="width:249px"></i></p></div></div>
+     <div><i class="ck"></i><i class="dt"></i><i class="av"></i><div><p><i class="b1" style="width:264px"></i><i class="sd"></i><i class="b2"></i></p><p><i class="b3"></i><i class="b4" style="width:278px"></i></p></div></div>
+     <div><i class="ck"></i><i class="dt"></i><i class="av"></i><div><p><i class="b1" style="width:241px"></i><i class="sd"></i><i class="b2"></i></p><p><i class="b3"></i><i class="b4" style="width:307px"></i></p></div></div>
+     <div><i class="ck"></i><i class="dt"></i><i class="av"></i><div><p><i class="b1" style="width:308px"></i><i class="sd"></i><i class="b2"></i></p><p><i class="b3"></i><i class="b4" style="width:336px"></i></p></div></div>
+     <div><i class="ck"></i><i class="dt"></i><i class="av"></i><div><p><i class="b1" style="width:285px"></i><i class="sd"></i><i class="b2"></i></p><p><i class="b3"></i><i class="b4" style="width:245px"></i></p></div></div>
+    </div>
+   </div>
+  </div>
+  <div class="csr-l csr-veil"></div>
+  <div class="csr-l csr-grain"></div>
+  <i class="csr-glow"></i>
+ </div>
+</div>
+
+<script>
+(function () {
+ // timing in seconds (upstream frames / 30), shared by both orientations: the radius grows over 100f, the centre
+ // travels over 96f, the glow fades in by 10f and out by 90f; the drift is not clamped and keeps going to 130f
+ var CFG = { dur: 4.333, grow: 3.333, path: 3.2, glowT: [0, 0.333, 2, 3], glowA: [0, 0.9, 0.55, 0] };
+ // light, upstream px: start radius and end radius (landscape; portrait scales it to its own far corner), feather 0.85 r
+ var R0 = 160, R1 = 1300, FEATHER = 0.85;
+ // layout per orientation: title box width and tab row right limit in page px, so title, caret and tabs stay inside
+ // x 10%-90% from the hero frame (1.33 s, camera scale 1.638) on; light path as fractions of the frame
+ // (landscape 140,90 -> 420,260 px, as upstream)
+ var LAND = { titleW: 940, tabR: 1200, path: [0.0729, 0.0833, 0.2188, 0.2407] };
+ var PORT = { titleW: 458, tabR: 676, path: [0.0729, 0.0833, 0.2188, 0.2407] };
+ var v = { title: "本周任务", src: "", backdrop: "on" };
+ try {
+  var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+  for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k]; // "" hides the title
+ } catch (e) {}
+
+ var root = document.querySelector(".csr");
+ var q = function (s) { return root.querySelector(s); };
+ var FW = root.clientWidth, FH = root.clientHeight;
+ if (!FW || !FH) {
+  // not laid out yet: the host clip's declared size, then the window
+  var hc = root.closest("[data-width][data-height]");
+  FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+  FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+ }
+ var P = FH > FW, L = P ? PORT : LAND;
+ root.setAttribute("data-orient", P ? "portrait" : "landscape");
+ var off = String(v.backdrop) === "off";
+
+ // ==== kit:text@2 (kSplit only) ====
+ var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+ function kWords(s, key) {
+  s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+  var cut = function (x) {
+   if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+   return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+  };
+  var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+  var pre = "";
+  bits.forEach(function (x) {
+   var t = x.trim(), last = out[out.length - 1];
+   if (last && /^ /.test(x)) last.sp = true;
+   if (!t) return;
+   if (!/[\p{L}\p{N}]/u.test(t)) {
+    if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+    else { last.t += t; last.sp = / $/.test(x); }
+    return;
+   }
+   out.push({ t: pre + t, sp: / $/.test(x) });
+   pre = "";
+  });
+  if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+  if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+  if (out.length) out[out.length - 1].sp = false;
+  return out;
+ }
+ function kSplit(el, by, rise, text) {
+  var s = text != null ? String(text) : el.textContent, units = [];
+  var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+  el.textContent = "";
+  parts.forEach(function (p) {
+   var u = document.createElement("span"), box = u;
+   u.className = "csr-u"; u.textContent = p.t;
+   if (by === "line") u.style.display = "block";
+   if (!p.t.trim()) { el.appendChild(u); return; }
+   if (rise) { box = document.createElement("span"); box.className = "csr-cut"; box.style.display = u.style.display; box.appendChild(u); }
+   el.appendChild(box);
+   if (p.sp) el.appendChild(document.createTextNode(" "));
+   units.push(u);
+  });
+  return units;
+ }
+ // ==== end kit:text ====
+
+ // ==== kit:fit@1 (kFit only) ====
+ function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+   el.style.fontSize = f + "px";
+   m = kLines(el);
+   if ((m.w <= W && m.n <= n) || f <= min) break;
+   f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+   [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+   m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+ }
+ function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+   if (!t.data.trim()) continue;
+   r.selectNodeContents(t);
+   [].forEach.call(r.getClientRects(), function (b) {
+    var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+    if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+    row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+   });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+ }
+ // ==== end kit:fit ====
+
+ var cam = q(".csr-cam"), page = q(".csr-page"), veil = q(".csr-veil"), glow = q(".csr-glow");
+ // the page: the user's screenshot, or the built-in page with the variable title (one line; 72 px floor, then wraps)
+ var src = String(v.src).trim();
+ if (src) {
+  page.style.backgroundImage = 'url("' + src.replace(/"/g, "%22") + '")';
+  [].forEach.call(page.children, function (c) { c.style.display = "none"; });
+ } else {
+  var title = q(".csr-title");
+  if (String(v.title).trim()) {
+   // the veil and the glow cover the page on purpose: the text nodes carry the exemption
+   kSplit(title, "word", false, v.title).forEach(function (u) { u.setAttribute("data-layout-allow-occlusion", ""); });
+   title.style.maxWidth = L.titleW + "px";
+   kFit(title, { lines: 1, min: 72, width: L.titleW });
+  } else q(".csr-head").style.display = "none";
+  // tabs that would end past the safe edge at the settled frame are dropped (portrait keeps three)
+  [].forEach.call(q(".csr-tabs").children, function (b) { if (b.offsetLeft + b.offsetWidth > L.tabR) b.style.display = "none"; });
+ }
+ if (off) cam.style.display = "none";
+
+ // the light centre path in page px; the end radius covers the far corner as the landscape 1300 px does
+ var X0 = L.path[0] * FW, Y0 = L.path[1] * FH, X1 = L.path[2] * FW, Y1 = L.path[3] * FH, OX = 0.18 * FW, OY = 0.12 * FH;
+ var far = function (w, h, x, y) { return Math.hypot(0.18 * w + (w - 0.18 * w) / 1.47 - 30 - x, 0.12 * h + (h - 0.12 * h) / 1.47 - 20 - y); };
+ var R1F = R1 * far(FW, FH, X1, Y1) / 1086.5; // 1086.5 = that distance in the landscape frame
+ var px = function (n) { return n.toFixed(1) + "px"; };
+
+ // ==== kit:grain@1 ====
+ function kGrain(layer, o) {
+   o = o || {};
+   var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+   var dark = tones && tones.getAttribute("data-tone") === "dark";
+   var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+     var f = "type='linear' slope='2.4' intercept='-0.7'";
+     var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+       "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+       "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+       "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+       "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+     return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+   });
+   layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+   layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+   layer.style.backgroundSize = size + "px " + size + "px";
+   return function (t) {
+     var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+     layer.style.backgroundImage = tiles[k % 6];
+     layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+   };
+ }
+ // ==== end kit:grain ====
+
+ // film grain over the gradients (dark-stage strength); none when the card sits on a host picture
+ var grain = String(v.backdrop) === "off" ? null : kGrain(q(".csr-grain"), { opacity: 0.09, blend: "soft-light" });
+
+ var tl = MT.scene(CFG.dur, function (t) {
+  if (grain) grain(t);
+  var r = MT.mix(R0, R1F, MT.clamp(t / CFG.grow, 0, 1));          // linear, no ease: the whole point
+  var p = MT.clamp(t / CFG.path, 0, 1), cx = MT.mix(X0, X1, p), cy = MT.mix(Y0, Y1, p);
+  var d = t / CFG.grow;                                               // drift is not clamped (upstream extends it)
+  var s = 1.75 - 0.28 * d, tx = -40 + 70 * d, ty = -30 + 50 * d, rot = -1.2 + 1.2 * d;
+  var R = (1 + FEATHER) * r, inner = ((r - FEATHER * r * 0.25) / R * 100).toFixed(2) + "%";
+  cam.style.transform = "scale(" + s.toFixed(4) + ") translate(" + px(tx) + ", " + px(ty) + ") rotate(" + rot.toFixed(3) + "deg)";
+  // the same circle seen through the camera: frame = origin + s * (t + rot(page - origin))
+  var a = rot * Math.PI / 180, vx = cx - OX, vy = cy - OY;
+  var sx = OX + s * (tx + vx * Math.cos(a) - vy * Math.sin(a)), sy = OY + s * (ty + vx * Math.sin(a) + vy * Math.cos(a));
+  veil.style.background = "radial-gradient(circle " + px(R * s) + " at " + px(sx) + " " + px(sy) + ", transparent " + inner + ", var(--k-stage))";
+  // the glow sits at the page-px centre in frame px, as upstream (outside the camera)
+  var g = glow.style;
+  g.left = px(cx - 0.7 * r); g.top = px(cy - 0.7 * r); g.width = g.height = px(1.4 * r);
+  g.opacity = MT.interpolate(t, CFG.glowT, CFG.glowA, { extrapolateRight: "clamp" }).toFixed(3);
+ });
+ window.__timelines["corner-spotlight-reveal"] = tl;
+})();
+</script>
+    </template>
+  </body>
+</html>

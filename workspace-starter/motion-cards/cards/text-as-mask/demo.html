@@ -1,0 +1,323 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"word","type":"string","label":"大字（2–4 个汉字或 3–6 个字母）","default":"AI入门"},
+    {"id":"name","type":"string","label":"眉题（可空）","default":"示例应用"},
+    {"id":"sub","type":"string","label":"副题（| 后加粗，可空）","default":"把复杂的事|讲清楚"},
+    {"id":"media","type":"string","label":"字里透出的图（空：示意面板）","default":""},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+<head>
+  <meta charset="UTF-8" />
+  <title>text-as-mask · 字形遮罩冲入</title>
+  <script src="../../lib/preview.js"></script>
+</head>
+<body>
+  <template id="text-as-mask-template">
+    <!-- Ported from video-shotcraft demos/opening/text-as-mask/TextAsMask.tsx
+         (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+         Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+         Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+         neutral palette, system fonts, generic copy; kit mark and a text-free panel (or an image) replace the brand
+         and dashboard; 9:16; origin measured from the glyphs; the inline mask zooms, not a box with a 1/S counter-
+         scale; no cover layer. Beats, eases, 1.32 panel, breath, t^1.8 log-space rush to 46x kept. -->
+    <style>
+    @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+    @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+    @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+    @font-face { font-family: "tm-heavy"; font-weight: 700 900; src: local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"), local("PingFangSC-Semibold"), local("NotoSansSC-Black"); }
+    #root {
+      --k-bg: var(--mc-bg, #ffffff);
+      --k-panel: var(--mc-panel, #f4f5f7);
+      --k-ink: var(--mc-ink, #15171c);
+      --k-muted: var(--mc-muted, #6b7280);
+      --k-accent: var(--mc-accent, #e8590c);
+      --k-accent-2: var(--mc-accent-2, #2563eb);
+      --k-on-accent: var(--mc-on-accent, #ffffff);
+      --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      font-family: var(--k-font);
+      color: var(--k-ink);
+    }
+    /* ==== kit:derived@1 (shade only) ==== */
+    .tm { --tm-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); }
+    .tm[data-tone="dark"] { --tm-shade: color-mix(in srgb, var(--k-bg) 30%, black); }
+    /* ==== end kit:derived ==== */
+    /* ==== kit:backdrop@1 (key light at 42% 12% + fill light, as upstream) ==== */
+    .tm-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+    .tm-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 58% 62% at 42% 12%, color-mix(in srgb, var(--k-bg) 90%, transparent) 0%, transparent 70%), radial-gradient(ellipse 50% 46% at 85% 90%, color-mix(in srgb, var(--k-accent-2) 10%, transparent) 0%, transparent 72%); }
+    /* ==== end kit:backdrop ==== */
+    /* ==== kit:vignette@1 (light 0.22, as upstream) ==== */
+    .tm-vig {
+      position: absolute; inset: 0; pointer-events: none;
+      --vs: 0.22; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--tm-shade);
+      background:
+        radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+        radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+    }
+    .tm[data-tone="dark"] .tm-vig { --vs: 0.55; }
+    /* ==== end kit:vignette ==== */
+
+    /* panel = skin inverted: dark on white; on a dark skin a light accent-2 tinted panel, deeper chart colours */
+    .tm {
+      position: absolute; inset: 0; container-type: size;
+      --tm-d0: color-mix(in srgb, var(--k-ink) 93%, var(--k-accent-2));
+      --tm-d1: color-mix(in srgb, var(--tm-d0), var(--k-bg) 5%);
+      --tm-d2: color-mix(in srgb, var(--tm-d0), var(--k-bg) 9%);
+      --tm-dl: color-mix(in srgb, var(--k-bg) 13%, transparent);
+      --tm-di: color-mix(in srgb, var(--k-bg) 92%, var(--tm-d0));
+      --tm-di2: color-mix(in srgb, var(--k-bg) 55%, var(--tm-d0));
+      --tm-di3: color-mix(in srgb, var(--k-bg) 28%, var(--tm-d0));
+      --tm-c0: var(--k-accent-2); --tm-c1: var(--k-accent); --tm-cm: color-mix(in srgb, var(--tm-c0), var(--tm-c1)); --tm-ao: .55;
+    }
+    .tm[data-tone="dark"] {
+      --tm-d0: color-mix(in srgb, var(--k-ink) 76%, var(--k-accent-2)); --tm-ao: .85;
+      --tm-c0: color-mix(in srgb, var(--k-accent-2), var(--k-bg) 22%); --tm-c1: color-mix(in srgb, var(--k-accent), var(--k-bg) 30%);
+      --tm-cm: color-mix(in oklch, var(--tm-c0), var(--tm-c1));
+    }
+    /* win: masked window (only its mask scales); dash: panel 1.32 -> 1. Hidden until the script runs */
+    .tm-shw, .tm-dash, .tm-win { position: absolute; inset: 0; }
+    .tm-shw, .tm-win { opacity: 0; }
+    .tm-shm { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: var(--tm-shade); }
+    .tm-dash { background: radial-gradient(ellipse 70% 60% at 60% 30%, color-mix(in srgb, var(--tm-d0), var(--k-accent-2) 22%) 0%, var(--tm-d0) 70%); }
+    .tm-dash svg, .tm-media { position: absolute; left: 0; top: 0; }
+    .tm-media { width: 100%; height: 100%; object-fit: cover; display: none; }
+    .tm-eye, .tm-sub { position: absolute; left: 11%; right: 11%; line-height: 1.3; white-space: nowrap; }
+    .tm-eye { top: 170px; display: flex; justify-content: center; align-items: center; gap: 16px; font-size: 40px; font-weight: 700; }
+    .tm-sub { top: 853px; text-align: center; font-size: 44px; font-weight: 500; color: var(--k-muted); }
+    .tm-sub b { color: var(--k-ink); font-weight: 700; }
+    /* static stand-in for the word (no script); the script removes it */
+    .tm-fb { position: absolute; inset: 310px 0 auto; text-align: center; font: 900 22.6cqw/1 tm-heavy, var(--k-font); letter-spacing: .02em; white-space: nowrap; color: var(--tm-d0); }
+    @container (orientation: portrait) { .tm-eye { top: 487px; } .tm-sub { top: 992px; } .tm-fb { top: 618px; font-size: 25.8cqw; } }
+    </style>
+
+    <div id="root" data-composition-id="text-as-mask">
+      <div class="tm" data-layout-allow-overflow>
+        <div class="tm-backdrop"></div>
+        <div class="tm-vig"></div>
+        <div class="tm-shw"><div class="tm-shm"></div></div>
+        <div class="tm-win"><div class="tm-dash"><img class="tm-media" data-var-src="media" alt="" /></div></div>
+        <div class="tm-fb">AI入门</div>
+        <div class="tm-eye"><span class="tm-mk"></span><span class="tm-name">示例应用</span></div>
+        <div class="tm-sub">把复杂的事<b>讲清楚</b></div>
+      </div>
+    </div>
+
+    <script>
+    (function () {
+    // seconds = upstream frames / 30
+    var CFG = {
+      dur: 5.5, wipe: 0.533, intro: 0.6, eye: 0.2, eyeDur: 0.667, sub: 0.467, subDur: 0.6,
+      drift: 0.6, driftDur: 2.6, breath: 3.2, breathDur: 0.267, out: 0.333, rush: 3.467, rushDur: 0.8, land: 0.933,
+      pull: 1.04, inhale: 0.035, power: 1.8, maxS: 46, panelS: 1.32, cover: 0.86, rim: 0.25
+    };
+    // word box (frame share), eyebrow / subtitle gaps (short side = 1000), stack centre, drift
+    var LAND = { w: 0.7, h: 0.42, eye: 128, sub: 85, anchor: 0.5, dx: 0.078 };
+    var PORT = { w: 0.8, h: 0.24, eye: 111, sub: 78, anchor: 0.4, dx: 0.09 };
+    var v = { word: "AI入门", name: "示例应用", sub: "把复杂的事|讲清楚", media: "", backdrop: "on" };
+    try {
+      var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+      for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k]; // "" clears name / sub
+    } catch (e) {}
+
+    var root = document.querySelector(".tm");
+    var q = function (s) { return root.querySelector(s); };
+    var FW = root.clientWidth, FH = root.clientHeight;
+    if (!FW || !FH) {
+      // not laid out yet: host clip size, else the window
+      var hc = root.closest("[data-width][data-height]");
+      FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+      FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+    }
+    var P = FH > FW, L = P ? PORT : LAND, U = Math.min(FW, FH) / 1000;
+    var N = (window.__tmMount = (window.__tmMount || 0) + 1); // SVG id suffix per mount
+
+    // ==== kit:tone@1 — light or dark skin, read from --k-bg; sets data-tone on the wrapper ====
+    function kRGB(el, color) {
+      var p = document.createElement("i");
+      p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+      el.appendChild(p);
+      var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+      el.removeChild(p);
+      return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+    }
+    function kTone(wrap) {
+      var c = kRGB(wrap, "var(--k-bg)");
+      var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+      wrap.setAttribute("data-tone", tone);
+      return tone;
+    }
+    // ==== end kit:tone ====
+    // ==== kit:mark@1 — neutral placeholder mark (no real brand) ====
+    function kMark(size) {
+      return '<svg class="tm-mark" width="' + size + '" height="' + size + '" viewBox="0 0 128 128" aria-hidden="true">' +
+        '<rect class="tm-mark-box" x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/>' +
+        '<circle class="tm-mark-dot" cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/>' +
+        '<rect class="tm-mark-bar" x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg>';
+    }
+    // ==== end kit:mark ====
+
+    kTone(root);
+    q(".tm-fb").remove();
+    if (String(v.backdrop) === "off") q(".tm-backdrop").style.display = q(".tm-vig").style.display = "none";
+    var esc = function (s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); };
+    var eye = q(".tm-eye"), name = q(".tm-name"), sub = q(".tm-sub"), sp = String(v.sub).split("|");
+    name.textContent = String(v.name);
+    q(".tm-mk").outerHTML = kMark(52);
+    sub.innerHTML = esc(sp[0]) + (sp.length > 1 ? "<b>" + esc(sp.slice(1).join("")) + "</b>" : "");
+    var hasEye = !!String(v.name).trim(), hasSub = !!sp.join("").trim();
+    if (!hasEye) eye.style.display = "none";
+    if (!hasSub) sub.style.display = "none";
+
+    // the word, measured in a blank iframe: installed fonts at once (here the @font-face aliases load late)
+    var WORD = String(v.word).trim() || "AI入门";
+    var cs = getComputedStyle(root), FAM = cs.getPropertyValue("--k-font").trim() || "sans-serif";
+    var LS = /[⺀-鿿가-힯＀-￯]/.test(WORD) ? 0.02 : -0.047; // em: upstream -22 px at 470 px; CJK never below 0
+    var fr = document.createElement("iframe");
+    fr.style.cssText = "position:absolute;width:0;height:0;border:0";
+    root.appendChild(fr);
+    var M = 800, cv = fr.contentDocument.createElement("canvas");
+    cv.width = cv.height = M;
+    var cx = cv.getContext("2d");
+    var font = function (px) { cx.font = "900 " + px.toFixed(2) + "px " + FAM; cx.letterSpacing = (LS * px).toFixed(2) + "px"; return cx.measureText(WORD); };
+    var m = font(100);
+    var F = 100 * Math.min((L.w * FW) / (m.actualBoundingBoxLeft + m.actualBoundingBoxRight), (L.h * FH) / (m.actualBoundingBoxAscent + m.actualBoundingBoxDescent));
+    m = font(F);
+    var a = -m.actualBoundingBoxLeft, b = m.actualBoundingBoxRight, asc = m.actualBoundingBoxAscent, desc = m.actualBoundingBoxDescent;
+    var inkCY = L.anchor * FH + ((hasEye ? (L.eye + 24) * U : 0) - (hasSub ? (L.sub + 53) * U : 0)) / 2, inkH = asc + desc;
+    var X = FW / 2 - (a + b) / 2, Y = inkCY - (desc - asc) / 2, TOP = Y - asc;
+    eye.style.top = (TOP - (L.eye + 24) * U).toFixed(1) + "px";
+    sub.style.top = (Y + desc + L.sub * U).toFixed(1) + "px";
+
+    // zoom origin: deepest stroke point. On a frame-scaled grid the chessboard distance to an empty pixel = how far
+    // the frame can zoom in; the plateau nearest the centre, at its middle
+    cx.setTransform(M / FW, 0, 0, M / FH, 0, 0);
+    cx.fillStyle = "#fff";
+    cx.fillText(WORD, X, Y);
+    var x0 = Math.max(0, Math.floor(((X + a) * M) / FW) - 2), y0 = Math.max(0, Math.floor((TOP * M) / FH) - 2);
+    var w = Math.min(M, Math.ceil(((X + b) * M) / FW) + 2) - x0, h = Math.min(M, Math.ceil(((Y + desc) * M) / FH) + 2) - y0;
+    var px = cx.getImageData(x0, y0, w, h).data, D = new Float32Array(w * h), i, j, n;
+    root.removeChild(fr);
+    var at = function (x, y) { return x < 0 || y < 0 || x >= w || y >= h ? 0 : D[y * w + x]; };
+    for (i = 0; i < w * h; i++) D[i] = px[i * 4 + 3] > 127 ? 1e9 : 0;
+    for (j = 0; j < h; j++) for (i = 0; i < w; i++) if ((n = j * w + i), D[n]) D[n] = Math.min(D[n], at(i - 1, j) + 1, at(i - 1, j - 1) + 1, at(i, j - 1) + 1, at(i + 1, j - 1) + 1);
+    for (j = h - 1; j >= 0; j--) for (i = w - 1; i >= 0; i--) if ((n = j * w + i), D[n]) D[n] = Math.min(D[n], at(i + 1, j) + 1, at(i + 1, j + 1) + 1, at(i, j + 1) + 1, at(i - 1, j + 1) + 1);
+    var best = 0, bd = 1e9, bi = 0, bj = 0, c0, c1;
+    for (j = 0; j < h; j++) for (i = 0; i < w; i++) {
+      var d = D[j * w + i], dd = Math.hypot(((x0 + i) * FW) / M - FW / 2, ((y0 + j) * FH) / M - inkCY);
+      if (d > best || (d === best && dd < bd)) { best = d; bd = dd; bi = i; bj = j; }
+    }
+    for (c0 = c1 = bi; at(c0 - 1, bj) === best; ) c0--;
+    for (; at(c1 + 1, bj) === best; ) c1++;
+    bi = (c0 + c1) / 2;
+    for (c0 = c1 = bj; at(Math.round(bi), c0 - 1) === best; ) c0--;
+    for (; at(Math.round(bi), c1 + 1) === best; ) c1++;
+    var ox = ((x0 + bi + 0.5) * FW) / M, oy = ((y0 + (c0 + c1) / 2 + 0.5) * FH) / M;
+    // the stroke covers the frame at fill x (upstream: 83 px stem, ~23x; ends at 46x)
+    var fill = M / (2 * Math.max(0.5, best - 0.5)), s0 = 1 - CFG.inhale;
+    var MAXS = Math.min(160, Math.max(CFG.maxS, 2 * fill));
+    var coverAt = Math.min(0.97, Math.max(CFG.cover, Math.log((1.1 * fill) / s0) / Math.log(MAXS / s0)));
+    // inline SVG mask: vector at any zoom (data-URI masks or boxes scaled past ~4x go blank in Chrome)
+    var MID = "tm-mask" + N, HV = cs.getPropertyValue("--mc-font").trim() ? "" : "tm-heavy, ";
+    root.insertAdjacentHTML("beforeend", '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><mask id="' + MID + '" maskUnits="userSpaceOnUse" x="0" y="0" width="' + FW + '" height="' + FH +
+      '"><g><text x="' + X.toFixed(2) + '" y="' + Y.toFixed(2) + '" style="font:900 ' + F.toFixed(2) + "px " + HV + esc(FAM) + ";letter-spacing:" + (LS * F).toFixed(2) + 'px;fill:#fff">' + esc(WORD) + "</text></g></mask></svg>");
+    var zg = root.querySelector("#" + MID + " g"), MASK = "url(#" + MID + ")";
+    var win = q(".tm-win"), dash = q(".tm-dash"), shw = q(".tm-shw"), shm = q(".tm-shm");
+    shm.style.maskImage = MASK; win.style.opacity = 1;
+    shm.style.top = (0.055 * F).toFixed(1) + "px"; // upstream 26 px down, 22 px blur at 470 px
+    shw.style.filter = "blur(" + (0.047 * F).toFixed(1) + "px)";
+
+    // the panel: an image, or a text-free live dashboard in units (short side = 1000)
+    var img = q(".tm-media"), o = [], Z = {}, bars = [], Wd = FW / U, Hd = FH / U;
+    var B = function (x, y, bw, bh, r, c, ex) { o.push('<rect x="' + x + '" y="' + y + '" width="' + bw + '" height="' + bh + '" rx="' + r + '" style="fill:' + c + (ex || "") + '"/>'); };
+    var I1 = "var(--tm-di)", I2 = "var(--tm-di2)", I3 = "var(--tm-di3)", D1 = "var(--tm-d1)", DL = "var(--tm-dl)", AC = "var(--tm-c1)", A2 = "var(--tm-c0)", LN = "url(#tm-ln" + N + ")";
+    var A16 = "color-mix(in srgb, var(--k-accent) 16%, transparent)", B16 = "color-mix(in srgb, var(--k-accent-2) 16%, transparent)";
+    var card = function (c, l) { B(c[0], c[1], c[2], c[3], 20, "url(#tm-pg" + N + ")", ";stroke:" + DL + ";stroke-width:1.4"); if (l) B(c[0] + 28, c[1] + 26, 140, 13, 6.5, I2); };
+    var stop = function (f, c) { return '<stop offset="' + f + '" style="stop-color:' + c + '"/>'; };
+    var grad = function (id, y, c0, c1, m) { return '<linearGradient id="tm-' + id + N + '"' + (y ? ' x2="0" y2="1"' : "") + ">" + stop(0, c0) + (m ? stop(0.5, m) : "") + stop(1, c1) + "</linearGradient>"; };
+    if (v.media) { img.setAttribute("src", String(v.media)); img.style.display = "block"; }
+    else {
+      var G = P ? { live: [Wd - 159, 50], kpi: [[44, 222, 444, 194], [511, 222, Wd - 555, 194]], bars: [44, 439, Wd - 89, 185], main: [44, 646, Wd - 89, 560], ch: 470, reg: [44, 1229, Wd - 89, 505] }
+                : { live: [726, 48], kpi: [[269, 139, 481, 185], [772, 139, 463, 185]], bars: [1257, 139, Wd - 1313, 185], main: [269, 348, Wd - 325, 435], ch: 352, reg: [269, 806, Wd - 325, 157] };
+      o.push("<defs>" + grad("pg", 1, "var(--tm-d2)", D1) + grad("ar", 1, A2 + ";stop-opacity:var(--tm-ao)", A2 + ";stop-opacity:0") + grad("ln", 0, A2, AC, "var(--tm-cm)") + "</defs>");
+      if (P) { B(44, 48, 41, 41, 11, I3); B(100, 61, 111, 15, 7.5, I2); B(44, 139, 481, 44, 11, I1); B(Wd - 230, 139, 185, 46, 11, D1); }
+      else {
+        B(213, 0, 1.4, Hd, 0, DL); B(28, 33, 37, 37, 10, I3); B(76, 46, 89, 13, 6.5, I2); B(28, 180, 157, 47, 9, B16);
+        [65, 89, 57, 78, 69].forEach(function (bw, k) { B(41, 139 + 60 * k, bw, 11, 5.5, k === 1 ? I1 : I3); });
+        B(269, 46, 435, 41, 11, I1); B(Wd - 241, 50, 185, 46, 11, D1);
+      }
+      var lv = G.live; B(lv[0], lv[1], 107, 37, 18.5, A16); B(lv[0] + 35, lv[1] + 13, 52, 11, 5.5, AC);
+      o.push('<circle class="tm-dot" cx="' + (lv[0] + 18.5) + '" cy="' + (lv[1] + 18.5) + '" r="4.6" style="fill:' + AC + '"/>');
+      G.kpi.forEach(function (c, k) { card(c, 1); B(c[0] + 28, c[1] + 70, k ? 120 : 268, 70, 11, I1); if (k) B(c[0] + 168, c[1] + 96, 83, 28, 14, A16); });
+      var bc = G.bars, step = (bc[2] - 56) / 24;
+      card(bc, 1);
+      for (i = 0; i < 24; i++) o.push('<rect class="tm-bar" x="' + (bc[0] + 28 + i * step) + '" width="' + step * 0.65 + '" rx="2.8" style="fill:' + (i > 17 ? AC : A2) + '"/>');
+      Z.base = bc[1] + bc[3] - 26; Z.bh = bc[3] - 93;
+      var mc = G.main; card(mc, 1); B(mc[0] + mc[2] - 213, mc[1] + 28, 185, 11, 5.5, I3);
+      Z.x = mc[0] + 4; Z.y = mc[1] + 65; Z.cw = mc[2] - 9; Z.ch = G.ch;
+      for (i = 1; i < 4; i++) B(Z.x, Z.y + (Z.ch * i) / 4, Z.cw, 1.4, 0, DL);
+      o.push('<path class="tm-area" style="fill:url(#tm-ar' + N + ')"/><path class="tm-crv" style="fill:none;stroke:' + LN + ';stroke-width:4.6;stroke-linejoin:round"/>' +
+        '<circle class="tm-halo" r="20" style="fill:' + AC + ';opacity:.22"/><circle class="tm-end" r="9" style="fill:' + AC + '"/>');
+      var rc = G.reg; card(rc);
+      [0.92, 0.74, 0.58, 0.41].forEach(function (r, k) {
+        var cw = P ? rc[2] - 56 : (rc[2] - 188) / 4, x = rc[0] + 28 + (P ? 0 : k * (cw + 44)), y = rc[1] + (P ? 60 + k * 110 : 61);
+        B(x, y, 102, 11, 5.5, I3); B(x + cw - 52, y - 2, 52, 15, 7.5, I1); B(x, y + 33, cw, 11, 5.5, B16); B(x, y + 33, cw * r, 11, 5.5, LN);
+      });
+      dash.insertAdjacentHTML("beforeend", '<svg width="' + FW + '" height="' + FH + '" viewBox="0 0 ' + Wd + " " + Hd + '" aria-hidden="true">' + o.join("") + "</svg>");
+      bars = [].slice.call(dash.querySelectorAll(".tm-bar"));
+    }
+    var line = q(".tm-crv"), area = q(".tm-area"), halo = q(".tm-halo"), endd = q(".tm-end"), dot = q(".tm-dot");
+    // at 1.32x the chart's middle runs through the word's waist (upstream -110 px)
+    var DY = v.media ? -0.1 * FH : inkCY - (FH / 2 + ((Z.y + 0.487 * Z.ch) * U - FH / 2) * CFG.panelS);
+    // upstream wave(); samples shift per frame, so it flows left
+    var wave = function (u) { return 0.52 + 0.17 * Math.sin(u * 0.11) + 0.09 * Math.sin(u * 0.31 + 1.3) + 0.05 * Math.sin(u * 0.73 + 0.4) + 0.12 * Math.max(0, Math.sin(u * 0.045 - 0.6)); };
+    function live(f) {
+      if (!line) return;
+      var d = "", ex = 0, ey = 0, bot = Z.y + Z.ch;
+      for (var k = 0, ns = Math.round(Z.cw / 15.04); k <= ns; k++) { ex = Z.x + (k / ns) * Z.cw; ey = bot - wave(k + f * 0.55) * Z.ch * 0.92; d += (k ? "L" : "M") + ex.toFixed(1) + " " + ey.toFixed(1); }
+      line.setAttribute("d", d);
+      area.setAttribute("d", d + "L" + ex + " " + bot + "L" + Z.x + " " + bot + "Z");
+      [halo, endd].forEach(function (c) { c.setAttribute("cx", ex); c.setAttribute("cy", ey); });
+      bars.forEach(function (r, k) {
+        var bb = 0.3 + 0.6 * Math.abs(Math.sin(k * 1.7 + f * 0.05)) * (0.6 + 0.4 * Math.sin(k * 0.45));
+        r.setAttribute("y", Z.base - bb * Z.bh); r.setAttribute("height", bb * Z.bh); r.style.opacity = 0.5 + 0.5 * bb;
+      });
+      dot.style.opacity = 0.6 + 0.4 * Math.sin(f / 5);
+    }
+
+    var DRIFT = MT.bezier(0.3, 0, 0.7, 1), C = CFG;
+    function render(t) {
+      // in: window opens from the glyph tops down (16 f), word settles 1.04 -> 1
+      var intro = MT.ramp(t, 0, C.intro, "snappy"), wipe = MT.ramp(t, 0, C.wipe, "out");
+      // breath 1 -> 0.965, then the rush in log space by p^1.8
+      var breath = MT.ramp(t, C.breath, C.breathDur, "swift"), rush = Math.pow(MT.ramp(t, C.rush, C.rushDur, "linear"), C.power);
+      var s = (C.pull - (C.pull - 1) * intro) * (1 - C.inhale * breath), S = s * Math.pow(MAXS / s, rush);
+      var cdx = (FW / 2 - ox) * rush, cdy = (FH / 2 - oy) * rush; // pinned stroke pulled to the centre
+      zg.setAttribute("transform", "translate(" + (ox + cdx - S * ox).toFixed(2) + " " + (oy + cdy - S * oy).toFixed(2) + ") scale(" + S.toFixed(5) + ")");
+      // stroke covers the frame: drop the mask (upstream fades in an unmasked copy)
+      var clip = wipe < 1 ? "inset(0 0 " + Math.max(0, FH - oy - S * (TOP + wipe * 2.087 * inkH - oy)).toFixed(1) + "px 0)" : "none";
+      win.style.maskImage = rush >= coverAt ? "none" : MASK;
+      win.style.clipPath = shm.style.clipPath = clip;
+      var so = 0.2 * (1 - MT.clamp(rush / C.rim, 0, 1)) * intro;
+      shw.style.opacity = so.toFixed(4); shw.style.display = so > 0.001 ? "" : "none";
+      // panel drifts across, then lands at 1x, 4 f after the rush
+      var drift = DRIFT(MT.clamp((t - C.drift) / C.driftDur, 0, 1)), land = MT.ramp(t, C.rush, C.land, "snappy"), A = L.dx * FW;
+      dash.style.transform = "translate(" + ((A - 2 * A * drift) * (1 - land)).toFixed(2) + "px," + (DY * (1 - land)).toFixed(2) + "px) scale(" + (C.panelS + (1 - C.panelS) * land).toFixed(4) + ")";
+      // eyebrow tracks in, subtitle rises; both leave on the breath
+      var ey = MT.ramp(t, C.eye, C.eyeDur, "out"), sb = MT.ramp(t, C.sub, C.subDur, "out"), out = 1 - MT.ramp(t, C.breath, C.out, "exit");
+      eye.style.opacity = (ey * out).toFixed(4); name.style.letterSpacing = (0.03 + (1 - ey) * 0.3).toFixed(3) + "em";
+      sub.style.opacity = (sb * out).toFixed(4); sub.style.transform = "translateY(" + ((1 - sb) * 16).toFixed(2) + "px)";
+      live(t * 30); // 30 fps frames
+    }
+    var tl = MT.scene(CFG.dur, render);
+    render(0);
+    window.__timelines["text-as-mask"] = tl;
+    })();
+    </script>
+  </template>
+</body>
+</html>

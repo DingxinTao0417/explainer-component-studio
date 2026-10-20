@@ -1,0 +1,467 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"文档标题（可空：空着只留图标和横条）","default":"上线前检查清单"},
+    {"id":"rows","type":"string","label":"表格每行一项（用 | 分隔，3–6 项）","default":"账号和权限|接口地址|数据备份|错误提示|导出格式"},
+    {"id":"passes","type":"number","label":"往复扫几趟（3–7）","default":5,"min":3,"max":7,"step":1},
+    {"id":"x","type":"number","label":"只在透明底时用：扫描框左上角 x（横屏按 1920×1080，竖屏按 1080×1920）","default":0,"min":0,"max":1920,"step":1},
+    {"id":"y","type":"number","label":"扫描框左上角 y","default":0,"min":0,"max":1920,"step":1},
+    {"id":"w","type":"number","label":"扫描框宽（0 = 自动居中，同示例文档）","default":0,"min":0,"max":1920,"step":1},
+    {"id":"h","type":"number","label":"扫描框高（0 = 自动居中，同示例文档）","default":0,"min":0,"max":1920,"step":1},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底和示例文档"},{"value":"off","label":"透明，只留括号和扫描光"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>scan-bracket-sweep · 取景括号往复扫</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="scan-bracket-sweep-template">
+      <!-- Ported from video-shotcraft demos/effects/scan-bracket-sweep/ScanBracketSweep.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds,
+           the 480x270 design stage replaced by native px (x4); neutral --k-* palette (scan light = --k-accent, brackets =
+           --k-ink; on dark skins the tail and row light use the accent mixed 50% with white), system fonts, generic
+           copy; the upstream shot-list table (its brand name and recipe names, 22 px text, 7 rows) replaced by a
+           variable checklist at 40 px (3-6 rows, 5 by default, rows that do not fit are dropped), meta line drawn as a
+           bar; the scan band sits above the paper and under the document text, grain under the document (both were on
+           top); pass count, backdrop off with an x / y / w / h target box, and a portrait layout (792x880) added.
+           Kept: document pop 0.86 -> 1, bracket stagger, overshoot and 8 design px travel, 5 passes over 0.17-0.95 of
+           the clock with inOutSine and a 12% rest, tail length from speed (82 x4, power 0.75), row light sigma 7 x4 at
+           9%, band fades 0.16-0.20 / 0.93-0.99, shadow and backdrop values. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* ==== kit:fonts@2 ==== */
+        @font-face { font-family: "Noto Serif SC"; src: local("Noto Serif SC"), local("Noto Serif CJK SC"), local("Source Han Serif SC"); }
+        @font-face { font-family: "Songti SC"; src: local("Songti SC"), local("STSong"), local("SimSun"); }
+        @font-face { font-family: "Consolas"; src: local("Consolas"); }
+        #root {
+          --k-serif: var(--mc-serif, "Noto Serif SC", "Songti SC", serif);
+          --k-mono: var(--mc-mono, Consolas, monospace);
+        }
+        /* ==== end kit:fonts ==== */
+
+        /* ==== kit:derived@1 ==== */
+        .sbw {
+          --sbw-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+          --sbw-hi: color-mix(in srgb, white 80%, transparent);
+        }
+        .sbw[data-tone="dark"] {
+          --sbw-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+          --sbw-hi: color-mix(in srgb, white 6%, transparent);
+        }
+        /* ==== end kit:derived ==== */
+
+        /* ==== kit:backdrop@1 ==== */
+        .sbw-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .sbw-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        /* ==== end kit:backdrop ==== */
+
+        /* ==== kit:vignette@1 ==== */
+        .sbw-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--sbw-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .sbw[data-tone="dark"] .sbw-vig { --vs: 0.55; }
+        /* ==== end kit:vignette ==== */
+
+        /* ==== kit:grain@1 ==== */
+        .sbw-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+
+        /* ==== kit:light@1 ==== */
+        .sbw-light { mix-blend-mode: multiply; }
+        .sbw[data-tone="dark"] .sbw-light { mix-blend-mode: screen; }
+        /* ==== end kit:light ==== */
+
+        /* ==== kit:text@2 ==== */
+        .sbw-u { display: inline-block; white-space: pre; }
+        /* ==== end kit:text ==== */
+        /* the wrapper is the size container; everything that changes with orientation lives inside it */
+        .sbw {
+          position: absolute; inset: 0; container-type: size;
+          --sbw-doc: var(--k-bg);
+          --sbw-hair: color-mix(in srgb, var(--k-ink) 9%, transparent);
+          --sbw-bar: color-mix(in srgb, var(--k-ink) 13%, var(--sbw-doc));
+          --sbw-lit: var(--k-accent);
+        }
+        /* dark skins: the tail, row light and wash screen a paler accent (a strong yellow screened on blue-grey reads olive) */
+        .sbw[data-tone="dark"] { --sbw-doc: var(--k-panel); --sbw-lit: color-mix(in srgb, var(--k-accent), white 50%); }
+        .sbw-bg { position: absolute; inset: 0; }
+        /* upstream Backdrop(light at 50% 30%, a 7% wash of the scan colour low in the frame, vignette 0.16) */
+        .sbw-backdrop::after {
+          background: radial-gradient(ellipse 55% 60% at 50% 88%, color-mix(in srgb, var(--sbw-lit) 7%, transparent) 0%, transparent 70%),
+            radial-gradient(ellipse 62% 70% at 50% 30%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%);
+        }
+        /* landscape: the upstream 300x178 document at x4 (1200x712), centred */
+        .sbw-box { position: absolute; left: calc(50% - 600px); top: calc(50% - 356px); width: 1200px; height: 712px; }
+        .sbw-paper, .sbw-doc, .sbw-scan { position: absolute; inset: 0; border-radius: 40px; }
+        .sbw-paper {
+          background: linear-gradient(180deg, var(--sbw-doc) 0%, color-mix(in srgb, var(--sbw-doc), var(--k-ink) 1.2%) 100%);
+          box-shadow: inset 0 0 0 1.2px var(--sbw-hair), inset 0 1.6px 0 var(--sbw-hi), 0 2.4px 5.1px color-mix(in srgb, var(--sbw-shade) 12.4%, transparent), 0 3.3px 7.8px -1.3px color-mix(in srgb, var(--sbw-shade) 9.4%, transparent);
+        }
+        .sbw-lit { position: absolute; left: 32px; right: 32px; border-radius: 12px; background: color-mix(in srgb, var(--sbw-lit) 9%, transparent); opacity: 0; }
+        /* the scan band: clipped to the document's own radius; sits above the paper, under the document's text */
+        .sbw-scan { overflow: hidden; pointer-events: none; opacity: 0; }
+        .sbw-beam { position: absolute; left: 0; right: 0; top: 0; height: 0; }
+        .sbw-beam > i { position: absolute; left: 0; right: 0; display: block; }
+        /* tail: hangs on the side the band came from; data-dir flips its anchor and its gradient together */
+        .sbw-tail { bottom: 0; height: 0; background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--sbw-lit) 6%, transparent) 55%, color-mix(in srgb, var(--sbw-lit) 20%, transparent) 100%); }
+        .sbw-beam[data-dir="up"] .sbw-tail { top: 0; bottom: auto; transform: scaleY(-1); }
+        .sbw-beam > .sbw-wash { top: -56px; height: 112px; display: none; background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--sbw-lit) 9%, transparent), transparent); }
+        .sbw-off .sbw-beam > .sbw-wash { display: block; }
+        .sbw-glow { top: -20px; height: 40px; background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--k-accent) 22%, transparent) 50%, transparent 100%); }
+        .sbw-core {
+          top: -2.4px; height: 4.8px;
+          background: linear-gradient(90deg, color-mix(in srgb, var(--k-accent) 55%, transparent) 0%, var(--k-accent) 18%, color-mix(in oklch, var(--k-accent), white 40%) 50%, var(--k-accent) 82%, color-mix(in srgb, var(--k-accent) 55%, transparent) 100%);
+          box-shadow: 0 0 10px color-mix(in srgb, var(--k-accent) 75%, transparent);
+        }
+        /* the document: header, column heads, rows, total */
+        .sbw-doc { display: flex; flex-direction: column; padding: 40px 56px 34px; color: var(--k-ink); font-variant-numeric: tabular-nums; }
+        .sbw-head { display: flex; align-items: flex-start; gap: 24px; flex: none; }
+        .sbw-icon { display: block; flex: none; margin-top: 6px; }
+        .sbw-hcol { flex: 1; min-width: 0; }
+        .sbw-title { display: block; font-size: 48px; font-weight: 700; line-height: 1.2; }
+        .sbw-meta { display: block; width: 46%; height: 14px; margin-top: 14px; border-radius: 7px; background: var(--sbw-bar); }
+        .sbw-chip { flex: none; margin-top: 8px; padding: 6px 18px; border-radius: 16px; font: 600 28px/1.2 var(--k-mono); color: var(--k-muted); background: color-mix(in srgb, var(--sbw-doc), var(--k-ink) 5%); box-shadow: inset 0 0 0 1.2px var(--sbw-hair); white-space: nowrap; }
+        .sbw-hr { flex: none; height: 1.2px; background: var(--sbw-hair); }
+        .sbw-head + .sbw-hr { margin-top: 26px; }
+        .sbw-th, .sbw-tr { display: grid; grid-template-columns: 88px minmax(0, 1fr) 280px 120px; column-gap: 24px; align-items: center; }
+        .sbw-th { flex: none; margin: 20px 0 14px; font-size: 28px; line-height: 1.2; letter-spacing: 0.06em; color: var(--k-muted); }
+        .sbw-th > :last-child, .sbw-p { text-align: right; }
+        .sbw-body { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: space-evenly; }
+        .sbw-tr { flex: none; font-size: 40px; line-height: 1.2; }
+        .sbw-n { font-family: var(--k-mono); color: var(--k-muted); }
+        .sbw-c { display: block; min-width: 0; font-weight: 600; }
+        .sbw-d { display: block; height: 14px; border-radius: 7px; background: var(--sbw-bar); }
+        .sbw-p { font-family: var(--k-mono); font-weight: 600; }
+        .sbw-tot { flex: none; display: flex; justify-content: space-between; align-items: baseline; margin-top: 18px; font-size: 40px; font-weight: 700; line-height: 1.3; }
+        .sbw-tot b { font: 700 44px/1.3 var(--k-mono); }
+        /* a narrow box (every portrait default) drops the description column */
+        .sbw-narrow .sbw-th, .sbw-narrow .sbw-tr { grid-template-columns: 72px minmax(0, 1fr) 120px; }
+        .sbw-narrow .sbw-th > :nth-child(3), .sbw-narrow .sbw-d { display: none; }
+        /* the four L brackets: 144px boxes whose corner sits 28px outside the document (upstream 36 / -7 at x4) */
+        .sbw-k { position: absolute; display: block; overflow: visible; fill: none; stroke: var(--k-ink); stroke-width: 6.4px; stroke-linecap: round; stroke-linejoin: round; }
+        .sbw-k0 { left: -32px; top: -32px; } .sbw-k1 { right: -32px; top: -32px; } .sbw-k2 { right: -32px; bottom: -32px; } .sbw-k3 { left: -32px; bottom: -32px; }
+        .sbw-off .sbw-bg, .sbw-off .sbw-paper, .sbw-off .sbw-doc { display: none; }
+        /* portrait: 792x880, so the brackets end inside x 108-972 and y 230-1306; centred on the 40% line */
+        @container (orientation: portrait) {
+          .sbw-box { left: calc(50% - 396px); top: calc(40% - 440px); width: 792px; height: 880px; }
+          .sbw-th, .sbw-tr { grid-template-columns: 72px minmax(0, 1fr) 120px; }
+          .sbw-th > :nth-child(3), .sbw-d { display: none; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="scan-bracket-sweep">
+        <div class="sbw">
+          <div class="sbw-bg"><div class="sbw-backdrop"></div><div class="sbw-vig"></div><div class="sbw-grain"></div></div>
+          <div class="sbw-box">
+            <div class="sbw-paper"></div>
+            <div class="sbw-scan"><div class="sbw-beam"><i class="sbw-tail sbw-light"></i><i class="sbw-wash sbw-light"></i><i class="sbw-glow"></i><i class="sbw-core"></i></div></div>
+            <div class="sbw-doc">
+              <div class="sbw-head">
+                <svg class="sbw-icon" width="36" height="44" viewBox="0 0 9 11" aria-hidden="true"><path d="M1 .5h4.6L8.5 3.4V10a.5.5 0 0 1-.5.5H1A.5.5 0 0 1 .5 10V1A.5.5 0 0 1 1 .5z" style="fill:color-mix(in srgb, var(--k-accent) 10%, var(--sbw-doc));stroke:var(--k-accent);stroke-width:.6"/><path d="M5.5.6v2.9h2.9" style="fill:none;stroke:var(--k-accent);stroke-width:.6"/></svg>
+                <div class="sbw-hcol"><div class="sbw-title">上线前检查清单</div><span class="sbw-meta"></span></div>
+                <div class="sbw-chip">5 项</div>
+              </div>
+              <div class="sbw-hr"></div>
+              <div class="sbw-th"><span>序号</span><span>内容</span><span>说明</span><span>页码</span></div>
+              <div class="sbw-hr"></div>
+              <div class="sbw-body">
+                <div class="sbw-tr"><span class="sbw-n">01</span><span class="sbw-c">账号和权限</span><span class="sbw-d" style="width:72%"></span><span class="sbw-p">P1</span></div>
+                <div class="sbw-tr"><span class="sbw-n">02</span><span class="sbw-c">接口地址</span><span class="sbw-d" style="width:93%"></span><span class="sbw-p">P3</span></div>
+                <div class="sbw-tr"><span class="sbw-n">03</span><span class="sbw-c">数据备份</span><span class="sbw-d" style="width:58%"></span><span class="sbw-p">P4</span></div>
+                <div class="sbw-tr"><span class="sbw-n">04</span><span class="sbw-c">错误提示</span><span class="sbw-d" style="width:84%"></span><span class="sbw-p">P7</span></div>
+                <div class="sbw-tr"><span class="sbw-n">05</span><span class="sbw-c">导出格式</span><span class="sbw-d" style="width:66%"></span><span class="sbw-p">P9</span></div>
+              </div>
+              <div class="sbw-hr"></div>
+              <div class="sbw-tot"><span>合计</span><b>11 页</b></div>
+            </div>
+            <svg class="sbw-k sbw-k0" width="144" height="144" viewBox="0 0 144 144" aria-hidden="true"><path d="M4 140V4h136"/></svg>
+            <svg class="sbw-k sbw-k1" width="144" height="144" viewBox="0 0 144 144" aria-hidden="true"><path d="M4 4h136v136"/></svg>
+            <svg class="sbw-k sbw-k2" width="144" height="144" viewBox="0 0 144 144" aria-hidden="true"><path d="M140 4v136H4"/></svg>
+            <svg class="sbw-k sbw-k3" width="144" height="144" viewBox="0 0 144 144" aria-hidden="true"><path d="M140 140H4V4"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing in seconds (upstream 150 frames at 30 fps, its 0-1 clock = frame / 149); shared by both orientations
+          var CFG = {
+            pop: 0.546,                        // document 0.86 -> 1, snappy; opacity is full a third of the way in
+            k0: 0.397, kGap: 0.109,            // brackets: first one, then one every 0.109 s, clockwise from top left
+            kFade: 0.149, kMove: 0.273,        // each bracket: opacity (linear), then 32 px inward with overshoot
+            in0: 0.795, in1: 0.993,            // scan band fades in
+            s0: 0.844, pass: 0.775, rest: 0.12, // scan starts; one pass (down or up); last 12% of a pass stands still
+            out0: -0.099, out1: 0.199          // band fades out, relative to the end of the last pass
+          };
+          // layout per orientation: the auto box (px at a 1080-short-side frame) and where its centre sits
+          var LAND = { w: 1200, h: 712, cy: 0.5 };
+          var PORT = { w: 792, h: 880, cy: 0.4 };
+          var v = { title: "上线前检查清单", rows: "账号和权限|接口地址|数据备份|错误提示|导出格式", passes: 5, x: 0, y: 0, w: 0, h: 0, backdrop: "on" }, R0 = v.rows;
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var g in got) if (got[g] !== undefined && got[g] !== null) v[g] = got[g];
+          } catch (e) {}
+
+          var root = document.querySelector(".sbw");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND, K = Math.min(FW, FH) / 1.08e3;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          var off = String(v.backdrop) === "off";
+          if (off) root.classList.add("sbw-off");
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== end kit:tone ====
+
+// ==== kit:text@2 (kReveal left out: unused) ====
+var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+function kWords(s, key) {
+  s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+  var cut = function (x) {
+    if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+    return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+  };
+  var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+  var pre = "";
+  bits.forEach(function (x) {
+    var t = x.trim(), last = out[out.length - 1];
+    if (last && /^ /.test(x)) last.sp = true;
+    if (!t) return;
+    if (!/[\p{L}\p{N}]/u.test(t)) {
+      if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+      else { last.t += t; last.sp = / $/.test(x); }
+      return;
+    }
+    out.push({ t: pre + t, sp: / $/.test(x) });
+    pre = "";
+  });
+  if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+  if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+  if (out.length) out[out.length - 1].sp = false;
+  return out;
+}
+function kSplit(el, by, rise, text) {
+  var s = text != null ? String(text) : el.textContent, units = [];
+  var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+  el.textContent = "";
+  parts.forEach(function (p) {
+    var u = document.createElement("span"), box = u;
+    u.className = "sbw-u"; u.textContent = p.t;
+    if (by === "line") u.style.display = "block";
+    if (!p.t.trim()) { el.appendChild(u); return; }
+    if (rise) { box = document.createElement("span"); box.className = "sbw-cut"; box.style.display = u.style.display; box.appendChild(u); }
+    el.appendChild(box);
+    if (p.sp) el.appendChild(document.createTextNode(" "));
+    units.push(u);
+  });
+  return units;
+}
+// ==== end kit:text ====
+
+// ==== kit:fit@1 (kRows left out: unused) ====
+function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+      var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+      if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+      row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+      "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+      "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+      "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+      "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+}
+// ==== end kit:grain ====
+          var tone = kTone(root);
+
+          // the scanned box: over the host's picture (backdrop off) x / y / w / h in frame px when w and h are given;
+          // otherwise, and always with the card's own document, the orientation's centred box
+          var box = q(".sbw-box"), W = off ? +v.w : 0, H = off ? +v.h : 0;
+          if (!(W > 0 && H > 0)) { W = L.w * K; H = L.h * K; v.x = (FW - W) / 2; v.y = FH * L.cy - H / 2; }
+          box.style.cssText = "left:" + (+v.x || 0) + "px;top:" + (+v.y || 0) + "px;width:" + W + "px;height:" + H + "px";
+          box.classList.toggle("sbw-narrow", W < 1000 * K);
+
+          // brackets: arm 136 px (upstream 34 at x4), never longer than a quarter of the short side
+          var A = Math.min(136 * K, Math.min(W, H) / 4), G = 28 * K, pd = 4 * K, S = A + 2 * pd;
+          var ks = [].slice.call(root.querySelectorAll(".sbw-k"));
+          var dirs = [[1, 1], [-1, 1], [-1, -1], [1, -1]];
+          ks.forEach(function (k, i) {
+            var a = pd, b = pd + A, d = [["M", a, b, "V", a, "H", b], ["M", a, a, "H", b, "V", b], ["M", b, a, "V", b, "H", a], ["M", b, b, "H", a, "V", a]][i];
+            k.setAttribute("width", S); k.setAttribute("height", S); k.setAttribute("viewBox", "0 0 " + S + " " + S);
+            k.firstChild.setAttribute("d", d.join(" "));
+            k.style.strokeWidth = 6.4 * K + "px";
+            k.style[i === 0 || i === 3 ? "left" : "right"] = k.style[i < 2 ? "top" : "bottom"] = -(G + pd) + "px";
+          });
+
+          // the document's text: title, then one row per item (the static HTML already shows the defaults)
+          var title = q(".sbw-title"), pages = [2, 1, 3, 2, 3, 2];
+          if (String(v.title).trim()) { kSplit(title, "word", false, v.title); kFit(title, { max: 48, min: 40, lines: 1 }); }
+          else title.style.display = "none";
+          var s = String(v.rows).trim() || R0, items = s.indexOf("|") >= 0 ? kWords(s) : s ? [{ t: s }] : [];
+          items = items.slice(0, 6);
+          var body = q(".sbw-body"), rnd = MT.seeded(5), pg = 1;
+          body.textContent = "";
+          var rows = items.map(function (it, i) {
+            var r = document.createElement("div");
+            r.className = "sbw-tr";
+            r.innerHTML = '<span class="sbw-n">0' + (i + 1) + '</span><span class="sbw-c"></span><span class="sbw-d"></span><span class="sbw-p"></span>';
+            r.children[2].style.width = Math.round(55 + rnd() * 40) + "%";
+            body.appendChild(r);
+            kSplit(r.children[1], "word", false, it.t);
+            kFit(r.children[1], { lines: 1, min: 40 });
+            return r;
+          });
+          // rows that no longer fit at 40 px (long items wrap) are dropped from the end: never smaller, never off the paper
+          while (rows.length > 1 && body.scrollHeight > body.clientHeight + 1) body.removeChild(rows.pop());
+          rows.forEach(function (r, i) { r.children[3].textContent = "P" + pg; pg += pages[i]; });
+          q(".sbw-chip").textContent = rows.length + " 项";
+          q(".sbw-tot b").textContent = pg - 1 + " 页";
+
+          // each row's lit strip: centred on the row, lit by a Gaussian of its distance to the band (upstream sigma 7 at x4)
+          var paper = q(".sbw-paper"), doc = q(".sbw-doc");
+          var lits = rows.map(function (r) {
+            var el = document.createElement("i"), h = r.offsetHeight + 20 * K, c = body.offsetTop + r.offsetTop + r.offsetHeight / 2;
+            el.className = "sbw-lit";
+            el.style.top = c - h / 2 + "px"; el.style.height = h + "px";
+            paper.appendChild(el);
+            return { el: el, c: c };
+          });
+
+          // two-layer soft shadow at the upstream design scale (x4), e = elevation in design px
+          var dk = tone === "dark" ? 2.6 : 1.1, r1 = function (x) { return (Math.round(x * 40 * K) / 10).toFixed(1) + "px "; };
+          var mixc = function (a) { return "color-mix(in srgb, var(--sbw-shade) " + Math.min(100, a * 100 * dk).toFixed(1) + "%, transparent)"; };
+          var shadow = function (e) {
+            return "inset 0 0 0 " + r1(0.3) + "var(--sbw-hair), inset 0 " + r1(0.4) + "0 var(--sbw-hi), 0 " + r1(0.5 + e * 0.06) + r1(1 + e * 0.18) + mixc(0.12 / (1 + e / 24)) +
+              ", 0 " + r1(e * 0.55) + r1(e * 1.3) + r1(-e * 0.22) + mixc(0.08 + (Math.min(e, 64) / 64) * 0.22);
+          };
+
+          // the scan: N passes over [s0, s0 + N * pass], alternating down / up, inOutSine inside a pass, then a rest
+          var N = Math.max(3, Math.min(7, Math.round(+v.passes) || 5)), END = CFG.s0 + N * CFG.pass;
+          var scanAt = function (t) {
+            var raw = MT.clamp((t - CFG.s0) / (N * CFG.pass)) * N, pi = Math.min(N - 1, Math.floor(raw));
+            var p = MT.clamp((raw - pi) / (1 - CFG.rest)), pr = 0.5 - Math.cos(Math.PI * p) / 2, dn = pi % 2 === 0;
+            // speed / peak speed = sin(pi p) while moving, 0 in the rest: the tail shrinks to nothing at each turn
+            return { y: (dn ? pr : 1 - pr) * H, dn: dn, sp: p < 1 && t > CFG.s0 ? Math.sin(Math.PI * p) : 0 };
+          };
+          var scan = q(".sbw-scan"), beam = q(".sbw-beam"), tail = q(".sbw-tail"), cs = scan.style, bs = beam.style, ts = tail.style;
+          var grain = kGrain(q(".sbw-grain"), tone === "dark" ? {} : { opacity: 0.045 });
+          var easeOver = MT.ease("overshoot");
+
+          var tl = MT.scene(END + CFG.out1, function (t) {
+            // document pops in: present before it is settled (opacity full at a third of the scale move)
+            var dp = MT.ramp(t, 0, CFG.pop, "snappy"), tf = "scale(" + (0.86 + 0.14 * dp).toFixed(4) + ")", op = Math.min(1, dp * 3);
+            paper.style.transform = doc.style.transform = tf;
+            paper.style.opacity = doc.style.opacity = op;
+            paper.style.boxShadow = shadow(MT.mix(22, 6, dp) / 4);
+            // brackets land one by one from 32 px outside, overshooting about 8% inward
+            ks.forEach(function (k, i) {
+              var t0 = CFG.k0 + i * CFG.kGap, o = (1 - easeOver(MT.clamp((t - t0) / CFG.kMove))) * 32 * K;
+              k.style.opacity = MT.ramp(t, t0, CFG.kFade, "linear");
+              k.style.transform = "translate(" + (-o * dirs[i][0]).toFixed(2) + "px," + (-o * dirs[i][1]).toFixed(2) + "px)";
+            });
+            // the band, its speed-scaled tail (82 design px = 328 px at peak speed) and the rows it lights
+            var a = MT.ramp(t, CFG.in0, CFG.in1 - CFG.in0, "linear") * (1 - MT.ramp(t, END + CFG.out0, CFG.out1 - CFG.out0, "linear"));
+            var sc = scanAt(t);
+            cs.opacity = a.toFixed(3);
+            bs.transform = "translateY(" + sc.y.toFixed(2) + "px)";
+            beam.setAttribute("data-dir", sc.dn ? "down" : "up");
+            ts.height = (328 * K * Math.pow(sc.sp, 0.75)).toFixed(2) + "px";
+            lits.forEach(function (l) { l.el.style.opacity = (a * Math.exp(-Math.pow((sc.y - l.c) / (28 * K), 2))).toFixed(3); });
+            grain(t);
+          });
+          window.__timelines["scan-bracket-sweep"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

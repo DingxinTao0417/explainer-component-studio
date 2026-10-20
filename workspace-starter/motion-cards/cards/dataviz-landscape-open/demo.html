@@ -1,0 +1,474 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"kicker","type":"string","label":"眉题（可以留空）","default":"12,480 条笔记 · 46 个主题"},
+    {"id":"title","type":"string","label":"标题第一行（用 | 切意群）","default":"千头|万绪，"},
+    {"id":"title2","type":"string","label":"标题第二行，强调色（可以留空）","default":"汇成|一条主线。"},
+    {"id":"tags","type":"string","label":"线上标签（用 | 分隔，最多 6 个，每个 2–4 字；可以留空）","default":"收集|整理|草稿|图表|反馈|定稿"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"暗场地景"},{"value":"off","label":"透明（只留线、光和字）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>dataviz-landscape-open · 暗场汇流地景</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="dataviz-landscape-open-template">
+      <!-- Ported from video-shotcraft demos/opening/dataviz-landscape-open/DatavizLandscapeOpen.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette with --k-stage (lime look -> accent trunk, key light, horizon band and bloom; branches, dots
+           and dust mixed from --k-on-stage), system fonts with --k-mono, generic copy; upstream wordmark kicker, slogan and
+           shot-name tags became the variables kicker, title, title2 and tags ("#0n" + note). SVG lines are drawn on canvases
+           (glow, sharp, near layer) with the same per-segment depth, fog, blur and pulse rules; a solid dark base under the
+           35% fade-up. Title: Latin 108px (line height 0.94, tracking -0.04em) -> CJK 96px (portrait 100px), line height
+           1.15; its bottom pinned 363px down, so it starts at 76px (was 128px) and grows upward; kicker 28 -> 40px; gaps
+           26/4px -> 18/0px. Labels: text floored at 28px (upstream 25px x depth scale, 17.5px far), note as large as the
+           number and brighter, cut after 4 characters; landscape anchors #02 u 0.75 -> 0.82 and #05 u 0.45 -> 0.55 so the
+           larger capsules never touch; a capsule that would leave the frame opens to the left. Portrait: same world and
+           timing, camera height 680 (220), horizon 36%, line width x1.3, its own six anchors. Camera path, branch geometry,
+           growth, label, pulse, bloom and title timings kept frame for frame. -->
+      <style>
+  @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+  @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+  @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+  @font-face { font-family: "Consolas"; src: local("Consolas"); }
+  #root {
+    --k-bg: var(--mc-bg, #ffffff);
+    --k-panel: var(--mc-panel, #f4f5f7);
+    --k-ink: var(--mc-ink, #15171c);
+    --k-muted: var(--mc-muted, #6b7280);
+    --k-accent: var(--mc-accent, #e8590c);
+    --k-accent-2: var(--mc-accent-2, #2563eb);
+    --k-on-accent: var(--mc-on-accent, #ffffff);
+    --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+    --k-mono: var(--mc-mono, Consolas, monospace);
+    --k-stage: var(--mc-stage, #0b0d12);
+    --k-on-stage: var(--mc-on-stage, #f3f5f8);
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    font-family: var(--k-font);
+    color: var(--k-ink);
+  }
+  /* ==== kit:text@2 ==== */
+  .dv-u { display: inline-block; white-space: pre; }
+  .dv-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+  /* ==== end kit:text ==== */
+  /* ==== kit:vignette@1 ==== */
+  .dv-vig {
+    position: absolute; inset: 0; pointer-events: none;
+    --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--dv-shade);
+    background:
+      radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+      radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+  }
+  /* ==== end kit:vignette ==== */
+  /* ==== kit:grain@1 ==== */
+  .dv-grain { position: absolute; inset: 0; pointer-events: none; }
+  /* ==== end kit:grain ==== */
+  /* --hy horizon, --vx vanishing point (the script rewrites both) */
+  .dv { position: absolute; inset: 0; container-type: size; --hy: 38.89%; --vx: 66.61%; --dv-shade: color-mix(in srgb, var(--k-stage) 40%, black); }
+  .dv-sc, .dv-l { position: absolute; inset: 0; }
+  .dv-l { pointer-events: none; width: 100%; height: 100%; }
+  .dv[data-backdrop="off"] .dv-bd { display: none; }
+  .dv-base { background: color-mix(in srgb, var(--k-stage), black 35%); }
+  .dv-stage { background: linear-gradient(180deg, color-mix(in srgb, var(--k-stage), white 5%), var(--k-stage) 52%, color-mix(in srgb, var(--k-stage), black 35%)); }
+  .dv-key {
+    mix-blend-mode: screen;
+    background:
+      radial-gradient(ellipse 58% 62% at var(--vx) var(--hy), color-mix(in srgb, var(--k-accent) 30%, transparent), transparent 70%),
+      radial-gradient(ellipse 50% 46% at 12% 95%, color-mix(in srgb, var(--k-on-stage) 12%, transparent), transparent 72%);
+  }
+  .dv-band { position: absolute; left: -10%; right: -10%; top: calc(var(--hy) - 9cqh); height: 18cqh; filter: blur(10px); background: radial-gradient(ellipse 50% 50%, color-mix(in srgb, var(--k-accent) 15%, transparent), transparent 70%); }
+  .dv-ground { position: absolute; inset: var(--hy) 0 0; background: linear-gradient(180deg, color-mix(in srgb, var(--k-on-stage) 9%, transparent), color-mix(in srgb, var(--k-on-stage) 2%, transparent) 30%, transparent); }
+  .dv-hz { position: absolute; inset: var(--hy) 0 auto; height: 1px; margin-top: -0.5px; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--k-on-stage) 16%, transparent) 40%, color-mix(in srgb, var(--k-accent) 35%, transparent) 66%, color-mix(in srgb, var(--k-on-stage) 12%, transparent) 85%, transparent); }
+  .dv-sc .dv-vig { --vs: 0.6; --vin: 42%; }
+  .dv-glow { filter: blur(7px); opacity: 0.75; }
+  .dv-near { filter: blur(11px); }
+  /* hand-off bloom: 1040 x 520 in a 1920 frame */
+  .dv-vp {
+    position: absolute; left: var(--vx); top: var(--hy); width: 54.2cqw; height: 27.1cqw; transform: translate(-50%, -50%); mix-blend-mode: screen; pointer-events: none;
+    background: radial-gradient(50% 50% at 50% 50%, color-mix(in srgb, color-mix(in srgb, var(--k-accent) 25%, white) 55%, transparent), color-mix(in srgb, var(--k-accent) 22%, transparent) 22%, transparent 70%);
+  }
+  .dv-vpd { position: absolute; left: var(--vx); top: var(--hy); width: 8px; height: 8px; margin: -4px; border-radius: 50%; background: color-mix(in srgb, var(--k-accent) 12%, white); box-shadow: 0 0 18px 6px color-mix(in srgb, var(--k-accent) 60%, transparent); }
+  /* label: zero-size node on the pin; capsule built at 28px, scaled by the script */
+  .dv-tag { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+  .dv-pin { position: absolute; left: -6px; top: -6px; width: 12px; height: 12px; border-radius: 2.5px; background: var(--k-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--k-stage) 90%, transparent), 0 0 18px color-mix(in srgb, var(--k-accent) 70%, transparent); }
+  .dv-stem { position: absolute; left: -0.75px; width: 1.5px; background: linear-gradient(0deg, color-mix(in srgb, var(--k-accent) 70%, transparent), color-mix(in srgb, var(--k-on-stage) 25%, transparent)); }
+  .dv-cap {
+    position: absolute; left: 0; top: 0; height: 52px; box-sizing: border-box; padding: 0 16px 0 13px; border-radius: 11px;
+    display: flex; align-items: center; gap: 11px; white-space: nowrap; transform-origin: 0 100%;
+    background: color-mix(in srgb, color-mix(in srgb, var(--k-stage), white 6%) 82%, transparent); border: 1px solid color-mix(in srgb, var(--k-on-stage) 12%, transparent);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, white 6%, transparent), 0 11px 31px color-mix(in srgb, black 50%, transparent);
+  }
+  .dv-flip .dv-cap { transform-origin: 100% 100%; }
+  .dv-dot { display: block; flex: none; width: 8px; height: 8px; border-radius: 4px; background: var(--k-accent); }
+  .dv-id { font-family: var(--k-mono), var(--k-font); font-size: 28px; font-weight: 600; letter-spacing: 0.02em; color: var(--k-on-stage); }
+  .dv-nt { font-size: 28px; font-weight: 500; color: color-mix(in srgb, var(--k-on-stage) 72%, var(--k-stage)); }
+  .dv-head { position: absolute; left: 6.25%; bottom: 66.4%; width: 46%; }
+  .dv-kick { font-family: var(--k-mono), var(--k-font); font-size: 40px; font-weight: 600; line-height: 1.2; letter-spacing: 0.12em; color: var(--k-accent); }
+  .dv-t { font-size: 96px; font-weight: 700; line-height: 1.15; color: var(--k-on-stage); }
+  .dv-t1 { margin-top: 18px; }
+  .dv-t2 { color: var(--k-accent); }
+  @container (orientation: portrait) {
+    .dv { --hy: 36%; }
+    .dv-head { left: 10%; width: 80%; top: 12.5%; bottom: auto; }
+    .dv-t { font-size: 100px; }
+  }
+      </style>
+
+      <div id="root" data-composition-id="dataviz-landscape-open">
+        <div class="dv">
+          <div class="dv-l dv-bd dv-base"></div>
+          <div class="dv-sc">
+            <div class="dv-l dv-bd dv-stage"></div>
+            <div class="dv-l dv-bd dv-key"></div>
+            <div class="dv-bd dv-band"></div>
+            <canvas class="dv-l dv-bd dv-dust"></canvas>
+            <div class="dv-bd dv-ground"></div>
+            <div class="dv-bd dv-hz"></div>
+            <div class="dv-l dv-bd dv-vig"></div>
+            <div class="dv-l dv-bd dv-grain"></div>
+            <canvas class="dv-l dv-glow" data-layout-allow-overflow></canvas>
+            <canvas class="dv-l dv-cv" data-layout-allow-overflow></canvas>
+            <div class="dv-vp"></div>
+            <div class="dv-vpd"></div>
+            <div class="dv-l dv-tags"></div>
+            <canvas class="dv-l dv-near" data-layout-allow-overflow></canvas>
+          </div>
+          <div class="dv-head">
+            <div class="dv-kick">12,480 条笔记 · 46 个主题</div>
+            <div class="dv-t dv-t1">千头万绪，</div>
+            <div class="dv-t dv-t2">汇成一条主线。</div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+(function () {
+  // timing in seconds (upstream frames / 30), shared by both orientations
+  var CFG = {
+    dur: 6, fade: 0.4, // scene rises from 35% over 12f
+    trunk: 1.2, grow: 1.133, flow: 0.8, // trunk draws over 36f, each branch over 34f, pulses ease in over 24f
+    tags: [1.467, 1.767, 2.067, 2.433, 2.8, 3.2], // labels at 44, 53, 62, 73, 84, 96f
+    cam: 5.967, // the dolly runs to 179f
+    glow: 3.933, glowDur: 1.667, // vanishing point blooms from 118f over 50f
+    kick: 3.467, t1: 3.667, t2: 4.033, word: 0.667, gap: 0.167 // kicker 104f; title lines 110f / 121f, words 20f, 5f apart
+  };
+  // f focal (x width), hy horizon (x height), ch camera height, lw line width; tl labels [branch, u, opens left]
+  var LAND = { f: 0.5729, hy: 0.3889, ch: 220, lw: 1, tl: [[2, 0.6], [1, 0.82], [3, 0.6], [6, 0.3], [7, 0.55], [8, 0.45]] };
+  var PORT = { f: 0.5729, hy: 0.36, ch: 680, lw: 1.3, tl: [[2, 0.6], [3, 0.6, 1], [4, 0.7], [6, 0.35], [9, 0.4, 1], [8, 0.7, 1]] };
+  var v = { kicker: "12,480 条笔记 · 46 个主题", title: "千头|万绪，", title2: "汇成|一条主线。", tags: "收集|整理|草稿|图表|反馈|定稿", backdrop: "on" };
+  try {
+    var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k]; // "" hides kicker / title2 / tags
+  } catch (e) {}
+
+  var root = document.querySelector(".dv");
+  var q = function (s) { return root.querySelector(s); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+    // not laid out yet: the host clip's declared size, then the window
+    var hc = root.closest("[data-width][data-height]");
+    FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+    FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND;
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+  root.setAttribute("data-backdrop", String(v.backdrop) === "off" ? "off" : "on");
+
+  // ==== kit:tone@1 (kRGB only) ====
+  function kRGB(el, color) {
+    var p = document.createElement("i");
+    p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+    el.appendChild(p);
+    var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+    el.removeChild(p);
+    return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+  }
+  // ==== end kit:tone ====
+
+  // ==== kit:text@2 (rise only) ====
+  var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+  function kWords(s, key) {
+    s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+    var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+    var cut = function (x) {
+      if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+      return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+    };
+    var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+    var pre = "";
+    bits.forEach(function (x) {
+      var t = x.trim(), last = out[out.length - 1];
+      if (last && /^ /.test(x)) last.sp = true;
+      if (!t) return;
+      if (!/[\p{L}\p{N}]/u.test(t)) {
+        if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+        else { last.t += t; last.sp = / $/.test(x); }
+        return;
+      }
+      out.push({ t: pre + t, sp: / $/.test(x) });
+      pre = "";
+    });
+    if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+    if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+    if (out.length) out[out.length - 1].sp = false;
+    return out;
+  }
+  function kSplit(el, by, rise, text) {
+    var s = text != null ? String(text) : el.textContent, units = [];
+    var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+    el.textContent = "";
+    parts.forEach(function (p) {
+      var u = document.createElement("span"), box = u;
+      u.className = "dv-u"; u.textContent = p.t;
+      if (by === "line") u.style.display = "block";
+      if (!p.t.trim()) { el.appendChild(u); return; }
+      if (rise) { box = document.createElement("span"); box.className = "dv-cut"; box.style.display = u.style.display; box.appendChild(u); }
+      el.appendChild(box);
+      if (p.sp) el.appendChild(document.createTextNode(" "));
+      units.push(u);
+    });
+    return units;
+  }
+  function kReveal(tl, units, variant, at, o) {
+    o = o || {};
+    var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+    units.forEach(function (u, i) {
+      var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+      tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+      tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+    });
+    return tl;
+  }
+  // ==== end kit:text ====
+
+  // ==== kit:fit@1 (kFit, kLines) ====
+  function kFit(el, o) {
+    o = o || {};
+    var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+    var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+    for (;;) {
+      el.style.fontSize = f + "px";
+      m = kLines(el);
+      if ((m.w <= W && m.n <= n) || f <= min) break;
+      f = Math.max(min, f - 2);
+    }
+    if (m.w > W) {
+      [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+      m = kLines(el);
+    }
+    return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+  }
+  function kLines(el) {
+    var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+    var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+    while ((t = it.nextNode())) {
+      if (!t.data.trim()) continue;
+      r.selectNodeContents(t);
+      [].forEach.call(r.getClientRects(), function (b) {
+        var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+        if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+        row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+      });
+    }
+    return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+  }
+  // ==== end kit:fit ====
+
+  // ==== kit:grain@1 ====
+  function kGrain(layer, o) {
+    o = o || {};
+    var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+    var dark = tones && tones.getAttribute("data-tone") === "dark";
+    var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+      var f = "type='linear' slope='2.4' intercept='-0.7'";
+      var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+        "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+        "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+        "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+        "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+      return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+    });
+    layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+    layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+    layer.style.backgroundSize = size + "px " + size + "px";
+    return function (t) {
+      var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+      layer.style.backgroundImage = tiles[k % 6];
+      layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+    };
+  }
+  // ==== end kit:grain ====
+
+  // ---- a ground plane seen by a pinhole camera (x across, z ahead) ----
+  var S = Math.min(FW, FH) / 1.08e3, F = L.f * FW, CX = FW / 2, HY = L.hy * FH, FC = F * L.ch, SL = 0.29, M = 220 * S;
+  root.style.setProperty("--hy", HY + "px");
+  root.style.setProperty("--vx", CX + F * SL + "px");
+  var tX = function (z) { return SL * z - 160 + 150 * Math.sin(z / 950); }; // the trunk winds toward x = SL * z
+  var sm = function (a, b, x) { var u = MT.clamp((x - a) / (b - a), 0, 1); return u * u * (3 - 2 * u); };
+  var camE = MT.bezier(0.3, 0.3, 0.55, 1), smE = MT.ease("smooth");
+  var camAt = function (t) { var u = MT.clamp(t / CFG.cam, 0, 1), z = 950 * camE(u); return [SL * z + MT.mix(-140, 110, smE(u)), z]; };
+  var proj = function (p, c) { var zr = p[1] - c[1]; return [CX + (F * (p[0] - c[0])) / zr, HY + FC / zr, zr]; };
+  var trunk = [];
+  for (var i = 0; i <= 260; i++) { var z = -300 + Math.pow(i / 260, 1.7) * 14300; trunk.push([tX(z), z]); }
+  // branches [side, z0, offset, join z, tangent, start frame, width]; the last skims the lens
+  var TR = [[-1, -260, 700, 1500, 520, 8, 5], [1, -120, 900, 2100, 640, 11, 5], [-1, 500, 1500, 2700, 760, 16, 4.4], [1, 800, 1800, 3300, 820, 20, 4.4], [-1, 1400, 2300, 3900, 900, 25, 4.2], [1, 1700, 2500, 4600, 980, 29, 4.2], [-1, 2500, 2900, 5300, 1050, 34, 4.2], [1, 3100, 3200, 6100, 1150, 38, 4.2], [-1, 4100, 3600, 7100, 1250, 43, 4.2], [1, 5000, 3900, 8200, 1350, 47, 4.2], [1, -420, 260, 980, 380, 4, 6]];
+  var tribs = TR.map(function (s) {
+    // cubic from off-frame, joins the trunk along its tangent; equal arc-length samples
+    var zm = s[3], dx = SL + (150 / 950) * Math.cos(zm / 950), dl = Math.hypot(dx, 1);
+    var p3 = [tX(zm), zm], p2 = [p3[0] - (dx / dl) * s[4], zm - s[4] / dl], p0 = [tX(s[1]) + s[0] * s[2], s[1]];
+    var p1 = [p0[0] + (p3[0] - p0[0]) * 0.12, p0[1] + (zm - p0[1]) * 0.5], raw = [], cum = [0], pts = [], m = 1;
+    for (var j = 0; j <= 240; j++) {
+      var t = j / 240, u = 1 - t, a = u * u * u, b = 3 * u * u * t, c = 3 * u * t * t, d = t * t * t;
+      raw.push([a * p0[0] + b * p1[0] + c * p2[0] + d * p3[0], a * p0[1] + b * p1[1] + c * p2[1] + d * p3[1]]);
+      if (j) cum.push(cum[j - 1] + Math.hypot(raw[j][0] - raw[j - 1][0], raw[j][1] - raw[j - 1][1]));
+    }
+    for (var k = 0; k <= 90; k++) {
+      var tg = (k / 90) * cum[240];
+      while (m < 240 && cum[m] < tg) m++;
+      var f = (tg - cum[m - 1]) / Math.max(1e-6, cum[m] - cum[m - 1]);
+      pts.push([MT.mix(raw[m - 1][0], raw[m][0], f), MT.mix(raw[m - 1][1], raw[m][1], f)]);
+    }
+    return { g: s[5] / 30, w: s[6], pts: pts };
+  });
+
+  var D = window.devicePixelRatio || 1;
+  var ctx = function (s) { var c = q(s), g = c.getContext("2d"); c.width = Math.round(FW * D); c.height = Math.round(FH * D); g.setTransform(D, 0, 0, D, 0, 0); return g; };
+  var dx = ctx(".dv-dust"), gx = ctx(".dv-glow"), cx = ctx(".dv-cv"), nx = ctx(".dv-near");
+  var rgb = function (c) { return kRGB(root, c).map(Math.round).join(","); };
+  var CA = rgb("var(--k-accent)"), CO = rgb("var(--k-on-stage)"), C2 = rgb("color-mix(in srgb, var(--k-on-stage) 66%, var(--k-stage))");
+  var seg = function (g, a, b, w, c, o) { g.strokeStyle = "rgba(" + c + "," + o.toFixed(3) + ")"; g.lineWidth = w; g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); };
+  var tips = [];
+  // one line in segments (butt caps): width, opacity by depth; near -> blurred canvas; tr: trunk (glows)
+  var drawLine = function (pts, g, cam, w, c, base, lift, pl, tr) {
+    var n = pts.length - 1, reach = g * n, kMax = Math.min(n, Math.ceil(reach));
+    for (var k = 0; k < kMax; k++) {
+      var a = pts[k], b = pts[k + 1], f = Math.min(1, reach - k);
+      if (f < 1) b = [MT.mix(a[0], b[0], f), MT.mix(a[1], b[1], f)];
+      if (a[1] - cam[1] < 70 || b[1] - cam[1] < 70) continue;
+      var pa = proj(a, cam), pb = proj(b, cam);
+      if ((pa[0] < -M && pb[0] < -M) || (pa[0] > FW + M && pb[0] > FW + M) || (pa[1] > FH + M && pb[1] > FH + M)) continue;
+      var zr = (pa[2] + pb[2]) / 2, u = (k + 0.5 * f) / n;
+      var o = base * (1 - sm(2600, 11000, zr)) * (lift ? 0.3 + 0.7 * Math.pow(u, 0.8) : 1) * MT.mix(1, pl(u), sm(500, 1400, zr));
+      if (o < 0.01) continue;
+      var ww = Math.max(0.9, Math.min(46, (w * F) / zr)) * L.lw, nw = 1 - sm(420, 1050, zr);
+      if (nw < 0.98) { seg(cx, pa, pb, ww, c, o * (1 - nw)); if (tr) seg(gx, pa, pb, ww * 3, c, o * (1 - nw) * 0.45); }
+      if (nw > 0.02) seg(nx, pa, pb, ww * 1.3, c, o * nw * 0.7);
+    }
+    if (g > 0 && g < 1) {
+      var kk = Math.min(n - 1, Math.floor(reach)), ff = reach - kk, p = [MT.mix(pts[kk][0], pts[kk + 1][0], ff), MT.mix(pts[kk][1], pts[kk + 1][1], ff)];
+      if (p[1] - cam[1] > 70) tips.push(proj(p, cam).concat(tr));
+    }
+  };
+  // pulses drifting to the merge once a line is drawn (frames at 30 fps)
+  var pulse = function (t, end, n, sp, seed) {
+    var on = MT.ramp(t, end, CFG.flow, "smooth"), f = t * 30;
+    return function (u) { return 0.7 + on * 0.55 * Math.pow(Math.max(0, Math.cos((u * n - f * sp + seed) * 2 * Math.PI)), 4); };
+  };
+  var H = function (n) { var x = Math.sin(n * 91.345 + 47.853) * 43758.5453; return x - Math.floor(x); };
+
+  // ---- labels, far ones first so near ones cover them ----
+  var notes = String(v.tags).trim() ? kWords(v.tags) : [];
+  var tags = L.tl.slice(0, notes.length).map(function (a, i) {
+    var el = document.createElement("div");
+    el.className = "dv-tag";
+    el.innerHTML = '<i class="dv-pin"></i><i class="dv-stem"></i><div class="dv-cap"><i class="dv-dot"></i><b class="dv-id" data-layout-allow-occlusion></b><span class="dv-nt" data-layout-allow-occlusion></span></div>';
+    el.querySelector(".dv-id").textContent = "#0" + (i + 1);
+    el.querySelector(".dv-nt").textContent = notes[i].t;
+    return { el: el, p: tribs[a[0]].pts[Math.round(a[1] * 90)], t: CFG.tags[i], flip: a[2], pin: el.children[0], stem: el.children[1], cap: el.children[2] };
+  });
+  tags.slice().sort(function (a, b) { return b.p[1] - a.p[1]; }).forEach(function (g) { q(".dv-tags").appendChild(g.el); });
+  tags.forEach(function (g) {
+    // notes over 4 characters get an ellipsis; a capsule leaving the frame opens left
+    var nt = g.cap.children[2], e = proj(g.p, camAt(CFG.dur));
+    while (nt.offsetWidth > 4.3 * 28 && nt.textContent.length > 2) nt.textContent = nt.textContent.slice(0, -2) + "…";
+    g.w = g.cap.offsetWidth; g.h = g.cap.offsetHeight;
+    if (!g.flip && e[0] + (g.w * Math.max(MT.clamp(1500 / e[2], 0.7, 1.7), 1.12)) / 1.12 > FW - 24 * S) g.flip = 1;
+    if (g.flip) g.el.className += " dv-flip";
+  });
+
+  var kick = q(".dv-kick"), t1 = q(".dv-t1"), t2 = q(".dv-t2"), head = [];
+  if (String(v.kicker).trim()) { kick.textContent = String(v.kicker).trim(); kFit(kick, { lines: 1, min: 40 }); } else kick.style.display = "none";
+  [[t1, v.title, CFG.t1], [t2, v.title2, CFG.t2]].forEach(function (r) {
+    if (!String(r[1]).trim()) { r[0].style.display = "none"; return; }
+    var u = kSplit(r[0], "word", true, r[1]);
+    kFit(r[0], { lines: 1, min: 72 });
+    // a rising unit is clipped below its line: the checker sees it under the canvas, on the labels
+    u.forEach(function (x) { x.setAttribute("data-layout-allow-occlusion", ""); x.setAttribute("data-layout-allow-overlap", ""); });
+    head.push([u, r[2]]);
+  });
+
+  var grain = kGrain(q(".dv-grain"), { opacity: 0.1, blend: "soft-light" });
+  var vp = q(".dv-vp"), vpd = q(".dv-vpd");
+
+  var tl = MT.scene(CFG.dur, function (t) {
+    var f = t * 30, cam = camAt(t);
+    [dx, gx, cx, nx].forEach(function (g) { g.clearRect(0, 0, FW, FH); });
+    // sky dust: 26 motes, 0.12 px a frame (upstream seed), clipped to the sky
+    dx.save(); dx.beginPath(); dx.rect(0, 0, FW, HY); dx.clip();
+    for (var i = 0; i < 26; i++) {
+      var z = H(217 + i * 7.1), r = ((2 + z * z * 16) * S) / 2, WW = FW + 200 * S, HH = FH + 100 * S;
+      var x = ((((H(91 + i * 3.7) * WW + f * 0.12 * (0.4 + z)) % WW) + WW) % WW) - 100 * S + r;
+      var y = ((((H(119 + i * 5.3) * FH - f * 0.036 * (0.5 + z)) % HH) + HH) % HH) - 50 * S + r;
+      var a = (0.25 + 0.75 * (0.5 + 0.5 * Math.sin(f / (14 + z * 20) + i))) * (0.3 + z * 0.7) * 0.35 * 0.9;
+      var gr = dx.createRadialGradient(x, y, 0, x, y, r);
+      gr.addColorStop(0, "rgba(" + C2 + "," + a.toFixed(3) + ")"); gr.addColorStop(1, "rgba(" + C2 + ",0)");
+      dx.filter = z > 0.7 ? "blur(" + ((z - 0.7) * 10).toFixed(1) + "px)" : "none";
+      dx.fillStyle = gr; dx.beginPath(); dx.arc(x, y, r, 0, 7); dx.fill();
+    }
+    dx.restore();
+    // ground dots locked to the world
+    for (var zz = Math.ceil((cam[1] + 300) / 420) * 420; zz < cam[1] + 9000; zz += 420) {
+      for (var xx = Math.floor((cam[0] - 5200) / 420) * 420; xx < cam[0] + 5200; xx += 420) {
+        var p = proj([xx, zz], cam), o = 0.28 * (1 - sm(2000, 9000, p[2])) * sm(300, 900, p[2]);
+        if (p[0] < -20 || p[0] > FW + 20 || p[1] > FH + 20 || o < 0.01) continue;
+        cx.fillStyle = "rgba(" + C2 + "," + o.toFixed(3) + ")";
+        cx.beginPath(); cx.arc(p[0], p[1], MT.clamp(2400 / p[2], 0.8, 3.2), 0, 7); cx.fill();
+      }
+    }
+    tips.length = 0;
+    tribs.forEach(function (b, i) { drawLine(b.pts, MT.ramp(t, b.g, CFG.grow, "out"), cam, b.w, C2, 0.62, 1, pulse(t, b.g + CFG.grow, 2.2, 0.018, i * 0.37), 0); });
+    drawLine(trunk, MT.ramp(t, 0, CFG.trunk, "out"), cam, 11, CA, 0.95, 0, pulse(t, CFG.trunk, 4, 0.022, 0), 1);
+    // pen tips: a white core in an accent halo
+    tips.forEach(function (p) {
+      var r = MT.clamp((p[3] ? 7000 : 4200) / p[2], 3, 18) * S, gr = cx.createRadialGradient(p[0], p[1], 0, p[0], p[1], r * 5);
+      gr.addColorStop(0, "rgba(" + CO + ",0.9)"); gr.addColorStop(0.3, "rgba(" + CA + ",0.35)"); gr.addColorStop(1, "rgba(" + CA + ",0)");
+      cx.fillStyle = gr; cx.beginPath(); cx.arc(p[0], p[1], r * 5, 0, 7); cx.fill();
+      cx.fillStyle = "rgb(" + CO + ")"; cx.beginPath(); cx.arc(p[0], p[1], r * 0.6, 0, 7); cx.fill();
+    });
+    // labels: pin pops, stem grows, capsule rises out of a blur; scale 1500 / depth (0.7-1.7), text >= 28px
+    tags.forEach(function (g) {
+      var pr = proj(g.p, cam), s = g.el.style;
+      if (t < g.t || pr[2] < 200) { s.opacity = 0; return; }
+      var k = MT.clamp(1500 / pr[2], 0.7, 1.7) * S, m = Math.max(k, 1.12 * S), c = g.cap.style, sh = 44 * k;
+      var pin = MT.ramp(t, g.t, 0.333, "overshoot"), st = MT.ramp(t, g.t + 0.067, 0.4, "snappy"), tag = MT.ramp(t, g.t + 0.2, 0.467, "snappy");
+      s.opacity = 1 - sm(3600, 8000, pr[2]);
+      s.transform = "translate(" + pr[0].toFixed(1) + "px," + pr[1].toFixed(1) + "px)";
+      g.pin.style.opacity = MT.ramp(t, g.t, 0.133, "out");
+      g.pin.style.transform = "scale(" + (k * pin).toFixed(3) + ")";
+      g.stem.style.top = (-8 * k - sh * st).toFixed(1) + "px";
+      g.stem.style.height = (sh * st).toFixed(1) + "px";
+      c.transform = "translate(" + (g.flip ? 2 * k - g.w : -2 * k).toFixed(1) + "px," + (-8 * k - sh - g.h + (1 - tag) * 14 * m).toFixed(1) + "px) scale(" + (m / 1.12).toFixed(3) + ")";
+      c.opacity = tag;
+      c.filter = tag < 0.98 ? "blur(" + ((1 - tag) * 6).toFixed(2) + "px)" : "none";
+    });
+    grain(t);
+  });
+  tl.fromTo(q(".dv-sc"), { opacity: 0.35 }, { opacity: 1, duration: CFG.fade, ease: "out" }, 0);
+  tl.fromTo(vp, { opacity: 0.25 }, { opacity: 1, duration: CFG.glowDur, ease: "swift" }, CFG.glow);
+  tl.fromTo(vpd, { opacity: 0.4 }, { opacity: 1, duration: CFG.glowDur, ease: "swift" }, CFG.glow);
+  tl.fromTo(kick, { opacity: 0 }, { opacity: 1, duration: 0.467, ease: "out" }, CFG.kick);
+  tl.fromTo(kick, { y: 12 * S }, { y: 0, duration: 0.6, ease: "snappy" }, CFG.kick);
+  head.forEach(function (h) { kReveal(tl, h[0], "rise", h[1], { each: CFG.word, gap: CFG.gap }); });
+  window.__timelines["dataviz-landscape-open"] = tl;
+})();
+      </script>
+    </template>
+  </body>
+</html>

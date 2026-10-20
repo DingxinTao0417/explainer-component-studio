@@ -1,0 +1,301 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"term","type":"string","label":"术语","default":"上下文窗口"},
+    {"id":"reading","type":"string","label":"读音或英文（可空）","default":"Context Window"},
+    {"id":"tag","type":"string","label":"词性小标签（可空）","default":"名词 · 大模型"},
+    {"id":"gloss","type":"string","label":"释义（用 | 分意群）","default":"模型一次能看到的全部文字，|包括你的提问、之前的对话，|还有它自己写下的回答"},
+    {"id":"key","type":"string","label":"划线强调（释义里的一段，一字不差；可空）","default":"一次能看到的全部文字"},
+    {"id":"not","type":"string","label":"常见误解（可空，出现后被划掉）","default":"模型能永久记住的所有内容"},
+    {"id":"hit","type":"number","label":"划线时刻（秒）","default":2.8,"min":0,"max":20,"step":0.05},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>term-define · 术语定义</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="term-define-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* wrapper = size container (absolute, no layout of its own); everything that changes with orientation lives inside */
+        .td { position: absolute; inset: 0; container-type: size; }
+        .td-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        /* landscape: a left-aligned entry 1520px wide, centred vertically */
+        .td-box { position: absolute; top: 80px; bottom: 80px; left: 200px; right: 200px; display: flex; flex-direction: column; justify-content: center; }
+        .td-entry { display: block; }
+        .td-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 48px; }
+        .td-term { display: block; font-size: 150px; font-weight: 800; line-height: 1.16; letter-spacing: 0.02em; white-space: nowrap; }
+        /* padding-right leaves room for the tag's pop overshoot (back.out scales it past 1 from its left edge) */
+        .td-meta { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; padding: 0 36px 24px 0; }
+        /* a term that would have to shrink beside the meta keeps its size and puts the meta on a row under it */
+        .td-stack .td-meta { flex-basis: 100%; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 12px 22px; padding: 8px 36px 0 0; }
+        .td-read { display: block; font-size: 52px; font-weight: 500; line-height: 1.2; color: var(--k-muted); white-space: nowrap; }
+        .td-tag { display: block; font-size: 40px; font-weight: 600; line-height: 1.25; padding: 4px 22px; border-radius: 999px; background: var(--k-panel); color: var(--k-muted); white-space: nowrap; }
+        /* in a row (stacked landscape, portrait) a long reading or tag wraps inside the column instead of running off */
+        .td-stack .td-read, .td-stack .td-tag { white-space: normal; max-width: 100%; overflow-wrap: anywhere; }
+        .td-rule { display: block; height: 4px; margin: 34px 0 40px; border-radius: 2px; background: var(--k-muted); opacity: 0.4; }
+        .td-gloss { display: block; font-size: 60px; font-weight: 500; line-height: 1.5; }
+        /* a sense group stays on one line when it fits the column; the script marks longer ones td-brk so they break inside */
+        .td-seg { display: inline-block; white-space: nowrap; }
+        .td-seg.td-brk { display: inline; white-space: normal; }
+        /* the misconception wraps under its own text, not under "不是：" */
+        .td-not { display: flex; align-items: baseline; margin-top: 30px; font-size: 46px; font-weight: 500; line-height: 1.45; color: var(--k-muted); }
+        .td-no { flex: none; font-weight: 700; }
+        .td-nt { flex: 1 1 0; min-width: 0; text-wrap: pretty; }
+        /* scripted text: every unbreakable unit is a block that can rise; key pieces carry their own stroke */
+        .td-t { display: inline-block; white-space: pre; }
+        .td-kw { position: relative; display: inline-block; white-space: pre; }
+        .td-bar { position: absolute; left: -0.5px; right: -0.5px; display: block; }
+        .td-ul { bottom: 0.1em; height: 0.1em; background: var(--k-accent); }
+        .td-x { top: 0.74em; height: 0.075em; background: var(--k-ink); }
+        /* static (no script) final picture: the key underlined in accent, the misconception struck through */
+        .td-ks { color: var(--k-accent); background: linear-gradient(var(--k-accent), var(--k-accent)) 0 96% / 100% 0.1em no-repeat; }
+        .td-ns { text-decoration: line-through; text-decoration-thickness: 0.075em; text-decoration-color: var(--k-ink); }
+        /* portrait: the entry sits in the 12%-68% band (its middle is the 40% anchor line), 11% off each side */
+        @container (orientation: portrait) {
+          .td-box { top: 12%; bottom: 32%; left: 11%; right: 11%; }
+          .td-head { flex-direction: column; align-items: flex-start; gap: 0; }
+          .td-term { font-size: 120px; }
+          .td-meta { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 12px 22px; padding: 14px 36px 0 0; }
+          .td-read { font-size: 44px; }
+          .td-read, .td-tag { white-space: normal; max-width: 100%; overflow-wrap: anywhere; }
+          .td-rule { height: 3px; margin: 32px 0 34px; }
+          .td-gloss { font-size: 52px; line-height: 1.55; }
+          .td-not { margin-top: 28px; font-size: 44px; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="term-define">
+        <div class="td">
+          <div class="td-bg"></div>
+          <div class="td-box">
+            <div class="td-entry">
+              <div class="td-head">
+                <div class="td-term">上下文窗口</div>
+                <div class="td-meta">
+                  <div class="td-read">Context Window</div>
+                  <div class="td-tag">名词 · 大模型</div>
+                </div>
+              </div>
+              <div class="td-rule"></div>
+              <div class="td-gloss"><span class="td-seg">模型<span class="td-ks">一次能看到的全部文字</span>，</span><span class="td-seg">包括你的提问、之前的对话，</span><span class="td-seg">还有它自己写下的回答</span></div>
+              <div class="td-not"><span class="td-no">不是：</span><span class="td-nt"><span class="td-ns">模型能永久记住的所有内容</span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing (seconds), shared by both orientations: only LAND / PORT differ
+          var CFG = { term: 0.15, termDur: 0.62, fade: 0.24, lsFrom: 0.1, lsTo: 0.02, read: 0.72, readDur: 0.4, tag: 0.86, tagDur: 0.42,
+            rule: 1.02, ruleDur: 0.55, gloss: 1.35, each: 0.32, segDur: 0.5, spread: 0.12, uDur: 0.5, notGap: 0.2, notDur: 0.4, strike: 0.4, strikeDur: 0.4 };
+          // layout per orientation: motion distances in px, the term's largest size, and whether the meta may sit beside the term
+          var LAND = { fall: 64, rise: 26, slide: 24, termMax: 150, termMin: 100, side: true };
+          var PORT = { fall: 52, rise: 22, slide: 20, termMax: 120, termMin: 72, side: false };
+          var v = { term: "上下文窗口", reading: "Context Window", tag: "名词 · 大模型", gloss: "模型一次能看到的全部文字，|包括你的提问、之前的对话，|还有它自己写下的回答",
+            key: "一次能看到的全部文字", not: "模型能永久记住的所有内容", hit: 2.8, backdrop: "on" };
+          var OPT = { reading: 1, tag: 1, key: 1, not: 1 }; // these may be set to "" to drop the part
+          var DEF = {}, k;
+          for (k in v) DEF[k] = v[k];
+          var trim = function (s) { return String(s == null ? "" : s).trim(); };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (k in got) if (got[k] !== undefined && got[k] !== null && (got[k] !== "" || OPT[k])) v[k] = got[k];
+          } catch (e) {}
+          // a new term with the demo's reading, tag or misconception still in place: those belong to the demo term
+          if (trim(v.term) && trim(v.term) !== DEF.term) ["reading", "tag", "not"].forEach(function (n) { if (trim(v[n]) === DEF[n]) v[n] = ""; });
+
+          var root = document.querySelector(".td");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          if (String(v.backdrop) === "off") q(".td-bg").style.display = "none";
+
+          var term = trim(v.term), reading = trim(v.reading), tag = trim(v.tag), key = trim(v.key), not = trim(v.not);
+          var CJK = /[\u2e80-\u9fff\uf900-\ufaff\ufe30-\ufe4f\uff00-\uffef]/, LAT = /[A-Za-z0-9]/;
+          // sense groups, trimmed; a | between two Latin words, or a space written next to a Latin word at a |, keeps one space
+          var segs = [], gapWas = false;
+          String(v.gloss).split("|").forEach(function (s) {
+            var t = trim(s), n = segs.length;
+            if (t) {
+              var a = n ? segs[n - 1].slice(-1) : "", b = t.charAt(0);
+              if (n && ((LAT.test(a) && LAT.test(b)) || ((gapWas || /^\s/.test(s)) && !(CJK.test(a) && CJK.test(b))))) segs[n - 1] += " ";
+              segs.push(t);
+            }
+            gapWas = /\s$/.test(s);
+          });
+          var box = q(".td-box"), BW = box.clientWidth || FW * (P ? 0.78 : 0.79), BH = box.clientHeight || FH * (P ? 0.56 : 0.85);
+          var em = function (s) { var w = 0; for (var c = 0; c < s.length; c++) w += s.charCodeAt(c) > 255 ? 1 : 0.6; return w; };
+
+          // head: term, then the reading and the tag (either may be empty)
+          var termEl = q(".td-term"), meta = q(".td-meta"), readEl = q(".td-read"), tagEl = q(".td-tag");
+          termEl.textContent = term;
+          readEl.textContent = reading;
+          tagEl.textContent = tag;
+          if (!reading) readEl.style.display = "none";
+          if (!tag) tagEl.style.display = "none";
+          if (!reading && !tag) meta.style.display = "none";
+          // the term is sized with its loose starting letter-spacing (measured at 100px; the estimate is only a fallback when
+          // nothing is laid out yet) so it never grows past the box while it tightens; in landscape it shares the line with
+          // the meta column, and drops the meta below it when that would be too small
+          // the tag pops with back.out(2), which peaks at 1.132x from its left edge: keep that much room on the right
+          if (tag) meta.style.paddingRight = Math.ceil(tagEl.offsetWidth * 0.14) + "px";
+          termEl.style.fontSize = "100px";
+          var rg = document.createRange();
+          rg.selectNodeContents(termEl);
+          var wAt = function (ls) { termEl.style.letterSpacing = ls + "em"; return rg.getBoundingClientRect().width / 100; };
+          var tw0 = wAt(0), nCh = tw0 ? (wAt(CFG.lsFrom) - tw0) / CFG.lsFrom : 0; // width per px of font, spaced characters
+          if (!tw0) { tw0 = em(term); nCh = term.length; }
+          termEl.style.letterSpacing = "";
+          var room = function (w, ls) { return Math.floor(w / Math.max(0.01, tw0 + nCh * ls)); };
+          var side = L.side && (reading || tag) ? BW - (meta.offsetWidth || 0) - 48 : BW;
+          var ts = Math.min(L.termMax, room(side, CFG.lsFrom)), ls0 = CFG.lsFrom;
+          if (ts < L.termMax * 0.85) { ts = Math.min(L.termMax, room(BW, CFG.lsFrom)); if (side < BW) q(".td-head").classList.add("td-stack"); }
+          // a long term starts less loose rather than going under the title floor (as far as the settled spacing allows)
+          if (ts < L.termMin) {
+            ts = Math.min(L.termMin, room(BW, CFG.lsTo));
+            ls0 = Math.max(CFG.lsTo, Math.min(CFG.lsFrom, Math.floor(1000 * (BW / ts - tw0) / Math.max(1, nCh)) / 1000));
+          }
+          termEl.style.fontSize = ts + "px";
+
+          // text split into unbreakable units: one CJK char (closing punctuation sticks to the char before it, opening
+          // punctuation to the char after it) or one Latin word with its trailing spaces. Units are inline blocks, so the
+          // browser still wraps the paragraph, and the key / struck pieces inside them get one stroke bar per piece
+          var CLOSE = "，。、；：！？）」』”’》〉】,.;:!?)%", OPEN = "（「『“‘《〈【(";
+          var units = function (s) {
+            var out = [], cur = null, glue = false;
+            for (var i = 0; i < s.length; i++) {
+              var c = s.charAt(i), sp = /\s/.test(c), cjk = CJK.test(c);
+              if (cur && (glue || sp || CLOSE.indexOf(c) >= 0 || (!cjk && cur.lat && !cur.sp))) { cur.e = i + 1; if (sp) cur.sp = true; }
+              else { cur = { s: i, e: i + 1, lat: !cjk && !sp, sp: false }; out.push(cur); }
+              glue = OPEN.indexOf(c) >= 0;
+            }
+            return out;
+          };
+          // fill el with the units of s; chars whose global index (off + i) is in [ka, kb) go into stroke pieces
+          var fill = function (el, s, off, ka, kb, bar, pieces) {
+            return units(s).map(function (u) {
+              var t = document.createElement("span"), i = u.s;
+              t.className = "td-t";
+              while (i < u.e) {
+                var inK = off + i >= ka && off + i < kb, j = i;
+                while (j < u.e && (off + j >= ka && off + j < kb) === inK) j++;
+                if (inK) {
+                  var kw = document.createElement("span"), b = document.createElement("i");
+                  kw.className = "td-kw";
+                  kw.textContent = s.slice(i, j);
+                  b.className = "td-bar " + bar;
+                  kw.appendChild(b);
+                  t.appendChild(kw);
+                  pieces.push(kw);
+                } else t.appendChild(document.createTextNode(s.slice(i, j)));
+                i = j;
+              }
+              el.appendChild(t);
+              return t;
+            });
+          };
+
+          // gloss: one span per sense group; the key is found in the joined text, exactly as written
+          var gloss = q(".td-gloss"), full = segs.join(""), ka = key ? full.indexOf(key) : -1, kb = ka < 0 ? -1 : ka + key.length;
+          var keys = [], off = 0, segEls = [];
+          gloss.innerHTML = "";
+          var segUnits = segs.map(function (s) {
+            var w = document.createElement("span");
+            w.className = "td-seg";
+            gloss.appendChild(w);
+            segEls.push(w);
+            var r = fill(w, s, off, ka, kb, "td-ul", keys);
+            off += s.length;
+            return r;
+          });
+          // a group wider than the column breaks inside like plain text; every other group moves to the next line whole
+          var fit = function () {
+            var gw = gloss.clientWidth;
+            segEls.forEach(function (w) { w.classList.remove("td-brk"); if (w.offsetWidth > gw) w.classList.add("td-brk"); });
+          };
+          fit();
+          // misconception: "不是：" + the struck text (dropped when empty)
+          var notEl = q(".td-not"), nt = q(".td-nt"), strikes = [];
+          nt.innerHTML = "";
+          if (not) fill(nt, not, 0, 0, not.length, "td-x", strikes);
+          else notEl.style.display = "none";
+          // a long gloss shrinks (not below 40px) until the whole entry fits the box
+          var gs = parseFloat(getComputedStyle(gloss).fontSize) || 60, entry = q(".td-entry");
+          for (var n = 0; n < 12 && entry.offsetHeight > BH && gs > 40; n++) { gs = Math.max(40, gs - 3); gloss.style.fontSize = gs + "px"; fit(); }
+
+          // timing that depends on the text: the key is struck only after the group holding its last character has landed
+          var segAt = function (i) { return CFG.gloss + i * CFG.each; };
+          var segEnd = segAt(Math.max(0, segs.length - 1)) + CFG.segDur + CFG.spread;
+          var keySeg = 0;
+          for (var a = 0, c2 = 0; a < segs.length; a++) { if (kb - 1 >= c2 && kb - 1 < c2 + segs[a].length) keySeg = a; c2 += segs[a].length; }
+          var hit = Math.max(segAt(keySeg) + CFG.segDur + CFG.spread, parseFloat(v.hit) || 2.8);
+          var notAt = Math.max(keys.length ? hit + CFG.uDur : 0, segEnd) + CFG.notGap;
+
+          var tl = MT.timeline();
+          // 1. the term drops in, settles with a small dip past its line, and its letter-spacing tightens
+          tl.fromTo(termEl, { opacity: 0 }, { opacity: 1, duration: CFG.fade, ease: "power1.out" }, CFG.term);
+          tl.fromTo(termEl, { y: -L.fall }, { y: 0, duration: CFG.termDur, ease: "back.out(1.6)" }, CFG.term);
+          tl.fromTo(termEl, { letterSpacing: ls0 + "em" }, { letterSpacing: CFG.lsTo + "em", duration: CFG.termDur + 0.06, ease: "power3.out" }, CFG.term);
+          // 2. reading slides out of the term, the tag pops (opaque, from scale 0: it is ink on a panel chip)
+          tl.fromTo(readEl, { opacity: 0, x: -L.slide }, { opacity: 1, x: 0, duration: CFG.readDur, ease: "power3.out" }, CFG.read);
+          tl.fromTo(tagEl, { scale: 0, transformOrigin: "0% 50%" }, { scale: 1, duration: CFG.tagDur, ease: "back.out(2)" }, CFG.tag);
+          // 3. the rule draws left to right
+          tl.fromTo(q(".td-rule"), { scaleX: 0, transformOrigin: "0% 50%" }, { scaleX: 1, duration: CFG.ruleDur, ease: "power2.inOut" }, CFG.rule);
+          // 4. the gloss rises one sense group at a time
+          segUnits.forEach(function (us, i) {
+            tl.fromTo(us, { opacity: 0, y: L.rise }, { opacity: 1, y: 0, duration: CFG.segDur, ease: "power3.out", stagger: { amount: CFG.spread } }, segAt(i));
+          });
+          // 5. hit: one pen stroke runs under the key (piece by piece, so it follows line breaks) and turns it accent
+          var inv = function (p) { return p < 0.5 ? Math.sqrt(p / 2) : 1 - Math.sqrt((1 - p) / 2); }; // inverse of power2.inOut
+          var stroke = function (pieces, at, dur, recolor) {
+            var ws = pieces.map(function (p) { return p.offsetWidth || 1; }), tot = ws.reduce(function (s, w) { return s + w; }, 0), acc = 0;
+            pieces.forEach(function (p, i) {
+              var a0 = inv(acc / tot), a1 = inv(Math.min(1, (acc + ws[i]) / tot));
+              acc += ws[i];
+              tl.fromTo(p.querySelector(".td-bar"), { scaleX: 0, transformOrigin: "0% 50%" }, { scaleX: 1, duration: Math.max(0.01, (a1 - a0) * dur), ease: "none" }, at + a0 * dur);
+              if (recolor) tl.fromTo(p, { color: "var(--k-ink)" }, { color: "var(--k-accent)", duration: 0.22, ease: "power1.out" }, at + a0 * dur);
+            });
+          };
+          tl.addLabel("hit", hit);
+          if (keys.length) stroke(keys, hit, CFG.uDur, true);
+          // 6. the misconception comes up in the muted colour and is struck through
+          if (not) {
+            tl.fromTo(notEl, { opacity: 0, y: L.rise }, { opacity: 1, y: 0, duration: CFG.notDur, ease: "power3.out" }, notAt);
+            stroke(strikes, notAt + CFG.strike, CFG.strikeDur, false);
+          }
+          window.__timelines["term-define"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

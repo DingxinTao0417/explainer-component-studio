@@ -1,0 +1,358 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（蓝图纸和点阵不画，线框仍画在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>wireframe-draw-on · 线框描画成界面</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="wireframe-draw-on-template">
+      <!-- Ported from video-shotcraft demos/ui-entrance/wall-reveal-moves/WireframeDrawOn.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition (MT.scene), frames to seconds;
+           neutral --k-* palette, upstream mark, brand name, breadcrumb and the FakeDashboard text removed: the wireframe and the solid
+           interface are now built from one shared shape list (wordless bars, so they cannot drift apart) instead of hand-matched
+           geometry; the upstream card keeps its 3x2 layout in landscape, portrait shows the same interface as an app window
+           (slim rail, 2x3 cards) with the same groups and start frames. Group starts, 30-frame draw, scan span, warm trail, 4px
+           front line, vignette and grain kept; vignette strength and blueprint colours mixed from the palette. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+/* ==== kit:derived@1 ==== */
+.wd {
+  --wd-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+  --wd-panel-2: color-mix(in srgb, var(--k-panel), var(--k-ink) 4%);
+  --wd-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+  --wd-hi: color-mix(in srgb, white 80%, transparent);
+}
+.wd[data-tone="dark"] {
+  --wd-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+  --wd-hi: color-mix(in srgb, white 6%, transparent);
+}
+/* ==== end kit:derived ==== */
+
+/* ==== kit:vignette@1 ==== */
+.wd-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--wd-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.wd[data-tone="dark"] .wd-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+
+/* ==== kit:grain@1 ==== */
+.wd-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+
+/* ==== kit:light@1 ==== */
+.wd-light { mix-blend-mode: multiply; }
+.wd[data-tone="dark"] .wd-light { mix-blend-mode: screen; }
+/* ==== end kit:light ==== */
+
+
+        /* blueprint paper and wire colour, then the solid interface's tones (light: white cards, near-black rail) */
+        .wd { --wd-paper: color-mix(in srgb, var(--k-bg), var(--k-ink) 6%); --wd-bp: color-mix(in srgb, var(--k-muted) 85%, var(--k-accent-2)); --wd-card: var(--k-bg); --wd-raised: color-mix(in srgb, var(--k-bg) 70%, var(--wd-paper)); --wd-side: color-mix(in srgb, var(--k-ink) 92%, var(--k-accent-2)); --wd-hair: color-mix(in srgb, var(--k-ink) 10%, transparent); --wd-s: 1; }
+        .wd[data-tone="dark"] { --wd-paper: color-mix(in srgb, var(--k-bg), var(--k-ink) 4%); --wd-card: color-mix(in srgb, var(--k-panel), var(--k-ink) 6%); --wd-raised: color-mix(in srgb, var(--k-panel) 80%, var(--k-bg)); --wd-side: color-mix(in srgb, var(--k-bg) 60%, black); --wd-s: 2.6; }
+        .wd { position: absolute; inset: 0; container-type: size; }
+        .wd-paper { position: absolute; inset: 0; background: var(--wd-paper); }
+        .wd-dots { position: absolute; inset: 0; background-image: radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--wd-bp) 38%, transparent) 1px, transparent 1.4px); background-size: 24px 24px; }
+        .wd-bp, .wd-sv { position: absolute; left: 0; top: 0; overflow: visible; }
+        .wd-bp * { fill: none; stroke: var(--wd-bp); stroke-linecap: round; stroke-linejoin: round; }
+        .wd-solid { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; overflow: hidden; }
+        .wd-sv .cv { fill: var(--wd-paper); }
+        .wd-sv .sd { fill: var(--wd-side); }
+        .wd-sv .tb { fill: var(--wd-raised); }
+        .wd-sv .cd, .wd-sv .sr { fill: var(--wd-card); stroke: var(--wd-hair); stroke-width: 1; }
+        .wd-sv .cd { filter: drop-shadow(0 0.7px 1px color-mix(in srgb, var(--wd-shade) calc(11% * var(--wd-s)), transparent)) drop-shadow(0 2px 3px color-mix(in srgb, var(--wd-shade) calc(8% * var(--wd-s)), transparent)); }
+        .wd-sv .win { filter: drop-shadow(0 2px 4px color-mix(in srgb, var(--wd-shade) calc(14% * var(--wd-s)), transparent)) drop-shadow(0 14px 28px color-mix(in srgb, var(--wd-shade) calc(16% * var(--wd-s)), transparent)); }
+        .wd-sv .ln { fill: var(--wd-hair); }
+        .wd-sv .ik { fill: color-mix(in srgb, var(--k-ink) 62%, var(--wd-card)); }
+        .wd-sv .ik2 { fill: color-mix(in srgb, var(--k-ink) 36%, var(--wd-raised)); }
+        .wd-sv .bm { fill: color-mix(in srgb, var(--k-ink) 22%, var(--wd-card)); }
+        .wd-sv .lt { fill: color-mix(in srgb, var(--k-ink) 11%, var(--wd-card)); }
+        .wd-sv .ac { fill: color-mix(in srgb, var(--k-accent) 18%, var(--wd-card)); }
+        .wd-sv .am { fill: var(--k-accent); }
+        .wd-sv .av { fill: color-mix(in srgb, var(--k-ink) 80%, var(--wd-raised)); }
+        .wd-sv .oa { fill: var(--k-on-accent); }
+        .wd-sv .sk { fill: color-mix(in srgb, white 92%, transparent); }
+        .wd-sv .sk2 { fill: color-mix(in srgb, white 52%, transparent); }
+        .wd-sv .sk3 { fill: color-mix(in srgb, white 28%, transparent); }
+        .wd-sv .sa, .wd-sv .su { fill: color-mix(in srgb, white 8%, transparent); }
+        .wd-sv .wv { fill: none; stroke: var(--k-accent-2); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+        .wd-sv .wa { fill: color-mix(in srgb, var(--k-accent-2) 11%, transparent); }
+        .wd-trail { position: absolute; top: 0; bottom: 0; width: 260px; pointer-events: none; opacity: 0; background: linear-gradient(90deg, color-mix(in srgb, var(--k-accent) 0%, transparent) 0%, color-mix(in srgb, var(--k-accent) 10%, transparent) 70%, color-mix(in srgb, var(--k-accent) 22%, transparent) 100%); }
+        .wd-scan { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; opacity: 0; background: linear-gradient(180deg, color-mix(in srgb, var(--k-accent) 60%, white), var(--k-accent) 20%, color-mix(in srgb, var(--k-accent) 70%, white) 50%, var(--k-accent) 80%, color-mix(in srgb, var(--k-accent) 60%, white));
+          box-shadow: 0 0 18px 6px color-mix(in srgb, var(--k-accent) 55%, transparent), 0 0 60px 18px color-mix(in srgb, var(--k-accent) 22%, transparent); }
+        .wd-vig { --vs: 0.12; --vin: 55%; }
+      </style>
+
+      <div id="root" data-composition-id="wireframe-draw-on">
+        <div class="wd">
+          <div class="wd-paper"></div>
+          <div class="wd-dots"></div>
+          <svg class="wd-bp" aria-hidden="true"></svg>
+          <div class="wd-solid" data-layout-allow-overflow><svg class="wd-sv" aria-hidden="true"></svg><div class="wd-trail wd-light"></div></div>
+          <div class="wd-scan"></div>
+          <div class="wd-vig"></div>
+          <div class="wd-grain"></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing in seconds (upstream frames / 30), shared by both orientations; group start frames live in the shape list below
+          var CFG = {
+            dur: 5, dots: 0.6, draw: 1, // dot grid fades in over 18f; every wire takes 30f to draw
+            scan: 2.933, scanLen: 1, // reveal sweep, frames 88-118
+            line: [2.867, 3.067, 3.733, 4], // front line opacity keys, frames 86 / 92 / 112 / 120
+            trail: 260 // warm afterglow behind the front, px
+          };
+          var root = document.querySelector(".wd");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          var v = { backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== end kit:tone ====
+
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+      "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+      "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+      "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+      "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+}
+// ==== end kit:grain ====
+
+
+          kTone(root);
+          if (String(v.backdrop) === "off") [].forEach.call(root.querySelectorAll(".wd-paper, .wd-dots, .wd-vig, .wd-grain"), function (n) { n.style.display = "none"; });
+
+          // ---- one shape list feeds both layers: W = thin wire (drawn on), S = solid shape at the same place ----
+          var W = [], S = [];
+          var n = function (x) { return Math.round(x * 10) / 10; };
+          var frac = function (i) { var x = Math.sin(i * 127.3) * 43758.5453; return x - Math.floor(x); }; // upstream seed hash
+          var rc = function (x, y, w, h, r) { return 'x="' + n(x) + '" y="' + n(y) + '" width="' + n(w) + '" height="' + n(h) + '" rx="' + n(r) + '"'; };
+          var ln = function (x1, y, x2) { return 'x1="' + n(x1) + '" y1="' + n(y) + '" x2="' + n(x2) + '" y2="' + n(y) + '"'; };
+          var ci = function (x, y, r) { return 'cx="' + n(x) + '" cy="' + n(y) + '" r="' + n(r) + '"'; };
+          // wire: pathLength 1, the dash gap a little longer than the path so nothing shows before the pen starts (f = start frame at 30 fps)
+          var wire = function (tag, a, sw, f, o) { W.push({ s: "<" + tag + " " + a + ' stroke-width="' + sw + '" pathLength="1" stroke-dasharray="1 1.01" stroke-dashoffset="1" style="opacity:0"/>', f: f / 30, o: o == null ? 1 : o }); };
+          var solid = function (tag, cls, a, extra) { S.push("<" + tag + ' class="' + cls + '" ' + a + (extra || "") + "/>"); };
+          var box = function (x, y, w, h, r, cls, sw, f) { solid("rect", cls, rc(x, y, w, h, r)); wire("rect", rc(x, y, w, h, r), sw, f); };
+          var bar = function (x, y, w, th, cls, f, sw) { solid("rect", cls, rc(x, y - th / 2, w, th, th / 2)); wire("line", ln(x, y, x + w), sw || 1.25, f); };
+          var dot = function (x, y, r, cls, f) { solid("circle", cls, ci(x, y, r)); wire("circle", ci(x, y, r), 1.25, f); };
+          var hair = function (x1, y, x2, f) { solid("rect", "ln", rc(x1, y - 0.75, x2 - x1, 1.5, 0)); wire("line", ln(x1, y, x2), 1.25, f); };
+          var rp = function (x, y, w, h, a, b, c, d) { // rounded rect path, corner radii a b c d = tl tr br bl
+            var arc = function (r, px, py) { return r ? "A" + r + "," + r + " 0 0 1 " + px + "," + py : ""; };
+            return "M" + (x + a) + "," + y + "H" + (x + w - b) + arc(b, x + w, y + b) + "V" + (y + h - c) + arc(c, x + w - c, y + h) + "H" + (x + d) + arc(d, x, y + h - d) + "V" + (y + a) + arc(a, x + a, y) + "Z";
+          };
+          var smooth = function (pts) { // Catmull-Rom to bezier
+            var d = "M" + n(pts[0][0]) + "," + n(pts[0][1]);
+            for (var i = 0; i < pts.length - 1; i++) {
+              var p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)];
+              d += " C" + n(p1[0] + (p2[0] - p0[0]) / 6) + "," + n(p1[1] + (p2[1] - p0[1]) / 6) + " " + n(p2[0] - (p3[0] - p1[0]) / 6) + "," + n(p2[1] - (p3[1] - p1[1]) / 6) + " " + n(p2[0]) + "," + n(p2[1]);
+            }
+            return d;
+          };
+          var wave = function (x0, x1, yTop, yBot, seed) {
+            var pts = [];
+            for (var i = 0; i < 12; i++) {
+              var k = i / 11, vv = 0.45 * k + 0.2 * Math.sin(i * 0.9 + seed) + 0.12 * frac(seed * 7 + i);
+              pts.push([x0 + (x1 - x0) * k, yBot - (yBot - yTop) * Math.min(1, Math.max(0, vv + 0.15))]);
+            }
+            return smooth(pts);
+          };
+
+          // one dashboard card: outline, crop marks, header, number, footer, and one of five chart forms by index.
+          // Y() stretches the body (y 60-393 of the 454px upstream card) to the card's height, so portrait cards keep the order
+          var card = function (i, cx, cy, cw, ch, o) {
+            var f = (ch - 121) / 333, wk = cw / 524, s0 = 40 + i * 3, k, y;
+            var Y = function (yy) { return cy + (yy <= 60 ? yy : yy >= 393 ? ch - (454 - yy) : 60 + (yy - 60) * f); };
+            var H = function (h) { return h * f; };
+            var td = function (j) { return 46 + i * 3 + j; };
+            box(cx, cy, cw, ch, 14, "cd", 1.6, s0);
+            [[-o, -o, 1, 1], [cw + o, -o, -1, 1], [-o, ch + o, 1, -1], [cw + o, ch + o, -1, -1]].forEach(function (c) {
+              var x = cx + c[0], yy = cy + c[1];
+              wire("path", 'd="M' + n(x) + "," + n(yy + c[3] * 14) + " L" + n(x) + "," + n(yy) + " L" + n(x + c[2] * 14) + "," + n(yy) + '"', 1, s0, 0.55);
+            });
+            box(cx + 20, cy + 20, 28, 28, 7, "ac", 1.25, td(0));
+            bar(cx + 58, cy + 34, 80 + (((i + 1) * 37) % 50), 11, "ik", td(1));
+            box(cx + cw - 75, cy + 24, 30, 20, 5, "lt", 1.25, td(1));
+            bar(cx + 20, Y(84), 120 + (((i + 2) * 53) % 110), 18, "ik", td(2), 3);
+            bar(cx + 20, Y(120), 110, 10, "lt", td(3));
+            hair(cx + 20, cy + ch - 61, cx + cw - 20, td(4));
+            for (k = 0; k < 3; k++) dot(cx + 31 + k * 20, cy + ch - 33, 10, "lt", td(5 + k));
+            bar(cx + 94, cy + ch - 33, 96, 9, "lt", td(6));
+            bar(cx + cw - 66, cy + ch - 33, 46, 9, "lt", td(7));
+            if (i === 0 || i === 5) { // area curve
+              var d = wave(cx + 20, cx + cw - 24, Y(170), Y(355), i ? 4 : 1);
+              solid("path", "wa", 'd="' + d + " L" + n(cx + cw - 24) + "," + n(Y(355)) + " L" + n(cx + 20) + "," + n(Y(355)) + ' Z"');
+              solid("path", "wv", 'd="' + d + '"');
+              wire("path", 'd="' + d + '"', 2, i ? 60 : 52);
+            } else if (i === 1) { // six list bars
+              [484, 320, 212, 140, 92, 180].forEach(function (w, j) { box(cx + 20, Y(85 + j * 42) - H(12), (w * (cw - 40)) / 484, H(24), 5, j ? "lt" : "ac", 1.25, 54 + j * 2); });
+            } else if (i === 2) { // fourteen columns
+              for (k = 0; k < 14; k++) {
+                var h = H(30 + (0.25 + 0.75 * Math.min(1, k / 8)) * 150 * (0.75 + 0.25 * frac(k + 9)));
+                box(cx + 26 + k * 34.6 * wk, Y(358) - h, 20 * wk, h, 3, k > 11 ? "am" : "bm", 1.25, 56 + k);
+              }
+            } else if (i === 3) { // five progress rows
+              for (k = 0; k < 5; k++) {
+                y = Y(178 + k * 46);
+                bar(cx + 20, y - H(18), 60 + k * 9, 9, "bm", 58 + k * 2);
+                box(cx + 20, y - 3, cw - 40, 6, 3, "lt", 1.25, 59 + k * 2);
+                solid("rect", "am", rc(cx + 20, y - 3, (cw - 40) * [0.78, 0.52, 0.9, 0.35, 0.64][k], 6, 3));
+              }
+            } else { // heat grid: frame, row guides, cells
+              box(cx + 20, Y(144), cw - 46, H(156), 4, "lt", 1.25, 60);
+              var sz = H(18), cols = Math.floor((cw - 62) / (sz + 5)), j, hp = ["", "", "", ""];
+              for (k = 0; k < 6; k++) {
+                y = Y(167 + k * 23);
+                wire("line", ln(cx + 20, y, cx + cw - 26), 1, 62 + k);
+                // cells share four opacity steps, one path per step (a card with 120 separate rects made the dense check time out)
+                for (j = 0; j < cols; j++) hp[Math.floor(frac(k * 20 + j) * 4)] += "M" + n(cx + 28 + j * (sz + 5)) + "," + n(y - sz / 2) + "h" + n(sz) + "v" + n(sz) + "h" + n(-sz) + "z";
+              }
+              hp.forEach(function (d, q4) { if (d) solid("path", "am", 'd="' + d + '"', ' fill-opacity="' + (0.2 + q4 * 0.2).toFixed(2) + '"'); });
+            }
+          };
+
+          var cols, rows, gx, gy, gw, gh, pad, gap;
+          if (!P) {
+            // landscape: full-bleed dashboard, 220px rail, 72px top bar, 3 x 2 cards
+            var sd = 220, tp = 72;
+            solid("rect", "cv", rc(0, 0, FW, FH, 0)); solid("rect", "sd", rc(0, 0, sd, FH, 0)); solid("rect", "tb", rc(sd, 0, FW - sd, tp, 0));
+            solid("rect", "ln", rc(sd, tp - 0.75, FW - sd, 1.5, 0));
+            wire("rect", rc(1, 1, sd - 1, FH - 2, 2), 1.6, 20);
+            box(22, 28, 40, 40, 10, "am", 1.25, 24);
+            dot(37, 43, 5.5, "oa", 25); bar(31, 56, 22, 5, "oa", 28);
+            bar(73, 40, 100, 10, "sk", 25); bar(73, 58, 45, 8, "sk2", 26);
+            box(22, 96, 176, 34, 8, "sa", 1.25, 26);
+            for (var a = 0; a < 7; a++) { var cy = 113 + a * 40; box(33, cy - 7, 14, 14, 3, a ? "sk2" : "sk", 1.25, 26 + a * 2); bar(59, cy, 42 + ((a * 29) % 36), 8, a ? "sk2" : "sk", 27 + a * 2); }
+            bar(32, 409, 66, 7, "sk3", 40);
+            [72, 77, 76].forEach(function (w, b) { dot(40, 437 + b * 38, 4, b ? "sk3" : "am", 41 + b * 2); bar(59, 437 + b * 38, w, 8, "sk2", 42 + b * 2); });
+            box(22, FH - 79, 176, 50, 10, "su", 1.25, 46); bar(34, FH - 42, 152, 5, "sk3", 48);
+            solid("rect", "sk", rc(34, FH - 44.5, 152 * 0.68, 5, 2.5));
+            wire("line", ln(sd, tp, FW), 1.6, 30);
+            bar(252, 36, 106, 10, "ik2", 33); bar(388, 36, 66, 10, "ik", 34);
+            box(486, 20, 136, 32, 9, "sr", 1.25, 35); box(FW - 408, 18, 320, 36, 10, "sr", 1.25, 36); dot(FW - 50, 36, 18, "av", 38);
+            cols = 3; rows = 2; gx = sd; gy = tp; gw = FW - sd; gh = FH - tp; pad = 36; gap = 28;
+          } else {
+            // portrait: the same interface as an app window in the main zone: slim rail, 84px top bar, 2 x 3 cards
+            var wx = Math.round(FW * 0.1), ww = FW - 2 * wx, wy = Math.round(FH * 0.12), wh = Math.round(FH * 0.56), rl = 88, tq = 84, rd = 28;
+            solid("rect", "cv win", rc(wx, wy, ww, wh, rd));
+            solid("path", "sd", 'd="' + rp(wx, wy, rl, wh, rd, 0, 0, rd) + '"');
+            solid("path", "tb", 'd="' + rp(wx + rl, wy, ww - rl, tq, 0, rd, 0, 0) + '"');
+            solid("rect", "ln", rc(wx + rl, wy + tq - 0.75, ww - rl, 1.5, 0));
+            wire("rect", rc(wx, wy, ww, wh, rd), 1.6, 20);
+            wire("path", 'd="M' + (wx + rl) + "," + wy + " V" + (wy + wh) + '"', 1.6, 24);
+            box(wx + 24, wy + 24, 40, 40, 10, "am", 1.25, 24);
+            dot(wx + 39, wy + 39, 5.5, "oa", 25); bar(wx + 33, wy + 52, 22, 5, "oa", 28);
+            box(wx + 14, wy + 78, 60, 44, 10, "sa", 1.25, 26);
+            for (var c = 0; c < 7; c++) box(wx + 34, wy + 90 + c * 52, 20, 20, 5, c ? "sk2" : "sk", 1.25, 26 + c * 2);
+            bar(wx + 30, wy + 456, 28, 6, "sk3", 40);
+            for (var e = 0; e < 3; e++) dot(wx + 44, wy + 500 + e * 40, 5, e ? "sk3" : "am", 41 + e * 2);
+            dot(wx + 44, wy + wh - 52, 18, "su", 46);
+            wire("line", ln(wx + rl, wy + tq, wx + ww), 1.6, 30);
+            bar(wx + rl + 28, wy + 42, 90, 10, "ik2", 33); bar(wx + rl + 140, wy + 42, 56, 10, "ik", 34);
+            box(wx + rl + 224, wy + 25, 128, 34, 9, "sr", 1.25, 35); box(wx + ww - 300, wy + 24, 200, 36, 10, "sr", 1.25, 36); dot(wx + ww - 48, wy + 42, 18, "av", 38);
+            cols = 2; rows = 3; gx = wx + rl; gy = wy + tq; gw = ww - rl; gh = wh - tq; pad = 24; gap = 20;
+          }
+          var cw = (gw - 2 * pad - (cols - 1) * gap) / cols, ch = (gh - 2 * pad - (rows - 1) * gap) / rows;
+          for (var i = 0; i < 6; i++) card(i, gx + pad + (i % cols) * (cw + gap), gy + pad + Math.floor(i / cols) * (ch + gap), cw, ch, Math.min(10, gap / 2 - 3));
+
+          var wsvg = q(".wd-bp"), ssvg = q(".wd-sv");
+          [wsvg, ssvg].forEach(function (s) { s.setAttribute("width", FW); s.setAttribute("height", FH); s.setAttribute("viewBox", "0 0 " + FW + " " + FH); });
+          wsvg.innerHTML = W.map(function (w) { return w.s; }).join("");
+          ssvg.innerHTML = S.join("");
+          var wires = [].slice.call(wsvg.children);
+
+          var grain = kGrain(q(".wd-grain"), { opacity: 0.04 });
+          var dots = q(".wd-dots"), solidL = q(".wd-solid"), trail = q(".wd-trail"), scanL = q(".wd-scan");
+          trail.style.width = CFG.trail + "px";
+          var DRAW = MT.bezier(0.4, 0, 0.3, 1), SCAN = MT.bezier(0.55, 0, 0.25, 1);
+          var tl = MT.scene(CFG.dur, function (t) {
+            for (var j = 0; j < wires.length; j++) {
+              var p = MT.ramp(t, W[j].f, CFG.draw, DRAW);
+              wires[j].style.strokeDashoffset = (1 - p).toFixed(4);
+              wires[j].style.opacity = p > 0 ? W[j].o : 0;
+            }
+            var sc = MT.ramp(t, CFG.scan, CFG.scanLen, SCAN), x = sc * FW;
+            solidL.style.width = x.toFixed(1) + "px"; // reveal by width (the shapes inside keep their size): a clip-path write per sample made the dense check time out
+            trail.style.left = x - CFG.trail + "px";
+            trail.style.opacity = sc > 0 && sc < 1 ? 1 : 0;
+            scanL.style.left = x - 2 + "px";
+            scanL.style.opacity = MT.interpolate(t, CFG.line, [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+            dots.style.opacity = 0.9 * MT.ramp(t, 0, CFG.dots, "power2.out");
+            grain(t);
+          });
+          window.__timelines["wireframe-draw-on"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

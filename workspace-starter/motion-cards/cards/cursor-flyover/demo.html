@@ -1,0 +1,491 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+  {"id":"titles","type":"string","label":"四块的标题（| 分隔，按巡览顺序：左上、右上、右下、左下）","default":"本月处理量|每周访问|新功能开关|常用模板"},
+  {"id":"name","type":"string","label":"顶栏的应用名","default":"示例应用"},
+  {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（去掉界面外的底）"}]}
+  ]'
+>
+<head>
+<meta charset="UTF-8" />
+<title>cursor-flyover · 光标导游巡览</title>
+<script src="../../lib/preview.js"></script>
+</head>
+<body>
+<template id="cursor-flyover-template">
+<!-- Ported from video-shotcraft demos/camera/cursor-flyover/CursorFlyover.tsx
+     (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+     Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+     Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+     --k-* palette for the porcelain look (pale accent tints on dark skins), system fonts; upstream mark, wordmark,
+     product copy and feature names replaced by a neutral Chinese dashboard; small UI text 28-32px (upstream 22-28),
+     titles 36 (34); old big number fades to 0 (upstream 0.1); tooltip shows from 75% opacity (upstream from 0);
+     cursor tip on the target (upstream 4px off); portrait: 2x2 world of 660x820 modules, own camera keys; 0.4 s
+     longer hold. World 2400x1500, camera table, lead and lag, hop, ease, press, ripple, springs, speed blur, stage
+     light, vignette, grain, shadow formula and timings as upstream. -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+#root {
+--k-bg: var(--mc-bg, #ffffff);
+--k-panel: var(--mc-panel, #f4f5f7);
+--k-ink: var(--mc-ink, #15171c);
+--k-muted: var(--mc-muted, #6b7280);
+--k-accent: var(--mc-accent, #e8590c);
+--k-accent-2: var(--mc-accent-2, #2563eb);
+--k-on-accent: var(--mc-on-accent, #ffffff);
+--k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+position: absolute;
+inset: 0;
+overflow: hidden;
+font-family: var(--k-font);
+color: var(--k-ink);
+}
+/* ==== kit:derived@1 ==== */
+.cf {
+--cf-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+--cf-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+--cf-hi: color-mix(in srgb, white 80%, transparent);
+}
+.cf[data-tone="dark"] {
+--cf-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+--cf-hi: color-mix(in srgb, white 6%, transparent);
+}
+/* ==== end kit:derived ==== */
+/* ==== kit:backdrop@1 ==== */
+.cf-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+/* ==== end kit:backdrop ==== */
+/* ==== kit:vignette@1 ==== */
+.cf-vig {
+position: absolute; inset: 0; pointer-events: none;
+--vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--cf-shade);
+background:
+radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.cf[data-tone="dark"] .cf-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+/* ==== kit:grain@1 ==== */
+.cf-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+.cf *{box-sizing:border-box}
+.cf,.cf-st,.cf-sb,.cf-cam,.cf-plate,.cf-top,.cf-m,.cf-t,.cf-s,.cf-seg,.cf-seg b,.cf-seg span,.cf-nb,.cf-nb span,.cf-up,.cf-bars,.cf-v,.cf-gr,.cf-gr svg,.cf-gd,.cf-pt,.cf-ax,.cf-tip,.cf-rows,.cf-fl,.cf-fl b,.cf-fl>span,.cf-tg,.cf-tg i,.cf-tg u,.cf-pg,.cf-tb,.cf-tr,.cf-tr s,.cf-cb svg,.cf-rip,.cf-cur{position:absolute}
+/* light stage as upstream */
+.cf{inset:0;container-type:size;--cf-tint:var(--k-accent);--cf-card:var(--k-bg);--cf-plate:var(--k-panel);--cf-well:color-mix(in srgb,var(--cf-card),var(--k-ink) 6%);--cf-s3:0 .7px 1.5px color-mix(in srgb,var(--cf-shade) 10.7%,transparent),0 1.7px 3.9px -.7px color-mix(in srgb,var(--cf-shade) 9%,transparent)}
+.cf[data-tone="dark"]{--cf-tint:color-mix(in srgb,var(--k-accent) 35%,white);--cf-card:var(--k-panel);--cf-plate:color-mix(in srgb,var(--k-bg),var(--k-panel) 45%)}
+.cf-st,.cf-sb{inset:0}
+.cf-st .cf-backdrop::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 58% 62% at 50% -10%,color-mix(in srgb,var(--k-bg) 90%,transparent),transparent 70%),radial-gradient(ellipse 50% 46% at 10% 100%,color-mix(in srgb,var(--k-accent-2) 10%,transparent),transparent 72%)}
+.cf-st .cf-vig{--vin:42%}
+/* kShadow as calc: elevation --ce, strength --cs, x2.6 on dark skins */
+.cf{--ck:1}.cf[data-tone="dark"]{--ck:2.6}
+.cf-m,.cf-plate,.cf-tip{box-shadow:var(--ci,0 0 #0000),0 calc(.5px + .06px*var(--ce)) calc(1px + .18px*var(--ce)) color-mix(in srgb,var(--cf-shade) calc(12%*var(--cs)*var(--ck)/(1 + var(--ce)/24)),transparent),0 calc(.55px*var(--ce)) calc(1.3px*var(--ce)) calc(-.22px*var(--ce)) color-mix(in srgb,var(--cf-shade) calc((8% + .34375%*var(--ce))*var(--cs)*var(--ck)),transparent)}
+/* world 2400 x 1500; static = settled overview */
+.cf-nav span,.cf-sch,.cf-s,.cf-seg span,.cf-ax,.cf-fl>span,.cf-tr span{color:var(--k-muted)}
+.cf-cam{line-height:1.25;left:50%;top:50%;width:2400px;height:1500px;transform-origin:0 0;transform:translate(-800px,-520px) scale(.6666)}
+.cf-plate{inset:-30px -40px;border-radius:48px;border:1.5px solid var(--cf-line);background:linear-gradient(180deg,var(--cf-plate),color-mix(in srgb,var(--cf-plate),var(--k-ink) 3%));--ce:40;--cs:1.2;--ci:inset 0 2px 0 var(--cf-hi)}
+.cf-top{left:60px;right:60px;top:36px;height:76px;display:flex;align-items:center}
+.cf-mk{display:block;flex:none}
+.cf-name{display:block;margin-left:18px;max-width:520px;font-size:40px;font-weight:700;line-height:1.2}
+.cf-nav{display:flex;flex:none;gap:14px;margin-left:72px}
+.cf-nav span{display:flex;align-items:center;height:56px;padding:0 26px;border-radius:16px;font-size:30px}
+.cf-nav span:first-child{color:var(--k-ink);background:var(--cf-card);box-shadow:var(--cf-s3)}
+.cf-sch{display:flex;align-items:center;margin-left:auto;width:360px;height:56px;padding:0 22px;border-radius:16px;border:1.5px solid var(--cf-line);background:var(--cf-card);font-size:28px}
+.cf-av{display:block;flex:none;margin-left:18px;width:56px;height:56px;border-radius:50%;border:3px solid var(--cf-card);background:linear-gradient(135deg,var(--k-accent),var(--k-accent-2));box-shadow:var(--cf-s3)}
+/* modules, static = clicked */
+.cf-m{width:1120px;height:640px;border-radius:28px;overflow:hidden;background:var(--cf-card);border:1.5px solid color-mix(in srgb,var(--k-accent) calc(18%*var(--ca)),var(--cf-line));--ca:1;--ce:calc(6 + 14*var(--ca));--cs:.9;--ci:inset 0 1.5px 0 var(--cf-hi)}
+.cf-m1{left:60px;top:150px}.cf-m2{left:1220px;top:150px}.cf-m3{left:1220px;top:830px}.cf-m4{left:60px;top:830px}
+.cf-t{left:64px;right:64px;top:56px;font-size:36px;font-weight:700}
+.cf-m1 .cf-t{right:440px}.cf-m2 .cf-t{right:260px}
+.cf-s{left:64px;top:104px;font-size:32px;line-height:1.3;white-space:nowrap}
+.cf-seg{right:40px;top:40px;width:360px;height:60px;border-radius:16px;border:1.5px solid var(--cf-line);background:var(--cf-well)}
+.cf-seg b{left:241px;top:5px;width:114px;height:47px;border-radius:12px;background:var(--cf-card);box-shadow:var(--cf-s3)}
+.cf-seg span{top:0;width:114px;height:57px;display:flex;align-items:center;justify-content:center;font-size:30px}
+.cf-seg span.on{color:var(--k-ink)}
+.cf-nb{left:60px;top:168px;width:700px;height:170px;overflow:hidden}
+.cf-nb span{left:0;top:0;font-size:150px;font-weight:700;line-height:.94;white-space:nowrap}
+.cf-nb span:first-child{opacity:0}
+.cf-up{right:64px;top:236px;height:52px;padding:0 20px;border-radius:26px;display:flex;align-items:center;font-size:30px;font-weight:700;color:var(--k-accent-2);background:color-mix(in srgb,var(--k-accent-2) 10%,transparent)}
+.cf-bars{left:64px;right:64px;bottom:64px;height:200px;display:flex;align-items:flex-end;gap:18px}
+.cf-bars i{flex:1;border-radius:10px;background:color-mix(in srgb,var(--cf-tint) 19%,transparent)}
+.cf-bars i:last-child{background:linear-gradient(180deg,var(--k-accent),color-mix(in srgb,var(--k-accent) 65%,white))}
+.cf-v{right:64px;top:56px;font-size:36px;font-weight:700}
+/* chart: 992 x 360 path stretched to its box, strokes kept */
+.cf-gr{left:64px;top:190px;width:992px;height:360px}
+.cf-gr svg{left:0;top:0;width:100%;height:100%;overflow:visible}
+.cf-gr path{fill:none;vector-effect:non-scaling-stroke}
+.cf-gl{stroke:var(--cf-line);stroke-width:1.5px}
+.cf-pl{stroke:var(--k-accent);stroke-width:5px;stroke-linecap:round;stroke-linejoin:round}
+.cf-gd{left:calc(81.818% - 1px);top:24%;bottom:0;width:2px;opacity:.8;background:repeating-linear-gradient(180deg,var(--k-accent) 0 6px,transparent 6px 12px)}
+.cf-pt{left:81.818%;top:24%;width:37px;height:37px;border-radius:50%;border:5px solid var(--k-accent);background:var(--cf-card);transform:translate(-50%,-50%)}
+.cf-ax{left:0;right:0;top:calc(100% + 22px);display:flex;justify-content:space-between;font-size:28px}
+.cf-tip{left:calc(81.818% - 145px);bottom:calc(76% + 44px);width:290px;padding:16px 26px;border-radius:20px;background:var(--k-ink);color:var(--k-bg);transform-origin:50% 100%;--ce:24;--cs:1.4}
+.cf-tip small{display:block;font-size:28px;color:color-mix(in srgb,var(--k-bg) 60%,transparent)}
+.cf-tip b{font-size:46px;line-height:1.2}
+.cf-tip em{margin-left:14px;font-size:30px;font-style:normal;font-weight:700;color:color-mix(in srgb,var(--k-accent-2) 55%,var(--k-bg))}
+.cf-rows{left:64px;right:64px;top:196px}
+.cf-fl{left:0;right:0;height:100px}
+.cf-fl+.cf-fl{border-top:1.5px solid var(--cf-line)}
+.cf-fl:nth-child(2){top:140px}.cf-fl:nth-child(3){top:280px}
+.cf-fl b{left:0;top:22px;font-size:36px}
+.cf-fl>span{left:0;top:70px;font-size:30px}
+.cf-fl:first-child b{top:6px}.cf-fl:first-child>span{top:54px}
+.cf-tg{right:0;top:22px;width:92px;height:54px;border-radius:27px;background:color-mix(in srgb,var(--k-ink) 16%,var(--cf-card))}
+.cf-fl:first-child .cf-tg{top:4px}
+.cf-tg.on{background:var(--k-accent)}
+.cf-tg i{inset:0;border-radius:27px;background:var(--k-accent)}
+.cf-tg u{left:5px;top:5px;width:44px;height:44px;border-radius:22px;background:var(--k-bg);box-shadow:0 2px 6px color-mix(in srgb,var(--cf-shade) 25%,transparent)}
+.cf-tg.on u{left:43px}
+.cf-pg{left:0;right:0;top:100px;display:flex;align-items:center;gap:18px}
+.cf-pg>i{flex:1;height:8px;border-radius:4px;overflow:hidden;background:var(--cf-well)}
+.cf-pg>i>i{display:block;width:25%;height:100%;background:var(--k-accent)}
+.cf-pg span{width:260px;text-align:right;font-size:30px;font-weight:700;color:var(--k-accent)}
+.cf-tb{left:40px;right:40px;top:196px}
+.cf-tr{left:0;right:0;height:100px;padding:0 32px 0 42px;display:flex;align-items:center;gap:24px;border-radius:18px;border-top:1.5px solid var(--cf-line)}
+.cf-tr:first-child{border-color:transparent}
+.cf-tr:nth-child(2){top:104px}.cf-tr:nth-child(3){top:208px}.cf-tr:nth-child(4){top:312px}
+.cf-tb.s .cf-tr:nth-child(2),.cf-tb.s .cf-tr:nth-child(3){border-color:transparent}
+.cf-tr.on{background:color-mix(in srgb,var(--cf-tint) 8%,transparent)}
+.cf-tr s{left:0;top:calc(50% - 28px);width:6px;height:56px;border-radius:3px;background:var(--k-accent);transform:scaleY(0)}
+.cf-tr.on s{transform:none}
+.cf-cb{position:relative;flex:none;width:36px;height:36px;border-radius:10px;border:2.5px solid color-mix(in srgb,var(--k-ink) 22%,var(--cf-card));background:var(--cf-card)}
+.cf-tr.on .cf-cb{border-color:var(--k-accent);background:var(--k-accent)}
+.cf-cb svg{left:-2.5px;top:-2.5px}
+.cf-ck{fill:none;stroke:var(--k-on-accent);stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:26}
+.cf-tr b{flex:1;min-width:0;font-size:36px;font-weight:400;white-space:nowrap}
+.cf-tr.on b{font-weight:700}
+.cf-tr span{flex:none;height:40px;padding:0 16px;border-radius:20px;font-size:28px;line-height:40px;background:var(--cf-well)}
+.cf-tr em{flex:none;min-width:110px;text-align:right;font-size:36px;font-style:normal;font-weight:700}
+/* screen space: click ring, cursor (tip at its top-left) */
+.cf-rip{left:0;top:0;width:80px;height:80px;margin:-40px 0 0 -40px;border-radius:50%;border:3px solid var(--k-accent);background:color-mix(in srgb,var(--k-accent) 13%,transparent);opacity:0}
+.cf-cur{left:calc(50% - 693.3px);top:calc(50% + 266.6px);overflow:visible;transform-origin:0 0;filter:drop-shadow(0 2px 2px color-mix(in srgb,var(--cf-shade) 35%,transparent)) drop-shadow(0 8px 12px color-mix(in srgb,var(--cf-shade) 25%,transparent))}
+/* portrait: 1480 x 1860 world, 660 x 820 modules, overview in the 12%-68% band */
+@container (orientation: portrait) {
+.cf-cam{top:40%;width:1480px;height:1860px;transform:translate(-409.6px,-514.7px) scale(.55348)}
+.cf-cur{left:calc(50% - 321px);top:calc(40% + 280px)}
+.cf-m{width:660px;height:820px}
+.cf-nav{margin-left:40px}.cf-sch{width:160px}
+.cf-m2,.cf-m3{left:760px}.cf-m3,.cf-m4{top:1010px}
+.cf-m1 .cf-t{right:64px}.cf-m2 .cf-t{right:240px}
+.cf-seg{right:auto;left:64px;top:450px}
+.cf-nb{top:170px;width:540px}
+.cf-up{right:auto;left:64px;top:360px}
+.cf-gr{top:200px;width:532px;height:460px}
+.cf-rows{top:220px}.cf-fl:nth-child(2){top:215px}.cf-fl:nth-child(3){top:430px}
+.cf-tb{top:220px}.cf-tr{height:120px}.cf-tr:nth-child(2){top:146px}.cf-tr:nth-child(3){top:292px}.cf-tr:nth-child(4){top:438px}
+}
+</style>
+
+<div id="root" data-composition-id="cursor-flyover">
+<div class="cf">
+<div class="cf-st"><div class="cf-backdrop"></div><div class="cf-vig"></div><div class="cf-grain"></div></div>
+<div class="cf-sb">
+<div class="cf-cam" data-layout-allow-overflow>
+<div class="cf-plate"></div>
+<div class="cf-top">
+<svg class="cf-mk" width="60" height="60" viewBox="0 0 128 128"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg>
+<span class="cf-name">示例应用</span>
+<span class="cf-nav"><span>总览</span><span>任务</span><span>报表</span><span>设置</span></span>
+<span class="cf-sch">搜索</span>
+<span class="cf-av"></span>
+</div>
+<div class="cf-m cf-m1">
+<div class="cf-t">本月处理量</div>
+<div class="cf-s">近 90 天</div>
+<div class="cf-seg"><b></b><span style="left:5px">7 天</span><span style="left:123px">30 天</span><span class="on" style="left:241px" data-layout-allow-occlusion>90 天</span></div>
+<div class="cf-nb"><span data-layout-allow-overlap>2.48 万</span><span data-layout-allow-overlap>7.31 万</span></div>
+<div class="cf-up">▲ 25%</div>
+<div class="cf-bars"><i style="height:30%"></i><i style="height:38%"></i><i style="height:45%"></i><i style="height:42%"></i><i style="height:55%"></i><i style="height:62%"></i><i style="height:58%"></i><i style="height:70%"></i><i style="height:76%"></i><i style="height:82%"></i><i style="height:88%"></i><i style="height:96%"></i></div>
+</div>
+<div class="cf-m cf-m2">
+<div class="cf-t">每周访问</div>
+<div class="cf-s">按周统计</div>
+<div class="cf-v">12,480</div>
+<div class="cf-gr">
+<svg viewBox="0 0 992 360" preserveAspectRatio="none">
+<defs><linearGradient id="cf-ga" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--cf-tint);stop-opacity:.2"/><stop offset="1" style="stop-color:var(--cf-tint);stop-opacity:0"/></linearGradient></defs>
+<path class="cf-gl" d="M0,0H992M0,120H992M0,240H992M0,360H992"/>
+<path style="fill:url(#cf-ga)" d="M0,223C15,219 60,200 90,198C120,196 150,214 180,209C210,203 240,170 271,166C301,161 331,184 361,180C391,176 421,148 451,144C481,140 511,163 541,158C571,154 601,123 631,119C661,115 691,139 721,133C752,128 782,91 812,86C842,82 872,112 902,108C932,104 977,72 992,65V360H0Z"/>
+<path class="cf-pl" d="M0,223C15,219 60,200 90,198C120,196 150,214 180,209C210,203 240,170 271,166C301,161 331,184 361,180C391,176 421,148 451,144C481,140 511,163 541,158C571,154 601,123 631,119C661,115 691,139 721,133C752,128 782,91 812,86C842,82 872,112 902,108C932,104 977,72 992,65"/>
+</svg>
+<i class="cf-gd"></i><i class="cf-pt"></i>
+<div class="cf-ax"><span>1 日</span><span>8 日</span><span>15 日</span><span>22 日</span><span>29 日</span></div>
+<div class="cf-tip"><small>24 日</small><b>5,120</b><em>+12%</em></div>
+</div>
+</div>
+<div class="cf-m cf-m3">
+<div class="cf-t">新功能开关</div>
+<div class="cf-s">3 项</div>
+<div class="cf-rows">
+<div class="cf-fl"><b>自动整理</b><span>新文件按日期归档</span><i class="cf-tg on"><i></i><u></u></i><div class="cf-pg"><i><i></i></i><span>正在开启 · 25%</span></div></div>
+<div class="cf-fl"><b>一键导出</b><span>同时导出三种格式</span><i class="cf-tg on"><i></i><u></u></i></div>
+<div class="cf-fl"><b>多人协作</b><span>邀请同事一起编辑</span><i class="cf-tg"><u></u></i></div>
+</div>
+</div>
+<div class="cf-m cf-m4">
+<div class="cf-t">常用模板</div>
+<div class="cf-s">按本月使用次数</div>
+<div class="cf-tb s">
+<div class="cf-tr"><s></s><i class="cf-cb"></i><b>周报模板</b><span>文档</span><em>4,280</em></div>
+<div class="cf-tr on"><s></s><i class="cf-cb"><svg width="36" height="36" viewBox="0 0 36 36"><path class="cf-ck" d="M10 18.5L15.5 24 26 12.5"/></svg></i><b>会议纪要</b><span>文档</span><em>3,125</em></div>
+<div class="cf-tr"><s></s><i class="cf-cb"></i><b>数据看板</b><span>表格</span><em>1,890</em></div>
+<div class="cf-tr"><s></s><i class="cf-cb"></i><b>课程大纲</b><span>教学</span><em>941</em></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cf-rip"></div>
+<svg class="cf-cur" width="40" height="40" viewBox="4.5 2.5 24 24"><path d="M4.5 2.5L4.5 19.2 8.9 15 11.9 21.6 14.9 20.3 11.9 13.8 18.2 13.4Z" style="fill:var(--k-ink);stroke:var(--k-bg);stroke-width:1.6;stroke-linejoin:round"/></svg>
+</div>
+</div>
+
+<script>
+(function () {
+// seconds (frames / 30), both orientations; leg k: cursor at leg0 + k*leg for fly, camera lag later for cam, click at +aim
+var CFG = { dur: 8.4, intro: 0.467, push: 0.733, leg0: 0.733, leg: 1.467, fly: 0.533, lag: 0.067, cam: 0.667, aim: 0.733, back: 6.6, backDur: 0.8, creep: 7.4, creepDur: 0.6, hop: 0.08, blur: 0.09, blurMax: 8 };
+// world px: overview centre o, zooms so / sc, anchor line ay (of frame height), cursor start c0
+var LAND = { o: [1200, 780], so: 0.66, sc: 1.3, ay: 0.5, c0: [1240, 830] };
+var PORT = { o: [740, 930], so: 0.548, sc: 1.25, ay: 0.4, c0: [780, 1010] };
+// bar heights before / after the range switch
+var BA = [0.42, 0.5, 0.46, 0.58, 0.52, 0.6, 0.55, 0.64, 0.6, 0.7, 0.66, 0.74], BB = [0.3, 0.38, 0.45, 0.42, 0.55, 0.62, 0.58, 0.7, 0.76, 0.82, 0.88, 0.96];
+var v = { titles: "本月处理量|每周访问|新功能开关|常用模板", name: "示例应用", backdrop: "on" };
+try {
+var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+} catch (e) {}
+var root = document.querySelector(".cf");
+var q = function (s) { return root.querySelector(s); }, qa = function (s) { return [].slice.call(root.querySelectorAll(s)); };
+var FW = root.clientWidth, FH = root.clientHeight;
+if (!FW || !FH) {
+// not laid out yet: the host clip's declared size, then the window
+var hc = root.closest("[data-width][data-height]");
+FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+}
+var P = FH > FW, L = P ? PORT : LAND;
+root.setAttribute("data-orient", P ? "portrait" : "landscape");
+if (String(v.backdrop) === "off") q(".cf-st").style.display = "none";
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+var p = document.createElement("i");
+p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+el.appendChild(p);
+var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+el.removeChild(p);
+return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+var c = kRGB(wrap, "var(--k-bg)");
+var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+wrap.setAttribute("data-tone", tone);
+return tone;
+}
+// ==== end kit:tone ====
+
+// ==== kit:speedblur@1 ====
+function kSpeedBlur(box, prefix, o) {
+o = o || {};
+var amount = o.amount || 0.45, max = o.max || 36;
+var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+var outer = document.createElement("div"), inner = document.createElement("div");
+outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+while (box.firstChild) inner.appendChild(box.firstChild);
+outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+var fe = svg.firstChild.firstChild;
+return function (vx, vy) {
+vy = vy || 0;
+var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+outer.style.filter = "url(#" + id + ")";
+};
+}
+// ==== end kit:speedblur ====
+
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+o = o || {};
+var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+var dark = tones && tones.getAttribute("data-tone") === "dark";
+var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+var f = "type='linear' slope='2.4' intercept='-0.7'";
+var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+"<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+"<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+"<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+"<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+});
+layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+layer.style.backgroundSize = size + "px " + size + "px";
+return function (t) {
+var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+layer.style.backgroundImage = tiles[k % 6];
+layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+};
+}
+// ==== end kit:grain ====
+
+// ==== kit:fit@1 ====
+function kFit(el, o) {
+o = o || {};
+var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+for (;;) {
+el.style.fontSize = f + "px";
+m = kLines(el);
+if ((m.w <= W && m.n <= n) || f <= min) break;
+f = Math.max(min, f - 2);
+}
+if (m.w > W) {
+[].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+m = kLines(el);
+}
+return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+while ((t = it.nextNode())) {
+if (!t.data.trim()) continue;
+r.selectNodeContents(t);
+[].forEach.call(r.getClientRects(), function (b) {
+var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+});
+}
+return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+
+kTone(root);
+var grain = kGrain(q(".cf-grain"));
+// titles: "|" lists one label per module (inner spaces kept, empty keeps the default); one line >= 32px, else
+// it wraps and hides the subtitle under it
+var tt = String(v.titles).split("|");
+qa(".cf-t").forEach(function (el, i) { var s = (tt[i] || "").trim(); if (s) el.textContent = s; if (!kFit(el, { min: 32 }).fits) el.nextElementSibling.style.opacity = 0; });
+var nm = q(".cf-name");
+nm.textContent = String(v.name).trim() || nm.textContent;
+kFit(nm, { min: 32, width: 520 });
+
+var cam = q(".cf-cam"), cur = q(".cf-cur"), rip = q(".cf-rip"), mods = qa(".cf-m");
+var seg = qa(".cf-seg span"), thumb = q(".cf-seg b"), meta = q(".cf-m1 .cf-s"), nums = qa(".cf-nb span"), up = q(".cf-up"), bars = qa(".cf-bars i");
+var gr = q(".cf-gr"), tip = q(".cf-tip"), gd = q(".cf-gd"), pt = q(".cf-pt");
+var tg = q(".cf-tg"), tgOn = q(".cf-tg i"), knob = q(".cf-tg u"), pg = q(".cf-pg"), fill = q(".cf-pg i i"), pgl = q(".cf-pg span");
+var tb = q(".cf-tb"), row = qa(".cf-tr")[1], rbar = row.querySelector("s"), ck = q(".cf-ck");
+var sb = kSpeedBlur(q(".cf-sb"), "cf", { amount: CFG.blur, max: CFG.blurMax });
+cur.style.left = cur.style.top = "0px";
+var CE = MT.bezier(0.55, 0, 0.18, 1), AX = FW / 2, AY = FH * L.ay, G = null;
+var legAt = function (k) { return CFG.leg0 + k * CFG.leg; }, clickAt = function (k) { return legAt(k) + CFG.aim; };
+// world position of an element's centre
+function at(el) {
+var x = el.offsetWidth / 2, y = el.offsetHeight / 2;
+for (; el && el !== cam; el = el.offsetParent) { x += el.offsetLeft; y += el.offsetTop; }
+return [x, y];
+}
+// stops = module centres; targets = "90" segment, data point 9 (81.8% / 24% of the chart), toggle, row 2 checkbox
+function geo() {
+var g = at(gr);
+return { m: mods.map(at), t: [at(seg[2]), [g[0] + 0.31818 * gr.offsetWidth, g[1] - 0.26 * gr.offsetHeight], at(tg), at(row.querySelector(".cf-cb"))] };
+}
+// camera: push 0.94 -> 1, four legs (legs 2-4 pull out 8% mid-flight), pull back, 1% creep
+function camAt(t) {
+var x = L.o[0], y = L.o[1], s = L.so * MT.mix(0.94, 1, MT.ramp(t, 0, CFG.push, "snappy")), hop = 0;
+for (var k = 0; k < 4; k++) {
+var u = MT.ramp(t, legAt(k) + CFG.lag, CFG.cam, CE), m = G.m[k];
+x = MT.mix(x, m[0], u); y = MT.mix(y, m[1], u); s = MT.mix(s, L.sc, u);
+if (k && u > 0 && u < 1) hop = CFG.hop * Math.sin(Math.PI * u);
+}
+var b = MT.ramp(t, CFG.back, CFG.backDur, "smooth");
+x = MT.mix(x, L.o[0], b); y = MT.mix(y, L.o[1], b); s = MT.mix(s, L.so, b);
+return { x: x, y: y, s: s * (1 - hop) * (1 + 0.01 * MT.ramp(t, CFG.creep, CFG.creepDur, "smooth")) };
+}
+// cursor: each leg a swift move on an arc bowed sideways up to 90px (12% of the distance)
+function curAt(t) {
+var x = L.c0[0], y = L.c0[1];
+for (var k = 0; k < 4; k++) {
+var u = MT.ramp(t, legAt(k), CFG.fly, "swift"), p = G.t[k], dx = p[0] - x, dy = p[1] - y;
+var len = Math.max(1, Math.hypot(dx, dy)), bow = Math.sin(Math.PI * u) * Math.min(90, len * 0.12);
+var nx = MT.mix(x, p[0], u) - (dy / len) * bow;
+y = MT.mix(y, p[1], u) + (dx / len) * bow; x = nx;
+}
+return [x, y];
+}
+var ox = function (u) { var c = camAt(u); return -c.x * c.s; }, oy = function (u) { var c = camAt(u); return -c.y * c.s; };
+var fx = function (n) { return n.toFixed(2); }, tr = function (x, y) { return "translate(" + fx(x) + "px," + fx(y) + "px) scale("; };
+var ac = function (p) { return "color-mix(in srgb, var(--cf-tint) " + p + "%, transparent)"; };
+
+function render(t) {
+G = G || geo();
+var c = camAt(t), s = c.s, io = MT.ramp(t, 0, CFG.intro, "out"), k;
+cam.style.transform = tr(-c.x * s, -c.y * s) + s.toFixed(5) + ")";
+cam.style.opacity = io;
+sb(MT.velocity(ox, t), MT.velocity(oy, t));
+var p = curAt(t), X = AX + (p[0] - c.x) * s, Y = AY + (p[1] - c.y) * s, pr = 0, rp = -1;
+// frames at 30 fps: press down 3, up 6 (overshoot); ring 18
+for (k = 0; k < 4; k++) {
+var f = (t - clickAt(k)) * 30;
+if (f > -2 && f < 8) pr = Math.max(pr, f < 1 ? MT.ramp(f, -2, 3, "swift") : 1 - MT.ramp(f, 1, 6, "overshoot"));
+if (f >= 0 && f < 18) rp = f / 18;
+}
+cur.style.transform = tr(X, Y) + (1 - 0.16 * pr).toFixed(3) + ")";
+cur.style.opacity = io;
+rip.style.opacity = rp < 0 ? 0 : (1 - rp) * 0.9;
+rip.style.transform = tr(X, Y) + (0.3 + MT.EASE.out(Math.max(0, rp)) * 1.2).toFixed(3) + ")";
+
+var resp = function (k, d, e) { return MT.ramp(t, clickAt(k) + 2 / 30, (d || 16) / 30, e || "snappy"); };
+var a = [resp(0), resp(1), resp(2), resp(3, 14)];
+mods.forEach(function (m, k) { m.style.setProperty("--ca", a[k].toFixed(3)); });
+// 1: range 30 -> 90: thumb, figure swap, bars spring one by one
+var sel = MT.ramp(t, clickAt(0), 8 / 30, "snappy"), r0 = a[0];
+thumb.style.left = fx(5 + MT.mix(118, 236, sel)) + "px";
+seg[1].classList.toggle("on", sel < 0.5); seg[2].classList.toggle("on", sel >= 0.5);
+meta.textContent = sel > 0.5 ? "近 90 天" : "近 30 天";
+nums[0].style.transform = "translateY(" + fx(-r0 * 150) + "px)"; nums[0].style.opacity = 1 - r0;
+nums[1].style.transform = "translateY(" + fx((1 - r0) * 150) + "px)"; nums[1].style.opacity = r0;
+up.textContent = r0 > 0.5 ? "▲ 25%" : "▲ 18%";
+bars.forEach(function (b, i) {
+b.style.height = fx(MT.mix(BA[i], BB[i], MT.spring({ t: t, delay: clickAt(0) + (2 + i * 1.4) / 30, damping: 15, stiffness: 190 })) * 100) + "%";
+if (i < 11) b.style.background = ac((14 + (10 * r0 * i) / 11).toFixed(1));
+});
+// 2: guide drops, point swells, tooltip springs (shown from 75% opacity)
+var sp = MT.spring({ t: t, delay: clickAt(1) + 2 / 30, damping: 14, stiffness: 210 }), o = Math.min(1, sp * 2), d = 2 * (9 + 7 * sp) + 5;
+tip.style.opacity = o < 0.75 ? 0 : o;
+tip.style.transform = "translateY(" + fx((1 - sp) * 16) + "px) scale(" + (0.86 + 0.14 * sp).toFixed(3) + ")";
+gd.style.clipPath = "inset(0 0 " + fx((1 - resp(1, 12)) * 100) + "% 0)";
+pt.style.width = pt.style.height = fx(d) + "px";
+// 3: toggle springs on, bar 0 -> 25%
+var on = MT.spring({ t: t, delay: clickAt(2) + 1 / 30, damping: 16, stiffness: 240 }), roll = resp(2, 26, "out");
+tg.classList.toggle("on", on > 0.5);
+tgOn.style.opacity = MT.clamp(on);
+knob.style.left = fx(5 + 38 * on) + "px";
+pg.style.opacity = Math.min(1, roll * 3);
+fill.style.width = fx(roll * 25) + "%";
+pgl.textContent = "正在开启 · " + Math.round(roll * 25) + "%";
+// 4: row 2 picked: tint, bar, box, tick
+var r3 = a[3];
+tb.classList.toggle("s", r3 >= 0.01);
+row.classList.toggle("on", r3 > 0.3);
+row.style.background = ac((8 * r3).toFixed(2));
+rbar.style.transform = "scaleY(" + r3.toFixed(3) + ")";
+ck.style.strokeDashoffset = fx(26 * (1 - resp(3, 12, "out")));
+grain(t);
+}
+
+var tl = MT.scene(CFG.dur, render);
+window.__timelines["cursor-flyover"] = tl;
+})();
+</script>
+</template>
+</body>
+</html>

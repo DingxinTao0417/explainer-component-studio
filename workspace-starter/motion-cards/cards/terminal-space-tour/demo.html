@@ -1,0 +1,501 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"cmds","type":"string","label":"三条命令（用 | 分隔）","default":"app init demo|app build demo|app export demo"},
+    {"id":"steps","type":"string","label":"三个窗口的名字（用 | 分隔）","default":"初始化|构建|导出"},
+    {"id":"out1","type":"string","label":"第一窗输出（| 分行，1–4 行）","default":"template   basic|files      12 created|deps       installed|ready      next: app build"},
+    {"id":"out2","type":"string","label":"第二窗输出（| 分行，1–4 行）","default":"home       8 pages|guide     10 pages|about      6 pages|24 pages   1.8 MB"},
+    {"id":"out3","type":"string","label":"第三窗输出（| 分行，0–3 行，可留空）","default":"bundle     1.8 MB|check      links ok|upload     done in 3.1s"},
+    {"id":"result","type":"string","label":"最后亮起的成果名","default":"demo-site.zip"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>terminal-space-tour · 三窗终端巡航</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="terminal-space-tour-template">
+<!-- Ported from video-shotcraft demos/camera/terminal-3d/Terminal3D.tsx
+(github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+neutral --k-* palette (light stage first, the lime stage only on dark skins), system fonts, generic CLI copy as
+variables, upstream CLI and film name removed; title bar 76px with 28px text (was 72, 22-24px); output 40px, rows
+every 72px from y 226 (was 38px, 70, 220); typing longer than 0.7 s is sped up; second-window rows are spinner rows,
+progress reads "/ 24" with square blocks; light skin: off-focus windows fade instead of darkening, lights and dust
+multiply the accent, grid in ink, window rim and shadow from the palette; floor grid opacity in 10 steps; portrait
+stacks the windows (800 wide, 1000 apart, middle z 60); 1.1 s hold added. Kept: poses, views, tilt, perspective,
+flight frames, sine pull-back, curves, depth of field, grid, lights, numerals, grain, vignette, typing jitter, caret,
+output timing, READY pop and glow. -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+@font-face { font-family: "ts-heavy"; font-weight: 700 900; src: local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"), local("PingFangSC-Semibold"), local("NotoSansSC-Black"); }
+/* ==== kit:fonts@2 ==== */
+@font-face { font-family: "Consolas"; src: local("Consolas"); }
+@font-face { font-family: "Consolas"; font-weight: 700; src: local("Consolas Bold"), local("Consolas-Bold"); }
+#root { --k-mono: var(--mc-mono, Consolas, monospace); }
+/* ==== end kit:fonts ==== */
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--k-font);
+  color: var(--k-ink);
+}
+/* ==== kit:derived@1 ==== */
+.ts {
+--ts-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+--ts-panel-2: color-mix(in srgb, var(--k-panel), var(--k-ink) 4%);
+--ts-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+--ts-hi: color-mix(in srgb, white 80%, transparent);
+}
+.ts[data-tone="dark"] {
+--ts-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+--ts-hi: color-mix(in srgb, white 6%, transparent);
+}
+/* ==== end kit:derived ==== */
+/* ==== kit:vignette@1 ==== */
+.ts-vig {
+position: absolute; inset: 0; pointer-events: none;
+--vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--ts-shade);
+background:
+radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.ts[data-tone="dark"] .ts-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+/* ==== kit:light@1 ==== */
+.ts-light { mix-blend-mode: multiply; }
+.ts[data-tone="dark"] .ts-light { mix-blend-mode: screen; }
+/* ==== end kit:light ==== */
+/* ==== kit:grain@1 ==== */
+.ts-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+
+/* light skin first; dark skins get upstream's stage (olive key light, accent grid) */
+.ts{position:absolute;inset:0;container-type:size;
+--ts-key:color-mix(in srgb, white 90%, transparent);--ts-fill:color-mix(in srgb, var(--k-accent-2) 10%, transparent);
+--ts-hz:color-mix(in srgb, white 55%, transparent);--ts-grid:color-mix(in srgb, var(--k-ink) 26%, transparent);
+--ts-bl:color-mix(in srgb, var(--k-accent) 40%, white);--ts-dust:var(--k-accent);
+--ts-sh:0 50px 120px color-mix(in srgb, var(--ts-shade) 24%, transparent)}
+.ts[data-tone=dark]{--ts-lc:color-mix(in srgb, var(--k-accent) 30%, var(--k-muted));
+--ts-key:color-mix(in srgb, var(--ts-lc) 55%, transparent);--ts-fill:color-mix(in srgb, var(--k-accent) 8%, transparent);
+--ts-hz:color-mix(in srgb, var(--ts-lc) 28%, transparent);--ts-grid:color-mix(in srgb, var(--k-accent) 34%, transparent);
+--ts-bl:color-mix(in srgb, var(--k-accent) 45%, white);--ts-dust:color-mix(in srgb, var(--k-accent) 40%, white);
+--ts-sh:0 50px 120px color-mix(in srgb, black 70%, transparent)}
+.ts-st,.ts-bg,.ts-key,.ts-fl,.ts-lt,.ts-du,.ts-sb{position:absolute;inset:0}
+.ts-fl{width:100%;height:100%;overflow:visible;stroke:var(--ts-grid);stroke-width:1.4}
+.ts-bg{background:linear-gradient(180deg, var(--k-bg), color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 52%, color-mix(in srgb, var(--k-bg), var(--k-ink) 8%))}
+.ts[data-tone=dark] .ts-bg{background:linear-gradient(180deg, color-mix(in srgb, var(--k-bg), white 3%), var(--k-bg) 52%, color-mix(in srgb, var(--k-bg), black 45%))}
+.ts-key{background:radial-gradient(ellipse 58% 62% at 36% -6%, var(--ts-key), transparent 70%), radial-gradient(ellipse 50% 46% at 82% 100%, var(--ts-fill), transparent 72%)}
+.ts-hz{position:absolute;left:-10%;right:-10%;top:38%;height:18%;background:radial-gradient(closest-side, var(--ts-hz), transparent 70%);filter:blur(10px)}
+.ts[data-tone=dark] .ts-key,.ts[data-tone=dark] .ts-hz{mix-blend-mode:screen}
+.ts-off .ts-b{display:none}
+/* backlight and floor pool, projected under the focused window */
+.ts-bl,.ts-po{position:absolute;opacity:0;--c:var(--ts-bl);--a:30%;--b:11%;background:radial-gradient(closest-side, color-mix(in srgb, var(--c) var(--a), transparent), color-mix(in srgb, var(--c) var(--b), transparent) 46%, transparent 72%)}
+.ts-po{--c:var(--k-accent);--a:26%;--b:8%}
+.ts-du{opacity:0.45}
+.ts-du i{position:absolute;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb, var(--ts-dust) 90%, transparent), transparent 70%)}
+/* 3D space; static = the last frame, where only window 3 shows */
+.ts-vp{position:absolute;inset:0;perspective:1800px;perspective-origin:50% 50%;overflow:hidden}
+.ts-world{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d}
+.ts-pose{position:absolute;left:-590px;top:-310px;width:1180px;height:620px;transform-style:preserve-3d;--f:0}
+.ts-p0,.ts-p1{opacity:0}
+.ts-p2{transform:translateZ(36px) rotateX(-4deg) rotateY(10deg);--f:1}
+.ts-num{position:absolute;left:-120px;top:-270px;transform:translateZ(-380px)}
+.ts-num::before{content:attr(data-n);display:block;font:800 560px/1 ts-heavy, var(--k-font);letter-spacing:-0.05em;white-space:nowrap;color:transparent;
+-webkit-text-stroke:2px color-mix(in srgb, var(--k-accent) calc(7% + 30% * var(--f)), transparent)}
+.ts-win{position:absolute;inset:0;border-radius:22px;overflow:hidden;font-family:var(--k-mono);
+background:linear-gradient(180deg, var(--k-panel), var(--k-panel) 30%, var(--ts-panel-2));
+box-shadow:inset 0 0 0 1.5px color-mix(in srgb, var(--ts-line), var(--k-accent) calc(30% * var(--f))), inset 0 2px 0 var(--ts-hi), var(--ts-sh), 0 0 0 1px var(--ts-line),
+0 0 90px color-mix(in srgb, var(--k-accent) calc(7% * var(--f)), transparent)}
+.ts-bar{position:absolute;left:0;top:0;right:0;height:76px;display:flex;align-items:center;gap:14px;padding:0 30px;box-sizing:border-box;
+border-bottom:1.5px solid var(--ts-line);font-size:28px;color:var(--k-muted);white-space:nowrap}
+.ts-bar i{flex:none;width:16px;height:16px;border-radius:50%;background:color-mix(in srgb, var(--k-ink) 16%, transparent)}
+.ts-bar b{margin-left:22px;color:var(--k-accent);letter-spacing:0.04em}
+.ts-name{flex:1;min-width:0;font-family:var(--k-font);white-space:normal;line-height:1.2}
+.ts-cmd{position:absolute;left:56px;right:56px;top:124px;font-size:52px;font-weight:700;line-height:1.15;white-space:pre-wrap}
+.ts-ps{color:var(--k-accent)}
+.ts-ca{display:inline-block;width:0.58em;height:1.08em;margin-left:4px;vertical-align:-0.16em;border-radius:3px;background:var(--k-accent);opacity:0}
+.ts-out{position:absolute;left:56px;right:56px;top:226px;display:flex;flex-direction:column;gap:32px;font-size:40px;line-height:1}
+.ts-ln{margin:0;padding-left:1.6em;text-indent:-1.6em;white-space:pre-wrap}
+.ts-ln i{display:inline-block;width:1.6em;text-indent:0;font-style:normal;color:var(--k-accent)}
+.ts-ln em{font-style:normal}
+.ts-ln em,.ts-ln .ts-sp,.ts-of{color:var(--k-muted)}
+.ts-pass em{color:var(--k-accent)}
+.ts-prog{display:flex;align-items:center;gap:22px;white-space:pre}
+.ts-blk{position:relative;width:13.075em;height:0.85em;background:repeating-linear-gradient(90deg, color-mix(in srgb, var(--k-ink) 10%, transparent) 0 0.425em, transparent 0 0.55em)}
+.ts-fill{position:absolute;left:0;top:0;bottom:0;width:100%;background:repeating-linear-gradient(90deg, var(--k-accent) 0 0.425em, transparent 0 0.55em)}
+.ts-ready{display:flex;align-items:center;gap:26px;margin-top:16px;transform-origin:0 50%}
+.ts-pill{flex:none;display:flex;align-items:center;gap:14px;height:56px;padding:0 22px;border-radius:12px;font-size:30px;font-weight:700;letter-spacing:0.08em;
+background:var(--k-accent);color:var(--k-on-accent);box-shadow:0 0 40px color-mix(in srgb, var(--k-accent) 45%, transparent)}
+.ts-pill i{width:14px;height:14px;border-radius:50%;background:var(--k-on-accent)}
+.ts-res{min-width:0;font-size:52px;font-weight:700;color:var(--k-accent);white-space:pre-wrap}
+/* portrait: windows stacked top to bottom, look-at row at 40% */
+@container (orientation:portrait){
+.ts-vp{perspective-origin:50% 40%}
+.ts-world{top:40%}
+.ts-pose{left:-400px;width:800px}
+.ts-num{left:-60px;top:-300px}
+.ts-cmd,.ts-out{left:48px;right:48px}
+.ts-prog{gap:16px}
+.ts-hz{top:30%}
+}
+</style>
+
+<div id="root" data-composition-id="terminal-space-tour">
+<div class="ts">
+<div class="ts-st">
+<div class="ts-bg ts-b"></div>
+<div class="ts-key ts-b"></div>
+<div class="ts-hz ts-b"></div>
+<svg class="ts-fl"><g></g></svg>
+<div class="ts-lt" data-layout-allow-overflow><div class="ts-bl ts-light"></div><div class="ts-bl ts-light"></div><div class="ts-bl ts-light"></div>
+<div class="ts-po ts-light"></div><div class="ts-po ts-light"></div><div class="ts-po ts-light"></div></div>
+<div class="ts-du ts-light ts-b"></div>
+<div class="ts-vig ts-b"></div>
+<div class="ts-grain ts-b"></div>
+</div>
+<div class="ts-sb">
+<div class="ts-vp" data-layout-allow-overflow>
+<div class="ts-world">
+<div class="ts-pose ts-p0"><div class="ts-num" data-n="01"></div><div class="ts-win">
+<div class="ts-bar"><i></i><i></i><i></i><b>01</b><span class="ts-name">初始化</span><span>~/demo</span></div>
+<div class="ts-cmd"><span class="ts-ps">❯ </span><span class="ts-ty">app init demo</span><span class="ts-ca"></span></div>
+<div class="ts-out">
+<p class="ts-ln"><i>✓</i><em>template   </em>basic</p>
+<p class="ts-ln"><i>✓</i><em>files      </em>12 created</p>
+<p class="ts-ln"><i>✓</i><em>deps       </em>installed</p>
+<p class="ts-ln ts-pass"><i>✓</i><em>ready      </em>next: app build</p>
+</div>
+</div></div>
+<div class="ts-pose ts-p1"><div class="ts-num" data-n="02"></div><div class="ts-win">
+<div class="ts-bar"><i></i><i></i><i></i><b>02</b><span class="ts-name">构建</span><span>~/demo</span></div>
+<div class="ts-cmd"><span class="ts-ps">❯ </span><span class="ts-ty">app build demo</span><span class="ts-ca"></span></div>
+<div class="ts-out">
+<div class="ts-prog"><span class="ts-blk"><span class="ts-fill"></span></span><span class="ts-cnt">24</span><span class="ts-of">/ 24</span></div>
+<p class="ts-ln"><i>✓</i><em>home       </em>8 pages</p>
+<p class="ts-ln"><i>✓</i><em>guide     </em>10 pages</p>
+<p class="ts-ln"><i>✓</i><em>about      </em>6 pages</p>
+<p class="ts-ln ts-pass"><i>✓</i><em>24 pages   </em>1.8 MB</p>
+</div>
+</div></div>
+<div class="ts-pose ts-p2"><div class="ts-num" data-n="03"></div><div class="ts-win">
+<div class="ts-bar"><i></i><i></i><i></i><b>03</b><span class="ts-name">导出</span><span>~/demo</span></div>
+<div class="ts-cmd"><span class="ts-ps">❯ </span><span class="ts-ty">app export demo</span><span class="ts-ca"></span></div>
+<div class="ts-out">
+<p class="ts-ln"><i>✓</i><em>bundle     </em>1.8 MB</p>
+<p class="ts-ln"><i>✓</i><em>check      </em>links ok</p>
+<p class="ts-ln"><i>✓</i><em>upload     </em>done in 3.1s</p>
+<div class="ts-ready"><span class="ts-pill"><i></i>READY</span><span class="ts-res">demo-site.zip</span></div>
+</div>
+</div></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+(function () {
+// timing in seconds (upstream frame / 30), shared by both orientations
+var CFG = {
+slot: 9.3,
+open: 0.8, pull0: 260, // opening push-in from 260px back (out)
+fly: [[2.067, 3.067], [5.067, 6.067]], peak: 1250, peak2: 1.05, // flights (swift) with a sine pull-back bump
+type: [0.267, 3.133, 6.133], typeMax: 0.7, // typing starts after each arrival; longer commands type faster
+tail: 7.4, tailDur: 0.8, tailPull: 36 // closing push-in, about 2% (smooth)
+};
+// per orientation (px, deg): window, look-at row, floor y, numeral offset, poses [x, y, z, ry]
+var LAND = { w: 1180, h: 620, cy: 0.5, floor: 500, num: [-120, -270], pose: [[-1500, -30, -220, 24], [0, 30, 260, -14], [1520, -40, -160, 28]] };
+var PORT = { w: 800, h: 620, cy: 0.4, floor: 1500, num: [-60, -300], pose: [[-90, -1000, -220, 24], [0, 0, 60, -14], [110, 1000, -160, 28]] };
+var VIEW = [9, -8, 10], TILT = -4, D = 1800, R = Math.PI / 180, SPIN = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏";
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+var p = document.createElement("i");
+p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+el.appendChild(p);
+var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+el.removeChild(p);
+return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+var c = kRGB(wrap, "var(--k-bg)");
+var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+wrap.setAttribute("data-tone", tone);
+return tone;
+}
+// ==== end kit:tone ====
+// ==== kit:hash@1 ====
+function kHash(n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+// ==== end kit:hash ====
+// ==== kit:speedblur@1 ====
+function kSpeedBlur(box, prefix, o) {
+o = o || {};
+var amount = o.amount || 0.45, max = o.max || 36;
+var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+var outer = document.createElement("div"), inner = document.createElement("div");
+outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+while (box.firstChild) inner.appendChild(box.firstChild);
+outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+var fe = svg.firstChild.firstChild;
+return function (vx, vy) {
+vy = vy || 0;
+var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+outer.style.filter = "url(#" + id + ")";
+};
+}
+// ==== end kit:speedblur ====
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+o = o || {};
+var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+var dark = tones && tones.getAttribute("data-tone") === "dark";
+var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+var f = "type='linear' slope='2.4' intercept='-0.7'";
+var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+"<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+"<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+"<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+"<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+});
+layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+layer.style.backgroundSize = size + "px " + size + "px";
+return function (t) {
+var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+layer.style.backgroundImage = tiles[k % 6];
+layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+};
+}
+// ==== end kit:grain ====
+// ==== kit:fit@1 ====
+function kFit(el, o) {
+o = o || {};
+var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+for (;;) {
+el.style.fontSize = f + "px";
+m = kLines(el);
+if ((m.w <= W && m.n <= n) || f <= min) break;
+f = Math.max(min, f - 2);
+}
+if (m.w > W) {
+[].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+m = kLines(el);
+}
+return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+while ((t = it.nextNode())) {
+if (!t.data.trim()) continue;
+r.selectNodeContents(t);
+[].forEach.call(r.getClientRects(), function (b) {
+var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+});
+}
+return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+// ==== kit:glow@1 ====
+function kGlow(c, s) {
+s = s == null ? 0.6 : s;
+var a = function (k) { return "color-mix(in srgb, " + c + " " + Math.round(k * s * 100) + "%, transparent)"; };
+return "0 0 " + (6 * s).toFixed(1) + "px " + a(0.55) + ", 0 0 " + (24 * s).toFixed(1) + "px " + a(0.45) + ", 0 0 " + (70 * s).toFixed(1) + "px " + a(0.3);
+}
+// ==== end kit:glow ====
+
+var root = document.querySelector(".ts");
+var q = function (s, e) { return (e || root).querySelector(s); }, qa = function (s, e) { return [].slice.call((e || root).querySelectorAll(s)); };
+// defaults = the static page's text
+var tx = function (s, e, c) { return qa(s, e).map(function (x) { return x.textContent.slice(c || 0); }).join("|"); }, ps = qa(".ts-pose");
+var v = { cmds: tx(".ts-ty"), steps: tx(".ts-name"), out1: tx(".ts-ln", ps[0], 1), out2: tx(".ts-ln", ps[1], 1), out3: tx(".ts-ln", ps[2], 1), result: tx(".ts-res"), backdrop: "on" };
+try {
+var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k]; // "" kept: out3 may be empty
+} catch (e) {}
+var FW = root.clientWidth, FH = root.clientHeight;
+if (!FW || !FH) {
+var hc = root.closest("[data-width][data-height]");
+FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+}
+var P = FH > FW, L = P ? PORT : LAND, CX = FW / 2, CY = FH * L.cy, K = Math.min(FW, FH) / 1.08e3;
+root.setAttribute("data-orient", P ? "portrait" : "landscape");
+var dark = kTone(root) === "dark";
+if (String(v.backdrop) === "off") root.classList.add("ts-off");
+// "|" cuts lines; runs of spaces stay (they align columns)
+var list = function (s) { return String(s).split("|").map(function (x) { return x.replace(/^ | +$/g, ""); }).filter(function (x) { return x.trim(); }); };
+var cmds = list(v.cmds), steps = list(v.steps);
+var at = function (k, n, first, close) { return k < n - 1 ? first + 4 * k : n > 1 ? first + 4 * (n - 2) + close : first; }; // frames after the output starts
+
+// text first, measured flat (no 3D transform yet)
+var world = q(".ts-world");
+world.style.transform = "none";
+var win = ps.map(function (pe, i) {
+pe.style.transform = "none";
+var w = { pe: pe, win: q(".ts-win", pe), ty: q(".ts-ty", pe), ca: q(".ts-ca", pe), cmd: cmds[i] || "", t0: CFG.type[i] * 30, rows: [] };
+q(".ts-name", pe).textContent = steps[i] || "";
+w.ty.textContent = w.cmd;
+kFit(q(".ts-cmd", pe), { min: 40, spare: 0.08 });
+var box = q(".ts-out", pe), keep = q(".ts-prog,.ts-ready", box), src = list(v["out" + (i + 1)]).slice(0, i < 2 ? 4 : 3), n = src.length;
+box.textContent = "";
+if (keep && i === 1) { box.appendChild(keep); w.rows.push({ el: keep, prog: 1, at: 0 }); }
+src.forEach(function (s, k) {
+var m = /^(\S.*?)( {2,})(.*)$/.exec(s), el = document.createElement("p"), last = i < 2 && k === n - 1;
+el.className = "ts-ln" + (last ? " ts-pass" : "");
+el.innerHTML = "<i>✓</i><em></em>";
+el.lastChild.textContent = m ? m[1] + m[2] : "";
+el.appendChild(document.createTextNode(m ? m[3] : s));
+box.appendChild(el);
+w.rows.push({ el: el, mk: el.firstChild, spin: !last, at: i === 2 ? at(k, n + 1, 0, 7) : at(k, n, i ? 10 : 0, 6) });
+});
+if (keep && i === 2) {
+box.appendChild(keep);
+q(".ts-res", keep).textContent = String(v.result);
+kFit(q(".ts-res", keep), { min: 40, width: box.clientWidth - q(".ts-pill", keep).offsetWidth - 26 }); // a flex item: give it the row's free width
+w.rows.push({ el: keep, ready: 1, at: at(n, n + 1, 0, 7) });
+}
+// typing: 0.75-1.65 frames a character (seeded), +0.6 after a space; Enter 2 frames later
+var ct = [], e = 0;
+for (var c = 0; c < w.cmd.length; c++) { ct.push(e); e += 0.75 + kHash((i + 3) * 31 + c) * 0.9 + (w.cmd[c] === " " ? 0.6 : 0); }
+var sc = Math.min(1, (CFG.typeMax * 30) / Math.max(e, 1e-6));
+w.ct = ct.map(function (x) { return x * sc; });
+w.end = e * sc; w.ent = w.t0 + w.end + 2; w.o0 = w.ent + 2;
+return w;
+});
+// poses; numeral 380px behind its window, offset along world axes as upstream
+win.forEach(function (w, i) {
+var p = L.pose[i], a = p[3] * R, nb = q(".ts-num", w.pe), ox = -L.w / 2 + L.num[0] + nb.offsetWidth / 2;
+w.pe.style.opacity = 1;
+w.pe.style.transform = "translate3d(" + p[0] + "px," + p[1] + "px," + p[2] + "px) rotateY(" + p[3] + "deg)";
+nb.style.transform = "translate3d(" + (ox * Math.cos(a) + 380 * Math.sin(a) - ox).toFixed(1) + "px,0," + (ox * Math.sin(a) - 380 * Math.cos(a)).toFixed(1) + "px)";
+});
+
+// camera: station parameter s (0..2) and pull-back, as the inverse of the window poses
+function cam(t) {
+var s = 0, pull = CFG.pull0 * (1 - MT.ramp(t, 0, CFG.open, "out"));
+CFG.fly.forEach(function (ab, i) {
+var d = ab[1] - ab[0];
+s += MT.ramp(t, ab[0], d, "swift");
+pull += Math.sin(Math.PI * Math.pow(MT.clamp((t - ab[0]) / d), 0.85)) * CFG.peak * (i ? CFG.peak2 : 1);
+});
+pull -= CFG.tailPull * MT.ramp(t, CFG.tail, CFG.tailDur, "smooth");
+var i0 = Math.min(1, Math.floor(s)), k = s - i0, a = L.pose[i0], b = L.pose[i0 + 1], m = function (j) { return a[j] + (b[j] - a[j]) * k; };
+return { s: s, pull: pull, x: m(0), y: m(1), z: m(2), yaw: VIEW[i0] + (VIEW[i0 + 1] - VIEW[i0]) * k - m(3) };
+}
+// same chain as the world transform: translateZ(-pull) rotateX(tilt) rotateY(yaw) translate(-pose)
+var ct = Math.cos(TILT * R), st = Math.sin(TILT * R);
+function pj(c, X, Y, Z) {
+var x0 = X - c.x, y0 = Y - c.y, z0 = Z - c.z, cy = Math.cos(c.yaw * R), sy = Math.sin(c.yaw * R);
+var x1 = x0 * cy + z0 * sy, z1 = -x0 * sy + z0 * cy, y2 = y0 * ct - z1 * st, z2 = y0 * st + z1 * ct - c.pull, k = D / (D - z2);
+return [CX + x1 * k * K, CY + y2 * k * K, k * K, z2];
+}
+var place = function (el, p, w, h, on) {
+el.style.cssText = on < 0.02 || p[3] > D - 200 ? "" : "left:" + (p[0] - (w * p[2]) / 2).toFixed(1) + "px;top:" + (p[1] - (h * p[2]) / 2).toFixed(1) + "px;width:" + (w * p[2]).toFixed(1) + "px;height:" + (h * p[2]).toFixed(1) + "px;opacity:" + on.toFixed(3);
+};
+
+// floor: 240px grid, lines cut into 8 projected segments, fading with depth; 10 paths by opacity
+var segs = [], fg = q(".ts-fl g"), fp = [];
+for (var b = 0; b < 10; b++) { fp.push(fg.appendChild(document.createElementNS("http://www.w3.org/2000/svg", "path"))); fp[b].setAttribute("stroke-opacity", (b + 0.5) / 10); }
+var line = function (a, b) { for (var j = 0; j < 8; j++) segs.push([a, b, j / 8]); };
+for (var gi = -14; gi <= 14; gi++) line([gi * 240, -3600], [gi * 240, 2400]);
+for (var gj = -15; gj <= 10; gj++) line([-3400, gj * 240], [3400, gj * 240]);
+// dust: upstream's 36 motes (seed 5, drift 0.35 px a frame) with its own sin hash
+var lh = function (n) { var x = Math.sin(n * 91.345 + 47.853) * 43758.5453; return x - Math.floor(x); }, du = q(".ts-du"), motes = [];
+for (var mi = 0; mi < 36; mi++) {
+var z = lh(155 + mi * 7.1), el = du.appendChild(document.createElement("i")), sz = 2 + z * z * 16;
+el.style.width = el.style.height = sz + "px";
+if (z > 0.7) el.style.filter = "blur(" + ((z - 0.7) * 10).toFixed(1) + "px)";
+motes.push([el, z, mi]);
+}
+// other frame sizes: scale3d(K) with perspective D * K = the picture scaled by K (K = 1 on the two standard frames)
+var SK = K !== 1 ? "scale3d(" + K + "," + K + "," + K + ") " : "";
+q(".ts-vp").style.perspective = D * K + "px";
+var grain = kGrain(q(".ts-grain")), blur = kSpeedBlur(q(".ts-sb"), "ts", { amount: 0.14, max: 10 });
+var bls = qa(".ts-bl"), pos = qa(".ts-po"), key = q(".ts-key"), fill = q(".ts-fill"), cnt = q(".ts-cnt"), pill = q(".ts-pill"), dot = q(".ts-pill i"), res = q(".ts-res");
+
+var tl = MT.scene(CFG.slot, function (t) {
+var f = t * 30, c = cam(t), ca = cam(t - 1 / 60), cb = cam(t + 1 / 60), kS = (D / (D + c.pull)) * K, wide = MT.clamp(c.pull / CFG.peak); // f: frames at 30 fps
+blur(-(cb.x - ca.x) * 30 * kS, -(cb.y - ca.y) * 30 * kS); // screen speed of the look-at point, px a second
+world.style.transform = SK + "translateZ(" + (-c.pull).toFixed(2) + "px) rotateX(" + TILT + "deg) rotateY(" + c.yaw.toFixed(3) + "deg) translate3d(" + (-c.x).toFixed(2) + "px," + (-c.y).toFixed(2) + "px," + (-c.z).toFixed(2) + "px)";
+if (dark) key.style.opacity = ((1 + 0.048 * Math.sin(f / 38)) / 1.048).toFixed(3); // the key light breathes on the dark stage
+win.forEach(function (w, i) {
+var p = L.pose[i], d = Math.abs(c.s - i), on = Math.max(0, 1 - d), fo = Math.min(1, Math.max(0, 1 - d * 1.25) + wide * 0.45), bl = (1 - fo) * 3;
+place(bls[i], pj(c, p[0], p[1] - 60, p[2] - 300), 2500, 1250, on);
+place(pos[i], pj(c, p[0], L.floor, p[2]), 1500, 260, on);
+// depth of field: blur up to 3px and fade (dark skin darkens, as upstream)
+w.pe.style.setProperty("--f", fo.toFixed(3));
+w.win.style.filter = bl > 0.3 ? "blur(" + bl.toFixed(2) + "px)" + (dark ? " brightness(" + (0.62 + 0.38 * fo).toFixed(3) + ")" : "") : "none";
+w.win.style.opacity = (0.72 + 0.28 * fo).toFixed(3);
+// caret: solid while typing, 8-frame blink otherwise, gone after Enter
+var tf = f - w.t0, n = 0;
+while (n < w.ct.length && w.ct[n] <= tf) n++;
+w.ty.textContent = w.cmd.slice(0, n);
+var lit = (tf >= 0 && n < w.cmd.length) || Math.floor((f - (tf < 0 ? 0 : w.t0 + w.end)) / 8) % 2 === 0;
+w.ca.style.opacity = f < w.ent + 1 && lit ? 0.95 : 0;
+// rows print in 6 frames from 10px left; spinner 6 frames, then a tick
+w.rows.forEach(function (r) {
+var s0 = w.o0 + r.at, pr = MT.ramp(f, s0, 6, "snappy"), lt = f - s0, tx = "translateX(" + ((1 - pr) * -10).toFixed(2) + "px)";
+r.el.style.opacity = pr <= 0 ? 0 : Math.min(1, pr * 1.8).toFixed(3);
+if (r.spin) { r.mk.textContent = lt > 6 ? "✓" : SPIN[Math.floor(Math.max(0, lt) * 1.5) % 10]; r.mk.className = lt > 6 ? "" : "ts-sp"; }
+if (r.prog) { var nn = Math.round(MT.ramp(f, s0, 20, "out") * 24); fill.style.width = nn * 0.55 + "em"; cnt.textContent = (nn < 10 ? " " : "") + nn; }
+if (r.ready) {
+var g = MT.ramp(f, s0, 26, "out");
+tx += " scale(" + (0.94 + 0.06 * MT.ramp(f, s0, 14, "overshoot")).toFixed(4) + ")";
+pill.style.boxShadow = "0 0 " + (40 * g).toFixed(1) + "px color-mix(in srgb, var(--k-accent) " + (45 * g).toFixed(1) + "%, transparent)";
+dot.style.opacity = (0.4 + 0.6 * (0.55 + 0.45 * Math.cos(Math.max(0, lt) / 6))).toFixed(3);
+res.style.textShadow = kGlow("var(--k-accent)", (dark ? 0.55 : 0.18) * g);
+}
+r.el.style.transform = tx;
+});
+});
+var ds = ["", "", "", "", "", "", "", "", "", ""];
+segs.forEach(function (sg) {
+var a = sg[0], b = sg[1], u = sg[2], pa = pj(c, a[0] + (b[0] - a[0]) * u, L.floor, a[1] + (b[1] - a[1]) * u), pb = pj(c, a[0] + (b[0] - a[0]) * (u + 0.125), L.floor, a[1] + (b[1] - a[1]) * (u + 0.125));
+var op = pa[3] > D - 120 || pb[3] > D - 120 ? 0 : MT.clamp(1.25 - (D - (pa[3] + pb[3]) / 2) / 4200);
+if (op >= 0.02) ds[Math.min(9, Math.floor(op * op * 10))] += "M" + pa[0].toFixed(1) + " " + pa[1].toFixed(1) + "L" + pb[0].toFixed(1) + " " + pb[1].toFixed(1);
+});
+fp.forEach(function (e, b) { e.setAttribute("d", ds[b] || "M0 0"); });
+motes.forEach(function (o) {
+var z = o[1], i = o[2], x = (((lh(65 + i * 3.7) * (FW + 200) + f * 0.35 * (0.4 + z)) % (FW + 200)) + FW + 200) % (FW + 200) - 100;
+var y = lh(85 + i * 5.3) * FH - f * 0.35 * 0.3 * (0.5 + z), tw = 0.5 + 0.5 * Math.sin(f / (14 + z * 20) + i);
+o[0].style.left = x.toFixed(1) + "px";
+o[0].style.top = ((((y % (FH + 100)) + FH + 100) % (FH + 100)) - 50).toFixed(1) + "px";
+o[0].style.opacity = ((0.25 + 0.75 * tw) * (0.3 + z * 0.7)).toFixed(3);
+});
+grain(t);
+});
+window.__timelines["terminal-space-tour"] = tl;
+})();
+</script>
+</template>
+  </body>
+</html>

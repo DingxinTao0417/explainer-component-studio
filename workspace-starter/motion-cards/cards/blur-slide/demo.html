@@ -1,0 +1,334 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"kicker","type":"string","label":"眉题（留空不要）","default":"第 3 节 · 核心概念"},
+    {"id":"line1","type":"string","label":"标题第一行（用 | 切意群）","default":"把|复杂的|知识"},
+    {"id":"line2","type":"string","label":"标题第二行（用 | 切意群，可留空）","default":"讲得|简单"},
+    {"id":"key","type":"string","label":"重点词（标题里的一个意群，最后落定）","default":"简单"},
+    {"id":"sub","type":"string","label":"副标题（用 | 切意群，留空不要）","default":"不背公式，|只用|一个例子，|从头|讲到尾"},
+    {"id":"num","type":"string","label":"后景大序号（留空不要）","default":"03"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>blur-slide · 逐词虚焦浮入</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="blur-slide-template">
+      <!-- Ported from video-shotcraft demos/typography/blur-slide/BlurSlide.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette, system fonts, generic Chinese copy, upstream wordmark, masthead and page label removed;
+           landscape and portrait layouts; rise and blur amounts kept as em of each line's font size; the hero word's
+           tracking closes from 0.06em to 0 (no negative tracking for CJK). Word timing, the shared quint-out progress,
+           the eyebrow, the two hairlines, the drifting back numeral and the 3% push are as upstream. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* ==== kit:fonts@2 — serif token only (SPEC 二 font paragraph); every family in the stack has a local() line ==== */
+        @font-face { font-family: "Noto Serif SC"; src: local("Noto Serif SC"), local("Noto Serif CJK SC"), local("Source Han Serif SC"); }
+        @font-face { font-family: "Songti SC"; src: local("Songti SC"), local("STSong"), local("SimSun"); }
+        #root { --k-serif: var(--mc-serif, "Noto Serif SC", "Songti SC", serif); }
+        /* ==== end kit:fonts ==== */
+        /* ==== kit:derived@1 — shade only (the vignette colour; tinted, never pure black). [data-tone] from kTone() ==== */
+        .bs { --bs-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); }
+        .bs[data-tone="dark"] { --bs-shade: color-mix(in srgb, var(--k-bg) 30%, black); }
+        /* ==== end kit:derived ==== */
+        /* ==== kit:backdrop@1 — white-first card background with some life (upstream Polish.Backdrop, light) ==== */
+        .bs-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .bs-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        /* ==== end kit:backdrop ==== */
+        /* ==== kit:vignette@1 — edges pressed down with a palette-tinted shade (upstream Polish.Vignette) ==== */
+        .bs-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--bs-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .bs[data-tone="dark"] .bs-vig { --vs: 0.55; }
+        /* ==== end kit:vignette ==== */
+        /* ==== kit:grain@1 — the layer kGrain() draws on; above the scenery, below the text ==== */
+        .bs-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+
+        /* the wrapper is the size container (SPEC 五): portrait overrides live in @container and only reach its children */
+        .bs { position: absolute; inset: 0; container-type: size; }
+        /* upstream ran this shot at vignette 0.1 (lighter than the kit's 0.16); a dark skin gets 0.25, not the stage 0.55 */
+        .bs .bs-vig { --vs: 0.1; }
+        .bs[data-tone="dark"] .bs-vig { --vs: 0.25; }
+        /* a faint warm trace of the accent in the bottom-right corner, so the white is not dead flat (upstream 6%) */
+        .bs-warm { position: absolute; inset: 0; background: radial-gradient(ellipse 40% 50% at 96% 100%, color-mix(in srgb, var(--k-accent) 6%, transparent), transparent 70%); }
+        /* back numeral: 4.5% ink, drawn by ::before so the checker does not read it as text */
+        .bs-num { position: absolute; right: 120px; top: 150px; font-family: var(--k-serif); font-size: 760px; font-weight: 400; line-height: 1; letter-spacing: -0.06em; color: color-mix(in srgb, var(--k-ink) 4.5%, transparent); }
+        .bs-num::before { content: attr(data-n); }
+        /* page hairlines: the top one draws left to right, the foot one right to left after the subtitle lands */
+        .bs-rule { position: absolute; left: 168px; right: 168px; height: 1.5px; }
+        .bs-rt { top: 140px; background: color-mix(in srgb, var(--k-ink) 22%, transparent); transform-origin: 0% 50%; }
+        .bs-rf { top: 972px; background: color-mix(in srgb, var(--k-ink) 18%, transparent); transform-origin: 100% 50%; }
+        /* the text block: left-aligned on the 168px grid; the 3% push scales it from its left edge, a little below centre */
+        .bs-box { position: absolute; left: 168px; right: 168px; top: 0; bottom: 0; padding-top: 40px; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; transform-origin: 0% 52%; }
+        /* eyebrow: never wider than the block (the script shrinks it to 32px, then it wraps; the square keeps to line 1) */
+        .bs-kick { display: flex; align-items: flex-start; gap: 18px; max-width: 100%; font-size: 40px; font-weight: 700; letter-spacing: 0.12em; line-height: 1.3; color: var(--k-accent); }
+        .bs-kt { min-width: 0; overflow-wrap: anywhere; text-wrap: balance; }
+        .bs-sq { display: block; flex: none; width: 16px; height: 16px; margin-top: calc(0.65em - 8px); background: var(--k-accent); }
+        .bs-h1 { margin-top: 30px; font-family: var(--k-serif); font-size: 144px; font-weight: 600; line-height: 1.2; color: var(--k-ink); }
+        .bs-row { display: flex; align-items: baseline; white-space: nowrap; }
+        .bs-w { display: inline-block; white-space: pre; }
+        .bs-hero { color: var(--k-accent); }
+        .bs-sub { display: flex; flex-wrap: wrap; align-items: baseline; margin-top: 70px; font-size: 48px; font-weight: 400; line-height: 1.35; color: var(--k-muted); }
+        /* portrait: the block sits in the 12%-68% band (its middle on the 40% line), 11% off the left and 13% off the
+           right so the 3% push still ends inside the 10% margin; hairlines frame that band */
+        @container (orientation: portrait) {
+          .bs-box { top: 12%; bottom: 32%; left: 11%; right: 13%; padding-top: 0; }
+          .bs-rule { left: 10%; right: 10%; }
+          .bs-rt { top: 13%; }
+          .bs-rf { top: 66%; }
+          .bs-num { right: 6%; top: 13%; font-size: 560px; }
+          .bs-h1 { margin-top: 26px; font-size: 112px; }
+          .bs-sub { margin-top: 56px; font-size: 44px; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="blur-slide">
+        <div class="bs">
+          <div class="bs-bg"><div class="bs-backdrop"></div><div class="bs-warm"></div></div>
+          <div class="bs-num" data-n="03"></div>
+          <div class="bs-vig"></div>
+          <div class="bs-grain"></div>
+          <div class="bs-rule bs-rt"></div>
+          <div class="bs-rule bs-rf"></div>
+          <div class="bs-box">
+            <div class="bs-kick"><span class="bs-sq"></span><span class="bs-kt">第 3 节 · 核心概念</span></div>
+            <div class="bs-h1">
+              <div class="bs-row"><span class="bs-w">把</span><span class="bs-w">复杂的</span><span class="bs-w">知识</span></div>
+              <div class="bs-row"><span class="bs-w">讲得</span><span class="bs-w bs-hero">简单</span></div>
+            </div>
+            <div class="bs-sub"><span class="bs-w">不背公式，</span><span class="bs-w">只用</span><span class="bs-w">一个例子，</span><span class="bs-w">从头</span><span class="bs-w">讲到尾</span></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing (seconds = upstream frames / 30), shared by both orientations
+          var CFG = {
+            dur: 4,                                 // scene length (120 frames)
+            rule: 0, ruleDur: 0.8,                  // top hairline, left to right (0-24f, snappy)
+            kick: 0.133, kickDur: 0.6,              // eyebrow, one unit (4f, 18f window)
+            h1: 0.333, h1Each: 0.133, h1Dur: 0.733, // headline words: first at 10f, 4f apart, 22f window each
+            h1Breath: 0.133,                        // line 2 waits 4 more frames (a breath)
+            heroDur: 1, heroTrack: [0.06, 0],       // key word: 30f window, tracking closes 0.06em -> 0 on the same p
+            heroTrackLat: [0.03, -0.025],           // ...an all-Latin headline: upstream's 0.03em -> -0.025em
+            sub: 1.133, subEach: 0.08, subDur: 0.667, // subtitle words: 34f, 2.4f apart, 20f window
+            foot: 2.4, footDur: 0.867,              // foot hairline, right to left (72f, 26f, snappy)
+            numDur: 1.6, numBlur: 24, numDrift: 24, // back numeral: out of focus in 48f, drifts 24px left over the shot
+            push: 0.03, pushDur: 3.967              // whole text block 1 -> 1.03, smooth, 0-119f
+          };
+          // rise and blur per unit as em of its own font size (upstream px at its sizes: 64 / 18 at 170, 26 / 9 at 46, 18 / 6 at 30)
+          var AMP = { h1: [0.376, 0.106], sub: [0.565, 0.196], kick: [0.6, 0.2] };
+          var v = { kicker: "第 3 节 · 核心概念", line1: "把|复杂的|知识", line2: "讲得|简单", key: "简单", sub: "不背公式，|只用|一个例子，|从头|讲到尾", num: "03", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".bs");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          root.setAttribute("data-orient", FH > FW ? "portrait" : "landscape");
+
+          // ==== kit:tone@1 — light or dark skin, read from --k-bg; sets data-tone on the wrapper ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+          // ==== kit:grain@1 — film grain on a full-size layer (needs kit:tone first if the card can be dark) ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+
+          var dark = kTone(root) === "dark";
+          var off = String(v.backdrop) === "off";
+          var grain = null;
+          if (off) [".bs-bg", ".bs-vig", ".bs-grain", ".bs-num", ".bs-rt", ".bs-rf"].forEach(function (s) { q(s).style.display = "none"; });
+          else grain = kGrain(q(".bs-grain"), { opacity: dark ? 0.09 : 0.06 }); // upstream grain 0.06 on the paper look
+
+          // units {t, sp}: "|" cuts phrases (no gap, as Chinese is written); else typed spaces cut, and a line with no
+          // space goes to the word breaker (key kept whole). A typed space is never dropped: sp = a gap after the unit.
+          var CJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+          var seg = function (s) { return typeof Intl.Segmenter === "function" ? Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(s), function (x) { return x.segment; }) : [s]; };
+          function words(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            if (!s) return [];
+            var bar = s.indexOf("|") >= 0, k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) { return / /.test(s) || !CJK.test(x) ? x.split(/( )/) : seg(x); };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var out = [];
+            bits.forEach(function (x) {
+              var t = x.trim();
+              if (/^ /.test(x) && out.length) out[out.length - 1].sp = true;
+              if (t) out.push({ t: t, sp: / $/.test(x) });
+            });
+            // Latin words cut with "|" keep their gap ("Make|every")
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !CJK.test(u.t.slice(-1)) && !CJK.test(n.t.charAt(0))) u.sp = true; });
+            return out;
+          }
+          function fill(row, list, gap) {
+            row.innerHTML = "";
+            return list.map(function (u, i) {
+              var s = document.createElement("span");
+              s.className = "bs-w"; s.textContent = u.t;
+              if (u.sp && i < list.length - 1) s.style.marginRight = gap;
+              row.appendChild(s);
+              return s;
+            });
+          }
+          var box = q(".bs-box");
+          var BW = box.clientWidth || (FH > FW ? FW * 0.76 : FW - 336);
+          // eyebrow wider than the block (est. CJK 1em, space 0.3em, other 0.62em, +0.12em tracking; square + gap 34px)
+          // shrinks to 32px at least; past that the CSS wraps it
+          var kick = q(".bs-kick"), kt = String(v.kicker).replace(/\s+/g, " ").trim();
+          if (kt) {
+            q(".bs-kt").textContent = kt;
+            var kem = 0, kfs = parseFloat(getComputedStyle(kick).fontSize) || 40;
+            for (var c = 0; c < kt.length; c++) kem += (CJK.test(kt.charAt(c)) ? 1 : kt.charAt(c) == " " ? 0.3 : 0.62) + 0.12;
+            if (kem * kfs > BW - 34) kick.style.fontSize = Math.max(32, Math.floor((BW - 34) / kem)) + "px";
+          } else kick.style.display = "none";
+          var num = q(".bs-num");
+          if (String(v.num).trim()) num.setAttribute("data-n", String(v.num).trim()); else num.style.display = "none";
+
+          // headline: up to two lines of phrases. Rows are packed here from estimated widths (CJK 1em, Latin 0.6em a
+          // glyph), not by flex-wrap, which would re-wrap a row while the key word's tracking closes. A line too long for
+          // the block first shrinks the font (down to 104px, portrait 84px), then breaks between phrases. 6% of the width
+          // stays spare: the key word's opening tracking and the 3% push both widen a row. A typed space is a 0.24em gap.
+          var key = String(v.key).replace(/\s+/g, " ").trim(), h1 = q(".bs-h1"), GAP = 0.24;
+          var lines = [words(v.line1, key), words(v.line2, key)].filter(function (l) { return l.length; });
+          // all-Latin headline as upstream: italic key word, tighter leading and tracking
+          var latHead = lines.length > 0 && !CJK.test(lines.map(function (l) { return l.map(function (u) { return u.t; }).join(""); }).join(""));
+          var em = function (s) { var w = 0; for (var c = 0; c < s.length; c++) w += s.charCodeAt(c) > 255 ? 1 : 0.6; return w; };
+          var lineEm = function (l) { return l.reduce(function (w, u, i) { return w + em(u.t) + (u.sp && i < l.length - 1 ? GAP : 0); }, 0); };
+          var fs0 = parseFloat(getComputedStyle(h1).fontSize) || 144;
+          var widest = Math.max.apply(null, lines.map(lineEm).concat([1]));
+          var fs = Math.max(FH > FW ? 84 : 104, Math.min(fs0, Math.floor((BW * 0.94) / widest))), cap = (BW * 0.94) / fs;
+          h1.style.fontSize = fs + "px";
+          h1.innerHTML = "";
+          var units = [], gi = 0;
+          lines.forEach(function (l, li) {
+            var row = null, w = 0, prev = null;
+            l.forEach(function (u) {
+              var gw = em(u.t), gap = prev && prev.sp ? GAP : 0;
+              if (!row || w + gap + gw > cap) {
+                row = document.createElement("div");
+                row.className = "bs-row";
+                if (latHead) { row.style.lineHeight = "1.02"; row.style.letterSpacing = "-0.02em"; }
+                h1.appendChild(row);
+                w = gw;
+              } else {
+                w += gap + gw;
+                if (gap) prev.el.style.marginRight = GAP + "em";
+              }
+              var s = document.createElement("span"), hero = key && u.t === key;
+              s.className = "bs-w" + (hero ? " bs-hero" : ""); s.textContent = u.t;
+              if (hero && latHead) s.style.fontStyle = "italic";
+              row.appendChild(s);
+              u.el = s; prev = u;
+              // line 2 waits one breath; the key word gets the longer window and the closing tracking
+              units.push({ el: s, at: CFG.h1 + gi * CFG.h1Each + (li ? CFG.h1Breath : 0), dur: hero ? CFG.heroDur : CFG.h1Dur, amp: AMP.h1,
+                track: hero ? (latHead ? CFG.heroTrackLat : CFG.heroTrack) : null });
+              gi++;
+            });
+          });
+          var sub = q(".bs-sub"), subWords = words(v.sub);
+          if (!subWords.length) sub.style.display = "none";
+          fill(sub, subWords, "0.26em").forEach(function (s, i) {
+            units.push({ el: s, at: CFG.sub + i * CFG.subEach, dur: CFG.subDur, amp: AMP.sub });
+          });
+          units.push({ el: kick, at: CFG.kick, dur: CFG.kickDur, amp: AMP.kick });
+          // rise / blur in px from each unit's own font size, measured once after the layout is final
+          units.forEach(function (u) { var f = parseFloat(getComputedStyle(u.el).fontSize) || 48; u.rise = u.amp[0] * f; u.blur = u.amp[1] * f; });
+
+          var rt = q(".bs-rt"), rf = q(".bs-rf");
+          var tl = MT.scene(CFG.dur, function (t) {
+            // one progress p per unit drives opacity, rise and blur together: the card's core, never three curves
+            units.forEach(function (u) {
+              var p = MT.ramp(t, u.at, u.dur, "out");
+              u.el.style.opacity = p;
+              u.el.style.transform = "translateY(" + ((1 - p) * u.rise).toFixed(2) + "px)";
+              u.el.style.filter = p >= 0.999 ? "" : "blur(" + ((1 - p) * u.blur).toFixed(2) + "px)";
+              if (u.track) u.el.style.letterSpacing = (u.track[0] + (u.track[1] - u.track[0]) * p).toFixed(4) + "em";
+            });
+            var drift = MT.ramp(t, 0, CFG.pushDur, "smooth");
+            box.style.transform = "scale(" + (1 + CFG.push * drift).toFixed(5) + ")";
+            if (off) return;
+            rt.style.transform = "scaleX(" + MT.ramp(t, CFG.rule, CFG.ruleDur, "snappy").toFixed(4) + ")";
+            rf.style.transform = "scaleX(" + MT.ramp(t, CFG.foot, CFG.footDur, "snappy").toFixed(4) + ")";
+            var n = MT.ramp(t, 0, CFG.numDur, "out");
+            num.style.opacity = n;
+            num.style.filter = n >= 0.999 ? "" : "blur(" + ((1 - n) * CFG.numBlur).toFixed(2) + "px)";
+            num.style.transform = "translateX(" + (-CFG.numDrift * drift).toFixed(2) + "px)";
+            if (grain) grain(t);
+          });
+          window.__timelines["blur-slide"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

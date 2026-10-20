@@ -1,0 +1,506 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"文档标题","default":"第 12 周学习周报"},
+    {"id":"doc","type":"string","label":"正文（用 | 分段；# 开头是小标题，#@ 开头的写完后长出底色）","default":"#本周小结|三条主线都推进到可交付节点|笔记模板 v2 已经生效|周五集中过一遍全部结论|#@成员 A|第 3 节的练习全部完成|错题集更新到 42 题|#@成员 B|示例项目跑通第一版，快 3 倍|下周录一段完整的操作演示"},
+    {"id":"name","type":"string","label":"应用名（留空只留标志）","default":"示例应用"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"带光的白底"},{"value":"off","label":"透明（只留窗口）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>document-typewriter-reveal · 文档自己写出</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="document-typewriter-reveal-template">
+    <!-- Ported from video-shotcraft demos/ui-entrance/document-typewriter-reveal/DocumentTypewriterReveal.tsx
+         (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+         Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/. Recipe: typography/document-typewriter-reveal.
+         Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+         neutral --k-* palette on a lit white stage (was dark aurora), system fonts, generic copy in variables; the
+         screenshot (mark, wordmark, names) -> a DOM window, text >= 40 px, text-free rails, toolbar and history;
+         20 small blocks in pairs -> 11 large ones one by one in the same 8f-56.6f budget; clip-path per line, not a
+         paper mask; caret 5x54 px, rail edge 3 px, drop (0.86 slot) and air shadow scaled to the bigger text; wash
+         under the text, not multiply; backlight ring -> glow; tagline, its camera lift and the dust motes (they only
+         read on the dark stage) dropped, hold = 0.8% push; portrait: narrower window, no comment rail. Kept: camera
+         keys 0/26/64f, perspective 2200 x zoom, eases and cues of write, wash, rails and drops, idle blink, window
+         shadow, top glint, grain, vignette. -->
+    <style>
+@font-face{font-family:"Microsoft YaHei";src:local("Microsoft YaHei"),local("MicrosoftYaHei")}
+@font-face{font-family:"PingFang SC";src:local("PingFang SC")}
+@font-face{font-family:"Noto Sans SC";src:local("Noto Sans SC"),local("Noto Sans CJK SC")}
+/* real bold for the headings (the palette faces are regular) */
+@font-face{font-family:"dw-bold";font-weight:700 900;src:local("Microsoft YaHei Bold"),local("MicrosoftYaHei-Bold"),local("PingFangSC-Semibold"),local("NotoSansSC-Bold")}
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  position:absolute;
+  inset:0;
+  overflow:hidden;
+  font-family:var(--k-font);
+  color:var(--k-ink);
+}
+/* ==== kit:derived@1 (line, panel-2, shade) ==== */
+.dw{--dw-line:color-mix(in srgb,var(--k-ink) 12%,transparent);--dw-panel-2:color-mix(in srgb,var(--k-panel),var(--k-ink) 4%);--dw-shade:color-mix(in srgb,var(--k-ink) 85%,var(--k-accent-2))}
+.dw[data-tone="dark"]{--dw-shade:color-mix(in srgb,var(--k-bg) 30%,black)}
+/* ==== end kit:derived ==== */
+/* light: white window on a lit grey stage; dark: lighter panel, lights in accent-2 */
+.dw,.dw-bg,.dw-vig,.dw-grain,.dw-cam,.dw-view,.dw-glow,.dw-win,.dw-bg::after{position:absolute;inset:0}
+.dw{container-type:size;
+  --dw-paper:var(--k-bg);--dw-rail:var(--k-panel);--dw-rim:var(--dw-line);
+  --dw-g1:var(--k-bg);--dw-g2:color-mix(in srgb,var(--k-bg),var(--k-ink) 4%);--dw-g3:color-mix(in srgb,var(--k-bg),var(--k-ink) 8%);
+  --dw-key:color-mix(in srgb,var(--k-bg) 92%,transparent);--dw-fill:color-mix(in srgb,var(--k-accent-2) 9%,transparent);
+  --dw-hz:color-mix(in srgb,var(--k-bg) 60%,transparent);--dw-glow:color-mix(in srgb,var(--k-accent) 14%,transparent);
+  --dw-s1:30%;--dw-s2:12%;--dw-c:color-mix(in srgb,var(--k-accent),var(--k-ink) 18%);
+  --dw-wash:color-mix(in srgb,var(--k-accent) 24%,var(--dw-paper));
+  --dw-k1:color-mix(in srgb,var(--k-ink) 42%,transparent);--dw-k2:color-mix(in srgb,var(--k-ink) 20%,transparent);--dw-k3:color-mix(in srgb,var(--k-ink) 11%,transparent)}
+.dw[data-tone="dark"]{--dw-paper:var(--k-panel);--dw-rail:color-mix(in srgb,var(--k-panel),black 24%);--dw-rim:color-mix(in srgb,white 32%,transparent);
+  --dw-g1:color-mix(in srgb,var(--k-bg),white 5%);--dw-g2:var(--k-bg);--dw-g3:color-mix(in srgb,var(--k-bg),black 45%);
+  --dw-key:color-mix(in srgb,var(--k-accent-2) 34%,transparent);--dw-fill:color-mix(in srgb,white 6%,transparent);
+  --dw-hz:color-mix(in srgb,var(--k-accent-2) 18%,transparent);--dw-glow:color-mix(in srgb,var(--k-accent-2) 30%,transparent);
+  --dw-s1:95%;--dw-s2:55%;--dw-c:var(--k-accent);--dw-wash:color-mix(in srgb,var(--k-accent-2) 36%,var(--dw-paper))}
+.dw[data-off] .dw-deco{display:none}
+/* ==== kit:backdrop@1 (as the upstream stage: key light top centre, accent-2 fill bottom right, horizon band at 90%) ==== */
+.dw-bg{background:radial-gradient(ellipse 50% 46% at 88% 95%,var(--dw-fill),transparent 72%),linear-gradient(var(--dw-g1),var(--dw-g2) 52%,var(--dw-g3))}
+.dw-bg::before{content:"";position:absolute;left:-10%;right:-10%;top:81%;height:18%;background:radial-gradient(closest-side,var(--dw-hz),transparent 70%);filter:blur(10px)}
+.dw-bg::after{content:"";opacity:var(--dw-kb,1);background:radial-gradient(ellipse 58% 62% at 50% 2%,var(--dw-key),transparent 70%)}
+/* ==== end kit:backdrop ==== */
+/* ==== kit:vignette@1 (clear centre 42% as the upstream stage) ==== */
+.dw-vig{
+  pointer-events:none;
+  --vs:0.16;--vin:42%;--vx:50%;--vy:46%;--vc:var(--dw-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.dw[data-tone="dark"] .dw-vig{--vs:0.55}
+/* ==== end kit:vignette ==== */
+/* ==== kit:grain@1 ==== */
+.dw-grain{pointer-events:none}
+/* ==== end kit:grain ==== */
+/* ==== kit:text@2 (.dw-u) ==== */
+.dw-u{display:inline-block;white-space:pre}
+/* ==== end kit:text ==== */
+/* camera; static = the settled pose */
+.dw-cam{transform:translate(0px,-10px)}
+.dw-view{perspective:1907px;perspective-origin:50% 50%}
+.dw-page{position:absolute;left:0;top:0;width:1920px;height:1080px;zoom:0.867;transform-origin:960px 540px;transform:translate(147.27px,82.84px) rotateY(-6deg) rotateX(4deg);transform-style:preserve-3d}
+/* backlight ring, 40px behind the window */
+.dw-glow{border-radius:28px;transform:translateZ(-40px);box-shadow:0 0 220px 30px var(--dw-glow)}
+.dw-win{border-radius:28px;overflow:hidden;background:var(--dw-paper);
+  box-shadow:0 0 0 1.5px var(--dw-rim),0 70px 160px -20px color-mix(in srgb,var(--dw-shade) var(--dw-s1),transparent),0 20px 60px color-mix(in srgb,var(--dw-shade) var(--dw-s2),transparent)}
+.dw-win::after{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,transparent,color-mix(in srgb,white 90%,transparent),transparent)}
+.dw i,.dw b{display:block}
+.dw-hd{position:absolute;left:0;right:0;top:0;height:76px;display:flex;align-items:center;gap:18px;padding:0 28px;box-sizing:border-box;border-bottom:1px solid var(--dw-line)}
+.dw-mk{display:block;flex:none;width:44px;height:44px}
+.dw-nm{flex:none;font-size:34px;line-height:1.2}
+.dw-nv{flex:none;width:60px;height:14px;border-radius:7px;background:var(--dw-k2)}
+.dw-nm + .dw-nv{margin-left:22px}
+.dw-av{flex:none;width:42px;height:42px;margin-left:auto;border-radius:50%;background:var(--k-accent-2);box-shadow:inset 0 0 0 3px var(--dw-paper),0 0 0 2px var(--k-accent-2)}
+/* rails (text-free): history on the left, comments on the right */
+.dw-rl,.dw-rr{position:absolute;top:77px;bottom:0;box-sizing:border-box;background:var(--dw-rail);--ln:0}
+.dw-rl{left:0;width:264px;padding:0 4px;border-right:1px solid var(--dw-line)}
+.dw-rr{right:0;width:304px;padding:0 16px;border-left:1px solid var(--dw-line)}
+.dw-rl::after,.dw-rr::after{content:"";position:absolute;top:0;bottom:0;width:3px;background:var(--dw-c);box-shadow:0 0 14px var(--k-accent);opacity:var(--ln)}
+.dw-rl::after{right:-2px}
+.dw-rr::after{left:-2px}
+.dw-rh{height:14px;width:34%;margin:34px 18px 28px;border-radius:7px;background:var(--dw-k1)}
+.dw-se{position:relative;height:52px;margin:0 10px 14px;border-radius:12px;background:var(--dw-paper);box-shadow:inset 0 0 0 1.5px var(--dw-line)}
+.dw-se::before{content:"";position:absolute;left:16px;top:17px;width:14px;height:14px;border-radius:50%;box-shadow:inset 0 0 0 2.5px var(--dw-k1)}
+.dw-se::after{content:"";position:absolute;left:44px;top:20px;width:42%;height:12px;border-radius:6px;background:var(--dw-k3)}
+/* a slot: title bar, date bar (::after) and a summary bar (::before) */
+.dw-cu,.dw-en{position:relative;height:88px;box-sizing:border-box;background:var(--dw-paper);border-bottom:1px solid var(--dw-line)}
+.dw-cu{border:0;border-radius:10px;background:var(--dw-panel-2)}
+.dw-cu::before,.dw-en::before,.dw-cu::after,.dw-en::after{content:"";position:absolute;left:16px;top:23px;width:50%;height:15px;border-radius:8px;background:var(--dw-k1);box-shadow:0 30px 0 -1px var(--dw-k2)}
+.dw-cu::after,.dw-en::after{left:auto;right:16px;width:18%;height:12px;background:var(--dw-k3);box-shadow:none}
+.dw-cu::after{background:var(--k-accent)}
+.dw-cm{padding:18px;margin-bottom:18px;border-radius:14px;background:var(--dw-paper);box-shadow:inset 0 0 0 1.5px var(--dw-line)}
+.dw-cm b{height:40px;border-radius:8px;background:linear-gradient(90deg,var(--k-accent) 5px,var(--dw-panel-2) 5px)}
+.dw-cm i{width:88%;height:12px;margin-top:16px;border-radius:6px;background:var(--dw-k2)}
+.dw-cm i:nth-of-type(1){width:46%;height:14px;background:var(--dw-k1)}
+.dw-cm i:nth-of-type(3){width:60%}
+.dw-cm i + b{width:70%;margin-top:18px;background:none;box-shadow:inset 0 0 0 1.5px var(--dw-line)}
+.dw-tb{position:absolute;left:264px;right:304px;top:77px;height:72px;overflow:hidden;border-bottom:1px solid var(--dw-line)}
+.dw-tb svg{position:absolute;left:22px;top:0;width:1012px;height:72px;fill:none;stroke:var(--dw-k1);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* the document, one block per paragraph */
+.dw-doc{position:absolute;left:576px;top:186px;width:760px}
+.dw-doc > div{position:relative}
+.dw-b{font-family:"dw-bold",var(--k-font);font-weight:700}
+.dw[data-hf] .dw-b{font-family:var(--k-font)}
+.dw-t{font-size:60px;line-height:1.25;margin-bottom:28px}
+.dw-h{z-index:0;width:fit-content;font-size:48px;line-height:1.3;margin:22px 0 8px}
+.dw-t + .dw-h{margin-top:0}
+.dw-li{font-size:48px;line-height:1.4;padding-left:40px;margin-bottom:4px}
+.dw-li::before { content: ""; position: absolute; left: 10px; top: calc(0.7em - 5px); width: 10px; height: 10px; border-radius: 50%; background: var(--k-ink); }
+.dw-wa{position:absolute;z-index:-1;left:-10px;right:-14px;top:-1px;bottom:-1px;border-radius:10px;background:var(--dw-wash);transform-origin:0 50%}
+.dw-cr{position:absolute;left:0;top:0;width:5px;height:54px;border-radius:3px;opacity:0;background:var(--dw-c);
+  box-shadow:0 0 14px color-mix(in srgb,var(--dw-c) 60%,transparent),0 0 36px color-mix(in srgb,var(--k-accent) 45%,transparent)}
+/* portrait: a 976px window, no comment rail */
+@container (orientation:portrait){
+  .dw-cam{transform:translate(-6px,-200px)}
+  .dw-page{width:976px;transform-origin:488px 540px;transform:translate(134.8px,567.3px) rotateY(-6deg) rotateX(4deg)}
+  .dw-rl{width:136px}
+  .dw-rr,.dw-nv{display:none}
+  .dw-tb{left:136px;right:0}
+  .dw-doc{left:176px}
+}
+    </style>
+<div id="root" data-composition-id="document-typewriter-reveal">
+ <div class="dw">
+  <div class="dw-bg dw-deco"></div>
+  <div class="dw-vig dw-deco"></div>
+  <div class="dw-grain dw-deco"></div>
+  <div class="dw-cam">
+   <div class="dw-view" data-layout-allow-overflow>
+    <div class="dw-page">
+     <div class="dw-glow"></div>
+     <div class="dw-win">
+      <div class="dw-hd">
+       <svg class="dw-mk" viewBox="0 0 128 128"><rect x="8" y="8" width="112" height="112" rx="30" style="fill: var(--k-accent)" /><circle cx="46" cy="46" r="16" style="fill: var(--k-on-accent)" /><rect x="30" y="78" width="68" height="16" rx="8" style="fill: var(--k-on-accent)" /></svg>
+       <div class="dw-nm dw-b">示例应用</div>
+       <i class="dw-nv"></i><i class="dw-nv"></i><i class="dw-av"></i>
+      </div>
+      <div class="dw-rl">
+       <i class="dw-rh"></i><i class="dw-se"></i>
+       <i class="dw-cu"></i>
+       <i class="dw-en"></i><i class="dw-en"></i><i class="dw-en"></i><i class="dw-en"></i><i class="dw-en"></i><i class="dw-en"></i>
+      </div>
+      <div class="dw-rr">
+       <i class="dw-rh"></i>
+       <div class="dw-cm"><b></b><i></i><i></i><i></i><b></b></div>
+       <div class="dw-cm"><b></b><i></i><i></i><i></i><b></b></div>
+      </div>
+      <div class="dw-tb">
+       <svg viewBox="0 0 810 57.6"><g transform="translate(0 16.8)">
+        <path d="M9 15 4 10l5-5M4 10h10a5 5 0 0 1 0 10h-2" /><path d="M51 15l5-5-5-5M56 10H46a5 5 0 0 0 0 10h2" />
+        <path d="M76 1v22M204 1v22M376 1v22M472 1v22" style="stroke: var(--dw-k3)" />
+        <rect x="92" y="-2" width="96" height="28" rx="8" style="stroke: var(--dw-k3)" /><path d="M102 12h44M166 10l4 4 4-4" />
+        <path d="M227 5h6a3.5 3.5 0 0 1 0 7H227zm0 7h7a3.5 3.5 0 0 1 0 7H227z" /><path d="M266 5h7M263 19h7M271 5 266 19" />
+        <path d="M299 4v7a5 5 0 0 0 10 0V4M297 21h14" />
+        <path d="M334 17 340 4l6 13M336.5 12h7" /><path d="M333 21h14" style="stroke: var(--k-accent); stroke-width: 3" />
+        <path d="M434 6h10M434 12h10M434 18h10M429 6h0.01M429 12h0.01M429 18h0.01" /><path d="M498 14a4 4 0 0 0 6 0l3-3a4 4 0 0 0-6-6l-1 1M502 10a4 4 0 0 0-6 0l-3 3a4 4 0 0 0 6 6l1-1" />
+        <path d="M528 5h16v14H528zM528 16l5-5 5 5 2-2 4 4M539.5 9.5h0.01" /><path d="M564 5h16v14H564zM564 10h16M564 15h16M570 5v14" />
+       </g></svg>
+      </div>
+      <div class="dw-doc">
+       <i class="dw-cr"></i>
+       <div class="dw-t dw-b">第 12 周学习周报</div>
+       <div class="dw-h dw-b">本周小结</div>
+       <div class="dw-li">三条主线都推进到可交付节点</div>
+       <div class="dw-li">笔记模板 v2 已经生效</div>
+       <div class="dw-li">周五集中过一遍全部结论</div>
+       <div class="dw-h dw-b"><span class="dw-wa"></span>@成员 A</div>
+       <div class="dw-li">第 3 节的练习全部完成</div>
+       <div class="dw-li">错题集更新到 42 题</div>
+       <div class="dw-h dw-b"><span class="dw-wa"></span>@成员 B</div>
+       <div class="dw-li">示例项目跑通第一版，快 3 倍</div>
+       <div class="dw-li">下周录一段完整的操作演示</div>
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+ </div>
+</div>
+    <script>
+(function () {
+  // timing (s = upstream frames / 30); the blocks are written one by one from w0 to wEnd
+  var CFG = { dur: 4.5, w0: 0.267, wEnd: 1.887, wipe: 0.3, fade: 0.067, washAt: 0.133, washDur: 0.267,
+    rails: [1.8, 2.067], railDur: 0.333, edgeEnd: 0.8, item0: 2.2, itemGap: 0.167, drop: 0.3, appear: 0.1, push: 0.867, nameW: 520 };
+  // camera keys [t, look-at x, y (page px), zoom, tilt x, y (deg), shift x, y (px)]
+  var LAND = { keys: [[0, 690, 320, 1.42, 8, -18, 0, 0], [0.867, 770, 390, 1.24, 6, -13, 0, 0], [2.133, 0, 0, 0.86, 4, -6, 0, -10]] };
+  var PORT = { keys: [[0, 300, 320, 1.42, 8, -18, 0, -100], [0.867, 350, 390, 1.24, 6, -13, 0, -120], [2.133, 0, 0, 0.86, 4, -6, -6, -200]] };
+  // defaults = the static document ("#" heading, "#@" heading with a wash)
+  var root = document.querySelector(".dw"), q = function (s) { return root.querySelector(s); }, doc = q(".dw-doc"), dk = [].slice.call(doc.children, 1);
+  var v = { title: dk[0].textContent, doc: dk.slice(1).map(function (e) { return (e.classList.contains("dw-h") ? "#" : "") + e.textContent; }).join("|"), name: q(".dw-nm").textContent, backdrop: "on" };
+  try {
+    var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    // only the optional name may be emptied
+    for (var k in got) if (got[k] != null && (String(got[k]).trim() || k === "name")) v[k] = got[k];
+  } catch (e) {}
+
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+    // not laid out yet: the host clip's declared size, then the window
+    var hc = root.closest("[data-width][data-height]");
+    FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+    FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND;
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== end kit:tone ====
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+      "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+      "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+      "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+      "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+}
+// ==== end kit:grain ====
+// ==== kit:text@2 (kWords, kSplit) ====
+var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+function kWords(s, key) {
+  s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+  var cut = function (x) {
+    if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+    return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+  };
+  var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+  var pre = "";
+  bits.forEach(function (x) {
+    var t = x.trim(), last = out[out.length - 1];
+    if (last && /^ /.test(x)) last.sp = true;
+    if (!t) return;
+    if (!/[\p{L}\p{N}]/u.test(t)) {
+      if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+      else { last.t += t; last.sp = / $/.test(x); }
+      return;
+    }
+    out.push({ t: pre + t, sp: / $/.test(x) });
+    pre = "";
+  });
+  if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+  if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+  if (out.length) out[out.length - 1].sp = false;
+  return out;
+}
+function kSplit(el, by, rise, text) {
+  var s = text != null ? String(text) : el.textContent, units = [];
+  var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+  el.textContent = "";
+  parts.forEach(function (p) {
+    var u = document.createElement("span"), box = u;
+    u.className = "dw-u"; u.textContent = p.t;
+    if (by === "line") u.style.display = "block";
+    if (!p.t.trim()) { el.appendChild(u); return; }
+    if (rise) { box = document.createElement("span"); box.className = "dw-cut"; box.style.display = u.style.display; box.appendChild(u); }
+    el.appendChild(box);
+    if (p.sp) el.appendChild(document.createTextNode(" "));
+    units.push(u);
+  });
+  return units;
+}
+// ==== end kit:text ====
+// ==== kit:fit@1 (kFit, kLines) ====
+function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+      var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+      if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+      row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+
+  var dark = kTone(root) === "dark";
+  if (getComputedStyle(root).getPropertyValue("--mc-font").trim()) root.setAttribute("data-hf", "");
+  if (String(v.backdrop) === "off") root.setAttribute("data-off", "");
+  var cam = q(".dw-cam"), view = q(".dw-view"), page = q(".dw-page"), cr = q(".dw-cr"), bg = q(".dw-bg");
+  // measure with the camera at rest: rects / k (host scale) = page px
+  var still = function (fn) {
+    var s = [page.style.zoom, page.style.transform, cam.style.transform];
+    page.style.zoom = 1; page.style.transform = cam.style.transform = "none";
+    fn(page.getBoundingClientRect().width / page.offsetWidth || 1);
+    page.style.zoom = s[0]; page.style.transform = s[1]; cam.style.transform = s[2];
+  };
+
+  // rebuild the document from the variables
+  var nm = q(".dw-nm"), name = String(v.name).trim(), blocks = [];
+  var add = function (cls, text, wash) {
+    var e = doc.appendChild(document.createElement("div")), b = { el: e };
+    e.className = cls;
+    if (wash) (b.wa = e.appendChild(document.createElement("span"))).className = "dw-wa";
+    e.appendChild(document.createTextNode(text));
+    blocks.push(b);
+    return e;
+  };
+  doc.textContent = "";
+  doc.appendChild(cr);
+  var title = add("dw-t dw-b", "");
+  kSplit(title, "word", false, v.title);
+  String(v.doc).split("|").forEach(function (s) {
+    s = s.trim();
+    if (s.charAt(0) !== "#") return s && add("dw-li", s);
+    s = s.slice(1).trim();
+    if (s) add("dw-h dw-b", s, s.charAt(0) === "@");
+  });
+  // each block's lines in block px: x from the text rects, y = the line box
+  var measure = function (k) {
+    var d = doc.getBoundingClientRect(), r = document.createRange();
+    blocks.forEach(function (b) {
+      var e = b.el.getBoundingClientRect(), cs = getComputedStyle(b.el), fs = parseFloat(cs.fontSize), lh = parseFloat(cs.lineHeight) / 2, rows = [], it = document.createTreeWalker(b.el, NodeFilter.SHOW_TEXT), t;
+      b.x = (e.left - d.left) / k; b.y = (e.top - d.top) / k; b.w = e.width / k; b.h = e.height / k;
+      while ((t = it.nextNode())) {
+        if (!t.data.trim()) continue;
+        r.selectNodeContents(t);
+        [].forEach.call(r.getClientRects(), function (c) {
+          var x0 = (c.left - e.left) / k, x1 = (c.right - e.left) / k, m = (c.top + c.bottom) / 2 / k - e.top / k;
+          var w = rows.filter(function (w) { return Math.abs(w.c - m) < fs * 0.45; })[0];
+          if (!w) rows.push((w = { c: m, x0: x0, x1: x1, y0: m - lh, y1: m + lh }));
+          w.x0 = Math.min(w.x0, x0); w.x1 = Math.max(w.x1, x1);
+        });
+      }
+      b.rows = rows.sort(function (a, c) { return a.c - c.c; });
+      b.len = rows.reduce(function (s, w) { return s + w.x1 - w.x0; }, 0);
+    });
+  };
+  var items = [].slice.call(root.querySelectorAll(".dw-en")), live, dropH;
+  still(function (k) {
+    if (name) { nm.textContent = name; nm.style.maxWidth = CFG.nameW + "px"; kFit(nm, { lines: 1, min: 34, width: CFG.nameW }); } else nm.style.display = "none";
+    kFit(title, { lines: 1, min: 48 }); // one line down to 48px, then wrap
+    measure(k);
+    // paragraphs past the window bottom are dropped
+    var room = page.offsetHeight - doc.offsetTop - 24;
+    live = blocks.filter(function (b) { var ok = b.rows.length && b.y + b.h <= room; if (!ok) b.el.style.display = "none"; return ok; });
+    // and a heading whose paragraphs were all cut
+    while (live.length > 1 && live.length < blocks.length && /dw-h/.test(live[live.length - 1].el.className)) live.pop().el.style.display = "none";
+    dropH = items.length ? 0.86 * items[0].offsetHeight : 0;
+    L.keys[2][1] = page.offsetWidth / 2; L.keys[2][2] = page.offsetHeight / 2; // settled: window centre
+  });
+  var fonts = document.fonts, late = fonts && fonts.status !== "loaded";
+
+  // monotone cubic Hermite through the keys (upstream camera spline)
+  var spline = function (xs, ys) {
+    var n = xs.length, d = [], m = [], i;
+    for (i = 0; i < n - 1; i++) d.push((ys[i + 1] - ys[i]) / (xs[i + 1] - xs[i]));
+    for (i = 0; i < n; i++) m.push(i === 0 || i === n - 1 || d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2);
+    for (i = 0; i < n - 1; i++) {
+      if (!d[i]) { m[i] = m[i + 1] = 0; continue; }
+      var a = m[i] / d[i], c = m[i + 1] / d[i], h = a * a + c * c;
+      if (h > 9) { h = 3 / Math.sqrt(h); m[i] = h * a * d[i]; m[i + 1] = h * c * d[i]; }
+    }
+    return function (x) {
+      if (x <= xs[0]) return ys[0];
+      if (x >= xs[n - 1]) return ys[n - 1];
+      for (i = 0; i < n - 2 && x > xs[i + 1]; i++);
+      var h = xs[i + 1] - xs[i], s = (x - xs[i]) / h, s2 = s * s, s3 = s2 * s;
+      return (2 * s3 - 3 * s2 + 1) * ys[i] + (s3 - 2 * s2 + s) * h * m[i] + (-2 * s3 + 3 * s2) * ys[i + 1] + (s3 - s2) * h * m[i + 1];
+    };
+  };
+  // hold: a 0.8% push to the end (upstream 0.74 -> 0.746)
+  var K = L.keys.concat([[CFG.dur].concat(L.keys[2].slice(1))]);
+  K[3][3] = CFG.push;
+  var curve = [1, 2, 3, 4, 5, 6, 7].map(function (j) { return spline(K.map(function (x) { return x[0]; }), K.map(function (x) { return x[j]; })); });
+
+  var E = MT.bezier(0.4, 0, 0.6, 1), EW = MT.bezier(0.3, 0, 0.2, 1), ED = MT.bezier(0.2, 1.15, 0.3, 1);
+  var n = live.length, beat = n > 1 ? (CFG.wEnd - CFG.w0 - CFG.wipe) / (n - 1) : 0;
+  // clip: lines above whole, the current one up to the pen
+  var clip = function (b, p) {
+    var s = p * b.len, j = 0, R = b.rows;
+    while (j < R.length - 1 && s > R[j].x1 - R[j].x0) s -= R[j].x1 - R[j].x0, j++;
+    var w = R[j], x = Math.min(w.x1, w.x0 + s), y = R[0].y0 - 8, e = b.w + 12, z = w.y1 + (j < R.length - 1 ? 0 : 8);
+    b.px = x; b.py = w.c;
+    return "polygon(-12px " + y + "px," + e + "px " + y + "px," + e + "px " + w.y0 + "px," + x + "px " + w.y0 + "px," + x + "px " + z + "px,-12px " + z + "px)";
+  };
+  var rails = [q(".dw-rl"), q(".dw-rr")], grain = kGrain(q(".dw-grain")), f2 = function (x) { return x.toFixed(2); };
+
+  var render = function (t) {
+    if (late && fonts.status === "loaded") { late = false; still(measure); }
+    var c = curve.map(function (f) { return f(t); }), z = c[2];
+    cam.style.transform = "translate(" + f2(c[5]) + "px," + f2(c[6]) + "px)";
+    view.style.perspective = f2(2200 * z) + "px";
+    page.style.zoom = z.toFixed(4);
+    page.style.transformOrigin = f2(c[0]) + "px " + f2(c[1]) + "px";
+    page.style.transform = "translate(" + f2(FW / 2 / z - c[0]) + "px," + f2(FH / 2 / z - c[1]) + "px) rotateY(" + c[4].toFixed(3) + "deg) rotateX(" + c[3].toFixed(3) + "deg)";
+    // one pen: the newest block being written, gone 2 frames after
+    var pen = null, a = 0;
+    live.forEach(function (b, i) {
+      var cue = CFG.w0 + i * beat, p = E(MT.clamp((t - cue) / CFG.wipe));
+      b.el.style.opacity = t < cue ? 0 : 1;
+      b.el.style.clipPath = t < cue || p >= 1 ? "" : clip(b, p);
+      if (t >= cue && t <= cue + CFG.wipe + CFG.fade) { pen = b; if (p >= 1) clip(b, 1); a = p < 1 ? 1 : 1 - (t - cue - CFG.wipe) / CFG.fade; }
+      if (b.wa) b.wa.style.transform = "scaleX(" + EW(MT.clamp((t - cue - CFG.wipe - CFG.washAt) / CFG.washDur)).toFixed(4) + ")";
+    });
+    // idle pen at the title start, 4-frame blink
+    if (t < CFG.w0 && live[0]) { pen = live[0]; pen.px = pen.rows[0].x0 - 6; pen.py = pen.rows[0].c; a = Math.floor(t * 30 / 4) % 2 ? 0.25 : 1; }
+    cr.style.opacity = pen ? a : 0;
+    if (pen) cr.style.transform = "translate(" + f2(pen.x + pen.px + 2) + "px," + f2(pen.y + pen.py - 27) + "px)";
+    // rails open top-down, accent edge fades by +0.8 s
+    rails.forEach(function (r, i) {
+      var c0 = CFG.rails[i], u = EW(MT.clamp((t - c0) / CFG.railDur));
+      r.style.opacity = t < c0 ? 0 : 1;
+      r.style.clipPath = u >= 1 ? "" : "inset(0 -30px " + f2(100 - u * 100) + "% -30px)";
+      r.style.setProperty("--ln", t < c0 ? 0 : f2(1 - MT.clamp((t - c0 - CFG.railDur) / (CFG.edgeEnd - CFG.railDur))));
+    });
+    // history slots drop in with a bounce and an air shadow
+    items.forEach(function (e, i) {
+      var c0 = CFG.item0 + i * CFG.itemGap, u = ED(MT.clamp((t - c0) / CFG.drop)), air = Math.max(0, 1 - u);
+      e.style.opacity = f2(MT.clamp((t - c0) / CFG.appear));
+      e.style.transform = "translateY(" + f2(-dropH * (1 - u)) + "px)";
+      e.style.boxShadow = air > 0.02 ? "0 " + f2(19 * air) + "px " + f2(38 * air) + "px color-mix(in srgb, var(--dw-shade) " + f2(20 * air) + "%, transparent)" : "";
+    });
+    // dark skins: key light breathing, frames at 30 fps
+    bg.style.setProperty("--dw-kb", dark ? f2((1 + 0.084 * Math.sin(t * 30 / 38)) / 1.084) : 1);
+    grain(t);
+  };
+  var tl = MT.scene(CFG.dur, render);
+  tl.seek(0);
+  window.__timelines["document-typewriter-reveal"] = tl;
+})();
+    </script>
+    </template>
+  </body>
+</html>

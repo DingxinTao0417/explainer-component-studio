@@ -1,0 +1,465 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"name","type":"string","label":"应用名（导航栏）","default":"示例应用"},
+    {"id":"kicker","type":"string","label":"眉题（留空不要）","default":"新功能 · 自动排版"},
+    {"id":"line1","type":"string","label":"标题第一行","default":"把复杂的事"},
+    {"id":"line2","type":"string","label":"标题第二行（留空不要）","default":"讲清楚"},
+    {"id":"key","type":"string","label":"强调词（留空不要）","default":"讲清楚"},
+    {"id":"sub","type":"string","label":"说明句（留空不要）","default":"从骨架到成稿，一键生成完整页面"},
+    {"id":"cta","type":"string","label":"主按钮","default":"开始使用"},
+    {"id":"cta2","type":"string","label":"次按钮（留空不要）","default":"看示例"},
+    {"id":"stats","type":"string","label":"指标（用 | 分隔，1–3 个）","default":"3 倍|42%|12,480"},
+    {"id":"labels","type":"string","label":"指标说明（用 | 分隔；留空不要）","default":"效率提升|时间节省|本周生成"},
+    {"id":"src","type":"string","label":"配图（从项目根目录写起）","default":"motion-cards/lib/samples/p4.jpg"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"带光的白底"},{"value":"off","label":"透明（只留页面）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>assemble-then-type-flyin · 先骨架再飞字</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="assemble-then-type-flyin-template">
+    <!-- Ported from video-shotcraft demos/effects/assemble-then-type-flyin/AssembleThenTypeFlyin.tsx
+         (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+         Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+         Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+         neutral --k-* palette on a lit white stage (was the dark graphite look; gold -> --k-accent), system fonts (serif
+         title 600, no italic; mono labels -> sans), generic Chinese copy in variables, upstream mark and wordmark ->
+         neutral mark and a name; portrait phone layout; 21 text blocks -> 14 (nav links, image label, wheel labels
+         dropped), text 22-36px -> 28-40px; film still -> sample image graded by CSS filters; guide rows, image shade,
+         card hairline and light breathing dropped; glyphs exempt from overflow while in flight; CTA label ink ->
+         on-accent (was gold -> dark). Shell, glyph, guide, CTA, wipe and push timing kept frame for frame; hold 0.3 s longer. -->
+    <style>
+  @font-face {font-family:"Microsoft YaHei";src:local("Microsoft YaHei"),local("MicrosoftYaHei");}
+  @font-face {font-family:"PingFang SC";src:local("PingFang SC");}
+  @font-face {font-family:"Noto Sans SC";src:local("Noto Sans SC"),local("Noto Sans CJK SC");}
+  /* kit:fonts@2 (serif only) */
+  @font-face {font-family:"Noto Serif SC";src:local("Noto Serif SC"),local("Noto Serif CJK SC"),local("Source Han Serif SC");}
+  @font-face {font-family:"Songti SC";src:local("Songti SC"),local("STSong"),local("SimSun");}
+  #root {
+    --k-bg: var(--mc-bg, #ffffff);
+    --k-panel: var(--mc-panel, #f4f5f7);
+    --k-ink: var(--mc-ink, #15171c);
+    --k-muted: var(--mc-muted, #6b7280);
+    --k-accent: var(--mc-accent, #e8590c);
+    --k-accent-2: var(--mc-accent-2, #2563eb);
+    --k-on-accent: var(--mc-on-accent, #ffffff);
+    --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+    --k-serif: var(--mc-serif, "Noto Serif SC", "Songti SC", serif);
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    font-family: var(--k-font);
+    color: var(--k-ink);
+  }
+  .at {position:absolute;inset:0;container-type:size;--at-gc:color-mix(in srgb,var(--k-ink) 7%,transparent);--at-s1:10%;--at-s2:30%;--at-fl:9%;}
+  /* ==== kit:derived@1 (line, panel-2, shade, hi) ==== */
+  .at {--at-line:color-mix(in srgb,var(--k-ink) 12%,transparent);--at-panel-2:color-mix(in srgb,var(--k-panel),var(--k-ink) 4%);--at-shade:color-mix(in srgb,var(--k-ink) 85%,var(--k-accent-2));--at-hi:color-mix(in srgb,white 80%,transparent);}
+  .at[data-tone="dark"] {--at-shade:color-mix(in srgb,var(--k-bg) 30%,black);--at-hi:color-mix(in srgb,white 6%,transparent);--at-gc:color-mix(in srgb,var(--k-ink) 5%,transparent);--at-s1:50%;--at-s2:85%;--at-fl:16%;--at-fb:screen;}
+  /* ==== end kit:derived ==== */
+  .at[data-backdrop="off"] .at-deco {display:none;}
+  /* ==== kit:backdrop@1 (key light at the upstream stage's 30% 5%; accent fill light at 85% 55%) ==== */
+  .at-bg {position:absolute;inset:0;background-blend-mode:var(--at-fb,multiply),normal;background:radial-gradient(ellipse 50% 46% at 85% 55%,color-mix(in srgb,var(--k-accent) var(--at-fl),transparent) 0%,transparent 72%),linear-gradient(var(--k-bg) 0%,color-mix(in srgb,var(--k-bg),var(--k-ink) 4%) 55%,color-mix(in srgb,var(--k-bg),var(--k-ink) 7%) 100%);}
+  .at-bg::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 62% 70% at 30% 5%,color-mix(in srgb,var(--k-bg) 95%,transparent) 0%,transparent 72%);}
+  /* ==== end kit:backdrop ==== */
+  .at[data-tone="dark"] .at-bg::after{mix-blend-mode:screen;background:radial-gradient(ellipse 58% 62% at 30% 5%,color-mix(in srgb,var(--k-ink) 16%,transparent) 0%,transparent 70%);}
+  /* 12-column guides (upstream: 13 lines, 140px apart), on from the first frame */
+  .at-gd {position:absolute;inset:0;opacity:0.25;}
+  .at-gd::before{content:"";position:absolute;top:0;bottom:0;left:120px;right:119px;background:repeating-linear-gradient(90deg,var(--at-gc) 0 1px,transparent 1px 140px);}
+  /* ==== kit:vignette@1 (clear centre 42% as the upstream stage) ==== */
+  .at-vig {
+    position:absolute;inset:0;pointer-events:none;
+    --vs:0.16;--vin:42%;--vx:50%;--vy:46%;--vc:var(--at-shade);
+    background:
+      radial-gradient(ellipse 72% 72% at var(--vx) var(--vy),transparent var(--vin),color-mix(in srgb,var(--vc) calc(var(--vs) * 32%),transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55),color-mix(in srgb,var(--vc) calc(var(--vs) * 100%),transparent) 100%),
+      radial-gradient(ellipse 100% 100% at var(--vx) var(--vy),transparent 60%,color-mix(in srgb,var(--vc) calc(var(--vs) * 60%),transparent) 100%);
+  }
+  .at[data-tone="dark"] .at-vig {--vs:0.55;}
+  /* ==== end kit:vignette ==== */
+  /* ==== kit:grain@1 ==== */
+  .at-grain {position:absolute;inset:0;pointer-events:none;}
+  /* ==== end kit:grain ==== */
+  /* page geometry, landscape (portrait at the end) */
+  .at-cam {
+    position:absolute;inset:0;transform-origin:50% 50%;
+    --nx:120px;--ny:64px;--nw:1680px;--nh:80px;--nr:24px;--pw:202px;--pi:12px;--ms:40px;--nf:36px;
+    --lw:980px;--ky:222px;--hy:270px;--hf:112px;--dy:560px;--uy:580px;--by:700px;--bh:80px;
+    --sy:836px;--sw:314px;--sh:144px;--sg:338px;--sp:30px;--vy:20px;--vf:56px;--ly:94px;
+    --cx:1160px;--cy:220px;--cw:640px;--chh:760px;--cr:30px;--phw:640px;--phh:500px;--ci:20px;
+    --wx:1160px;--wy:744px;--ww:640px;--ws:148px;
+  }
+  .at-fly,.at-tx {position:absolute;inset:0;}
+  .at-pn,.at-mk,.at-wh,.at-dv,.at-cta,.at-gh,.at-t {position:absolute;box-sizing:border-box;}
+  .at-pn {background:var(--k-panel);border:1px solid var(--at-line);box-shadow:inset 0 1px 0 var(--at-hi),0 2px 4px color-mix(in srgb,var(--at-shade) var(--at-s1),transparent),0 30px 60px -24px color-mix(in srgb,var(--at-shade) var(--at-s2),transparent);}
+  .at-nav {left:var(--nx);top:var(--ny);width:var(--nw);height:var(--nh);border-radius:var(--nr);background:color-mix(in srgb,var(--k-panel) 82%,transparent);}
+  .at-nb {position:absolute;right:var(--pi);top:var(--pi);bottom:var(--pi);width:var(--pw);border-radius:calc(var(--nr) - 8px);border:1px solid var(--at-line);background:var(--at-panel-2);}
+  .at-mk {left:calc(var(--nx) + (var(--nh) - var(--ms)) / 2);top:calc(var(--ny) + (var(--nh) - var(--ms)) / 2);width:var(--ms);height:var(--ms);}
+  .at-mk svg{display:block;width:100%;height:100%;}
+  .at-card {left:var(--cx);top:var(--cy);width:var(--cw);height:var(--chh);border-radius:var(--cr);overflow:hidden;}
+  .at-ph {position:absolute;left:0;top:0;width:var(--phw);height:var(--phh);overflow:hidden;}
+  .at-im {position:absolute;inset:0;background:0 50% / cover no-repeat;filter:saturate(0.12) contrast(0.62) brightness(1.18);}
+  .at-im.at-gr {filter:saturate(1.15) contrast(1.08);}
+  .at-wp {position:absolute;top:0;bottom:0;left:0;width:2px;opacity:0;background:var(--k-accent);box-shadow:0 0 18px color-mix(in srgb,var(--k-accent) 90%,transparent);}
+  .at-wh {left:var(--wx);top:var(--wy);width:var(--ww);height:var(--ws);display:flex;justify-content:space-around;}
+  .at-wl {position:relative;flex:none;width:var(--ws);height:var(--ws);}
+  .at-wl i{position:absolute;display:block;border-radius:50%;}
+  .at-ring {inset:0;opacity:0.55;background:conic-gradient(from 90deg,#c95a5a,#c9b25a,#5ac97a,#5ab2c9,#6a5ac9,#c95ab2,#c95a5a);-webkit-mask:radial-gradient(circle,transparent 54%,#000 56%,#000 70%,transparent 71%);}
+  .at-hub {inset:17.6%;background:var(--at-panel-2);border:1px solid var(--at-line);}
+  /* control points, pushed off-centre as the image is graded */
+  .at-dot {left:43.9%;top:43.9%;width:12.2%;height:12.2%;background:var(--c);box-shadow:0 0 0 3px color-mix(in srgb,var(--at-shade) 35%,transparent),0 0 12px var(--c);transform:translate(calc(var(--ws) * var(--x)),calc(var(--ws) * var(--y)));}
+  .at-d1 {--c:var(--k-accent-2);--x:-0.108;--y:0.149;}
+  .at-d2 {--c:color-mix(in srgb,var(--k-accent) 40%,white);--x:0.081;--y:-0.068;}
+  .at-d3 {--c:var(--k-accent);--x:0.162;--y:-0.135;}
+  .at-dv {left:var(--nx);top:var(--dy);width:var(--lw);height:1px;background:linear-gradient(90deg,color-mix(in srgb,var(--k-ink) 22%,transparent),transparent);}
+  .at-cta,.at-gh,.at-ct1,.at-ct2 {left:var(--nx);top:var(--by);width:320px;height:var(--bh);border-radius:40px;}
+  .at-gh,.at-ct2 {left:calc(var(--nx) + 346px);}
+  /* --on 0 -> 1: outlined -> solid accent */
+  .at-cta {
+    --on:1;
+    border:1.5px solid color-mix(in srgb,var(--k-accent) calc(50% + 50% * var(--on)),transparent);
+    background:linear-gradient(color-mix(in srgb,var(--k-accent) calc(6% + 94% * var(--on)),transparent),color-mix(in srgb,color-mix(in srgb,var(--k-accent),black 12%) calc(4% + 96% * var(--on)),transparent));
+    box-shadow:inset 0 1px 0 color-mix(in srgb,white calc(10% + 35% * var(--on)),transparent),0 16px 40px -14px color-mix(in srgb,var(--k-accent) calc(55% * var(--on)),transparent);
+  }
+  .at-gh {border:1.5px solid color-mix(in srgb,var(--k-ink) 18%,transparent);background:color-mix(in srgb,var(--k-ink) 3%,transparent);}
+  .at-st {left:calc(var(--nx) + var(--i,0) * var(--sg));top:var(--sy);width:var(--sw);height:var(--sh);border-radius:22px;}
+  .at-s2,.at-v2,.at-b2 {--i:1;} .at-s3,.at-v3,.at-b3 {--i:2;}
+  .at-u {display:inline-block;white-space:pre;}
+  .at-name {left:calc(var(--nx) + var(--nh) / 2 + var(--ms) / 2 + 16px);top:var(--ny);width:50%;font-size:var(--nf);font-weight:700;line-height:var(--nh);letter-spacing:0.02em;}
+  .at-nbt {left:calc(var(--nx) + var(--nw) - var(--pi) - var(--pw));top:calc(var(--ny) + var(--pi));width:var(--pw);font-size:28px;font-weight:600;line-height:calc(var(--nh) - 2 * var(--pi));text-align:center;}
+  .at-kick,.at-h,.at-sub {left:var(--nx);width:var(--lw);}
+  .at-kick {top:var(--ky);font-size:30px;font-weight:700;line-height:1.3;letter-spacing:0.12em;color:var(--k-accent);}
+  .at-h {top:var(--hy);font-family:var(--k-serif);font-size:var(--hf);font-weight:600;line-height:1.2;}
+  .at-ln {display:block;}
+  .at-key {color:var(--k-accent);}
+  /* room for two lines, one line is centred */
+  .at-sub {top:var(--uy);height:104px;padding-top:26px;font-size:40px;line-height:1.3;color:var(--k-muted);}
+  .at-ct1,.at-ct2 {font-size:40px;font-weight:700;line-height:var(--bh);text-align:center;}
+  .at-ct1 {color:var(--k-on-accent);}
+  .at-v,.at-lb {left:calc(var(--nx) + var(--i,0) * var(--sg) + var(--sp));width:calc(var(--sw) - 2 * var(--sp));}
+  .at-v {top:calc(var(--sy) + var(--vy));font-size:var(--vf);font-weight:800;line-height:1.15;}
+  .at-lb {top:calc(var(--sy) + var(--ly));font-size:28px;line-height:1.3;letter-spacing:0.08em;color:var(--k-muted);}
+  /* portrait: a phone layout in x 120-960, y 240-1290 (12%-68%) */
+  @container (orientation:portrait) {
+    .at-cam {
+      transform-origin:50% 40%;
+      --ny:240px;--nw:840px;--nh:72px;--nr:22px;--pw:140px;--pi:10px;--ms:36px;--nf:32px;
+      --lw:840px;--ky:334px;--hy:384px;--hf:88px;--dy:612px;--uy:628px;--by:748px;--bh:72px;
+      --sy:846px;--sw:264px;--sh:124px;--sg:288px;--sp:24px;--vy:14px;--vf:48px;--ly:76px;
+      --cx:120px;--cy:994px;--cw:840px;--chh:296px;--cr:24px;--phw:500px;--phh:296px;--ci:16px;
+      --wx:620px;--wy:1072px;--ww:340px;--ws:92px;
+    }
+  }
+    </style>
+
+    <div id="root" data-composition-id="assemble-then-type-flyin">
+      <div class="at">
+        <div class="at-bg at-deco"></div>
+        <div class="at-gd"></div>
+        <div class="at-vig at-deco"></div>
+        <div class="at-grain at-deco"></div>
+        <div class="at-cam">
+          <div class="at-fly"><div class="at-pn at-nav"><div class="at-nb"></div></div></div>
+          <div class="at-fly"><div class="at-pn at-card"><div class="at-ph"><div class="at-im" style="background-image: url(motion-cards/lib/samples/p4.jpg)"></div><div class="at-im at-gr" style="background-image: url(motion-cards/lib/samples/p4.jpg)"></div><div class="at-wp"></div></div></div></div>
+          <div class="at-fly"><div class="at-mk"><svg viewBox="0 0 128 128" aria-hidden="true"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg></div></div>
+          <div class="at-fly"><div class="at-wh"><div class="at-wl"><i class="at-ring"></i><i class="at-hub"></i><i class="at-dot at-d1"></i></div><div class="at-wl"><i class="at-ring"></i><i class="at-hub"></i><i class="at-dot at-d2"></i></div><div class="at-wl"><i class="at-ring"></i><i class="at-hub"></i><i class="at-dot at-d3"></i></div></div></div>
+          <div class="at-fly"><div class="at-dv"></div></div>
+          <div class="at-fly"><div class="at-cta"></div></div>
+          <div class="at-fly"><div class="at-gh"></div></div>
+          <div class="at-fly"><div class="at-pn at-st at-s1"></div></div>
+          <div class="at-fly"><div class="at-pn at-st at-s2"></div></div>
+          <div class="at-fly"><div class="at-pn at-st at-s3"></div></div>
+          <div class="at-tx">
+            <div class="at-t at-name">示例应用</div>
+            <div class="at-t at-nbt">登录</div>
+            <div class="at-t at-kick">新功能 · 自动排版</div>
+            <div class="at-t at-h"><div class="at-ln">把复杂的事</div><div class="at-ln"><span class="at-key">讲清楚</span></div></div>
+            <div class="at-t at-sub">从骨架到成稿，一键生成完整页面</div>
+            <div class="at-t at-ct1">开始使用</div>
+            <div class="at-t at-ct2">看示例</div>
+            <div class="at-t at-v at-v1">3 倍</div>
+            <div class="at-t at-v at-v2">42%</div>
+            <div class="at-t at-v at-v3">12,480</div>
+            <div class="at-t at-lb at-b1">效率提升</div>
+            <div class="at-t at-lb at-b2">时间节省</div>
+            <div class="at-t at-lb at-b3">本周生成</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+(function () {
+  // timing in seconds (upstream frames / 30), shared by both orientations
+  var CFG = {
+    dur: 5.9,
+    shell: [0.2, 0.333, 0.5, 0.633, 0.767, 0.9, 1.033, 1.167, 1.3, 1.467], // take-offs at 6 10 15 19 23 27 31 35 39 44 f
+    fly: 0.533, turn: 0.667, fade: 0.2, blur: 0.32, blurMax: 18, // 16f overshoot; tilt gone after 20f; fade in 6f
+    guides: 1.6, guidesDur: 0.467, guidesTo: 0.25, // the grid steps back before the text starts (48f + 14f)
+    ch: 0.533, end: 4.267, stepMin: 0.35, stepMax: 1.6, persp: 900, // a glyph lands in 16f; all down by 128f; step in frames
+    cta: 3.933, ctaDur: 0.467, wipe: 4.133, wipeDur: 0.733, push: 4, pushDur: 1.6, pushBy: 0.015
+  };
+  // text block starts (s), upstream order: big title, nav, kicker, sub, buttons, values, labels
+  var AT = { l1: 1.933, l2: 2.2, name: 2.533, nbt: 2.8, kick: 2.867, sub: 2.933, ct1: 3.067, ct2: 3.167, v: [3.2, 3.3, 3.4], lb: [3.467, 3.533, 3.6] };
+  // shells in launch (= DOM) order, nav card mark wheels divider cta ghost stats: [from x, from y (px), start tilt (deg)]
+  var SH = [[0, -180, 0], [420, 40, 6], [-220, -80, -7], [260, 220, 5], [-320, 0, 0], [-160, 200, -5], [120, 220, 4], [-240, 260, -6], [0, 300, 3], [220, 280, 6]];
+  var v = { name: "示例应用", kicker: "新功能 · 自动排版", line1: "把复杂的事", line2: "讲清楚", key: "讲清楚", sub: "从骨架到成稿，一键生成完整页面", cta: "开始使用", cta2: "看示例", stats: "3 倍|42%|12,480", labels: "效率提升|时间节省|本周生成", src: "motion-cards/lib/samples/p4.jpg", backdrop: "on" };
+  var OPT = { kicker: 1, line2: 1, key: 1, sub: 1, cta2: 1, labels: 1 }; // "" hides these
+  try {
+    var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    for (var k in got) if (got[k] !== undefined && got[k] !== null && (OPT[k] || String(got[k]).trim())) v[k] = got[k];
+  } catch (e) {}
+
+  var root = document.querySelector(".at");
+  var q = function (s) { return root.querySelector(s); };
+  var qa = function (s) { return Array.prototype.slice.call(root.querySelectorAll(s)); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+    // not laid out yet: the host clip's declared size, then the window
+    var hc = root.closest("[data-width][data-height]");
+    FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+    FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  // both orientations share all timing; the layout is CSS variables on .at-cam, switched by @container
+  root.setAttribute("data-orient", FH > FW ? "portrait" : "landscape");
+  root.setAttribute("data-backdrop", String(v.backdrop) === "off" ? "off" : "on");
+
+  // ==== kit:tone@1 ====
+  function kRGB(el, color) {
+    var p = document.createElement("i");
+    p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+    el.appendChild(p);
+    var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+    el.removeChild(p);
+    return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+  }
+  function kTone(wrap) {
+    var c = kRGB(wrap, "var(--k-bg)");
+    var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+    wrap.setAttribute("data-tone", tone);
+    return tone;
+  }
+  // ==== end kit:tone ====
+
+  // ==== kit:hash@1 ====
+  function kHash(n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+  // ==== end kit:hash ====
+
+  // ==== kit:grain@1 ====
+  function kGrain(layer, o) {
+    o = o || {};
+    var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+    var dark = tones && tones.getAttribute("data-tone") === "dark";
+    var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+      var f = "type='linear' slope='2.4' intercept='-0.7'";
+      var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+        "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+        "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+        "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+        "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+      return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+    });
+    layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+    layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+    layer.style.backgroundSize = size + "px " + size + "px";
+    return function (t) {
+      var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+      layer.style.backgroundImage = tiles[k % 6];
+      layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+    };
+  }
+  // ==== end kit:grain ====
+
+  // ==== kit:speedblur@1 ====
+  function kSpeedBlur(box, prefix, o) {
+    o = o || {};
+    var amount = o.amount || 0.45, max = o.max || 36;
+    var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+    svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+    var outer = document.createElement("div"), inner = document.createElement("div");
+    outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+    while (box.firstChild) inner.appendChild(box.firstChild);
+    outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+    var fe = svg.firstChild.firstChild;
+    return function (vx, vy) {
+      vy = vy || 0;
+      var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+      if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+      var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+      fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+      outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+      inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+      outer.style.filter = "url(#" + id + ")";
+    };
+  }
+  // ==== end kit:speedblur ====
+
+  // ==== kit:text@2 (kWords only) ====
+  var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+  function kWords(s, key) {
+    s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+    var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+    var cut = function (x) {
+      if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+      return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+    };
+    var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+    var pre = "";
+    bits.forEach(function (x) {
+      var t = x.trim(), last = out[out.length - 1];
+      if (last && /^ /.test(x)) last.sp = true;
+      if (!t) return;
+      if (!/[\p{L}\p{N}]/u.test(t)) {
+        if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+        else { last.t += t; last.sp = / $/.test(x); }
+        return;
+      }
+      out.push({ t: pre + t, sp: / $/.test(x) });
+      pre = "";
+    });
+    if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+    if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+    if (out.length) out[out.length - 1].sp = false;
+    return out;
+  }
+  // ==== end kit:text ====
+
+  // ==== kit:fit@1 (kFit, kLines) ====
+  function kFit(el, o) {
+    o = o || {};
+    var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+    var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+    for (;;) {
+      el.style.fontSize = f + "px";
+      m = kLines(el);
+      if ((m.w <= W && m.n <= n) || f <= min) break;
+      f = Math.max(min, f - 2);
+    }
+    if (m.w > W) {
+      [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+      m = kLines(el);
+    }
+    return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+  }
+  function kLines(el) {
+    var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+    var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+    while ((t = it.nextNode())) {
+      if (!t.data.trim()) continue;
+      r.selectNodeContents(t);
+      [].forEach.call(r.getClientRects(), function (b) {
+        var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+        if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+        row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+      });
+    }
+    return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+  }
+  // ==== end kit:fit ====
+
+  var dark = kTone(root) == "dark";
+  var grain = kGrain(q(".at-grain"));
+  var S = function (s) { return String(s == null ? "" : s).replace(/\s+/g, " ").trim(); };
+  qa(".at-im").forEach(function (e) { e.style.backgroundImage = 'url("' + S(v.src) + '")'; });
+
+  // slot -> units (kWords phrases, or one) -> glyph inline-blocks that tumble while the line keeps its layout
+  var fill = function (el, text, word, fit) {
+    el.textContent = "";
+    if (!text) return (el.style.display = "none"), [];
+    var gs = [];
+    (word ? kWords(text) : [{ t: text }]).forEach(function (w) {
+      var u = el.appendChild(document.createElement("span"));
+      u.className = "at-u";
+      Array.from(w.t).forEach(function (c) {
+        var g = u.appendChild(document.createElement("span"));
+        g.className = "at-u";
+        g.textContent = c === " " ? "\u00a0" : c;
+        if (c !== " ") gs.push(g);
+      });
+      if (w.sp) el.appendChild(document.createTextNode(" "));
+    });
+    if (fit) kFit(el, fit);
+    return gs;
+  };
+  var lines = [S(v.line1), S(v.line2)].filter(Boolean), ln = qa(".at-ln"), sub = q(".at-sub");
+  var st = S(v.stats).split("|").map(S).filter(Boolean).slice(0, 3), lb = S(v.labels).split("|").map(S);
+  if (!S(v.cta2)) q(".at-gh").parentNode.style.display = "none";
+  qa(".at-st").forEach(function (e, i) { if (!st[i]) e.parentNode.style.display = "none"; });
+  // [element, text, start, word mode, kFit options]
+  var B = [[ln[0], lines[0], AT.l1, 1], [ln[1], lines[1] || "", AT.l2, 1], [q(".at-name"), S(v.name), AT.name, 0, { min: 28 }],
+    [q(".at-nbt"), q(".at-nbt").textContent, AT.nbt], [q(".at-kick"), S(v.kicker), AT.kick, 0, { min: 28 }], [sub, S(v.sub), AT.sub, 1, { lines: 2 }],
+    [q(".at-ct1"), S(v.cta), AT.ct1, 0, { min: 32, width: 280 }], [q(".at-ct2"), S(v.cta2), AT.ct2, 0, { min: 32, width: 280 }]];
+  qa(".at-v").forEach(function (e, i) { B.push([e, st[i] || "", AT.v[i], 0, {}]); });
+  qa(".at-lb").forEach(function (e, i) { B.push([e, st[i] ? lb[i] || "" : "", AT.lb[i], 0, { min: 28 }]); });
+  B.forEach(function (b) { b[5] = fill(b[0], b[1], b[3], b[4]); });
+  kFit(q(".at-h"), { lines: lines.length, min: 72 });
+  if (kLines(sub).n > 1) sub.style.paddingTop = "0";
+  // the key word turns accent in the first line that holds it
+  var kk = S(v.key).replace(/ /g, "");
+  if (kk) [B[0][5], B[1][5]].some(function (gs) {
+    var p = gs.map(function (g) { return g.textContent; }).join("").indexOf(kk);
+    for (var j = p; p >= 0 && j < p + kk.length; j++) gs[j].classList.add("at-key");
+    return p >= 0;
+  });
+
+  // each glyph: a seeded 3D start in the upstream ranges
+  var G = [], seed = 0;
+  B.forEach(function (b) {
+    var gs = b[5], step = MT.clamp(((CFG.end - b[2] - CFG.ch) * 30) / Math.max(1, gs.length), CFG.stepMin, CFG.stepMax) / 30;
+    gs.forEach(function (g, i) {
+      var n = seed++, h = function (o) { return kHash(n + o) - 0.5; };
+      G.push({ el: g, t0: b[2] + i * step, dx: h(0) * 520, dy: h(50) * 400, dz: -480 - h(99) * 560, rx: h(7) * 340, ry: h(13) * 380, rz: h(23) * 240 });
+    });
+  });
+
+  var shells = qa(".at-fly > div").map(function (el, i) {
+    var s = SH[i];
+    return el.parentNode.style.display === "none" ? null : { el: el, at: CFG.shell[i], fx: s[0], fy: s[1], rot: s[2], blur: kSpeedBlur(el.parentNode, "at", { amount: CFG.blur, max: CFG.blurMax }) };
+  }).filter(Boolean);
+  var cam = q(".at-cam"), gd = q(".at-gd"), cta = q(".at-cta"), ct1 = q(".at-ct1");
+  var gr = q(".at-gr"), wp = q(".at-wp"), PW = q(".at-ph").clientWidth, dots = qa(".at-dot");
+  var DOT = [[-16, 22], [12, -10], [24, -20]], WS = q(".at-wl").clientWidth / 148; // control points, px on a 148px wheel
+  // CTA label: ink (accent text on the outlined button measured 2.9:1), on-accent once the fill carries it (90% light, 45% dark)
+  var swap = dark ? 0.45 : 0.9;
+
+  var tl = MT.scene(CFG.dur, function (t) {
+    grain(t);
+    gd.style.opacity = 1 - (1 - CFG.guidesTo) * MT.ramp(t, CFG.guides, CFG.guidesDur, "out");
+    // shells: flat flight in (may leave the frame), overshoot, tilt back 4f later, speed blur
+    shells.forEach(function (o) {
+      var u = function (tt) { return 1 - MT.ramp(tt, o.at, CFG.fly, "overshoot"); }, a = u(t), on = t >= o.at, vu = on && t < o.at + CFG.fly ? MT.velocity(u, t) : 0;
+      o.el.style.opacity = on ? Math.min(1, MT.ramp(t, o.at, CFG.fade, "out") * 1.2) : 0;
+      o.el.style.transform = "translate(" + (a * o.fx).toFixed(2) + "px," + (a * o.fy).toFixed(2) + "px) rotate(" + ((1 - MT.ramp(t, o.at, CFG.turn, "snappy")) * o.rot).toFixed(2) + "deg)";
+      o.el.toggleAttribute("data-layout-allow-overflow", t < o.at + CFG.turn);
+      o.blur(vu * o.fx, vu * o.fy);
+    });
+    // glyphs tumble in from depth, blurred while far; in flight they may cross each other and the frame
+    G.forEach(function (c) {
+      var a = MT.ramp(t, c.t0, CFG.ch, "snappy"), u = 1 - a, s = c.el.style, b = u * u * (1 - (c.dz / 760) * 7);
+      s.opacity = a > 0 ? Math.min(1, a * 1.8) : 0;
+      s.filter = a > 0 && a < 1 && b > 0.1 ? "blur(" + b.toFixed(2) + "px)" : "";
+      s.transform = a >= 1 ? "none" : "perspective(" + CFG.persp + "px) translate3d(" + (u * c.dx).toFixed(1) + "px," + (u * c.dy).toFixed(1) + "px," + (u * c.dz).toFixed(1) + "px) rotateX(" + (u * c.rx).toFixed(1) + "deg) rotateY(" + (u * c.ry).toFixed(1) + "deg) rotateZ(" + (u * c.rz).toFixed(1) + "deg)";
+      c.el.toggleAttribute("data-layout-allow-overlap", a < 1);
+      c.el.toggleAttribute("data-layout-allow-overflow", a < 1);
+    });
+    // final touch: CTA powers on, the image is wiped from flat grey to graded, the wheel points follow
+    var on = MT.ramp(t, CFG.cta, CFG.ctaDur, "out"), w = MT.ramp(t, CFG.wipe, CFG.wipeDur, "swift");
+    cta.style.setProperty("--on", on);
+    ct1.style.color = "var(--k-" + (on < swap ? "ink" : "on-accent") + ")";
+    gr.style.clipPath = "inset(0 " + ((1 - w) * 100).toFixed(2) + "% 0 0)";
+    wp.style.opacity = w > 0 && w < 1 ? 1 : 0;
+    wp.style.transform = "translateX(" + (w * PW - 1).toFixed(1) + "px)";
+    dots.forEach(function (d, i) { d.style.transform = "translate(" + (DOT[i][0] * w * WS).toFixed(2) + "px," + (DOT[i][1] * w * WS).toFixed(2) + "px)"; });
+    cam.style.transform = "scale(" + (1 + CFG.pushBy * MT.ramp(t, CFG.push, CFG.pushDur, "smooth")).toFixed(5) + ")";
+  });
+  window.__timelines["assemble-then-type-flyin"] = tl;
+})();
+    </script>
+    </template>
+  </body>
+</html>

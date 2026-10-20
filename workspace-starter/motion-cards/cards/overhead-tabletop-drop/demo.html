@@ -1,0 +1,395 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"选中页的标题（| 切意群，最多两行）","default":"用看板|排好这一周"},
+    {"id":"kicker","type":"string","label":"眉题（留空不要）","default":"看板视图"},
+    {"id":"sub","type":"string","label":"副题（留空不要）","default":"把任务拖进对应的那一天，进度一眼看清。"},
+    {"id":"tags","type":"string","label":"桌上三张页的标签（| 分隔，中间那张是选中的）","default":"卡片|看板|列表"},
+    {"id":"name","type":"string","label":"应用名","default":"示例应用"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底（桌面）"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>overhead-tabletop-drop · 桌面巡视扎入</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="overhead-tabletop-drop-template">
+      <!-- Ported from video-shotcraft demos/camera/overhead-camera-moves/OverheadTabletopDrop.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette (grey desk and white pages on light skins, the graphite look on dark ones), system fonts,
+           upstream mark, wordmark, site copy and product pages removed: the picked page is a generic poster page whose
+           kicker, title, subline and app name come from variables, the side pages, buttons, planner labels and block
+           labels are bars; desk tags in the body font (no mono); kicker 25% toward ink (contrast under the far shade);
+           desk 3000px deeper towards the camera, a far-shade fill behind it, white lamp light 34% on light skins;
+           portrait uses 560x996 pages, 100px gap, pan +438 -> -207, desk centre at 41% of the height until the dive,
+           desk 2400px further back. Kept: 62 deg desk, pan +760 -> -360 (smooth, 0-50f), pick 44-60f (16px lift, side lights
+           to 35%, hero +25%), dive 58-86f with bezier(0.36,0,0.12,1) and the scale curve bezier(0.45,-0.18,0.12,1),
+           -1.6 / 0.5 / 0 settle, scale 2.04 -> 2.0, push 1 -> 1.012 94-140f, block slide 98-118f, light pools, beams,
+           far-end shade, vignette 0.12+0.45 tilt and grain on dark skins. -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--k-font);
+  color: var(--k-ink);
+}
+/* ==== kit:derived@1 ==== */
+.od {
+  --od-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+  --od-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+  --od-hi: color-mix(in srgb, white 80%, transparent);
+}
+.od[data-tone="dark"] {
+  --od-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+  --od-hi: color-mix(in srgb, white 6%, transparent);
+}
+/* ==== end kit:derived ==== */
+/* ==== kit:vignette@1 ==== */
+.od-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--od-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.od[data-tone="dark"] .od-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+/* ==== kit:grain@1 ==== */
+.od-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+/* desk and paper per tone: a mid-grey desk under white pages on light skins, upstream graphite on dark ones;
+   --od-la = lamp light (white): upstream 20% on dark, 34% on light skins so pools and beams show on a grey desk */
+.od{position:absolute;inset:0;container-type:size;--od-d0:color-mix(in srgb,var(--k-bg),var(--k-ink) 13%);--od-d1:color-mix(in srgb,var(--k-bg),var(--k-ink) 19%);--od-g:color-mix(in srgb,var(--k-ink) 7%,transparent);--od-gf:color-mix(in srgb,var(--k-ink) 3%,transparent);--od-paper:var(--k-bg);--od-far:color-mix(in srgb,var(--k-bg),var(--k-ink) 26%);--od-pl:color-mix(in srgb,var(--k-ink) 92%,var(--k-bg));--od-blk:color-mix(in srgb,var(--k-ink) 78%,var(--k-bg));--od-bar:color-mix(in srgb,white 30%,transparent);--od-tx:color-mix(in srgb,var(--k-ink) 16%,transparent);--od-la:34%;}
+.od[data-tone="dark"]{--od-d0:color-mix(in srgb,var(--k-bg),black 25%);--od-d1:color-mix(in srgb,var(--k-bg),black 50%);--od-g:color-mix(in srgb,white 5%,transparent);--od-gf:color-mix(in srgb,white 2.2%,transparent);--od-paper:var(--k-panel);--od-far:color-mix(in srgb,var(--k-bg),black 55%);--od-pl:color-mix(in srgb,var(--k-bg),black 35%);--od-blk:color-mix(in srgb,var(--k-panel),white 7%);--od-la:20%;}
+.od-cam{position:absolute;inset:0;perspective:1600px;perspective-origin:50% 42%;background:var(--od-far);}
+/* world origin = frame centre; static = landed (scale 2, flat, centred). The desk reaches 3900px towards the camera
+   (upstream 900): the portrait pan looks down past the near edge */
+.od-world{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d;transform:scale(2);}
+.od-desk{position:absolute;left:-2800px;top:-3200px;width:5600px;height:7100px;backface-visibility:hidden;background:repeating-linear-gradient(90deg,var(--od-g) 0 1.5px,transparent 1.5px 400px),repeating-linear-gradient(0deg,var(--od-g) 0 1.5px,transparent 1.5px 400px),repeating-linear-gradient(90deg,var(--od-gf) 0 1px,transparent 1px 80px),repeating-linear-gradient(0deg,var(--od-gf) 0 1px,transparent 1px 80px),linear-gradient(180deg,var(--od-d0),var(--od-d1));}
+.od-pool{position:absolute;top:3200px;width:1640px;height:1240px;margin:-620px 0 0 -820px;background:radial-gradient(ellipse 50% 50%,color-mix(in srgb,white var(--od-la),transparent),color-mix(in srgb,white calc(var(--od-la) * 0.35),transparent) 45%,transparent 75%);}
+.od-tag{position:absolute;display:flex;justify-content:center;align-items:center;font-size:30px;font-weight:700;letter-spacing:0.16em;line-height:1.3;color:color-mix(in srgb,var(--k-ink) 62%,transparent);}
+.od-tag i{font-style:normal;}
+.od-tag i::after{content:"";display:inline-block;width:40px;height:2px;margin:0 18px;vertical-align:middle;background:currentColor;opacity:0.5;}
+.od-card{position:absolute;left:-996px;top:-560px;width:1992px;height:1120px;overflow:hidden;border-radius:20px;background:var(--od-paper);backface-visibility:hidden;transform:translateZ(4px) scale(0.5);box-shadow:inset 0 2px 0 var(--od-hi);}
+.od-pg{position:relative;width:1920px;height:1080px;zoom:1.0375;}
+.od-cd{position:absolute;inset:0;border-radius:20px;background:var(--od-d1);opacity:0;}
+.od-nav{position:absolute;left:150px;right:150px;top:60px;height:64px;display:flex;align-items:center;gap:14px;}
+.od-mark{display:block;flex:none;width:44px;height:44px;}
+.od-name{display:block;max-width:460px;font-size:36px;line-height:1.2;}
+.od-nav i{display:block;flex:none;height:14px;border-radius:7px;background:var(--od-tx);}
+.od-nav .od-nb{width:190px;height:22px;border-radius:11px;background:color-mix(in srgb,var(--k-ink) 72%,transparent);}
+.od-bars{display:flex;gap:46px;margin-left:90px;}
+.od-bars i{width:96px;}
+.od-nav .od-pill{margin-left:auto;width:250px;height:64px;border-radius:32px;background:linear-gradient(var(--od-paper),var(--od-paper)) center/50% 14px no-repeat,var(--k-ink);}
+.od-hb{position:absolute;left:150px;top:210px;width:640px;height:84px;border-radius:42px;background:color-mix(in srgb,var(--k-ink) 80%,transparent);}
+.od-sp{position:absolute;left:150px;right:150px;top:380px;bottom:110px;display:flex;gap:40px;}
+.od-sp i{flex:1;border-radius:28px;box-shadow:inset 0 0 0 2px var(--od-line);background:linear-gradient(var(--od-tx),var(--od-tx)) 44px 44px/40% 22px no-repeat,linear-gradient(var(--od-tx),var(--od-tx)) 44px 100px/62% 60px no-repeat,linear-gradient(var(--od-tx),var(--od-tx)) 44px 200px/70% 14px no-repeat;}
+.od-sp .od-on{background-color:var(--k-ink);}
+.od-rows{flex-direction:column;gap:0;}
+.od-rows i{border-radius:0;box-shadow:inset 0 2px 0 var(--od-line);background:linear-gradient(var(--k-ink),var(--k-ink)) 0 50%/90px 36px no-repeat,linear-gradient(var(--od-tx),var(--od-tx)) 330px 40%/38% 30px no-repeat,linear-gradient(var(--od-tx),var(--od-tx)) 330px 72%/55% 14px no-repeat;}
+.od-hero{position:absolute;left:150px;top:270px;width:860px;}
+.od-kick{display:flex;align-items:center;gap:16px;font-size:40px;font-weight:700;line-height:1.25;letter-spacing:0.12em;color:color-mix(in srgb,var(--k-accent),var(--k-ink) 25%);}
+.od-kick::before{content:"";flex:none;width:36px;height:3px;background:currentColor;}
+.od-title{margin-top:30px;font-size:148px;font-weight:800;line-height:1.15;word-break:keep-all;}
+.od-sub{margin-top:40px;font-size:40px;line-height:1.4;color:var(--k-muted);}
+.od-btns{display:flex;gap:22px;margin-top:52px;}
+.od-btns i{display:block;width:260px;height:84px;border-radius:42px;background:linear-gradient(var(--od-paper),var(--od-paper)) center/48% 14px no-repeat,var(--k-ink);}
+.od-btns i+i{width:300px;background:linear-gradient(var(--od-tx),var(--od-tx)) center/55% 14px no-repeat;box-shadow:inset 0 0 0 2px var(--od-line);}
+/* the planner on the picked page: five columns of blocks, the accent block slides into column 3 at the end */
+.od-plan{--col:126px;--bt:150px;position:absolute;left:1080px;top:250px;width:690px;height:600px;border-radius:28px;overflow:hidden;background:var(--od-pl);box-shadow:0 40px 80px -30px color-mix(in srgb,var(--od-shade) 55%,transparent);}
+.od-plan::after{content:"";position:absolute;left:40px;right:40px;top:calc(var(--bt) - 18px);height:1px;background:var(--od-bar);}
+.od-plan b,.od-plan s{position:absolute;left:40px;top:38px;width:200px;height:22px;border-radius:11px;background:var(--od-bar);}
+.od-plan s{left:calc(38px + var(--d) * var(--col));top:calc(var(--bt) - 52px);width:64px;height:14px;}
+.od-blks i{position:absolute;left:calc(38px + var(--d) * var(--col));top:calc(var(--bt) + var(--y) * 1px);width:calc(var(--col) - 12px);height:calc(var(--h) * 1px);border-radius:14px;background:var(--od-blk);}
+.od-blks i::before,.od-blks i::after{content:"";position:absolute;left:14px;right:28%;top:16px;height:12px;border-radius:6px;background:var(--od-bar);}
+.od-blks i::after{right:50%;top:38px;}
+.od-blks .od-gold{--d:2;--y:60;--h:136;background:linear-gradient(180deg,color-mix(in srgb,var(--k-accent),white 35%),var(--k-accent));box-shadow:0 12px 26px -8px color-mix(in srgb,var(--k-accent) 45%,transparent),inset 0 1px 0 color-mix(in srgb,white 50%,transparent);}
+.od-gold::before,.od-gold::after{background:color-mix(in srgb,var(--k-on-accent) 70%,transparent);}
+.od-beam{position:absolute;pointer-events:none;filter:blur(26px);}
+.od-beam i{position:absolute;inset:0;clip-path:polygon(44% 0,56% 0,90% 100%,10% 100%);background:linear-gradient(180deg,color-mix(in srgb,white calc(var(--od-la) * 1.1),transparent),color-mix(in srgb,white calc(var(--od-la) * 0.45),transparent) 60%,transparent);}
+.od-far{position:absolute;inset:0;pointer-events:none;display:none;}
+.od .od-vig{--vin:45%;--vc:black;--vs:0.04;}
+/* portrait: 560 x 996 pages (9:16, landing at 2.0 fills the frame); readable content inside y 256-1293 of the page */
+@container (orientation:portrait){
+  .od-desk{top:-5600px;height:9500px;}
+  .od-pool{top:5600px;width:1240px;height:1640px;margin:-820px 0 0 -620px;}
+  .od-card{left:-560px;top:-996px;width:1120px;height:1992px;}
+  .od-pg{width:1080px;height:1920px;}
+  .od-nav{left:140px;right:140px;top:270px;}
+  .od-bars{display:none;}
+  .od-hb{left:140px;top:380px;width:560px;}
+  .od-sp{left:140px;right:140px;top:520px;bottom:470px;flex-direction:column;}
+  .od-hero{left:140px;top:340px;width:800px;}
+  .od-title{font-size:112px;}
+  .od-plan{--col:145px;--bt:110px;left:140px;top:980px;width:800px;height:470px;}
+  .od-plan b{top:24px;}
+}
+</style>
+
+<div id="root" data-composition-id="overhead-tabletop-drop">
+ <div class="od" data-layout-allow-overflow>
+  <div class="od-cam">
+   <div class="od-world">
+    <div class="od-desk"></div>
+    <div class="od-card"><div class="od-pg"></div><i class="od-cd"></i></div>
+    <div class="od-card"><div class="od-pg"></div><i class="od-cd"></i></div>
+    <div class="od-card">
+     <div class="od-pg">
+      <div class="od-nav">
+       <!-- kit:mark@1 markup (kMark), inlined so the static page shows it -->
+       <svg class="od-mark" viewBox="0 0 128 128" aria-hidden="true"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)" /><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)" /><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)" /></svg>
+       <b class="od-name">示例应用</b><span class="od-bars"><i></i><i></i><i></i><i></i></span><i class="od-pill"></i>
+      </div>
+      <div class="od-hero">
+       <div class="od-kick">看板视图</div>
+       <div class="od-title">用看板&#8203;排好这一周</div>
+       <div class="od-sub">把任务拖进对应的那一天，进度一眼看清。</div>
+       <div class="od-btns"><i></i><i></i></div>
+      </div>
+      <div class="od-plan"><b></b><s style="--d:0"></s><s style="--d:1"></s><s style="--d:2"></s><s style="--d:3"></s><s style="--d:4"></s>
+       <div class="od-blks"><i style="--d:0;--y:40;--h:120"></i><i style="--d:1;--y:190;--h:150"></i><i class="od-c2" style="--d:2;--y:210;--h:100"></i><i style="--d:3;--y:230;--h:120"></i><i style="--d:4;--y:40;--h:140"></i><i style="--d:0;--y:300;--h:110"></i><i style="--d:4;--y:290;--h:110"></i><i class="od-gold"></i></div>
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+  <div class="od-beam"><i></i></div><div class="od-beam"><i></i></div><div class="od-beam"><i></i></div>
+  <div class="od-far"></div>
+  <div class="od-vig"></div>
+  <div class="od-grain"></div>
+ </div>
+</div>
+
+<script>
+(function () {
+  // timing (s) = upstream frames / 30: pan 0-50f, pick 44-60f, dive 58-86f, settle to 94f, block 98-118f, push 94-140f
+  var CFG = { pan: 1.667, pick: [1.467, 0.533], drop: 1.933, dive: 0.933, back: 0.133, land: 0.267, lift: [2.333, 0.6], slot: [3.267, 0.667], push: [3.133, 1.533, 1.012], dur: 5 };
+  // per orientation (world px): page card, gap, pan start / end, beam size, block start x, planner column, title floor (page px)
+  // wy: where the desk centre sits (fraction of FH) during the pan, the dive brings it to the frame centre; dt: desk
+  // reach behind the pages (portrait 5600: the raised camera sees further)
+  var LAND = { cw: 996, ch: 560, gap: 150, p0: 760, p1: -360, bw: 1120, bh: 560, slide: 760, col: 126, tmin: 96, wy: 0.5, dt: 3200 };
+  var PORT = { cw: 560, ch: 996, gap: 100, p0: 438, p1: -207, bw: 640, bh: 820, slide: 870, col: 145, tmin: 70, wy: 0.41, dt: 5600 };
+  var v = { title: "用看板|排好这一周", kicker: "看板视图", sub: "把任务拖进对应的那一天，进度一眼看清。", tags: "卡片|看板|列表", name: "示例应用", backdrop: "on" };
+  try {
+    var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+  } catch (e) {}
+
+  var root = document.querySelector(".od");
+  var q = function (s) { return root.querySelector(s); }, qa = function (s) { return [].slice.call(root.querySelectorAll(s)); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+    // not laid out yet: the host clip's declared size, then the window
+    var hc = root.closest("[data-width][data-height]");
+    FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+    FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND, U = Math.min(FW, FH) / 1.08e3; // 1 on a 1080-px short side
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== end kit:tone ====
+// ==== kit:shadow@1 ====
+function kShadow(e, strength) {
+  e = Math.max(0, e);
+  var s = strength == null ? 1 : strength, r = function (x) { return Math.round(x * 10) / 10; };
+  var c = function (a) { return "color-mix(in srgb, var(--od-shade) " + r(Math.min(1, a) * 100) + "%, transparent)"; };
+  return "0 " + r(0.5 + e * 0.06) + "px " + r(1 + e * 0.18) + "px " + c((0.12 * s) / (1 + e / 24)) + ", " +
+    "0 " + r(e * 0.55) + "px " + r(e * 1.3) + "px " + r(-e * 0.22) + "px " + c((0.08 + (Math.min(e, 64) / 64) * 0.22) * s);
+}
+// ==== end kit:shadow ====
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+      "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+      "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+      "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+      "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+}
+// ==== end kit:grain ====
+// ==== kit:text@2 (kWords only: the texts are blocks, nothing reveals per unit) ====
+var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+function kWords(s, key) {
+  s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+  var cut = function (x) {
+    if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+    return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+  };
+  var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+  var pre = "";
+  bits.forEach(function (x) {
+    var t = x.trim(), last = out[out.length - 1];
+    if (last && /^ /.test(x)) last.sp = true;
+    if (!t) return;
+    if (!/[\p{L}\p{N}]/u.test(t)) {
+      if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+      else { last.t += t; last.sp = / $/.test(x); }
+      return;
+    }
+    out.push({ t: pre + t, sp: / $/.test(x) });
+    pre = "";
+  });
+  if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+  if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+  if (out.length) out[out.length - 1].sp = false;
+  return out;
+}
+// ==== end kit:text ====
+// ==== kit:fit@1 (kRows not needed) ====
+function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+      var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+      if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+      row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+
+  var dark = kTone(root) === "dark", SH = dark ? 3.2 : 1.4;
+  var esc = function (s) { var d = document.createElement("i"); d.textContent = s; return d.innerHTML; };
+  // text slots: kWords phrases as one text node (no per-phrase spans: their projected boxes overlap while the page is
+  // tilted), a zero-width space between phrases, typed spaces kept (inside a phrase they do not break: nbsp);
+  // titles use keep-all so lines break only between phrases. An empty optional slot hides; each one fits its box
+  var put = function (el, s, lines, min, w) {
+    s = String(s).trim();
+    el.style.display = s ? "" : "none";
+    el.textContent = kWords(s).map(function (u) { return u.t.replace(/ /g, "\u00a0") + (u.sp ? " " : "\u200b"); }).join("").replace(/\u200b$/, "");
+    if (s && !kFit(el, { lines: lines, min: min, width: w }).fits) { el.style.wordBreak = "normal"; kFit(el, { lines: lines, min: min, width: w }); }
+  };
+  put(q(".od-title"), v.title, 2, L.tmin);
+  put(q(".od-sub"), v.sub, 2, 40);
+  put(q(".od-kick"), v.kicker, 1, 40);
+  put(q(".od-name"), v.name, 1, 32, 460); // a flex item: fit to its max-width
+  // the two side pages: the same nav with a bar for the name, a heading bar, three cards / three rows
+  var cards = qa(".od-card"), nav = q(".od-nav").outerHTML.replace(/<b class="od-name"[\s\S]*?<\/b>/, '<i class="od-nb"></i>'), sp = '<i class="od-hb"></i><div class="od-sp';
+  cards[0].firstChild.innerHTML = nav + sp + '"><i></i><i class="od-on"></i><i></i></div>';
+  cards[1].firstChild.innerHTML = nav + sp + ' od-rows"><i></i><i></i><i></i></div>';
+  // desk: a light pool and a printed tag under each page (cards: left, right, picked; desk order: left, picked, right)
+  var PITCH = L.cw + L.gap, X = [-PITCH, PITCH, 0], tags = String(v.tags).split("|"), desk = q(".od-desk"), pools = [], tg = [];
+  X.forEach(function (x, i) {
+    var c = cards[i], n = [1, 3, 2][i], p = desk.appendChild(document.createElement("i")), t = desk.appendChild(document.createElement("b"));
+    c.style.left = x - L.cw + "px";
+    p.className = "od-pool"; p.style.left = 2800 + x + "px";
+    t.className = "od-tag";
+    t.style.cssText = "left:" + (2800 + x - L.cw / 2) + "px;width:" + L.cw + "px;top:" + (L.dt + L.ch / 2 + 34) + "px";
+    t.innerHTML = "<i>0" + n + "</i><span>" + esc((tags[n - 1] || "").trim()) + "</span>";
+    kFit(t.lastChild, { width: L.cw - 160, min: 28 });
+    pools.push(p); tg.push(t);
+  });
+  var dims = qa(".od-cd"), beams = qa(".od-beam"), far = q(".od-far"), vig = q(".od-vig"), gEl = q(".od-grain"), world = q(".od-world");
+  var c2 = q(".od-c2"), gold = q(".od-gold"), grain = kGrain(gEl);
+  if (String(v.backdrop) === "off") [desk, far, vig, gEl].concat(beams).forEach(function (e) { e.style.display = "none"; }), q(".od-cam").style.background = "none";
+  // texts sit under the vignette and grain on purpose (upstream draws both over the whole frame)
+  qa(".od-tag span, .od-tag i, .od-kick, .od-title, .od-sub, .od-name").forEach(function (e) { e.setAttribute("data-layout-allow-occlusion", ""); });
+  var DIVE = MT.bezier(0.36, 0, 0.12, 1), DIVS = MT.bezier(0.45, -0.18, 0.12, 1), de = CFG.drop + CFG.dive, V = dark ? [0.12, 0.45, 0.04, 0.05] : [0.04, 0.22, 0.03, 0.03];
+  var render = function (t) {
+    var pick = MT.ramp(t, CFG.pick[0], CFG.pick[1], "out"), d = MT.ramp(t, CFG.drop, CFG.dive, DIVE), ds = MT.ramp(t, CFG.drop, CFG.dive, DIVS);
+    // dive: angle, scale and x run together; then -1.6 -> 0.5 -> 0 deg and 2.04 -> 2.0, then a slow push
+    var rot = t < de ? MT.mix(62, -1.6, d) : t < de + CFG.back ? MT.mix(-1.6, 0.5, MT.ramp(t, de, CFG.back, "smooth")) : MT.mix(0.5, 0, MT.ramp(t, de + CFG.back, CFG.back, "smooth"));
+    var sc = (t < de ? MT.mix(1, 2.04, ds) : MT.mix(2.04, 2, MT.ramp(t, de, CFG.land, "smooth"))) * MT.mix(1, CFG.push[2], MT.ramp(t, CFG.push[0], CFG.push[1], "smooth"));
+    // pan: x only, the angle stays at 62 deg until the dive
+    var tx = t <= CFG.drop ? MT.mix(L.p0, L.p1, MT.ramp(t, 0, CFG.pan, "smooth")) : MT.mix(L.p1, 0, d);
+    var lift = 16 * (pick - MT.ramp(t, CFG.lift[0], CFG.lift[1], "smooth")), tilt = MT.clamp(rot / 62, 0, 1), k = [1 - 0.65 * pick, 1 - 0.65 * pick, 1 + 0.25 * pick];
+    world.style.top = (100 * MT.mix(L.wy, 0.5, t <= CFG.drop ? 0 : d)).toFixed(3) + "%";
+    world.style.transform = "translateX(" + tx.toFixed(2) + "px) rotateX(" + rot.toFixed(3) + "deg) scale(" + sc.toFixed(4) + ")";
+    cards.forEach(function (c, i) {
+      var e = i == 2 ? lift : 0;
+      c.style.transform = "translateZ(" + (4 + e).toFixed(2) + "px) scale(0.5)";
+      c.style.boxShadow = kShadow((4 + e * 1.6) * 2, SH) + ",inset 0 2px 0 var(--od-hi)";
+      pools[i].style.opacity = k[i].toFixed(3);
+      // beams: one per lamp, following the desk across the frame, gone as the camera levels
+      var b = beams[i], o = k[i] * tilt;
+      b.style.cssText = o < 0.02 ? "display:none" : "left:" + (FW / 2 + tx + X[i] * 0.92 - L.bw / 2).toFixed(1) + "px;top:" + -60 * U + "px;width:" + L.bw + "px;height:" + L.bh + "px;opacity:" + o.toFixed(3);
+    });
+    dims.forEach(function (e) { e.style.opacity = (0.08 + 0.34 * pick).toFixed(3); });
+    tg[2].style.color = "color-mix(in srgb,var(--k-ink) " + (62 + 38 * pick).toFixed(1) + "%,transparent)";
+    tg[2].firstChild.style.color = pick > 0.5 ? "var(--k-accent-2)" : "";
+    // far end of the desk sinks into shade; vignette and grain fade with the tilt
+    far.style.display = tilt < 0.01 ? "none" : "block";
+    far.style.background = "linear-gradient(180deg,color-mix(in srgb,var(--od-far) " + (95 * tilt).toFixed(1) + "%,transparent),color-mix(in srgb,var(--od-far) " + (55 * tilt).toFixed(1) + "%,transparent) 24%,transparent 48%)";
+    vig.style.setProperty("--vs", (V[0] + V[1] * tilt).toFixed(3));
+    gEl.style.opacity = (V[2] + V[3] * tilt).toFixed(3);
+    grain(t);
+    // on the landed page: the accent block slides into column 3 (overshoot), the block there makes room
+    var s = MT.ramp(t, CFG.slot[0], CFG.slot[1], "overshoot"), sp = Math.max(0, s);
+    c2.style.setProperty("--y", (60 + 150 * sp).toFixed(1));
+    gold.style.left = MT.mix(L.slide, 38 + 2 * L.col, s).toFixed(1) + "px";
+    gold.style.boxShadow = "0 " + (12 + 18 * (1 - sp)).toFixed(1) + "px " + (26 + 20 * (1 - sp)).toFixed(1) + "px -8px color-mix(in srgb,var(--k-accent) 45%,transparent),inset 0 1px 0 color-mix(in srgb,white 50%,transparent)";
+  };
+  var tl = MT.scene(CFG.dur, render);
+  window.__timelines["overhead-tabletop-drop"] = tl;
+})();
+</script>
+    </template>
+  </body>
+</html>

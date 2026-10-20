@@ -130,6 +130,12 @@
   /* 预览高度 = 16:9 画面 + 34px 播放条 */
   .dl-stage { position: relative; background: #f4f5f7; border-radius: 8px; overflow: hidden; }
   .dl-stage::before { content: ""; display: block; padding-top: calc(56.25% + 34px); }
+  /* 竖屏：9:16 的格子和检视台 */
+  .grid.port { grid-template-columns: repeat(auto-fill, minmax(min(100%, 190px), 1fr)); }
+  .grid.port .stage { aspect-ratio: 9 / 16; }
+  .dl-stage.port { width: min(100%, 380px); margin: 0 auto; }
+  .dl-stage.port::before { padding-top: calc(177.78% + 34px); }
+  .seg[hidden] { display: none; }
   .dl-stage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; color-scheme: normal; }
   .strip { margin: 0; }
   .strip img { display: block; width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--line); }
@@ -199,6 +205,10 @@
     <div class="seg" role="group" aria-label="卡片预览用哪套皮">
       <button type="button" id="skin-light" aria-pressed="true">浅色皮</button>
       <button type="button" id="skin-dark" aria-pressed="false">深色皮</button>
+    </div>
+    <div class="seg" id="orient" role="group" aria-label="按哪种画幅看卡" hidden>
+      <button type="button" id="or-land" aria-pressed="true">横屏</button>
+      <button type="button" id="or-port" aria-pressed="false">竖屏</button>
     </div>
     <button type="button" class="filter-toggle" id="filter-toggle" aria-expanded="false" aria-controls="rail">筛选</button>
   </div>
@@ -291,6 +301,15 @@
   });
   var skin = store.get("skin", "light");
   if (skin !== "dark") skin = "light";
+  // frame: the toggle shows only once some card supports portrait; the portrait view lists those cards and switches
+  // preview, thumbnail, strip and mount snippet to 1080x1920
+  var nPort = cards.filter(function (c) { return c.portrait; }).length;
+  var orient = nPort ? store.get("orient", "land") : "land";
+  if (orient !== "port") orient = "land";
+  var PORT = function () { return orient === "port"; };
+  // per card: show it as portrait only when the view is portrait AND the card supports it (a #hash can open any card)
+  var asPort = function (c) { return PORT() && !!c.portrait; };
+  $("#orient").hidden = !nPort;
   var state = { q: "", group: "", energy: "", need: "", intent: "", overlay: false };
   var basket = store.get("basket", []);
   basket = Array.isArray(basket) ? basket.filter(function (id) { return byId[id]; }) : [];
@@ -312,6 +331,8 @@
     }).join("");
     $("#skin-dark").setAttribute("aria-pressed", skin === "dark");
     $("#skin-light").setAttribute("aria-pressed", skin === "light");
+    $("#or-land").setAttribute("aria-pressed", !PORT());
+    $("#or-port").setAttribute("aria-pressed", PORT());
   }
   $("#rail").addEventListener("click", function (e) {
     var b = e.target.closest("[data-group],[data-energy],[data-need],[data-overlay]");
@@ -328,12 +349,13 @@
   $("#reset").addEventListener("click", function () { state = { q: "", group: "", energy: "", need: "", intent: "", overlay: false }; $("#q").value = ""; drawFilters(); render(); });
   $("#filter-toggle").addEventListener("click", function () { var r = $("#rail"), open = r.getAttribute("data-open") !== "true"; r.setAttribute("data-open", open); this.setAttribute("aria-expanded", open); });
   ["dark", "light"].forEach(function (s) { $("#skin-" + s).addEventListener("click", function () { skin = s; store.set("skin", s); drawFilters(); render(); }); });
+  ["land", "port"].forEach(function (o) { $("#or-" + o).addEventListener("click", function () { orient = o; store.set("orient", o); drawFilters(); render(); }); });
 
   // Search looks at names and uses first; only when nothing matches there does it fall back to the full card text.
   function visible() {
     var base = cards.filter(function (c) {
       return (!state.group || c.group === state.group) && (!state.energy || c.energy === state.energy) &&
-        (!state.need || c.needs.indexOf(state.need) >= 0) && (!state.intent || c.intents.indexOf(state.intent) >= 0) && (!state.overlay || c.overlay);
+        (!state.need || c.needs.indexOf(state.need) >= 0) && (!state.intent || c.intents.indexOf(state.intent) >= 0) && (!state.overlay || c.overlay) && (!PORT() || c.portrait);
     });
     var words = state.q.trim().toLowerCase().split(/\s+/).filter(Boolean);
     if (!words.length) return { list: base, full: false };
@@ -349,7 +371,9 @@
     var hero = c.hero != null ? "<i class='hero' style='" + at(c.hero) + "'></i>" : "";
     return "<div class='ruler' aria-hidden='true' title='建议时长 " + slot + " 秒；竖线是连拍的五个时刻，菱形是主画面（" + c.hero + " 秒）'><i class='track'></i>" + ticks + hero + "<span class='len'>" + slot + "s</span></div>";
   }
-  function demoUrl(c, extra) { return BASE + "cards/" + c.id + "/demo.html?skin=" + skin + (extra || ""); }
+  // a hosted copy that cannot hold one file per image (site --pack) ships the thumbnails inline in lib/thumbs.js and no strips
+  function thumbUrl(c) { var k = c.id + (asPort(c) ? "-p" : ""); return (window.MC_THUMBS && window.MC_THUMBS[k]) || BASE + "cards/" + c.id + "/thumb" + (asPort(c) ? "-p" : "") + ".jpg"; }
+  function demoUrl(c, extra) { return BASE + "cards/" + c.id + "/demo.html?skin=" + skin + (asPort(c) ? "&o=portrait" : "") + (extra || ""); }
 
   // ---- contact sheet: a preview iframe exists only while its tile is on screen
   var io = "IntersectionObserver" in window ? new IntersectionObserver(function (es) {
@@ -379,8 +403,8 @@
   var shown = "";
   function render() {
     var v = visible(), list = v.list;
-    $("#count").textContent = v.full ? "卡名和用途里没有，按说明全文找到 " + list.length + " 张" : "显示 " + list.length + " / " + cards.length + " 张";
-    var key = skin + "|" + list.map(function (c) { return c.id; }).join(",");
+    $("#count").textContent = v.full ? "卡名和用途里没有，按说明全文找到 " + list.length + " 张" : "显示 " + list.length + " / " + cards.length + " 张" + (PORT() ? "（竖屏能用的卡；其余只有横屏版式）" : "");
+    var key = skin + "|" + orient + "|" + list.map(function (c) { return c.id; }).join(",");
     if (key === shown) return;
     shown = key;
     if (io) io.disconnect();
@@ -388,21 +412,21 @@
     groups.forEach(function (g) {
       var sub = list.filter(function (c) { return c.group === g.name; });
       if (!sub.length) return;
-      html += "<section><div class='group-head'><h3>" + esc(g.name) + "</h3><span class='n'>" + sub.length + "</span></div><div class='grid'>";
+      html += "<section><div class='group-head'><h3>" + esc(g.name) + "</h3><span class='n'>" + sub.length + "</span></div><div class='grid" + (PORT() ? " port" : "") + "'>";
       sub.forEach(function (c) {
         var on = basket.indexOf(c.id) >= 0;
         html += "<article class='tile' data-id='" + c.id + "'>" +
-          "<div class='stage' data-src='" + esc(demoUrl(c, "&bare=1")) + "' style=\"background-image:url('" + BASE + "cards/" + c.id + "/thumb.jpg')\">" +
+          "<div class='stage' data-src='" + esc(demoUrl(c, "&bare=1")) + "' style=\"background-image:url('" + thumbUrl(c) + "')\">" +
           (reduced ? "<button type='button' class='play'>▶ 播放</button>" : "") + "</div>" +
           "<button type='button' class='pick' aria-pressed='" + on + "' aria-label='" + esc(pickLabel(c, on)) + "'>" + (on ? "✓" : "＋") + "</button>" +
           "<div class='meta'><div class='name'><button type='button' class='open'>" + esc(c.name) + "</button><span class='id'>" + c.id + "</span></div>" +
           "<p class='one'>" + esc(c.one_line) + "</p>" +
-          "<div class='tags'><span class='energy e" + esc(c.energy) + "'>能量" + esc(c.energy) + "</span><span>" + c.needs.map(esc).join(" · ") + "</span>" + (c.overlay ? "<span>可叠加</span>" : "") + "</div>" +
+          "<div class='tags'><span class='energy e" + esc(c.energy) + "'>能量" + esc(c.energy) + "</span><span>" + c.needs.map(esc).join(" · ") + "</span>" + (c.overlay ? "<span>可叠加</span>" : "") + (c.portrait && !PORT() ? "<span>可竖屏</span>" : "") + "</div>" +
           ruler(c) + "</div></article>";
       });
       html += "</div></section>";
     });
-    $("#sheet").innerHTML = html || "<p class='empty'>没有符合条件的卡。换个说法搜，或者点“清空筛选”。</p>";
+    $("#sheet").innerHTML = html || "<p class='empty'>没有符合条件的卡。换个说法搜，或者点“清空筛选”" + (PORT() ? "；竖屏视图只列能竖屏的卡，切回横屏能看到全部" : "") + "。</p>";
     if (io) document.querySelectorAll(".stage").forEach(function (s) { io.observe(s); });
   }
   $("#sheet").addEventListener("click", function (e) {
@@ -473,7 +497,8 @@
   }
   function snippet(c) {
     var vals = {}; c.vars.forEach(function (v) { vals[v.id] = v.default; });
-    return "<div id=\"" + c.id + "-1\" class=\"clip\"\n     data-composition-id=\"" + c.id + "\"\n     data-composition-src=\"motion-cards/cards/" + c.id + "/demo.html\"\n     data-variable-values='" + JSON.stringify(vals).replace(/'/g, "&#39;") + "'\n     data-start=\"0\" data-duration=\"" + c.slot + "\" data-track-index=\"2\"\n     data-width=\"1920\" data-height=\"1080\"></div>";
+    var mt = c.runtime === "mt" ? "<!-- 这张卡用 MT 引擎：宿主 index.html 的 <head> 里要有 <script src=\"motion-cards/lib/mt.js\"></script> -->\n" : "";
+    return mt + "<div id=\"" + c.id + "-1\" class=\"clip\"\n     data-composition-id=\"" + c.id + "\"\n     data-composition-src=\"motion-cards/cards/" + c.id + "/demo.html\"\n     data-variable-values='" + JSON.stringify(vals).replace(/'/g, "&#39;") + "'\n     data-start=\"0\" data-duration=\"" + c.slot + "\" data-track-index=\"2\"\n     data-width=\"" + (asPort(c) ? 1080 : 1920) + "\" data-height=\"" + (asPort(c) ? 1920 : 1080) + "\"></div>";
   }
   function drawPick() {
     var on = basket.indexOf(current.id) >= 0;
@@ -487,13 +512,20 @@
     current = c;
     $("#dl-name").textContent = c.name;
     $("#dl-id").textContent = c.id + " · " + c.group;
-    $("#dl-stage").innerHTML = "<iframe title='" + esc(c.name) + " 预览，可拖动进度条' src='" + esc(demoUrl(c)) + "'></iframe>";
-    $("#dl-strip").innerHTML = "<img alt='" + esc(c.name) + " 的五帧连拍' src='" + BASE + "cards/" + c.id + "/strip.jpg' width='1936' height='238'><figcaption>连拍：五个关键时刻，每帧左上角是时间。</figcaption>";
+    $("#dl-stage").className = "dl-stage" + (asPort(c) ? " port" : "");
+    $("#dl-stage").innerHTML = "<iframe title='" + esc(c.name) + " 预览，可拖动进度条' src='" + esc(demoUrl(c, asPort(c) ? "&guides=1" : "")) + "'></iframe>";
+    $("#dl-strip").innerHTML = window.MC_THUMBS ? "" : asPort(c)
+      ? "<img alt='" + esc(c.name) + " 的竖屏五帧连拍' src='" + BASE + "cards/" + c.id + "/strip-p.jpg' width='1096' height='406'><figcaption>竖屏连拍：蓝色是顶栏（12% 以上），红线是 68%（往下不放字），红色是字幕区（74% 以下）。</figcaption>"
+      : "<img alt='" + esc(c.name) + " 的五帧连拍' src='" + BASE + "cards/" + c.id + "/strip.jpg' width='1936' height='238'><figcaption>连拍：五个关键时刻，每帧左上角是时间。</figcaption>";
     var intents = c.intents.map(function (k) { return D.intents[k]; }).join("、") || "不按旁白挑，垫在画面底下用";
     var facts = [["用在", c.use_when], ["旁白在说", intents], ["要的素材", c.needs.join("、")], ["能量", c.energy + (c.overlay ? "，能透明压在画面上" : "")], ["建议时长", c.slot + " 秒，主画面在 " + c.hero + " 秒"]];
     if (c.numbers) facts.push(["数字", "一屏摆 " + (c.numbers[0] === c.numbers[1] ? c.numbers[0] : c.numbers[0] + "–" + c.numbers[1]) + " 个" + (c.chart ? "，画" + (D.charts[c.chart] || c.chart) : "")]);
+    if (c.portrait) facts.push(["画幅", "横竖两用：片段写 1920×1080 是横版，写 1080×1920 是竖版"]);
+    if (c.runtime === "mt") facts.push(["引擎", "MT（lib/mt.js），宿主页要加载它，不用 GSAP"]);
     if (c.sfx && c.sfx !== "none") facts.push(["音效", c.sfx]);
     if (c.pairs_with && c.pairs_with.length) facts.push(["常搭", c.pairs_with.map(function (p) { return byId[p] ? byId[p].name + "（" + p + "）" : p; }).join("、")]);
+    // ported cards: where the motion recipe came from; the licence travels in motion-cards/THIRD_PARTY/<project>/
+    if (c.source) facts.push(["来源", "动法移植自 " + c.source + "，按本库规格重写；许可和说明见 motion-cards/THIRD_PARTY/" + c.source.split("/")[0] + "/"]);
     $("#dl-facts").innerHTML = facts.map(function (f) { return "<dt>" + f[0] + "</dt><dd>" + esc(f[1]) + "</dd>"; }).join("");
     $("#dl-snippet").textContent = snippet(c);
     $("#dl-vars").innerHTML = c.vars.length ? "<tr><th>变量</th><th>说明</th><th>默认</th></tr>" + c.vars.map(function (v) { return "<tr><td>" + esc(v.id) + "</td><td>" + esc(v.label) + "</td><td>" + esc(typeof v.default === "string" ? v.default : JSON.stringify(v.default)) + "</td></tr>"; }).join("") : "<tr><td>这张卡没有变量</td></tr>";

@@ -1,0 +1,469 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"nums","type":"string","label":"表盘数列（用 | 分隔，从大到小）","default":"45|35|28|22|17|10|5|4|3"},
+    {"id":"hero","type":"string","label":"主角数字（数列里的一个，停在弧顶后落进标题）","default":"5"},
+    {"id":"title","type":"string","label":"标题其余部分（用 | 切意群，末个意群染强调色，可留空）","default":"分钟|就能|装好"},
+    {"id":"label","type":"string","label":"左上角标（留空不要）","default":"安装用时"},
+    {"id":"name","type":"string","label":"右上字标（留空不要）","default":"示例应用"},
+    {"id":"note","type":"string","label":"底注，等宽字（$ 开头时 $ 染强调色，留空不要）","default":"$ setup --quick"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>countdown-arc-scatter · 表盘扫数落标题</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="countdown-arc-scatter-template">
+<!-- Ported from video-shotcraft demos/typography/countdown-arc-scatter/CountdownArcScatter.tsx
+     (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+     Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+     Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+     neutral --k-* palette (paper look -> white backdrop with its key light at 50% 30%, vignette 0.14, grain 0.05),
+     system fonts with a real bold face, generic Chinese copy; upstream wordmark replaced by a neutral mark and a
+     name variable, the install command by a generic note (mono 34 -> 40px); the number list, the hero number and
+     the title are variables, the hero's slot takes the hero's own width (was a fixed 0.6em); title tracking 0 for
+     CJK (was -0.03em); portrait layout (radius 430, outer arc +-52 deg); hold 22 -> 28 frames (3.6 s).
+     Kept as upstream: 24 deg spacing, 3 deg wind-up, spring 99 -> 0 (damping 12, stiffness 60), the +-70/22 deg
+     visibility window, 0.35 hand ratio, ticks, scatter blur 6px, hero flight 32-52f, word windows, tint, 0.6% push. -->
+<style>
+  @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+  @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+  @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+  /* a real bold for the dial and the title (the palette's faces point at the regular cut only) */
+  @font-face { font-family: "ca-heavy"; font-weight: 700 900; src: local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"), local("PingFangSC-Semibold"), local("NotoSansSC-Black"); }
+  @font-face { font-family: "Consolas"; src: local("Consolas"); }
+  #root {
+    --k-bg: var(--mc-bg, #ffffff);
+    --k-panel: var(--mc-panel, #f4f5f7);
+    --k-ink: var(--mc-ink, #15171c);
+    --k-muted: var(--mc-muted, #6b7280);
+    --k-accent: var(--mc-accent, #e8590c);
+    --k-accent-2: var(--mc-accent-2, #2563eb);
+    --k-on-accent: var(--mc-on-accent, #ffffff);
+    --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+    --k-mono: var(--mc-mono, Consolas, monospace);
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    font-family: var(--k-font);
+    color: var(--k-ink);
+  }
+  /* ==== kit:derived@1 (shade, hi) ==== */
+  .ca { --ca-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); --ca-hi: color-mix(in srgb, white 80%, transparent); }
+  .ca[data-tone="dark"] { --ca-shade: color-mix(in srgb, var(--k-bg) 30%, black); --ca-hi: color-mix(in srgb, white 6%, transparent); }
+  /* ==== end kit:derived ==== */
+  /* ==== kit:backdrop@1 ==== */
+  .ca-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+  .ca-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+  /* ==== end kit:backdrop ==== */
+  /* ==== kit:vignette@1 ==== */
+  .ca-vig {
+    position: absolute; inset: 0; pointer-events: none;
+    --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--ca-shade);
+    background:
+      radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+      radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+  }
+  .ca[data-tone="dark"] .ca-vig { --vs: 0.55; }
+  /* ==== end kit:vignette ==== */
+  /* ==== kit:grain@1 ==== */
+  .ca-grain { position: absolute; inset: 0; pointer-events: none; }
+  /* ==== end kit:grain ==== */
+  /* ==== kit:text@2 ==== */
+  .ca-u { display: inline-block; white-space: pre; }
+  /* ==== end kit:text ==== */
+  /* ==== kit:mark@1 (CSS only; the neutral placeholder mark is an inline 36px svg below) ==== */
+  .ca-mark { display: block; flex: none; }
+  .ca-wordmark { display: inline-flex; align-items: center; gap: 0.5em; font-weight: 700; letter-spacing: 0.02em; white-space: nowrap; }
+  /* ==== end kit:mark ==== */
+
+  .ca { position: absolute; inset: 0; container-type: size; --ca-f: "ca-heavy", var(--k-font); }
+  /* upstream key light sits top-centre (50% 30%); this shot ran a lighter vignette (0.14) */
+  .ca-backdrop::after { background: radial-gradient(ellipse 58% 62% at 50% 30%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 70%); }
+  .ca .ca-vig { --vs: 0.14; }
+  .ca[data-tone="dark"] .ca-vig { --vs: 0.25; }
+  /* Swiss frame: hairline drawn from the left, a label and a wordmark on one band above it */
+  /* one band: label left, wordmark right; long text wraps inside its half, the hairline stays under the band */
+  .ca-top { position: absolute; top: 100px; left: 120px; right: 120px; padding-bottom: 13px; display: flex; justify-content: space-between; align-items: flex-start; gap: 32px; font-family: var(--ca-f); font-size: 28px; font-weight: 700; line-height: 1.3; }
+  .ca-rule { position: absolute; left: 0; right: 0; bottom: 0; height: 1.5px; background: color-mix(in srgb, var(--k-ink) 50%, transparent); transform-origin: 0% 50%; }
+  .ca-lab { min-width: 0; letter-spacing: 0.14em; overflow-wrap: anywhere; }
+  .ca-wm { min-width: 0; margin-left: auto; gap: 12px; white-space: normal; }
+  .ca-nm { min-width: 0; overflow-wrap: anywhere; }
+  .ca-stage { position: absolute; inset: 0; transform-origin: 50% 50%; }
+  .ca-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .ca-arcP { display: none; }
+  .ca-arc { opacity: 0.35; }
+  .ca-hair { fill: none; stroke: color-mix(in srgb, var(--k-ink) 30%, transparent); stroke-width: 1.5; }
+  .ca-tri, .ca-hand { fill: var(--k-accent); stroke: var(--k-accent); }
+  .ca-nb { position: absolute; left: 0; top: 0; }
+  .ca-n { position: absolute; left: 50%; top: 50%; font-family: var(--ca-f); font-weight: 700; line-height: 1.2; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  /* the title block: its first line's middle sits at 600px (portrait 845px: the dial-to-note stack centres on the 40% line) */
+  .ca-text { position: absolute; left: 8%; right: 8%; top: 47.22%; display: flex; flex-direction: column; align-items: center; }
+  .ca-title { width: 100%; font-family: var(--ca-f); font-size: 150px; font-weight: 700; line-height: 1.2; text-align: center; }
+  .ca-slot { display: inline-block; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  .ca-ws { margin-left: 0.24em; }
+  .ca-last { color: var(--k-accent); }
+  .ca-note { margin-top: 40px; max-width: 100%; padding: 12px 30px; font-family: var(--k-mono); font-size: 40px; line-height: 1.3; letter-spacing: 0.01em; color: var(--k-muted); border: 1.5px solid color-mix(in srgb, var(--k-ink) 18%, transparent); border-radius: 12px; background: var(--ca-hi); overflow-wrap: anywhere; }
+  .ca-dl { color: var(--k-accent); }
+  @container (orientation: portrait) {
+    .ca-top { top: 13%; left: 11%; right: 11%; gap: 24px; }
+    .ca-arcL { display: none; }
+    .ca-arcP { display: block; }
+    .ca-text { left: 11%; right: 11%; top: 40.1%; }
+    .ca-title { font-size: 120px; }
+    .ca-note { margin-top: 36px; }
+  }
+</style>
+
+<div id="root" data-composition-id="countdown-arc-scatter">
+  <div class="ca">
+    <div class="ca-bg"><div class="ca-backdrop"></div></div>
+    <div class="ca-vig"></div>
+    <div class="ca-grain"></div>
+    <div class="ca-top">
+      <div class="ca-lab">安装用时</div>
+      <div class="ca-wm ca-wordmark"><svg class="ca-mark" width="36" height="36" viewBox="0 0 128 128" aria-hidden="true"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg><span class="ca-nm">示例应用</span></div>
+      <div class="ca-rule"></div>
+    </div>
+    <div class="ca-stage">
+      <svg class="ca-svg ca-dial" aria-hidden="true"></svg>
+      <svg class="ca-svg ca-arc ca-arcL" viewBox="0 0 1920 1080" aria-hidden="true"><path class="ca-hair" d="M208.2 876.4A800 800 0 0 1 1711.8 876.4"/><path class="ca-tri" d="M947 358L973 358L960 380Z"/></svg>
+      <svg class="ca-svg ca-arc ca-arcP" viewBox="0 0 1080 1920" aria-hidden="true"><path class="ca-hair" d="M138.1 726.6A510 510 0 0 1 941.9 726.6"/><path class="ca-tri" d="M527 538.6L553 538.6L540 560.6Z"/></svg>
+      <div class="ca-nums" data-layout-allow-orbit></div>
+      <div class="ca-text">
+        <div class="ca-title"><span class="ca-slot">5</span><span class="ca-ws"><span class="ca-u">分钟</span><span class="ca-u">就能</span><span class="ca-u ca-last">装好</span></span></div>
+        <div class="ca-note"><span class="ca-dl">$</span> setup --quick</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    // timing in seconds (upstream frames / 30), shared by both orientations
+    var CFG = {
+      dur: 3.6,                         // 108f: upstream 100f plus 8f so the last move holds a full second
+      wind: 0.167, from: 96, windDeg: 3, // 0-5f the dial winds back 96 -> 99 deg (swift)
+      damping: 12, stiffness: 60,       // 5f on: spring 99 -> 0 deg, ~2.1 deg overshoot near 24f
+      spacing: 24, win: 70, winSoft: 22, // number spacing; numbers fade out past +-70 deg over 22 deg
+      handRatio: 0.35,                  // the accent hand turns at 0.35x the dial
+      out: 0.933, outDur: 0.533,        // 28-44f: the other numbers, ticks and hand defocus (swift)
+      scatterBlur: 6,                   // px of blur at the end of that fade
+      fly: 1.067, flyDur: 0.667,        // 32-52f: the hero slides, grows and turns upright into the title slot (swift)
+      words: 1.4, wordEach: 0.133, wordDur: 0.467, lastDur: 0.533, // 42f, 4f apart, 14f windows, the last 16f (out)
+      wordRise: 0.12, wordBlur: 10,     // em of rise; px of blur at 150px, scaled with the title size
+      tintLag: 0.467, tintDur: 0.4,     // last word turns accent 14f after it starts, over 12f (swift)
+      noteLead: 0.067, noteDur: 0.533,  // the note rises 2f before the tint, 16f (snappy)
+      frameIn: 0.467, push: 0.006, pushDur: 3.333, // hairline / labels 0-14f (out); 0.6% push over 100f (smooth)
+      blurAmt: 0.16, blurMax: 14        // tangential motion blur per number (upstream SpeedBlur amount / max)
+    };
+    // layout per orientation, px at 1080 short side: top = the arc crest as a share of the height
+    var LAND = { top: 0.4167, R: 700, num: 112, arc: 800, arcSpan: 70, ticks: [584, 600, 620], hand: [490, 566], fit: { lines: 1, min: 96 } };
+    var PORT = { top: 0.318, R: 430, num: 96, arc: 510, arcSpan: 52, ticks: [359, 369, 381], hand: [301, 348], fit: { lines: 2, min: 72 } };
+    var v = { nums: "45|35|28|22|17|10|5|4|3", hero: "5", title: "分钟|就能|装好", label: "安装用时", name: "示例应用", note: "$ setup --quick", backdrop: "on" };
+    try {
+      var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+      for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+    } catch (e) {}
+
+    var root = document.querySelector(".ca");
+    var q = function (s) { return root.querySelector(s); };
+    var FW = root.clientWidth, FH = root.clientHeight;
+    if (!FW || !FH) {
+      // not laid out yet: the host clip's declared size, then the window
+      var hc = root.closest("[data-width][data-height]");
+      FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+      FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+    }
+    var P = FH > FW, L = P ? PORT : LAND, K = Math.min(FW, FH) / (4 * 270); // px scale against a full-HD short side
+    root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+    // ==== kit:tone@1 ====
+    function kRGB(el, color) {
+      var p = document.createElement("i");
+      p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+      el.appendChild(p);
+      var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+      el.removeChild(p);
+      return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+    }
+    function kTone(wrap) {
+      var c = kRGB(wrap, "var(--k-bg)");
+      var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+      wrap.setAttribute("data-tone", tone);
+      return tone;
+    }
+    // ==== end kit:tone ====
+    // ==== kit:grain@1 ====
+    function kGrain(layer, o) {
+      o = o || {};
+      var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+      var dark = tones && tones.getAttribute("data-tone") === "dark";
+      var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+        var f = "type='linear' slope='2.4' intercept='-0.7'";
+        var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+          "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+          "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+          "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+          "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+        return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+      });
+      layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+      layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+      layer.style.backgroundSize = size + "px " + size + "px";
+      return function (t) {
+        var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+        layer.style.backgroundImage = tiles[k % 6];
+        layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+      };
+    }
+    // ==== end kit:grain ====
+    // ==== kit:speedblur@1 ====
+    function kSpeedBlur(box, prefix, o) {
+      o = o || {};
+      var amount = o.amount || 0.45, max = o.max || 36;
+      var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+      var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+      svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+      var outer = document.createElement("div"), inner = document.createElement("div");
+      outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+      while (box.firstChild) inner.appendChild(box.firstChild);
+      outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+      var fe = svg.firstChild.firstChild;
+      return function (vx, vy) {
+        vy = vy || 0;
+        var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+        if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+        var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+        fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+        outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+        inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+        outer.style.filter = "url(#" + id + ")";
+      };
+    }
+    // ==== end kit:speedblur ====
+    // ==== kit:text@2 (kWords, kSplit) ====
+    var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+    function kWords(s, key) {
+      s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+      var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+      var cut = function (x) {
+        if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+        return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+      };
+      var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+      var pre = "";
+      bits.forEach(function (x) {
+        var t = x.trim(), last = out[out.length - 1];
+        if (last && /^ /.test(x)) last.sp = true;
+        if (!t) return;
+        if (!/[\p{L}\p{N}]/u.test(t)) {
+          if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+          else { last.t += t; last.sp = / $/.test(x); }
+          return;
+        }
+        out.push({ t: pre + t, sp: / $/.test(x) });
+        pre = "";
+      });
+      if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+      if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+      if (out.length) out[out.length - 1].sp = false;
+      return out;
+    }
+    function kSplit(el, by, rise, text) {
+      var s = text != null ? String(text) : el.textContent, units = [];
+      var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+      el.textContent = "";
+      parts.forEach(function (p) {
+        var u = document.createElement("span"), box = u;
+        u.className = "ca-u"; u.textContent = p.t;
+        if (by === "line") u.style.display = "block";
+        if (!p.t.trim()) { el.appendChild(u); return; }
+        if (rise) { box = document.createElement("span"); box.className = "ca-cut"; box.style.display = u.style.display; box.appendChild(u); }
+        el.appendChild(box);
+        if (p.sp) el.appendChild(document.createTextNode(" "));
+        units.push(u);
+      });
+      return units;
+    }
+    // ==== end kit:text ====
+    // ==== kit:fit@1 (kFit, kLines) ====
+    function kFit(el, o) {
+      o = o || {};
+      var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+      var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+      for (;;) {
+        el.style.fontSize = f + "px";
+        m = kLines(el);
+        if ((m.w <= W && m.n <= n) || f <= min) break;
+        f = Math.max(min, f - 2);
+      }
+      if (m.w > W) {
+        [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+        m = kLines(el);
+      }
+      return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+    }
+    function kLines(el) {
+      var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+      var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+      while ((t = it.nextNode())) {
+        if (!t.data.trim()) continue;
+        r.selectNodeContents(t);
+        [].forEach.call(r.getClientRects(), function (b) {
+          var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+          if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+          row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+        });
+      }
+      return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+    }
+    // ==== end kit:fit ====
+
+    var dark = kTone(root) === "dark", off = String(v.backdrop) === "off", grain = null;
+    if (off) [".ca-bg", ".ca-vig", ".ca-grain"].forEach(function (s) { q(s).style.display = "none"; });
+    else grain = kGrain(q(".ca-grain"), { opacity: dark ? 0.09 : 0.05 });
+    // a host font (--mc-font) wins over the built-in bold face
+    if (getComputedStyle(root).getPropertyValue("--mc-font").trim()) root.style.setProperty("--ca-f", "var(--k-font)");
+    var txt = function (x) { return String(x == null ? "" : x).replace(/\s+/g, " ").trim(); };
+
+    // corner labels: empty hides them
+    var lab = q(".ca-lab"), wm = q(".ca-wm");
+    if (txt(v.label)) lab.textContent = txt(v.label); else lab.style.display = "none";
+    if (txt(v.name)) { q(".ca-nm").textContent = txt(v.name); } else wm.style.display = "none";
+    var note = q(".ca-note"), nt = txt(v.note);
+    if (!nt) note.style.display = "none";
+    else if (/^[$>] /.test(nt)) { note.innerHTML = '<span class="ca-dl"></span>'; note.firstChild.textContent = nt.charAt(0); note.appendChild(document.createTextNode(nt.slice(1))); }
+    else note.textContent = nt;
+
+    // the number list; the hero sits at angle 0, so the spring stops it on the crest
+    var nums = String(v.nums).split("|").map(txt).filter(Boolean), hv = txt(v.hero) || "5";
+    var HI = nums.lastIndexOf(hv);
+    if (HI < 0) { HI = Math.min(6, nums.length); nums.splice(HI, 0, hv); }
+
+    // title: the slot holds the hero (same font, so the flying number lands glyph on glyph), then the words
+    var title = q(".ca-title"), slot = q(".ca-slot"), ws = q(".ca-ws");
+    slot.textContent = hv;
+    var words = kSplit(ws, "word", 0, v.title);
+    if (!words.length) ws.style.display = "none";
+    var fit = kFit(title, L.fit);
+    var TF = fit.size, last = words[words.length - 1];
+    var wb = function (u, k) {
+      var s = CFG.words + k * CFG.wordEach;
+      return { s: s, d: u === last ? CFG.lastDur : CFG.wordDur };
+    };
+    var tint0 = words.length ? wb(last, words.length - 1).s + CFG.tintLag : CFG.fly + CFG.flyDur;
+    var note0 = tint0 - CFG.noteLead;
+
+    // slot centre in wrapper px (the preview may scale the whole stage: divide it out)
+    var rr = root.getBoundingClientRect(), sc = rr.width / (root.offsetWidth || 1), sr = slot.getBoundingClientRect();
+    var SX = (sr.left + sr.width / 2 - rr.left) / sc, SY = (sr.top + sr.height / 2 - rr.top) / sc;
+
+    // dial geometry
+    var CX = FW / 2, R = L.R * K, CY = L.top * FH + R, D2R = Math.PI / 180;
+    var polar = function (a, r) { return [CX + Math.sin(a * D2R) * r, CY - Math.cos(a * D2R) * r]; };
+    var winOp = function (pa) { return Math.min(1, Math.max(0, (CFG.win - Math.abs(pa)) / CFG.winSoft)); };
+    var rotAt = function (t) {
+      if (t <= CFG.wind) return CFG.from + CFG.windDeg * MT.ramp(t, 0, CFG.wind, "swift");
+      return (CFG.from + CFG.windDeg) * (1 - MT.spring({ t: t, delay: CFG.wind, damping: CFG.damping, stiffness: CFG.stiffness }));
+    };
+    var flyAt = function (t) { return MT.ramp(t, CFG.fly, CFG.flyDur, "swift"); };
+    var outAt = function (t) { return MT.ramp(t, CFG.out, CFG.outDur, "swift"); };
+    var NS = L.num * K;
+    function numState(i, t) {
+      var pa = (i - HI) * CFG.spacing + rotAt(t), p = polar(pa, R), s = { x: p[0], y: p[1], r: pa, op: winOp(pa), z: NS / TF };
+      if (i === HI) {
+        var h = flyAt(t);
+        s.x = MT.mix(s.x, SX, h); s.y = MT.mix(s.y, SY, h); s.r *= 1 - h; s.z = MT.mix(NS, TF, h) / TF; s.op = Math.max(s.op, h); s.h = h;
+      } else s.op *= 1 - outAt(t);
+      return s;
+    }
+
+    // the dial: outer hairline arc and crest marker (static in the HTML), ticks and hand drawn per frame
+    var arcSvg = q(P ? ".ca-arcP" : ".ca-arcL"), a0 = polar(-L.arcSpan, L.arc * K), a1 = polar(L.arcSpan, L.arc * K), ay = CY - L.arc * K, f2 = function (n) { return n.toFixed(1); };
+    arcSvg.setAttribute("viewBox", "0 0 " + FW + " " + FH);
+    arcSvg.firstChild.setAttribute("d", "M" + f2(a0[0]) + " " + f2(a0[1]) + "A" + f2(L.arc * K) + " " + f2(L.arc * K) + " 0 0 1 " + f2(a1[0]) + " " + f2(a1[1]));
+    arcSvg.lastChild.setAttribute("d", "M" + f2(CX - 13 * K) + " " + f2(ay + 8 * K) + "L" + f2(CX + 13 * K) + " " + f2(ay + 8 * K) + "L" + f2(CX) + " " + f2(ay + 30 * K) + "Z");
+    var dial = q(".ca-dial"), NSV = "http://www.w3.org/2000/svg", ticks = [];
+    dial.setAttribute("viewBox", "0 0 " + FW + " " + FH);
+    for (var j = 0; j < 61; j++) {
+      var ln = document.createElementNS(NSV, "line"), a = (j - 30) * 4 - 48, major = a % CFG.spacing === 0;
+      ln.setAttribute("stroke-linecap", "round");
+      ln.setAttribute("stroke-width", (major ? 3 : 1.5) * K);
+      ln.style.stroke = "var(--k-ink)";
+      dial.appendChild(ln);
+      ticks.push({ el: ln, a: a, r0: L.ticks[major ? 0 : 1] * K, op: major ? 0.7 : 0.28 });
+    }
+    var hand = document.createElementNS(NSV, "line");
+    hand.setAttribute("class", "ca-hand"); hand.setAttribute("stroke-width", 6 * K); hand.setAttribute("stroke-linecap", "round");
+    dial.appendChild(hand);
+
+    // numbers: each in its own small box so the motion blur stays local (upstream SpeedBlur box 360px)
+    var B = 240 * K, layer = q(".ca-nums");
+    var dig = nums.map(function (n, i) {
+      var box = document.createElement("div"), el = document.createElement("div");
+      box.className = "ca-nb"; box.style.width = box.style.height = B + "px";
+      el.className = "ca-n"; el.textContent = n; el.style.fontSize = (i === HI ? TF : NS) + "px";
+      // the hero crosses the first word while that word is still fading in (upstream path): intended
+      if (i === HI) el.setAttribute("data-layout-allow-overlap", "");
+      box.appendChild(el); layer.appendChild(box);
+      return { box: box, el: el, blur: kSpeedBlur(box, "ca", { amount: CFG.blurAmt, max: CFG.blurMax }) };
+    });
+
+    var stage = q(".ca-stage"), rule = q(".ca-rule"), arcs = [].slice.call(root.querySelectorAll(".ca-arc"));
+    var E = 0.5 / 30; // half a frame, for the centred-difference velocity
+    var tl = MT.scene(CFG.dur, function (t) {
+      var rot = rotAt(t), out = outAt(t), fin = MT.ramp(t, 0, CFG.frameIn, "out");
+      stage.style.transform = "scale(" + (1 + CFG.push * MT.ramp(t, 0, CFG.pushDur, "smooth")).toFixed(5) + ")";
+      rule.style.transform = "scaleX(" + fin.toFixed(4) + ")";
+      lab.style.opacity = wm.style.opacity = fin;
+      arcs.forEach(function (s) { s.style.opacity = ((1 - out * 0.65) * fin).toFixed(4); });
+      dial.style.opacity = 1 - out;
+      ticks.forEach(function (k) {
+        var pa = k.a + rot, op = winOp(pa), p0 = polar(pa, k.r0), p1 = polar(pa, L.ticks[2] * K);
+        k.el.style.display = op > 0 ? "" : "none";
+        k.el.setAttribute("x1", f2(p0[0])); k.el.setAttribute("y1", f2(p0[1]));
+        k.el.setAttribute("x2", f2(p1[0])); k.el.setAttribute("y2", f2(p1[1]));
+        k.el.style.strokeOpacity = (op * k.op).toFixed(3);
+      });
+      var h0 = polar(rot * CFG.handRatio, L.hand[0] * K), h1 = polar(rot * CFG.handRatio, L.hand[1] * K);
+      hand.setAttribute("x1", f2(h0[0])); hand.setAttribute("y1", f2(h0[1]));
+      hand.setAttribute("x2", f2(h1[0])); hand.setAttribute("y2", f2(h1[1]));
+      var landed = false;
+      dig.forEach(function (d, i) {
+        var s = numState(i, t);
+        if (s.h >= 1) landed = true;
+        if (s.op <= 0.002 || s.h >= 1) { d.box.style.display = "none"; return; }
+        var a = numState(i, t - E), b = numState(i, t + E);
+        d.box.style.display = "";
+        d.box.style.transform = "translate(" + f2(s.x - B / 2) + "px," + f2(s.y - B / 2) + "px)";
+        d.el.style.opacity = s.op.toFixed(3);
+        d.el.style.transform = "translate(-50%,-50%) rotate(" + s.r.toFixed(3) + "deg)" + (i === HI ? " scale(" + s.z.toFixed(4) + ")" : "");
+        d.el.style.filter = i !== HI && out > 0.01 ? "blur(" + (out * CFG.scatterBlur * K).toFixed(2) + "px)" : "";
+        d.blur((b.x - a.x) * 30, (b.y - a.y) * 30);
+      });
+      // the hero hands over to its slot on the landing frame, where both coincide
+      slot.style.opacity = landed ? 1 : 0;
+      words.forEach(function (u, k) {
+        var w = wb(u, k), p = MT.ramp(t, w.s, w.d, "out");
+        u.style.opacity = p;
+        u.style.transform = "translateY(" + ((1 - p) * CFG.wordRise).toFixed(3) + "em)";
+        u.style.filter = p < 0.999 ? "blur(" + ((1 - p) * CFG.wordBlur * TF / 150).toFixed(2) + "px)" : "";
+      });
+      if (last) last.style.color = "color-mix(in srgb, var(--k-accent) " + (MT.ramp(t, tint0, CFG.tintDur, "swift") * 100).toFixed(1) + "%, var(--k-ink))";
+      var c = MT.ramp(t, note0, CFG.noteDur, "snappy");
+      note.style.opacity = c;
+      note.style.transform = "translateY(" + ((1 - c) * 24 * K).toFixed(2) + "px)";
+      if (grain) grain(t);
+    });
+    window.__timelines["countdown-arc-scatter"] = tl;
+  })();
+</script>
+</template>
+  </body>
+</html>

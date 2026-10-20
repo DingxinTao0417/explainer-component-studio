@@ -1,0 +1,284 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"stem","type":"string","label":"句干（一直不动的前半句，可留空）","default":"这套方法最适合"},
+    {"id":"words","type":"string","label":"滚轮上的词（用 | 分隔，2–6 个，最后一个是结论；词里的空格保留）","default":"初学者|上班族|小团队|每个人"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>vertical-word-roll-blur-cycle · 句尾词竖滚轮</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="vertical-word-roll-blur-cycle-template">
+      <!-- Ported from video-shotcraft demos/typography/vertical-word-roll-blur-cycle/VerticalWordRollBlurCycle.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette (indigo accent -> --k-accent, grey dim = ink 26% over the background, so skins follow),
+           system fonts, generic Chinese copy ("Crafted for" + four words -> stem and words variables, 2-6 words, the widest
+           word sets the window width by measuring, the font fits an 84% / 80% band); portrait (and a landscape sentence too long for one line at 72px) stacks the stem over the
+           reel (reel shows 2.6 rows, the outgoing word is masked out before it reaches the stem) at 104px instead of 120px; rows outside the
+           window get opacity 0 and clip-path replaces overflow hidden; the 480x270 design stage is dropped (sizes scale
+           with the font, 4x at 120px). Step starts 0.16 / 0.36 / 0.56 of 149f (0.795 / 1.788 / 2.781s), step 16.4f,
+           0.7 outQuint + 0.3 outBack, vertical-only blur 3 / 5px, motion blur cap 4px, dye 1 - 2.4d, squash 14%, fade
+           0.9-0.985, soft backdrop, vignette 0.12 and grain 0.05 kept. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .vr { position: absolute; inset: 0; container-type: size; }
+        /* landscape: stem and window on one line, centred on the frame; the script re-sets the vars after fitting */
+        .vr-box { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; --vr-fs: 120px; --vr-row: 176px; --vr-above: 1; --vr-m0: 0; --vr-m1: 0.78; --vr-ww: 400px; --vr-last: 3; }
+        .vr-group { display: flex; align-items: center; gap: calc(var(--vr-fs) * 0.47); }
+        .vr-stem { flex: none; font-size: var(--vr-fs); font-weight: 800; line-height: 1.2; white-space: nowrap; color: var(--k-ink); }
+        /* the window: clip-path (not overflow) cuts it, a vertical gradient mask softens top and bottom */
+        .vr-win { position: relative; flex: none; width: var(--vr-ww); height: calc((var(--vr-above) + 2) * var(--vr-row)); clip-path: inset(0);
+          -webkit-mask-image: linear-gradient(180deg, transparent calc(var(--vr-m0) * var(--vr-row)), #000 calc(var(--vr-m1) * var(--vr-row)), #000 calc((var(--vr-above) + 1.22) * var(--vr-row)), transparent calc((var(--vr-above) + 2) * var(--vr-row)));
+          mask-image: linear-gradient(180deg, transparent calc(var(--vr-m0) * var(--vr-row)), #000 calc(var(--vr-m1) * var(--vr-row)), #000 calc((var(--vr-above) + 1.22) * var(--vr-row)), transparent calc((var(--vr-above) + 2) * var(--vr-row))); }
+        .vr-reel { position: absolute; left: 0; top: 0; transform: translateY(calc((var(--vr-above) - var(--vr-last)) * var(--vr-row))); }
+        .vr-w { display: flex; align-items: center; height: var(--vr-row); font-size: var(--vr-fs); font-weight: 800; line-height: 1; white-space: nowrap; opacity: 0; color: var(--vr-dim); }
+        .vr-w:nth-last-child(2) { opacity: 0.35; transform: scaleY(0.9); }
+        .vr-w:last-child { opacity: 1; color: var(--k-accent); }
+        .vr-t { display: block; }
+        /* the words are drawn from data-t by a pseudo-element while the reel moves (they are depth cues, grey on purpose, and
+           the contrast check cannot tell); the real text takes over only once a word has settled (data-live) */
+        .vr-w { position: relative; }
+        .vr[data-run] .vr-w::before { content: attr(data-t); position: absolute; left: 0; top: 0; bottom: 0; display: flex; align-items: center; }
+        .vr[data-run] .vr-t { opacity: 0; }
+        .vr[data-run] .vr-w[data-live] .vr-t { opacity: 1; }
+        .vr[data-run] .vr-w[data-live]::before { content: none; }
+        /* portrait: stem over window, left edges aligned, the pair centred on the 40% line (band 12%-68%) */
+        @container (orientation: portrait) {
+          .vr-box { inset: 12% 0 32% 0; --vr-fs: 104px; --vr-row: 152px; --vr-above: 0.6; --vr-m0: 0.3; --vr-m1: 0.58; }
+        }
+        /* stacked layout (always in portrait; in landscape only when the sentence cannot fit one line at 72px) */
+        .vr-stack .vr-group { flex-direction: column; align-items: flex-start; gap: 0; }
+        @container (orientation: portrait) { .vr-group { flex-direction: column; align-items: flex-start; gap: 0; } }
+        /* kit:derived@1, only the shade and the dim grey (grey words = ink 26% over the background) */
+        .vr { --vr-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); --vr-dim: color-mix(in srgb, var(--k-ink) 26%, var(--k-bg)); }
+        .vr[data-tone="dark"] { --vr-shade: color-mix(in srgb, var(--k-bg) 30%, black); }
+        /* ==== kit:grain@1 ==== */
+        .vr-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+
+        /* ==== kit:backdrop@1 ==== */
+        .vr-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .vr-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 50% 30%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        /* ==== end kit:backdrop ==== */
+
+        /* ==== kit:vignette@1 ==== */
+        .vr-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--vr-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .vr[data-tone="dark"] .vr-vig { --vs: 0.55; }
+        /* ==== end kit:vignette ==== */
+        .vr-vig { --vs: 0.12; }
+      </style>
+
+      <div id="root" data-composition-id="vertical-word-roll-blur-cycle">
+        <div class="vr">
+          <div class="vr-backdrop"></div>
+          <div class="vr-vig"></div>
+          <div class="vr-grain"></div>
+          <div class="vr-box">
+            <div class="vr-group">
+              <div class="vr-stem">这套方法最适合</div>
+              <div class="vr-win">
+                <div class="vr-reel" data-layout-allow-overflow>
+                  <div class="vr-w"><span class="vr-t">初学者</span></div>
+                  <div class="vr-w"><span class="vr-t">上班族</span></div>
+                  <div class="vr-w"><span class="vr-t">小团队</span></div>
+                  <div class="vr-w"><span class="vr-t">每个人</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing in seconds (frames at 30 fps, the upstream's 0-1 time is frame / 149): the first step starts at 0.16,
+          // later steps every 0.2 (0.795s, then +0.993s), each step 0.11 (0.546s); the fade starts 1.143s after the last
+          // word settles and takes 0.423s (upstream 0.9 -> 0.985); tail is slack to a round 5.0s
+          var CFG = { first: 0.795, pitch: 0.993, dur: 0.546, hold: 1.143, fade: 0.423, tail: 0.108, row: 44 / 30, gap: 0.47, pad: 0.06 };
+          // layout per orientation: font px (upstream 30px of a 270px stage = 120px at 1080) and the share of the frame
+          // width the stem + window may take
+          var LAND = { fs: 120, band: 0.84 };
+          var PORT = { fs: 104, band: 0.8 };
+          // window geometry in rows: one line (a full row above the centre row) or stacked under the stem (0.6 row above,
+          // the mask hides the outgoing word before it reaches the stem)
+          var LINE = { above: 1, m0: 0, m1: 0.78 }, STACK = { above: 0.6, m0: 0.3, m1: 0.58 };
+          var DEF = { stem: "这套方法最适合", words: "初学者|上班族|小团队|每个人", backdrop: "on" };
+          var v = { stem: DEF.stem, words: DEF.words, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".vr");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          root.setAttribute("data-run", "");
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+          kTone(root);
+          if (String(v.backdrop) === "off") {
+            q(".vr-backdrop").style.display = "none"; q(".vr-vig").style.display = "none"; q(".vr-grain").style.display = "none";
+          }
+
+          // text: words are rows of the reel (inner spaces kept, only the ends trimmed); an empty stem hides itself
+          var box = q(".vr-box"), stem = q(".vr-stem"), reel = q(".vr-reel");
+          var words = String(v.words).split("|").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 6);
+          if (words.length < 2) words = DEF.words.split("|");
+          var stemText = String(v.stem).trim();
+          stem.textContent = stemText;
+          stem.style.display = stemText ? "" : "none";
+          reel.innerHTML = "";
+          var rows = words.map(function (w) {
+            var r = document.createElement("div");
+            r.className = "vr-w";
+            r.innerHTML = '<span class="vr-t"></span>';
+            r.firstChild.textContent = w;
+            r.setAttribute("data-t", w);
+            reel.appendChild(r);
+            return r;
+          });
+          // size by measuring at 100px: widths scale with the font. The stem and the widest word share one font size
+          box.style.setProperty("--vr-fs", "100px");
+          var stemEm = stemText ? stem.getBoundingClientRect().width / 100 : 0, wordEm = 0;
+          rows.forEach(function (r) { wordEm = Math.max(wordEm, r.firstChild.getBoundingClientRect().width / 100); });
+          var AW = FW * L.band;
+          // one line when it fits at the 72px floor, else stacked (portrait is always stacked)
+          var stack = P || stemEm + (stemEm ? CFG.gap : 0) + wordEm + CFG.pad > (AW * 0.96) / 72, G = stack ? STACK : LINE;
+          var need = stack ? Math.max(stemEm, wordEm + CFG.pad) : stemEm + (stemEm ? CFG.gap : 0) + wordEm + CFG.pad;
+          var fs = Math.max(72, Math.min(L.fs, Math.floor((AW * 0.96) / need / 2) * 2));
+          if (stack) box.classList.add("vr-stack");
+          var ROW = Math.round(fs * CFG.row), S = fs / 30;
+          box.style.setProperty("--vr-fs", fs + "px");
+          box.style.setProperty("--vr-row", ROW + "px");
+          box.style.setProperty("--vr-above", String(G.above));
+          box.style.setProperty("--vr-m0", String(G.m0));
+          box.style.setProperty("--vr-m1", String(G.m1));
+          box.style.setProperty("--vr-ww", Math.ceil((wordEm + CFG.pad) * fs) + "px");
+          // a stem longer than the line at the 72px floor wraps (portrait); the words never wrap
+          if (stack && stemEm * fs > AW * 0.96) { stem.style.whiteSpace = "normal"; stem.style.maxWidth = AW * 0.96 + "px"; }
+
+          // each word gets its own vertical-only blur filter (the id carries a per-mount counter so two mounts never share one)
+          var mount = (window.__vrMount = (window.__vrMount || 0) + 1);
+          var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.setAttribute("aria-hidden", "true");
+          svg.style.position = "absolute";
+          svg.innerHTML = rows.map(function (r, i) {
+            return '<filter id="vr' + mount + "-" + i + '" x="-10%" y="-120%" width="120%" height="340%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+          }).join("");
+          box.appendChild(svg);
+          var blurs = [].slice.call(svg.querySelectorAll("feGaussianBlur"));
+
+          var dim = kRGB(root, "var(--vr-dim)"), acc = kRGB(root, "var(--k-accent)"), gm = root.getAttribute("data-tone") === "dark" ? 2.2 : 1;
+          // dye colour at k (0 grey .. 1 accent); on dark skins mixed in linear light so the middle steps stay bright
+          var dye = function (k) { return "rgb(" + [0, 1, 2].map(function (c) { var a = Math.pow(dim[c] / 255, gm), b = Math.pow(acc[c] / 255, gm); return Math.round(255 * Math.pow(a + (b - a) * k, 1 / gm)); }).join(",") + ")"; };
+          var N = rows.length, starts = [];
+          for (var s = 0; s < N - 1; s++) starts.push(CFG.first + s * CFG.pitch);
+          var fadeAt = starts[N - 2] + CFG.dur + CFG.hold, total = fadeAt + CFG.fade + CFG.tail;
+          var clamp01 = function (x) { return Math.max(0, Math.min(1, x)); };
+          // reel position in rows: each step adds 0.7 outQuint + 0.3 outBack (fast, near-stop, a little overshoot)
+          var step = function (u) { u = clamp01(u); var m = u - 1; return 0.7 * (1 - Math.pow(1 - u, 5)) + 0.3 * (1 + 2.70158 * m * m * m + 1.70158 * m * m); };
+          var reelAt = function (t) { var p = 0; for (var i = 0; i < starts.length; i++) p += step((t - starts[i]) / CFG.dur); return p; };
+          var DT = 0.5 / 30;   // half a frame, to read the reel speed (rows per frame)
+          var group = q(".vr-group"), draw = kGrain(q(".vr-grain"));
+
+          var tl = MT.scene(total, function (t) {
+            var p = reelAt(t), speed = Math.abs(reelAt(t + DT) - reelAt(t - DT));
+            var mb = Math.min(4, speed * 44 * 0.22);   // upstream design px; scaled by S below
+            reel.style.transform = "translateY(" + ((G.above - p) * ROW).toFixed(2) + "px)";
+            for (var i = 0; i < N; i++) {
+              var d = Math.abs(i - p), b = (d < 1 ? 3 * d : 3 + 2 * Math.min(d - 1, 1)) + mb;
+              var op = (d < 1 ? 1 - 0.65 * d : Math.max(0.1, 0.35 - 0.23 * (d - 1))) * clamp01((1.62 - d) / 0.3);
+              var k = clamp01(1 - d * 2.4), el = rows[i];
+              if ((d < 0.04) !== (el.getAttribute("data-live") !== null)) { if (d < 0.04) el.setAttribute("data-live", ""); else el.removeAttribute("data-live"); }
+              el.style.opacity = op.toFixed(3);
+              el.style.transform = "scaleY(" + (1 - 0.14 * Math.min(1, d / 1.4)).toFixed(4) + ")";
+              el.style.color = dye(k);
+              blurs[i].setAttribute("stdDeviation", "0 " + (b * S).toFixed(2));
+              el.style.filter = b > 0.05 ? "url(#vr" + mount + "-" + i + ")" : "none";
+            }
+            group.style.opacity = (1 - clamp01((t - fadeAt) / CFG.fade) * 0.999).toFixed(3);
+            draw(t);
+          });
+          window.__timelines["vertical-word-roll-blur-cycle"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

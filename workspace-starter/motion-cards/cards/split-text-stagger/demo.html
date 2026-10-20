@@ -1,0 +1,351 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"标题（逐字升起；用 | 或空格标出可以换行的地方）","default":"三分钟|看懂|一个概念"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>split-text-stagger · 逐字裂升</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="split-text-stagger-template">
+      <!-- Ported from video-shotcraft demos/typography/type-assembly-moves/SplitTextStagger.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette, system fonts (the bold YaHei face), generic Chinese copy instead of the upstream brand
+           line, accent baseline gradient mixed from the palette; one clip-path cut per row instead of an overflow box per
+           character, at most two rows, each with its own baseline that starts with its first character; line box 1.2em
+           instead of 1.05em and the cut 0.06em lower, so CJK glyphs and descenders are not clipped at rest; tracking 0
+           for CJK (-0.015em kept for all-Latin titles); on dark skins vignette 0.25 and the tint in accent-2; landscape and portrait (two 120px
+           rows) layouts. The 12f start, 2f stagger per character (spaces included), the 14f out-cubic rise from 115% to
+           -10% of the line box, the 6f out-quad settle, the 30f snappy baseline (3px under 12px of gap at 136px), the
+           vertical speed blur (0.32 x px per frame, at most 10px) and the light backdrop (light at 42% / 30%, 7% accent
+           tint, vignette 0.12, grain 0.045) are as upstream. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        /* the stroke weight is the look of this title: a real bold face, not the browser's synthetic bold */
+        @font-face { font-family: "spx-heavy"; font-weight: 700 900; src: local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"), local("PingFangSC-Semibold"), local("NotoSansSC-Bold"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* ==== kit:derived@1 (shade only) ==== */
+        .spx { --spx-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); }
+        .spx[data-tone="dark"] { --spx-shade: color-mix(in srgb, var(--k-bg) 30%, black); }
+        /* ==== end kit:derived ==== */
+        /* ==== kit:backdrop@1 ==== */
+        .spx-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .spx-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        /* ==== end kit:backdrop ==== */
+        /* ==== kit:vignette@1 ==== */
+        .spx-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--spx-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .spx[data-tone="dark"] .spx-vig { --vs: 0.55; }
+        /* ==== end kit:vignette ==== */
+        /* ==== kit:grain@1 ==== */
+        .spx-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+        /* ==== kit:text@2 ==== */
+        .spx-u { display: inline-block; white-space: pre; }
+        /* ==== end kit:text ==== */
+        /* ==== kit:fit@1 ==== */
+        .spx-row { display: block; white-space: nowrap; }
+        /* ==== end kit:fit ==== */
+
+        /* the wrapper is the size container (SPEC 五): portrait overrides live in @container */
+        .spx { position: absolute; inset: 0; container-type: size; --spx-hv: spx-heavy, var(--k-font); --spx-tint: var(--k-accent); }
+        /* dark skins: the warm tint turns olive on a dark ground, so it takes accent-2 there */
+        .spx[data-tone="dark"] { --spx-tint: var(--k-accent-2); }
+        /* upstream ran this shot lit from 42% / 30% with a 7% accent tint opposite the light, vignette 0.12 */
+        .spx .spx-backdrop::after { background: radial-gradient(ellipse 62% 70% at 42% 30%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%), radial-gradient(ellipse 55% 60% at 58% 88%, color-mix(in srgb, var(--spx-tint) 7%, transparent) 0%, transparent 70%); }
+        .spx .spx-vig { --vs: 0.12; }
+        .spx[data-tone="dark"] .spx-vig { --vs: 0.25; }
+        /* the title block: centred on the frame; landscape keeps 10% off each side */
+        .spx-box { position: absolute; left: 10%; right: 10%; top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; }
+        .spx-title { width: 100%; text-align: center; font-family: var(--spx-hv); font-size: 136px; font-weight: 700; line-height: 1.2; color: var(--k-ink); }
+        /* one line = its row of characters (cut at the bottom by clip-path) and the baseline under it, exactly as wide */
+        .spx-line { display: block; width: fit-content; max-width: 100%; margin: 0 auto; }
+        .spx-line + .spx-line { margin-top: 0.14em; }
+        /* the still page shows the default title as the script lays it out: one line in landscape, two rows in portrait */
+        .spx-st { display: inline-block; }
+        .spx .spx-st + .spx-st { margin-top: 0; }
+        .spx-txt { display: block; }
+        /* the cut: 0.06em under the line box (bold YaHei, measured: CJK ink ends 0.14em and Latin descenders 0.26em under
+           the baseline, which sits 1.0em down a 1.2em line box); the top and sides leave room for the 10% overshoot */
+        .spx .spx-row { clip-path: inset(-0.5em -0.3em -0.06em -0.3em); }
+        .spx-c { display: inline-block; white-space: pre; }
+        .spx-base { display: block; height: 0.022em; margin-top: 0.088em; border-radius: 2px; transform-origin: 0% 50%;
+          background: linear-gradient(90deg, var(--k-accent), color-mix(in oklch, var(--k-accent), white 30%)); }
+        /* portrait: the block sits in the 12%-68% band (its middle on the 40% line), 10% off each side */
+        @container (orientation: portrait) {
+          .spx-box { top: 12%; bottom: 32%; }
+          .spx-title { font-size: 120px; }
+          .spx-st { display: block; }
+          .spx .spx-st + .spx-st { margin-top: 0.14em; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="split-text-stagger">
+        <div class="spx">
+          <div class="spx-bg"><div class="spx-backdrop"></div></div>
+          <div class="spx-vig"></div>
+          <div class="spx-grain"></div>
+          <div class="spx-box">
+            <div class="spx-title"><div class="spx-line spx-st"><div class="spx-txt">三分钟看懂</div><div class="spx-base"></div></div><div class="spx-line spx-st"><div class="spx-txt">一个概念</div><div class="spx-base"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing (seconds = upstream frames / 30), shared by both orientations
+          var CFG = {
+            dur: 3.5,                // scene length
+            start: 0.4,              // first character leaves the cut and the baseline starts (12f)
+            each: 0.0667,            // stagger per character slot, spaces included (2f)
+            rise: 0.467,             // 115% -> -10% of the line box, out-cubic = power2.out (14f)
+            settle: 0.2,             // -10% -> 0, out-quad = power1.out (6f)
+            from: 1.15, over: -0.1,  // start and overshoot, fractions of the line box height
+            baseDur: 1,              // each baseline grows left to right, snappy (30f)
+            blurK: 0.32, blurMax: 10 // vertical speed blur: 0.32 x px per frame, at most 10px
+          };
+          // layout per orientation: largest size, smallest size that still takes one line, then two lines down to min
+          // (portrait: two rows at the full 120px before any shrinking, so a title stacks instead of thinning to one line)
+          var LAND = { fs: 136, one: 104, min: 72 };
+          var PORT = { fs: 120, one: 120, min: 72 };
+          var v = { title: "三分钟|看懂|一个概念", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".spx");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+          // ==== kit:text@2 (kWords, kSplit) ====
+          var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "spx-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "spx-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          // ==== end kit:text ====
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          function kRows(el, cls) {
+            if (!el.children.length) return [];
+            var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+            var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+            kids.forEach(function (c, i) {
+              if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+              if (tops[i] != null) last = tops[i];
+              row.appendChild(c);
+            });
+            return [].slice.call(el.children);
+          }
+          // ==== end kit:fit ====
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+
+          var dark = kTone(root) === "dark", grain = null;
+          if (String(v.backdrop) === "off") [".spx-bg", ".spx-vig", ".spx-grain"].forEach(function (s) { q(s).style.display = "none"; });
+          else grain = kGrain(q(".spx-grain"), { opacity: dark ? 0.09 : 0.045 });
+          // a host font replaces the bold face as well
+          if (getComputedStyle(root).getPropertyValue("--mc-font").trim()) root.style.setProperty("--spx-hv", "var(--k-font)");
+
+          // title -> phrases (kSplit) -> font size by measuring (one line first, then two) -> rows frozen (kRows)
+          var title = q(".spx-title"), text = String(v.title).trim();
+          title.style.letterSpacing = kCJK.test(text) ? "0em" : "-0.015em"; // upstream's tight tracking for Latin only
+          kSplit(title, "word", false, text);
+          if (!kFit(title, { lines: 1, min: L.one, max: L.fs }).fits) kFit(title, { lines: 2, min: L.min, max: L.fs });
+          var rows = kRows(title, "spx-row"), chars = [], slot = 0, lines = [];
+          rows.forEach(function (row) {
+            // each row gets its own line wrapper and baseline; its characters become one span each
+            var line = document.createElement("div"), base = document.createElement("div");
+            line.className = "spx-line"; base.className = "spx-base";
+            title.insertBefore(line, row);
+            line.appendChild(row); line.appendChild(base);
+            var first = slot;
+            [].slice.call(row.childNodes).forEach(function (n) {
+              if (n.nodeType !== 1) { slot++; return; } // a space between phrases still takes its 2f slot
+              var s = n.textContent;
+              n.textContent = "";
+              Array.from(s).forEach(function (ch) {
+                var c = document.createElement("span");
+                c.className = "spx-c"; c.textContent = ch;
+                n.appendChild(c);
+                if (ch.trim()) chars.push({ el: c, t0: CFG.start + slot * CFG.each });
+                slot++;
+              });
+            });
+            lines.push({ base: base, t0: CFG.start + first * CFG.each });
+          });
+          var H = rows.length ? rows[0].offsetHeight : 0; // the line box: rise and overshoot are fractions of it
+
+          // one vertical-blur filter per character; ids carry a per-mount number (two mounts share the document)
+          var N = (window.__spxN = (window.__spxN || 0) + 1), svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+          svg.innerHTML = chars.map(function (c, i) { return '<filter id="spx' + N + "-" + i + '" x="-10%" y="-50%" width="120%" height="200%"><feGaussianBlur stdDeviation="0 0"/></filter>'; }).join("");
+          root.appendChild(svg);
+          chars.forEach(function (c, i) { c.fe = svg.children[i].firstChild; c.url = "url(#spx" + N + "-" + i + ")"; });
+
+          // y of one character (fraction of the line box) at t: rise with overshoot, then settle
+          function yAt(t, t0) {
+            if (t < t0 + CFG.rise) return MT.mix(CFG.from, CFG.over, MT.ramp(t, t0, CFG.rise, "power2.out"));
+            return MT.mix(CFG.over, 0, MT.ramp(t, t0 + CFG.rise, CFG.settle, "power1.out"));
+          }
+          var tl = MT.scene(CFG.dur, function (t) {
+            chars.forEach(function (c) {
+              var y = yAt(t, c.t0), vy = Math.abs(yAt(t + 1 / 60, c.t0) - yAt(t - 1 / 60, c.t0)) * H; // px per frame
+              var b = Math.min(CFG.blurMax, vy * CFG.blurK);
+              // hidden under the cut until its slot: transparent too, so the checker never reads it there
+              c.el.style.opacity = t >= c.t0 ? "1" : "0";
+              c.el.style.transform = "translateY(" + (y * H).toFixed(2) + "px)";
+              if (b > 0.3) { c.fe.setAttribute("stdDeviation", "0 " + b.toFixed(2)); c.el.style.filter = c.url; }
+              else c.el.style.filter = "";
+            });
+            lines.forEach(function (l) { l.base.style.transform = "scaleX(" + MT.ramp(t, l.t0, CFG.baseDur, "snappy").toFixed(4) + ")"; });
+            if (grain) grain(t);
+          });
+          window.__timelines["split-text-stagger"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

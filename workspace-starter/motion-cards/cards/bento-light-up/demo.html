@@ -1,0 +1,460 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"标题（用 | 切意群）","default":"六个功能，一屏看全"},
+    {"id":"name","type":"string","label":"眉标名称（留空不要）","default":"示例应用"},
+    {"id":"items","type":"string","label":"六格名称（用 | 分隔，从左到右、从上到下）","default":"自动整理|一键导出|多人协作|版本记录|智能搜索|权限管理"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>bento-light-up · 逐格点亮墙</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="bento-light-up-template">
+      <!-- Ported from video-shotcraft demos/ui-entrance/wall-reveal-moves/BentoLightUp.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition (MT.scene), frames to seconds;
+           neutral --k-* palette on a white-first wall (dark stage, amber and dark-tone Card replaced by an unlit slab that turns white
+           and the accent comet), system fonts, generic copy, upstream mark and tagline removed; every cell now carries a readable
+           name plus a small wordless chart instead of dashboard texture text; grain sits under the wall, not over it;
+           portrait re-flows the 3x2 wall to 2x3 on the same clock. Beat, comet, pop and push timings and curves kept. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+/* ==== kit:derived@1 ==== */
+.bn {
+  --bn-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+  --bn-panel-2: color-mix(in srgb, var(--k-panel), var(--k-ink) 4%);
+  --bn-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+  --bn-hi: color-mix(in srgb, white 80%, transparent);
+}
+.bn[data-tone="dark"] {
+  --bn-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+  --bn-hi: color-mix(in srgb, white 6%, transparent);
+}
+/* ==== end kit:derived ==== */
+
+/* ==== kit:backdrop@1 ==== */
+.bn-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+.bn-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+/* ==== end kit:backdrop ==== */
+
+/* ==== kit:vignette@1 ==== */
+.bn-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--bn-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.bn[data-tone="dark"] .bn-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+
+/* ==== kit:grain@1 ==== */
+.bn-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+
+/* ==== kit:light@1 ==== */
+.bn-light { mix-blend-mode: multiply; }
+.bn[data-tone="dark"] .bn-light { mix-blend-mode: screen; }
+/* ==== end kit:light ==== */
+
+/* ==== kit:text@2 ==== */
+.bn-u { display: inline-block; white-space: pre; }
+.bn-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+/* ==== end kit:text ==== */
+
+/* ==== kit:fit@1 ==== */
+.bn-row { display: block; white-space: nowrap; }
+/* ==== end kit:fit ==== */
+
+/* ==== kit:mark@1 ==== */
+.bn-mark { display: block; flex: none; }
+.bn-wordmark { display: inline-flex; align-items: center; gap: 0.5em; font-weight: 700; letter-spacing: 0.02em; white-space: nowrap; }
+/* ==== end kit:mark ==== */
+
+
+        /* wall tones: page = the ground, off = a cell that has not been lit yet (a slab one step darker than the page), lit = the powered face */
+        .bn { --bn-page: color-mix(in srgb, var(--k-bg), var(--k-ink) 5%); --bn-off: color-mix(in srgb, var(--k-bg), var(--k-ink) 11%); --bn-lit: var(--k-bg); --bn-tex: color-mix(in srgb, var(--k-ink) 20%, var(--bn-lit)); --bn-pop: color-mix(in srgb, var(--k-accent) 62%, var(--bn-lit)); }
+        .bn[data-tone="dark"] { --bn-page: var(--k-bg); --bn-off: color-mix(in srgb, var(--k-bg), var(--k-panel) 65%); --bn-lit: color-mix(in srgb, var(--k-panel), var(--k-ink) 9%); --bn-tex: color-mix(in srgb, var(--k-ink) 24%, var(--bn-lit)); --bn-pop: var(--k-accent); }
+        .bn { position: absolute; inset: 0; container-type: size; }
+        .bn-glow { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 50% 40% at 50% 62%, color-mix(in srgb, var(--k-accent) 10%, transparent), transparent 70%); }
+        .bn-push { position: absolute; inset: 0; transform-origin: 50% 50%; }
+        /* landscape: the wall is 1528px wide (80%), the title block sits over its left edge, the pair centred a little above the middle line */
+        .bn-box { position: absolute; left: 196px; right: 196px; top: 0; bottom: 40px; display: flex; flex-direction: column; justify-content: center; }
+        .bn-head { margin-bottom: 44px; }
+        .bn-eyebrow { display: flex; align-items: center; gap: 12px; height: 34px; }
+        .bn-name { font-size: 28px; font-weight: 700; letter-spacing: 0.03em; line-height: 1.2; color: var(--k-accent); }
+        .bn-title { margin-top: 10px; font-size: 64px; font-weight: 700; line-height: 1.2; }
+        .bn-wall { display: flex; flex-wrap: wrap; gap: 44px; }
+        .bn-cell { position: relative; flex: none; height: 330px; width: calc((100% - 88px) * var(--a) / 24); }
+        .bn-face { position: absolute; inset: 0; box-sizing: border-box; padding: 28px; display: flex; flex-direction: column; gap: 14px; border-radius: 14px; background: var(--bn-lit); border: 1px solid var(--bn-line);
+          box-shadow: inset 0 1px 0 var(--bn-hi), 0 0.7px 1.7px color-mix(in srgb, var(--bn-shade) 10.3%, transparent), 0 2.2px 5.2px -0.9px color-mix(in srgb, var(--bn-shade) 9.4%, transparent); }
+        .bn[data-tone="dark"] .bn-face { box-shadow: inset 0 1px 0 var(--bn-hi), 0 0.7px 1.7px color-mix(in srgb, var(--bn-shade) 27%, transparent), 0 2.2px 5.2px -0.9px color-mix(in srgb, var(--bn-shade) 24%, transparent); }
+        .bn-pulse { position: absolute; inset: 0; border-radius: 14px; pointer-events: none; --pl: 0; background: radial-gradient(90% 70% at 50% 0%, color-mix(in srgb, var(--k-accent) calc(var(--pl) * 100%), transparent), transparent 70%); }
+        .bn-top, .bn-label, .bn-chart { position: relative; z-index: 1; }
+        .bn-top { display: flex; align-items: center; justify-content: space-between; flex: none; }
+        .bn-ico { display: block; width: 44px; height: 44px; border-radius: 11px; background: color-mix(in srgb, var(--k-accent) 15%, var(--bn-lit)); position: relative; }
+        .bn-ico::after { content: ""; position: absolute; left: 14px; top: 14px; width: 16px; height: 16px; border-radius: 50%; background: var(--bn-pop); }
+        .bn-pill { display: block; width: 64px; height: 16px; border-radius: 8px; background: color-mix(in srgb, var(--k-ink) 9%, var(--bn-lit)); }
+        .bn-label { flex: none; font-size: 48px; font-weight: 700; line-height: 1.2; }
+        .bn-chart { flex: 1; min-height: 0; }
+        .bn-ring { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+        @container (orientation: portrait) {
+          /* portrait: the 12%-68% band, wall 820px wide so the 1.04 push stays inside x 108-972; two cells per row */
+          .bn-box { left: 130px; right: 130px; top: 230px; bottom: 614px; }
+          .bn-head { margin-bottom: 34px; }
+          .bn-title { font-size: 80px; }
+          .bn-wall { gap: 28px; }
+          .bn-cell { height: 250px; width: calc((100% - 28px) * var(--b) / 17); }
+          .bn-face { padding: 22px; gap: 10px; }
+          .bn-ico { width: 40px; height: 40px; border-radius: 10px; }
+          .bn-ico::after { left: 12px; top: 12px; }
+          .bn-label { font-size: 44px; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="bento-light-up">
+        <div class="bn">
+          <div class="bn-backdrop"></div>
+          <div class="bn-glow bn-light"></div>
+          <div class="bn-vig"></div>
+          <div class="bn-grain"></div>
+          <div class="bn-push">
+            <div class="bn-box">
+              <div class="bn-head">
+                <div class="bn-eyebrow"><span class="bn-markslot"></span><span class="bn-name">示例应用</span></div>
+                <div class="bn-title">六个功能，一屏看全</div>
+              </div>
+              <div class="bn-wall">
+                <div class="bn-cell" style="--a:10;--b:10"><div class="bn-face"><div class="bn-pulse"></div><div class="bn-top bn-tex"><span class="bn-ico"></span><span class="bn-pill"></span></div><div class="bn-label">自动整理</div><div class="bn-chart bn-tex"></div></div></div>
+                <div class="bn-cell" style="--a:7;--b:7"><div class="bn-face"><div class="bn-pulse"></div><div class="bn-top bn-tex"><span class="bn-ico"></span><span class="bn-pill"></span></div><div class="bn-label">一键导出</div><div class="bn-chart bn-tex"></div></div></div>
+                <div class="bn-cell" style="--a:7;--b:7"><div class="bn-face"><div class="bn-pulse"></div><div class="bn-top bn-tex"><span class="bn-ico"></span><span class="bn-pill"></span></div><div class="bn-label">多人协作</div><div class="bn-chart bn-tex"></div></div></div>
+                <div class="bn-cell" style="--a:7;--b:10"><div class="bn-face"><div class="bn-pulse"></div><div class="bn-top bn-tex"><span class="bn-ico"></span><span class="bn-pill"></span></div><div class="bn-label">版本记录</div><div class="bn-chart bn-tex"></div></div></div>
+                <div class="bn-cell" style="--a:7;--b:10"><div class="bn-face"><div class="bn-pulse"></div><div class="bn-top bn-tex"><span class="bn-ico"></span><span class="bn-pill"></span></div><div class="bn-label">智能搜索</div><div class="bn-chart bn-tex"></div></div></div>
+                <div class="bn-cell" style="--a:10;--b:7"><div class="bn-face"><div class="bn-pulse"></div><div class="bn-top bn-tex"><span class="bn-ico"></span><span class="bn-pill"></span></div><div class="bn-label">权限管理</div><div class="bn-chart bn-tex"></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing in seconds (upstream frames / 30), shared by both orientations
+          var CFG = {
+            dur: 5.1, first: 0.667, gap: 0.4, // first cell at frame 20, one cell every 12 frames
+            draw: 0.267, ringAt: 0.067, ringLen: 0.267, // comet laps the border in 8f; the thin ring follows it
+            fadeAt: 0.4, fadeLen: 0.467, // comet burns down to a steady ring 12-26f after its start
+            cometOff: 0.267, // comet fades 8-16f after its start
+            litAt: 0.2, litLen: 0.267, // content lights and pops 6-14f after the cell's start (the hand-over)
+            push: 3.2, pushLen: 0.833, pushTo: 1.04, // push-in once all six are lit (frames 96-121)
+            titleLen: 0.667, glowLen: 0.8, tail: 22, rise: 20
+          };
+          var v = { title: "六个功能，一屏看全", name: "示例应用", items: "自动整理|一键导出|多人协作|版本记录|智能搜索|权限管理", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k]; // "" hides the eyebrow
+          } catch (e) {}
+
+          var root = document.querySelector(".bn");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          var LAND = { titleLines: 1, titleMin: 48 };
+          var PORT = { titleLines: 2, titleMin: 72 };
+          var L = P ? PORT : LAND;
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== end kit:tone ====
+
+// ==== kit:hash@1 ====
+function kHash(n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+// ==== end kit:hash ====
+
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+      "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+      "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+      "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+      "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+}
+// ==== end kit:grain ====
+
+// ==== kit:text@2 ====
+var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+function kWords(s, key) {
+  s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+  var cut = function (x) {
+    if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+    return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+  };
+  var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+  var pre = "";
+  bits.forEach(function (x) {
+    var t = x.trim(), last = out[out.length - 1];
+    if (last && /^ /.test(x)) last.sp = true;
+    if (!t) return;
+    if (!/[\p{L}\p{N}]/u.test(t)) {
+      if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+      else { last.t += t; last.sp = / $/.test(x); }
+      return;
+    }
+    out.push({ t: pre + t, sp: / $/.test(x) });
+    pre = "";
+  });
+  if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+  if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+  if (out.length) out[out.length - 1].sp = false;
+  return out;
+}
+function kSplit(el, by, rise, text) {
+  var s = text != null ? String(text) : el.textContent, units = [];
+  var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+  el.textContent = "";
+  parts.forEach(function (p) {
+    var u = document.createElement("span"), box = u;
+    u.className = "bn-u"; u.textContent = p.t;
+    if (by === "line") u.style.display = "block";
+    if (!p.t.trim()) { el.appendChild(u); return; }
+    if (rise) { box = document.createElement("span"); box.className = "bn-cut"; box.style.display = u.style.display; box.appendChild(u); }
+    el.appendChild(box);
+    if (p.sp) el.appendChild(document.createTextNode(" "));
+    units.push(u);
+  });
+  return units;
+}
+function kReveal(tl, units, variant, at, o) {
+  o = o || {};
+  var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+  units.forEach(function (u, i) {
+    var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+    if (variant === "rise") {
+      tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+      tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+    } else if (variant === "blur") {
+      tl.fromTo(u, { opacity: 0, y: fs * 0.25, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: each, ease: ease }, t0);
+    } else if (variant === "drop") {
+      tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each / 3, ease: "none" }, t0);
+      tl.fromTo(u, { y: -fs * 0.6 }, { y: 0, duration: each, ease: "overshoot" }, t0);
+    } else if (variant === "scale") {
+      tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each * 0.1, ease: "power1.out" }, t0);
+      tl.fromTo(u, { scale: 1.6, filter: "blur(8px)" }, { scale: 1, filter: "blur(0px)", duration: each, ease: ease }, t0);
+    } else {
+      tl.fromTo(u, { opacity: 0, marginRight: "0.5em" }, { opacity: 1, marginRight: "0em", duration: each, ease: ease }, t0);
+    }
+  });
+  return tl;
+}
+// ==== end kit:text ====
+
+// ==== kit:fit@1 ====
+function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+      var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+      if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+      row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+function kRows(el, cls) {
+  if (!el.children.length) return [];
+  var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+  var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+  kids.forEach(function (c, i) {
+    if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+    if (tops[i] != null) last = tops[i];
+    row.appendChild(c);
+  });
+  return [].slice.call(el.children);
+}
+// ==== end kit:fit ====
+
+// ==== kit:mark@1 ====
+function kMark(size) {
+  return '<svg class="bn-mark" width="' + size + '" height="' + size + '" viewBox="0 0 128 128" aria-hidden="true">' +
+    '<rect class="bn-mark-box" x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/>' +
+    '<circle class="bn-mark-dot" cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/>' +
+    '<rect class="bn-mark-bar" x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg>';
+}
+// ==== end kit:mark ====
+
+
+          kTone(root);
+          if (String(v.backdrop) === "off") [].forEach.call(root.querySelectorAll(".bn-backdrop, .bn-glow, .bn-vig, .bn-grain"), function (n) { n.style.display = "none"; });
+
+          // text slots: every one goes through kSplit, then kFit measures the real layout
+          var title = q(".bn-title");
+          kSplit(title, "word", false, v.title);
+          kFit(title, { lines: L.titleLines, min: L.titleMin });
+          var eyebrow = q(".bn-eyebrow"), name = q(".bn-name");
+          if (String(v.name).trim()) {
+            q(".bn-markslot").innerHTML = kMark(32);
+            kSplit(name, "word", false, v.name);
+            kFit(name, { lines: 1, min: 28, width: q(".bn-box").clientWidth - 44 });
+          } else eyebrow.style.display = "none";
+          var names = String(v.items).split("|");
+
+          // wordless chart for a cell, sized to what is left under its name: line, bars or progress rows
+          var chart = function (el, i) {
+            var w = el.offsetWidth, h = el.offsetHeight, o = [], j, n, kind = i % 3;
+            if (h < 24 || w < 24) return;
+            var ink = "var(--bn-tex)", pop = "var(--bn-pop)", st = function (c, sw) { return "fill:none;stroke:" + c + ";stroke-width:" + sw + ";stroke-linecap:round;stroke-linejoin:round"; };
+            if (kind === 0) {
+              for (j = 0, n = []; j <= 10; j++) n.push((j * w / 10).toFixed(1) + "," + (h - 4 - (0.15 + 0.7 * kHash(i * 11 + j)) * (h - 8)).toFixed(1));
+              o.push('<polyline points="' + n.join(" ") + '" style="' + st(ink, 3.5) + '"/>');
+            } else if (kind === 1) {
+              n = 8;
+              for (j = 0; j < n; j++) { var bh = (0.25 + 0.75 * kHash(i * 7 + j)) * h; o.push('<rect x="' + (j * w / n).toFixed(1) + '" y="' + (h - bh).toFixed(1) + '" width="' + (w / n - 8).toFixed(1) + '" height="' + bh.toFixed(1) + '" rx="4" style="fill:' + (j === n - 3 ? pop : ink) + '"/>'); }
+            } else {
+              for (j = 0; j < 3; j++) { var y = (j + 0.5) * h / 3; o.push('<line x1="0" y1="' + y.toFixed(1) + '" x2="' + w + '" y2="' + y.toFixed(1) + '" style="' + st("color-mix(in srgb, var(--k-ink) 9%, var(--bn-lit))", 8) + '"/><line x1="0" y1="' + y.toFixed(1) + '" x2="' + (w * (0.3 + 0.6 * kHash(i * 5 + j))).toFixed(1) + '" y2="' + y.toFixed(1) + '" style="' + st(j === 0 ? pop : ink, 8) + '"/>'); }
+            }
+            el.innerHTML = '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + " " + h + '" style="display:block;overflow:visible" aria-hidden="true">' + o.join("") + "</svg>";
+          };
+
+          // cells: the face (translate, colour, pulse), its texture and name, and the comet ring on top
+          var mount = (window.__kxN = (window.__kxN || 0) + 1);
+          var cells = [].slice.call(root.querySelectorAll(".bn-cell")).map(function (cell, i) {
+            var face = cell.querySelector(".bn-face"), lab = cell.querySelector(".bn-label");
+            var w = cell.offsetWidth, h = cell.offsetHeight, id = "bn" + mount + "-" + i;
+            var txt = (names[i] || "").trim();
+            if (txt) { kSplit(lab, "word", false, txt); kFit(lab, { lines: 2, min: 40 }); } else lab.style.display = "none";
+            chart(cell.querySelector(".bn-chart"), i);
+            var jit = Math.abs((Math.sin(i * 127.3) * 43758.5453) % 1); // upstream seed hash: per-cell glow strength
+            var rect = function (cls, inset, c, sw, extra) {
+              return '<rect class="' + cls + '" x="' + inset + '" y="' + inset + '" width="' + (w - 2 * inset) + '" height="' + (h - 2 * inset) + '" rx="14" pathLength="100" style="fill:none;stroke:' + c + ';stroke-width:' + sw + ';stroke-linecap:round;opacity:0"' + (extra || "") + "/>";
+            };
+            var core = "color-mix(in srgb, var(--k-accent) 30%, white)";
+            var ring = document.createElement("div");
+            ring.className = "bn-ring";
+            ring.style.opacity = 0;
+            ring.innerHTML = '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + " " + h + '" style="overflow:visible" aria-hidden="true"><defs><filter id="' + id + '" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="' + (4 + jit * 2).toFixed(2) + '"/></filter></defs>' +
+              rect("bn-r0", 0.75, "var(--k-accent)", 1.5, ' stroke-dasharray="100" stroke-dashoffset="100"') +
+              rect("bn-r1", 1.5, "var(--k-accent)", 6, ' stroke-dasharray="' + CFG.tail + " " + (100 - CFG.tail) + '" filter="url(#' + id + ')"') +
+              rect("bn-r2", 1.5, core, 2.5, ' stroke-dasharray="' + CFG.tail + " " + (100 - CFG.tail) + '"') + "</svg>";
+            cell.appendChild(ring);
+            var rr = ring.querySelectorAll("rect");
+            return { face: face, lab: lab, tex: [].slice.call(cell.querySelectorAll(".bn-tex")), pulse: cell.querySelector(".bn-pulse"), ring: ring, r0: rr[0], r1: rr[1], r2: rr[2], jit: jit };
+          });
+
+          var grain = kGrain(q(".bn-grain"));
+          var glow = q(".bn-glow"), push = q(".bn-push");
+          var POP = MT.bezier(0.3, 1.4, 0.5, 1); // upstream pop curve: back-out with one small overshoot
+          var tl = MT.scene(CFG.dur, function (t) {
+            cells.forEach(function (c, i) {
+              var s = CFG.first + i * CFG.gap;
+              var draw = MT.ramp(t, s, CFG.draw, "power3.out");
+              var fade = 1 - 0.6 * MT.ramp(t, s + CFG.fadeAt, CFG.fadeLen, "power2.out");
+              var ring = MT.ramp(t, s + CFG.ringAt, CFG.ringLen, "power2.out");
+              var lit = MT.ramp(t, s + CFG.litAt, CFG.litLen, "power3.out");
+              var rise = MT.ramp(t, s + CFG.litAt, CFG.litLen, POP);
+              var pulse = lit * (1 - lit) * 4; // brightest glow mid-way through the light-up
+              var head = 100 * draw, ty = CFG.rise * (1 - rise) + "px";
+              var off = 1 - MT.ramp(t, s + CFG.cometOff, CFG.cometOff, "none");
+              c.face.style.transform = "translateY(" + ty + ")";
+              c.face.style.backgroundColor = "color-mix(in srgb, var(--bn-lit) " + (lit * 100).toFixed(1) + "%, var(--bn-off))";
+              c.pulse.style.setProperty("--pl", (0.16 * pulse * (0.8 + c.jit * 0.4)).toFixed(3));
+              c.lab.style.opacity = lit;
+              c.tex.forEach(function (n) { n.style.opacity = 0.18 + 0.82 * lit; });
+              c.ring.style.opacity = draw > 0 ? 1 : 0;
+              c.ring.style.transform = "translateY(" + ty + ")";
+              c.r0.style.strokeDashoffset = 100 * (1 - draw);
+              c.r0.style.opacity = ring * fade;
+              c.r1.style.strokeDashoffset = CFG.tail - head;
+              c.r1.style.opacity = off * 0.8;
+              c.r2.style.strokeDashoffset = CFG.tail - head;
+              c.r2.style.opacity = off;
+            });
+            var all = MT.ramp(t, CFG.first + 5 * CFG.gap + 0.2, CFG.glowLen, "power2.out");
+            glow.style.opacity = 0.3 + 0.7 * all;
+            title.style.opacity = 0.25 + 0.75 * MT.ramp(t, CFG.first, CFG.titleLen, "power2.out");
+            eyebrow.style.opacity = title.style.opacity;
+            push.style.transform = "scale(" + (1 + (CFG.pushTo - 1) * MT.ramp(t, CFG.push, CFG.pushLen, MT.bezier(0.33, 0, 0.2, 1))).toFixed(5) + ")";
+            grain(t);
+          });
+          window.__timelines["bento-light-up"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,441 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"kicker","type":"string","label":"眉题（留空不显示）","default":"第 3 节 · 结果对比"},
+    {"id":"title","type":"string","label":"标题（留空不显示）","default":"本周完成率"},
+    {"id":"value","type":"string","label":"大数字（留空不显示）","default":"42%"},
+    {"id":"caption","type":"string","label":"说明（留空不显示）","default":"示例数字，换成你自己的结果"},
+    {"id":"chart","type":"string","label":"柱图小标题（留空不显示）","default":"每天的进度"},
+    {"id":"name","type":"string","label":"署名（留空不显示）","default":"示例应用"},
+    {"id":"meta","type":"string","label":"署名旁的小字（留空不显示）","default":"刚刚更新"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底（纸面、点阵、暗角）"},{"value":"off","label":"透明（压在画面上，只留卡片和描边）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>draw-svg-trace · 描边画出卡片</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="draw-svg-trace-template">
+      <!-- Ported from video-shotcraft demos/ui-entrance/draw-svg-trace/DrawSvgTrace.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition (MT.scene), frames to seconds;
+           neutral --k-* palette, system fonts, generic copy, upstream mark and signature removed; the report card is rebuilt
+           with generic text (kicker, title, one big number, caption, 12 bars, signature row) and also stacks into a 768 x 960
+           portrait layout on the same timeline; the 20 px month letters under the bars dropped, text floors raised to 28 / 40 px;
+           the underline stroke on the big number dropped (a second move, same as underline-draw); the closing flash goes to
+           pure white on dark skins; stage vignette, grain and dot grid kept; trace, pen head, flash, crop marks, ink-in,
+           bar growth and the 0.9% push-in keep the upstream timing and numbers. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* ==== kit:text@2 ==== */
+        .dt-u { display: inline-block; white-space: pre; }
+        .dt-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+        /* ==== end kit:text ==== */
+
+
+        /* ==== kit:grain@1 ==== */
+        .dt-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+
+
+        /* ==== kit:derived@1 ==== */
+        .dt {
+          --dt-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+          --dt-panel-2: color-mix(in srgb, var(--k-panel), var(--k-ink) 4%);
+          --dt-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+          --dt-hi: color-mix(in srgb, white 80%, transparent);
+        }
+        .dt[data-tone="dark"] {
+          --dt-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+          --dt-hi: color-mix(in srgb, white 6%, transparent);
+        }
+        /* ==== end kit:derived ==== */
+
+        /* ==== kit:backdrop@1 ==== */
+        .dt-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .dt-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        /* ==== end kit:backdrop ==== */
+
+        /* ==== kit:vignette@1 ==== */
+        .dt-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--dt-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .dt[data-tone="dark"] .dt-vig { --vs: 0.55; }
+        /* ==== end kit:vignette ==== */
+        .dt { position: absolute; inset: 0; container-type: size; --dt-ink2: color-mix(in srgb, var(--k-ink) 78%, var(--k-bg)); }
+        /* drawing-paper dots: 48px grid, clear in the middle and fading out towards the edges */
+        .dt-dots { position: absolute; inset: 0; background-image: radial-gradient(circle, color-mix(in srgb, var(--k-ink) 24%, transparent) 2px, transparent 2.4px); background-size: 48px 48px; background-position: 24px 18px; -webkit-mask-image: radial-gradient(ellipse 62% 66% at 50% 50%, #000 30%, transparent 100%); mask-image: radial-gradient(ellipse 62% 66% at 50% 50%, #000 30%, transparent 100%); }
+        .dt-push { position: absolute; inset: 0; }
+        /* landscape: the card is 1120 x 660, centred (the trace rect measures the card, so the size lives only here) */
+        .dt-card { position: absolute; left: 50%; top: 50%; width: 1120px; height: 660px; margin: -330px 0 0 -560px; }
+        .dt-face { position: absolute; inset: 0; border-radius: 28px; background: linear-gradient(180deg, color-mix(in srgb, var(--k-bg), white 60%) 0%, color-mix(in srgb, var(--k-bg), var(--k-panel) 70%) 100%); box-shadow: inset 0 1px 0 var(--dt-hi), 0 2.3px 6.4px color-mix(in srgb, var(--dt-shade) 4.8%, transparent), 0 16.5px 39px -6.6px color-mix(in srgb, var(--dt-shade) 16.5%, transparent); }
+        .dt[data-tone="dark"] .dt-face { background: linear-gradient(180deg, color-mix(in srgb, var(--k-panel), white 5%) 0%, var(--k-panel) 100%); }
+        .dt-edge { position: absolute; inset: 0; border-radius: 28px; border: 1.5px solid color-mix(in srgb, var(--k-ink) 14%, transparent); box-sizing: border-box; }
+        .dt-content { position: absolute; inset: 0; }
+        .dt-kick { position: absolute; left: 64px; right: 64px; top: 52px; display: flex; align-items: center; gap: 14px; }
+        .dt-kdot { display: block; flex: none; width: 12px; height: 12px; border-radius: 50%; background: var(--k-accent); }
+        .dt-kt { display: block; flex: 1; min-width: 0; font-size: 28px; font-weight: 600; letter-spacing: 0.08em; line-height: 1.3; color: var(--dt-ink2); }
+        .dt-left { position: absolute; left: 64px; top: 128px; width: 560px; }
+        .dt-title { display: block; font-size: 72px; font-weight: 700; line-height: 1.2; color: var(--dt-ink2); }
+        .dt-value { display: block; margin-top: 2px; font-size: 188px; font-weight: 800; line-height: 1; letter-spacing: -0.04em; color: var(--k-ink); }
+        .dt-cap { display: block; margin-top: 40px; font-size: 40px; font-weight: 400; line-height: 1.35; color: var(--dt-ink2); }
+        .dt-chart { position: absolute; left: 680px; top: 128px; width: 376px; }
+        .dt-clabel { display: block; font-size: 28px; font-weight: 600; letter-spacing: 0.1em; line-height: 1.3; color: var(--k-muted); }
+        .dt-bars { display: flex; align-items: flex-end; gap: 10px; height: 270px; margin-top: 14px; }
+        .dt-bar { display: block; flex: 1; border-radius: 8px; background: color-mix(in srgb, var(--k-ink) 10%, transparent); }
+        .dt-bar-hot { background: linear-gradient(180deg, color-mix(in srgb, var(--k-accent), white 18%) 0%, var(--k-accent) 100%); }
+        .dt-sig { position: absolute; left: 64px; right: 64px; bottom: 44px; display: flex; align-items: center; gap: 16px; }
+        .dt-sig::before { content: ""; position: absolute; left: 0; right: 0; top: -26px; height: 1px; background: var(--dt-line); }
+        .dt-name { display: block; flex: none; max-width: 42%; font-size: 28px; font-weight: 700; letter-spacing: 0.03em; line-height: 1.3; }
+        .dt-meta { display: block; flex: 1; min-width: 0; font-size: 28px; font-weight: 400; line-height: 1.3; color: var(--k-muted); }
+        .dt-svg { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
+        /* portrait: one column, 768 x 960, its middle on the 40% line (y 768); text sits in y 330-1248, x 156-924 */
+        @container (orientation: portrait) {
+          .dt-card { top: 40%; width: 768px; height: 960px; margin: -480px 0 0 -384px; }
+          .dt-content { display: flex; flex-direction: column; padding: 44px 48px; box-sizing: border-box; }
+          .dt-kick, .dt-left, .dt-chart, .dt-sig { position: relative; left: auto; right: auto; top: auto; bottom: auto; width: auto; }
+          .dt-left { margin-top: 28px; }
+          .dt-value { font-size: 168px; }
+          .dt-cap { margin-top: 20px; }
+          .dt-chart { margin-top: 32px; }
+          .dt-bars { height: 200px; }
+          .dt-sig { margin-top: auto; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="draw-svg-trace">
+        <div class="dt">
+          <div class="dt-backdrop"></div>
+          <div class="dt-dots"></div>
+          <div class="dt-vig"></div>
+          <div class="dt-grain"></div>
+          <div class="dt-push">
+            <div class="dt-card">
+              <div class="dt-face"></div>
+              <div class="dt-content">
+                <div class="dt-kick"><span class="dt-kdot"></span><div class="dt-kt">第 3 节 · 结果对比</div></div>
+                <div class="dt-left">
+                  <div class="dt-title">本周完成率</div>
+                  <div class="dt-value">42%</div>
+                  <div class="dt-cap">示例数字，换成你自己的结果</div>
+                </div>
+                <div class="dt-chart">
+                  <div class="dt-clabel">每天的进度</div>
+                  <div class="dt-bars">
+                    <i class="dt-bar" style="height:34%"></i><i class="dt-bar" style="height:40%"></i><i class="dt-bar" style="height:37%"></i><i class="dt-bar" style="height:48%"></i><i class="dt-bar" style="height:45%"></i><i class="dt-bar" style="height:54%"></i><i class="dt-bar" style="height:58%"></i><i class="dt-bar" style="height:56%"></i><i class="dt-bar" style="height:66%"></i><i class="dt-bar dt-bar-hot" style="height:74%;opacity:0.6"></i><i class="dt-bar dt-bar-hot" style="height:81%;opacity:0.8"></i><i class="dt-bar dt-bar-hot" style="height:96%"></i>
+                  </div>
+                </div>
+                <div class="dt-sig">
+                  <svg class="dt-mark" width="52" height="52" viewBox="0 0 128 128" aria-hidden="true"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg>
+                  <div class="dt-name">示例应用</div>
+                  <div class="dt-meta">刚刚更新</div>
+                </div>
+              </div>
+              <div class="dt-edge"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing in seconds (upstream frames / 30), shared by both orientations
+          var CFG = {
+            marks: { each: 0.067, dur: 0.4, off: 26, pop: 22, len: 54, popAt: 1.667, popDur: 0.333, fadeAt: 1.733, fadeDur: 0.4 },
+            trace0: 0.333, trace1: 1.667, pen: 0.04, rx: 28,
+            flashAt: 1.667, flashUp: 0.067, flashDown: 0.2,
+            face: 1.667, faceDur: 0.333, lift: 1.667, liftDur: 0.733,
+            ink: 1.733, inkGap: 0.1, inkDur: 0.4,
+            handoff: 1.867, handoffDur: 0.333,
+            bars: 1.867, barGap: 0.05, barDur: 0.467,
+            push: 2.0, pushDur: 2.4, pushAmt: 0.009,
+            dur: 4.4
+          };
+          // per orientation: only the text floors and line counts differ (sizes and the card live in the CSS)
+          var LAND = { titleMin: 40, titleLines: 1, valueMin: 72 };
+          var PORT = { titleMin: 72, titleLines: 2, valueMin: 72 };
+          var v = { kicker: "第 3 节 · 结果对比", title: "本周完成率", value: "42%", caption: "示例数字，换成你自己的结果", chart: "每天的进度", name: "示例应用", meta: "刚刚更新", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+
+          // ==== kit:text@2 ====
+          var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "dt-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "dt-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          // ==== end kit:text ====
+
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          // ==== end kit:fit ====
+
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+
+          // ==== kit:shadow@1 ====
+          function kShadow(e, strength) {
+            e = Math.max(0, e);
+            var s = strength == null ? 1 : strength, r = function (x) { return Math.round(x * 10) / 10; };
+            var c = function (a) { return "color-mix(in srgb, var(--dt-shade) " + r(Math.min(1, a) * 100) + "%, transparent)"; };
+            return "0 " + r(0.5 + e * 0.06) + "px " + r(1 + e * 0.18) + "px " + c((0.12 * s) / (1 + e / 24)) + ", " +
+              "0 " + r(e * 0.55) + "px " + r(e * 1.3) + "px " + r(-e * 0.22) + "px " + c((0.08 + (Math.min(e, 64) / 64) * 0.22) * s);
+          }
+          // ==== end kit:shadow ====
+          var root = document.querySelector(".dt");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          var tone = kTone(root);
+          if (String(v.backdrop) === "off") ["backdrop", "dots", "vig", "grain"].forEach(function (c) { q(".dt-" + c).style.display = "none"; });
+
+          // text slots: kSplit keeps every typed space, kFit shrinks to the floor and then wraps; an empty variable hides its block
+          var slot = function (el, text, fit, hide) {
+            var s = String(text).trim();
+            if (!s) { (hide || el).style.display = "none"; return false; }
+            kSplit(el, "word", false, s);
+            kFit(el, fit);
+            return true;
+          };
+          var sigW = q(".dt-sig").clientWidth || FW * 0.6;
+          slot(q(".dt-kt"), v.kicker, { lines: 2, min: 28 }, q(".dt-kick"));
+          slot(q(".dt-title"), v.title, { lines: L.titleLines, min: L.titleMin });
+          if (slot(q(".dt-value"), v.value, { lines: 1, min: L.valueMin }) && kCJK.test(String(v.value))) q(".dt-value").style.letterSpacing = "0";
+          slot(q(".dt-cap"), v.caption, { lines: 1, min: 40 });
+          slot(q(".dt-clabel"), v.chart, { lines: 1, min: 28 });
+          var hasName = slot(q(".dt-name"), v.name, { lines: 1, min: 28, width: sigW * 0.42 });
+          var hasMeta = slot(q(".dt-meta"), v.meta, { lines: 1, min: 28 });
+          if (!hasName) q(".dt-mark").style.display = "none";
+          if (!hasName && !hasMeta) q(".dt-sig").style.display = "none";
+
+          var card = q(".dt-card"), push = q(".dt-push"), face = q(".dt-face"), edge = q(".dt-edge");
+          var CW = card.offsetWidth || Math.round(FW * (P ? 0.711 : 0.583)), CH = card.offsetHeight || Math.round(FH * (P ? 0.5 : 0.611)), RX = CFG.rx;
+          var rise = [".dt-kick", ".dt-title", ".dt-value", ".dt-cap", ".dt-clabel", ".dt-sig"].map(q);
+          var chartBox = q(".dt-chart"), bars = [].slice.call(q(".dt-bars").children);
+          var BARS = bars.map(function (b) { return parseFloat(b.style.height); });
+          var drawGrain = kGrain(q(".dt-grain"));
+
+          // the trace and the crop marks are drawn by the script from the measured card
+          var NS = "http://www.w3.org/2000/svg";
+          var mk = function (tag, a, parent) { var e = document.createElementNS(NS, tag); for (var n in a) e.setAttribute(n, a[n]); parent.appendChild(e); return e; };
+          var mksvg = mk("svg", { "class": "dt-svg", width: CW, height: CH }, card);
+          var trsvg = mk("svg", { "class": "dt-svg", width: CW, height: CH }, card);
+          var corners = [[0, 0, -1, -1], [CW, 0, 1, -1], [CW, CH, 1, 1], [0, CH, -1, 1]].map(function (c) {
+            var g = mk("g", { "stroke-width": 2.5, "stroke-linecap": "round", style: "stroke:var(--dt-ink2)" }, mksvg);
+            return { x: c[0], y: c[1], sx: c[2], sy: c[3], a: mk("line", {}, g), b: mk("line", {}, g), d: mk("circle", { r: 3.5, stroke: "none", style: "fill:var(--k-accent)" }, g) };
+          });
+          var rect = function (w) { return mk("rect", { x: 0, y: 0, width: CW, height: CH, rx: RX, fill: "none", "stroke-width": w, pathLength: 1, "stroke-linecap": "round", style: "stroke:var(--k-ink)" }, trsvg); };
+          var main = rect(6); main.setAttribute("stroke-dasharray", "1 2");
+          var pens = [{ len: CFG.pen, w: 6.4 }, { len: CFG.pen * 0.6, w: 8 }, { len: CFG.pen * 0.28, w: 9.6 }].map(function (s) {
+            var r = rect(s.w); r.setAttribute("stroke-dasharray", s.len + " 2"); return { r: r, len: s.len };
+          });
+          var tip = mk("g", {}, trsvg);
+          var tipShadow = mk("circle", { r: 10, style: "fill:color-mix(in srgb, var(--dt-shade) 16%, transparent)" }, tip);
+          var tipDot = mk("circle", { r: 7.5, style: "fill:var(--k-ink)" }, tip);
+          var tipHi = mk("circle", { r: 2, fill: "rgba(255,255,255,0.4)" }, tip);
+          var flashInk = tone === "dark" ? "#ffffff" : "#000000";
+
+          // point on the rounded-rect outline at arc fraction u (same start and direction as an SVG rect: top edge, clockwise)
+          var rrPoint = function (u, w, h, r) {
+            var sx = w - 2 * r, sy = h - 2 * r, arc = (Math.PI * r) / 2, tot = 2 * sx + 2 * sy + 4 * arc, s = (((u % 1) + 1) % 1) * tot, h2 = Math.PI / 2;
+            var segs = [
+              [sx, function (k) { return [r + k * sx, 0]; }],
+              [arc, function (k) { return [w - r + r * Math.sin(k * h2), r - r * Math.cos(k * h2)]; }],
+              [sy, function (k) { return [w, r + k * sy]; }],
+              [arc, function (k) { return [w - r + r * Math.cos(k * h2), h - r + r * Math.sin(k * h2)]; }],
+              [sx, function (k) { return [w - r - k * sx, h]; }],
+              [arc, function (k) { return [r - r * Math.sin(k * h2), h - r + r * Math.cos(k * h2)]; }],
+              [sy, function (k) { return [0, h - r - k * sy]; }],
+              [arc, function (k) { return [r - r * Math.cos(k * h2), r - r * Math.sin(k * h2)]; }]
+            ];
+            for (var i = 0; i < segs.length; i++) { if (s <= segs[i][0]) return segs[i][1](segs[i][0] > 0 ? s / segs[i][0] : 0); s -= segs[i][0]; }
+            return [r, 0];
+          };
+
+          var M = CFG.marks, clampOpts = { extrapolateLeft: "clamp", extrapolateRight: "clamp" };
+          var render = function (t) {
+            // crop marks: grow from the corners, spring outwards at the close, fade
+            var pop = MT.ramp(t, M.popAt, M.popDur, "out");
+            mksvg.style.opacity = 1 - MT.ramp(t, M.fadeAt, M.fadeDur, "out");
+            corners.forEach(function (c, k) {
+              var a = MT.ramp(t, k * M.each, M.dur, "snappy"), off = M.off + M.pop * pop, ox = c.x + c.sx * off, oy = c.y + c.sy * off, len = M.len * a;
+              c.a.setAttribute("x1", ox); c.a.setAttribute("y1", oy); c.a.setAttribute("x2", ox - c.sx * len); c.a.setAttribute("y2", oy); c.a.style.opacity = a;
+              c.b.setAttribute("x1", ox); c.b.setAttribute("y1", oy); c.b.setAttribute("x2", ox); c.b.setAttribute("y2", oy - c.sy * len); c.b.style.opacity = a;
+              c.d.setAttribute("cx", ox); c.d.setAttribute("cy", oy); c.d.style.opacity = a;
+            });
+            // trace: one lap, in-out; the pen head is three shorter dashes ahead of the line plus a round tip
+            var p = MT.interpolate(t, [CFG.trace0, CFG.trace1], [0, 1], { easing: "power2.inOut", extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+            var flash = t < CFG.flashAt + CFG.flashUp ? MT.ramp(t, CFG.flashAt, CFG.flashUp, "linear") : 1 - MT.ramp(t, CFG.flashAt + CFG.flashUp, CFG.flashDown, "out");
+            var gone = MT.ramp(t, CFG.handoff, CFG.handoffDur, "linear");
+            main.setAttribute("stroke-dashoffset", 1 - p);
+            main.setAttribute("stroke-width", 6 + flash * 5);
+            main.style.stroke = flash > 0.5 ? flashInk : "var(--k-ink)";
+            trsvg.style.opacity = 1 - gone;
+            edge.style.opacity = gone;
+            var penOp = MT.interpolate(p, [0, 0.02, 0.97, 0.995], [0, 1, 1, 0], clampOpts);
+            pens.forEach(function (s) { s.r.setAttribute("stroke-dashoffset", s.len - p); s.r.style.opacity = penOp; });
+            var xy = rrPoint(p, CW, CH, RX);
+            tip.style.opacity = penOp;
+            tipShadow.setAttribute("cx", xy[0] + 1.5); tipShadow.setAttribute("cy", xy[1] + 4);
+            tipDot.setAttribute("cx", xy[0]); tipDot.setAttribute("cy", xy[1]);
+            tipHi.setAttribute("cx", xy[0] - 2.2); tipHi.setAttribute("cy", xy[1] - 2.4);
+            // card face: inks in at the close and lifts off the page (shadow grows)
+            face.style.opacity = MT.ramp(t, CFG.face, CFG.faceDur, "out");
+            face.style.boxShadow = "inset 0 1px 0 var(--dt-hi), " + kShadow(4 + MT.ramp(t, CFG.lift, CFG.liftDur, "out") * 26, 0.9);
+            // content inks in block by block: opacity, a 14 px rise and a 6 px blur share one progress
+            rise.forEach(function (el, k) {
+              var u = MT.ramp(t, CFG.ink + k * CFG.inkGap, CFG.inkDur, "out");
+              el.style.opacity = u;
+              el.style.transform = u < 1 ? "translateY(" + ((1 - u) * 14).toFixed(2) + "px)" : "";
+              el.style.filter = u < 1 ? "blur(" + ((1 - u) * 6).toFixed(2) + "px)" : "";
+            });
+            chartBox.style.opacity = MT.ramp(t, CFG.ink + 3 * CFG.inkGap, CFG.inkDur, "out") > 0 ? 1 : 0;
+            bars.forEach(function (b, i) { b.style.height = (BARS[i] * MT.ramp(t, CFG.bars + i * CFG.barGap, CFG.barDur, "snappy")).toFixed(2) + "%"; });
+            push.style.transform = "scale(" + (1 + CFG.pushAmt * MT.ramp(t, CFG.push, CFG.pushDur, "smooth")).toFixed(5) + ")";
+            drawGrain(t);
+          };
+          window.__timelines["draw-svg-trace"] = MT.scene(CFG.dur, render);
+        })();
+      </script>
+    </template>
+  </body>
+</html>

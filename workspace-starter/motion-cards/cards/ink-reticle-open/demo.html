@@ -1,0 +1,332 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"name","type":"string","label":"字标（逐字压印，留空不要）","default":"示例应用"},
+    {"id":"kicker","type":"string","label":"副标（打字机，留空不要）","default":"把复杂的事讲清楚"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>ink-reticle-open · 墨线准星开场</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="ink-reticle-open-template">
+      <!-- Ported from video-shotcraft recipe opening/brand-ink-open, demos/typography/brand-ink-open/BrandInkOpen.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette, system fonts, generic copy, upstream wordmark and tagline removed; landscape and
+           portrait layouts; sizes follow the wordmark font size in em (crosshair 0.48em, press blur 0.045em, lift 0.3em);
+           the wordmark is a display size (260px landscape, 200px portrait) and shrinks to fit; the paper is the palette
+           background with a 3% accent tint instead of a fixed cream; no negative tracking for CJK (0.02em); letter step
+           and typing speed are capped for long text and the 1.1 s hold starts when the last element settles, so the
+           exit start follows the text length (upstream fixed it at frame 97). Crosshair strokes, press timing (3 frames
+           per letter, 12 frames each, scale 1.6 to 1, blur to 0), glint, typewriter speed (0.7 frames per character),
+           cursor blink and the 7-frame exit (lift, 12% shrink, fade) are as upstream. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* ==== kit:text@2 ==== */
+        .bi-u { display: inline-block; white-space: pre; }
+        .bi-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+        /* ==== end kit:text ==== */
+
+        /* ==== kit:fit@1 ==== */
+        .bi-row { display: block; white-space: nowrap; }
+        /* ==== end kit:fit ==== */
+
+        /* ==== kit:fonts@2 ==== */
+        @font-face { font-family: "Noto Serif SC"; src: local("Noto Serif SC"), local("Noto Serif CJK SC"), local("Source Han Serif SC"); }
+        @font-face { font-family: "Songti SC"; src: local("Songti SC"), local("STSong"), local("SimSun"); }
+        @font-face { font-family: "Consolas"; src: local("Consolas"); }
+        #root {
+          --k-serif: var(--mc-serif, "Noto Serif SC", "Songti SC", serif);
+          --k-mono: var(--mc-mono, Consolas, monospace);
+        }
+        /* ==== end kit:fonts ==== */
+        /* the wrapper is the size container (SPEC 五); portrait overrides live in @container and reach only its children */
+        .bi { position: absolute; inset: 0; container-type: size; }
+        /* paper: the palette background with a 3% accent tint (upstream a fixed cream) */
+        .bi-bg { position: absolute; inset: 0; background: color-mix(in srgb, var(--k-bg) 97%, var(--k-accent)); }
+        /* landscape: the lockup is centred on the frame; 10% side margins */
+        .bi-box { position: absolute; top: 0; bottom: 0; left: 10%; right: 10%; display: flex; align-items: center; justify-content: center; }
+        .bi-lock { width: 100%; text-align: center; }
+        /* sizes below are the static defaults; the script re-sets crosshair size and margins from the fitted wordmark size */
+        .bi-cross { display: block; width: 125px; height: 125px; margin: 0 auto 67px; overflow: visible; opacity: 0; }
+        .bi-cv, .bi-ch { fill: none; stroke: var(--k-accent); stroke-width: 5; stroke-linecap: round; stroke-dasharray: 100 200; stroke-dashoffset: 0; }
+        .bi-word { display: block; font-family: var(--k-serif); font-size: 260px; font-weight: 600; line-height: 1.2; letter-spacing: 0.02em; color: var(--k-ink); }
+        .bi-word .bi-u { position: relative; }
+        .bi-wd { display: inline-block; white-space: nowrap; }
+        .bi-gl { position: absolute; left: 0; bottom: 0.03em; width: 100%; height: 0.016em; min-height: 3px; border-radius: 2px; background: var(--k-accent); opacity: 0; }
+        .bi-kick { display: flex; align-items: center; justify-content: center; margin-top: 59px; min-height: 1.3em; font-family: var(--k-mono), var(--k-font); font-size: 48px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--k-muted); }
+        .bi-kt { white-space: pre-wrap; }
+        .bi-cur { display: block; flex: none; width: 0.54em; height: 0.92em; margin-left: 0.15em; background: var(--k-accent); opacity: 0; }
+        /* portrait: the lockup is centred on the 40% anchor line (12%-68% band) */
+        @container (orientation: portrait) {
+          .bi-box { top: 12%; bottom: 32%; }
+          .bi-word { font-size: 200px; }
+          .bi-cross { width: 96px; height: 96px; margin-bottom: 52px; }
+          .bi-kick { margin-top: 45px; font-size: 44px; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="ink-reticle-open">
+        <div class="bi">
+          <div class="bi-bg"></div>
+          <div class="bi-box">
+            <div class="bi-lock">
+              <svg class="bi-cross" viewBox="0 0 64 64" aria-hidden="true">
+                <line class="bi-cv" x1="32" y1="2" x2="32" y2="62" pathLength="100" />
+                <line class="bi-ch" x1="2" y1="32" x2="62" y2="32" pathLength="100" />
+              </svg>
+              <div class="bi-word">示例应用</div>
+              <div class="bi-kick"><span class="bi-kt">把复杂的事讲清楚</span><span class="bi-cur"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing (seconds = frames / 30), shared by both orientations
+          var CFG = {
+            vDur: 0.3, hAt: 0.267, hDur: 0.333,        // crosshair: vertical stroke 0-9f, horizontal 8-18f
+            fadeAt: 0.8, fadeDur: 0.333,                // crosshair fades 24-34f
+            charAt: 0.333, charStep: 0.1, charDur: 0.4, // letters: 10f start, 3f apart, 12f each
+            stepSpan: 0.667,                            // cap: the last letter starts at most 0.667 s after the first
+            glintHalf: 0.133,                           // glint rises and falls over 4f each side of the settle
+            kickAt: 0.933, kickPer: 0.7 / 30, kickSpan: 0.55, // typing: 28f start, 0.7f per character, capped at 0.55 s in all
+            hold: 1.1,                                  // full lockup rests 1.1 s (33f) after the last element settles
+            exitDur: 0.233                              // 7f exit: lift, shrink, fade
+          };
+          // layout per orientation: sizes live in the CSS; here the fit floors and widths
+          var LAND = { minWord: 84, minKick: 40, wordW: 1 };
+          var PORT = { minWord: 72, minKick: 40, wordW: 1 };
+          var v = { name: "示例应用", kicker: "把复杂的事讲清楚", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".bi");
+          var q = function (s) { return root.querySelector(s); };
+          // orientation = the box the host clip gave this card (the root declares no size, so it fills the clip)
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          if (String(v.backdrop) === "off") q(".bi-bg").style.display = "none";
+
+          // ==== kit:text@2 ====
+          var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "bi-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "bi-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          function kReveal(tl, units, variant, at, o) {
+            o = o || {};
+            var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+            units.forEach(function (u, i) {
+              var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+              if (variant === "rise") {
+                tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+                tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+              } else if (variant === "blur") {
+                tl.fromTo(u, { opacity: 0, y: fs * 0.25, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: each, ease: ease }, t0);
+              } else if (variant === "drop") {
+                tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each / 3, ease: "none" }, t0);
+                tl.fromTo(u, { y: -fs * 0.6 }, { y: 0, duration: each, ease: "overshoot" }, t0);
+              } else if (variant === "scale") {
+                tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each * 0.1, ease: "power1.out" }, t0);
+                tl.fromTo(u, { scale: 1.6, filter: "blur(8px)" }, { scale: 1, filter: "blur(0px)", duration: each, ease: ease }, t0);
+              } else {
+                tl.fromTo(u, { opacity: 0, marginRight: "0.5em" }, { opacity: 1, marginRight: "0em", duration: each, ease: ease }, t0);
+              }
+            });
+            return tl;
+          }
+          // ==== end kit:text ====
+
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          function kRows(el, cls) {
+            if (!el.children.length) return [];
+            var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+            var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+            kids.forEach(function (c, i) {
+              if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+              if (tops[i] != null) last = tops[i];
+              row.appendChild(c);
+            });
+            return [].slice.call(el.children);
+          }
+          // ==== end kit:fit ====
+          var word = q(".bi-word"), kick = q(".bi-kick"), kt = q(".bi-kt"), cur = q(".bi-cur"), cross = q(".bi-cross"), lock = q(".bi-lock");
+          var name = String(v.name).trim(), ktxt = String(v.kicker).trim();
+
+          // wordmark: one unit per character (spaces keep their width and never animate), each with a glint bar
+          var base = parseFloat(getComputedStyle(word).fontSize), glyphs = [], n = 0;
+          if (name) {
+            kSplit(word, "char", false, name);
+            // keep a Latin word together when the name wraps (CJK characters may wrap anywhere)
+            var run = null;
+            [].slice.call(word.children).forEach(function (u) {
+              var c = u.textContent;
+              if (!c.trim() || kCJK.test(c)) { run = null; return; }
+              if (!run) { run = document.createElement("span"); run.className = "bi-wd"; word.insertBefore(run, u); }
+              run.appendChild(u);
+            });
+            base = kFit(word, { lines: 1, min: L.minWord, width: word.clientWidth * L.wordW }).size;
+            [].slice.call(word.querySelectorAll(".bi-u")).forEach(function (u, i) {
+              n = i + 1;
+              if (!u.textContent.trim()) return;
+              var gl = document.createElement("i");
+              gl.className = "bi-gl";
+              u.appendChild(gl);
+              glyphs.push({ u: u, gl: gl, i: i });
+            });
+          } else word.style.display = "none";
+          // crosshair and gaps follow the fitted wordmark size (upstream 64px / 34px / 30px at 132px)
+          cross.style.width = cross.style.height = Math.round(base * 0.48) + "px";
+          cross.style.marginBottom = (name ? Math.round(base * 0.26) : 0) + "px";
+          // typewriter: the full text is laid out once for fitting; each() then shows a prefix
+          var kchars = Array.from(ktxt);
+          if (ktxt) {
+            kt.textContent = ktxt;
+            kick.style.marginTop = Math.round(base * 0.227) + "px";
+            kFit(kick, { lines: 1, min: L.minKick, width: kick.clientWidth });
+          } else kick.style.display = "none";
+
+          // schedule: the hold starts when the last element has settled, so the exit follows the text length
+          var step = n > 1 ? Math.min(CFG.charStep, CFG.stepSpan / (n - 1)) : CFG.charStep;
+          var wordDone = name ? CFG.charAt + (n - 1) * step + CFG.charDur : 0;
+          var per = kchars.length ? Math.min(CFG.kickPer, CFG.kickSpan / kchars.length) : 0;
+          var kickDone = ktxt ? CFG.kickAt + kchars.length * per : 0;
+          var settle = Math.max(wordDone, kickDone, CFG.fadeAt + CFG.fadeDur);
+          var EXIT = settle + CFG.hold;
+
+          var tl = MT.timeline();
+          // crosshair: vertical then horizontal stroke drawn on (pathLength 100), then it fades so it cannot fight the wordmark
+          tl.fromTo(q(".bi-cv"), { strokeDashoffset: 100 }, { strokeDashoffset: 0, duration: CFG.vDur, ease: "cubic-bezier(.3,0,.2,1)" }, 0);
+          tl.fromTo(q(".bi-ch"), { strokeDashoffset: 100 }, { strokeDashoffset: 0, duration: CFG.hDur, ease: "none" }, CFG.hAt);
+          tl.fromTo(cross, { opacity: 1 }, { opacity: 0, duration: CFG.fadeDur, ease: "none" }, CFG.fadeAt);
+          // letterpress: each character presses from 1.6x to 1 with the blur closing, one eased progress for all three;
+          // a glint bar flashes under it as it lands
+          glyphs.forEach(function (g) {
+            var t0 = CFG.charAt + g.i * step, c = t0 + CFG.charDur, o = "50% 100%";
+            tl.fromTo(g.u, { opacity: 0, scale: 1.6, filter: "blur(" + (base * 0.045).toFixed(2) + "px)", transformOrigin: o },
+              { opacity: 1, scale: 1, filter: "blur(0px)", transformOrigin: o, duration: CFG.charDur, ease: "cubic-bezier(.2,.7,.25,1)" }, t0);
+            tl.fromTo(g.gl, { opacity: 0, scaleX: 0 }, { opacity: 1, scaleX: 1, duration: CFG.glintHalf, ease: "none" }, c - CFG.glintHalf);
+            tl.fromTo(g.gl, { opacity: 1, scaleX: 1 }, { opacity: 0, scaleX: 0, duration: CFG.glintHalf, ease: "none" }, c);
+          });
+          // exit: the whole lockup lifts, shrinks 12% and fades, faster than it came in
+          tl.fromTo(lock, { opacity: 1, y: 0, scale: 1 }, { opacity: 0, y: -Math.round(base * 0.3), scale: 0.88, duration: CFG.exitDur, ease: "cubic-bezier(.4,0,.5,1)" }, EXIT);
+          // typewriter text and block cursor are written here, not tweened: MT does not touch them
+          tl.each(function (t) {
+            if (!ktxt) return;
+            var cnt = Math.min(kchars.length, Math.floor(Math.max(0, t - CFG.kickAt) / per + 1e-6));
+            kt.textContent = kchars.slice(0, cnt).join("");
+            var on;
+            if (t < CFG.kickAt) on = false;
+            else if (t < kickDone) on = true;
+            else if (t > EXIT - 0.067) on = false;                       // upstream stops the blink 2 frames before the exit
+            else on = Math.floor(((t - kickDone) * 30) / 2) % 2 === 0;   // blink: 2 frames on, 2 off (frames at 30 fps)
+            cur.style.opacity = on ? 0.85 : 0;
+          });
+          window.__timelines["ink-reticle-open"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

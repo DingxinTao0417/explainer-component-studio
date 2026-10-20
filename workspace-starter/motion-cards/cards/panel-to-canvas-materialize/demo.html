@@ -1,0 +1,432 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"board","type":"string","label":"白板标题","default":"本周计划"},
+    {"id":"heading","type":"string","label":"清单标题","default":"待办清单"},
+    {"id":"items","type":"string","label":"5 条，| 分隔（1、3、4 飞走）","default":"确定选题方向|收集参考资料|写出第一版提纲|录一段试讲|整理常见问题"},
+    {"id":"tags","type":"string","label":"各条标签，| 分隔","default":"选题|资料|提纲|试讲|答疑"},
+    {"id":"button","type":"string","label":"按钮文字","default":"加到白板"},
+    {"id":"moved","type":"string","label":"空槽里的字（可空）","default":"已上板"},
+    {"id":"done","type":"string","label":"计数后的字（可空）","default":"张已上板"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>panel-to-canvas-materialize · 行飞上画布变卡</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+<template id="panel-to-canvas-materialize-template">
+<!-- Ported from video-shotcraft demos/interaction/canvas-materialize-moves/PanelToCanvasMaterialize.tsx
+     (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+     Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+     Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+     neutral --k-* palette, system fonts, generic copy; mark/wordmark row, panel subtitle, recipe and person names,
+     initials, counts and card meta removed; quote and names drawn as bars, avatars as discs; text 40px (labels
+     28px); the 0.35-opacity button became a lighter solid one; board title at y 70, rising as one block; portrait
+     re-laid out in x 120-960 (bottom sheet, 4 rows, button in its header, 400x180 cards). Timings, springs, arc,
+     size lag, cross-fades, tilts, squash, slot, speed blur and camera push kept. -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+@font-face { font-family: "Noto Serif SC"; src: local("Noto Serif SC"), local("Noto Serif CJK SC"), local("Source Han Serif SC"); }
+@font-face { font-family: "Songti SC"; src: local("Songti SC"), local("STSong"), local("SimSun"); }
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  --k-serif: var(--mc-serif, "Noto Serif SC", "Songti SC", serif);
+  position: absolute; inset: 0; overflow: hidden; font-family: var(--k-font); color: var(--k-ink);
+}
+.pc,.pc-cam,.pc-sb,.pc-bg,.pc-bg::after,.pc-dots{position:absolute;inset:0}
+/* kit:derived@1 (line, shade, hi) + surfaces: sheet = panel, li = row, card = checked row and card */
+.pc{container-type:size;--pc-line:color-mix(in srgb,var(--k-ink) 12%,#0000);--pc-shade:color-mix(in srgb,var(--k-ink) 85%,var(--k-accent-2));--pc-hi:color-mix(in srgb,#fff 80%,#0000);
+  --pc-sheet:var(--k-bg);--pc-li:var(--k-panel);--pc-card:var(--k-bg);--pc-acc:color-mix(in srgb,var(--k-accent),var(--k-ink) 25%);--pc-gf:color-mix(in srgb,var(--k-accent) 4%,#0000);
+  --pc-a35:color-mix(in srgb,var(--k-accent) 35%,#0000);--pc-a8:color-mix(in srgb,var(--k-accent) 8%,#0000)}
+.pc[data-tone="dark"]{--pc-shade:color-mix(in srgb,var(--k-bg) 30%,#000);--pc-hi:color-mix(in srgb,#fff 6%,#0000);
+  --pc-sheet:var(--k-panel);--pc-li:color-mix(in srgb,var(--k-panel),var(--k-ink) 5%);--pc-card:color-mix(in srgb,var(--k-panel),var(--k-ink) 4%);--pc-acc:var(--k-accent);--pc-gf:color-mix(in srgb,#fff 3%,#0000)}
+/* kit:backdrop@1, key light at 30% 10%, accent-2 fill light bottom right (upstream sand stage) */
+.pc-bg{background:radial-gradient(ellipse 50% 46% at 90% 90%,color-mix(in srgb,var(--k-accent-2) 8%,#0000),#0000 72%),linear-gradient(var(--k-bg),color-mix(in srgb,var(--k-bg),var(--k-ink) 4%) 55%,color-mix(in srgb,var(--k-bg),var(--k-ink) 7%))}
+.pc-bg::after{content:"";background:radial-gradient(ellipse 62% 70% at 30% 10%,color-mix(in srgb,var(--k-bg) 95%,#0000),#0000 72%)}
+.pc-dots{--m:radial-gradient(ellipse 46% 60% at 30% 56%,#000 30%,#0000);background:radial-gradient(color-mix(in srgb,var(--k-ink) 13%,#0000) 1.5px,#0000 1.8px) 10px 14px/38px 38px;mask-image:var(--m)}
+/* ==== kit:vignette@1 ==== */
+.pc-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--pc-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.pc[data-tone="dark"] .pc-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+/* ==== kit:grain@1 ==== */
+.pc-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+.pc *{box-sizing:border-box}
+.pc-head{position:absolute;left:120px;top:70px;display:flex;align-items:baseline;gap:26px;clip-path:inset(-.2em -.3em -.3em)}
+.pc-board{flex:none;max-width:680px;font:600 84px/1.2 var(--k-serif)}
+.pc-cw{clip-path:inset(-.1em -.3em -.3em)}
+.pc-count{font-size:40px;line-height:1.2;color:var(--k-muted)}
+.pc-n{color:var(--k-accent);font-weight:700;margin-right:.25em}
+.pc-panel{position:absolute;left:1164px;top:96px;width:656px;height:888px;border-radius:30px;border:1px solid var(--pc-line);
+  background:linear-gradient(var(--pc-sheet),color-mix(in srgb,var(--pc-sheet),var(--k-ink) 3%));box-shadow:inset 0 1px var(--pc-hi),0 2.3px 6.4px color-mix(in srgb,var(--pc-shade) 7%,#0000),0 16.5px 39px -6.6px color-mix(in srgb,var(--pc-shade) 24%,#0000)}
+.pc-ph{position:absolute;left:32px;right:32px;top:44px}
+.pc-pname{font-size:48px;font-weight:700;line-height:1.2}
+.pc-rows{position:absolute;left:23px;top:165px;display:flex;flex-direction:column;gap:12px}
+.pc-li{position:relative;width:608px;height:104px}
+.pc-rb,.pc-gh{position:absolute;inset:0;border-radius:18px}
+.pc-rb{background:var(--pc-li);border:1px solid var(--pc-line)}
+.pc-rb,.pc-rf{display:flex;align-items:center;gap:22px;padding:0 24px}
+.pc-ck .pc-rb{background:var(--pc-card);border-color:var(--pc-a35);box-shadow:0 0 0 3px var(--pc-a8)}
+.pc-on .pc-rb{opacity:0}
+.pc-li:not(.pc-on) .pc-gh{display:none}
+.pc-gh{border:2px dashed color-mix(in srgb,var(--pc-acc) 55%,#0000);background:var(--pc-gf);display:flex;align-items:center;justify-content:center;gap:16px;font-size:32px;font-weight:700;line-height:1.2;color:var(--pc-acc)}
+.pc-gh::before{content:"";width:9px;height:18px;margin-top:-6px;border:solid var(--k-accent);border-width:0 3px 3px 0;transform:rotate(45deg)}
+.pc-cb{flex:none;display:grid;place-items:center;width:36px;height:36px;border-radius:10px;border:2px solid color-mix(in srgb,var(--k-ink) 22%,#0000);background:var(--pc-card)}
+.pc-cb svg{width:22px;fill:none;stroke:var(--k-on-accent);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1}
+.pc-ck .pc-cb{border:0;background:linear-gradient(color-mix(in srgb,var(--k-accent),#fff 16%),var(--k-accent));box-shadow:inset 0 1px color-mix(in srgb,#fff 30%,#0000),0 3px 8px -3px color-mix(in srgb,var(--k-accent) 70%,#0000)}
+.pc-ck .pc-cb svg{stroke-dashoffset:0}
+.pc-t{min-width:0;font-size:40px;font-weight:600;line-height:1.15}
+.pc-av{flex:none;display:block;width:40px;height:40px;border-radius:50%;margin-left:auto;background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--av,var(--k-accent-2)),#fff 22%),var(--av,var(--k-accent-2)))}
+.pc-li:nth-child(1),.pc-c1{--av:var(--k-accent)}
+.pc-li:nth-child(3),.pc-c2{--av:color-mix(in srgb,var(--k-accent),var(--k-ink) 40%)}
+.pc-li:nth-child(4),.pc-c3{--av:color-mix(in srgb,var(--k-accent-2),var(--k-ink) 35%)}
+.pc-btn{position:absolute;left:24px;right:24px;bottom:24px;height:92px;border-radius:20px;display:flex;align-items:center;justify-content:center;gap:16px;background:var(--k-ink);color:var(--pc-sheet)}
+.pc-bt{font-size:40px;font-weight:700;line-height:1.2}
+.pc-badge{flex:none;display:grid;place-items:center;min-width:48px;height:48px;border-radius:24px;background:var(--k-accent);color:var(--k-on-accent);font-size:28px}
+/* a picked row in flight: one clipping box, row form and card form cross-fade inside */
+.pc-card{position:absolute;left:var(--cx);top:var(--cy);width:486px;height:300px;border-radius:24px;overflow:hidden;background:var(--pc-card);border:1px solid #0000;transform:rotate(var(--r));transform-origin:50% 100%;
+  box-shadow:inset 0 1px var(--pc-hi),0 1px 2.4px color-mix(in srgb,var(--pc-shade) 13.5%,#0000),0 4.4px 10.4px -1.8px color-mix(in srgb,var(--pc-shade) 16%,#0000)}
+.pc-c1{--cx:116px;--cy:268px;--r:-2.5deg}
+.pc-c2{--cx:636px;--cy:306px;--r:1.8deg}
+.pc-c3{--cx:330px;--cy:640px;--r:-1.2deg}
+.pc-top{position:absolute;left:0;right:0;top:0;height:6px;background:var(--k-accent)}
+.pc-rf,.pc-cf{position:absolute;left:0;top:0}
+.pc-rf{width:608px;height:104px;opacity:0}
+.pc-cf{width:486px;height:300px;padding:28px 30px}
+.pc-cr{display:flex;align-items:center}
+.pc-cr .pc-av{width:36px;height:36px}
+.pc-cf::after{content:"";position:absolute;left:78px;bottom:39px;width:120px;height:14px;border-radius:7px;background:color-mix(in srgb,var(--k-ink) 16%,#0000)}
+.pc-cr .pc-av{position:absolute;left:30px;bottom:28px}
+.pc-tag{max-width:330px;padding:4px 14px;border-radius:99px;font-size:28px;font-weight:700;line-height:1.2;color:var(--k-accent-2);background:color-mix(in srgb,var(--k-accent-2) 10%,#0000);border:1px solid color-mix(in srgb,var(--k-accent-2) 18%,#0000)}
+.pc-ct{margin-top:18px;font-size:40px;font-weight:700;line-height:1.2}
+.pc-bar{display:block;height:14px;margin-top:14px;border-radius:7px;background:color-mix(in srgb,var(--k-ink) 10%,#0000)}
+.pc-bar+.pc-bar{width:62%;margin-top:10px}
+.pc-cur{position:absolute;left:0;top:0;opacity:0;transform-origin:4px 2px;filter:drop-shadow(0 3px 2px color-mix(in srgb,var(--pc-shade) 30%,#0000))}
+.pc-cur path{fill:var(--k-ink);stroke:var(--k-bg);stroke-width:1.4;stroke-linejoin:round}
+/* portrait: title on top, 400x180 cards, the panel as a bottom sheet (4 rows, button in its header); x 120-960 so the 2.5% push stays in 108-972 */
+@container (orientation: portrait) {
+  .pc-head{left:124px;top:248px}
+  .pc-cf::after{content:none}
+  .pc-cr .pc-av{position:static}
+  .pc-li:nth-child(5),.pc-bar+.pc-bar{display:none}
+  .pc-board{font-size:72px;max-width:560px}
+  .pc-dots{--m:radial-gradient(ellipse 62% 22% at 50% 30%,#000 30%,#0000)}
+  .pc-panel{left:120px;top:786px;width:840px;height:516px}
+  .pc-ph{left:24px;right:370px;top:22px;height:80px;display:flex;align-items:center}
+  .pc-pname{flex:1;font-size:44px}
+  .pc-rows{left:21px;top:117px;gap:10px}
+  .pc-li,.pc-rf{width:796px;height:84px}
+  .pc-btn{left:auto;right:22px;top:22px;width:330px;height:80px}
+  .pc-card,.pc-cf{width:400px;height:180px}
+  .pc-cf{padding:20px 24px}
+  .pc-c1{--cx:120px;--cy:380px}
+  .pc-c2{--cx:552px;--cy:398px}
+  .pc-c3{--cx:336px;--cy:598px}
+  .pc-ct{margin-top:12px}
+}
+</style>
+
+<div id="root" data-composition-id="panel-to-canvas-materialize">
+  <div class="pc">
+    <div class="pc-bg"></div><div class="pc-dots"></div><div class="pc-vig"></div><div class="pc-grain"></div>
+    <div class="pc-cam">
+      <div class="pc-head"><div class="pc-board">本周计划</div><div class="pc-cw"><div class="pc-count"><b class="pc-n">3</b><span class="pc-done">张已上板</span></div></div></div>
+      <div class="pc-panel">
+        <div class="pc-ph"><div class="pc-pname">待办清单</div></div>
+        <div class="pc-rows">
+          <div class="pc-li pc-on"><div class="pc-gh"><span class="pc-mv">已上板</span></div><div class="pc-rb"><i class="pc-cb"></i><div class="pc-t">确定选题方向</div><i class="pc-av"></i></div></div>
+          <div class="pc-li"><div class="pc-rb"><i class="pc-cb"></i><div class="pc-t">收集参考资料</div><i class="pc-av"></i></div></div>
+          <div class="pc-li pc-on"><div class="pc-gh"><span class="pc-mv">已上板</span></div><div class="pc-rb"><i class="pc-cb"></i><div class="pc-t">写出第一版提纲</div><i class="pc-av"></i></div></div>
+          <div class="pc-li pc-on"><div class="pc-gh"><span class="pc-mv">已上板</span></div><div class="pc-rb"><i class="pc-cb"></i><div class="pc-t">录一段试讲</div><i class="pc-av"></i></div></div>
+          <div class="pc-li"><div class="pc-rb"><i class="pc-cb"></i><div class="pc-t">整理常见问题</div><i class="pc-av"></i></div></div>
+        </div>
+        <div class="pc-btn"><div class="pc-bt">加到白板</div><b class="pc-badge">3</b></div>
+      </div>
+      <div class="pc-sb"><div class="pc-card pc-c1 pc-ck"><i class="pc-top"></i><div class="pc-rf" data-layout-allow-overflow></div><div class="pc-cf" data-layout-allow-overflow><div class="pc-cr"><div class="pc-tag">选题</div><i class="pc-av"></i></div><div class="pc-ct">确定选题方向</div><i class="pc-bar"></i><i class="pc-bar"></i></div></div></div>
+      <div class="pc-sb"><div class="pc-card pc-c2 pc-ck"><i class="pc-top"></i><div class="pc-rf" data-layout-allow-overflow></div><div class="pc-cf" data-layout-allow-overflow><div class="pc-cr"><div class="pc-tag">提纲</div><i class="pc-av"></i></div><div class="pc-ct">写出第一版提纲</div><i class="pc-bar"></i><i class="pc-bar"></i></div></div></div>
+      <div class="pc-sb"><div class="pc-card pc-c3 pc-ck"><i class="pc-top"></i><div class="pc-rf" data-layout-allow-overflow></div><div class="pc-cf" data-layout-allow-overflow><div class="pc-cr"><div class="pc-tag">试讲</div><i class="pc-av"></i></div><div class="pc-ct">录一段试讲</div><i class="pc-bar"></i><i class="pc-bar"></i></div></div></div>
+      <svg class="pc-cur" width="44" height="48" viewBox="0 0 20 22"><path d="M2 1 2 17 6.5 13.2 9.4 20 12.4 18.7 9.5 12 15 11.6Z"/></svg>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+// timing in seconds (upstream frames / 30), shared by both orientations
+var CFG = {
+  dur: 5, panelLen: 0.6, row0: 0.2, rowStep: 0.083, rowLen: 0.533, title: 0.133, word: 0.6,
+  checks: [0.467, 0.8, 1.133], popDamp: 11, popStiff: 300, draw: 0.033, drawLen: 0.233, readyLen: 0.267,
+  cur: [0.133, 0.433, 0.767, 1.1, 1.667], curIn: 0.1, curInLen: 0.267, curOut: 2.6, curOutLen: 0.333, curArc: 26, click: 0.233,
+  press: 1.733, pressIn: 0.1, pressOut: 0.3,
+  lift: [1.867, 2.067, 2.267], liftLen: 0.133, // pull-up, then take-off, 0.2 s apart
+  flyDamp: 17, flyStiff: 95, flyMass: 0.9, sizeLag: 0.1, arc: 220, land: 0.733, squashLen: 0.2, squash: 0.03, ghost: 0.133, ghostLen: 0.333,
+  count: 3, countLen: 0.467, counted: 1, cam: 1.867, camLen: 3.133, camTo: 1.025, blur: 0.32, blurMax: 14
+};
+// per orientation: motion distances, anchors (sizes and places are CSS, measured)
+var LAND = { slide: [160, 0], rowIn: [40, 0], cur0: [0.448, 0.704], origin: "52% 50%", titleMin: 56, rowLines: 2, cardLines: 2 };
+var PORT = { slide: [0, 160], rowIn: [0, 30], cur0: [0.62, 0.36], origin: "50% 16%", titleMin: 72, rowLines: 1, cardLines: 1 };
+var SEL = [0, 2, 3]; // ticked rows, not adjacent: picking, not select-all
+var v = { board: "本周计划", heading: "待办清单", items: "确定选题方向|收集参考资料|写出第一版提纲|录一段试讲|整理常见问题",
+  tags: "选题|资料|提纲|试讲|答疑", button: "加到白板", moved: "已上板", done: "张已上板", backdrop: "on" };
+var OPT = { moved: 1, done: 1 }; // may be "" (hidden)
+try {
+  var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+  for (var key in got) if (got[key] != null && (got[key] + "" || OPT[key])) v[key] = got[key]; // "" only reaches OPT slots
+} catch (e) {}
+
+var root = document.querySelector(".pc");
+var q = function (s) { return root.querySelector(s); }, qa = function (s) { return [].slice.call(root.querySelectorAll(s)); };
+var FW = root.clientWidth, FH = root.clientHeight;
+if (!FW || !FH) {
+  // not laid out yet: the host clip's declared size, then the window
+  var hc = root.closest("[data-width][data-height]");
+  FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+  FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+}
+var P = FH > FW, L = P ? PORT : LAND;
+root.setAttribute("data-orient", P ? "portrait" : "landscape");
+if (String(v.backdrop) === "off") qa(".pc-bg,.pc-dots,.pc-vig,.pc-grain").forEach(function (n) { n.style.display = "none"; });
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== end kit:tone ====
+// ==== kit:shadow@1 ====
+function kShadow(e, strength) {
+  e = Math.max(0, e);
+  var s = strength == null ? 1 : strength, r = function (x) { return Math.round(x * 10) / 10; };
+  var c = function (a) { return "color-mix(in srgb, var(--pc-shade) " + r(Math.min(1, a) * 100) + "%, transparent)"; };
+  return "0 " + r(0.5 + e * 0.06) + "px " + r(1 + e * 0.18) + "px " + c((0.12 * s) / (1 + e / 24)) + ", " +
+    "0 " + r(e * 0.55) + "px " + r(e * 1.3) + "px " + r(-e * 0.22) + "px " + c((0.08 + (Math.min(e, 64) / 64) * 0.22) * s);
+}
+// ==== end kit:shadow ====
+// ==== kit:speedblur@1 ====
+function kSpeedBlur(box, prefix, o) {
+  o = o || {};
+  var amount = o.amount || 0.45, max = o.max || 36;
+  var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+  var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+  svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+  var outer = document.createElement("div"), inner = document.createElement("div");
+  outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+  while (box.firstChild) inner.appendChild(box.firstChild);
+  outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+  var fe = svg.firstChild.firstChild;
+  return function (vx, vy) {
+    vy = vy || 0;
+    var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+    if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+    var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+    fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+    outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+    inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+    outer.style.filter = "url(#" + id + ")";
+  };
+}
+// ==== end kit:speedblur ====
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+      "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+      "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+      "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+      "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+}
+// ==== end kit:grain ====
+// ==== kit:fit@1 ====
+function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+      var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+      if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+      row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+
+var C = CFG, R = MT.ramp, M = MT.mix, grain = kGrain(q(".pc-grain")), STR = kTone(root) === "dark" ? 2.6 : 1.5;
+var px = function (n) { return n.toFixed(2) + "px"; }, tr = function (x, y) { return "translate(" + px(x) + "," + px(y) + ")"; };
+// a text slot: the text as typed, shrunk to its box; an empty optional slot hides
+var put = function (el, s, o) { s = String(s).trim(); el.style.display = s ? "" : "none"; if (s) { el.textContent = s; kFit(el, o); } };
+var cut = function (s) { var a = String(s).split("|").map(function (x) { return x.trim(); }).filter(Boolean); return a.length ? a : [" "]; };
+var items = cut(v.items), tags = cut(v.tags), rows = qa(".pc-li"), it = function (i) { return items[i % items.length]; };
+var panel = q(".pc-panel"), count = q(".pc-count"), board = q(".pc-board"), btn = q(".pc-btn"), cam = q(".pc-cam");
+put(board, v.board, { width: parseFloat(getComputedStyle(board).maxWidth), min: L.titleMin });
+put(q(".pc-done"), v.done);
+// the count line gets what the board title leaves of the header width
+var hl = q(".pc-head").offsetLeft;
+count.style.maxWidth = (P ? FW - hl : panel.offsetLeft - 40) - hl - board.offsetWidth - 26 + "px";
+kFit(count);
+put(q(".pc-pname"), v.heading);
+put(q(".pc-bt"), v.button, { width: btn.clientWidth - 120 });
+var cbs = rows.map(function (r, i) {
+  var mv = r.querySelector(".pc-mv"), cb = r.querySelector(".pc-cb");
+  if (r.offsetParent) put(r.querySelector(".pc-t"), it(i), { lines: L.rowLines, width: r.clientWidth - 170 });
+  if (mv) put(mv, v.moved, { min: 28, width: r.clientWidth - 100 });
+  cb.innerHTML = '<svg viewBox="0 0 18 18"><path d="M3.5 9.5 7.3 13 14.5 5" pathLength="1"/></svg>';
+  return cb;
+});
+// flying cards cross the panel, its header and the cards already down for 0.1-0.2 s (as upstream): on purpose
+qa(".pc-t,.pc-mv,.pc-ct,.pc-tag,.pc-bt,.pc-badge,.pc-pname").forEach(function (n) { n.setAttribute("data-layout-allow-occlusion", ""); n.setAttribute("data-layout-allow-overlap", ""); });
+// camera-layer [cx, cy, w, h], measured before anything moves
+var cr = cam.getBoundingClientRect(), K = cr.width / cam.offsetWidth || 1;
+var mid = function (el) { var b = el.getBoundingClientRect(); return [((b.left + b.right) / 2 - cr.left) / K, ((b.top + b.bottom) / 2 - cr.top) / K, b.width / K, b.height / K]; };
+var F = qa(".pc-card").map(function (c, k) {
+  var r = rows[SEL[k]], s = mid(r), rf = c.querySelector(".pc-rf");
+  put(c.querySelector(".pc-tag"), tags[SEL[k] % tags.length], { min: 28, width: 300 });
+  put(c.querySelector(".pc-ct"), it(SEL[k]), { lines: L.cardLines });
+  [].forEach.call(r.querySelector(".pc-rb").children, function (n) { rf.appendChild(n.cloneNode(true)); });
+  return { s: c.style, rf: rf.style, cf: rf.nextSibling.style, top: c.firstChild.style, a: s, rw: s[2], rh: s[3], cw: c.offsetWidth, ch: c.offsetHeight, at: C.lift[k] + C.liftLen,
+    e: [c.offsetLeft + c.offsetWidth / 2, c.offsetTop + c.offsetHeight / 2], r: parseFloat(getComputedStyle(c).getPropertyValue("--r")) || 0,
+    blur: kSpeedBlur(c.parentNode, "pc", { amount: C.blur, max: C.blurMax }) };
+});
+// cursor stops: in, the three boxes, then just right of the badge (never over text)
+var badge = q(".pc-badge"), bb = mid(badge), num = q(".pc-n"), cur = q(".pc-cur");
+var stops = [[FW * L.cur0[0], FH * L.cur0[1]]].concat(SEL.map(function (s) { var c = mid(cbs[s]); return [c[0] + 6, c[1] + 6]; }), [[bb[0] + bb[2] / 2 + 14, bb[1]]]);
+cam.style.transformOrigin = L.origin;
+rows.forEach(function (r) { r.classList.remove("pc-on"); });
+
+var fly = function (t, k) { return t <= F[k].at ? 0 : MT.spring({ t: t, delay: F[k].at, damping: C.flyDamp, stiffness: C.flyStiff, mass: C.flyMass }); };
+// quadratic bezier, control point C.arc px above the higher end; past 1 the spring runs on along the end tangent; size lags 3 frames
+function geo(t, k) {
+  var f = F[k], u = fly(t, k), us = fly(t - C.sizeLag, k), a = MT.clamp(u), b = 1 - a, s = f.a, e = f.e, cx = (s[0] + e[0]) / 2, cy = Math.min(s[1], e[1]) - C.arc;
+  return { u: u, us: us, w: M(f.rw, f.cw, us), h: M(f.rh, f.ch, us), arc: Math.sin(Math.PI * a),
+    x: b * b * s[0] + 2 * b * a * cx + a * a * e[0] + (u - a) * (e[0] - cx) * 0.6, y: b * b * s[1] + 2 * b * a * cy + a * a * e[1] + (u - a) * (e[1] - cy) * 0.6 };
+}
+
+function render(t) {
+  grain(t);
+  var pin = R(t, 0, C.panelLen, "snappy"), n = 0, bump = 0, x = stops[0][0], y = stops[0][1], j, cs = C.cur, sq = 1, pp;
+  panel.style.opacity = pin;
+  panel.style.transform = tr((1 - pin) * L.slide[0], (1 - pin) * L.slide[1]);
+  rows.forEach(function (r, i) {
+    var p = R(t, C.row0 + i * C.rowStep, C.rowLen, "snappy"), k = SEL.indexOf(i), at = C.checks[k], on = k >= 0 && t >= at;
+    r.style.opacity = p;
+    r.style.transform = tr((1 - p) * L.rowIn[0], (1 - p) * L.rowIn[1]);
+    r.classList.toggle("pc-ck", on);
+    if (k < 0) return;
+    n += on;
+    bump = Math.max(bump, 1 - Math.abs(t - at - 0.067) * 7.5);
+    r.classList.toggle("pc-on", t >= C.lift[k]); // the pulled-up copy covers the row from here
+    // box pops on a lively spring, check draws in 7 frames; the dashed slot shows once the row has left
+    cbs[i].style.transform = on ? "scale(" + (0.75 + 0.25 * MT.spring({ t: t, delay: at, damping: C.popDamp, stiffness: C.popStiff })).toFixed(3) + ")" : "";
+    cbs[i].firstChild.firstChild.style.strokeDashoffset = on ? 1 - R(t, at + C.draw, C.drawLen, "out") : 1;
+    r.firstChild.style.opacity = R(t, F[k].at + C.ghost, C.ghostLen, "out");
+  });
+  // button: lighter until the first tick; badge counts ticks, bumps on each; one press
+  var bp = t < C.press ? 0 : R(t, C.press, C.pressIn, "out") * (1 - R(t, C.press + C.pressIn, C.pressOut, "out"));
+  btn.style.background = "color-mix(in srgb,var(--k-ink) " + (55 + 45 * R(t, C.checks[0], C.readyLen, "out")).toFixed(1) + "%,var(--pc-sheet))";
+  btn.style.transform = "scale(" + (1 - 0.04 * bp).toFixed(4) + ")";
+  btn.style.boxShadow = "inset 0 1px color-mix(in srgb,#fff 12%,#0000)," + kShadow(10 - 6 * bp, 1.6);
+  badge.textContent = n;
+  badge.style.transform = "scale(" + (1 + 0.12 * bump).toFixed(3) + ")";
+  // cursor: swift hops with a 26px arc, a squeeze on each click
+  for (j = 1; j < stops.length; j++) if (t >= cs[j - 1]) {
+    pp = R(t, cs[j - 1] + 1 / 30, cs[j] - cs[j - 1] - 1 / 30, "swift");
+    x = M(stops[j - 1][0], stops[j][0], pp); y = M(stops[j - 1][1], stops[j][1], pp) - Math.sin(Math.PI * pp) * C.curArc;
+  }
+  C.checks.concat(C.press).forEach(function (c) { var d = t - c + 1 / 30; if (d >= 0 && d < C.click) sq = Math.min(sq, 1 - 0.16 * Math.sin((Math.PI * d) / C.click)); });
+  cur.style.opacity = R(t, C.curIn, C.curInLen, "out") * (1 - R(t, C.curOut, C.curOutLen, "out"));
+  cur.style.transform = tr(x, y) + " scale(" + sq.toFixed(3) + ")";
+  // picked rows: pull up 2%, fly the arc while turning into cards, land with the tilt and a squash
+  F.forEach(function (f, k) {
+    var lift = C.lift[k], s = f.s;
+    s.display = t < lift ? "none" : "";
+    if (t < lift) return f.blur(0, 0);
+    var pre = R(t, lift, C.liftLen, "out"), fl = t >= f.at, g = geo(t, k), a = geo(t - 1 / 60, k), b = geo(t + 1 / 60, k);
+    var co = R(g.us, 0.5, 0.3, "linear"), w = fl ? g.w : f.rw * (1 + 0.02 * pre), h = fl ? g.h : f.rh * (1 + 0.02 * pre);
+    f.blur(fl ? (b.x - a.x) * 30 : 0, fl ? (b.y - a.y) * 30 : 0);
+    s.left = px((fl ? g.x : f.a[0]) - w / 2); s.top = px((fl ? g.y : f.a[1]) - h / 2); s.width = px(w); s.height = px(h);
+    s.transform = "rotate(" + (f.r * g.u).toFixed(3) + "deg) scaleY(" + (1 - C.squash * Math.sin(Math.PI * MT.clamp((t - f.at - C.land) / C.squashLen))).toFixed(4) + ")";
+    s.borderRadius = px(M(18, 24, Math.min(1, g.us)));
+    s.borderColor = "color-mix(in srgb,var(--k-accent) " + (35 - 35 * co).toFixed(1) + "%,#0000)";
+    s.boxShadow = "inset 0 1px var(--pc-hi)," + kShadow(fl ? 8 + 46 * g.arc + (g.u > 0.96 ? 0 : 6) : 4 + 10 * pre, STR);
+    f.top.opacity = f.cf.opacity = co;
+    f.rf.opacity = 1 - R(g.us, 0.08, 0.32, "linear"); // the row form is gone before the card form starts
+  });
+  // board count: rises once the first card is down, then counts up as each lands
+  num.textContent = Math.max(1, C.lift.filter(function (l) { return t >= l + C.liftLen + C.counted; }).length);
+  count.style.opacity = t < C.count + 1 / 30 ? 0 : 1; // its first frame is all below the cut anyway
+  count.style.transform = "translateY(" + ((1 - R(t, C.count, C.countLen, "snappy")) * 110).toFixed(1) + "%)";
+  cam.style.transform = "scale(" + (1 + (C.camTo - 1) * R(t, C.cam, C.camLen, "smooth")).toFixed(4) + ")";
+}
+
+var tl = MT.scene(C.dur, render);
+// board title rises out of its cut (upstream TextReveal rise, 18 frames), hidden until it starts
+tl.set(board, { opacity: 0 }, 0).set(board, { opacity: 1 }, C.title);
+tl.fromTo(board, { y: board.offsetHeight * 1.05 + parseFloat(board.style.fontSize) * 0.3 }, { y: 0, duration: C.word, ease: "snappy" }, C.title);
+window.__timelines["panel-to-canvas-materialize"] = tl;
+})();
+</script>
+</template>
+  </body>
+</html>

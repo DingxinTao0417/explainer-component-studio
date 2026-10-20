@@ -1,0 +1,355 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"value","type":"string","label":"主卡上的数字（末尾的单位会排小一号）","default":"99.9%"},
+    {"id":"label","type":"string","label":"数字上方的说明","default":"本周任务完成率"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底（亮底沉入暗场）"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>pull-back-isolation · 拉远孤立</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="pull-back-isolation-template">
+      <!-- Ported from video-shotcraft demos/camera/tension-camera-moves/PullBackIsolation.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette, the dark field from --k-stage with an accent-2 tint (upstream #5b63d3), system fonts, generic copy from variables; the hero card's
+           label raised to 52 px and number to 150 px (upstream 17 / 128), its chip and footer text dropped, status
+           colours from accent-2 / accent; sibling cards are text-free SVG panels (upstream Fixtures.Card); a 2D scale
+           instead of the 2.2x CSS-zoom layout; portrait: own sibling ring, camera 2.0 -> 0.72. Kept: scale 2.2 -> 0.62
+           over 110 frames (cubic out), sibling offsets and sizes, nearest-first fade every 8 frames over 16 (opacity
+           ease-out, brightness to 0.3 by k squared, 5 px blur, scale 0.97), light-to-dark cross-fade 60-110, cold glow
+           60-100 (70 / 180 px), soft shadow 18 easing to 40 %, lit top edge, grain 0.05 -> 0.09. -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--k-font);
+  color: var(--k-ink);
+}
+/* ==== kit:stage-tokens@1 ==== */
+#root {
+  --k-stage: var(--mc-stage, #0b0d12);
+  --k-on-stage: var(--mc-on-stage, #f3f5f8);
+}
+/* ==== end kit:stage-tokens ==== */
+/* ==== kit:derived@1 ==== */
+.pb {
+  --pb-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+  --pb-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+  --pb-hi: color-mix(in srgb, white 80%, transparent);
+}
+.pb[data-tone="dark"] {
+  --pb-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+  --pb-hi: color-mix(in srgb, white 6%, transparent);
+}
+/* ==== end kit:derived ==== */
+/* ==== kit:vignette@1 ==== */
+.pb-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--pb-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.pb[data-tone="dark"] .pb-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+/* ==== kit:backdrop@1 ==== */
+.pb-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+.pb-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+/* ==== end kit:backdrop ==== */
+/* ==== kit:grain@1 ==== */
+.pb-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+/* ==== kit:text@2 (rise mask not used) ==== */
+.pb-u { display: inline-block; white-space: pre; }
+/* ==== end kit:text ==== */
+
+.pb { position: absolute; inset: 0; container-type: size;
+  --pb-i1: color-mix(in srgb, var(--k-ink) 70%, var(--k-panel)); --pb-i2: color-mix(in srgb, var(--k-ink) 24%, var(--k-panel)); --pb-i3: color-mix(in srgb, var(--k-ink) 9%, var(--k-panel));
+  --pb-glow: color-mix(in srgb, var(--k-on-stage), var(--k-accent-2) 14%); --pb-glow2: color-mix(in srgb, var(--k-on-stage), var(--k-accent-2) 40%); }
+.pb .pb-backdrop + .pb-vig { --vs: 0.14; }
+/* the dark field the scene sinks into: --k-stage with a cool centre glow, an accent-2 tint low, a heavy vignette */
+.pb-dark { position: absolute; inset: 0;
+  background: radial-gradient(ellipse 55% 60% at 50% 80%, color-mix(in srgb, var(--k-accent-2) 14%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 62% 70% at 50% 50%, color-mix(in srgb, var(--pb-glow2) 16%, transparent) 0%, transparent 72%),
+    linear-gradient(180deg, color-mix(in srgb, var(--k-stage), white 4%) 0%, var(--k-stage) 55%, color-mix(in srgb, var(--k-stage), black 30%) 100%); }
+.pb-dark .pb-vig { --vs: 0.6; --vc: color-mix(in srgb, var(--k-stage) 40%, black); }
+/* camera: the world is scaled about the hero card's centre (static fallback = the end of the pull) */
+.pb-cam { position: absolute; inset: 0; }
+.pb-world { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform: scale(0.62); }
+.pb-card { position: absolute; box-sizing: border-box; border: 1px solid var(--pb-line);
+  background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-panel) 40%) 100%); }
+.pb-sib { border-radius: 14px; box-shadow: inset 0 1px 0 var(--pb-hi), 0 0.7px 1.7px color-mix(in srgb, var(--pb-shade) 10%, transparent), 0 2.2px 5.2px -0.9px color-mix(in srgb, var(--pb-shade) 9%, transparent); }
+.pb-sib svg { display: block; }
+.pb-hero { left: -260px; top: -170px; width: 520px; height: 340px; border-radius: 18px; padding: 30px 34px 26px; display: flex; flex-direction: column;
+  box-shadow: inset 0 1px 0 white, 0 1.6px 4.2px color-mix(in srgb, var(--pb-shade) 2.7%, transparent), 0 9.9px 23.4px -4px color-mix(in srgb, var(--pb-shade) 5.7%, transparent), 0 0 70px color-mix(in srgb, var(--pb-glow) 32%, transparent), 0 0 180px color-mix(in srgb, var(--pb-glow2) 20%, transparent); }
+.pb-hd { display: flex; align-items: center; gap: 16px; }
+.pb-dot { display: block; flex: none; width: 14px; height: 14px; border-radius: 50%; background: var(--k-accent-2); box-shadow: 0 0 0 6px color-mix(in srgb, var(--k-accent-2) 14%, transparent); }
+.pb-label { flex: 1; min-width: 0; font-size: 52px; font-weight: 700; line-height: 1.25; }
+.pb-num { display: block; margin-top: 14px; font-size: 150px; font-weight: 700; line-height: 0.96; letter-spacing: -0.045em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pb-unit { font-size: 0.56em; font-weight: 600; color: var(--k-muted); margin-left: 0.04em; letter-spacing: 0; }
+/* 45-day status strip: one repeating cell, two marked days on top */
+.pb-strip { position: relative; margin-top: auto; height: 30px; --c: calc((100% + 3px) / 45);
+  background: repeating-linear-gradient(90deg, color-mix(in srgb, var(--k-accent-2) 78%, transparent) 0 calc(var(--c) - 3px), transparent calc(var(--c) - 3px) var(--c)); }
+.pb-strip i { position: absolute; top: 0; bottom: 0; left: calc(var(--c) * 17); width: calc(var(--c) - 3px); background: var(--k-accent); }
+.pb-strip i + i { left: calc(var(--c) * 33); background: color-mix(in srgb, var(--k-accent-2) 40%, var(--k-bg)); }
+@container (orientation: portrait) {
+  .pb-world { top: 40%; transform: scale(0.72); }
+}
+</style>
+
+      <div id="root" data-composition-id="pull-back-isolation">
+        <div class="pb">
+          <div class="pb-light"><div class="pb-backdrop"></div><div class="pb-vig"></div></div>
+          <div class="pb-dark"><div class="pb-vig"></div></div>
+          <div class="pb-grain"></div>
+          <div class="pb-cam" data-layout-allow-overflow>
+            <div class="pb-world">
+              <div class="pb-card pb-hero">
+                <div class="pb-hd"><i class="pb-dot"></i><span class="pb-label">本周任务完成率</span></div>
+                <div class="pb-num"><span class="pb-big">99.9</span><span class="pb-unit">%</span></div>
+                <div class="pb-strip"><i></i><i></i></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+<script>
+(function () {
+  // timing (s): pull 0 -> 3.667 (110 frames); siblings fade nearest first from 1.0, every 0.267, each 0.533; the
+  // field sinks 2.0 -> 3.667; the hero's glow 2.0 -> 3.333
+  var CFG = { dur: 5, pull: 3.667, fade: 1, gap: 0.267, fadeDur: 0.533, sink: [2, 1.667], glow: [2, 1.333] };
+  // camera scale (start, end) and the 8 sibling cards [dx, dy, w, h] around the hero centre, per orientation
+  var LAND = { s: [2.2, 0.62], sib: [[-620, -330, 360, 240], [10, -390, 420, 220], [620, -320, 380, 260], [-680, 20, 340, 230], [700, 40, 360, 250], [-600, 360, 400, 240], [40, 400, 440, 220], [640, 350, 370, 250]] };
+  var PORT = { s: [2, 0.72], sib: [[0, -420, 400, 220], [0, 430, 420, 230], [-470, -150, 340, 240], [470, 170, 340, 240], [-430, -560, 360, 220], [440, -600, 380, 240], [-450, 580, 380, 230], [460, 560, 360, 250]] };
+  var D = { value: "99.9%", label: "本周任务完成率", backdrop: "on" };
+  var v = {}, k;
+  for (k in D) v[k] = D[k];
+  try {
+    var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    for (k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+  } catch (e) {}
+
+  var root = document.querySelector(".pb");
+  var q = function (s) { return root.querySelector(s); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+    // not laid out yet: the host clip's declared size, then the window
+    var hc = root.closest("[data-width][data-height]");
+    FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+    FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND;
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+  // ==== kit:tone@1 ====
+  function kRGB(el, color) {
+    var p = document.createElement("i");
+    p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+    el.appendChild(p);
+    var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+    el.removeChild(p);
+    return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+  }
+  function kTone(wrap) {
+    var c = kRGB(wrap, "var(--k-bg)");
+    var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+    wrap.setAttribute("data-tone", tone);
+    return tone;
+  }
+  // ==== end kit:tone ====
+  // ==== kit:grain@1 ====
+  function kGrain(layer, o) {
+    o = o || {};
+    var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+    var dark = tones && tones.getAttribute("data-tone") === "dark";
+    var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+      var f = "type='linear' slope='2.4' intercept='-0.7'";
+      var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+        "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+        "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+        "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+        "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+      return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+    });
+    layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+    layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+    layer.style.backgroundSize = size + "px " + size + "px";
+    return function (t) {
+      var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+      layer.style.backgroundImage = tiles[k % 6];
+      layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+    };
+  }
+  // ==== end kit:grain ====
+  // ==== kit:shadow@1 ====
+  function kShadow(e, strength) {
+    e = Math.max(0, e);
+    var s = strength == null ? 1 : strength, r = function (x) { return Math.round(x * 10) / 10; };
+    var c = function (a) { return "color-mix(in srgb, var(--pb-shade) " + r(Math.min(1, a) * 100) + "%, transparent)"; };
+    return "0 " + r(0.5 + e * 0.06) + "px " + r(1 + e * 0.18) + "px " + c((0.12 * s) / (1 + e / 24)) + ", " +
+      "0 " + r(e * 0.55) + "px " + r(e * 1.3) + "px " + r(-e * 0.22) + "px " + c((0.08 + (Math.min(e, 64) / 64) * 0.22) * s);
+  }
+  // ==== end kit:shadow ====
+  // ==== kit:fit@1 (kRows not used) ====
+  function kFit(el, o) {
+    o = o || {};
+    var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+    var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+    for (;;) {
+      el.style.fontSize = f + "px";
+      m = kLines(el);
+      if ((m.w <= W && m.n <= n) || f <= min) break;
+      f = Math.max(min, f - 2);
+    }
+    if (m.w > W) {
+      [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+      m = kLines(el);
+    }
+    return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+  }
+  function kLines(el) {
+    var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+    var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+    while ((t = it.nextNode())) {
+      if (!t.data.trim()) continue;
+      r.selectNodeContents(t);
+      [].forEach.call(r.getClientRects(), function (b) {
+        var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+        if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+        row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+      });
+    }
+    return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+  }
+  // ==== end kit:fit ====
+  // ==== kit:text@2 (kReveal not used) ====
+  var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+  function kWords(s, key) {
+    s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+    var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+    var cut = function (x) {
+      if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+      return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+    };
+    var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+    var pre = "";
+    bits.forEach(function (x) {
+      var t = x.trim(), last = out[out.length - 1];
+      if (last && /^ /.test(x)) last.sp = true;
+      if (!t) return;
+      if (!/[\p{L}\p{N}]/u.test(t)) {
+        if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+        else { last.t += t; last.sp = / $/.test(x); }
+        return;
+      }
+      out.push({ t: pre + t, sp: / $/.test(x) });
+      pre = "";
+    });
+    if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+    if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+    if (out.length) out[out.length - 1].sp = false;
+    return out;
+  }
+  function kSplit(el, by, rise, text) {
+    var s = text != null ? String(text) : el.textContent, units = [];
+    var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+    el.textContent = "";
+    parts.forEach(function (p) {
+      var u = document.createElement("span"), box = u;
+      u.className = "pb-u"; u.textContent = p.t;
+      if (by === "line") u.style.display = "block";
+      if (!p.t.trim()) { el.appendChild(u); return; }
+      if (rise) { box = document.createElement("span"); box.className = "pb-cut"; box.style.display = u.style.display; box.appendChild(u); }
+      el.appendChild(box);
+      if (p.sp) el.appendChild(document.createTextNode(" "));
+      units.push(u);
+    });
+    return units;
+  }
+  // ==== end kit:text ====
+
+  kTone(root);
+  var off = String(v.backdrop) === "off";
+  if (off) ["light", "dark", "grain"].forEach(function (c) { q(".pb-" + c).style.display = "none"; });
+  var grain = kGrain(q(".pb-grain"));
+
+  // the hero card: label (one line, 52 -> 36 px, wraps beyond), number with a smaller trailing unit
+  var lab = q(".pb-label"), num = q(".pb-num"), hd = q(".pb-hd");
+  if (String(v.label).trim()) { kSplit(lab, "word", false, v.label); var fl = kFit(lab, { min: 36 }); } else hd.style.display = "none";
+  var m = String(v.value).trim().match(/^(.*\d)(\D*)$/) || [0, String(v.value).trim(), ""];
+  q(".pb-big").textContent = m[1];
+  q(".pb-unit").textContent = m[2];
+  kFit(num, { max: fl && fl.lines > 1 ? 104 : 150, min: 72 });
+
+  // sibling cards: text-free panels, ranked by distance from the hero (nearest fades first)
+  var world = q(".pb-world"), hero = q(".pb-hero");
+  var panel = function (w, h, seed) {
+    var o = [], rnd = MT.seeded(seed), u = Math.min(w / 360, h / 240);
+    var R = function (x, y, rw, rh, r, c) { o.push('<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + rw.toFixed(1) + '" height="' + rh.toFixed(1) + '" rx="' + r + '" style="fill:var(--' + c + ')"/>'); };
+    R(20, 20, 26, 26, 7, "pb-i3"); R(56, 27, 80 + rnd() * 70, 12, 6, "pb-i2"); R(w - 78, 22, 56, 22, 11, "pb-i3");
+    R(20, 62, 100 + rnd() * 60, 28, 7, "pb-i1");
+    var y0 = 108, y1 = h - 22, bh = y1 - y0, kind = seed % 3;
+    if (kind === 0) for (var j = 0; j < 9; j++) { var hh = bh * (0.25 + 0.75 * rnd()); R(20 + j * (w - 40) / 9, y1 - hh, (w - 40) / 9 - 8 * u, hh, 3, j === 6 ? "k-accent-2" : "pb-i2"); }
+    else if (kind === 1) {
+      var pts = [];
+      for (j = 0; j <= 10; j++) pts.push((20 + j * (w - 40) / 10).toFixed(1) + "," + (y1 - bh * (0.2 + 0.6 * (0.5 + 0.5 * Math.sin(j * 0.8 + seed)) * (0.7 + 0.3 * rnd()))).toFixed(1));
+      o.push('<polyline points="' + pts.join(" ") + '" style="fill:none;stroke:var(--k-accent-2);stroke-width:3;stroke-linejoin:round;stroke-linecap:round"/>');
+    } else for (j = 0; j < 3; j++) { var ry = y0 + j * bh / 3; R(20, ry + 4, 24, 24, 12, "pb-i3"); R(56, ry + 6, 120 + rnd() * 100, 10, 5, "pb-i2"); R(56, ry + 22, 70 + rnd() * 60, 8, 4, "pb-i3"); }
+    return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + " " + h + '" aria-hidden="true">' + o.join("") + "</svg>";
+  };
+  var sibs = L.sib.map(function (s, i) {
+    var e = document.createElement("div");
+    e.className = "pb-card pb-sib";
+    e.style.cssText = "left:" + (s[0] - s[2] / 2) + "px;top:" + (s[1] - s[3] / 2) + "px;width:" + s[2] + "px;height:" + s[3] + "px";
+    e.innerHTML = panel(s[2] - 2, s[3] - 2, i + 3);
+    world.insertBefore(e, hero);
+    return { el: e, d: Math.sqrt(s[0] * s[0] + s[1] * s[1]) };
+  });
+  sibs.slice().sort(function (a, b) { return a.d - b.d; }).forEach(function (s, r) { s.at = CFG.fade + r * CFG.gap; });
+
+  var R = MT.ramp, O = MT.EASE.out;
+  var render = function (t) {
+    world.style.transform = "scale(" + (L.s[0] + (L.s[1] - L.s[0]) * R(t, 0, CFG.pull, "power2.out")).toFixed(4) + ")";
+    var bg = R(t, CFG.sink[0], CFG.sink[1], "power1.inOut"), gl = R(t, CFG.glow[0], CFG.glow[1], "power1.inOut");
+    q(".pb-dark").style.opacity = bg.toFixed(3);
+    // a sibling goes out: opacity first (ease-out), darkening later (k squared), so it never parks as a grey slab
+    sibs.forEach(function (s) {
+      var k = MT.clamp((t - s.at) / CFG.fadeDur), st = s.el.style;
+      st.opacity = (1 - O(k)).toFixed(3);
+      st.filter = k > 0.001 ? "brightness(" + (1 - 0.7 * k * k).toFixed(3) + ") blur(" + (k * 5).toFixed(2) + "px)" : "";
+      st.transform = "scale(" + (1 - 0.03 * k).toFixed(4) + ")";
+    });
+    hero.style.boxShadow = "inset 0 1px 0 color-mix(in srgb, white " + (90 + 10 * gl).toFixed(1) + "%, transparent), " + kShadow(18, 1 - 0.6 * gl) +
+      ", 0 0 70px color-mix(in srgb, var(--pb-glow) " + (32 * gl).toFixed(1) + "%, transparent), 0 0 180px color-mix(in srgb, var(--pb-glow2) " + (20 * gl).toFixed(1) + "%, transparent)";
+    var g = q(".pb-grain").style;
+    grain(t);
+    g.opacity = (0.05 + 0.04 * bg).toFixed(3);
+    g.mixBlendMode = bg > 0.5 ? "soft-light" : "overlay";
+  };
+  var tl = MT.scene(CFG.dur, render);
+  window.__timelines["pull-back-isolation"] = tl;
+})();
+</script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,487 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"name","type":"string","label":"应用名","default":"示例应用"},
+    {"id":"title","type":"string","label":"页面标题（| 标出可折行处）","default":"今天的工作台"},
+    {"id":"stats","type":"string","label":"数字卡（「名称 数字」，| 分隔，最多 3 张，可留空）","default":"今日任务 4|进行中 2|本周完成 18"},
+    {"id":"items","type":"string","label":"任务行（| 分隔，最多 4 条，可留空）","default":"整理课程素材|录制操作演示|核对字幕时间|导出第一版"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"暗场"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>neon-frame-forerun · 霓虹框先行贴落</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="neon-frame-forerun-template">
+<!-- Ported from video-shotcraft demos/ui-entrance/neon-frame-forerun/NeonFrameForerun.tsx
+     (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+     Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+     Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+     neutral --k-* palette with --k-stage, system fonts; neon accent -> accent-2 (upstream violet -> pink), veil
+     from accent-2; upstream mark, wordmark, person name, date and shot-tool copy replaced by a neutral mark and a
+     generic task page with 40-84px text (upstream 18-84px; status words, initials and badge count became bars and
+     dots), stat cards still at y 176; portrait: an 800x960 panel without sidebar nav or status pills; the run drawn
+     on its own path that starts at the right middle; fill light at 85%/90% (upstream 85%/95%); airborne or unlit
+     panel text leaves the layout check; the panel grows when copy wraps; dark skin: neutral chips, avatars mixed
+     with white. Kept: all timings and eases, camera, 4-stroke tube, 5-echo tunnel with its strike and quench
+     tables, lift heights, shadow offset, scale, blur and opacity, rim glow, stage light levels, vignette 0.7,
+     grain 0.09. -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  --k-stage: var(--mc-stage, #0b0d12);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--k-font);
+  color: var(--k-ink);
+}
+/* ==== kit:stage@1 ==== */
+.nf-stage { position: absolute; inset: 0; background: linear-gradient(180deg, color-mix(in srgb, var(--k-stage), white 5%) 0%, var(--k-stage) 52%, color-mix(in srgb, var(--k-stage), black 35%) 100%); }
+.nf-key {
+  position: absolute; inset: 0; mix-blend-mode: screen; --kx: 50%; --ky: 8%; --kl: 0.55;
+  background:
+    radial-gradient(ellipse 58% 62% at var(--kx) var(--ky), color-mix(in srgb, var(--k-accent) calc(var(--kl) * 100%), transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 46% at 85% 90%, color-mix(in srgb, var(--k-accent-2) 22%, transparent) 0%, transparent 72%);
+}
+.nf-stage ~ .nf-vig, .nf-stage ~ * .nf-vig { --vs: 0.55; --vc: color-mix(in srgb, var(--k-stage) 40%, black); }
+/* ==== end kit:stage ==== */
+/* ==== kit:vignette@1 ==== */
+.nf-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--nf-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+/* ==== end kit:vignette ==== */
+/* ==== kit:grain@1 ==== */
+.nf-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+/* ==== kit:text@2 ==== */
+.nf-u { display: inline-block; white-space: pre; }
+/* ==== end kit:text ==== */
+
+/* size container; panel colours follow the skin, cards lighter than the page on both tones */
+.nf { position: absolute; inset: 0; container-type: size;
+  --nf-main: color-mix(in srgb, var(--k-bg), var(--k-panel) 45%); --nf-side: color-mix(in srgb, var(--k-panel), var(--k-ink) 3%);
+  --nf-card: var(--k-bg); --nf-line: color-mix(in srgb, var(--k-ink) 10%, transparent); --nf-sh: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+  --nf-veil: color-mix(in srgb, var(--k-stage), var(--k-accent-2) 30%); --nf-core: color-mix(in srgb, white 92%, var(--k-accent-2)); }
+.nf[data-tone="dark"] { --nf-main: var(--k-bg); --nf-side: color-mix(in srgb, var(--k-bg), var(--k-panel) 50%); --nf-card: var(--k-panel); --nf-sh: color-mix(in srgb, var(--k-bg) 30%, black); }
+/* stage: key light at 30% / 5%, its level animated as opacity; vignette 0.7 */
+.nf .nf-key { --kx: 30%; --ky: 5%; opacity: 0.7; }
+.nf .nf-stage ~ .nf-vig { --vs: 0.7; --vin: 42%; }
+/* camera: the rig (panel) centred; static = the last frame */
+.nf-cam { position: absolute; inset: 0; perspective: 1600px; perspective-origin: 50% 45%; }
+.nf-rig { position: absolute; left: 50%; top: 50%; width: 1440px; height: 840px; margin: -420px 0 0 -720px; transform: scale(0.89) rotateY(-10.5deg) rotateX(5deg) rotateZ(-2.5deg); }
+.nf-rig, .nf-echo, .nf-ui, .nf-sb, .nf-main, .nf-stats, .nf-tasks, .nf-f { transform-style: preserve-3d; }
+.nf-echo, .nf-ui, .nf-glow, .nf-base, .nf-veil { position: absolute; inset: 0; }
+/* neon tube: four strokes (haze, haze, colour core, white-hot core), no blur */
+.nf-echo svg, .nf-fr { position: absolute; left: -22px; top: -22px; width: calc(100% + 44px); height: calc(100% + 44px); overflow: visible; --w: 1; --a: 0.65; --c: 0.35; --g: url(#nf-g); }
+.nf-fr { transform: translateZ(2px); }
+.nf-tube rect { x: 0; y: 0; width: 100%; height: 100%; }
+.nf-tube > * { fill: none; stroke: var(--g); }
+.nf-tube > :nth-child(1) { stroke-width: calc(34px * var(--w)); opacity: calc(0.07 * var(--a)); }
+.nf-tube > :nth-child(2) { stroke-width: calc(14px * var(--w)); opacity: calc(0.18 * var(--a)); }
+.nf-tube > :nth-child(3) { stroke-width: calc(5px * var(--w)); opacity: calc(0.9 * var(--a)); }
+.nf-tube > :nth-child(4) { stroke-width: calc(1.6px * var(--w)); opacity: calc(0.85 * var(--a) * var(--c)); stroke: var(--nf-core); }
+.nf-fr circle { fill: var(--hg, url(#nf-h)); }
+.nf-hd, .nf-dot, .nf-fl { display: none; }
+/* panel: rim glow, page plane, floating parts */
+.nf-glow { border-radius: 18px; transform: translateZ(-2px); box-shadow: 0 40px 120px -10px rgba(4, 1, 12, 0.85), -30px -10px 80px 6px color-mix(in srgb, var(--k-accent) 40%, transparent), 30px 30px 90px 10px color-mix(in srgb, var(--k-accent-2) 32.5%, transparent); }
+.nf-base { border-radius: 18px; overflow: hidden; background: linear-gradient(180deg, var(--nf-main), color-mix(in srgb, var(--nf-main), var(--k-ink) 3%)); }
+.nf-side { position: absolute; left: 0; top: 0; bottom: 0; width: 330px; background: var(--nf-side); box-shadow: inset -1px 0 0 var(--nf-line); }
+.nf-ui { display: flex; }
+.nf-sb { flex: none; width: 330px; box-sizing: border-box; padding: 40px 30px; }
+.nf-main { flex: 1; min-width: 0; padding: 40px 54px 0; display: flex; flex-direction: column; }
+.nf-f { position: relative; }
+.nf-b { transform: translateZ(1px); }
+.nf-sh { position: absolute; left: 0; top: 0; width: 100%; pointer-events: none; }
+.nf-brand { margin-bottom: 30px; }
+.nf-brand .nf-b { display: flex; align-items: center; gap: 14px; min-height: 64px; }
+.nf-mk { display: block; flex: none; width: 56px; height: 56px; }
+.nf-nm { flex: 1; min-width: 0; font-size: 46px; font-weight: 700; line-height: 1.25; }
+.nf-nav { margin-bottom: 8px; }
+.nf-nav .nf-b { display: flex; align-items: center; gap: 18px; height: 76px; padding: 0 18px; border-radius: 16px; font-size: 48px; line-height: 1.25; color: var(--k-muted); }
+.nf-on .nf-b { color: var(--k-ink); font-weight: 700; background: var(--nf-card); box-shadow: 0 0 0 1px var(--nf-line), 0 2px 6px color-mix(in srgb, var(--nf-sh) 6%, transparent); }
+.nf-ic { display: block; flex: none; width: 40px; height: 40px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.nf-on .nf-ic { stroke: var(--k-accent); }
+.nf-bd { margin-left: auto; width: 16px; height: 16px; border-radius: 50%; background: var(--k-accent); }
+.nf-ti { font-size: 72px; font-weight: 700; line-height: 1.2; }
+.nf-stats { display: flex; gap: 24px; margin-top: 50px; }
+.nf-stat { flex: 1; min-width: 0; }
+.nf-stat .nf-b, .nf-task .nf-b { background: var(--nf-card); box-shadow: 0 0 0 1px var(--nf-line), 0 1px 2px color-mix(in srgb, var(--nf-sh) 5%, transparent), 0 10px 24px -14px color-mix(in srgb, var(--nf-sh) 18%, transparent); }
+.nf-stat .nf-b { min-height: 192px; height: 100%; box-sizing: border-box; padding: 22px 28px; border-radius: 22px; }
+.nf-sl { font-size: 46px; line-height: 1.25; color: var(--k-muted); }
+.nf-sv { margin-top: 6px; font-size: 84px; font-weight: 700; line-height: 1; }
+.nf-stat:nth-child(3) .nf-sv { color: var(--k-accent); }
+.nf-today { margin-top: 30px; font-size: 40px; font-weight: 700; line-height: 1.25; letter-spacing: 0.14em; color: var(--k-muted); }
+.nf-tasks { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.nf-task { --nf-rc: var(--k-accent); }
+.nf-task:nth-child(2) { --nf-rc: var(--k-accent-2); }
+.nf-task:nth-child(4) { --nf-rc: var(--k-muted); }
+.nf-task .nf-b { display: flex; align-items: center; gap: 22px; height: 80px; box-sizing: border-box; padding: 0 24px; border-radius: 16px; }
+.nf-ring { flex: none; width: 30px; height: 30px; border-radius: 50%; box-shadow: inset 0 0 0 4px var(--nf-rc); }
+.nf-tt { flex: 1; min-width: 0; font-size: 46px; line-height: 1.25; }
+.nf-pill { flex: none; display: flex; align-items: center; width: 120px; height: 40px; box-sizing: border-box; padding: 0 18px; border-radius: 12px; background: color-mix(in srgb, var(--nf-rc) 14%, var(--nf-card)); }
+.nf-pill i { flex: 1; height: 10px; border-radius: 5px; background: color-mix(in srgb, var(--nf-rc) 70%, var(--nf-card)); }
+.nf-av { flex: none; width: 48px; height: 48px; border-radius: 50%; background: color-mix(in srgb, var(--nf-rc) 28%, var(--nf-card)); }
+/* dark skin: accent mixed into a dark card goes olive; neutral chips, avatars mixed with white */
+.nf[data-tone="dark"] .nf-pill { background: color-mix(in srgb, var(--nf-card), white 7%); }
+.nf[data-tone="dark"] .nf-pill i { background: var(--nf-rc); }
+.nf[data-tone="dark"] .nf-av { background: color-mix(in srgb, var(--nf-rc) 55%, white); }
+/* portrait: 800 x 960 panel on the 40% line, no nav, no status pills */
+@container (orientation: portrait) {
+  .nf-cam { perspective-origin: 50% 37%; }
+  .nf-rig { top: 40%; width: 800px; height: 960px; margin: -480px 0 0 -400px; }
+  .nf-ui { flex-direction: column; padding: 40px 36px 0; }
+  .nf-sb, .nf-main { width: auto; padding: 0; }
+  .nf-side, .nf-nav, .nf-pill { display: none; }
+  .nf-brand { margin-bottom: 20px; }
+  .nf-ti { font-size: 84px; }
+  .nf-stats { gap: 14px; }
+  .nf-stat .nf-b { padding: 22px 20px; }
+}
+</style>
+
+<div id="root" data-composition-id="neon-frame-forerun">
+  <div class="nf">
+    <div class="nf-stage"></div>
+    <div class="nf-key"></div>
+    <div class="nf-vig"></div>
+    <div class="nf-grain"></div>
+    <div class="nf-cam">
+      <div class="nf-rig">
+        <div class="nf-echo" data-layout-allow-overflow></div>
+        <div class="nf-glow"></div>
+        <div class="nf-base"><i class="nf-side"></i><i class="nf-veil"></i></div>
+        <div class="nf-ui">
+          <div class="nf-sb">
+            <div class="nf-f nf-brand" data-f="0 150"><div class="nf-b"><svg class="nf-mk" viewBox="0 0 128 128" aria-hidden="true"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)" /><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)" /><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)" /></svg><span class="nf-nm">示例应用</span></div></div>
+            <div class="nf-f nf-nav nf-on" data-f="0.08 130"><div class="nf-b"><svg class="nf-ic" viewBox="0 0 20 20"><path d="M3.5 9L10 3.5 16.5 9V16.5H3.5ZM8 16.5V12H12V16.5" /></svg>首页</div></div>
+            <div class="nf-f nf-nav" data-f="0.14 130"><div class="nf-b"><svg class="nf-ic" viewBox="0 0 20 20"><path d="M3 11L5.2 4.5H14.8L17 11V16H3ZM3 11H7.2L8.3 12.8H11.7L12.8 11H17" /></svg>消息<i class="nf-bd"></i></div></div>
+            <div class="nf-f nf-nav" data-f="0.2 130"><div class="nf-b"><svg class="nf-ic" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" /><path d="M7 10.2L9.2 12.4 13.2 8" /></svg>项目</div></div>
+            <div class="nf-f nf-nav" data-f="0.26 130"><div class="nf-b"><svg class="nf-ic" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" /><circle cx="10" cy="10" r="3" /></svg>设置</div></div>
+          </div>
+          <div class="nf-main">
+            <div class="nf-f nf-hello" data-f="0.04 170"><div class="nf-b"><div class="nf-ti">今天的工作台</div></div></div>
+            <div class="nf-stats">
+              <div class="nf-f nf-stat" data-f="0.2 160"><div class="nf-b"><div class="nf-sl">今日任务</div><div class="nf-sv">4</div></div></div>
+              <div class="nf-f nf-stat" data-f="0.27 160"><div class="nf-b"><div class="nf-sl">进行中</div><div class="nf-sv">2</div></div></div>
+              <div class="nf-f nf-stat" data-f="0.34 160"><div class="nf-b"><div class="nf-sl">本周完成</div><div class="nf-sv">18</div></div></div>
+            </div>
+            <div class="nf-f nf-today" data-f="0.42 120"><div class="nf-b">今天</div></div>
+            <div class="nf-tasks">
+              <div class="nf-f nf-task" data-f="0.5 140"><div class="nf-b"><i class="nf-ring"></i><span class="nf-tt">整理课程素材</span><i class="nf-pill"><i></i></i><i class="nf-av"></i></div></div>
+              <div class="nf-f nf-task" data-f="0.62 140"><div class="nf-b"><i class="nf-ring"></i><span class="nf-tt">录制操作演示</span><i class="nf-pill"><i></i></i><i class="nf-av"></i></div></div>
+              <div class="nf-f nf-task" data-f="0.74 140"><div class="nf-b"><i class="nf-ring"></i><span class="nf-tt">核对字幕时间</span><i class="nf-pill"><i></i></i><i class="nf-av"></i></div></div>
+              <div class="nf-f nf-task" data-f="0.86 140"><div class="nf-b"><i class="nf-ring"></i><span class="nf-tt">导出第一版</span><i class="nf-pill"><i></i></i><i class="nf-av"></i></div></div>
+            </div>
+          </div>
+        </div>
+        <svg class="nf-fr" aria-hidden="true">
+          <defs>
+            <linearGradient id="nf-g" x2="1" y2="1"><stop style="stop-color: var(--k-accent)" /><stop offset="0.55" style="stop-color: color-mix(in oklch, var(--k-accent), var(--k-accent-2))" /><stop offset="1" style="stop-color: var(--k-accent-2)" /></linearGradient>
+            <radialGradient id="nf-h"><stop style="stop-color: #fff" /><stop offset="0.25" style="stop-color: var(--nf-core); stop-opacity: 0.9" /><stop offset="1" style="stop-color: var(--k-accent-2); stop-opacity: 0" /></radialGradient>
+          </defs>
+          <g class="nf-tube"><rect /><rect /><rect /><rect /></g>
+          <circle class="nf-dot" r="34" /><circle class="nf-hd" r="46" /><circle class="nf-hd" r="46" /><circle class="nf-fl" />
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+// seconds (upstream frames / 30), [start, duration]; both orientations
+var CFG = { dur: 4.7, run: [0.067, 0.667], meet: [0.7, 0.467], vis: [0.533, 0.467], lit: [0.8, 2], land: [1.8, 1.667], fall: 0.8,
+  cam: [0, 3.2], drift: [3, 1.667], core: [2, 1.333], dim: [3.2, 1], rim: [1.333, 1.333], rim2: [3.333, 1], up: [0.6, 1],
+  on: [0.667, 0.8, 0.933, 1.067, 1.2], off: [3.6, 3.433, 3.133, 3.433, 3.6] };
+// camera: rotations (deg) and scale, from -> to; title font floor (panel sizes in the CSS)
+var LAND = { ry: [-30, -12], rx: [10, 5], rz: [-7, -2.5], s: [0.8, 0.88], tmin: 48 };
+var PORT = { ry: [-30, -12], rx: [10, 5], rz: [-7, -2.5], s: [0.8, 0.88], tmin: 72 };
+var v = { name: "示例应用", title: "今天的工作台", stats: "今日任务 4|进行中 2|本周完成 18", items: "整理课程素材|录制操作演示|核对字幕时间|导出第一版", backdrop: "on" };
+try {
+  var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+  for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+} catch (e) {}
+
+var root = document.querySelector(".nf");
+var q = function (s) { return root.querySelector(s); }, qa = function (s) { return [].slice.call(root.querySelectorAll(s)); };
+var FW = root.clientWidth, FH = root.clientHeight;
+if (!FW || !FH) {
+  // not laid out yet: the host clip's declared size, then the window
+  var hc = root.closest("[data-width][data-height]");
+  FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+  FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+}
+var P = FH > FW, L = P ? PORT : LAND, K = Math.min(FW, FH) / 1.08e3;
+root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== end kit:tone ====
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+      "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+      "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+      "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+      "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+}
+// ==== end kit:grain ====
+// ==== kit:text@2 ====
+var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+function kWords(s, key) {
+  s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+  var cut = function (x) {
+    if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+    return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+  };
+  var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+  var pre = "";
+  bits.forEach(function (x) {
+    var t = x.trim(), last = out[out.length - 1];
+    if (last && /^ /.test(x)) last.sp = true;
+    if (!t) return;
+    if (!/[\p{L}\p{N}]/u.test(t)) {
+      if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+      else { last.t += t; last.sp = / $/.test(x); }
+      return;
+    }
+    out.push({ t: pre + t, sp: / $/.test(x) });
+    pre = "";
+  });
+  if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+  if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+  if (out.length) out[out.length - 1].sp = false;
+  return out;
+}
+function kSplit(el, by, rise, text) {
+  var s = text != null ? String(text) : el.textContent, units = [];
+  var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+  el.textContent = "";
+  parts.forEach(function (p) {
+    var u = document.createElement("span"), box = u;
+    u.className = "nf-u"; u.textContent = p.t;
+    if (by === "line") u.style.display = "block";
+    if (!p.t.trim()) { el.appendChild(u); return; }
+    if (rise) { box = document.createElement("span"); box.className = "nf-cut"; box.style.display = u.style.display; box.appendChild(u); }
+    el.appendChild(box);
+    if (p.sp) el.appendChild(document.createTextNode(" "));
+    units.push(u);
+  });
+  return units;
+}
+// ==== end kit:text ====
+// ==== kit:fit@1 ====
+function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+      var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+      if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+      row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+
+kTone(root);
+var key = q(".nf-key"), rig = q(".nf-rig"), base = q(".nf-base"), veil = q(".nf-veil"), glow = q(".nf-glow"), fr = q(".nf-fr");
+// the stage is dark on every skin: dark grain
+var grain = kGrain(q(".nf-grain"), { opacity: 0.09, blend: "soft-light" });
+if (String(v.backdrop) === "off") qa(".nf-stage,.nf-key,.nf-vig,.nf-grain").forEach(function (e) { e.style.display = "none"; });
+q(".nf-cam").style.perspective = 1600 * K + "px";
+rig.style.transform = "none"; // text is measured on the flat panel; the scene writes the camera every frame
+
+// text slots: phrases fitted to their box, never below the floor
+var txt = function (s) { return String(s == null ? "" : s).trim(); };
+var fill = function (el, s, min) { kSplit(el, "word", false, s); kFit(el, { min: min }); };
+var hide = function (el) { el.style.display = "none"; };
+fill(q(".nf-nm"), txt(v.name) || "示例应用", 40);
+fill(q(".nf-ti"), txt(v.title) || "今天的工作台", L.tmin);
+var st = txt(v.stats).split("|").map(txt).filter(Boolean).slice(0, 3);
+if (!st.length) hide(q(".nf-stats"));
+qa(".nf-stat").forEach(function (c, i) {
+  if (i >= st.length) return hide(c);
+  // "label value": the last word is the number
+  var m = /^(.*\S)\s+(\S+)$/.exec(st[i]) || [0, "", st[i]];
+  fill(c.querySelector(".nf-sl"), m[1], 40);
+  fill(c.querySelector(".nf-sv"), m[2], 48);
+});
+var it = txt(v.items).split("|").map(txt).filter(Boolean).slice(0, 4);
+if (!it.length) [".nf-today", ".nf-tasks"].forEach(function (s) { hide(q(s)); });
+qa(".nf-task").forEach(function (r, i) { if (i >= it.length) hide(r); else fill(r.querySelector(".nf-tt"), it[i], 40); });
+
+// a wrapped title or label makes the panel taller, still centred on its line (content height: bottom released)
+var ui = q(".nf-ui"), need;
+ui.style.bottom = "auto"; need = ui.offsetHeight + 30; ui.style.bottom = "";
+if (need > rig.offsetHeight) { rig.style.height = need + "px"; rig.style.marginTop = -need / 2 + "px"; }
+// floating parts: u = place in the landing order, h = start height (px)
+var fall = MT.bezier(0.55, 0, 0.75, 0.95), out = MT.EASE.out;
+var parts = qa(".nf-f").filter(function (f) { return f.offsetParent; }).map(function (f) {
+  var b = f.firstElementChild, s = b.cloneNode(true);
+  // shadow: the same shape blacked out on the page (decoration)
+  s.classList.add("nf-sh");
+  s.setAttribute("data-layout-ignore", "");
+  f.insertBefore(s, b);
+  var d = f.getAttribute("data-f").split(" ");
+  return { f: f, b: b, s: s.style, H: +d[1], at: CFG.land[0] + out(+d[0]) * CFG.land[1] };
+});
+
+// tunnel: five echoes of the frame, further and bigger
+var tube = q(".nf-tube"), NS = "http://www.w3.org/2000/svg";
+var echoes = CFG.on.map(function (on, i) {
+  var k = i + 1, z = 320 * k, svg = document.createElementNS(NS, "svg");
+  svg.appendChild(tube.cloneNode(true));
+  svg.style.cssText = "display:none;transform:translateZ(" + -z + "px) scale(" + (((1.13 + 0.2 * k) * (1600 + z)) / 1600) + ");--g:var(--k-accent" + (k % 2 ? "" : "-2") + ");--w:" + (1.2 + 0.3 * k) + ";--c:0.5";
+  q(".nf-echo").appendChild(svg);
+  return { el: svg, k: k, on: Math.round(on * 30), off: Math.round(CFG.off[i] * 30) };
+});
+// the run: one dash centred on the left middle of a path starting at the right middle (a dash never wraps
+// past a path's start); the static rect tube takes over once it closes
+var W = rig.offsetWidth + 44, H = rig.offsetHeight + 44, n = (window.__nfN = (window.__nfN || 0) + 1);
+var rt = fr.insertBefore(tube.cloneNode(false), tube);
+rt.innerHTML = Array(5).join('<path pathLength="1000" d="M' + W + " " + H / 2 + "V" + H + "H0V0H" + W + 'Z" />');
+// gradient ids numbered per mount
+["g", "h"].forEach(function (c) { q("#nf-" + c).id = "nf-" + c + n; fr.style.setProperty("--" + (c === "g" ? "g" : "hg"), "url(#nf-" + c + n + ")"); });
+var hd = qa(".nf-hd"), dot = q(".nf-dot"), fl = q(".nf-fl");
+dot.setAttribute("cy", H / 2); fl.setAttribute("cx", W); fl.setAttribute("cy", H / 2);
+// point u (0-1) round the frame, clockwise from the left middle
+var pt = function (u) {
+  var s = u * 2 * (W + H), seg = [[0, H / 2, 0, 0], [0, 0, W, 0], [W, 0, W, H], [W, H, 0, H], [0, H, 0, H / 2]];
+  for (var i = 0; i < 5; i++) {
+    var a = seg[i], l = Math.abs(a[2] - a[0]) + Math.abs(a[3] - a[1]);
+    if (s <= l) return [a[0] + ((a[2] - a[0]) * s) / l, a[1] + ((a[3] - a[1]) * s) / l];
+    s -= l;
+  }
+  return [0, H / 2];
+};
+var mixc = function (c, p) { return "color-mix(in srgb, var(" + c + ") " + p + "%, transparent)"; };
+var STRIKE = [0, 0.7, 0.15, 0.9, 0.35, 1], FADE = [1, 0.3, 0.8, 0.12, 0.4, 0];
+
+var render = function (t) {
+  var e = function (a, ease) { return MT.ramp(t, a[0], a[1], ease); };
+  var f = t * 30; // frames at 30 fps: the tube flicker steps once a frame
+  var trace = e(CFG.run, "swift"), half = trace * 500, meet = e(CFG.meet, "out"), flash = t >= CFG.meet[0] ? 1 - meet : 0;
+  var vis = e(CFG.vis, "out"), lit = e(CFG.lit, "smooth"), cam = e(CFG.cam, "out"), dr = e(CFG.drift, "smooth"), dim = e(CFG.dim, "smooth");
+  var rim = e(CFG.rim, "out") * (1 + 0.25 * e(CFG.rim2, "smooth")), run = trace < 1;
+  grain(t);
+  key.style.opacity = (0.55 + 0.45 * e(CFG.up, "out") - 0.3 * dim);
+  rig.style.transform = "scale(" + ((MT.mix(L.s[0], L.s[1], cam) + 0.01 * dr) * K) + ") rotateY(" + (MT.mix(L.ry[0], L.ry[1], cam) + 1.5 * dr) +
+    "deg) rotateX(" + MT.mix(L.rx[0], L.rx[1], cam) + "deg) rotateZ(" + MT.mix(L.rz[0], L.rz[1], cam) + "deg)";
+  // echoes strike near to far, go out middle first
+  echoes.forEach(function (o) {
+    var a = (f < o.on ? 0 : f - o.on >= 6 ? 1 : STRIKE[Math.floor(f - o.on)]) * (f < o.off ? 1 : f - o.off >= 6 ? 0 : FADE[Math.floor(f - o.off)]);
+    a *= (0.42 - o.k * 0.06) * (0.85 + 0.15 * Math.sin(f / 7 + o.k));
+    o.el.style.display = a > 0.002 ? "" : "none";
+    o.el.style.setProperty("--a", a);
+  });
+  glow.style.opacity = Math.min(1, trace * 2);
+  glow.style.boxShadow = "0 40px 120px -10px rgba(4,1,12,.85), -30px -10px 80px 6px " + mixc("--k-accent", 32 * rim) + ", 30px 30px 90px 10px " + mixc("--k-accent-2", 26 * rim);
+  // page out of the dark; a cold veil retreats to the right
+  base.style.opacity = vis;
+  base.style.filter = lit < 0.995 ? "brightness(" + Math.max(0.03, lit) + ")" : "";
+  veil.style.background = "linear-gradient(90deg, transparent " + MT.mix(-40, 100, lit) + "%, " + mixc("--nf-veil", 60) + " " + MT.mix(0, 160, lit) + "%)";
+  parts.forEach(function (p) {
+    // 0.8 s accelerating fall, soft touchdown
+    var h = (1 - fall(MT.clamp((t - p.at + CFG.fall) / CFG.fall))) * p.H, s = p.s;
+    p.b.style.transform = "translateZ(" + (h + 1) + "px)";
+    p.b.style.opacity = vis;
+    p.b.style.filter = lit < 0.995 ? "brightness(" + Math.max(0.04, lit) + ")" : "";
+    // higher: further right-down, bigger, softer, fainter
+    s.display = h > 0.5 ? "" : "none";
+    s.transform = "translate3d(" + (0.34 * h) + "px," + (0.5 * h) + "px,0.5px) scale(" + (1 + 0.0011 * h) + ")";
+    s.filter = "brightness(0) blur(" + (2 + 0.12 * h) + "px)";
+    s.opacity = ((0.42 - 0.0016 * h) * lit * vis);
+    // unlit or airborne text is dark on dark by design: unchecked until it lands lit
+    p.f.toggleAttribute("data-layout-ignore", h > 0.5 || lit < 0.97);
+  });
+  // frame: two heads run from the left middle and meet at the right middle
+  fr.style.setProperty("--a", (1 - 0.35 * dim));
+  fr.style.setProperty("--c", MT.mix(1, 0.35, e(CFG.core, "smooth")));
+  tube.style.display = run ? "none" : "";
+  rt.style.display = run ? "" : "none";
+  rt.style.strokeDasharray = (2 * half) + " 1000";
+  rt.style.strokeDashoffset = (half - 500);
+  hd.forEach(function (c, i) {
+    c.style.display = run ? "inline" : "";
+    var p = pt(i ? 1 - trace / 2 : trace / 2);
+    c.setAttribute("cx", p[0]); c.setAttribute("cy", p[1]);
+  });
+  dot.style.display = t < 0.1 ? "inline" : "";
+  fl.style.display = flash > 0.01 ? "inline" : "";
+  fl.setAttribute("r", (60 + 160 * meet));
+  fl.style.opacity = flash;
+};
+var tl = MT.scene(CFG.dur, render);
+window.__timelines["neon-frame-forerun"] = tl;
+})();
+</script>
+    </template>
+  </body>
+</html>

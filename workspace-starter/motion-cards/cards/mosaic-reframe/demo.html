@@ -1,0 +1,470 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"name","type":"string","label":"页眉名称","default":"示例相册"},
+    {"id":"views","type":"string","label":"三档版式名（用 | 分隔，每档 2–3 个字）","default":"网格|拼贴|斜排"},
+    {"id":"kicker","type":"string","label":"主图眉题（可空）","default":"本周精选"},
+    {"id":"pick","type":"string","label":"主图标题","default":"先看这一张"},
+    {"id":"meta","type":"string","label":"主图说明（可空）","default":"第 1 张 · 共 12 张"},
+    {"id":"title","type":"string","label":"收尾标题（用 | 切段，最后一段用强调色）","default":"同一批图，|换三种看法"},
+    {"id":"sub","type":"string","label":"收尾副行（可空）","default":"网格看全貌，拼贴挑重点，斜排看顺序"},
+    {"id":"srcs","type":"string","label":"12 张图（用 | 分隔，不足 12 张循环；留空用示例图）","default":""},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>mosaic-reframe · 瓦片三态重排</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="mosaic-reframe-template">
+      <!-- Ported from video-shotcraft demos/transition/mosaic-reframe/MosaicReframe.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette (sand look dropped), system fonts, generic Chinese copy, upstream mark, wordmark, board name and
+           tagline removed (neutral mark + name variable); the 8 drawn film photos replaced by the library sample photos (srcs
+           variable); control labels, caption kicker and meta raised to 40px (control cells 168 -> 176px), caption and title in the
+           serif token at 600, leading 1.0 -> 1.2, tracking 0, italic only for Latin; caption scrim 60% -> 72% (bright user photos), long caption copy has its reveal gaps squeezed and drops
+           the meta line, then the kicker, when it outgrows the hero tile; top grain moved under the text (stage grain doubled,
+           photo grain per tile); slot 7.4s for a 1s rest;
+           a portrait layout added (3x4 grid, 4x6 mosaic, smaller papers). Layout tables, timing, eases, stagger, lag, lift,
+           rotation overshoot, paper border and z-order switch kept. -->
+      <style>
+  @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+  @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+  @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+  /* ==== kit:fonts@2 (serif only) ==== */
+  @font-face { font-family: "Noto Serif SC"; src: local("Noto Serif SC"), local("Noto Serif CJK SC"), local("Source Han Serif SC"); }
+  @font-face { font-family: "Songti SC"; src: local("Songti SC"), local("STSong"), local("SimSun"); }
+  #root {
+    --k-bg: var(--mc-bg, #ffffff);
+    --k-panel: var(--mc-panel, #f4f5f7);
+    --k-ink: var(--mc-ink, #15171c);
+    --k-muted: var(--mc-muted, #6b7280);
+    --k-accent: var(--mc-accent, #e8590c);
+    --k-accent-2: var(--mc-accent-2, #2563eb);
+    --k-on-accent: var(--mc-on-accent, #ffffff);
+    --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+    --k-serif: var(--mc-serif, "Noto Serif SC", "Songti SC", serif);
+    /* ==== kit:stage-tokens@1: the caption scrim on the hero photo is dark on any skin ==== */
+    --k-stage: var(--mc-stage, #0b0d12);
+    --k-on-stage: var(--mc-on-stage, #f3f5f8);
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    font-family: var(--k-font);
+    color: var(--k-ink);
+  }
+  .mr { position: absolute; inset: 0; container-type: size; --mr-paper: var(--k-bg); }
+  /* ==== kit:derived@1 ==== */
+  .mr {
+    --mr-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+    --mr-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+  }
+  .mr[data-tone="dark"] { --mr-shade: color-mix(in srgb, var(--k-bg) 30%, black); --mr-paper: var(--k-panel); }
+  /* ==== kit:backdrop@1: key light moved to upstream's 28% 2%, accent-2 fill light bottom right ==== */
+  .mr-bd { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 52%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+  .mr-bd::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 58% 62% at 28% 2%, color-mix(in srgb, var(--k-bg) 90%, transparent) 0%, transparent 70%), radial-gradient(ellipse 50% 46% at 90% 95%, color-mix(in srgb, var(--k-accent-2) 10%, transparent) 0%, transparent 72%); }
+  /* ==== kit:vignette@1 ==== */
+  .mr-vig {
+    position: absolute; inset: 0; pointer-events: none;
+    --vs: 0.16; --vin: 42%; --vx: 50%; --vy: 46%; --vc: var(--mr-shade);
+    background:
+      radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+      radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+  }
+  .mr[data-tone="dark"] .mr-vig { --vs: 0.55; }
+  /* ==== kit:grain@1 ==== */
+  .mr-grain { position: absolute; inset: 0; pointer-events: none; }
+  /* ==== kit:text@2 ==== */
+  .mr-u { display: inline-block; white-space: pre; }
+  .mr-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+
+  .mr-cam { position: absolute; inset: 0; transform-origin: 50% 46%; }
+  .mr-head { position: absolute; left: 96px; top: 92px; min-height: 72px; display: flex; align-items: center; gap: 18px; }
+  .mr-mark { display: block; flex: none; }
+  .mr-name { display: block; max-width: 456px; font-size: 40px; font-weight: 700; line-height: 1.2; letter-spacing: 0.03em; }
+  /* layout switch: the accent pill slides under the labels (cells --sw wide, 6px inner pad) */
+  .mr-seg { --sw: 176px; position: absolute; right: 96px; top: 92px; width: calc(3 * var(--sw) + 12px); height: 72px; border-radius: 999px;
+    background: color-mix(in srgb, var(--k-panel) 85%, transparent);
+    box-shadow: inset 0 0 0 1px var(--mr-line), 0 0.9px 2.1px color-mix(in srgb, var(--mr-shade) 5.8%, transparent), 0 3.3px 7.8px -1.3px color-mix(in srgb, var(--mr-shade) 6%, transparent); }
+  .mr-pill { position: absolute; top: 6px; left: calc(6px + 2 * var(--sw)); width: var(--sw); height: 60px; border-radius: 999px; background: var(--k-accent);
+    box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--k-accent) 70%, transparent), inset 0 1px 0 color-mix(in srgb, white 25%, transparent); }
+  .mr-lab { position: absolute; top: 6px; width: var(--sw); height: 60px; display: flex; align-items: center; justify-content: center; text-align: center;
+    font-size: 40px; font-weight: 600; line-height: 1.2; color: var(--k-muted); }
+  .mr-lab:last-child { color: var(--k-on-accent); }
+  /* the cascade's poster title, lower left; it grows upward from a fixed bottom line */
+  .mr-end { position: absolute; left: 96px; bottom: 92px; width: 800px; }
+  .mr-title { font-family: var(--k-serif); font-size: 124px; font-weight: 600; line-height: 1.2; }
+  .mr-key { display: inline-block; color: var(--k-accent); }
+  .mr-sub { margin-top: 26px; font-size: 40px; line-height: 1.3; color: var(--k-muted); }
+  /* tile: real left/top/size each frame, never a whole-tile scale; static = the settled cascade */
+  .mr-t { position: absolute; background: var(--mr-paper); left: calc(700px + 79.45px * var(--i)); top: calc(28px + 65.09px * var(--i));
+    width: 300px; height: 372px; border-radius: 6px; z-index: calc(10 + var(--i)); transform: rotate(calc(3deg * var(--i) - 15deg));
+    box-shadow: 0 1.3px 3.5px color-mix(in srgb, var(--mr-shade) 10.6%, transparent), 0 7.7px 18.2px -3.1px color-mix(in srgb, var(--mr-shade) 18%, transparent); }
+  .mr-ph { position: absolute; inset: 14px; border-radius: 2px; background: center / cover no-repeat;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mr-shade) 10%, transparent), inset 0 -60px 80px -40px color-mix(in srgb, var(--mr-shade) 18%, transparent); }
+  .mr-ph::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0.05; mix-blend-mode: overlay;
+    background-image: var(--mr-gi); background-position: var(--mr-gp); background-size: 256px 256px; }
+  .mr-scrim { position: absolute; inset: 0; border-radius: inherit; opacity: 0;
+    background: linear-gradient(200deg, transparent 35%, color-mix(in srgb, var(--k-stage) 72%, transparent) 100%); }
+  .mr-cap { position: absolute; left: 44px; bottom: 36px; color: var(--k-on-stage); opacity: 0; }
+  .mr-kick { margin-bottom: 10px; font-size: 40px; font-weight: 700; line-height: 1.3; letter-spacing: 0.16em; color: color-mix(in srgb, var(--k-accent), white 55%); }
+  .mr-pick { font-family: var(--k-serif); font-size: 84px; font-weight: 600; line-height: 1.15; text-shadow: 0 2px 18px color-mix(in srgb, var(--k-stage) 35%, transparent); }
+  .mr-meta { margin-top: 8px; font-size: 40px; line-height: 1.3; color: color-mix(in srgb, var(--k-on-stage) 82%, transparent); }
+  /* portrait: header row inside the 12% line, title above the 68% line; everything 120px off the sides so the
+     1.025 push-in still ends inside x 108-972 */
+  @container (orientation: portrait) {
+    .mr-head { left: 120px; top: 250px; }
+    .mr-name { max-width: 274px; }
+    .mr-t { left: calc(155px + 51.36px * var(--i)); top: calc(380px + 29.64px * var(--i)); width: 200px; height: 248px; }
+    .mr-ph { inset: 10px; }
+    .mr-seg { --sw: 156px; right: 120px; top: 250px; }
+    .mr-end { left: 120px; width: auto; right: 120px; bottom: 630px; }
+    .mr-title { font-size: 88px; }
+    .mr-sub { margin-top: 20px; }
+    .mr-cap { left: 30px; bottom: 26px; }
+    .mr-pick { font-size: 64px; }
+  }
+      </style>
+
+      <div id="root" data-composition-id="mosaic-reframe">
+        <div class="mr">
+          <div class="mr-bd"></div>
+          <div class="mr-vig"></div>
+          <div class="mr-grain"></div>
+          <div class="mr-cam">
+            <div class="mr-head">
+              <!-- kit:mark@1: neutral placeholder mark -->
+              <svg class="mr-mark" width="50" height="50" viewBox="0 0 128 128" aria-hidden="true"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg>
+              <div class="mr-name">示例相册</div>
+            </div>
+            <div class="mr-seg">
+              <i class="mr-pill"></i>
+              <div class="mr-lab" style="left: 6px">网格</div>
+              <div class="mr-lab" style="left: calc(6px + var(--sw))">拼贴</div>
+              <div class="mr-lab" style="left: calc(6px + 2 * var(--sw))">斜排</div>
+            </div>
+            <div class="mr-end">
+              <div class="mr-title">同一批图，<span class="mr-key">换三种看法</span></div>
+              <div class="mr-sub">网格看全貌，拼贴挑重点，斜排看顺序</div>
+            </div>
+<div class="mr-t" style="--i: 0"><div class="mr-ph" style="background-image: url(motion-cards/lib/samples/p1.jpg)"></div></div>
+<div class="mr-t" style="--i: 1"><div class="mr-ph" style="background-image: url(motion-cards/lib/samples/p2.jpg)"></div></div>
+<div class="mr-t" style="--i: 2"><div class="mr-ph" style="background-image: url(motion-cards/lib/samples/p3.jpg)"></div></div>
+<div class="mr-t" style="--i: 3"><div class="mr-ph" style="background-image: url(motion-cards/lib/samples/p4.jpg)"></div></div>
+<div class="mr-t" style="--i: 4"><div class="mr-ph" style="background-image: url(motion-cards/lib/samples/p5.jpg)"></div></div>
+<div class="mr-t" style="--i: 5"><div class="mr-ph" style="background-image: url(motion-cards/lib/samples/p6.jpg)"></div></div>
+<div class="mr-t" style="--i: 6"><div class="mr-ph" style="background-image: url(motion-cards/lib/samples/p7.jpg)"></div></div>
+<div class="mr-t" style="--i: 7"><div class="mr-ph" style="background-image: url(motion-cards/lib/samples/p8.jpg)"></div></div>
+<div class="mr-t" style="--i: 8"><div class="mr-ph" style="background-image: url(motion-cards/lib/samples/p4.jpg)"></div></div>
+<div class="mr-t" style="--i: 9"><div class="mr-ph" style="background-image: url(motion-cards/lib/samples/p2.jpg)"></div></div>
+<div class="mr-t" style="--i: 10"><div class="mr-ph" style="background-image: url(motion-cards/lib/samples/p6.jpg)"></div></div>
+<div class="mr-t" style="--i: 11"><div class="mr-ph" style="background-image: url(motion-cards/lib/samples/p3.jpg)"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+(function () {
+  // timing in seconds (upstream frames / 30), shared by both orientations
+  var CFG = {
+    dur: 7.4, cam: 7.133, camTo: 1.025, // slow push-in over the whole upstream shot (214 f, smooth)
+    inSpan: 0.467, inLead: 0.067, inLen: 0.533, inRise: 40, // entrance: 6 diagonals over 14 f ("out"), 16 f snappy
+    ab: 1.733, bc: 4.267, seg: 0.4, lag: 0.133, // the pill moves first (52 f / 128 f, 12 f snappy), tiles 4 f later
+    abLen: 0.867, abSpread: 0.333, // grid -> mosaic: 26 f per tile, starts over 10 f ("out": dense first)
+    bcLen: 1, bcSpread: 0.467, // mosaic -> cascade: 30 f per tile, dealt evenly over 14 f
+    sizeLag: 0.067, rotLag: 0.133, lift: 0.035, // w/h 2 f and rotation 4 f behind the centre; 3.5% lift mid-move
+    scrim: 2.4, cap: 2.533, kick: 2.6, pick: 2.733, meta: 3, capOut: 0.333, // hero caption (B)
+    title: 5.267, line2: 0.2, sub: 5.733 // poster title (C)
+  };
+  // layouts in frame px: content box (mx, top, bot), A grid (ac columns, gap ag), B mosaic (bc unit columns,
+  // gap bg, 12 slots as col,row,w,h), C papers cw x ch dealt from c0 to c1 at -15deg + 3deg each
+  var LAND = { mx: 96, top: 212, bot: 96, ac: 4, ag: 24, bc: 6, bg: 16,
+    slots: [0,0,3,2, 3,0,1,1, 4,0,1,1, 5,0,1,1, 3,1,2,1, 5,1,1,1, 0,2,1,1, 1,2,2,1, 3,2,1,2, 4,2,2,1, 0,3,3,1, 4,3,2,1],
+    c0: [850, 214], c1: [1724, 930], cw: 300, ch: 372, pad: 14, sw: 176, nameW: 456, capL: 44, endW: 800 };
+  var PORT = { mx: 120, top: 352, bot: 630, ac: 3, ag: 20, bc: 4, bg: 14,
+    slots: [0,0,3,2, 3,0,1,1, 3,1,1,1, 0,2,2,1, 2,2,1,1, 3,2,1,2, 0,3,1,1, 1,3,2,1, 0,4,1,2, 1,4,2,1, 3,4,1,1, 1,5,3,1],
+    c0: [255, 504], c1: [820, 830], cw: 200, ch: 248, pad: 10, sw: 156, nameW: 274, capL: 30, endW: 840 };
+  var v = { name: "示例相册", views: "网格|拼贴|斜排", kicker: "本周精选", pick: "先看这一张", meta: "第 1 张 · 共 12 张",
+    title: "同一批图，|换三种看法", sub: "网格看全貌，拼贴挑重点，斜排看顺序", srcs: "", backdrop: "on" };
+  try {
+    var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+  } catch (e) {}
+
+  var root = document.querySelector(".mr");
+  var q = function (s) { return root.querySelector(s); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+    // not laid out yet: the host clip's declared size, then the window
+    var hc = root.closest("[data-width][data-height]");
+    FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+    FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND;
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+  if (String(v.backdrop) === "off") [".mr-bd", ".mr-vig", ".mr-grain"].forEach(function (s) { q(s).style.display = "none"; });
+
+  // ==== kit:tone@1 ====
+  function kRGB(el, color) {
+    var p = document.createElement("i");
+    p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+    el.appendChild(p);
+    var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+    el.removeChild(p);
+    return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+  }
+  function kTone(wrap) {
+    var c = kRGB(wrap, "var(--k-bg)");
+    var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+    wrap.setAttribute("data-tone", tone);
+    return tone;
+  }
+  // ==== end kit:tone ====
+
+  // ==== kit:stagger@1 ====
+  function kStagger(i, n, span, ease) { return n <= 1 ? 0 : MT.ease(ease || "linear")(i / (n - 1)) * span; }
+  // ==== end kit:stagger ====
+
+  // ==== kit:grain@1 ====
+  function kGrain(layer, o) {
+    o = o || {};
+    var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+    var dark = tones && tones.getAttribute("data-tone") === "dark";
+    var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+      var f = "type='linear' slope='2.4' intercept='-0.7'";
+      var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+        "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+        "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+        "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+        "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+      return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+    });
+    layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+    layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+    layer.style.backgroundSize = size + "px " + size + "px";
+    return function (t) {
+      var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+      layer.style.backgroundImage = tiles[k % 6];
+      layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+    };
+  }
+  // ==== end kit:grain ====
+
+  // ==== kit:shadow@1 ====
+  function kShadow(e, strength) {
+    e = Math.max(0, e);
+    var s = strength == null ? 1 : strength, r = function (x) { return Math.round(x * 10) / 10; };
+    var c = function (a) { return "color-mix(in srgb, var(--mr-shade) " + r(Math.min(1, a) * 100) + "%, transparent)"; };
+    return "0 " + r(0.5 + e * 0.06) + "px " + r(1 + e * 0.18) + "px " + c((0.12 * s) / (1 + e / 24)) + ", " +
+      "0 " + r(e * 0.55) + "px " + r(e * 1.3) + "px " + r(-e * 0.22) + "px " + c((0.08 + (Math.min(e, 64) / 64) * 0.22) * s);
+  }
+  // ==== end kit:shadow ====
+
+  // ==== kit:text@2 (rise and blur variants only) ====
+  var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+  function kWords(s, key) {
+    s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+    var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+    var cut = function (x) {
+      if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+      return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+    };
+    var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+    var pre = "";
+    bits.forEach(function (x) {
+      var t = x.trim(), last = out[out.length - 1];
+      if (last && /^ /.test(x)) last.sp = true;
+      if (!t) return;
+      if (!/[\p{L}\p{N}]/u.test(t)) {
+        if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+        else { last.t += t; last.sp = / $/.test(x); }
+        return;
+      }
+      out.push({ t: pre + t, sp: / $/.test(x) });
+      pre = "";
+    });
+    if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+    if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+    if (out.length) out[out.length - 1].sp = false;
+    return out;
+  }
+  function kSplit(el, by, rise, text) {
+    var s = text != null ? String(text) : el.textContent, units = [];
+    var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+    el.textContent = "";
+    parts.forEach(function (p) {
+      var u = document.createElement("span"), box = u;
+      u.className = "mr-u"; u.textContent = p.t;
+      if (by === "line") u.style.display = "block";
+      if (!p.t.trim()) { el.appendChild(u); return; }
+      if (rise) { box = document.createElement("span"); box.className = "mr-cut"; box.style.display = u.style.display; box.appendChild(u); }
+      el.appendChild(box);
+      if (p.sp) el.appendChild(document.createTextNode(" "));
+      units.push(u);
+    });
+    return units;
+  }
+  function kReveal(tl, units, variant, at, o) {
+    o = o || {};
+    var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+    units.forEach(function (u, i) {
+      var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+      if (variant === "rise") {
+        tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+        tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+      } else if (variant === "blur") {
+        tl.fromTo(u, { opacity: 0, y: fs * 0.25, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: each, ease: ease }, t0);
+      }
+    });
+    return tl;
+  }
+  // ==== end kit:text ====
+
+  // ==== kit:fit@1 (kRows not used) ====
+  function kFit(el, o) {
+    o = o || {};
+    var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+    var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+    for (;;) {
+      el.style.fontSize = f + "px";
+      m = kLines(el);
+      if ((m.w <= W && m.n <= n) || f <= min) break;
+      f = Math.max(min, f - 2);
+    }
+    if (m.w > W) {
+      [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+      m = kLines(el);
+    }
+    return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+  }
+  function kLines(el) {
+    var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+    var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+    while ((t = it.nextNode())) {
+      if (!t.data.trim()) continue;
+      r.selectNodeContents(t);
+      [].forEach.call(r.getClientRects(), function (b) {
+        var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+        if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+        row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+      });
+    }
+    return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+  }
+  // ==== end kit:fit ====
+
+  var dark = kTone(root) === "dark";
+  var gl = q(".mr-grain"), grain = kGrain(gl, { opacity: dark ? 0.09 : 0.1 }); // upstream stacks two 0.05 grains on the stage
+  var MOVE = MT.bezier(0.75, 0, 0.15, 1), ROT = MT.bezier(0.45, 0, 0.3, 1.22); // decisive swap; late rotation, one overshoot
+
+  // the three layouts, as tile centres and sizes
+  var W = FW - 2 * L.mx, H = FH - L.top - L.bot, ar = 12 / L.ac, br = 24 / L.bc;
+  var aw = (W - (L.ac - 1) * L.ag) / L.ac, ah = (H - (ar - 1) * L.ag) / ar;
+  var uw = (W - (L.bc - 1) * L.bg) / L.bc, uh = (H - (br - 1) * L.bg) / br;
+  var span = function (n, u, g) { return n * u + (n - 1) * g; };
+  var imgs = String(v.srcs).split("|").map(function (s) { return s.trim(); }).filter(Boolean);
+  var cam = q(".mr-cam"), tiles = root.querySelectorAll(".mr-t"), T = [];
+  for (var i = 0; i < 12; i++) {
+    var s = L.slots.slice(i * 4, i * 4 + 4), f = i / 11, ca = i % L.ac, ra = Math.floor(i / L.ac);
+    var o = {
+      A: { x: L.mx + ca * (aw + L.ag) + aw / 2, y: L.top + ra * (ah + L.ag) + ah / 2, w: aw, h: ah },
+      B: { x: L.mx + s[0] * (uw + L.bg) + span(s[2], uw, L.bg) / 2, y: L.top + s[1] * (uh + L.bg) + span(s[3], uh, L.bg) / 2, w: span(s[2], uw, L.bg), h: span(s[3], uh, L.bg) },
+      C: { x: L.c0[0] + (L.c1[0] - L.c0[0]) * f, y: L.c0[1] + (L.c1[1] - L.c0[1]) * f, w: L.cw, h: L.ch, r: -15 + 3 * i },
+      // entrance along the diagonals, 2 f lead so frame 0 shows the first tile
+      s0: kStagger(ca + ra, 6, CFG.inSpan, "out") - CFG.inLead,
+      sA: CFG.ab + CFG.lag + kStagger(i, 12, CFG.abSpread, "out"),
+      sB: CFG.bc + CFG.lag + kStagger(i, 12, CFG.bcSpread)
+    };
+    o.el = tiles[i];
+    o.ph = o.el.querySelector(".mr-ph");
+    if (imgs.length) o.ph.style.backgroundImage = "url('" + imgs[i % imgs.length].replace(/'/g, "%27") + "')";
+    if (!i) o.ph.insertAdjacentHTML("beforeend", '<i class="mr-scrim"></i>');
+    // papers the frame crops on purpose: rotated box after the push-in, overshoot included
+    var c = o.C, r = (Math.abs(c.r) * 1.22 * Math.PI) / 180, hw = (c.w * Math.cos(r) + c.h * Math.sin(r)) / 2, hh = (c.w * Math.sin(r) + c.h * Math.cos(r)) / 2;
+    var ox = FW / 2, oy = FH * 0.46, z = CFG.camTo;
+    if (ox + (c.x - hw - ox) * z < 0 || ox + (c.x + hw - ox) * z > FW || oy + (c.y - hh - oy) * z < 0 || oy + (c.y + hh - oy) * z > FH) o.el.setAttribute("data-layout-allow-overflow", "");
+    T.push(o);
+  }
+
+  // text slots: every one fitted to its box; empty optional slots disappear
+  var setText = function (el, s, o2) { s = String(s).trim(); el.style.display = s ? "" : "none"; el.textContent = s; if (s) kFit(el, o2); };
+  setText(q(".mr-name"), v.name, { width: L.nameW, lines: 2 });
+  var labs = [].slice.call(root.querySelectorAll(".mr-lab")), views = kWords(v.views);
+  labs.forEach(function (lb, j) { setText(lb, views[j] ? views[j].t : "", { width: L.sw - 12, min: 30 }); });
+  var t0 = T[0], capW = t0.B.w - 2 * L.capL;
+  t0.el.insertAdjacentHTML("beforeend", '<div class="mr-cap" style="width:' + capW + 'px"><div class="mr-kick"></div><div class="mr-pick"></div><div class="mr-meta"></div></div>');
+  t0.el.style.transform = "none"; // measure the caption unrotated (static CSS tilts the paper)
+  var capEl = q(".mr-cap"), kickEl = q(".mr-kick"), pickEl = q(".mr-pick"), metaEl = q(".mr-meta"), scrim = q(".mr-scrim");
+  var kick = String(v.kicker).trim() ? kSplit(kickEl, "word", false, v.kicker) : (kickEl.style.display = "none", []);
+  kFit(kickEl, { width: capW });
+  var pick = kSplit(pickEl, "word", true, v.pick);
+  kFit(pickEl, { width: capW, lines: 2, min: 48 });
+  setText(metaEl, v.meta, { width: capW });
+  // a caption taller than the hero tile drops the meta line, then the kicker
+  [metaEl, kickEl].forEach(function (el) { if (capEl.offsetHeight > t0.B.h - 60) el.style.display = "none"; });
+  var tEl = q(".mr-title"), units = kSplit(tEl, "word", true, v.title), bar = String(v.title).indexOf("|") >= 0;
+  var accent = bar ? units.slice(-1) : [], plain = bar ? units.slice(0, -1) : units;
+  accent.forEach(function (u) { u.className += " mr-key"; if (!kCJK.test(u.textContent)) u.style.fontStyle = "italic"; });
+  kFit(tEl, { width: L.endW, lines: 2, min: 72 });
+  var subEl = q(".mr-sub");
+  setText(subEl, v.sub, { width: L.endW, lines: 2 });
+
+  var pill = q(".mr-pill"), str = dark ? 2.6 : 1;
+  function render(t) {
+    cam.style.transform = "scale(" + MT.mix(1, CFG.camTo, MT.ramp(t, 0, CFG.cam, "smooth")).toFixed(5) + ")";
+    // the switch leads: pill slides one cell (stretching 18% mid-way), the target label dips 5%
+    var p1 = MT.ramp(t, CFG.ab, CFG.seg), p2 = MT.ramp(t, CFG.bc, CFG.seg), pos = p1 + p2;
+    pill.style.left = (6 + pos * L.sw).toFixed(2) + "px";
+    pill.style.transform = "scaleX(" + (1 + 0.18 * (Math.sin(Math.PI * p1) + Math.sin(Math.PI * p2))).toFixed(4) + ")";
+    labs.forEach(function (lb, j) {
+      lb.style.color = 1 - Math.abs(pos - j) > 0.5 ? "var(--k-on-accent)" : "var(--k-muted)";
+      if (j) lb.style.transform = "scale(" + (1 - 0.05 * Math.sin(Math.PI * MT.ramp(t, (j === 1 ? CFG.ab : CFG.bc) - 0.1, 0.267, "linear"))).toFixed(4) + ")";
+    });
+    var capOut = MT.ramp(t, CFG.bc, CFG.capOut, "exit"), inC = t >= CFG.bc + CFG.lag;
+    T.forEach(function (o, j) {
+      // centre first, size 2 f later, rotation 4 f later with one overshoot; lifted while moving
+      var pA = MT.ramp(t, o.sA, CFG.abLen, MOVE), pB = MT.ramp(t, o.sB, CFG.bcLen, MOVE);
+      var zA = MT.ramp(t, o.sA + CFG.sizeLag, CFG.abLen, MOVE), zB = MT.ramp(t, o.sB + CFG.sizeLag, CFG.bcLen, MOVE);
+      var a = o.A, b = o.B, c = o.C, mx = function (k) { var sz = k === "w" || k === "h"; return MT.mix(MT.mix(a[k], b[k], sz ? zA : pA), c[k], sz ? zB : pB); };
+      var w = mx("w"), h = mx("h"), lift = Math.max(Math.sin(Math.PI * pA), Math.sin(Math.PI * pB));
+      var inP = MT.ramp(t, o.s0, CFG.inLen, "snappy"), pad = L.pad * zB, rad = MT.mix(16, 6, zB), st = o.el.style;
+      st.left = (mx("x") - w / 2).toFixed(2) + "px";
+      st.top = (mx("y") - h / 2 + (1 - inP) * CFG.inRise).toFixed(2) + "px";
+      st.width = w.toFixed(2) + "px";
+      st.height = h.toFixed(2) + "px";
+      st.transform = "rotate(" + (c.r * MT.ramp(t, o.sB + CFG.rotLag, CFG.bcLen, ROT)).toFixed(3) + "deg) scale(" + (MT.mix(0.94, 1, inP) * (1 + CFG.lift * lift)).toFixed(4) + ")";
+      st.opacity = inP.toFixed(3);
+      st.zIndex = inC ? 10 + j : j ? 10 : 30; // dealt order from the cascade on (B has no overlaps, so the switch is invisible)
+      st.borderRadius = rad.toFixed(2) + "px";
+      st.boxShadow = kShadow(6 + 34 * lift + 8 * zB, (0.9 + 0.5 * zB) * str);
+      o.ph.style.inset = pad.toFixed(2) + "px";
+      o.ph.style.borderRadius = Math.max(2, rad - pad * 0.7).toFixed(2) + "px";
+    });
+    scrim.style.opacity = (MT.ramp(t, CFG.scrim, 0.467, "out") * (1 - capOut)).toFixed(3);
+    capEl.style.opacity = t < CFG.cap ? 0 : (1 - capOut).toFixed(3);
+    grain(t);
+    root.style.setProperty("--mr-gi", gl.style.backgroundImage);
+    root.style.setProperty("--mr-gp", gl.style.backgroundPosition);
+  }
+
+  // long copy squeezes into a fixed span so it lands before the exit
+  var gap = function (u, g, span) { return u.length > 1 ? Math.min(g, span / (u.length - 1)) : g; };
+  var tl = MT.scene(CFG.dur, render);
+  kReveal(tl, kick, "blur", CFG.kick, { each: 0.467, gap: gap(kick, 0.133, 0.4) });
+  kReveal(tl, pick, "rise", CFG.pick, { each: 0.6, gap: gap(pick, 0.167, 0.6) });
+  tl.fromTo(metaEl, { opacity: 0 }, { opacity: 1, duration: 0.467, ease: "out" }, CFG.meta);
+  kReveal(tl, plain, "rise", CFG.title, { each: 0.667, gap: gap(plain, 0.167, 0.4) });
+  kReveal(tl, accent, "rise", CFG.title + CFG.line2, { each: 0.667, gap: gap(accent, 0.167, 0.2) });
+  tl.fromTo(subEl, { opacity: 0 }, { opacity: 1, duration: 0.533, ease: "out" }, CFG.sub);
+  tl.fromTo(subEl, { y: parseFloat(getComputedStyle(subEl).fontSize) * 0.3 }, { y: 0, duration: 0.6, ease: "snappy" }, CFG.sub);
+  window.__timelines["mosaic-reframe"] = tl;
+})();
+      </script>
+    </template>
+  </body>
+</html>

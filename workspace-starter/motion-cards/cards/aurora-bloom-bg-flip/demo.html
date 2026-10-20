@@ -1,0 +1,330 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"before","type":"string","label":"旧句：反转前那一句（用 | 切意群，可留空）","default":"很多年来|我们都|这样做"},
+    {"id":"after","type":"string","label":"新句：反转后那一句（用 | 切意群，可留空）","default":"直到|一切都变了"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>aurora-bloom-bg-flip · 极光升起底色反转</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="aurora-bloom-bg-flip-template">
+      <!-- Ported from video-shotcraft demos/effects/aurora-bloom-bg-flip/AuroraBloomBgFlip.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, normalised time to
+           seconds (t x 5.167 s); neutral --k-* palette: the light field is --k-bg, the dark field --k-ink (a dark skin
+           flips dark to light), aurora purple / magenta / orange / white -> --k-accent-2 / their oklch mix / --k-accent /
+           --k-bg, the new line's purple -> --k-accent-2 lightened 25%; system fonts, generic Chinese copy, upstream
+           wordmark line removed; the 480x270 design stage dropped and sizes written at 1080p (blob blur 60 -> 240px as
+           22.22cqmin, text 26 -> 104px, word blur 8 / lift 5 and 6 / glow 10 kept as em of the font size); each line's
+           word stagger spread over a fixed span so any word count keeps the beat; both lines take the smaller fitted
+           size; portrait layout (text on the 40% line, aurora box 18% higher); vignette and grain drawn under the text;
+           backdrop off turns the flip into an 88% ink scrim over the host; 0.53 s more hold at the end. Rise, flip,
+           squash, drift, push and word timings, the four blob boxes and both field lights are as upstream. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* the wrapper is the size container (SPEC 五). --ab-hi / --ab-lo: the lighter and darker of bg and ink, so the
+           light field always gets the top light and the dark field the cool sky, whichever way the skin flips */
+        .ab {
+          position: absolute; inset: 0; container-type: size;
+          --ab-hi: var(--k-bg); --ab-lo: var(--k-ink);
+          --ab-sky: color-mix(in srgb, var(--k-accent-2) 60%, var(--ab-hi));
+          --ab-shade: color-mix(in srgb, var(--ab-lo) 30%, black);
+        }
+        .ab[data-tone="dark"] { --ab-hi: var(--k-ink); --ab-lo: var(--k-bg); }
+        /* the two fields: "from" is --k-bg, "to" is --k-ink and cross-fades in on the flip (= upstream's rgb mix) */
+        .ab-f { position: absolute; inset: 0; }
+        .ab-lf { background: radial-gradient(ellipse 70% 60% at 50% 8%, color-mix(in srgb, var(--ab-hi) 75%, transparent), transparent 70%), color-mix(in srgb, var(--ab-hi), var(--ab-lo) 7%); }
+        .ab-df { background: radial-gradient(ellipse 80% 60% at 50% 0%, color-mix(in srgb, var(--ab-sky) 16%, transparent), transparent 70%), var(--ab-lo); }
+        /* aurora: four soft blobs in a box 10% bigger than the frame on every side; the script lifts and grows the box */
+        .ab-aur { position: absolute; inset: -10%; transform: translateY(-6%) scale(1.175); opacity: 0.4; }
+        .ab-blob { position: absolute; border-radius: 50%; filter: blur(22.22cqmin); background: radial-gradient(circle, var(--c) 0%, transparent var(--s)); }
+        .ab-b1 { left: 8%; bottom: -45%; width: 90%; height: 85%; --s: 68%; --c: color-mix(in srgb, var(--k-accent-2) 85%, transparent); }
+        .ab-b2 { left: 22%; bottom: -36%; width: 60%; height: 58%; --s: 64%; --c: color-mix(in srgb, color-mix(in oklch, var(--k-accent-2), var(--k-accent)) 60%, transparent); transform: translateX(2.1%); }
+        .ab-b3 { left: 32%; bottom: -18%; width: 44%; height: 46%; --s: 66%; --c: color-mix(in srgb, var(--k-accent) 90%, transparent); transform: translateX(7.8%); }
+        .ab-b4 { left: -12%; bottom: -40%; width: 64%; height: 60%; --s: 62%; --c: color-mix(in srgb, var(--k-bg) 80%, transparent); opacity: 0; }
+        /* ==== kit:vignette@1 ==== */
+        .ab-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.55; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--ab-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        /* ==== end kit:vignette ==== */
+        /* ==== kit:grain@1 ==== */
+        .ab-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+        /* ==== kit:text@2 ==== */
+        .ab-u { display: inline-block; white-space: pre; }
+        /* ==== end kit:text ==== */
+        /* the two lines share one centre (stacked in one grid cell); the old line starts hidden in the static frame */
+        .ab-txt { position: absolute; left: 10%; right: 10%; top: 0; bottom: 0; display: grid; align-content: center; }
+        .ab-line { grid-area: 1 / 1; text-align: center; font-size: 104px; font-weight: 700; line-height: 1.2; }
+        .ab-a { color: var(--k-ink); opacity: 0; }
+        .ab-b { color: var(--k-bg); }
+        /* portrait: the lines sit on the 40% line inside the 12%-68% band; the aurora box rides 18% higher so its glow
+           still meets the text from below */
+        @container (orientation: portrait) {
+          .ab-txt { top: 12%; bottom: 32%; }
+          .ab-aur { top: -28%; bottom: 8%; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="aurora-bloom-bg-flip">
+        <div class="ab">
+          <div class="ab-f ab-from ab-lf"></div>
+          <div class="ab-f ab-to ab-df"></div>
+          <div class="ab-aur" data-layout-allow-overflow>
+            <div class="ab-blob ab-b1"></div>
+            <div class="ab-blob ab-b2"></div>
+            <div class="ab-blob ab-b3"></div>
+            <div class="ab-blob ab-b4"></div>
+          </div>
+          <div class="ab-vig"></div>
+          <div class="ab-grain"></div>
+          <div class="ab-txt">
+            <div class="ab-line ab-a">很多年来我们都这样做</div>
+            <div class="ab-line ab-b">直到一切都变了</div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing in seconds = upstream normalised t x 5.167 (155 frames / 30); shared by both orientations
+          var CFG = {
+            span: 5.167,                            // upstream length: the drift phases run on t / span
+            rise: 0.207, riseDur: 2.686,            // aurora lifts 32% -> -6% and grows 1 -> 1.25 (t 0.04-0.56, outCubic)
+            flip: 2.945, flipDur: 0.362,            // the field flips (t 0.57-0.64, inOutQuad): the accent of the card
+            squashDur: 0.672,                       // aurora pressed 6% from the flip on, overshoot (t 0.57-0.70)
+            push: 2.997,                            // old line pushes 1 -> 1.035 from 0 (swift)
+            aOut: 2.067, aSpan: 0.413, aDur: 0.517, // old line: first word goes at 2.067 s, the last 0.413 s later, 0.517 s each (inQuad)
+            bIn: 3.617, bSpan: 0.258, bDur: 0.568,  // new line: first word at 3.617 s, the last 0.258 s later, 0.568 s each (outQuint)
+            cLag: 0.31, cDur: 0.465,                // each new word's colour settles 0.31 s after it starts, over 0.465 s (outQuad)
+            slot: 5.7
+          };
+          // word blur, lift (out / in) and glow as em of the line's font size: upstream 8 / 5 / 6 / 10 px at 26px
+          var AMP = { blur: 0.308, out: 0.192, inn: 0.231, glow: 0.385 };
+          var v = { before: "很多年来|我们都|这样做", after: "直到|一切都变了", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".ab");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          root.setAttribute("data-orient", FH > FW ? "portrait" : "landscape");
+
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+          // ==== kit:text@2 ==== (kWords + kSplit only)
+          var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "ab-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "ab-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          // ==== end kit:text ====
+          // ==== kit:fit@1 ==== (kFit + kLines)
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          // ==== end kit:fit ====
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+
+          var dark = kTone(root) === "dark", off = String(v.backdrop) === "off";
+          var from = q(".ab-from"), to = q(".ab-to"), aur = q(".ab-aur"), b2 = q(".ab-b2"), b3 = q(".ab-b3"), melt = q(".ab-b4");
+          var vig = q(".ab-vig"), gl = q(".ab-grain"), lineA = q(".ab-a"), lineB = q(".ab-b");
+          // a dark skin flips dark -> light: the from field takes the dark lighting, the to field the light one
+          if (dark) { from.className = "ab-f ab-from ab-df"; to.className = "ab-f ab-to ab-lf"; }
+          // transparent: no from field, melt, vignette or grain; the to field becomes an 88% scrim over the host picture
+          if (off) [from, melt, vig, gl].forEach(function (el) { el.style.display = "none"; });
+          var grain = off ? null : kGrain(gl, { blend: "soft-light" });
+
+          // both lines: phrases from kWords, shrunk to fit one line (down to 72px, then they wrap); the new line takes
+          // the old line's place, so both end at the smaller of the two sizes
+          lineA.style.opacity = 1;
+          var A = kSplit(lineA, "word", false, v.before), B = kSplit(lineB, "word", false, v.after);
+          var fs = Math.min.apply(null, [[lineA, A], [lineB, B]].map(function (p) {
+            if (p[1].length && !kCJK.test(p[0].textContent)) p[0].style.letterSpacing = "-0.022em"; // all-Latin: upstream tracking
+            return p[1].length ? kFit(p[0], { lines: 1, min: 72 }).size : 999;
+          }));
+          if (fs < 999) lineA.style.fontSize = lineB.style.fontSize = fs + "px";
+          var fa = fs, fb = fs;
+          // the new line lands in the aurora colour and settles to the from field's colour
+          var C0 = kRGB(root, "color-mix(in srgb, var(--k-accent-2) 75%, var(--k-bg))"), C1 = kRGB(root, "var(--k-bg)");
+          var G = kRGB(root, "var(--k-accent-2)").map(Math.round).join(",");
+          var col = function (c) { return "rgb(" + C0.map(function (x, i) { return Math.round(x + (C1[i] - x) * c); }).join(",") + ")"; };
+          // word i of n starts span * i / (n - 1) after the first: with 2 or more words the line ends on the same beat
+          var at = function (i, n, s0, span) { return s0 + (n > 1 ? (span * i) / (n - 1) : 0); };
+
+          var tl = MT.scene(CFG.slot, function (t) {
+            var rise = MT.ramp(t, CFG.rise, CFG.riseDur, "power2.out");
+            var flip = MT.ramp(t, CFG.flip, CFG.flipDur, "power1.inOut");
+            var sq = MT.ramp(t, CFG.flip, CFG.squashDur, "overshoot");
+            var u = t / CFG.span, d1 = Math.sin(u * Math.PI * 2.2), d2 = Math.sin(u * Math.PI * 1.6 + 1.1);
+            aur.style.transform = "translateY(" + (32 - 38 * rise).toFixed(3) + "%) scale(" + ((1 + 0.25 * rise) * (1 - 0.06 * sq)).toFixed(4) + ")";
+            aur.style.opacity = (1 - 0.6 * flip).toFixed(4);
+            // the orange core and the magenta bridge drift sideways at their own rates, so the glow moves inside itself
+            b2.style.transform = "translateX(" + (d2 * 6).toFixed(3) + "%)";
+            b3.style.transform = "translateX(" + (d1 * 8).toFixed(3) + "%)";
+            melt.style.opacity = (1 - flip).toFixed(4);
+            to.style.opacity = ((off ? 0.88 : 1) * flip).toFixed(4);
+            // vignette and grain follow how dark the field is: 0.07 -> 0.55 and 0.05 -> 0.09 as upstream
+            var dk = dark ? 1 - flip : flip;
+            vig.style.setProperty("--vs", (0.07 + 0.48 * dk).toFixed(4));
+            if (grain) { grain(t); gl.style.opacity = (0.05 + 0.04 * dk).toFixed(4); }
+            lineA.style.transform = "scale(" + (1 + 0.035 * MT.ramp(t, 0, CFG.push, "swift")).toFixed(5) + ")";
+            A.forEach(function (w, i) {
+              var p = MT.ramp(t, at(i, A.length, CFG.aOut, CFG.aSpan), CFG.aDur, "power1.in");
+              w.style.opacity = (1 - p).toFixed(4);
+              w.style.filter = p > 0.005 ? "blur(" + (p * AMP.blur * fa).toFixed(2) + "px)" : "";
+              w.style.transform = "translateY(" + (-p * AMP.out * fa).toFixed(2) + "px)";
+            });
+            B.forEach(function (w, i) {
+              var d0 = at(i, B.length, CFG.bIn, CFG.bSpan), a = MT.ramp(t, d0, CFG.bDur, "power4.out"), c = MT.ramp(t, d0 + CFG.cLag, CFG.cDur, "power1.out");
+              w.style.opacity = a.toFixed(4);
+              w.style.filter = a < 0.995 ? "blur(" + ((1 - a) * AMP.blur * fb).toFixed(2) + "px)" : "";
+              w.style.transform = "translateY(" + ((1 - a) * AMP.inn * fb).toFixed(2) + "px)";
+              w.style.color = col(c);
+              w.style.textShadow = c < 1 ? "0 0 " + (AMP.glow * fb * (1 - c)).toFixed(1) + "px rgba(" + G + "," + (0.45 * a * (1 - c)).toFixed(3) + ")" : "";
+            });
+          });
+          window.__timelines["aurora-bloom-bg-flip"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

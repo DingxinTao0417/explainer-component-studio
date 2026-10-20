@@ -1,0 +1,398 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"phrases","type":"string","label":"状态短语（用 | 分隔，2–6 条，字数尽量接近）","default":"读取文件|分析结构|生成草稿|全部完成"},
+    {"id":"label","type":"string","label":"状态行的项目名（留空不要）","default":"示例项目 / 第 3 节"},
+    {"id":"state","type":"string","label":"状态词（进行时|完成时）","default":"进行中|已完成"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（只留字和进度条）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>glitch-cycle · 乱码轮播</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="glitch-cycle-template">
+      <!-- Ported from video-shotcraft demos/typography/glitch-cycle/GlitchCycle.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette on a lit white stage (aurora dark stage dropped; dark skins get the screen-blend key
+           light, 0.65 vignette and soft-light grain back), system fonts, generic Chinese copy, portrait layout;
+           upstream mark and "Crafted with" sign-off removed; RENDERING / project / #4127 status line made variables;
+           split colours pink / ice-blue -> accent / accent-2; CJK cells (1.1em) beside 0.64em Latin cells and a
+           mojibake pool for them; phrase size fitted to the block (160px max, 120px portrait), block 900-1100px (720-816px portrait) hugging the line with jitter, split, tear
+           and blocks scaled by size / 104; phrase count 2-6 with DONE = (N-1) x 38f + 26f; slot 5.7s (was 5.6s) for a
+           1s hold. Keyframes [1,0,0,0.1,0,0,1] / last [..,0], 38f per phrase, 2f re-roll, hash, jitter 36 / 10,
+           split 10, tear 160 above g 0.25, blocks above g 0.45, bloom 26f, linear progress, pulse and intro kept. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        @font-face { font-family: "Consolas"; src: local("Consolas"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          --k-mono: var(--mc-mono, Consolas, monospace);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* ==== kit:derived@1 (shade only) ==== */
+        .gc { position: absolute; inset: 0; container-type: size; --gc-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); --gc-hit: color-mix(in srgb, var(--k-accent) 72%, var(--k-ink)); }
+        .gc[data-tone="dark"] { --gc-shade: color-mix(in srgb, var(--k-bg) 30%, black); --gc-hit: var(--k-accent); }
+        .gc[data-backdrop="off"] .gc-deco { display: none; }
+        /* ==== kit:backdrop@1 ==== */
+        .gc-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .gc-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        /* ==== kit:light@1 ==== */
+        .gc-light { mix-blend-mode: multiply; }
+        .gc[data-tone="dark"] .gc-light { mix-blend-mode: screen; }
+        /* key light centred on the slot (upstream key 50% / 45%) and a cool fill top right (82% / 12%) */
+        /* dark skins: the key turns to accent-2 (a yellow accent screened at 55% reads as fog), fill to the accent */
+        .gc-key { position: absolute; inset: 0; opacity: 0.14; --gc-kc: color-mix(in srgb, var(--k-accent) 55%, transparent); --gc-fc: color-mix(in srgb, var(--k-accent-2) 40%, transparent); background: radial-gradient(ellipse 58% 62% at 50% 45%, var(--gc-kc) 0%, transparent 70%), radial-gradient(ellipse 50% 46% at 82% 12%, var(--gc-fc) 0%, transparent 72%); }
+        .gc[data-tone="dark"] .gc-key { opacity: 1; --gc-kc: color-mix(in srgb, var(--k-accent-2) 45%, transparent); --gc-fc: color-mix(in srgb, var(--k-accent) 16%, transparent); }
+        /* signal band: a soft horizontal glow behind the phrase, stronger while the line is breaking up */
+        .gc-band { position: absolute; left: 0; right: 0; top: 390px; height: 300px; background: radial-gradient(ellipse 45% 50% at 50% 50%, color-mix(in srgb, var(--k-accent) 26%, transparent) 0%, transparent 70%); }
+        .gc-scan { position: absolute; inset: 0; opacity: 0.22; background: repeating-linear-gradient(180deg, transparent 0 3px, color-mix(in srgb, var(--gc-shade) 22%, transparent) 4px); }
+        .gc[data-tone="dark"] .gc-scan { opacity: 0.5; }
+        /* ==== kit:vignette@1 ==== */
+        .gc-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--gc-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .gc[data-tone="dark"] .gc-vig { --vs: 0.65; }
+        /* ==== kit:grain@1 ==== */
+        .gc-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* the console block: status line, bracketed slot, progress rail */
+        .gc-box { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+        .gc-blk { position: relative; width: 900px; }
+        .gc-stat { display: flex; align-items: center; gap: 18px; margin-bottom: 54px; font-family: var(--k-mono), var(--k-font); font-size: 32px; line-height: 1.25; letter-spacing: 0.14em; color: var(--k-muted); }
+        .gc-stat span { display: block; flex: none; }
+        .gc-dot { width: 14px; height: 14px; border-radius: 7px; box-sizing: border-box; border: 2px solid var(--k-accent-2); background: var(--k-accent-2); }
+        .gc-st { font-weight: 600; }
+        .gc-stat[data-done] .gc-st { color: var(--k-ink); }
+        .gc-stat .gc-lab { flex: 1 1 auto; min-width: 0; }
+        .gc-slot { position: relative; padding: 30px 0; }
+        .gc-br { position: absolute; width: 30px; height: 30px; border: 0 solid color-mix(in srgb, var(--k-ink) 35%, transparent); }
+        .gc-b1 { left: -36px; top: 0; border-width: 2px 0 0 2px; } .gc-b2 { right: -36px; top: 0; border-width: 2px 2px 0 0; }
+        .gc-b3 { left: -36px; bottom: 0; border-width: 0 0 2px 2px; } .gc-b4 { right: -36px; bottom: 0; border-width: 0 2px 2px 0; }
+        .gc-txt { position: relative; font-family: var(--k-mono), var(--k-font); font-size: 160px; font-weight: 600; line-height: 1.2; }
+        .gc-r { display: flex; flex-wrap: wrap; justify-content: center; width: 100%; margin: 0 auto; white-space: pre; }
+        .gc-r2 { position: absolute; left: 0; right: 0; top: 0; opacity: 0; }
+        .gc-r span { display: block; flex: none; width: 1.1em; text-align: center; }
+        .gc-px { position: absolute; opacity: 0; }
+        .gc-pa { background: color-mix(in srgb, var(--k-accent) 55%, transparent); }
+        .gc-pb { background: color-mix(in srgb, var(--k-accent-2) 55%, transparent); }
+        .gc-bar { position: relative; margin-top: 56px; height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--k-ink) 10%, transparent); }
+        .gc-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; border-radius: 2px; background: linear-gradient(90deg, color-mix(in srgb, var(--k-accent) 30%, transparent) 0%, var(--k-accent) 70%, var(--k-accent-2) 100%); box-shadow: 0 0 14px color-mix(in srgb, var(--k-accent) 60%, transparent); }
+        .gc-tk { position: absolute; top: -7px; width: 2px; height: 18px; margin-left: -1px; background: var(--k-accent); }
+        .gc-rd { margin-top: 26px; display: flex; justify-content: space-between; font-family: var(--k-mono), var(--k-font); font-size: 40px; line-height: 1.2; letter-spacing: 0.1em; color: var(--k-muted); font-variant-numeric: tabular-nums; white-space: pre; }
+        .gc-rd span { display: block; }
+        /* portrait: the block sits on the 40% line inside the 12%-68% band, at most x 132-948 (brackets 108-972) */
+        @container (orientation: portrait) {
+          .gc-box { top: 12%; bottom: 32%; }
+          .gc-blk { width: 720px; }
+          .gc-stat { gap: 14px; margin-bottom: 44px; font-size: 30px; }
+          .gc-b1, .gc-b3 { left: -24px; } .gc-b2, .gc-b4 { right: -24px; }
+          .gc-txt { font-size: 120px; }
+          .gc-bar { margin-top: 48px; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="glitch-cycle">
+        <div class="gc">
+          <div class="gc-backdrop gc-deco"></div>
+          <div class="gc-key gc-light gc-deco"></div>
+          <div class="gc-band gc-light gc-deco"></div>
+          <div class="gc-scan gc-deco"></div>
+          <div class="gc-vig gc-deco"></div>
+          <div class="gc-grain gc-deco"></div>
+          <div class="gc-box">
+            <div class="gc-blk">
+              <div class="gc-stat" data-done="1"><span class="gc-dot"></span><span class="gc-st">已完成</span><span class="gc-sep">·</span><span class="gc-lab">示例项目 / 第 3 节</span><span>#0042</span></div>
+              <div class="gc-slot">
+                <div class="gc-br gc-b1"></div><div class="gc-br gc-b2"></div><div class="gc-br gc-b3"></div><div class="gc-br gc-b4"></div>
+                <div class="gc-txt">
+                  <div class="gc-r"><span>全</span><span>部</span><span>完</span><span>成</span></div>
+                  <div class="gc-r gc-r2"></div>
+                  <div class="gc-r gc-r2"></div>
+                  <div class="gc-px gc-light gc-pa"></div><div class="gc-px gc-light gc-pb"></div><div class="gc-px gc-light gc-pa"></div>
+                </div>
+              </div>
+              <div class="gc-bar">
+                <div class="gc-fill"></div>
+                <div class="gc-tk" style="left: 27.14%"></div><div class="gc-tk" style="left: 54.29%"></div><div class="gc-tk" style="left: 81.43%"></div>
+              </div>
+              <div class="gc-rd"><span class="gc-step">步骤 4/4</span><span class="gc-pct">100%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing in frames at 30 fps (upstream values); seconds = frames / 30
+          var CFG = {
+            slot: 38, // frames per phrase: scrambled -> clean -> 0.1 twitch -> clean -> scrambled into the next one
+            doneLag: 26, // progress reaches 100% this many frames into the last phrase (upstream DONE 140 = 3 x 38 + 26)
+            hold: 31, // clean hold after DONE (upstream 28f; 31f gives the 1s rest)
+            intro: 14, bloom: 26, roll: 2, // block fade-in, bloom decay, re-roll the noise every 2 frames
+            jx: 36, jy: 10, split: 10, tear: 160, tearAt: 0.25, blockAt: 0.45, splitAt: 0.04 // at 104px type
+          };
+          var KF = [1, 0, 0, 0.1, 0, 0, 1], KF_LAST = [1, 0, 0, 0.1, 0, 0, 0];
+          var POOL = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#$%&<>/\\", MOJI = "锟斤拷烫屯鏂囦欢鍙戦佹垚鍔";
+          // layout per orientation: phrase size range, block width range (px), share of the block the line may fill
+          var LAND = { max: 160, min: 72, bw: [900, 1100], fill: 0.96 };
+          var PORT = { max: 120, min: 72, bw: [720, 816], fill: 0.98 };
+          var v = { phrases: "读取文件|分析结构|生成草稿|全部完成", label: "示例项目 / 第 3 节", state: "进行中|已完成", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".gc");
+          var q = function (s) { return root.querySelector(s); };
+          var qa = function (s) { return Array.prototype.slice.call(root.querySelectorAll(s)); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          root.setAttribute("data-backdrop", String(v.backdrop) === "off" ? "off" : "on");
+
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+          // ==== kit:hash@1 ====
+          function kHash(n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+          // ==== end kit:hash ====
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          // ==== end kit:fit ====
+
+          var dark = kTone(root) === "dark";
+          var drawGrain = kGrain(q(".gc-grain"));
+
+          // phrases: every phrase is centred in the same row of fixed cells, so the line never reflows. A cell is
+          // 1.1em when any phrase has a CJK character at that index, else 0.64em (upstream mono cell)
+          var cjk = function (c) { return c.charCodeAt(0) > 0x2e7f; };
+          var list = String(v.phrases).split("|").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 6);
+          if (list.length < 2) list = list.concat(["", ""]).slice(0, 2).map(function (s) { return s || "-"; });
+          var N = list.length, MAX = Math.max.apply(null, list.map(function (s) { return Array.from(s).length; }));
+          var pads = list.map(function (s) {
+            var a = Array.from(s), l = Math.floor((MAX - a.length) / 2), out = [];
+            for (var i = 0; i < MAX; i++) out.push(i < l || i >= l + a.length ? " " : a[i - l]);
+            return out;
+          });
+          var cellW = [], emW = 0;
+          for (var i = 0; i < MAX; i++) {
+            cellW[i] = pads.some(function (p) { return cjk(p[i]); }) ? 1.1 : 0.64;
+            emW += cellW[i];
+          }
+          var rows = qa(".gc-r"), cells = rows.map(function (r) {
+            r.innerHTML = "";
+            return cellW.map(function (w) {
+              var s = document.createElement("span");
+              s.style.width = w + "em";
+              s.setAttribute("data-layout-allow-overlap", "");
+              s.setAttribute("data-layout-allow-occlusion", "");
+              r.appendChild(s);
+              return s;
+            });
+          });
+          // size: as large as the block allows, never under 72px; still too long at 72px -> the cells wrap
+          // (same index for every phrase, so the wrap point never moves)
+          var txt = q(".gc-txt"), blk = q(".gc-blk");
+          var fs = Math.max(L.min, Math.min(L.max, Math.floor((L.bw[1] * L.fill) / emW)));
+          txt.style.fontSize = fs + "px";
+          // the block (brackets, status line, rail) hugs the line like upstream, within the orientation's range
+          blk.style.width = Math.round(Math.max(L.bw[0], Math.min(L.bw[1], (emW * fs) / L.fill))) + "px";
+          var avail = L.bw[1] * L.fill, nl = Math.ceil((emW * fs) / avail);
+          // wrapped: balance the lines (same cell count per line) instead of leaving one cell alone on the last
+          if (nl > 1) rows.forEach(function (r) { r.style.width = Math.ceil((emW * fs) / nl + 1.1 * fs) + "px"; });
+          var ks = fs / 104;
+
+          // status line: state words, optional label (empty -> label and separator go), step and percent readouts
+          var st = String(v.state).split("|").map(function (s) { return s.trim(); });
+          var stOn = st[0] || "", stDone = st[1] || st[0] || "";
+          var lab = q(".gc-lab"), stEl = q(".gc-st"), stat = q(".gc-stat");
+          lab.textContent = String(v.label).trim();
+          if (!lab.textContent) { lab.style.display = "none"; q(".gc-sep").style.display = "none"; }
+          stEl.textContent = stDone;
+          if (lab.textContent) kFit(lab, { min: 28, width: lab.clientWidth });
+          var latin = !list.some(function (s) { return Array.from(s).some(cjk); });
+          var stepEl = q(".gc-step"), pctEl = q(".gc-pct");
+
+          // progress rail: one tick per phrase change, at its share of the run to DONE
+          var DONE = (N - 1) * CFG.slot + CFG.doneLag, DUR = (DONE + CFG.hold) / 30;
+          var bar = q(".gc-bar"), fill = q(".gc-fill");
+          qa(".gc-tk").forEach(function (e) { bar.removeChild(e); });
+          var ticks = [];
+          for (var j = 1; j < N; j++) {
+            var tk = document.createElement("div");
+            tk.className = "gc-tk";
+            tk.style.left = ((j * CFG.slot) / DONE * 100).toFixed(2) + "%";
+            bar.appendChild(tk);
+            ticks.push(tk);
+          }
+
+          // the signal band rides on the phrase line
+          var band = q(".gc-band"), slotEl = q(".gc-slot"), key = q(".gc-key"), dot = q(".gc-dot");
+          var tr = txt.getBoundingClientRect(), rr = root.getBoundingClientRect(), sc = rr.width ? FW / rr.width : 1;
+          band.style.top = ((tr.top + tr.height / 2 - rr.top) * sc - 150).toFixed(1) + "px";
+          var keyBase = parseFloat(getComputedStyle(key).opacity) || 1;
+          var A = kRGB(root, "var(--k-accent)").join(","), B = kRGB(root, "var(--k-accent-2)").join(",");
+          var glowA = dark ? [0.25, 0.45] : [0.1, 0.3], bandK = 0.7;
+          var px = qa(".gc-px");
+          var glitchAt = function (kf, p) {
+            var x = Math.min(5.999999, Math.max(0, p * 6)), i = Math.floor(x);
+            return kf[i] + (kf[i + 1] - kf[i]) * (x - i);
+          };
+
+          var tl = MT.scene(DUR, function (t) {
+            var f = t * 30 + 1e-6; // frames at 30 fps
+            var s = Math.min(N - 1, Math.floor(f / CFG.slot)), p = Math.min(1, (f - s * CFG.slot) / CFG.slot);
+            var g = glitchAt(s === N - 1 ? KF_LAST : KF, p), b = Math.floor(f / CFG.roll), text = pads[s];
+            drawGrain(t);
+            key.style.opacity = (keyBase * (1 + 0.048 * Math.sin(f / 38))).toFixed(3);
+            band.style.opacity = ((0.16 + 0.1 * g) / 0.26 * bandK).toFixed(3);
+            blk.style.opacity = MT.ramp(t, 0, CFG.intro / 30, "out").toFixed(3);
+            // one noise level g drives everything: swapped glyphs, jitter, RGB split, tear band, pixel blocks
+            for (var i = 0; i < MAX; i++) {
+              var ch = text[i], col = "", hit = ch !== " " && kHash(i * 31 + b * 17 + s * 97) < g;
+              if (hit) {
+                var cj = cellW[i] > 1 && kHash(i * 7 + b * 3) < 0.6;
+                ch = cj ? MOJI[Math.floor(kHash(i * 131 + b * 7 + s * 13) * MOJI.length)] : POOL[Math.floor(kHash(i * 131 + b * 7 + s * 13) * POOL.length)];
+                col = kHash(i + b) > 0.5 ? "var(--gc-hit)" : "var(--k-muted)";
+              }
+              for (var r = 0; r < 3; r++) {
+                var c = cells[r][i];
+                if (c.textContent !== ch) c.textContent = ch;
+                c.style.color = col;
+              }
+            }
+            var jx = (kHash(b * 5 + s) - 0.5) * g * CFG.jx * ks, jy = (kHash(b * 9 + s + 40) - 0.5) * g * CFG.jy * ks;
+            txt.style.transform = "translate(" + jx.toFixed(1) + "px," + jy.toFixed(1) + "px)";
+            var bl = s === N - 1 && p > 0.66 ? Math.max(0, 1 - (f - (s * CFG.slot + CFG.slot * 0.66)) / CFG.bloom) : 0;
+            var sp = (g * CFG.split * ks).toFixed(1), sa = (0.8 * Math.min(1, g * 1.4)).toFixed(3);
+            var sh = g > CFG.splitAt
+              ? sp + "px 0 rgba(" + A + "," + sa + "), " + -sp + "px 0 rgba(" + B + "," + sa + ")"
+              : "0 0 " + (20 + 40 * bl).toFixed(0) + "px rgba(" + A + "," + (glowA[0] + glowA[1] * bl).toFixed(3) + ")";
+            var tear = g > CFG.tearAt, top = 12 + kHash(b * 3 + 7) * 50, h = 16 + kHash(b * 11 + 3) * 24;
+            rows.forEach(function (e) { e.style.textShadow = sh; });
+            rows[0].style.clipPath = tear ? "inset(0 -200px " + (100 - top).toFixed(1) + "% -200px)" : "none";
+            rows[1].style.opacity = rows[2].style.opacity = tear ? "1" : "0";
+            rows[1].style.clipPath = "inset(" + top.toFixed(1) + "% -200px " + Math.max(0, 100 - top - h).toFixed(1) + "% -200px)";
+            rows[1].style.transform = "translateX(" + (tear ? (kHash(b * 13 + 5) - 0.5) * g * CFG.tear * ks : 0).toFixed(1) + "px)";
+            rows[2].style.clipPath = "inset(" + Math.min(100, top + h).toFixed(1) + "% -200px 0 -200px)";
+            px.forEach(function (e, k) {
+              var on = g > CFG.blockAt;
+              e.style.opacity = on ? "1" : "0";
+              if (!on) return;
+              e.style.left = (kHash(b * 19 + k * 7) * 100).toFixed(1) + "%";
+              e.style.top = (kHash(b * 23 + k * 5) * 90).toFixed(1) + "%";
+              e.style.width = ((4 + kHash(b * 29 + k) * 14) * 4 * ks).toFixed(1) + "px";
+              e.style.height = ((6 + kHash(b * 31 + k) * 14) * 2 * ks).toFixed(1) + "px";
+            });
+            // the rail is the one linear thing on screen: it fills straight to DONE, ticks light as it passes
+            var prog = Math.min(1, f / DONE), done = f >= DONE, pulse = 0.55 + 0.45 * Math.sin(f / 4);
+            fill.style.width = (prog * 100).toFixed(2) + "%";
+            ticks.forEach(function (e, j) { e.style.background = prog >= ((j + 1) * CFG.slot) / DONE ? "var(--k-accent)" : "color-mix(in srgb, var(--k-ink) 25%, transparent)"; });
+            stepEl.textContent = (latin ? "STEP " : "步骤 ") + (s + 1) + "/" + N;
+            pctEl.textContent = ("  " + Math.round(prog * 100)).slice(-3) + "%";
+            if (done) stat.setAttribute("data-done", "1"); else stat.removeAttribute("data-done");
+            var sw = done ? stDone : stOn;
+            if (stEl.textContent !== sw) stEl.textContent = sw;
+            dot.style.background = done ? "var(--k-accent-2)" : "rgba(" + B + "," + (pulse * 0.8).toFixed(3) + ")";
+            dot.style.boxShadow = "0 0 " + (done ? 16 : 10 * pulse).toFixed(1) + "px rgba(" + B + ",0.7)";
+          });
+          window.__timelines["glitch-cycle"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

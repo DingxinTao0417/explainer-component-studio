@@ -1,0 +1,392 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"words","type":"string","label":"飞过的词（用 | 分隔，16–30 个，每个 2–5 个字）","default":"提示词|工作流|自动化|快捷键|模板|插件|一键导出|多人协作|版本记录|数据表|图表|笔记|日程|搜索|同步|备份|权限|标签|评论|分享|批量处理|智能补全"},
+    {"id":"title","type":"string","label":"正中的标题（可留空；用 | 标出可以换行的地方）","default":"一个工具|二十种用法"},
+    {"id":"kicker","type":"string","label":"标题上的眉题（可留空）","default":"第 3 节 · 功能总览"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>flying-words · 词语隧道</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="flying-words-template">
+      <!-- Ported from video-shotcraft demos/typography/flying-words/FlyingWords.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette on a light lit stage first (the upstream midnight look comes back on dark skins:
+           screen glow, vignette 0.7, grain 0.08), system fonts, generic Chinese keywords, title and kicker as variables,
+           upstream mark, brand name and motto removed (a neutral mark instead). The motion is as upstream: 4400 px
+           perspective, z -7000 to +3200, golden-angle spawn with the same sin hash, drift 0.5 + 1.35u, life curve
+           [0,1,0.5,0.2,0] at [0,0.25,0.6,0.85,1], 2 whole cycles in 6 s, +-2.5 deg roll, 10 rings, 56 dust streaks,
+           far fog and near blur, the 20% dip inside the title ellipse. Changed: the speed trail is 4 text-shadow
+           copies instead of 6 (same length and fade); word sizes x0.9 for Chinese words; the title ellipse and its
+           scrim are sized from the measured title (upstream fixed 760 x 190); the scrim is the background colour,
+           not near-black; on light skins the glow multiplies at 16% (upstream screen 42%) and accent words glow at
+           half strength; portrait re-lays the tunnel taller than wide around the 40% line. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        @font-face { font-family: "Noto Serif SC"; src: local("Noto Serif SC"), local("Noto Serif CJK SC"), local("Source Han Serif SC"); }
+        @font-face { font-family: "Songti SC"; src: local("Songti SC"), local("STSong"), local("SimSun"); }
+        @font-face { font-family: "Consolas"; src: local("Consolas"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          --k-serif: var(--mc-serif, "Noto Serif SC", "Songti SC", serif);
+          --k-mono: var(--mc-mono, Consolas, monospace);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* ==== kit:derived@1 (shade only) ==== */
+        .fw { --fw-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); }
+        .fw[data-tone="dark"] { --fw-shade: color-mix(in srgb, var(--k-bg) 30%, black); }
+        /* ==== end kit:derived ==== */
+        /* ==== kit:backdrop@1 ==== */
+        .fw-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .fw-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        /* ==== end kit:backdrop ==== */
+        /* ==== kit:vignette@1 ==== */
+        .fw-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--fw-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .fw[data-tone="dark"] .fw-vig { --vs: 0.55; }
+        /* ==== end kit:vignette ==== */
+        /* ==== kit:light@1 ==== */
+        .fw-light { mix-blend-mode: multiply; }
+        .fw[data-tone="dark"] .fw-light { mix-blend-mode: screen; }
+        /* ==== end kit:light ==== */
+        /* ==== kit:grain@1 ==== */
+        .fw-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+        /* ==== kit:text@2 ==== */
+        .fw-u { display: inline-block; white-space: pre; }
+        /* ==== end kit:text ==== */
+
+        /* wrapper = size container (SPEC 五). Tone-dependent strengths: glow, accent-word glow, title halo */
+        .fw { position: absolute; inset: 0; container-type: size; --fw-gl: 16%; --fw-gl2: 5%; --fw-halo: color-mix(in srgb, var(--k-bg) 85%, transparent); }
+        .fw[data-tone="dark"] { --fw-gl: 42%; --fw-gl2: 12%; --fw-halo: rgba(0, 0, 0, 0.6); }
+        /* upstream lit this stage from the middle (key light 50% / 50%, intensity 0.5), vignette 0.7 on the dark look */
+        .fw .fw-backdrop::after { background: radial-gradient(ellipse 58% 62% at 50% 50%, color-mix(in srgb, var(--k-bg) 90%, transparent) 0%, transparent 70%); }
+        .fw[data-tone="dark"] .fw-vig { --vs: 0.7; }
+        .fw-bg, .fw-field, .fw-fg { position: absolute; inset: 0; }
+        /* the end of the tunnel: a breathing accent glow at the centre (sized and placed by the script) */
+        .fw-glow { position: absolute; left: 50%; top: 50%; width: 1040px; height: 720px; margin: -360px 0 0 -520px; border-radius: 50%;
+          background: radial-gradient(ellipse 50% 50% at 50% 50%, color-mix(in srgb, var(--k-accent) var(--fw-gl), transparent) 0%, color-mix(in srgb, var(--k-accent) var(--fw-gl2), transparent) 38%, transparent 70%); }
+        .fw-svg { position: absolute; left: 0; top: 0; }
+        .fw-ring { fill: none; stroke: var(--k-accent); }
+        .fw-dust { stroke: color-mix(in srgb, var(--k-ink) 55%, var(--k-accent-2)); stroke-linecap: round; }
+        /* one flying word; every value that moves is written per frame by the scene */
+        .fw-w { position: absolute; left: 0; top: 0; white-space: nowrap; line-height: 1; font-weight: 700; opacity: 0; will-change: transform; }
+        .fw-c0 { color: var(--k-ink); }
+        .fw-c1 { color: color-mix(in srgb, var(--k-ink) 78%, var(--k-bg)); }
+        .fw-c2 { color: color-mix(in srgb, var(--k-ink) 56%, var(--k-bg)); }
+        .fw-ca { color: var(--k-accent); }
+        .fw-s { font-family: var(--k-serif); font-weight: 500; }
+        /* foreground: a scrim in the background colour behind a static kicker + title (the loop stays seamless) */
+        .fw-scrim { position: absolute; left: 50%; top: 50%; width: 1520px; height: 520px; margin: -260px 0 0 -760px; border-radius: 50%;
+          background: radial-gradient(ellipse 50% 50% at 50% 50%, color-mix(in srgb, var(--k-bg) 70%, transparent) 0%, color-mix(in srgb, var(--k-bg) 38%, transparent) 45%, transparent 72%); }
+        .fw-box { position: absolute; left: 10%; right: 10%; top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        .fw-kick { display: flex; align-items: center; justify-content: center; gap: 18px; max-width: 100%; margin-bottom: 30px; font-family: var(--k-mono); font-size: 40px; letter-spacing: 0.1em; color: var(--k-accent); }
+        .fw-kick svg { display: block; flex: none; }
+        .fw-kt { display: block; min-width: 0; }
+        .fw-title { display: block; max-width: 100%; font-size: 112px; font-weight: 700; line-height: 1.2; color: var(--k-ink); text-shadow: 0 4px 40px var(--fw-halo); }
+        @container (orientation: portrait) {
+          .fw-box { top: 12%; bottom: 32%; }
+          .fw-glow { top: 40%; width: 760px; height: 1000px; margin: -500px 0 0 -380px; }
+          .fw-scrim { top: 40%; }
+          .fw-title { font-size: 104px; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="flying-words">
+        <div class="fw">
+          <div class="fw-bg"><div class="fw-backdrop"></div><div class="fw-glow fw-light"></div></div>
+          <div class="fw-field" data-layout-allow-overflow></div>
+          <div class="fw-vig"></div>
+          <div class="fw-grain"></div>
+          <div class="fw-fg">
+            <div class="fw-scrim"></div>
+            <div class="fw-box">
+              <div class="fw-kick"><svg width="52" height="52" viewBox="0 0 128 128" aria-hidden="true"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg><span class="fw-kt">第 3 节 · 功能总览</span></div>
+              <div class="fw-title"><span class="fw-u">一个工具</span><span class="fw-u">二十种用法</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // one 6 s scene = 2 whole cycles (upstream 180f, CYCLES 2): t = 6 draws the same frame as t = 0, so mounts
+          // placed end to end loop seamlessly. Depth in upstream's 1920-native px: projection s = P / (P - z)
+          var CFG = { dur: 6, cycles: 2, P: 4400, z0: -7000, z1: 3200, fogEnd: 0.22, fog: 2.2, nearAt: 0.86, near: 60, trailMin: 6 };
+          // life curve: opacity OP at progress OT (piecewise linear)
+          var OP = [0, 1, 0.5, 0.2, 0], OT = [0, 0.25, 0.6, 0.85, 1];
+          // layout per orientation: tunnel centre (share of height), spread on x / y (upstream 1 / 0.6), word size,
+          // title lines, the least size of the dimming ellipse round the title
+          var LAND = { cy: 0.5, kx: 1, ky: 0.6, fs: 0.9, lines: 1, ex: 760, ey: 190 };
+          var PORT = { cy: 0.4, kx: 0.56, ky: 0.95, fs: 0.9, lines: 3, ex: 470, ey: 260 };
+          var ACC = [3, 7, 12, 19], SER = [1, 5, 10, 14, 17, 21]; // upstream accent / serif slots, repeating every 22 words
+          var v = { words: "提示词|工作流|自动化|快捷键|模板|插件|一键导出|多人协作|版本记录|数据表|图表|笔记|日程|搜索|同步|备份|权限|标签|评论|分享|批量处理|智能补全", title: "一个工具|二十种用法", kicker: "第 3 节 · 功能总览", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".fw");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+          // ==== kit:hash@1 ====
+          function kHash(n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+          // ==== end kit:hash ====
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+          // ==== kit:text@2 (kReveal not used) ====
+          var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "fw-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "fw-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          // ==== end kit:text ====
+          // ==== kit:fit@1 (kRows not used) ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          // ==== end kit:fit ====
+
+          var dark = kTone(root) === "dark", U = Math.min(FW, FH) / 1.08e3, CX = FW / 2, CY = FH * L.cy;
+          var off = String(v.backdrop) === "off";
+          if (off) { q(".fw-backdrop").style.display = q(".fw-vig").style.display = q(".fw-grain").style.display = q(".fw-scrim").style.display = "none"; }
+          var grain = off ? function () {} : kGrain(q(".fw-grain"), { opacity: dark ? 0.08 : 0.05 });
+
+          // foreground: kicker and title from the variables; an empty one disappears with its row
+          var kt = q(".fw-kt"), ti = q(".fw-title"), box = q(".fw-box");
+          var hasK = !!String(v.kicker).trim(), hasT = !!String(v.title).trim();
+          if (hasK) { kSplit(kt, "line", false, v.kicker); kFit(kt, { lines: 1, min: 32, width: box.clientWidth - 70 * U }); } else q(".fw-kick").style.display = "none";
+          if (hasT) { kSplit(ti, "word", false, v.title); kFit(ti, { lines: L.lines, min: 72, width: box.clientWidth }); } else ti.style.display = "none";
+          if (!hasK && !hasT) q(".fw-fg").style.display = "none";
+          // the dimming ellipse and the scrim hug the measured title block (never smaller than upstream's 760 x 190)
+          var bw = 0, bh = 0;
+          [].forEach.call(box.children, function (c) { if (c.style.display !== "none") { bw = Math.max(bw, c.offsetWidth); bh += c.offsetHeight; } });
+          var ex = Math.max(L.ex * U, bw / 2 + 80 * U), ey = Math.max(L.ey * U, bh / 2 + 40 * U), fg = hasK || hasT;
+          var sc = q(".fw-scrim");
+          sc.style.width = 2 * ex + "px"; sc.style.height = 2.74 * ey + "px"; sc.style.margin = -1.37 * ey + "px 0 0 " + -ex + "px";
+
+          // the field: rings and dust in one SVG, then the words (all built once, only styles change per frame)
+          var NS = "http://www.w3.org/2000/svg", field = q(".fw-field");
+          var svg = document.createElementNS(NS, "svg");
+          svg.setAttribute("class", "fw-svg"); svg.setAttribute("width", FW); svg.setAttribute("height", FH);
+          field.appendChild(svg);
+          var mk = function (tag, cls) { var e = document.createElementNS(NS, tag); e.setAttribute("class", cls); svg.appendChild(e); return e; };
+          var rings = [], dust = [], words = [], i;
+          for (i = 0; i < 10; i++) rings.push({ el: mk("ellipse", "fw-ring"), ph: i / 10 });
+          for (i = 0; i < 56; i++) {
+            var da = i * 2.39996 + kHash(i * 5 + 77) * 1.2, dr = (180 + kHash(i * 3 + 91) * 1500) * U;
+            dust.push({ el: mk("line", "fw-dust"), x: Math.cos(da) * dr * L.kx, y: Math.sin(da) * dr * L.ky * 1.0333, ph: kHash(i * 9 + 13), w: 1 + kHash(i + 50) * 1.6 });
+          }
+          var list = kWords(String(v.words).indexOf("|") >= 0 ? v.words : String(v.words).replace(/[,，、]/g, "|")).map(function (u) { return u.t; });
+          if (!list.length) list = ["关键词"];
+          list.forEach(function (w, i) {
+            var a = i * 2.39996 + kHash(i * 7 + 1) * 0.8, r = (330 + kHash(i * 13 + 2) * 660) * U, s = i % 22;
+            var acc = ACC.indexOf(s) >= 0, ser = SER.indexOf(s) >= 0, cjk = kCJK.test(w);
+            var el = document.createElement("div");
+            el.className = "fw-w " + (acc ? "fw-ca" : "fw-c" + Math.floor(kHash(i + 5) * 3)) + (ser ? " fw-s" : "");
+            el.textContent = w;
+            // background texture: crosses the title, leaves the frame and the portrait caption zone by design
+            el.setAttribute("data-layout-allow-overlap", ""); el.setAttribute("data-layout-allow-occlusion", ""); el.setAttribute("data-layout-allow-caption-zone", "");
+            el.style.fontSize = ((64 + kHash(i + 3) * 56) * (cjk ? L.fs : 1) * U).toFixed(1) + "px";
+            el.style.letterSpacing = cjk ? "0" : ser ? "-0.01em" : "-0.03em";
+            if (ser && !cjk) el.style.fontStyle = "italic";
+            field.appendChild(el);
+            words.push({ el: el, x: Math.cos(a) * r * L.kx, y: Math.sin(a) * r * L.ky, rz: (kHash(i + 21) - 0.5) * 12, ph: i / list.length, acc: acc });
+          });
+          var glow = q(".fw-glow"), N = list.length;
+          var gs = dark ? [0.55, 0.3] : [0.28, 0.15]; // accent-word glow: full on dark skins, half on light ones
+          var glowStr = "0 0 " + (18 * U).toFixed(1) + "px color-mix(in srgb, var(--k-accent) " + gs[0] * 100 + "%, transparent), 0 0 " + (48 * U).toFixed(1) + "px color-mix(in srgb, var(--k-accent) " + gs[1] * 100 + "%, transparent)";
+
+          var curve = function (u) {
+            for (var k = 0; k < 4; k++) if (u <= OT[k + 1]) return OP[k] + ((OP[k + 1] - OP[k]) * (u - OT[k])) / (OT[k + 1] - OT[k]);
+            return 0;
+          };
+          // z moves linearly with u; drift 0.5 + 1.35u fans the words out as they come close; roll turns the whole tunnel
+          var proj = function (x, y, u, c, sn, drift) {
+            var z = CFG.z0 + (CFG.z1 - CFG.z0) * u, d = drift ? 0.5 + u * 1.35 : 1, s = CFG.P / (CFG.P - z);
+            return [CX + (x * c - y * sn) * d * s, CY + (x * sn + y * c) * d * s, s];
+          };
+          var f2 = function (n) { return n.toFixed(2); };
+
+          var tl = MT.scene(CFG.dur, function (t) {
+            var p = t / CFG.dur, roll = (2.5 * Math.PI / 180) * Math.sin(p * Math.PI * 2), c = Math.cos(roll), sn = Math.sin(roll);
+            var du = CFG.cycles / (CFG.dur * 30), deg = (roll * 180) / Math.PI;
+            grain(t);
+            glow.style.opacity = f2(0.82 + 0.14 * Math.sin(p * Math.PI * 4)); // breathes twice, in step with the 2 cycles
+            rings.forEach(function (g) {
+              var u = (p * CFG.cycles + g.ph) % 1, s = proj(0, 0, u, c, sn, false)[2], rx = 1150 * s * U;
+              var op = Math.min(1, u / 0.3) * (1 - MT.clamp((u - 0.55) / 0.3, 0, 1));
+              g.el.setAttribute("cx", CX); g.el.setAttribute("cy", CY);
+              g.el.setAttribute("rx", f2(rx * L.kx)); g.el.setAttribute("ry", f2(rx * L.ky));
+              g.el.setAttribute("stroke-opacity", f2(op * 0.16)); g.el.setAttribute("stroke-width", f2((1 + s * 0.8) * U));
+              g.el.setAttribute("transform", "rotate(" + f2(deg) + " " + CX + " " + CY + ")");
+            });
+            dust.forEach(function (d) {
+              // a streak from where the mote was 2.6 frames ago to where it is now
+              var u = (p * CFG.cycles + d.ph) % 1, a = proj(d.x, d.y, Math.max(0, u - du * 2.6), c, sn, true), b = proj(d.x, d.y, u, c, sn, true);
+              d.el.setAttribute("x1", f2(a[0])); d.el.setAttribute("y1", f2(a[1])); d.el.setAttribute("x2", f2(b[0])); d.el.setAttribute("y2", f2(b[1]));
+              d.el.setAttribute("stroke-opacity", f2(curve(u) * 0.75)); d.el.setAttribute("stroke-width", f2(d.w * Math.min(2.4, b[2]) * U));
+            });
+            words.forEach(function (w) {
+              var u = (p * CFG.cycles + w.ph) % 1, a = proj(w.x, w.y, u, c, sn, true), b = proj(w.x, w.y, Math.max(0, u - du), c, sn, true);
+              var vx = a[0] - b[0], vy = a[1] - b[1], s = a[2], st = w.el.style; // screen speed in px per frame
+              // inside the ellipse round the title a word drops to 20%, so it never fights the title
+              var k = Math.pow((a[0] - CX) / ex, 2) + Math.pow((a[1] - CY) / ey, 2);
+              var op = curve(u) * (fg && k < 1 ? 0.2 + 0.8 * k * k : 1);
+              if (op <= 0.005) { st.opacity = 0; return; }
+              var blur = (u < CFG.fogEnd ? (1 - u / CFG.fogEnd) * CFG.fog : 0) + (u > CFG.nearAt ? (u - CFG.nearAt) * CFG.near : 0);
+              var sh = w.acc ? [glowStr] : [];
+              if (Math.hypot(vx, vy) > CFG.trailMin * U) for (var j = 1; j <= 4; j++) {
+                var m = ((j / 4) * 0.9) / s; // 4 copies trailing back along the screen speed (upstream 6 over the same length)
+                sh.push(f2(-vx * m) + "px " + f2(-vy * m) + "px " + f2(j * 1.2 * U) + "px color-mix(in srgb, currentColor " + Math.round((0.2 - j * 0.039) * 100) + "%, transparent)");
+              }
+              st.opacity = op.toFixed(3);
+              st.transform = "translate(" + f2(a[0]) + "px," + f2(a[1]) + "px) translate(-50%,-50%) scale(" + s.toFixed(4) + ") rotate(" + f2(w.rz + deg) + "deg)";
+              st.textShadow = sh.join(",");
+              st.filter = blur > 0.05 ? "blur(" + f2((blur * U) / Math.max(0.6, s)) + "px)" : "";
+            });
+          });
+          window.__timelines["flying-words"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,465 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"name","type":"string","label":"顶栏：应用名（可留空）","default":"示例应用"},
+    {"id":"head","type":"string","label":"顶栏：页面名（可留空）","default":"更新日志"},
+    {"id":"title","type":"string","label":"被锁住的那一条：标题（可用 | 切词）","default":"一键导出"},
+    {"id":"desc","type":"string","label":"被锁住的那一条：说明（可留空）","default":"做好的视频直接存成文件"},
+    {"id":"ver","type":"string","label":"版本号，只在横屏显示（可留空）","default":"v1.24"},
+    {"id":"date","type":"string","label":"日期，只在横屏显示（可留空）","default":"今天"},
+    {"id":"tag","type":"string","label":"锁定后弹出的小标签（可留空）","default":"刚上线"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>brake-reticle-lock · 急刹锁定</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="brake-reticle-lock-template">
+<!-- Ported from video-shotcraft demos/data/scroll-brake-moves/BrakeReticleLock.tsx
+     (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+     Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+     Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+     neutral --k-* palette, system fonts, generic copy; upstream mark, wordmark, avatar and titles replaced by a
+     neutral mark, variables and a plain circle; other rows are text-free bars with SVG glyphs (one node each, SVG
+     background); list scaled 1.25x for 40px text (rows, blur caps, corners 46 -> 58px, shadows); locked row grows
+     with its text; tag on an ink pill, accent dot, text cut in at half fade, above the row in portrait or when too
+     wide; corner blur layers fixed full-frame; grain under the list; data-layout-ignore on the locked row while
+     blurred; portrait corner offsets 330 / 420. Kept: sine.in / power2.out 30px past / power1.out back, frame 59
+     brake = corner launch, back.out(2.4) lock, offsets 620 / 320, blur gains 0.15 / 0.1, dim 0.38, grain, vignette,
+     list fades. -->
+<style>
+  @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+  @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+  @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+  #root {
+    --k-bg: var(--mc-bg, #ffffff);
+    --k-panel: var(--mc-panel, #f4f5f7);
+    --k-ink: var(--mc-ink, #15171c);
+    --k-muted: var(--mc-muted, #6b7280);
+    --k-accent: var(--mc-accent, #e8590c);
+    --k-accent-2: var(--mc-accent-2, #2563eb);
+    --k-on-accent: var(--mc-on-accent, #ffffff);
+    --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    font-family: var(--k-font);
+    color: var(--k-ink);
+  }
+  /* ==== kit:fonts@2 (mono only) ==== */
+  @font-face { font-family: "Consolas"; src: local("Consolas"); }
+  #root { --k-mono: var(--mc-mono, Consolas, monospace); }
+  /* ==== end kit:fonts ==== */
+  /* ==== kit:derived@1 ==== */
+  .brl {
+    --brl-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+    --brl-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+    --brl-hi: color-mix(in srgb, white 80%, transparent);
+  }
+  .brl[data-tone="dark"] {
+    --brl-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+    --brl-hi: color-mix(in srgb, white 6%, transparent);
+  }
+  /* ==== end kit:derived ==== */
+  /* ==== kit:backdrop@1 (key light moved to 50% 25%, as upstream) ==== */
+  .brl-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+  .brl-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 50% 25%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+  /* ==== end kit:backdrop ==== */
+  /* ==== kit:vignette@1 ==== */
+  .brl-vig {
+    position: absolute; inset: 0; pointer-events: none;
+    --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--brl-shade);
+    background:
+      radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+      radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+  }
+  .brl[data-tone="dark"] .brl-vig { --vs: 0.55; }
+  /* ==== end kit:vignette ==== */
+  /* ==== kit:grain@1 ==== */
+  .brl-grain { position: absolute; inset: 0; pointer-events: none; }
+  /* ==== end kit:grain ==== */
+  /* ==== kit:text@2 (units only, no rise mask) ==== */
+  .brl-u { display: inline-block; white-space: pre; }
+  /* ==== end kit:text ==== */
+
+  /* --lx / --lw list left and width, --cy locked-row centre, --m0..--m3 list fade; rest shadow kShadow(3.75) */
+  .brl { position: absolute; inset: 0; container-type: size; --brl-row: var(--k-bg); --lx: calc(50% - 660px); --lw: 1260px; --cy: 50%;
+    --m0: 96px; --m1: 196px; --m2: 960px; --m3: 1080px;
+    --brl-b1: color-mix(in srgb, var(--k-ink) 20%, var(--brl-row)); --brl-b2: color-mix(in srgb, var(--k-ink) 10%, var(--brl-row));
+    --brl-sh: 0 0.7px 1.7px color-mix(in srgb, var(--brl-shade) 10.4%, transparent), 0 2.1px 4.9px -0.8px color-mix(in srgb, var(--brl-shade) 9.3%, transparent); }
+  .brl[data-tone="dark"] { --brl-row: var(--k-panel);
+    --brl-sh: 0 0.7px 1.7px color-mix(in srgb, var(--brl-shade) 27%, transparent), 0 2.1px 4.9px -0.8px color-mix(in srgb, var(--brl-shade) 24.2%, transparent); }
+  .brl-mask, .brl-blur, .brl-rows { position: absolute; inset: 0; }
+  .brl-mask { -webkit-mask-image: linear-gradient(180deg, transparent var(--m0), #000 var(--m1), #000 var(--m2), transparent var(--m3)); mask-image: linear-gradient(180deg, transparent var(--m0), #000 var(--m1), #000 var(--m2), transparent var(--m3)); }
+  .brl-list { position: absolute; left: var(--lx); width: var(--lw); top: calc(var(--cy) - 5925px); height: 7410px; }
+  .brl-r, .brl-hero { position: absolute; left: 0; right: 0; height: 150px; display: flex; align-items: center; gap: 32px; padding: 0 40px; box-sizing: border-box; border-radius: 20px;
+    background: var(--brl-row); border: 1px solid var(--brl-line); box-shadow: inset 0 1px 0 var(--brl-hi), var(--brl-sh); }
+  /* placeholder rows: icon and bars are one SVG background, drawn by the script */
+  .brl-r { background-origin: border-box; background-repeat: no-repeat; }
+  /* locked row: real text, drawn highlighted (static page = settled frame) */
+  .brl-hero { top: 5850px; box-shadow: inset 0 1px 0 var(--brl-hi), 0 2.2px 6.2px color-mix(in srgb, var(--brl-shade) 8.7%, transparent), 0 15.8px 37.4px -6.3px color-mix(in srgb, var(--brl-shade) 28.6%, transparent), 0 0 0 2px color-mix(in srgb, var(--k-accent) 85%, transparent); }
+  .brl-ic { display: grid; place-items: center; flex: none; width: 70px; height: 70px; border-radius: 18px; background: linear-gradient(180deg, color-mix(in srgb, var(--k-accent), white 22%), var(--k-accent)); box-shadow: inset 0 1px 0 color-mix(in srgb, white 35%, transparent); }
+  .brl-ic svg { width: 34px; height: 34px; fill: var(--k-on-accent); }
+  .brl-main { flex: 1; min-width: 0; }
+  .brl-title { font-size: 48px; font-weight: 700; line-height: 1.2; }
+  .brl-desc { margin-top: 6px; font-size: 40px; line-height: 1.25; color: var(--k-muted); }
+  .brl-ver, .brl-date { display: block; flex: none; max-width: 220px; font-size: 40px; line-height: 1.3; color: var(--k-muted); }
+  .brl-ver { font-family: var(--k-mono); }
+  .brl-date { min-width: 120px; text-align: right; }
+  /* app top bar */
+  .brl-bar { position: absolute; left: 0; right: 0; top: 0; height: 96px; display: flex; align-items: center; gap: 20px; padding: 0 50px; box-sizing: border-box;
+    background: color-mix(in srgb, var(--k-bg) 92%, transparent); border-bottom: 1px solid var(--brl-line); font-size: 40px; line-height: 1.2; white-space: nowrap; }
+  .brl-mark { display: block; flex: none; }
+  .brl-nm { font-weight: 700; }
+  .brl-sl, .brl-hd { color: var(--k-muted); }
+  .brl-av { display: block; flex: none; width: 48px; height: 48px; margin-left: auto; border-radius: 50%; background: color-mix(in srgb, var(--k-ink) 12%, var(--k-bg)); }
+  /* L corners: 58px boxes centred on the corners of the row grown by 12px, each in a fixed full-frame blur layer
+     .brl-c (a layer that moved while it rotated would drift off its centre) */
+  .brl-c { position: absolute; inset: 0; }
+  .brl-p { position: absolute; display: block; width: 58px; height: 58px; left: calc(var(--lx) - 41px); top: calc(var(--cy) - 116px); }
+  .brl-c1 .brl-p, .brl-c3 .brl-p { left: calc(var(--lx) + var(--lw) - 17px); }
+  .brl-c2 .brl-p, .brl-c3 .brl-p { top: calc(var(--cy) + 58px); }
+  .brl-l { position: absolute; inset: 0; }
+  .brl-l::before, .brl-l::after { content: ""; position: absolute; left: 0; top: 0; width: 58px; height: 8px; border-radius: 4px; background: var(--k-accent); }
+  .brl-l::after { width: 8px; height: 58px; }
+  .brl-c1 .brl-l { transform: scaleX(-1); }
+  .brl-c2 .brl-l { transform: scaleY(-1); }
+  .brl-c3 .brl-l { transform: scale(-1, -1); }
+  /* tag beside the row; its pill fades as a layer (--a), the text cuts in at once */
+  .brl-tag { position: absolute; left: calc(var(--lx) + var(--lw) + 47px); top: calc(var(--cy) - 36px); height: 72px; display: flex; align-items: center; gap: 16px; padding: 0 32px 0 28px; box-sizing: border-box;
+    transform-origin: 0 50%; color: var(--k-bg); font-size: 40px; font-weight: 700; line-height: 1.2; white-space: nowrap; }
+  .brl-tag::before { content: ""; position: absolute; inset: 0; border-radius: 36px; background: var(--k-ink); opacity: var(--a, 1);
+    box-shadow: 0 1.4px 3.7px color-mix(in srgb, var(--brl-shade) 10.3%, transparent), 0 8.3px 19.5px -3.3px color-mix(in srgb, var(--brl-shade) 18.4%, transparent); }
+  .brl-dot { position: relative; display: block; flex: none; width: 14px; height: 14px; border-radius: 50%; background: var(--k-accent); box-shadow: 0 0 0 5px color-mix(in srgb, var(--k-accent) 30%, transparent); opacity: var(--a, 1); }
+  .brl-tt { position: relative; }
+  /* tag too wide for the right margin: above the row, as in portrait */
+  .brl .brl-up { left: auto; right: calc(100% - var(--lx) - var(--lw)); transform-origin: 100% 100%; }
+  /* portrait: narrower list on the 40% line, bar under the top 12%, tag above the row, no version / date;
+     tokens go on the children (@container never reaches the container itself) */
+  @container (orientation: portrait) {
+    .brl > * { --lx: calc(50% - 390px); --lw: 780px; --cy: 40%; --m0: 326px; --m1: 430px; --m2: 1200px; --m3: 1410px; }
+    .brl-bar { top: 230px; padding: 0 108px; }
+    .brl-tag { left: auto; right: calc(100% - var(--lx) - var(--lw)); top: calc(var(--cy) - 204px); transform-origin: 100% 100%; }
+    .brl-ver, .brl-date { display: none; }
+  }
+</style>
+
+<div id="root" data-composition-id="brake-reticle-lock">
+  <div class="brl">
+    <div class="brl-backdrop"></div>
+    <div class="brl-vig"></div>
+    <div class="brl-grain"></div>
+    <div class="brl-mask">
+      <div class="brl-blur">
+        <div class="brl-list" data-layout-allow-overflow>
+          <div class="brl-rows"></div>
+          <div class="brl-hero">
+            <span class="brl-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.2 7.3 7.3 2.2-7.3 2.2-2.2 7.3-2.2-7.3-7.3-2.2 7.3-2.2z"/></svg></span>
+            <div class="brl-main"><div class="brl-title">一键导出</div><div class="brl-desc">做好的视频直接存成文件</div></div>
+            <span class="brl-ver">v1.24</span>
+            <span class="brl-date">今天</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="brl-bar">
+      <svg class="brl-mark" width="40" height="40" viewBox="0 0 128 128" aria-hidden="true"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg>
+      <span class="brl-nm">示例应用</span><span class="brl-sl">/</span><span class="brl-hd">更新日志</span><i class="brl-av"></i>
+    </div>
+    <div class="brl-c brl-c0"><i class="brl-p" data-layout-allow-overflow><i class="brl-l"></i></i></div>
+    <div class="brl-c brl-c1"><i class="brl-p" data-layout-allow-overflow><i class="brl-l"></i></i></div>
+    <div class="brl-c brl-c2"><i class="brl-p" data-layout-allow-overflow><i class="brl-l"></i></i></div>
+    <div class="brl-c brl-c3"><i class="brl-p" data-layout-allow-overflow><i class="brl-l"></i></i></div>
+    <div class="brl-tag"><i class="brl-dot"></i><span class="brl-tt">刚上线</span></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // timing (s) = upstream frames / 30, both orientations: hold 12f; sprint 12-50f (sine.in); brake 50-59f
+  // (power2.out, 30px past the stop); back 59-63f (power1.out). Frame 59 is the brake: the corners launch on it
+  // and lock in 9f (back.out(2.4)); highlight 59-65f, the rest dims 61-73f, the tag pops 63-71f (back.out(2.6))
+  var CFG = { s0: 0.4, s1: 1.6667, br: 1.9667, s3: 2.1, lock: 0.3, hl: 0.2, d0: 2.0333, d1: 2.4333, tag: 2.1, tagDur: 0.2667, tagIn: 0.1, end: 4,
+    rows: 38, at: 30, k: 1.25, run: 430, over: 30, blur: 0.15, max: 32, cblur: 0.1, cmax: 18, dim: 0.62 };
+  // per orientation: locked-row centre (fraction of the height), list top before the scroll, corner start offsets
+  // (px; landscape = upstream 620 / 320; portrait shorter and steeper so they still enter on frames 60-61)
+  var LAND = { cy: 0.5, top: 0, fx: 620, fy: 320 };
+  var PORT = { cy: 0.4, top: 230, fx: 330, fy: 420 };
+  var v = { name: "示例应用", head: "更新日志", title: "一键导出", desc: "做好的视频直接存成文件", ver: "v1.24", date: "今天", tag: "刚上线", backdrop: "on" };
+  try {
+    var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+  } catch (e) {}
+
+  // ==== kit:tone@1 ====
+  function kRGB(el, color) {
+    var p = document.createElement("i");
+    p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+    el.appendChild(p);
+    var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+    el.removeChild(p);
+    return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+  }
+  function kTone(wrap) {
+    var c = kRGB(wrap, "var(--k-bg)");
+    var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+    wrap.setAttribute("data-tone", tone);
+    return tone;
+  }
+  // ==== end kit:tone ====
+
+  // ==== kit:shadow@1 ====
+  function kShadow(e, strength) {
+    e = Math.max(0, e);
+    var s = strength == null ? 1 : strength, r = function (x) { return Math.round(x * 10) / 10; };
+    var c = function (a) { return "color-mix(in srgb, var(--brl-shade) " + r(Math.min(1, a) * 100) + "%, transparent)"; };
+    return "0 " + r(0.5 + e * 0.06) + "px " + r(1 + e * 0.18) + "px " + c((0.12 * s) / (1 + e / 24)) + ", " +
+      "0 " + r(e * 0.55) + "px " + r(e * 1.3) + "px " + r(-e * 0.22) + "px " + c((0.08 + (Math.min(e, 64) / 64) * 0.22) * s);
+  }
+  // ==== end kit:shadow ====
+
+  // ==== kit:speedblur@1 ====
+  function kSpeedBlur(box, prefix, o) {
+    o = o || {};
+    var amount = o.amount || 0.45, max = o.max || 36;
+    var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+    svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+    var outer = document.createElement("div"), inner = document.createElement("div");
+    outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+    while (box.firstChild) inner.appendChild(box.firstChild);
+    outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+    var fe = svg.firstChild.firstChild;
+    return function (vx, vy) {
+      vy = vy || 0;
+      var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+      if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+      var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+      fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+      outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+      inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+      outer.style.filter = "url(#" + id + ")";
+    };
+  }
+  // ==== end kit:speedblur ====
+
+  // ==== kit:grain@1 ====
+  function kGrain(layer, o) {
+    o = o || {};
+    var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+    var dark = tones && tones.getAttribute("data-tone") === "dark";
+    var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+      var f = "type='linear' slope='2.4' intercept='-0.7'";
+      var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+        "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+        "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+        "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+        "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+      return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+    });
+    layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+    layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+    layer.style.backgroundSize = size + "px " + size + "px";
+    return function (t) {
+      var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+      layer.style.backgroundImage = tiles[k % 6];
+      layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+    };
+  }
+  // ==== end kit:grain ====
+
+  // ==== kit:text@2 (kWords, kSplit; no kReveal) ====
+  var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+  function kWords(s, key) {
+    s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+    var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+    var cut = function (x) {
+      if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+      return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+    };
+    var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+    var pre = "";
+    bits.forEach(function (x) {
+      var t = x.trim(), last = out[out.length - 1];
+      if (last && /^ /.test(x)) last.sp = true;
+      if (!t) return;
+      if (!/[\p{L}\p{N}]/u.test(t)) {
+        if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+        else { last.t += t; last.sp = / $/.test(x); }
+        return;
+      }
+      out.push({ t: pre + t, sp: / $/.test(x) });
+      pre = "";
+    });
+    if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+    if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+    if (out.length) out[out.length - 1].sp = false;
+    return out;
+  }
+  function kSplit(el, by, rise, text) {
+    var s = text != null ? String(text) : el.textContent, units = [];
+    var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+    el.textContent = "";
+    parts.forEach(function (p) {
+      var u = document.createElement("span"), box = u;
+      u.className = "brl-u"; u.textContent = p.t;
+      if (by === "line") u.style.display = "block";
+      if (!p.t.trim()) { el.appendChild(u); return; }
+      if (rise) { box = document.createElement("span"); box.className = "brl-cut"; box.style.display = u.style.display; box.appendChild(u); }
+      el.appendChild(box);
+      if (p.sp) el.appendChild(document.createTextNode(" "));
+      units.push(u);
+    });
+    return units;
+  }
+  // ==== end kit:text ====
+
+  // ==== kit:fit@1 (kFit, kLines; no kRows) ====
+  function kFit(el, o) {
+    o = o || {};
+    var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+    var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+    for (;;) {
+      el.style.fontSize = f + "px";
+      m = kLines(el);
+      if ((m.w <= W && m.n <= n) || f <= min) break;
+      f = Math.max(min, f - 2);
+    }
+    if (m.w > W) {
+      [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+      m = kLines(el);
+    }
+    return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+  }
+  function kLines(el) {
+    var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+    var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+    while ((t = it.nextNode())) {
+      if (!t.data.trim()) continue;
+      r.selectNodeContents(t);
+      [].forEach.call(r.getClientRects(), function (b) {
+        var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+        if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+        row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+      });
+    }
+    return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+  }
+  // ==== end kit:fit ====
+
+  var root = document.querySelector(".brl");
+  var q = function (s) { return root.querySelector(s); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+    // not laid out yet: the host clip's declared size, then the window
+    var hc = root.closest("[data-width][data-height]");
+    FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+    FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND;
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+  var STR = kTone(root) === "dark" ? 2.6 : 1;
+  if (String(v.backdrop) === "off") [".brl-backdrop", ".brl-vig", ".brl-grain"].forEach(function (s) { q(s).style.display = "none"; });
+
+  // ---- text: every slot through kSplit, then fitted (before the rows: the locked row's height depends on it)
+  var put = function (s, val) {
+    var el = q(s), t = String(val).trim();
+    el.style.display = t ? "" : "none";
+    return t ? kSplit(el, "word", false, t) : [];
+  };
+  put(".brl-nm", v.name);
+  put(".brl-hd", v.head);
+  if (!String(v.name).trim() || !String(v.head).trim()) q(".brl-sl").style.display = "none";
+  put(".brl-ver", v.ver);
+  put(".brl-date", v.date);
+  put(".brl-title", v.title);
+  put(".brl-desc", v.desc);
+  var tagEl = q(".brl-tag"), tagU = put(".brl-tt", v.tag);
+  if (!tagU.length) tagEl.style.display = "none";
+  [".brl-nm", ".brl-hd", ".brl-ver", ".brl-date", ".brl-tt"].forEach(function (s) { kFit(q(s), { width: s === ".brl-ver" || s === ".brl-date" ? 220 : 340, min: 28 }); });
+  kFit(q(".brl-title"), { min: 40 });
+  kFit(q(".brl-desc"), { min: 40 });
+
+  // ---- rows: upstream 120px on a 156px pitch (times k); the locked row sits on L.cy and grows with its text
+  // (later rows, corners and the tag above it follow)
+  var K = CFG.k, PITCH = Math.round(156 * K), RH = Math.round(120 * K), at = CFG.at, i, hero = q(".brl-hero");
+  var HH = Math.max(RH, q(".brl-main").offsetHeight + 36), X = HH - RH, cy = L.cy * FH;
+  var FIN = at * PITCH + L.top - (cy - HH / 2), list = q(".brl-list"), rows = q(".brl-rows");
+  list.style.top = L.top - FIN + "px";
+  list.style.height = CFG.rows * PITCH + X + "px";
+  hero.style.top = at * PITCH + "px";
+  hero.style.height = HH + "px";
+  if (P || tagEl.offsetLeft + tagEl.offsetWidth > FW * 0.95) { tagEl.classList.add("brl-up"); tagEl.style.top = cy - HH / 2 - 129 + "px"; }
+  // other rows: bars sized like upstream's text (title lengths, icons by i * 7, roadmap after the locked row), never
+  // DOM text (dimming cannot fail contrast); one node each, bars as an SVG background in the skin's colours (a node
+  // per bar made each check sample ~20% slower). Portrait drops version and date
+  var LEN = [20, 23, 27, 22, 20, 18, 24, 21, 9, 18, 20, 22, 24, 20, 19, 21, 23, 22, 18, 12, 18, 19, 16, 11, 20, 19, 21, 16, 22, 15, 16, 18, 16, 16, 15, 13, 12, 14];
+  var GLY = ["M12 2.5l2.2 7.3 7.3 2.2-7.3 2.2-2.2 7.3-2.2-7.3-7.3-2.2 7.3-2.2z", "M7 17L17 7M9 7h8v8", "M5 12.5l4.5 4.5L19 7.5"], html = "", W = list.clientWidth, m = RH / 2;
+  var rgb = function (c) { return "rgb(" + kRGB(root, c).map(Math.round).join(",") + ")"; };
+  var b1 = rgb("var(--brl-b1)"), b2 = rgb("var(--brl-b2)"), KC = [rgb("var(--k-accent-2)"), rgb("color-mix(in srgb, var(--k-accent-2) 45%, var(--k-ink))"), rgb("var(--k-ink)")];
+  var bar = function (x, y, w, h, c, o) { return "<rect x='" + x + "' y='" + y + "' width='" + Math.max(0, w).toFixed(1) + "' height='" + h + "' rx='" + h / 2 + "' fill='" + c + "' fill-opacity='" + (o || 1) + "'/>"; };
+  for (i = 0; i < CFG.rows; i++) {
+    if (i === at) continue;
+    var late = i > at, kd = (i * 7) % 3, c = KC[kd], ko = kd > 1 ? 0.55 : 1, wv = late ? 24 : 82, wd = late ? 30 : (i * 11) % 27 > 8 ? 84 : 70;
+    var r = P ? W - 40 : W - 224 - wv, g = "<rect x='40' y='" + (m - 35) + "' width='70' height='70' rx='18' fill='" + c + "' fill-opacity='" + 0.12 * ko + "'/><path transform='translate(58 " + (m - 17) + ") scale(1.4167)' d='" + GLY[kd] +
+      (kd ? "' fill='none' stroke='" + c + "' stroke-opacity='" + ko + "' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/>" : "' fill='" + c + "'/>");
+    g += bar(142, m - 27, Math.min(LEN[i] * 19, r - 142), 22, late ? b2 : b1) + bar(142, m + 11, Math.min(late ? 225 : [420, 420, 390, 405][i % 4], r - 142), 16, b2);
+    if (!P) g += bar(r + 32, m - 7, wv, 14, b2) + bar(W - 40 - wd, m - 7, wd, 14, b2);
+    html += '<div class="brl-r" style="top:' + (i * PITCH + (late ? X : 0)) + "px;background-image:url(&quot;data:image/svg+xml;utf8," +
+      encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='" + W + "' height='" + RH + "'>" + g + "</svg>") + '&quot;)"></div>';
+  }
+  rows.innerHTML = html;
+
+  // ---- motion
+  var cs = [].slice.call(root.querySelectorAll(".brl-c")), ps = [].slice.call(root.querySelectorAll(".brl-p"));
+  ps.forEach(function (e, n) { e.style.top = cy + (n > 1 ? HH / 2 - 17 : -HH / 2 - 41) + "px"; });
+  var blur = kSpeedBlur(q(".brl-blur"), "brl", { amount: CFG.blur, max: CFG.max * K });
+  var cblur = cs.map(function (c) { return kSpeedBlur(c, "brl", { amount: CFG.cblur, max: CFG.cmax * K }); });
+  var grain = kGrain(q(".brl-grain"));
+  var A1 = FIN - CFG.run * K, OV = FIN + CFG.over * K, BACK = MT.ease("back.out(2.4)"), POP = MT.ease("back.out(2.6)"), F = 1 / 30;
+  var sc = function (t) {
+    if (t <= CFG.s0) return 0;
+    if (t <= CFG.s1) return MT.interpolate(t, [CFG.s0, CFG.s1], [0, A1], { easing: "sine.in" });
+    if (t <= CFG.br) return MT.interpolate(t, [CFG.s1, CFG.br], [A1, OV], { easing: "power2.out" });
+    return MT.interpolate(t, [CFG.br, CFG.s3], [OV, FIN], { easing: "power1.out", extrapolateRight: "clamp" });
+  };
+  var lk = function (t) { return t < CFG.br ? 0 : BACK(MT.clamp((t - CFG.br) / CFG.lock, 0, 1)); };
+  // corner c: outward signs times the start offset, plus the row's own drift
+  var pos = function (c, t) { var f = 1 - lk(t); return [(c % 2 ? 1 : -1) * L.fx * f, (c > 1 ? 1 : -1) * L.fy * f + FIN - sc(t)]; };
+  var tl = MT.scene(CFG.end, function (t) {
+    // the list: one translate; vertical blur from the step since the last frame (as upstream)
+    var s = sc(t), vy = (sc(t) - sc(t - F)) / F;
+    list.style.transform = "translateY(" + (FIN - s).toFixed(2) + "px)";
+    blur(0, vy);
+    // while that blur is on, the locked row's text is a smeared band, not copy (see card.md)
+    hero.toggleAttribute("data-layout-ignore", Math.min(CFG.max * K, (Math.abs(vy) / 30) * CFG.blur) >= 0.35);
+    // from the brake frame the corners fly in from off screen and bite, blurred along their path
+    var on = t >= CFG.br, L0 = lk(t);
+    cs.forEach(function (c, n) {
+      var p = pos(n, t), p0 = pos(n, t - F);
+      c.style.opacity = on ? Math.min(1, L0 * 3 + 0.35).toFixed(3) : 0;
+      ps[n].style.transform = "translate(" + p[0].toFixed(2) + "px," + (on ? p[1] : p[1] - FIN + s).toFixed(2) + "px)"; // the row's drift once launched
+      cblur[n](on ? (p[0] - p0[0]) / F : 0, on ? (p[1] - p0[1]) / F : 0);
+    });
+    // the row lights up (deeper shadow, accent ring), the rest dims to 0.38
+    var h = MT.clamp((t - CFG.br) / CFG.hl, 0, 1), d = MT.interpolate(t, [CFG.d0, CFG.d1], [0, 1], { easing: "power2.out", extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+    rows.style.opacity = (1 - CFG.dim * d).toFixed(4);
+    hero.style.boxShadow = "inset 0 1px 0 var(--brl-hi), " + kShadow(K * (3 + 20 * h), (1 + 0.6 * h) * STR) + ", 0 0 0 " + (2 * h).toFixed(2) + "px color-mix(in srgb, var(--k-accent) " + (85 * h).toFixed(1) + "%, transparent)";
+    // tag: pops 0.6 -> 1 with overshoot; pill fades in over 3f, text cuts in at half
+    var tp = POP(MT.clamp((t - CFG.tag) / CFG.tagDur, 0, 1)), ta = MT.clamp((t - CFG.tag) / CFG.tagIn, 0, 1);
+    tagEl.style.setProperty("--a", ta.toFixed(3));
+    tagEl.style.transform = "scale(" + (0.6 + 0.4 * tp).toFixed(4) + ")";
+    tagU.forEach(function (u) { u.style.opacity = ta >= 0.5 ? 1 : 0; });
+    grain(t);
+  });
+  window.__timelines["brake-reticle-lock"] = tl;
+})();
+</script>
+    </template>
+  </body>
+</html>

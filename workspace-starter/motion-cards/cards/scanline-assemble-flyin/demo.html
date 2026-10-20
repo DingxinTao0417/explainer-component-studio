@@ -1,0 +1,502 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"大标题（| 切意群，最后一段另起一行、渐变色）","default":"把复杂的事|讲清楚"},
+    {"id":"sub","type":"string","label":"正文（两行以内）","default":"一句话说清需求，页面自动排版，各就各位"},
+    {"id":"name","type":"string","label":"导航栏里的产品名","default":"示例应用"},
+    {"id":"cta","type":"string","label":"按钮上的字","default":"免费开始"},
+    {"id":"src","type":"string","label":"配图地址（从项目根目录写起）","default":"motion-cards/lib/samples/p2.jpg"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>scanline-assemble-flyin · 扫描装配飞入</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="scanline-assemble-flyin-template">
+<!-- Ported from video-shotcraft demos/effects/scanline-assemble-flyin/ScanlineAssembleFlyin.tsx
+  (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+  Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+  Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+  neutral --k-* palette (light blueprint first, midnight-like on dark skins), system fonts, generic Chinese copy;
+  upstream mark, wordmark, product copy, galaxy shot and its label removed (sample image, dimmed until lit);
+  type up: text 34 -> 40, labels 18-26 -> 28-32, nav / button / status 30-32 -> 40, figures 52 -> 56, title 120 -> 112;
+  slot boxes re-cut with the same bottoms; status icon-led, path dropped; scanline normal blend on light tones; grid on the artboard
+  corner; hold after the last landing 2.28 -> 1.78 s; portrait restacks the page on the same clock (CTA / stats from
+  820 / 800px below, picture from 480px right). Kept: 8-92f linear sweep, frameAtY landing with 4f gap, 14f overshoot
+  flight, landscape offsets and spins, speed blur 0.32 / 18 px, 22px ticks 20 -> 10px, slot fade, blueprint 30%, push. -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+@font-face { font-family: "Consolas"; src: local("Consolas"); }
+@font-face { font-family: "sa-heavy"; font-weight: 700 900; src: local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"), local("PingFangSC-Semibold"), local("NotoSansSC-Black"); }
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  --k-mono: var(--mc-mono, Consolas, monospace);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--k-font);
+  color: var(--k-ink);
+}
+/* card colours: bp blueprint, paper page, s0-s2 stage, key/fill light, scan core, tick; shade/hi/line as kit:derived */
+.sa{
+  position:absolute;inset:0;container-type:size;--sa-bp:var(--k-accent-2);
+  --sa-line:color-mix(in srgb, var(--k-ink) 12%, #0000);
+  --sa-shade:color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));--sa-hi:color-mix(in srgb, white 80%, #0000);
+  --sa-paper:var(--k-bg);--sa-s0:color-mix(in srgb, var(--k-bg), var(--k-accent-2) 5%);
+  --sa-s1:color-mix(in srgb, var(--sa-s0), var(--k-ink) 3%);--sa-s2:color-mix(in srgb, var(--sa-s0), var(--k-ink) 7%);
+  --sa-key:color-mix(in srgb, var(--k-bg) 77%, #0000);--sa-fill:9%;--sa-blend:normal;
+  --sa-core:color-mix(in srgb, var(--k-accent), white 25%);--sa-tick:var(--k-accent);--sa-g:0.6;
+}
+.sa[data-tone="dark"]{
+  --sa-shade:color-mix(in srgb, var(--k-bg) 30%, black);--sa-hi:color-mix(in srgb, white 6%, #0000);
+  --sa-paper:color-mix(in srgb, var(--k-panel), var(--k-accent-2) 6%);
+  --sa-s0:color-mix(in srgb, var(--k-bg), var(--k-accent-2) 8%);--sa-s1:var(--k-bg);
+  --sa-s2:color-mix(in srgb, var(--k-bg), black 45%);--sa-key:color-mix(in srgb, var(--k-accent-2) 47%, #0000);
+  --sa-fill:19%;--sa-blend:screen;--sa-core:color-mix(in srgb, var(--k-accent), white 80%);
+  --sa-tick:color-mix(in srgb, var(--k-accent), white 35%);--sa-g:1;
+}
+.sa-bg, .sa-bg::after, .sa-cam, .sa-grid, .sa-glit, .sa-sb, .sa-slots, .sa-surf, .sa-edge, .sa-nav, .sa-stats, .sa-cta, .sa-media, .sa-grain{position:absolute;inset:0}
+.sa-bg{background:linear-gradient(180deg, var(--sa-s0) 0%, var(--sa-s1) 52%, var(--sa-s2) 100%)}
+.sa-bg::after{content:"";mix-blend-mode:var(--sa-blend);background:radial-gradient(ellipse 58% 62% at 62% 0%, var(--sa-key) 0%, #0000 70%), radial-gradient(ellipse 50% 46% at 10% 95%, color-mix(in srgb, var(--k-accent-2) var(--sa-fill), #0000) 0%, #0000 72%)}
+/* ==== kit:vignette@1 ==== */
+.sa-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 42%; --vx: 50%; --vy: 46%; --vc: var(--sa-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.sa[data-tone="dark"] .sa-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+/* ==== kit:grain@1 ==== */
+.sa-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+/* blueprint grid 120/24px from the artboard corner; .sa-glit = lit trail 180px above the line */
+.sa-grid, .sa-grid{opacity:0.3}
+.sa-glit{
+  --c:color-mix(in srgb, var(--sa-bp) 7%, #0000);--cm:color-mix(in srgb, var(--sa-bp) 13%, #0000);
+  background:repeating-linear-gradient(180deg, var(--cm) 0 1.5px, #0000 1.5px 120px), repeating-linear-gradient(90deg, var(--cm) 0 1.5px, #0000 1.5px 120px), repeating-linear-gradient(180deg, var(--c) 0 1px, #0000 1px 24px), repeating-linear-gradient(90deg, var(--c) 0 1px, #0000 1px 24px);
+  background-position:20px 30px;
+}
+.sa-grid{opacity:0.3}
+.sa-glit{
+  --c:color-mix(in srgb, var(--k-accent) 22%, #0000);--cm:color-mix(in srgb, var(--k-accent) 40%, #0000);--ly:-999px;
+  opacity:0;
+  mask-image:linear-gradient(180deg, #0000 calc(var(--ly) - 180px), #000 var(--ly), #0000 calc(var(--ly) + 2px));
+}
+.sa-stat{position:absolute;left:140px;top:64px;width:1640px;height:44px;display:flex;align-items:center;font-size:40px;line-height:44px;white-space:nowrap}
+.sa-ico{flex:none;width:34px;height:34px;margin-right:12px;fill:none;stroke:var(--k-accent);stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round}
+.sa-stat[data-done] .sa-ico{stroke:var(--k-accent-2)}
+.sa-st{font-weight:700;letter-spacing:0.06em}
+.sa-cnt{margin-left:auto;color:var(--k-muted)}
+.sa-n, .sa-clk{font-family:var(--k-mono);color:var(--k-ink)}
+.sa-clk{margin-left:34px}
+/* page surface brushed in above the line: mask follows --sy */
+.sa-board{position:absolute;left:140px;top:150px;width:1640px;height:860px}
+.sa-surf{
+  --sy:9999px;border-radius:28px;
+  background:linear-gradient(180deg, var(--sa-paper) 0%, color-mix(in srgb, var(--sa-paper), var(--sa-bp) 3%) 100%);
+  box-shadow:0 40px 120px -40px color-mix(in srgb, var(--sa-shade) 40%, #0000), inset 0 0 0 1px color-mix(in srgb, var(--sa-bp) 12%, #0000), inset 0 1px 0 var(--sa-hi);
+  mask-image:linear-gradient(180deg, #000 calc(var(--sy) - 30px), #0000 calc(var(--sy) + 2px));
+}
+.sa-edge{border-radius:28px;border:1.5px dashed color-mix(in srgb, var(--sa-bp) 30%, #0000);opacity:0.3}
+.sa-dim{
+  position:absolute;left:0;top:-34px;width:100%;text-align:center;opacity:0.27;font:28px/1 var(--k-mono);color:var(--sa-bp);
+  --c:color-mix(in srgb, var(--sa-bp) 40%, #0000);background:linear-gradient(90deg, var(--c) calc(50% - 46px), #0000 0 calc(50% + 46px), var(--c) 0) 0 50% / 100% 1px no-repeat;
+}
+.sa-dim::before, .sa-slot::before{content:attr(data-l)}
+.sa-slot{position:absolute;box-sizing:border-box;border-radius:12px;border:1.5px dashed color-mix(in srgb, var(--sa-bp) 50%, #0000);background:color-mix(in srgb, var(--sa-bp) 6%, #0000);opacity:0}
+.sa-slot::before{position:absolute;left:14px;top:10px;font:600 28px/1 var(--k-mono);letter-spacing:0.06em;white-space:nowrap;color:color-mix(in srgb, var(--sa-bp) 85%, var(--k-ink))}
+.sa-fly{position:absolute;--lit:1;white-space:nowrap}
+.sa-hd{word-break:keep-all;overflow-wrap:anywhere}
+.sa-tk{position:absolute;left:0;top:0;overflow:visible;fill:none;stroke:var(--sa-tick);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 6px color-mix(in srgb, var(--k-accent) calc(var(--sa-g) * 90%), #0000));opacity:0}
+/* scanline: an accent line with three glows; screen blend on dark tones, as upstream */
+.sa-scan{
+  position:absolute;left:-60px;right:-60px;top:-2px;height:4px;opacity:0;
+  background:linear-gradient(90deg, #0000 0%, var(--k-accent) 8%, var(--sa-core) 50%, var(--k-accent) 92%, #0000 100%);
+  box-shadow:0 0 12px color-mix(in srgb, var(--k-accent) calc(var(--sa-g) * 95%), #0000), 0 0 36px color-mix(in srgb, var(--k-accent) calc(var(--sa-g) * 60%), #0000), 0 0 90px color-mix(in srgb, var(--k-accent) calc(var(--sa-g) * 35%), #0000);
+}
+.sa[data-tone="dark"] .sa-scan{mix-blend-mode:screen}
+/* slot geometry, shared by a slot and its block */
+.sa-g1{left:0;top:0;width:1640px;height:96px}
+.sa-g2{left:72px;top:142px;width:372px;height:64px}
+.sa-g3{left:72px;top:220px;width:820px;height:258px}
+.sa-g4{left:72px;top:496px;width:760px;height:108px}
+.sa-g5{left:940px;top:140px;width:628px;height:560px}
+.sa-g6{left:72px;top:640px;width:560px;height:76px}
+.sa-g7{left:72px;top:752px;width:1496px;height:80px}
+.sa-nav{display:flex;align-items:center;padding:0 72px;border-bottom:1px solid var(--sa-line)}
+.sa-mk{flex:none;display:block}
+.sa-name{flex:none;max-width:480px;margin-left:14px;font-size:40px;font-weight:700;line-height:1.2}
+.sa-links{margin-left:auto;display:flex;gap:44px;font-size:32px;color:var(--k-muted)}
+.sa-links i{font-style:normal}
+.sa-pill{flex:none;margin-left:48px;height:60px;padding:0 28px;border-radius:30px;display:flex;align-items:center;font-size:32px;font-weight:600;background:color-mix(in srgb, var(--k-ink) 6%, #0000);border:1px solid color-mix(in srgb, var(--k-ink) 14%, #0000)}
+.sa-tag{position:absolute;left:0;top:0;height:64px;box-sizing:border-box;padding:0 24px 0 14px;border-radius:32px;display:flex;align-items:center;gap:14px;font-size:32px;font-weight:600;background:color-mix(in srgb, var(--k-accent-2) 10%, var(--sa-paper));border:1px solid color-mix(in srgb, var(--k-accent-2) 35%, #0000)}
+.sa-chip{flex:none;padding:2px 12px;border-radius:10px;font-size:28px;font-weight:700;background:var(--k-accent-2);color:var(--k-on-accent)}
+.sa-h1, .sa-body, .sa-name, .sa-btx{white-space:normal}
+.sa-h1{position:absolute;left:0;top:0;width:100%;font:800 112px/1.15 sa-heavy, var(--k-font)}
+.sa-key{display:block;width:fit-content;color:var(--k-accent);-webkit-text-fill-color:#0000;background:linear-gradient(90deg in oklch, var(--k-accent), var(--k-accent-2));background-clip:text}
+.sa-body{position:absolute;left:0;top:0;width:100%;font-size:40px;line-height:1.3;color:var(--k-muted);text-wrap:balance}
+.sa-media{border-radius:26px;overflow:hidden;background:var(--k-panel) 0 50% / cover no-repeat;box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--k-ink) 12%, #0000), 0 30px 80px -30px color-mix(in srgb, var(--sa-shade) 70%, #0000), 0 0 calc(var(--lit) * 60px) color-mix(in srgb, var(--k-accent) calc(var(--lit) * 22%), #0000)}
+.sa-media::after{content:"";position:absolute;inset:0;background:color-mix(in srgb, var(--sa-shade) 28%, #0000);opacity:calc(1 - var(--lit))}
+.sa-cta{display:flex;align-items:center;gap:34px}
+.sa-btn{flex:none;height:76px;padding:0 40px;border-radius:38px;display:flex;align-items:center;font-size:40px;font-weight:700;color:var(--k-on-accent);background:linear-gradient(180deg, var(--k-accent), color-mix(in srgb, var(--k-accent), black 12%));box-shadow:0 14px 34px -12px color-mix(in srgb, var(--k-accent) 60%, #0000), inset 0 1px 0 color-mix(in srgb, white 45%, #0000)}
+.sa-btx{display:block;max-width:300px}
+.sa-play{display:flex;align-items:center;gap:12px;font-size:40px;font-weight:600}
+.sa-play svg{flex:none}
+.sa-stats{border-top:1px solid var(--sa-line);display:flex;align-items:flex-end;justify-content:space-between;padding-right:24px}
+.sa-stats span{display:flex;align-items:baseline;gap:16px;font-size:32px;color:var(--k-muted)}
+.sa-stats b{font:800 56px/1 sa-heavy, var(--k-font);color:var(--k-ink)}
+.sa-stats span:first-child b{color:color-mix(in srgb, var(--k-accent) 80%, var(--k-ink))}
+/* portrait: slot bottoms sit just above the line at the shared land times (card.md) */
+@container (orientation: portrait) {
+  .sa-stat{left:128px;top:250px;width:824px;height:48px;line-height:48px}
+  .sa-dim, .sa-links, .sa-stats span:last-child{display:none}
+  .sa-board{left:108px;top:304px;width:864px;height:980px}
+  .sa-grid, .sa-glit{background-position:108px 64px}
+  .sa-g1{width:864px;height:100px}
+  .sa-g2{left:40px;top:164px;width:344px}
+  .sa-g3{left:40px;top:286px;width:784px;height:250px}
+  .sa-g4{left:40px;top:576px;width:480px;height:104px}
+  .sa-g5{left:544px;top:568px;width:280px;height:220px}
+  .sa-g6{left:40px;top:736px;width:480px}
+  .sa-g7{left:40px;top:872px;width:784px;height:72px}
+  .sa-nav{padding:0 40px}
+  .sa-pill{margin-left:auto}
+  .sa-h1{font-size:106px}
+  .sa-cta{gap:24px}
+  .sa-btx{max-width:220px}
+  .sa-stats{justify-content:flex-start;gap:64px}
+}
+</style>
+
+<div id="root" data-composition-id="scanline-assemble-flyin">
+  <div class="sa">
+    <div class="sa-bg"></div>
+    <div class="sa-vig"></div>
+    <div class="sa-grain"></div>
+    <div class="sa-cam">
+      <div class="sa-grid"></div>
+      <div class="sa-glit"></div>
+      <div class="sa-stat" data-done>
+        <svg class="sa-ico" viewBox="0 0 34 34"><path d="M7 17.5 14 24.5 27.5 10" /></svg>
+        <b class="sa-st">已完成</b>
+        <span class="sa-cnt">模块 <b class="sa-n">07</b> / 07<span class="sa-clk">3.1 s</span></span>
+      </div>
+      <div class="sa-board">
+        <div class="sa-surf"></div>
+        <div class="sa-edge"></div>
+        <div class="sa-dim" data-l="1640" data-layout-allow-overflow></div>
+        <div class="sa-slots"></div>
+        <div class="sa-fly sa-g1">
+          <div class="sa-nav">
+            <svg class="sa-mk" width="56" height="56" viewBox="0 0 128 128"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)" /><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)" /><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)" /></svg>
+            <b class="sa-name">示例应用</b>
+            <span class="sa-links"><i>功能</i><i>案例</i><i>文档</i></span>
+            <span class="sa-pill">登录</span>
+          </div>
+        </div>
+        <div class="sa-fly sa-g2">
+          <div class="sa-tag"><b class="sa-chip">新</b>自动排版上线</div>
+        </div>
+        <div class="sa-fly sa-g3">
+          <div class="sa-h1"><span class="sa-hd">把复杂的事</span><span class="sa-key">讲清楚</span></div>
+        </div>
+        <div class="sa-fly sa-g4">
+          <div class="sa-body">一句话说清需求，页面自动排版，各就各位</div>
+        </div>
+        <div class="sa-fly sa-g5">
+          <div class="sa-media" style="background-image: url(motion-cards/lib/samples/p2.jpg)"></div>
+        </div>
+        <div class="sa-fly sa-g6">
+          <div class="sa-cta">
+            <span class="sa-btn"><span class="sa-btx">免费开始</span></span>
+            <span class="sa-play"><svg width="34" height="34" viewBox="0 0 34 34"><circle cx="17" cy="17" r="15" style="fill:none;stroke:var(--k-muted);stroke-width:2" /><path d="M13.5 10.5 23.5 17 13.5 23.5Z" style="fill:var(--k-ink)" /></svg>看演示</span>
+          </div>
+        </div>
+        <div class="sa-fly sa-g7">
+          <div class="sa-stats"><span><b>3 步</b>完成上线</span><span><b>12 个</b>现成模块</span><span><b>0 行</b>手写代码</span></div>
+        </div>
+        <div class="sa-scan" data-layout-allow-overflow></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var F = 1 / 30; // upstream frames -> seconds
+  // timing, both orientations. land: nav, tag, h1, text, media, cta, stats, when the landscape line crosses each bottom
+  var CFG = {
+    dur: 4.7,
+    scan0: 8 * F, scan1: 92 * F, over: 20, // linear sweep, 20px past the artboard at both ends
+    land: [0.628, 0.97, 1.816, 2.208, 2.507, 2.64, 2.917],
+    flight: 14 * F, // take-off lead
+    blur: 0.32, blurMax: 18, // speed blur per px/frame, cap
+    push: 156 * F, pushTo: 1.03,
+    arm: 22 // tick arm, px
+  };
+  // [dx, dy, deg] start per block (px at a 1080 short side), push origin
+  var LAND = { origin: [0.5, 0.52], from: [[0, -260, 0], [-620, -60, -7], [-980, 90, -4], [-860, 220, -2], [900, 80, 6], [-120, 460, 3], [140, 420, -2]] };
+  var PORT = { origin: [0.5, 0.3125], from: [[0, -420, 0], [-620, -60, -7], [-980, 90, -4], [-860, 220, -2], [480, 80, 6], [-120, 820, 3], [140, 800, -2]] };
+  var v = { title: "把复杂的事|讲清楚", sub: "一句话说清需求，页面自动排版，各就各位", name: "示例应用", cta: "免费开始", src: "motion-cards/lib/samples/p2.jpg", backdrop: "on" };
+  try {
+    var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+  } catch (e) {}
+
+  var root = document.querySelector(".sa");
+  var q = function (s) { return root.querySelector(s); }, qa = function (s) { return [].slice.call(root.querySelectorAll(s)); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+    // not laid out yet: the host clip's declared size, then the window
+    var hc = root.closest("[data-width][data-height]");
+    FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+    FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND, U = Math.min(FW, FH) / 1.08e3;
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+  // ==== kit:tone@1 ====
+  function kRGB(el, color) {
+    var p = document.createElement("i");
+    p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+    el.appendChild(p);
+    var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+    el.removeChild(p);
+    return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+  }
+  function kTone(wrap) {
+    var c = kRGB(wrap, "var(--k-bg)");
+    var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+    wrap.setAttribute("data-tone", tone);
+    return tone;
+  }
+  // ==== end kit:tone ====
+
+  // ==== kit:grain@1 ====
+  function kGrain(layer, o) {
+    o = o || {};
+    var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+    var dark = tones && tones.getAttribute("data-tone") === "dark";
+    var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+      var f = "type='linear' slope='2.4' intercept='-0.7'";
+      var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+        "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+        "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+        "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+        "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+      return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+    });
+    layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+    layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+    layer.style.backgroundSize = size + "px " + size + "px";
+    return function (t) {
+      var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+      layer.style.backgroundImage = tiles[k % 6];
+      layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+    };
+  }
+  // ==== end kit:grain ====
+
+  // ==== kit:speedblur@1 ====
+  function kSpeedBlur(box, prefix, o) {
+    o = o || {};
+    var amount = o.amount || 0.45, max = o.max || 36;
+    var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+    svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+    var outer = document.createElement("div"), inner = document.createElement("div");
+    outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+    while (box.firstChild) inner.appendChild(box.firstChild);
+    outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+    var fe = svg.firstChild.firstChild;
+    return function (vx, vy) {
+      vy = vy || 0;
+      var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+      if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+      var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+      fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+      outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+      inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+      outer.style.filter = "url(#" + id + ")";
+    };
+  }
+  // ==== end kit:speedblur ====
+
+  // ==== kit:text@2 (kWords only) ====
+  var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+  function kWords(s, key) {
+    s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+    var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+    var cut = function (x) {
+      if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+      return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+    };
+    var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+    var pre = "";
+    bits.forEach(function (x) {
+      var t = x.trim(), last = out[out.length - 1];
+      if (last && /^ /.test(x)) last.sp = true;
+      if (!t) return;
+      if (!/[\p{L}\p{N}]/u.test(t)) {
+        if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+        else { last.t += t; last.sp = / $/.test(x); }
+        return;
+      }
+      out.push({ t: pre + t, sp: / $/.test(x) });
+      pre = "";
+    });
+    if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+    if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+    if (out.length) out[out.length - 1].sp = false;
+    return out;
+  }
+  // ==== end kit:text ====
+
+  // ==== kit:fit@1 (kFit, kLines; kRows left out) ====
+  function kFit(el, o) {
+    o = o || {};
+    var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+    var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+    for (;;) {
+      el.style.fontSize = f + "px";
+      m = kLines(el);
+      if ((m.w <= W && m.n <= n) || f <= min) break;
+      f = Math.max(min, f - 2);
+    }
+    if (m.w > W) {
+      [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+      m = kLines(el);
+    }
+    return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+  }
+  function kLines(el) {
+    var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+    var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+    while ((t = it.nextNode())) {
+      if (!t.data.trim()) continue;
+      r.selectNodeContents(t);
+      [].forEach.call(r.getClientRects(), function (b) {
+        var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+        if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+        row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+      });
+    }
+    return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+  }
+  // ==== end kit:fit ====
+
+  kTone(root);
+  if (String(v.backdrop) === "off") qa(".sa-bg, .sa-vig, .sa-grain, .sa-grid, .sa-glit").forEach(function (e) { e.style.display = "none"; });
+  if (getComputedStyle(root).getPropertyValue("--mc-font").trim()) qa(".sa-h1, .sa-stats b").forEach(function (e) { e.style.fontFamily = "var(--k-font)"; });
+
+  // text through kWords (typed spaces kept, | phrases whole) as plain text, so a tilted block has no unit boxes to
+  // collide; the title may break only between phrases (zero-width spaces + keep-all). Then kFit to the box
+  var plain = function (s, br) { return kWords(s).map(function (u) { return u.t + (u.sp ? " " : br || ""); }).join(""); };
+  var parts = String(v.title).split("|"), many = parts.length > 1, key = q(".sa-key");
+  q(".sa-hd").textContent = plain(many ? parts.slice(0, -1).join("|") + "|" : v.title, "\u200b");
+  key.textContent = many ? plain(parts[parts.length - 1] + "|") : "";
+  key.style.display = many ? "" : "none";
+  kFit(q(".sa-h1"), { lines: many ? 2 : 1, min: 72 }); // no | : one plain line
+  q(".sa-body").textContent = plain(v.sub);
+  kFit(q(".sa-body"), { lines: 2, min: 40 });
+  [[".sa-name", v.name, 32], [".sa-btx", v.cta, 32]].forEach(function (s) {
+    var el = q(s[0]);
+    el.textContent = plain(s[1]);
+    kFit(el, { lines: 1, min: s[2], width: parseFloat(getComputedStyle(el).maxWidth) });
+  });
+  q(".sa-media").style.backgroundImage = "url('" + String(v.src).replace(/'/g, "%27") + "')";
+
+  var board = q(".sa-board"), cam = q(".sa-cam"), AH = board.offsetHeight, AY = board.offsetTop;
+  cam.style.transformOrigin = FW * L.origin[0] + "px " + FH * L.origin[1] + "px";
+  var NAMES = "NAV TAG H1 TEXT MEDIA CTA STATS".split(" "), slots = [];
+  var blocks = qa(".sa-fly").map(function (fly, i) {
+    var w = fly.offsetWidth, h = fly.offsetHeight, sb = document.createElement("div"), sl = document.createElement("div"), tk = null;
+    // dashed slot (gone in the final frame, so generated) and the full-board wrapper kSpeedBlur rotates
+    sl.className = "sa-slot " + fly.classList[1];
+    sl.setAttribute("data-l", NAMES[i] + " " + w + "×" + h);
+    slots.push(q(".sa-slots").appendChild(sl));
+    sb.className = "sa-sb";
+    fly.setAttribute("data-layout-allow-overflow", ""); // starts off-frame
+    fly.before(sb);
+    sb.appendChild(fly);
+    if (i) { // snap ticks on every block but the full-width nav
+      tk = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      tk.setAttribute("class", "sa-tk"); tk.setAttribute("width", w); tk.setAttribute("height", h);
+      tk.innerHTML = "<path/>";
+      fly.appendChild(tk);
+    }
+    return { fly: fly, w: w, h: h, tk: tk, blur: kSpeedBlur(sb, "sa", { amount: CFG.blur, max: CFG.blurMax }) };
+  });
+  // intended crossings: the line sweeps over every block's text, the nav drops through the status line
+  qa(".sa-fly *").forEach(function (e) { e.setAttribute("data-layout-allow-occlusion", ""); });
+  qa(".sa-stat *").forEach(function (e) { e.setAttribute("data-layout-allow-overlap", ""); e.setAttribute("data-layout-allow-occlusion", ""); });
+  var scan = q(".sa-scan"), surf = q(".sa-surf"), glit = q(".sa-glit"), grid = q(".sa-grid"), stat = q(".sa-stat");
+  var bpEls = qa(".sa-edge, .sa-dim"), nEl = q(".sa-n"), clk = q(".sa-clk"), stEl = q(".sa-st"), ico = q(".sa-ico path"), mg = blocks[4].fly;
+  var grain = kGrain(q(".sa-grain")), last = CFG.land[6], fx = function (x) { return x.toFixed(2); };
+
+  function pose(i, t) {
+    var a = MT.ramp(t, CFG.land[i] - CFG.flight, CFG.flight, "overshoot"), f = L.from[i];
+    return [f[0] * U * (1 - a), f[1] * U * (1 - a), f[2] * (1 - a)];
+  }
+  function tick(w, h, g) { // four L corners g px outside the slot
+    var a = CFG.arm, x = w + g, y = h + g;
+    return "M" + -g + " " + (a - g) + "V" + -g + "H" + (a - g) + "M" + (x - a) + " " + -g + "H" + x + "V" + (a - g) +
+      "M" + x + " " + (y - a) + "V" + y + "H" + (x - a) + "M" + (a - g) + " " + y + "H" + -g + "V" + (y - a);
+  }
+
+  function render(t) {
+    var ly = MT.mix(-CFG.over, AH + CFG.over, MT.clamp((t - CFG.scan0) / (CFG.scan1 - CFG.scan0)));
+    var on = MT.ramp(t, CFG.scan0 - 5 * F, 6 * F, "out") * (1 - MT.ramp(t, CFG.scan1, 10 * F, "exit"));
+    var done = MT.ramp(t, last + 4 * F, 12 * F, "out"), lit = MT.ramp(t, last + 2 * F, 20 * F, "out"), bp = MT.mix(1, 0.3, done), placed = 0;
+    cam.style.transform = "scale(" + (1 + (CFG.pushTo - 1) * MT.ramp(t, 0, CFG.push, "swift")).toFixed(5) + ")";
+    grid.style.opacity = bp;
+    bpEls.forEach(function (e, i) { e.style.opacity = bp * (i ? 0.9 : 1); });
+    glit.style.opacity = scan.style.opacity = on;
+    glit.style.setProperty("--ly", fx(AY + ly) + "px");
+    surf.style.setProperty("--sy", fx(ly) + "px");
+    scan.style.transform = "translateY(" + fx(ly) + "px)";
+    blocks.forEach(function (b, i) {
+      var land = CFG.land[i], p = pose(i, t), p0 = pose(i, t - F / 2), p1 = pose(i, t + F / 2), mv = t < land + 4 * F;
+      if (t >= land) placed++;
+      b.fly.style.opacity = MT.ramp(t, land - CFG.flight, 4 * F, "out");
+      b.fly.style.transform = "translate(" + fx(p[0]) + "px," + fx(p[1]) + "px) rotate(" + p[2].toFixed(3) + "deg)";
+      b.blur(mv ? (p1[0] - p0[0]) * 30 : 0, mv ? (p1[1] - p0[1]) * 30 : 0); // px per second
+      slots[i].style.opacity = (1 - MT.ramp(t, land - 2 * F, 4 * F, "out")) * bp;
+      if (b.tk) { // 3f in, 20 -> 10px outside the slot, 9f out
+        b.tk.style.opacity = MT.ramp(t, land + F, 3 * F, "out") * (1 - MT.ramp(t, land + 5 * F, 9 * F, "out"));
+        b.tk.firstChild.setAttribute("d", tick(b.w, b.h, 10 + 10 * (1 - MT.ramp(t, land + F, 6 * F, "snappy"))));
+      }
+    });
+    stat.style.opacity = MT.ramp(t, 0, 10 * F, "out");
+    nEl.textContent = (placed < 10 ? "0" : "") + placed;
+    clk.textContent = Math.min(t, last + 4 * F).toFixed(1) + " s";
+    stat.toggleAttribute("data-done", done > 0.5);
+    stEl.textContent = done > 0.5 ? "已完成" : "生成中";
+    ico.setAttribute("d", done > 0.5 ? "M7 17.5 14 24.5 27.5 10" : "M11 7.5 24 17 11 26.5Z"); // check / play triangle
+    mg.style.setProperty("--lit", lit.toFixed(3));
+    grain(t);
+  }
+
+  var tl = MT.scene(CFG.dur, render);
+  window.__timelines["scanline-assemble-flyin"] = tl;
+})();
+</script>
+    </template>
+  </body>
+</html>

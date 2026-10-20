@@ -1,0 +1,374 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"word","type":"string","label":"灯牌上的词（A–Z、0–9、- ! . 和空格，2–6 个字符，要观众认得的词）","default":"SHIP"},
+    {"id":"name","type":"string","label":"揭晓后的名称（可以留空）","default":"示例应用"},
+    {"id":"sub","type":"string","label":"揭晓后的一句话（可以留空）","default":"三分钟看懂一个概念"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"暗场墙面和地面"},{"value":"off","label":"透明（只留灯牌和字）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>stroke-segment-build · 断笔成字</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="stroke-segment-build-template">
+      <!-- Ported from video-shotcraft demos/opening/stroke-segment-build/StrokeSegmentBuild.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT scene, frames to seconds;
+           neutral --k-* palette with --k-stage (tubes from the accent, glow and wall light = accent + 15% white, upstream's
+           violet key light and wall rim from accent-2, core = white + 10% accent, stage gradient from --k-stage),
+           system fonts, generic copy; upstream wordmark and tagline replaced by a name and a line (40px, was 32px;
+           tracking 0.24em for CJK, was 0.34em). The hand-drawn SHIP glyphs are kept and extended into a 39-glyph
+           single-line tube font (A-Z, 0-9, - ! .; every letter and digit has one key segment), so the word is a
+           variable (2-6 characters); the hand-sorted lighting order is replaced by a generated cross-letter order
+           with up to three held keys. The sign fits 80% of the frame width (portrait 78%: scale 0.67 for SHIP, middle
+           at 37.5% height). Glow, reflection, mask and blur are SVG; the reflection is a mirrored <use> of the sign
+           with its mask in the sign's own units. Strike table, stagger curve, breath, key beats, reveal, surge, 2%
+           pulse, wall-light formula, floor and band, reflection numbers, vignette, grain and push kept. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          --k-stage: var(--mc-stage, #0b0d12);
+          --k-on-stage: var(--mc-on-stage, #f3f5f8);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* ==== kit:text@2 (word units only) ==== */
+        .sb-u { display: inline-block; white-space: pre; }
+        /* ==== end kit:text ==== */
+        /* ==== kit:grain@1 ==== */
+        .sb-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+        /* ==== kit:stage@1 (base only) ==== */
+        .sb-stage { position: absolute; inset: 0; background: linear-gradient(180deg, color-mix(in srgb, var(--k-stage), white 5%) 0%, var(--k-stage) 52%, color-mix(in srgb, var(--k-stage), black 35%) 100%); }
+        /* ==== end kit:stage ==== */
+        /* ==== kit:vignette@1 ==== */
+        .sb-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--sb-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        /* ==== end kit:vignette ==== */
+        /* the sign's geometry lives in custom properties on .sb-cam; the script writes them from the measured word, the
+           values here are the default word's, so the page without its script is the settled frame.
+           --fy floor line, --by floor light band centre, --sy subtitle top, --wy/--wrx/--wry wall light, --brx/--bry band */
+        .sb { position: absolute; inset: 0; container-type: size; }
+        .sb-cam {
+          position: absolute; inset: 0; transform-origin: 50% 45%; transform: scale(1.035);
+          --sb-glow: color-mix(in srgb, var(--k-accent), white 15%);
+          --sb-core: color-mix(in srgb, white 90%, var(--k-accent));
+          --fy: 780px; --by: 800px; --sy: 652px; --wy: 401.6px; --wrx: 800px; --wry: 441.6px; --brx: 700px; --bry: 60px;
+        }
+        .sb[data-backdrop="off"] .sb-bd { display: none; }
+        .sb-l { position: absolute; inset: 0; pointer-events: none; }
+        /* key light: upstream's violet top light, here the second accent (screen) */
+        .sb-key { mix-blend-mode: screen; background: radial-gradient(ellipse 58% 62% at 50% 0%, color-mix(in srgb, var(--k-accent-2) 19%, transparent), transparent 70%); }
+        /* the wall lit by the sign: tube colour in the middle, a cool rim; opacity follows the lit tubes */
+        .sb-wall { opacity: 1; background: radial-gradient(ellipse var(--wrx) var(--wry) at 50% var(--wy), color-mix(in srgb, var(--sb-glow) 28%, transparent), color-mix(in srgb, var(--k-accent-2) 12%, transparent) 45%, transparent 72%); }
+        .sb-floor { top: var(--fy); background: linear-gradient(180deg, color-mix(in srgb, black 55%, transparent), color-mix(in srgb, black 85%, transparent)); }
+        .sb-band { opacity: 0.9; background: radial-gradient(ellipse var(--brx) var(--bry) at 50% var(--by), color-mix(in srgb, var(--sb-glow) 30%, transparent), transparent 70%); }
+        .sb-vig { --vs: 0.7; --vin: 42%; --vc: color-mix(in srgb, var(--k-stage) 40%, black); }
+        /* tubes: every segment is one path drawn by four <use> layers (wide glow, near glow, tube, white-hot core);
+           pathLength 1 + dash 0.92 leaves a 4% electrode gap at both ends. The layers' stroke is an inline style: the
+           host scopes this sheet, and scoped rules do not reach the copies inside the reflection's <use> */
+        .sb-svg { width: 100%; height: 100%; overflow: visible; fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 0.92 1; stroke-dashoffset: -0.04; }
+        .sb-place { transform: translate(335px, 190px); }
+        .sb-sub { position: absolute; left: 10%; right: 10%; top: var(--sy); text-align: center; font-size: 40px; font-weight: 600; line-height: 1.35; letter-spacing: 0.24em; color: color-mix(in srgb, var(--k-on-stage) 74%, var(--k-stage)); }
+        .sb[data-backdrop="off"] .sb-sub { text-shadow: 0 0 3px var(--k-stage), 0 0 12px var(--k-stage); }
+        .sb-name { font-weight: 700; letter-spacing: 0.06em; color: var(--k-on-stage); }
+        .sb-dot { color: var(--k-accent); margin: 0 0.5em 0 0.8em; letter-spacing: 0; }
+        /* portrait: the sign is fitted to 78% of the width (0.6739 for SHIP: the tubes stay inside x 108-972 after the
+           3.5% push), its middle at 37.5% height (y 720) */
+        @container (orientation: portrait) {
+          .sb-cam { transform-origin: 50% 40%; --fy: 982.8px; --by: 996.3px; --sy: 896.6px; --wy: 727.8px; --wrx: 539.1px; --wry: 297.6px; --brx: 471.7px; --bry: 40.4px; }
+          .sb-place { transform: translate(118.8px, 585.22px) scale(0.6739); }
+          .sb-sub { left: 12%; right: 12%; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="stroke-segment-build">
+        <div class="sb">
+          <div class="sb-cam">
+            <div class="sb-l sb-bd sb-stage"></div>
+            <div class="sb-l sb-bd sb-key"></div>
+            <div class="sb-l sb-bd sb-wall"></div>
+            <div class="sb-l sb-bd sb-floor"></div>
+            <div class="sb-l sb-bd sb-band"></div>
+            <div class="sb-l sb-bd sb-vig"></div>
+            <div class="sb-l sb-bd sb-grain"></div>
+            <svg class="sb-l sb-svg"><defs><filter id="sb0-w" filterUnits="userSpaceOnUse" x="-150" y="-150" width="1550" height="700"><feGaussianBlur stdDeviation="22"/></filter><filter id="sb0-n" filterUnits="userSpaceOnUse" x="-150" y="-150" width="1550" height="700"><feGaussianBlur stdDeviation="6"/></filter><filter id="sb0-r" filterUnits="userSpaceOnUse" x="-150" y="-150" width="1550" height="700"><feGaussianBlur stdDeviation="5"/></filter><linearGradient id="sb0-g" gradientUnits="userSpaceOnUse" x1="0" y1="250" x2="0" y2="590"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="0.882" stop-color="#fff" stop-opacity="0.9"/><stop offset="0.997" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient><mask id="sb0-m" maskUnits="userSpaceOnUse" x="-150" y="-150" width="1550" height="900"><rect x="-150" y="-150" width="1550" height="900" fill="url(#sb0-g)"/></mask><g id="sb0-a"><path pathLength="1" d="M130 380C80 380 42 356 30 306"/><path pathLength="1" d="M228 92C214 44 176 20 130 20"/><path pathLength="1" d="M130 20C72 20 34 54 34 104"/><path pathLength="1" d="M228 296C228 348 186 380 130 380"/><path pathLength="1" d="M34 104C34 156 78 178 130 196"/><path pathLength="1" d="M130 196C186 214 228 240 228 296"/><path pathLength="1" d="M556 20L556 380"/><path pathLength="1" d="M364 20L364 196"/><path pathLength="1" d="M364 204L364 380"/><path pathLength="1" d="M388 200L532 200"/><path pathLength="1" d="M790 20L790 196"/><path pathLength="1" d="M790 204L790 380"/><path pathLength="1" d="M1048 20L1130 20C1186 20 1218 56 1218 108"/><path pathLength="1" d="M1024 204L1024 380"/><path pathLength="1" d="M1024 20L1024 196"/><path pathLength="1" d="M1218 108C1218 160 1186 196 1130 196L1048 196"/></g></defs><g class="sb-place"><g class="sb-bd" transform="matrix(1 0 0 -1 0 1180)"><g mask="url(#sb0-m)"><g filter="url(#sb0-r)" opacity="0.42"><use href="#sb0-s"/></g></g></g><g id="sb0-s"><g style="stroke:var(--sb-glow);stroke-width:76;opacity:0.4" filter="url(#sb0-w)"><use href="#sb0-a"/></g><g style="stroke:var(--k-accent);stroke-width:42;opacity:0.75" filter="url(#sb0-n)"><use href="#sb0-a"/></g><g style="stroke:var(--k-accent);stroke-width:30"><use href="#sb0-a"/></g><g style="stroke:var(--sb-core);stroke-width:9.6"><use href="#sb0-a"/></g></g></g></svg>
+            <div class="sb-sub"><span class="sb-name">示例应用</span><span class="sb-dot">●</span><span class="sb-tag">三分钟看懂一个概念</span></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing in seconds (upstream frames / 30), shared by both orientations: first tube at 12f, the other
+          // non-key tubes over the next 60f on the "out" curve, 14f breath, key tubes at 86/93/99f, each strike 7f,
+          // reveal at 105f (8f), surge 105-108-127f, subtitle 113f (16f), push over the whole 165f
+          var CFG = { dur: 5.5, first: 0.4, span: 2, keys: [2.867, 3.1, 3.3], reveal: 3.5, rev: 0.267, surge: [3.5, 3.6, 4.233], sub: 3.767, subDur: 0.533, push: 0.035 };
+          // layout per orientation: the sign's middle (share of the height), the widest it gets (share of the width)
+          var LAND = { cy: 0.3611, w: 0.8 };
+          var PORT = { cy: 0.375, w: 0.78 };
+          // neon strike, frames after the tube's start: on - off - on - half - on, then 0.58 until the reveal
+          var STF = [0, 1, 2, 3, 4, 5, 7], STV = [0, 1, 0.12, 0.95, 0.4, 1, 0.58];
+          // single-line tube font: 260x400 box, centre lines x 34-226 and y 20-380, 330 advance; each segment is a path
+          // without its leading M (a lower-case letter names a shared one in S2), listed in the order it lights inside
+          // the letter; * marks the key segment
+          var ADV = 330, FL = 590, GAP = 62;
+          var S2 = { a: "34 20L34 196", b: "34 204L34 380", c: "130 20L130 196", d: "130 204L130 380", e: "226 20L226 196", f: "226 280C226 340 184 380 130 380C76 380 34 340 34 280", g: "34 280L34 120", h: "34 120C34 60 76 20 130 20C184 20 226 60 226 120", i: "226 120L226 280", j: "34 200L34 270C34 338 70 380 130 380", k: "130 20C70 20 34 62 34 130L34 200", m: "224 96C212 46 176 20 130 20", n: "58 20L140 20C196 20 228 56 228 108", o: "228 108C228 160 196 196 140 196L58 196" };
+          var G = {
+            A:"130 20L83 196;179 204L226 380;81 204L34 380;130 20L177 196;*88 270L172 270", B:"58 20L140 20C188 20 214 52 214 106C214 160 190 194 146 200;b;58 200L146 200;a;*146 200C200 206 226 240 226 290C226 346 192 380 136 380L58 380",
+            C:"j;130 380C176 380 212 354 224 304;k;*m", D:"58 20L110 20C180 20 226 72 226 150L226 200;b;a;*226 200L226 250C226 328 180 380 110 380L58 380", E:"58 380L226 380;a;58 20L226 20;b;*58 200L190 200",
+            F:"b;58 20L226 20;a;*58 200L190 200", G:"130 380C190 380 226 340 226 280L226 230;m;j;k;*204 212L140 212", H:"226 20L226 380;a;b;*58 200L202 200", I:"c;d",
+            J:"206 20L206 196;206 204L206 286;*206 286C206 346 170 380 120 380C74 380 42 354 32 306", K:"220 20L64 192;b;a;*64 208L222 380", L:"b;a;*58 380L222 380",
+            M:"226 204L226 380;52 44L124 232;a;e;b;*208 44L136 232", N:"e;b;226 204L226 380;a;*56 40L204 360", O:"f;g;h;*i", P:"n;b;a;*o", Q:"h;g;i;f;*156 300L224 380",
+            R:"b;n;a;o;*150 214L226 380", S:"130 380C80 380 42 356 30 306;228 92C214 44 176 20 130 20;130 20C72 20 34 54 34 104;228 296C228 348 186 380 130 380;34 104C34 156 78 178 130 196;*130 196C186 214 228 240 228 296",
+            T:"d;130 44L130 196;*34 20L226 20", U:"e;34 204L34 280C34 340 76 380 130 380;a;*130 380C184 380 226 340 226 280L226 204", V:"226 20L179 196;83 204L130 380;34 20L81 196;*177 204L130 380",
+            W:"178 380L226 20;82 380L130 120;34 20L82 380;*130 120L178 380", X:"138 214L226 380;34 20L122 186;226 20L138 186;*122 214L34 380", Y:"130 214L130 380;34 20L122 190;*226 20L138 190",
+            Z:"34 380L226 380;34 20L226 20;*212 36L48 364", 0:"g;i;f;h;*184 84L76 316", 1:"d;c;*116 32L62 82", 2:"140 240L36 372;40 104C40 54 82 20 130 20C182 20 222 54 222 104;222 104C222 158 192 196 140 240;*58 380L226 380",
+            3:"116 188C186 184 226 228 226 286;40 20L216 20;206 34L120 178;*226 286C226 344 182 380 130 380C84 380 46 356 34 310", 4:"182 292L182 380;168 30L52 244;182 20L182 256;*34 274L226 274",
+            5:"42 20L42 172;226 272C226 336 184 380 128 380C82 380 46 356 34 310;66 20L218 20;*44 196C72 176 100 170 130 170C188 170 226 212 226 272", 6:"36 150L36 270;212 56C194 32 166 20 132 20C74 20 36 66 36 150;36 270C36 336 78 380 132 380C186 380 226 338 226 284;*226 284C226 230 186 190 132 190C90 190 54 212 38 252",
+            7:"160 206L104 372;222 34L164 196;*34 20L226 20", 8:"130 200C190 234 226 262 226 296C226 346 184 380 130 380;130 20C82 20 46 56 46 104C46 142 74 168 130 200;130 200C186 168 214 142 214 104C214 56 178 20 130 20;*130 380C76 380 34 346 34 296C34 262 70 234 130 200",
+            9:"38 112C38 56 78 20 130 20C184 20 222 60 222 120;222 250C222 334 180 380 128 380C96 380 66 368 48 340;222 120L222 250;*220 150C206 186 172 206 128 206C74 206 38 168 38 112",
+            "-":"70 200L190 200", "!":"c;130 204L130 290;130 362L130 364", ".":"130 362L130 364", " ":""
+          };
+          var v = { word: "SHIP", name: "示例应用", sub: "三分钟看懂一个概念", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k]; // "" hides name / sub
+          } catch (e) {}
+
+          var root = document.querySelector(".sb");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          root.setAttribute("data-backdrop", String(v.backdrop) === "off" ? "off" : "on");
+
+          // ==== kit:text@2 (word units only) ====
+          var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "sb-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "sb-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          // ==== end kit:text ====
+
+          // ==== kit:fit@1 (no kRows) ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          // ==== end kit:fit ====
+
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+
+          // the word: supported characters only, at most 6; nothing usable falls back to the default
+          var word = String(v.word).toUpperCase().replace(/\s+/g, " ").trim();
+          var chars = Array.from(word).filter(function (c) { return c in G; }).slice(0, 6);
+          if (!chars.join("").trim()) chars = Array.from("SHIP");
+          var hash = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+          var segs = [];
+          chars.forEach(function (c, li) {
+            G[c].split(";").forEach(function (s) {
+              if (!s) return;
+              var n = 0, key = s[0] === "*";
+              s = s.replace("*", "");
+              segs.push({ li: li, key: key, d: "M" + (S2[s] || s).replace(/[\d.]+/g, function (x) { return n++ % 2 ? x : +x + li * ADV; }) });
+            });
+          });
+          // order: up to three key segments (first, middle and last letter that has one) wait for the three beats; the
+          // rest are spread over their letter's share of the run with a fixed jitter, never two of one letter in a row
+          var ks = segs.filter(function (s) { return s.key; });
+          var held = ks.length > 3 ? [ks[0], ks[Math.round((ks.length - 1) / 2)], ks[ks.length - 1]] : ks;
+          var rest = segs.filter(function (s) { return held.indexOf(s) < 0; });
+          chars.forEach(function (c, li) {
+            var mine = rest.filter(function (s) { return s.li === li; });
+            mine.forEach(function (s, j) { s.p = s.key ? 1 + li / 100 : (j + 0.5 + (hash(li * 7.3 + j * 1.7) - 0.5) * 0.6) / mine.length; });
+          });
+          rest.sort(function (a, b) { return a.p - b.p; });
+          for (var i = 1; i < rest.length; i++) {
+            if (rest[i].li !== rest[i - 1].li) continue;
+            for (var j = i + 1; j < rest.length; j++) if (rest[j].li !== rest[i - 1].li) { rest.splice(i, 0, rest.splice(j, 1)[0]); break; }
+          }
+          var out = MT.EASE.out;
+          rest.forEach(function (s, i) { s.at = CFG.first + (rest.length > 1 ? out(i / (rest.length - 1)) : 0) * CFG.span; });
+          held.forEach(function (s, i) { s.at = CFG.keys[3 - held.length + i]; });
+
+          // the svg: tube paths once in <defs>, four layers of <use>; the floor reflection is the whole sign again,
+          // mirrored on the floor line, blurred and masked in the sign's own units. Ids carry a per-mount number
+          var u = "sb" + (window.__sbMount = (window.__sbMount || 0) + 1) + "-";
+          var WD = ADV * (chars.length - 1) + 260, box = 'filterUnits="userSpaceOnUse" x="-150" y="-150" width="' + (WD + 300) + '" height="';
+          var defs = [["w", 22], ["n", 6], ["r", 5]].map(function (f) { return '<filter id="' + u + f[0] + '" ' + box + '700"><feGaussianBlur stdDeviation="' + f[1] + '"/></filter>'; }).join("");
+          defs += '<linearGradient id="' + u + 'g" gradientUnits="userSpaceOnUse" x1="0" y1="' + (FL - 340) + '" x2="0" y2="' + FL + '"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="0.882" stop-color="#fff" stop-opacity="0.9"/><stop offset="0.997" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>';
+          defs += '<mask id="' + u + 'm" maskUnits="userSpaceOnUse" x="-150" y="-150" width="' + (WD + 300) + '" height="900"><rect x="-150" y="-150" width="' + (WD + 300) + '" height="900" fill="url(#' + u + 'g)"/></mask>';
+          var uses = "";
+          segs.forEach(function (s, i) { defs += '<path id="' + u + "p" + i + '" pathLength="1" d="' + s.d + '"/>'; uses += '<use href="#' + u + "p" + i + '"/>'; });
+          var svg = q(".sb-svg");
+          svg.innerHTML = "<defs>" + defs + '</defs><g class="sb-place"><g class="sb-bd" transform="matrix(1 0 0 -1 0 ' + 2 * FL + ')"><g mask="url(#' + u + 'm)"><g filter="url(#' + u + 'r)" opacity="0.42"><use href="#' + u + 's"/></g></g></g>' +
+            '<g id="' + u + 's">' + [["--sb-glow", 76, "w"], ["--k-accent", 42, "n"], ["--k-accent", 30], ["--sb-core", 9.6]].map(function (l) {
+              return '<g style="stroke:var(' + l[0] + ");stroke-width:" + l[1] + '"' + (l[2] ? ' filter="url(#' + u + l[2] + ')"' : "") + ">" + uses + "</g>";
+            }).join("") + "</g></g>";
+          var sign = svg.querySelector(".sb-place").lastChild;
+          var lay = [].map.call(sign.children, function (g) { return [].slice.call(g.children); });
+
+          // fit: the sign takes at most L.w of the width at its upstream size; everything around it follows its scale
+          var sc = Math.min(1, (FW * L.w) / WD), ox = (FW - WD * sc) / 2, oy = FH * L.cy - 200 * sc, cam = q(".sb-cam");
+          svg.querySelector(".sb-place").style.transform = "translate(" + ox + "px," + oy + "px) scale(" + sc + ")";
+          [["--fy", FL], ["--by", FL + 20], ["--sy", 400 + GAP], ["--wy", 211.6]].forEach(function (p) { cam.style.setProperty(p[0], (oy + p[1] * sc).toFixed(1) + "px"); });
+          [["--wrx", 0.64 * WD], ["--wry", 441.6], ["--brx", 0.56 * WD], ["--bry", 60]].forEach(function (p) { cam.style.setProperty(p[0], (p[1] * sc).toFixed(1) + "px"); });
+
+          // subtitle: name and line split into units (spaces kept), fitted together; the dot rides on the line's first
+          // unit so a wrap never leaves it hanging; an empty part is removed with its dot
+          var sub = q(".sb-sub"), nm = q(".sb-name"), tg = q(".sb-tag"), dot = q(".sb-dot");
+          var hasN = String(v.name).trim(), hasT = String(v.sub).trim();
+          if (hasN) kSplit(nm, "word", false, v.name); else nm.remove();
+          if (hasT) kSplit(tg, "word", false, v.sub); else tg.remove();
+          if (hasN && hasT) tg.firstChild.insertBefore(dot, tg.firstChild.firstChild); else dot.remove();
+          if (hasN || hasT) kFit(sub, { lines: 2, min: 40 }); else sub.remove();
+
+          var wall = q(".sb-wall"), band = q(".sb-band"), grain = kGrain(q(".sb-grain"), { opacity: 0.09, blend: "soft-light" });
+          var strike = function (df) {
+            if (df >= 7 || df <= 0) return df > 0 ? STV[6] : 0;
+            for (var k = 1; k < 7; k++) if (df < STF[k]) return MT.mix(STV[k - 1], STV[k], (df - STF[k - 1]) / (STF[k] - STF[k - 1]));
+          };
+          var tl = MT.scene(CFG.dur, function (t) {
+            var f = t * 30, lit = 0; // frames at 30 fps
+            var rev = MT.ramp(t, CFG.reveal, CFG.rev, "snappy");
+            var sg = MT.interpolate(t, CFG.surge, [0, 1, 0], { easing: "out", extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+            segs.forEach(function (s, i) {
+              var sf = s.at * 30, on = f >= sf;
+              if (f >= sf + 1) lit++;
+              var lv = f >= sf + 7 ? (0.58 + 0.42 * rev) * (1 + 0.035 * Math.sin(f * 0.9 + i * 2.3) * Math.sin(f * 0.37 + i)) : strike(f - sf);
+              var b = lv * (1 + 0.25 * sg), o = [Math.min(1, 0.4 * b + 0.4 * sg), Math.min(1, 0.75 * b), Math.min(1, 0.35 + 0.65 * b), Math.min(1, b)];
+              for (var k = 0; k < 4; k++) { lay[k][i].style.display = on ? "" : "none"; lay[k][i].style.opacity = o[k].toFixed(3); }
+            });
+            var p = 1 + 0.02 * sg;
+            sign.setAttribute("transform", "matrix(" + p + " 0 0 " + p + " " + (WD / 2) * (1 - p) + " " + 200 * (1 - p) + ")");
+            var amb = 0.12 + (0.5 * lit) / segs.length + 0.35 * rev + 0.3 * sg;
+            wall.style.opacity = Math.min(1, amb).toFixed(3);
+            band.style.opacity = Math.min(1, amb * 0.9).toFixed(3);
+            cam.style.transform = "scale(" + (1 + CFG.push * MT.ramp(t, 0, CFG.dur, "smooth")) + ")";
+            var kp = MT.ramp(t, CFG.sub, CFG.subDur, "out");
+            if (sub.isConnected) { sub.style.opacity = kp; sub.style.transform = "translateY(" + ((1 - kp) * 0.44).toFixed(3) + "em)"; }
+            grain(t);
+          });
+          window.__timelines["stroke-segment-build"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

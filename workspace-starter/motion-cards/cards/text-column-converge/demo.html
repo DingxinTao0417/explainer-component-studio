@@ -1,0 +1,350 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"lead","type":"string","label":"左边固定的词（留空不要）","default":"NEW"},
+    {"id":"words","type":"string","label":"轮换的词（用 | 隔开，可留空）","default":"自动整理笔记|一键导出 PDF|多人实时协作|版本记录|AI 智能搜索|批量处理|跨设备同步|定时备份"},
+    {"id":"name","type":"string","label":"最后合拢的词（产品名、口号）","default":"示例应用"},
+    {"id":"note","type":"string","label":"合拢后的小字（留空不要）","default":"三分钟看懂一个概念"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>text-column-converge · 双词对峙合拢</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="text-column-converge-template">
+      <!-- Ported from video-shotcraft demos/typography/text-column-converge/TextColumnConverge.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette, system fonts, generic Chinese copy, upstream wordmark and tagline removed; white-first
+           (the lead word and the soft glow come from --k-muted / --k-accent, the 1-frame flash is an accent tint on
+           light skins); landscape and portrait layouts. The word cadence (16/12/9/8/7/8/10/12 frames), the 8-frame
+           lead-in, the 10-frame settle, the 36-frame cubic in-out close, the 18-frame wait and 4-frame hard-cut note,
+           the 0.35 x speed horizontal blur capped at 4px, the vignette and the grain are as upstream. Changed numbers:
+           the close lands on measured text widths, not 0.6em per glyph, so any font and mixed CJK/Latin text bite at
+           exactly one space; the side margin is 32.2% of the frame width (upstream 618 of 1920) but shrinks, once for
+           the whole run, when the longest word needs the room (down to 10%); type is 42px landscape / 52px portrait
+           and the letter spacing is 0.07em (upstream 42px and 3px); the card is 6.5s with 1.23s of hold (upstream 6.0s,
+           0.73s). -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        @font-face { font-family: "Consolas"; src: local("Consolas"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          --k-mono: var(--mc-mono, Consolas, monospace);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* ==== kit:derived@1 — shade only (the vignette colour). [data-tone] from kTone() ==== */
+        .tc { --tc-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); }
+        .tc[data-tone="dark"] { --tc-shade: color-mix(in srgb, var(--k-bg) 30%, black); }
+        /* ==== end kit:derived ==== */
+        /* ==== kit:backdrop@1 — white-first card background with some life (upstream Polish.Backdrop, light) ==== */
+        .tc-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .tc-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        /* ==== end kit:backdrop ==== */
+        /* ==== kit:vignette@1 — edges pressed down with a palette-tinted shade (upstream Polish.Vignette) ==== */
+        .tc-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--tc-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .tc[data-tone="dark"] .tc-vig { --vs: 0.55; }
+        /* ==== end kit:vignette ==== */
+        /* ==== kit:grain@1 — the layer kGrain() draws on; above the scenery, below the text ==== */
+        .tc-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+
+        /* the wrapper is the size container (SPEC 五): portrait overrides live in @container and only reach its children */
+        .tc { position: absolute; inset: 0; container-type: size; --tc-fs: 42px; --tc-y: 50%; }
+        /* soft glow behind the settled line: upstream 10% lavender on dark; here a 6% trace of the accent (11% on a dark skin) */
+        .tc-glow { position: absolute; left: 50%; top: var(--tc-y); width: 54%; height: 28%; transform: translate(-50%, -50%); background: radial-gradient(ellipse 50% 50% at 50% 50%, color-mix(in srgb, var(--k-accent) 6%, transparent), transparent 70%); }
+        .tc[data-tone="dark"] .tc-glow { background: radial-gradient(ellipse 50% 50% at 50% 50%, color-mix(in srgb, var(--k-accent) 11%, transparent), transparent 70%); }
+        /* static layout = the settled picture: the line is centred by flex, the note hangs under its left edge.
+           The script measures this layout once, then lifts the three pieces out into pinned absolute boxes */
+        .tc-pos { position: absolute; left: 0; right: 0; top: var(--tc-y); transform: translateY(-50%); display: flex; justify-content: center; }
+        .tc-line { position: relative; flex: none; display: flex; align-items: flex-start; gap: 0.62em; font-size: var(--tc-fs); line-height: 1.2; }
+        .tc-t { display: block; font-family: var(--k-mono), var(--k-font); font-size: var(--tc-fs); font-weight: 500; letter-spacing: 0.07em; line-height: 1.2; white-space: pre; font-variant-ligatures: none; }
+        .tc-lead { color: var(--k-ink); }
+        .tc-word { color: var(--k-ink); }
+        .tc-note { position: absolute; left: 0; top: 100%; margin-top: 0.33em; max-width: 62cqw; font-style: italic; color: var(--k-muted); }
+        .tc-fx, .tc-fx > div { position: absolute; inset: 0; }
+        .tc-fx .tc-t { position: absolute; }
+        @container (orientation: portrait) {
+          .tc { --tc-fs: 52px; --tc-y: 40%; }
+          .tc-glow { width: 96%; height: 16%; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="text-column-converge">
+        <div class="tc">
+          <div class="tc-bg"><div class="tc-backdrop"></div></div>
+          <div class="tc-glow"></div>
+          <div class="tc-vig"></div>
+          <div class="tc-grain"></div>
+          <div class="tc-pos">
+            <div class="tc-line">
+              <span class="tc-t tc-lead">NEW</span>
+              <span class="tc-t tc-word">示例应用</span>
+              <span class="tc-t tc-note">三分钟看懂一个概念</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing (seconds = upstream frames / 30), shared by both orientations
+          var CFG = {
+            start: 0.267,                                              // 8f of empty frame before the first word
+            dwell: [0.533, 0.4, 0.3, 0.267, 0.233, 0.267, 0.333, 0.4], // 16/12/9/8/7/8/10/12f per word; uneven on purpose, cycled past 8 words
+            settle: 0.333,                                             // the last word sits 10f before the close starts
+            conv: 1.2,                                                 // the one close: 36f, cubic in-out
+            subWait: 0.6,                                              // the note waits 18f after the close lands
+            subFade: 0.133,                                            // and cuts in over 4f, no movement
+            hold: 1.233,                                               // rest after the note is in (SPEC: at least 1s)
+            flash: 0.033,                                              // 1-frame lift on every word change
+            leadMix: 0.8,                                              // the lead brightens to full ink over 80% of the close
+            glowAt: 1.0, glowDur: 0.8,                                 // glow behind the line lights up late in the close (upstream 30f / 24f)
+            margin: 0.322, side: 0.1                                   // pinned margin = 32.2% of the width (upstream 618 of 1920); never under 10%
+          };
+          var v = { lead: "NEW", words: "自动整理笔记|一键导出 PDF|多人实时协作|版本记录|AI 智能搜索|批量处理|跨设备同步|定时备份", name: "示例应用", note: "三分钟看懂一个概念", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".tc");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          root.setAttribute("data-orient", FH > FW ? "portrait" : "landscape");
+
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          function kRows(el, cls) {
+            if (!el.children.length) return [];
+            var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+            var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+            kids.forEach(function (c, i) {
+              if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+              if (tops[i] != null) last = tops[i];
+              row.appendChild(c);
+            });
+            return [].slice.call(el.children);
+          }
+          // ==== end kit:fit ====
+
+          // ==== kit:speedblur@1 ====
+          function kSpeedBlur(box, prefix, o) {
+            o = o || {};
+            var amount = o.amount || 0.45, max = o.max || 36;
+            var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+            var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+            svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+            var outer = document.createElement("div"), inner = document.createElement("div");
+            outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+            while (box.firstChild) inner.appendChild(box.firstChild);
+            outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+            var fe = svg.firstChild.firstChild;
+            return function (vx, vy) {
+              vy = vy || 0;
+              var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+              if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+              var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+              fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+              outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+              inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+              outer.style.filter = "url(#" + id + ")";
+            };
+          }
+          // ==== end kit:speedblur ====
+
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+
+          var dark = kTone(root) === "dark";
+          var off = String(v.backdrop) === "off";
+          var grain = null;
+          if (off) [".tc-bg", ".tc-glow", ".tc-vig", ".tc-grain"].forEach(function (s) { q(s).style.display = "none"; });
+          else grain = kGrain(q(".tc-grain"), { opacity: dark ? 0.07 : 0.05 }); // upstream grain 0.07 soft-light
+
+          // ---- text: lead, rotating words, the closing word, the note. Typed spaces are kept (white-space: pre) ----
+          var lead = q(".tc-lead"), word = q(".tc-word"), note = q(".tc-note"), line = q(".tc-line");
+          var s1 = function (s) { return String(s == null ? "" : s).replace(/[\r\n]+/g, " ").trim(); };
+          var list = String(v.words == null ? "" : v.words).split("|").map(s1).filter(Boolean);
+          var name = s1(v.name) || list.pop() || "示例应用";
+          var seq = list.concat([name]);
+          var leadTxt = s1(v.lead), noteTxt = s1(v.note);
+          lead.textContent = leadTxt; if (!leadTxt) lead.style.display = "none";
+          note.textContent = noteTxt; if (!noteTxt) note.style.display = "none";
+          var sc = root.getBoundingClientRect().width / FW || 1; // preview scale: measured rects are divided by it
+          var wid = function (el) { return el.getBoundingClientRect().width / sc; };
+          var fs = parseFloat(getComputedStyle(root).getPropertyValue("--tc-fs")) || 42;
+          var gap = function () { return parseFloat(getComputedStyle(line).columnGap) || fs * 0.62; };
+          // one type size for the whole run (a size that changes per word would read as another card): the widest word,
+          // the lead and three spaces of air must fit inside 80% of the frame; kFit shrinks to 40px, then the words wrap
+          var widest = seq[0], ww = 0;
+          seq.forEach(function (s) { word.textContent = s; if (wid(word) > ww) { ww = wid(word); widest = s; } });
+          word.textContent = widest;
+          var fit = kFit(word, { lines: 1, min: 40, width: FW * (1 - 2 * CFG.side) - (leadTxt ? wid(lead) : 0) - 3 * gap() });
+          word.style.fontSize = "";
+          root.style.setProperty("--tc-fs", fit.size + "px");
+          fs = fit.size;
+          var air = leadTxt ? wid(lead) + 3 * gap() : 0, need = air + wid(word);
+          var wrap = need > FW * (1 - 2 * CFG.side) + 0.5;
+          if (wrap) { // past the floor: the words fold (right-aligned) and the margin goes to its minimum
+            word.style.maxWidth = FW * (1 - 2 * CFG.side) - air + "px"; word.style.whiteSpace = "pre-wrap"; word.style.textAlign = "right";
+          }
+          // the pinned margin: 32.2% of the width, or less when the widest word needs the room; fixed for the whole run
+          var M = wrap ? FW * CFG.side : Math.max(FW * CFG.side, Math.min(FW * CFG.margin, (FW - need) / 2));
+
+          // ---- measure the settled picture (the static layout), then lift the pieces out into pinned boxes ----
+          word.textContent = name;
+          var rc = root.getBoundingClientRect();
+          var rel = function (el) { var b = el.getBoundingClientRect(); return { x: (b.left - rc.left) / sc, r: (b.right - rc.left) / sc, y: (b.top - rc.top) / sc, b: (b.bottom - rc.top) / sc }; };
+          var lr = rel(lead), wr = rel(word);
+          var Lm = leadTxt ? lr.x : wr.x, Rm = wr.r; // settled left edge of the lead / right edge of the word
+          if (noteTxt) { // the note hangs from the settled left edge and may not pass the right-hand 10% line
+            var cap = FW * (1 - CFG.side) - Lm, nf = kFit(note, { lines: 1, min: 40, width: cap });
+            if (!nf.fits) { note.style.whiteSpace = "pre-wrap"; note.style.width = cap + "px"; }
+          }
+          var mk = function (el) { var box = document.createElement("div"); box.className = "tc-fx"; box.appendChild(el); root.appendChild(box); return box; };
+          var fxL = mk(lead), fxW = mk(word);
+          root.removeChild(q(".tc-pos"));
+          root.appendChild(note);
+          note.style.position = "absolute"; note.style.margin = "0"; note.style.maxWidth = "none";
+          note.style.left = Lm + "px"; note.style.top = wr.b + 0.33 * fs + "px";
+          lead.style.left = Lm + "px"; lead.style.top = lr.y + "px";
+          word.style.left = "auto"; word.style.right = FW - Rm + "px"; word.style.top = wr.y + "px";
+          var blurL = kSpeedBlur(fxL, "tc", { amount: 0.35, max: 4 }), blurW = kSpeedBlur(fxW, "tc", { amount: 0.35, max: 4 });
+
+          // ---- schedule ----
+          var starts = [0];
+          for (var i = 0; i < list.length; i++) starts.push(starts[i] + CFG.dwell[i % CFG.dwell.length]);
+          var tConv = CFG.start + starts[seq.length - 1] + CFG.settle, tSub = tConv + CFG.conv + CFG.subWait;
+          var DUR = tSub + CFG.subFade + CFG.hold;
+          var cv = function (t) { return MT.ramp(t, tConv, CFG.conv, "power3.inOut"); }; // cubic in-out: the only slide
+          var posL = function (t) { return MT.mix(M, Lm, cv(t)); };
+          var posW = function (t) { return MT.mix(FW - M, Rm, cv(t)); };
+          var ink = kRGB(root, "var(--k-ink)"), muted = kRGB(root, "var(--k-muted)"), acc = kRGB(root, "var(--k-accent)");
+          var rgb = function (c) { return "rgb(" + c.map(function (n) { return Math.round(n); }).join(",") + ")"; };
+          var mix3 = function (a, b, p) { return a.map(function (n, j) { return n + (b[j] - n) * p; }); };
+          // flash: dark skin = lift to white with a cool glow; light skin = an accent tint (the same one-frame blink)
+          var flashC = dark ? "#ffffff" : rgb(mix3(ink, acc, 0.4));
+          var flashS = dark ? "0 0 14px rgba(200,210,255,0.35)" : "0 0 14px " + "rgba(" + acc.map(Math.round).join(",") + ",0.3)";
+          var glow = q(".tc-glow"), shown = -2;
+
+          var tl = MT.scene(DUR, function (t) {
+            var t0 = t - CFG.start, idx = -1;
+            for (var s = 0; s < seq.length; s++) if (t0 >= starts[s]) idx = s;
+            if (idx !== shown) { shown = idx; if (idx >= 0) word.textContent = seq[idx]; }
+            var vis = idx >= 0 ? 1 : 0, flash = idx > 0 && t0 - starts[idx] < CFG.flash;
+            lead.style.opacity = word.style.opacity = vis;
+            word.style.color = flash ? flashC : ""; word.style.textShadow = flash ? flashS : "none";
+            lead.style.color = rgb(mix3(muted, ink, MT.ramp(t, tConv, CFG.conv * CFG.leadMix, "smooth")));
+            lead.style.transform = "translateX(" + (posL(t) - Lm).toFixed(2) + "px)";
+            word.style.transform = "translateX(" + (posW(t) - Rm).toFixed(2) + "px)";
+            // horizontal motion blur from the real speed (upstream 0.35 x px per frame, capped at 4px); still = none
+            blurL(Math.abs(MT.velocity(posL, t)), 0); blurW(Math.abs(MT.velocity(posW, t)), 0);
+            note.style.opacity = MT.ramp(t, tSub, CFG.subFade, "none");
+            if (!off) { glow.style.opacity = MT.ramp(t, tConv + CFG.glowAt, CFG.glowDur, "out"); if (grain) grain(t); }
+          });
+          window.__timelines["text-column-converge"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

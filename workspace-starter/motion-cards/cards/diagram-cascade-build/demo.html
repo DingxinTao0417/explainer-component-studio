@@ -1,0 +1,389 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"prompt","type":"string","label":"输入框里打出的一句话","default":"帮我把这门课拆成章节和小节"},
+    {"id":"nodes","type":"string","label":"7 个节点，| 分隔（根、2 个子、4 个孙）","default":"课程大纲|入门篇|进阶篇|安装环境|跑通示例|常用技巧|实战项目"},
+    {"id":"status","type":"string","label":"生成完的状态（可空）","default":"7 个节点 · 6 条连线"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>diagram-cascade-build · 一句话长出结构树</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+<template id="diagram-cascade-build-template">
+<!-- Ported from video-shotcraft demos/interaction/canvas-materialize-moves/DiagramCascadeBuild.tsx
+     (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+     Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+     Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+     neutral --k-* palette on a light stage (aurora dark look dropped, dust kept for dark skins only), system fonts,
+     generic copy, upstream data model and prompt removed; field names, types and PK/FK labels drawn as bars and
+     chips; text 40px (status 28px); typing squeezed into a fixed 0.5 s window, so everything after the submit runs
+     23 frames earlier; portrait re-laid out (narrower nodes, status under the bar, push-in 1.2x). Level gap, sibling
+     stagger, line lead, edge draw, comet heads, pull-out-from-the-port spring, camera pull-back and breath kept. -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  position: absolute; inset: 0; overflow: hidden; font-family: var(--k-font); color: var(--k-ink);
+}
+.dc,.dc-cam,.dc-tree,.dc-bg,.dc-bg::after,.dc-dots,.dc-dust,.dc-svg{position:absolute;inset:0}
+.dc-svg{width:100%;height:100%;overflow:visible}
+.dc *{box-sizing:border-box}
+/* kit:derived@1 (line, shade, hi) + surfaces: sheet = prompt bar, node = node faces; core = comet head centre;
+   accent <-> accent-2 blends go round the hue circle the way that avoids grey and green (orange-blue via purple, yellow-blue via pink) */
+.dc{container-type:size;--dc-line:color-mix(in srgb,var(--k-ink) 12%,#0000);--dc-shade:color-mix(in srgb,var(--k-ink) 85%,var(--k-accent-2));--dc-hi:color-mix(in srgb,#fff 80%,#0000);
+  --dc-sheet:var(--k-bg);--dc-node:var(--k-bg);--dc-core:var(--k-accent-2);--dc-tint:var(--k-accent);--dc-chip:14%;--dc-hue:shorter}
+.dc[data-tone="dark"]{--dc-shade:color-mix(in srgb,var(--k-bg) 30%,#000);--dc-hi:color-mix(in srgb,#fff 8%,#0000);--dc-sheet:var(--k-panel);--dc-node:color-mix(in srgb,var(--k-panel),var(--k-accent-2) 6%);--dc-core:#fff;--dc-tint:var(--k-accent-2);--dc-chip:30%;--dc-hue:longer}
+/* kit:backdrop@1 with the key light top centre and an accent-2 fill bottom right (upstream stage: key 50% 5%, fill 82% 95%) */
+.dc-bg{background:radial-gradient(ellipse 50% 46% at 82% 95%,color-mix(in srgb,var(--k-accent-2) 8%,#0000),#0000 72%),linear-gradient(var(--k-bg),color-mix(in srgb,var(--k-bg),var(--k-ink) 4%) 52%,color-mix(in srgb,var(--k-bg),var(--k-ink) 7%))}
+.dc-bg::after{content:"";background:radial-gradient(ellipse 58% 62% at 50% 5%,color-mix(in srgb,var(--k-bg) 95%,#0000),#0000 70%)}
+/* the glow behind the tree: brighter as it grows, one step more on the breath (--au 0-1) */
+.dc-aur{position:absolute;left:13.5%;right:13.5%;top:35%;height:59%;--au:0;
+  background:radial-gradient(ellipse 50% 50% at 35% 55%,color-mix(in srgb,var(--k-accent) calc(10% + 12% * var(--au)),#0000),#0000 70%),radial-gradient(ellipse 45% 45% at 70% 60%,color-mix(in srgb,var(--k-accent-2) calc(5% + 8% * var(--au)),#0000),#0000 70%)}
+.dc-dots{--m:radial-gradient(ellipse 60% 62% at 50% 58%,#000 25%,#0000);background:radial-gradient(color-mix(in srgb,var(--k-ink) 12%,#0000) 1.4px,#0000 1.7px) 0 16px/40px 40px;mask-image:var(--m)}
+.dc-dust{display:none}
+.dc[data-tone="dark"] .dc-dust{display:block}
+.dc-dust i{position:absolute;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--k-accent) 90%,#0000),#0000 70%)}
+/* ==== kit:vignette@1 ==== */
+.dc-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--dc-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.dc[data-tone="dark"] .dc-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+/* ==== kit:grain@1 ==== */
+.dc-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+/* prompt bar: a 2px rim (accent once typed, a flowing accent / accent-2 gradient while it generates), the face inside */
+.dc-bar{position:absolute;left:400px;top:96px;width:1120px;border-radius:50px;padding:2px;background:color-mix(in srgb,var(--k-accent) 54%,#0000)}
+.dc-flow{position:absolute;inset:0;border-radius:50px;background:linear-gradient(90deg in oklch var(--dc-hue) hue,var(--k-accent),var(--k-accent-2),var(--k-accent),var(--k-accent-2),var(--k-accent)) 0 0/300% 100%;opacity:.55}
+.dc-pin{position:relative;display:flex;align-items:center;min-height:96px;padding:0 16px 0 30px;border-radius:48px;background:linear-gradient(var(--dc-sheet),color-mix(in srgb,var(--dc-sheet),var(--k-ink) 3%));box-shadow:inset 0 1px var(--dc-hi)}
+.dc-sp{flex:none;width:34px;height:34px;margin-right:20px}
+.dc-tx{flex:1;min-width:0;padding:6px 0;font-size:40px;font-weight:500;line-height:1.25}
+.dc-ca{display:inline-block;width:3px;height:40px;margin-left:4px;vertical-align:-7px;border-radius:2px;background:var(--k-accent);opacity:0}
+.dc-end{position:relative;flex:none;width:68px;height:68px}
+.dc-go{display:grid;place-items:center;width:68px;height:68px;border-radius:34px;opacity:0}
+.dc-go svg{width:30px;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+/* status: takes the button's place at the bar's right end (portrait: under the bar) */
+.dc-st{position:absolute;right:418px;top:112px;height:68px;display:flex;align-items:center;gap:12px;width:max-content;max-width:420px;font-size:28px;font-weight:600;line-height:1.2;color:var(--k-muted)}
+.dc-st::before{content:"";flex:none;width:28px;height:28px;border-radius:50%;background:color-mix(in srgb,var(--k-accent) 18%,#0000)}
+.dc-st::after{content:"";position:absolute;left:9px;top:25px;width:7px;height:13px;border:solid var(--k-accent);border-width:0 2.5px 2.5px 0;transform:rotate(45deg)}
+/* nodes: placed by their top centre (--x, --y; portrait --px, --py), pulled out of the port above them */
+.dc-n{position:absolute;left:calc(var(--x) - var(--w) / 2);top:var(--y);width:var(--w);--w:344px;border-radius:22px;transform-origin:50% 0}
+.dc-in{border-radius:22px;background:linear-gradient(var(--dc-node),color-mix(in srgb,var(--dc-node),var(--k-ink) 4%));border:1px solid var(--dc-line);box-shadow:inset 0 1px var(--dc-hi)}
+.dc-l0{padding:2px;background:linear-gradient(135deg in oklch var(--dc-hue) hue,var(--k-accent),var(--k-accent-2))}
+.dc-l0 .dc-in{border:0;border-radius:20px;background:linear-gradient(color-mix(in srgb,var(--dc-node),var(--dc-tint) 6%),var(--dc-node))}
+.dc-h{display:flex;align-items:center;gap:14px;min-height:66px;padding:0 24px;border-bottom:1px solid var(--dc-line)}
+.dc-ic{flex:none;width:24px;height:22px;border:2px solid var(--k-muted);border-radius:5px;background:linear-gradient(var(--k-muted),var(--k-muted)) 0 6px/100% 2px no-repeat,linear-gradient(var(--k-muted),var(--k-muted)) 7px 6px/2px 100% no-repeat}
+.dc-l0 .dc-ic{border-color:var(--k-accent);background-image:linear-gradient(var(--k-accent),var(--k-accent)),linear-gradient(var(--k-accent),var(--k-accent))}
+.dc-nm{flex:1;min-width:0;font-size:40px;font-weight:700;line-height:1.2}
+/* fields as texture: name bar, key chip, type bar */
+.dc-fs{display:flex;flex-direction:column;gap:10px;padding:14px 24px 16px}
+.dc-f{display:flex;align-items:center;gap:10px;height:26px}
+.dc-f i{display:block;width:38%;height:12px;border-radius:6px;background:color-mix(in srgb,var(--k-ink) 16%,#0000)}
+.dc-f+.dc-f i{width:52%}
+.dc-f i:last-child{width:20%;margin-left:auto;background:color-mix(in srgb,var(--k-ink) 9%,#0000)}
+/* key chips: PK in the accent, FK (third level) in accent-2; stronger on dark skins, where a thin yellow turns olive */
+.dc-f b{flex:none;width:34px;height:20px;border-radius:6px;--c:var(--k-accent);background:color-mix(in srgb,var(--c) var(--dc-chip),#0000);border:1px solid color-mix(in srgb,var(--c) 40%,#0000)}
+.dc-l2 .dc-f b{--c:var(--k-accent-2)}
+/* portrait: the bar across the body, the status under it, narrower levels (400 / 300 / 200) */
+@container (orientation: portrait) {
+  .dc-bar{left:108px;top:280px;width:864px}
+  .dc-st{right:122px;top:396px;max-width:600px}
+  .dc-n{left:calc(var(--px) - var(--w) / 2);top:var(--py)}
+  .dc-l0{--w:400px}
+  .dc-l1{--w:300px}
+  .dc-l2{--w:200px}
+  .dc-l2 .dc-ic{display:none}
+  .dc-l2 .dc-h,.dc-l2 .dc-fs{padding-left:16px;padding-right:16px}
+  .dc-aur{left:4%;right:4%;top:24%;height:40%}
+  .dc-dots{--m:radial-gradient(ellipse 70% 34% at 50% 40%,#000 25%,#0000)}
+}
+</style>
+
+<div id="root" data-composition-id="diagram-cascade-build">
+  <div class="dc">
+    <div class="dc-bg"></div><div class="dc-aur"></div><div class="dc-dots"></div><div class="dc-dust"></div><div class="dc-vig"></div><div class="dc-grain"></div>
+    <div class="dc-cam">
+      <div class="dc-bar"><div class="dc-flow"></div><div class="dc-pin">
+        <svg class="dc-sp" viewBox="0 0 24 24"><path d="M12 2.5l2.1 6.4 6.4 2.1-6.4 2.1L12 19.5l-2.1-6.4L3.5 11l6.4-2.1z" style="fill:var(--k-accent)"/><path d="M19 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z" style="fill:var(--k-accent);opacity:.6"/></svg>
+        <div class="dc-tx"><span class="dc-t">帮我把这门课拆成章节和小节</span><i class="dc-ca"></i></div>
+        <div class="dc-end"><div class="dc-go"><svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></div></div>
+      </div></div>
+      <div class="dc-st">7 个节点 · 6 条连线</div>
+      <div class="dc-tree"><svg class="dc-svg"></svg>
+        <div class="dc-n dc-l0" style="--x:960px;--y:293px;--px:540px;--py:480px"><div class="dc-in"><div class="dc-h"><i class="dc-ic"></i><div class="dc-nm">课程大纲</div></div><div class="dc-fs"><p class="dc-f"><i></i><b></b><i></i></p><p class="dc-f"><i></i><i></i></p></div></div></div>
+        <div class="dc-n dc-l1" style="--x:540px;--y:529px;--px:319px;--py:720px"><div class="dc-in"><div class="dc-h"><i class="dc-ic"></i><div class="dc-nm">入门篇</div></div><div class="dc-fs"><p class="dc-f"><i></i><b></b><i></i></p><p class="dc-f"><i></i><i></i></p></div></div></div>
+        <div class="dc-n dc-l1" style="--x:1380px;--y:529px;--px:761px;--py:720px"><div class="dc-in"><div class="dc-h"><i class="dc-ic"></i><div class="dc-nm">进阶篇</div></div><div class="dc-fs"><p class="dc-f"><i></i><b></b><i></i></p><p class="dc-f"><i></i><i></i></p></div></div></div>
+        <div class="dc-n dc-l2" style="--x:320px;--y:773px;--px:208px;--py:960px"><div class="dc-in"><div class="dc-h"><i class="dc-ic"></i><div class="dc-nm">安装环境</div></div><div class="dc-fs"><p class="dc-f"><i></i><b></b><i></i></p><p class="dc-f"><i></i><i></i></p></div></div></div>
+        <div class="dc-n dc-l2" style="--x:760px;--y:773px;--px:429px;--py:960px"><div class="dc-in"><div class="dc-h"><i class="dc-ic"></i><div class="dc-nm">跑通示例</div></div><div class="dc-fs"><p class="dc-f"><i></i><b></b><i></i></p><p class="dc-f"><i></i><i></i></p></div></div></div>
+        <div class="dc-n dc-l2" style="--x:1160px;--y:773px;--px:651px;--py:960px"><div class="dc-in"><div class="dc-h"><i class="dc-ic"></i><div class="dc-nm">常用技巧</div></div><div class="dc-fs"><p class="dc-f"><i></i><b></b><i></i></p><p class="dc-f"><i></i><i></i></p></div></div></div>
+        <div class="dc-n dc-l2" style="--x:1600px;--y:773px;--px:872px;--py:960px"><div class="dc-in"><div class="dc-h"><i class="dc-ic"></i><div class="dc-nm">实战项目</div></div><div class="dc-fs"><p class="dc-f"><i></i><b></b><i></i></p><p class="dc-f"><i></i><i></i></p></div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+// timing in seconds (upstream frames / 30), shared by both orientations. The prompt types inside a fixed window,
+// so the submit stays at 0.9 s for any prompt length; everything after it keeps upstream's spacing.
+var CFG = {
+  dur: 6, barLen: 0.467, type0: 0.267, typeEnd: 0.767, confirmLen: 0.2, submit: 0.9, pressIn: 0.1, pressOut: 0.333, blink: 0.233,
+  drip: 0.2, dripLen: 0.267, root: 0.467, level: 0.733, sibling: 0.167, lead: 0.333, edge: 0.533, // drip / root after the submit
+  popDamp: 14, popStiff: 190, popFade: 0.167, done: 0.4, breathe: 0.333, breatheLen: 0.467, breatheAmt: 0.03,
+  pullLag: 0.067, pull: 2.4, genLen: 0.267, doneLen: 0.467, flow: 0.36, aurLen: 2, drift: 0.18
+};
+// per orientation: push-in on the prompt bar at the start, and where the bar sits then (share of the frame height)
+var LAND = { zoom: 1.3, focus: 0.45 };
+var PORT = { zoom: 1.2, focus: 0.4 };
+var PARENT = [-1, 0, 0, 1, 1, 2, 2], LEVEL = [0, 1, 1, 2, 2, 2, 2], SIB = [0, 0, 1, 0, 1, 2, 3];
+var v = { prompt: "帮我把这门课拆成章节和小节", nodes: "课程大纲|入门篇|进阶篇|安装环境|跑通示例|常用技巧|实战项目", status: "7 个节点 · 6 条连线", backdrop: "on" };
+try {
+  var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+  for (var key in got) if (got[key] != null && (got[key] + "" || key === "status")) v[key] = got[key]; // only status may be ""
+} catch (e) {}
+
+var root = document.querySelector(".dc");
+var q = function (s) { return root.querySelector(s); }, qa = function (s) { return [].slice.call(root.querySelectorAll(s)); };
+var FW = root.clientWidth, FH = root.clientHeight;
+if (!FW || !FH) {
+  // not laid out yet: the host clip's declared size, then the window
+  var hc = root.closest("[data-width][data-height]");
+  FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+  FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+}
+var P = FH > FW, L = P ? PORT : LAND;
+root.setAttribute("data-orient", P ? "portrait" : "landscape");
+if (String(v.backdrop) === "off") qa(".dc-bg,.dc-aur,.dc-dots,.dc-dust,.dc-vig,.dc-grain").forEach(function (n) { n.style.display = "none"; });
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== end kit:tone ====
+// ==== kit:shadow@1 ====
+function kShadow(e, strength) {
+  e = Math.max(0, e);
+  var s = strength == null ? 1 : strength, r = function (x) { return Math.round(x * 10) / 10; };
+  var c = function (a) { return "color-mix(in srgb, var(--dc-shade) " + r(Math.min(1, a) * 100) + "%, transparent)"; };
+  return "0 " + r(0.5 + e * 0.06) + "px " + r(1 + e * 0.18) + "px " + c((0.12 * s) / (1 + e / 24)) + ", " +
+    "0 " + r(e * 0.55) + "px " + r(e * 1.3) + "px " + r(-e * 0.22) + "px " + c((0.08 + (Math.min(e, 64) / 64) * 0.22) * s);
+}
+// ==== end kit:shadow ====
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+      "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+      "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+      "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+      "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+}
+// ==== end kit:grain ====
+// ==== kit:fit@1 ====
+function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+      var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+      if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+      row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+
+var C = CFG, R = MT.ramp, M = MT.mix, dark = kTone(root) === "dark", grain = kGrain(q(".dc-grain")), STR = dark ? 2.6 : 1;
+var px = function (n) { return n.toFixed(2) + "px"; };
+var bar = q(".dc-bar"), tx = q(".dc-tx"), tEl = q(".dc-t"), st = q(".dc-st"), go = q(".dc-go"), cam = q(".dc-cam"), tree = q(".dc-tree");
+// status: up to two lines in its box; in landscape the prompt keeps clear of it
+var s0 = String(v.status).trim();
+st.style.display = s0 ? "" : "none";
+st.textContent = s0;
+kFit(st, { lines: 2, min: 28, width: parseFloat(getComputedStyle(st).maxWidth) - 40 });
+if (P) st.style.top = bar.offsetTop + bar.offsetHeight + 16 + "px";
+else if (s0) tx.style.marginRight = Math.max(0, st.offsetWidth - 56) + "px";
+var chars = Array.from(String(v.prompt).trim());
+tEl.textContent = chars.join("");
+kFit(tx);
+// keystrokes: uneven like a hand (upstream gaps 0.95-1.2 frames, a pause at spaces), squeezed into the window
+var sum = 0, CT = chars.map(function (c, i) { return (sum += /[\s，,。、]/.test(c) ? 1.7 : 0.95 + 0.25 * Math.abs(Math.sin(i * 2.17))); });
+CT = CT.map(function (x) { return C.type0 + ((C.typeEnd - C.type0) * x) / sum; });
+// nodes: names fitted, start times by level and sibling order, geometry from the CSS (top centre, size)
+var names = String(v.nodes).split("|").map(function (x) { return x.trim(); });
+var N = qa(".dc-n").map(function (el, i) {
+  var nm = el.querySelector(".dc-nm");
+  nm.textContent = names[i] || "";
+  kFit(nm);
+  return { el: el, h: el.querySelector(".dc-h"), f: [].slice.call(el.querySelectorAll(".dc-f")), x: el.offsetLeft + el.offsetWidth / 2, y: el.offsetTop, hh: el.offsetHeight,
+    t0: C.submit + C.root + LEVEL[i] * C.level + SIB[i] * C.sibling };
+});
+var last = N[6].t0, done = last + C.done, br0 = done + C.breathe;
+// links: parent bottom port -> down -> across -> down to the child's top port, corners as true arcs (radius 22)
+var y0 = bar.offsetTop + bar.offsetHeight + 4, top0 = N[0].y - 8, id = "dc" + (window.__dcN = (window.__dcN || 0) + 1), svg = "";
+var G = function (o) { return '<circle r="0" style="fill:var(--k-bg);stroke:var(--k-' + o + ');stroke-width:2.5"/>'; };
+N.forEach(function (n, i) {
+  if (!i) return;
+  var p = N[PARENT[i]], x1 = p.x, a = p.y + p.hh + 8, x2 = n.x, b = n.y - 8, m = (a + b) / 2, d = Math.sign(x2 - x1), r = Math.min(22, Math.abs(x2 - x1) / 2), s1 = d > 0 ? 0 : 1;
+  var path = "M" + x1 + " " + a + "V" + (m - r) + "A" + r + " " + r + " 0 0 " + s1 + " " + (x1 + d * r) + " " + m + "H" + (x2 - d * r) + "A" + r + " " + r + " 0 0 " + (1 - s1) + " " + x2 + " " + (m + r) + "V" + b;
+  svg += '<g><path d="' + path + '" style="fill:none;stroke:var(--k-accent);stroke-opacity:.18;stroke-width:9;stroke-linecap:round"/><path d="' + path + '" style="fill:none;stroke:url(#' + id + 'e);stroke-width:2.5;stroke-linecap:round"/>' +
+    '<circle r="18" style="fill:url(#' + id + 'h)"/>' + G("accent-2") + "</g>";
+  n.port = [x2, b];
+});
+svg += N.slice(0, 3).map(function (n) { return G("accent"); }).join("") + G("accent") +
+  '<line x1="' + N[0].x + '" x2="' + N[0].x + '" y1="' + y0 + '" style="stroke:url(#' + id + 'e);stroke-width:2.5;stroke-linecap:round;stroke-dasharray:2 7"/><circle r="16" style="fill:url(#' + id + 'h)"/>';
+var S = q(".dc-svg");
+S.innerHTML = '<defs><linearGradient id="' + id + 'e" x1="0" y1="' + y0 + '" x2="0" y2="' + (N[3].y + N[3].hh) + '" gradientUnits="userSpaceOnUse"><stop offset="0" style="stop-color:var(--k-accent);stop-opacity:.85"/><stop offset=".5" style="stop-color:color-mix(in oklch var(--dc-hue) hue,var(--k-accent),var(--k-accent-2));stop-opacity:.78"/><stop offset="1" style="stop-color:var(--k-accent-2);stop-opacity:.7"/></linearGradient>' +
+  '<radialGradient id="' + id + 'h"><stop offset="0" style="stop-color:var(--dc-core)"/><stop offset=".35" style="stop-color:var(--k-accent-2);stop-opacity:.9"/><stop offset="1" style="stop-color:var(--k-accent);stop-opacity:0"/></radialGradient></defs>' + svg;
+var E = [].slice.call(S.querySelectorAll("g")).map(function (g, k) {
+  var n = N[k + 1], ps = g.querySelectorAll("path"), len = ps[1].getTotalLength();
+  [].forEach.call(ps, function (p) { p.style.strokeDasharray = len + " " + len; });
+  return { n: n, ps: ps, len: len, head: g.children[2], port: g.children[3], t0: n.t0 - C.lead };
+});
+var tail = [].slice.call(S.children).slice(-6), drip = tail[4], dripHead = tail[5];
+// parent bottom ports appear as the first link leaves them; the root's top port takes the drip from the bar
+tail.slice(0, 3).forEach(function (c, i) { c.setAttribute("cx", N[i].x); c.setAttribute("cy", N[i].y + N[i].hh + 8); c.t0 = N[[1, 3, 5][i]].t0 - C.lead - 0.133; });
+tail[3].setAttribute("cx", N[0].x); tail[3].setAttribute("cy", top0);
+var barMid = bar.offsetTop + bar.offsetHeight / 2, xs = N.map(function (n) { return n.x; });
+cam.style.transformOrigin = FW / 2 + "px " + barMid + "px";
+tree.style.transformOrigin = (Math.min.apply(null, xs) + Math.max.apply(null, xs)) / 2 + "px " + (N[0].y + N[3].y + N[3].hh) / 2 + "px"; // the tree's centre, not the frame's
+// dust (dark skins only, as upstream's dark stage): 22 soft dots drifting 0.18 px a frame, nearer ones bigger and faster
+var hs = function (n) { var x = Math.sin(n * 91.345 + 47.853) * 43758.5453; return x - Math.floor(x); }, dust = [];
+if (dark) for (var i = 0; i < 22; i++) {
+  var z = hs(155 + i * 7.1), el = q(".dc-dust").appendChild(document.createElement("i")), sz = 2 + z * z * 16;
+  el.style.cssText = "width:" + sz + "px;height:" + sz + "px" + (z > 0.7 ? ";filter:blur(" + ((z - 0.7) * 10).toFixed(1) + "px)" : "");
+  dust.push({ s: el.style, z: z, x: hs(65 + i * 3.7), y: hs(85 + i * 5.3), i: i });
+}
+
+function render(t) {
+  grain(t);
+  var f = t * 30, pin = R(t, 0, C.barLen, "snappy"), cf = R(t, C.typeEnd, C.confirmLen, "out"), dn = R(t, done, C.doneLen, "snappy");
+  var gen = R(t, C.submit, C.genLen, "out") * (1 - R(t, done, 0.4, "out")), typed = CT.filter(function (x) { return x <= t; }).length;
+  var press = t < C.submit ? 0 : t < C.submit + C.pressIn ? R(t, C.submit, C.pressIn, "out") : 1 - R(t, C.submit + C.pressIn, C.pressOut, "out");
+  var br = R(t, br0, C.breatheLen, "smooth") - R(t, br0 + C.breatheLen, C.breatheLen, "smooth"), pull = R(t, C.submit + C.pullLag, C.pull, "smooth");
+  // prompt: drop in, type, rim turns accent, submit pressed, rim flows while generating, status replaces the button
+  bar.style.opacity = pin;
+  bar.style.transform = "translateY(" + px(-20 * (1 - pin)) + ")";
+  bar.style.background = "color-mix(in srgb,var(--k-accent) " + (14 + 40 * cf).toFixed(1) + "%,#0000)";
+  bar.style.boxShadow = "0 0 " + (30 + 40 * gen).toFixed(1) + "px color-mix(in srgb,var(--k-accent) " + (10 + 25 * gen).toFixed(1) + "%,#0000)," + kShadow(24, STR);
+  tEl.textContent = chars.slice(0, typed).join("");
+  q(".dc-ca").style.opacity = t < C.submit && (typed < chars.length || Math.floor((t - C.typeEnd) / C.blink) % 2 === 0) ? 1 : 0;
+  q(".dc-flow").style.cssText = "opacity:" + Math.max(gen, 0.55 * dn).toFixed(3) + ";background-position:" + (-Math.max(0, t - C.submit) * C.flow * 100).toFixed(2) + "% 0";
+  q(".dc-sp").style.filter = "drop-shadow(0 0 " + (8 + 10 * gen).toFixed(1) + "px color-mix(in srgb,var(--k-accent) 60%,#0000))";
+  go.style.opacity = (0.4 + 0.6 * cf) * (1 - dn);
+  go.style.transform = "scale(" + ((1 - 0.1 * press) * (1 - 0.3 * dn)).toFixed(4) + ")";
+  go.style.background = cf > 0 ? "linear-gradient(135deg in oklch var(--dc-hue) hue,var(--k-accent),var(--k-accent-2))" : "color-mix(in srgb,var(--k-ink) 6%,#0000)";
+  go.style.boxShadow = cf > 0.5 ? "0 6px 20px -6px color-mix(in srgb,var(--k-accent-2) 70%,#0000)" : "none";
+  go.firstChild.style.stroke = cf > 0.5 ? "var(--k-on-accent)" : "var(--k-muted)";
+  st.style.opacity = dn;
+  st.style.transform = "translateY(" + px(12 * (1 - dn)) + ")";
+  // camera: close on the bar, then a smooth pull-back while the tree grows into the space it opens
+  cam.style.transform = "translate(0," + px(M(FH * L.focus - barMid, 0, pull)) + ") scale(" + M(L.zoom, 1, pull).toFixed(4) + ")";
+  tree.style.transform = "scale(" + (1 + C.breatheAmt * br).toFixed(4) + ")";
+  var au = q(".dc-aur");
+  au.style.opacity = R(t, C.submit, C.aurLen, "out");
+  au.style.setProperty("--au", R(t, br0 - 0.2, 0.8, "out").toFixed(3));
+  // drip from the bar to the root's top port
+  var dp = R(t, C.submit + C.drip, C.dripLen, "out"), dy = M(y0, top0, dp);
+  drip.setAttribute("y2", dy); drip.style.opacity = dp > 0 ? 1 : 0;
+  dripHead.setAttribute("cx", N[0].x); dripHead.setAttribute("cy", dy); dripHead.style.opacity = dp > 0 && dp < 1 ? 1 : 0;
+  tail[3].setAttribute("r", 6 * R(t, C.submit + C.drip + 0.133, 0.267, "overshoot"));
+  tail.slice(0, 3).forEach(function (c) { c.setAttribute("r", 6 * R(t, c.t0, 0.267, "overshoot")); });
+  // links: drawn in 16 frames with a comet head, arriving 10 frames before the child; the child's port pops on arrival
+  E.forEach(function (e) {
+    var g = R(t, e.t0, C.edge, "out"), pt = e.ps[1].getPointAtLength(g * e.len);
+    [].forEach.call(e.ps, function (p) { p.style.strokeDashoffset = e.len * (1 - g); p.style.opacity = g > 0 ? 1 : 0; });
+    e.head.setAttribute("cx", pt.x); e.head.setAttribute("cy", pt.y);
+    e.head.style.opacity = g > 0 ? 1 - R(t, e.t0 + 0.4, 0.267, "out") : 0;
+    e.port.setAttribute("cx", e.n.port[0]); e.port.setAttribute("cy", e.n.port[1]);
+    e.port.setAttribute("r", 6 * R(t, e.t0 + 0.333, 0.333, "overshoot"));
+  });
+  // nodes: pulled out of their top port on a spring (scale from the top edge), head then fields settle in
+  N.forEach(function (n, i) {
+    var s = n.el.style;
+    if (t < n.t0) { s.opacity = 0; return; }
+    var pop = MT.spring({ t: t, delay: n.t0, damping: C.popDamp, stiffness: C.popStiff }), hd = R(t, n.t0 + 0.1, 0.267, "out");
+    s.opacity = R(t, n.t0, C.popFade, "linear");
+    s.transform = "translateY(" + px((1 - pop) * -18) + ") scale(" + (0.7 + 0.3 * pop).toFixed(4) + ")";
+    s.boxShadow = kShadow(10 + (1 - Math.min(1, pop)) * 22, STR) + (i ? "" : ",0 0 50px color-mix(in srgb,var(--k-accent) " + (25 + 20 * br).toFixed(1) + "%,#0000)");
+    n.h.style.opacity = hd;
+    n.h.style.transform = "translateY(" + px(6 * (1 - hd)) + ")";
+    n.f.forEach(function (r, j) { var p = R(t, n.t0 + 0.233 + j * 0.1, 0.3, "out"); r.style.opacity = p; r.style.transform = "translateX(" + px(-8 * (1 - p)) + ")"; });
+  });
+  dust.forEach(function (d) {
+    var w = FW + 200, hh = FH + 100, sp = f * C.drift;
+    d.s.left = px((((d.x * w + sp * (0.4 + d.z)) % w) + w) % w - 100);
+    d.s.top = px((((d.y * FH - sp * 0.3 * (0.5 + d.z)) % hh) + hh) % hh - 50);
+    d.s.opacity = ((0.25 + 0.75 * (0.5 + 0.5 * Math.sin(f / (14 + d.z * 20) + d.i))) * (0.3 + d.z * 0.7) * 0.35).toFixed(3);
+  });
+}
+
+var tl = MT.scene(C.dur, render);
+window.__timelines["diagram-cascade-build"] = tl;
+})();
+</script>
+</template>
+  </body>
+</html>

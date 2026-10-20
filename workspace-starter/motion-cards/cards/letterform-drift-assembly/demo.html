@@ -1,0 +1,354 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"text","type":"string","label":"文字（一个名字或一句短语，逐字漂回；用 | 或空格标出可以换行的地方）","default":"把复杂的事|讲清楚"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>letterform-drift-assembly · 漂移合拢</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="letterform-drift-assembly-template">
+      <!-- Ported from video-shotcraft demos/typography/type-assembly-moves/LetterformDriftAssembly.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette, system fonts (the bold YaHei face), a generic Chinese phrase instead of the upstream
+           brand name; drift, blur and the lock stroke in em of the font size (upstream px at 148px); the lock pulse goes
+           to black on light skins and to white on dark ones; the breath and the ground shadow start from the last lock
+           (11f and -6f, upstream's fixed 80f and 63f for its nine letters) and the ground shadow is sized from the word;
+           a start position that would leave the frame is pulled back inside (default text: none in landscape, one
+           character in portrait); up to two rows; on dark skins vignette 0.25, the tint in accent-2 and the ground
+           shadow at 34%; landscape and portrait (two rows of 148px display type) layouts. The seeded directions (same
+           hash), 260-360px magnitudes at 148px, +-24deg spin, 1.22 depth, 8px blur and 0.35 opacity on one out-cubic
+           progress, 3f stagger, 45f drift, the 8f pulse to 3px stroke, the 1.04 breath (12f up, 12f down, in-out
+           cubic), the 13% ground shadow and the light backdrop (light at 50% / 32%, 7% accent tint, vignette 0.14,
+           grain 0.05) are as upstream. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        /* the stroke weight is the look of the word: a real bold face, not the browser's synthetic bold */
+        @font-face { font-family: "ldf-heavy"; font-weight: 700 900; src: local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"), local("PingFangSC-Semibold"), local("NotoSansSC-Bold"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* ==== kit:derived@1 (shade only) ==== */
+        .ldf { --ldf-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); }
+        .ldf[data-tone="dark"] { --ldf-shade: color-mix(in srgb, var(--k-bg) 30%, black); }
+        /* ==== end kit:derived ==== */
+        /* ==== kit:backdrop@1 ==== */
+        .ldf-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .ldf-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        /* ==== end kit:backdrop ==== */
+        /* ==== kit:vignette@1 ==== */
+        .ldf-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--ldf-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .ldf[data-tone="dark"] .ldf-vig { --vs: 0.55; }
+        /* ==== end kit:vignette ==== */
+        /* ==== kit:grain@1 ==== */
+        .ldf-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+        /* ==== kit:text@2 ==== */
+        .ldf-u { display: inline-block; white-space: pre; }
+        /* ==== end kit:text ==== */
+        /* ==== kit:fit@1 ==== */
+        .ldf-row { display: block; white-space: nowrap; }
+        /* ==== end kit:fit ==== */
+
+        /* the wrapper is the size container (SPEC 五); --ldf-x is where the lock pulse goes: black on light, white on dark */
+        .ldf { position: absolute; inset: 0; container-type: size; --ldf-hv: ldf-heavy, var(--k-font); --ldf-x: black; --ldf-tint: var(--k-accent); }
+        .ldf[data-tone="dark"] { --ldf-x: white; --ldf-tint: var(--k-accent-2); } /* a warm tint turns olive on a dark ground */
+        /* upstream lit this shot from 50% / 32% with a 7% accent tint opposite the light, vignette 0.14 */
+        .ldf .ldf-backdrop::after { background: radial-gradient(ellipse 62% 70% at 50% 32%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%), radial-gradient(ellipse 55% 60% at 50% 87%, color-mix(in srgb, var(--ldf-tint) 7%, transparent) 0%, transparent 70%); }
+        .ldf .ldf-vig { --vs: 0.14; }
+        .ldf[data-tone="dark"] .ldf-vig { --vs: 0.25; }
+        /* the word block, centred on the frame (portrait: on the 40% line), 10% off each side. The box itself covers the
+           whole frame (margins are padding): a scattered, rotated letter near an edge is then still over its own box,
+           and the checker's corner probes never fall through to the vignette under it */
+        .ldf-box { position: absolute; inset: 0; padding: 0 10cqw; display: flex; flex-direction: column; justify-content: center; }
+        .ldf-word { position: relative; width: 100%; text-align: center; font-family: var(--ldf-hv); font-size: 148px; font-weight: 700; line-height: 1.2; letter-spacing: 0.02em; color: var(--k-ink); }
+        .ldf-c { display: inline-block; white-space: pre; }
+        /* a faint ground shadow under the word once it has assembled (sized and placed by the script) */
+        .ldf-ground { position: absolute; left: 50%; top: calc(50% + 74px); width: 1536px; height: 70px; margin-left: -768px; border-radius: 50%;
+          background: radial-gradient(ellipse 50% 50% at 50% 50%, color-mix(in srgb, var(--ldf-shade) var(--ldf-gs), transparent), transparent 70%); }
+        /* shadow strength 13% on light skins, x2.6 on dark ones, where a dark shade on a dark ground barely reads */
+        .ldf { --ldf-gs: 13%; }
+        .ldf[data-tone="dark"] { --ldf-gs: 34%; }
+        @container (orientation: portrait) {
+          .ldf-box { padding: 12cqh 10cqw 32cqh; }
+          .ldf-word { font-size: 148px; }
+          .ldf-ground { top: calc(40% + 163px); width: 657px; margin-left: -328px; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="letterform-drift-assembly">
+        <div class="ldf">
+          <div class="ldf-bg"><div class="ldf-backdrop"></div></div>
+          <div class="ldf-vig"></div>
+          <div class="ldf-grain"></div>
+          <div class="ldf-box">
+            <div class="ldf-ground"></div>
+            <div class="ldf-word">把复杂的事讲清楚</div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing (seconds = upstream frames / 30), shared by both orientations
+          var CFG = {
+            dur: 4.5,                  // scene length
+            stag: 0.1,                 // character i leaves at i x 0.1 s (3f)
+            travel: 1.5,               // drift home, out-cubic = power2.out on one progress p (45f)
+            pulse: 0.267,              // lock pulse after arriving: up 4f, down 4f
+            breathAt: 0.367,           // the whole word breathes 11f after the last lock...
+            breathUp: 0.4, breathDown: 0.4, breath: 0.04, // ...1 -> 1.04 -> 1, inOut cubic, 12f each way
+            groundLead: 0.2, groundDur: 1, // ground shadow: from 6f before the last lock, 30f, "out"
+            // amounts in em of the font size (upstream px at 148px): drift 260-360px, blur 8px, stroke 3px
+            magMin: 1.757, magSpan: 0.676, spin: 48, depth: 0.22, blur: 0.054, op0: 0.35, stroke: 0.02
+          };
+          // largest size, smallest size that still takes one line, then two rows down to min (portrait: two rows of
+          // display-size type before any shrinking, so a phrase stacks instead of shrinking into a thin line)
+          var LAND = { fs: 148, one: 104, min: 72 };
+          var PORT = { fs: 148, one: 148, min: 72 };
+          var v = { text: "把复杂的事|讲清楚", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".ldf");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+          // ==== kit:text@2 (kWords, kSplit) ====
+          var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "ldf-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "ldf-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          // ==== end kit:text ====
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          function kRows(el, cls) {
+            if (!el.children.length) return [];
+            var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+            var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+            kids.forEach(function (c, i) {
+              if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+              if (tops[i] != null) last = tops[i];
+              row.appendChild(c);
+            });
+            return [].slice.call(el.children);
+          }
+          // ==== end kit:fit ====
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+
+          var dark = kTone(root) === "dark", grain = null, off = String(v.backdrop) === "off";
+          if (off) [".ldf-bg", ".ldf-vig", ".ldf-grain"].forEach(function (s) { q(s).style.display = "none"; });
+          else grain = kGrain(q(".ldf-grain"), { opacity: dark ? 0.09 : 0.05 });
+          // a host font replaces the bold face as well
+          if (getComputedStyle(root).getPropertyValue("--mc-font").trim()) root.style.setProperty("--ldf-hv", "var(--k-font)");
+
+          // word -> phrases (kSplit) -> size by measuring (one line first, then two rows) -> rows frozen -> one span a character
+          var word = q(".ldf-word"), box = q(".ldf-box"), ground = q(".ldf-ground");
+          kSplit(word, "word", false, String(v.text).trim());
+          if (!kFit(word, { lines: 1, min: L.one, max: L.fs }).fits) kFit(word, { lines: 2, min: L.min, max: L.fs });
+          var rows = kRows(word, "ldf-row"), chars = [];
+          rows.forEach(function (row) {
+            [].forEach.call(row.querySelectorAll(".ldf-u"), function (u) {
+              var s = u.textContent;
+              u.textContent = "";
+              Array.from(s).forEach(function (ch) {
+                var c = document.createElement("span");
+                c.className = "ldf-c"; c.textContent = ch;
+                // spins about its own centre while it travels home: not a pivot error (HyperFrames' orbit opt-out)
+                c.setAttribute("data-layout-allow-orbit", "");
+                u.appendChild(c);
+                if (ch.trim()) chars.push({ el: c });
+              });
+            });
+          });
+          var fs = parseFloat(getComputedStyle(word).fontSize);
+
+          // upstream's seeded direction, magnitude and spin per character (its own sin hash, so the scatter matches)
+          var h = function (n) { var s = Math.sin(n * 127.3) * 43758.5453; return s - Math.floor(s); };
+          var bb = root.getBoundingClientRect(), sc = bb.width / FW || 1, pad = fs * 0.9;
+          chars.forEach(function (c, i) {
+            var r = c.el.getBoundingClientRect(), cx = (r.left + r.width / 2 - bb.left) / sc, cy = (r.top + r.height / 2 - bb.top) / sc;
+            var a = h(i + 1) * Math.PI * 2, m = (CFG.magMin + h(i + 101) * CFG.magSpan) * fs;
+            // a start that would leave the frame is pulled back inside, keeping the direction (glyph x1.22 plus spin)
+            var dx = Math.cos(a) * m, dy = Math.sin(a) * m;
+            dx = MT.clamp(cx + dx, pad, FW - pad) - cx; dy = MT.clamp(cy + dy, pad, FH - pad) - cy;
+            c.dx = dx; c.dy = dy; c.rot = (h(i + 201) - 0.5) * CFG.spin;
+            c.t0 = i * CFG.stag; c.lock = c.t0 + CFG.travel;
+          });
+          var lastLock = chars.length ? chars[chars.length - 1].lock : CFG.travel;
+          var b0 = lastLock + CFG.breathAt, b1 = b0 + CFG.breathUp;
+          // ground shadow under the last row, 1.45 x that row's width (upstream: 1040px under a word about 700px wide)
+          var lastRow = rows[rows.length - 1], gw = Math.min(FW * 0.8, (lastRow ? kLines(lastRow).w : 0) * 1.45);
+          ground.style.width = gw + "px"; ground.style.height = fs * 0.47 + "px";
+          ground.style.margin = "0 0 0 " + -gw / 2 + "px";
+          ground.style.top = (lastRow ? word.offsetTop + lastRow.offsetTop + lastRow.offsetHeight * 0.92 : 0) + "px";
+          if (off) ground.style.display = "none";
+
+          var tl = MT.scene(CFG.dur, function (t) {
+            chars.forEach(function (c) {
+              var p = MT.ramp(t, c.t0, CFG.travel, "power2.out"), u = 1 - p;
+              // lock pulse: a triangle 0 -> 1 -> 0 over 8f right after arriving
+              var k = (t - c.lock) / CFG.pulse, pulse = k <= 0 || k >= 1 ? 0 : 1 - Math.abs(2 * k - 1);
+              c.el.style.opacity = (CFG.op0 + (1 - CFG.op0) * p).toFixed(3);
+              c.el.style.transform = u > 0 ? "translate(" + (c.dx * u).toFixed(2) + "px," + (c.dy * u).toFixed(2) + "px) rotate(" + (c.rot * u).toFixed(2) + "deg) scale(" + (1 + CFG.depth * u).toFixed(4) + ")" : "";
+              c.el.style.filter = u > 0.002 ? "blur(" + (CFG.blur * fs * u).toFixed(2) + "px)" : "";
+              c.el.style.color = pulse ? "color-mix(in srgb, var(--k-ink), var(--ldf-x) " + (pulse * 100).toFixed(1) + "%)" : "";
+              c.el.style.webkitTextStroke = pulse ? (CFG.stroke * pulse).toFixed(4) + "em var(--ldf-x)" : "";
+            });
+            // the assembled word breathes once; its ground shadow fades in under it and breathes with it
+            var s = 1 + CFG.breath * (t < b1 ? MT.ramp(t, b0, CFG.breathUp, "power2.inOut") : 1 - MT.ramp(t, b1, CFG.breathDown, "power2.inOut"));
+            word.style.transform = "scale(" + s.toFixed(5) + ")";
+            ground.style.opacity = MT.ramp(t, lastLock - CFG.groundLead, CFG.groundDur, "out").toFixed(3);
+            ground.style.transform = "scale(" + s.toFixed(5) + ")";
+            if (grain) grain(t);
+          });
+          window.__timelines["letterform-drift-assembly"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

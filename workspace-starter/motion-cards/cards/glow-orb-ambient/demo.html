@@ -1,0 +1,321 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"示例标题（| 标出可折行处；留空只留玻璃卡）","default":"把复杂的事|讲清楚"},
+    {"id":"speed","type":"number","label":"漂移速度倍数","default":1,"min":0.2,"max":2,"step":0.1},
+    {"id":"strength","type":"number","label":"光斑浓度倍数","default":1,"min":0,"max":1.5,"step":0.05}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>glow-orb-ambient · 暗场光斑呼吸</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="glow-orb-ambient-template">
+<!-- Ported from video-shotcraft demos/effects/glow-flyline-moves/GlowOrbAmbient.tsx
+     (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+     Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+     Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+     neutral --k-* palette with --k-stage (teal / deep blue / coral orbs -> accent-2 turned 60deg toward teal,
+     accent-2, accent), system fonts; the player content of the glass card (mark, wordmark, "Now playing" pill,
+     subline, 64-bar waveform, countdown) replaced by one title variable, centred; speed and strength variables;
+     vignette and grain drawn under the glass card instead of over it; portrait: 820x620 card at the 40% line with
+     its own orb paths. Kept: orb sizes, peaks, gradient stops and periods, drift amplitudes, tide convergence
+     (115-145f out-sine), card rise, glass blur 44px + saturate 1.5, edge glow, rim light and wash formulas,
+     dot field, 1.03 push-in, vignette 0.5, grain 0.1. -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  --k-stage: var(--mc-stage, #0b0d12);
+  --k-on-stage: var(--mc-on-stage, #f3f5f8);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--k-font);
+  color: var(--k-ink);
+}
+/* ==== kit:stage@1 (base and vignette lines) ==== */
+.goa-stage { position: absolute; inset: 0; background: linear-gradient(180deg, color-mix(in srgb, var(--k-stage), white 5%) 0%, var(--k-stage) 52%, color-mix(in srgb, var(--k-stage), black 35%) 100%); }
+.goa-stage ~ .goa-vig, .goa-stage ~ * .goa-vig { --vs: 0.55; --vc: color-mix(in srgb, var(--k-stage) 40%, black); }
+/* ==== end kit:stage ==== */
+/* ==== kit:vignette@1 ==== */
+.goa-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--goa-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+/* ==== end kit:vignette ==== */
+/* ==== kit:grain@1 ==== */
+.goa-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+/* ==== kit:text@2 ==== */
+.goa-u { display: inline-block; white-space: pre; }
+/* ==== end kit:text ==== */
+
+/* orbs: main = accent-2 turned toward teal (a lighter accent-2 where relative colour is missing), second = accent-2,
+   the small warm one = accent; --goa-s = strength */
+.goa { position: absolute; inset: 0; container-type: size; --goa-s: 1;
+  --goa-c1: color-mix(in oklch, var(--k-accent-2), white 25%); --goa-c2: var(--k-accent-2); --goa-c3: var(--k-accent); }
+@supports (color: oklch(from red l c h)) { .goa { --goa-c1: oklch(from var(--k-accent-2) calc(l + 0.12) c calc(h - 60)); } }
+.goa .goa-vig { --vs: 0.5; --vin: 40%; }
+.goa-cam, .goa-top { position: absolute; inset: 0; transform-origin: 960px 550px; transform: scale(1.03); }
+.goa-orb { position: absolute; left: 0; top: 0; border-radius: 50%; mix-blend-mode: screen; --m: calc(var(--p) * var(--goa-s) * 100%);
+  background: radial-gradient(circle closest-side, color-mix(in srgb, var(--c) var(--m), transparent) 0%, color-mix(in srgb, var(--c) calc(var(--m) * 0.62), transparent) 22%, color-mix(in srgb, var(--c) calc(var(--m) * 0.3), transparent) 48%, color-mix(in srgb, var(--c) calc(var(--m) * 0.1), transparent) 72%, transparent 100%); }
+.goa-o1 { --c: var(--goa-c1); --p: 0.55; width: 1200px; height: 1200px; transform: translate(-92px, -408px); }
+.goa-o2 { --c: var(--goa-c2); --p: 0.5; width: 1000px; height: 1000px; transform: translate(1079px, 185px); }
+.goa-o3 { --c: var(--goa-c3); --p: 0.42; width: 760px; height: 760px; transform: translate(927px, -75px); }
+/* far dot field: gives the push-in a depth reference */
+.goa-dots { position: absolute; inset: -40px; opacity: 0.5; background: radial-gradient(circle, color-mix(in srgb, var(--k-on-stage) 12%, transparent) 1.2px, transparent 1.6px) 0 0 / 40px 40px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, #000 20%, transparent 85%); mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, #000 20%, transparent 85%); }
+/* the glass card: its ancestors carry no filter or opacity < 1, so the glass sees the orbs behind it; the rim light
+   sits under the title inside the glass (a layer over text trips text_occluded) */
+.goa-card { position: absolute; left: 50%; top: 50.93%; width: 1100px; height: 600px; margin: -300px 0 0 -550px; border-radius: 44px;
+  box-shadow: 0 0 44px 4px color-mix(in srgb, var(--goa-c3) 16%, transparent), 0 50px 120px -30px color-mix(in srgb, black 85%, transparent); }
+.goa-glass { position: absolute; inset: 0; border-radius: 44px; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 0 72px;
+  background: linear-gradient(180deg, color-mix(in srgb, white 10%, transparent) 0%, color-mix(in srgb, white 3.5%, transparent) 45%, color-mix(in srgb, white 5%, transparent) 100%);
+  -webkit-backdrop-filter: blur(44px) saturate(1.5); backdrop-filter: blur(44px) saturate(1.5);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, white 10%, transparent), inset 0 1.5px 0 color-mix(in srgb, white 18%, transparent); }
+.goa-wash { position: absolute; inset: 0; opacity: 0.34; background: linear-gradient(130deg, color-mix(in srgb, var(--goa-c3) 16%, transparent) 0%, transparent 55%); }
+.goa-rim { position: absolute; inset: 0; border-radius: 44px; padding: 1.5px; box-sizing: border-box; pointer-events: none;
+  background: linear-gradient(130deg, color-mix(in srgb, var(--goa-c3) 57%, transparent) 0%, color-mix(in srgb, white 7%, transparent) 35%, transparent 62%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+.goa-title { position: relative; width: 100%; font-size: 140px; font-weight: 700; line-height: 1.2; text-align: center; color: var(--k-on-stage); }
+.goa-ph { display: inline-block; white-space: nowrap; }
+@container (orientation: portrait) {
+  .goa-cam, .goa-top { transform-origin: 540px 768px; }
+  .goa-o1 { transform: translate(-335px, -332px); }
+  .goa-o2 { transform: translate(388px, 697px); }
+  .goa-o3 { transform: translate(505px, 347px); }
+  .goa-card { top: 40%; width: 820px; height: 620px; margin: -310px 0 0 -410px; }
+  .goa-glass { padding: 0 56px; }
+  .goa-title { font-size: 120px; }
+}
+</style>
+
+<div id="root" data-composition-id="glow-orb-ambient">
+  <div class="goa">
+    <div class="goa-stage"></div>
+    <div class="goa-cam">
+      <div class="goa-orb goa-o1"></div>
+      <div class="goa-orb goa-o2"></div>
+      <div class="goa-orb goa-o3"></div>
+      <div class="goa-dots"></div>
+    </div>
+    <div class="goa-vig"></div>
+    <div class="goa-grain"></div>
+    <div class="goa-top">
+      <div class="goa-card">
+        <div class="goa-glass">
+          <div class="goa-wash"></div>
+          <div class="goa-rim"></div>
+          <div class="goa-title"><span class="goa-ph">把复杂的事</span><span class="goa-ph">讲清楚</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // seconds = upstream frames / 30. Drift runs on "tide time" in frames: equal to the clock until tide0, then an
+  // out-sine that starts at slope 1 and stops tideLen frames later (frames at 30 fps, as upstream)
+  var CFG = { dur: 5.9, orbIn: 0.8, card: 0.267, cardDur: 0.867, title: 0.6, tEach: 0.667, tGap: 0.073, tide0: 115, tideLen: 30, camDur: 4.833, push: 0.03, rise: 48, near: 240, far: 760 };
+  // orbs: [base x, base y] as frame fractions, [drift x, drift y] in px at 1080 short side; card centre as fractions
+  var LAND = { cx: 0.5, cy: 0.5093, lines: 3, size: 140, base: [[0.2917, 0.3333], [0.7396, 0.6111], [0.6458, 0.2037]], amp: [[300, 200], [280, 190], [300, 160]] };
+  var PORT = { cx: 0.5, cy: 0.4, lines: 3, size: 120, base: [[0.2778, 0.2708], [0.7222, 0.6042], [0.7778, 0.3125]], amp: [[200, 300], [190, 280], [200, 240]] };
+  var ORB = [{ size: 1200, peak: 0.55, p1: 118, p2: 150, seed: 1 }, { size: 1000, peak: 0.5, p1: 132, p2: 96, seed: 2 }, { size: 760, peak: 0.42, p1: 104, p2: 142, seed: 3 }];
+  var v = { title: "把复杂的事|讲清楚", speed: 1, strength: 1 };
+  try {
+    var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k]; // "" clears the title
+  } catch (e) {}
+
+  var root = document.querySelector(".goa");
+  var q = function (s) { return root.querySelector(s); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+    // not laid out yet: the host clip's declared size, then the window
+    var hc = root.closest("[data-width][data-height]");
+    FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+    FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND, S = Math.min(FW, FH) / 1.08e3;
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+  var speed = Math.max(0, +v.speed || 0), str = Math.max(0, isNaN(+v.strength) ? 1 : +v.strength);
+  root.style.setProperty("--goa-s", str);
+
+  // ==== kit:text@2 (kWords; kReveal with its blur variant only) ====
+  var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+  function kWords(s, key) {
+    s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+    var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+    var cut = function (x) {
+      if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+      return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+    };
+    var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+    var pre = "";
+    bits.forEach(function (x) {
+      var t = x.trim(), last = out[out.length - 1];
+      if (last && /^ /.test(x)) last.sp = true;
+      if (!t) return;
+      if (!/[\p{L}\p{N}]/u.test(t)) {
+        if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+        else { last.t += t; last.sp = / $/.test(x); }
+        return;
+      }
+      out.push({ t: pre + t, sp: / $/.test(x) });
+      pre = "";
+    });
+    if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+    if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+    if (out.length) out[out.length - 1].sp = false;
+    return out;
+  }
+  function kReveal(tl, units, variant, at, o) {
+    o = o || {};
+    var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+    units.forEach(function (u, i) {
+      var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+      if (variant === "blur") tl.fromTo(u, { opacity: 0, y: fs * 0.25, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: each, ease: ease }, t0);
+    });
+    return tl;
+  }
+  // ==== end kit:text ====
+  // ==== kit:fit@1 (kFit, kLines) ====
+  function kFit(el, o) {
+    o = o || {};
+    var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+    var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+    for (;;) {
+      el.style.fontSize = f + "px";
+      m = kLines(el);
+      if ((m.w <= W && m.n <= n) || f <= min) break;
+      f = Math.max(min, f - 2);
+    }
+    if (m.w > W) {
+      [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+      m = kLines(el);
+    }
+    return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+  }
+  function kLines(el) {
+    var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+    var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+    while ((t = it.nextNode())) {
+      if (!t.data.trim()) continue;
+      r.selectNodeContents(t);
+      [].forEach.call(r.getClientRects(), function (b) {
+        var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+        if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+        row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+      });
+    }
+    return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+  }
+  // ==== end kit:fit ====
+  // ==== kit:grain@1 ====
+  function kGrain(layer, o) {
+    o = o || {};
+    var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+    var dark = tones && tones.getAttribute("data-tone") === "dark";
+    var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+      var f = "type='linear' slope='2.4' intercept='-0.7'";
+      var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+        "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+        "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+        "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+        "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+      return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+    });
+    layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+    layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+    layer.style.backgroundSize = size + "px " + size + "px";
+    return function (t) {
+      var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+      layer.style.backgroundImage = tiles[k % 6];
+      layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+    };
+  }
+  // ==== end kit:grain ====
+
+  // title: phrases from kWords never break inside; every character is one unit of the blur reveal
+  var title = q(".goa-title"), units = [], text = String(v.title).trim();
+  title.textContent = "";
+  kWords(text).forEach(function (w) {
+    var ph = title.appendChild(document.createElement("span"));
+    ph.className = "goa-ph";
+    Array.from(w.t).forEach(function (c) {
+      var u = ph.appendChild(document.createElement("span"));
+      u.className = "goa-u"; u.textContent = c;
+      if (c.trim()) units.push(u);
+    });
+    if (w.sp) title.appendChild(document.createTextNode(" "));
+  });
+  if (!text) title.style.display = "none";
+  else kFit(title, { lines: L.lines, max: L.size, min: 72 });
+
+  var cam = [q(".goa-cam"), q(".goa-top")], card = q(".goa-card"), glass = q(".goa-glass"), wash = q(".goa-wash"), rim = q(".goa-rim");
+  var orbs = [].slice.call(root.querySelectorAll(".goa-orb")), cols = ["var(--goa-c1)", "var(--goa-c2)", "var(--goa-c3)"];
+  var CX = FW * L.cx, CY = FH * L.cy, TAU = Math.PI * 2;
+  cam.forEach(function (c) { c.style.transformOrigin = CX + "px " + CY + "px"; });
+  // upstream's sin hash for the orb phases (its own constants, not the grain hash)
+  var h = function (n) { var s = Math.sin(n * 127.3) * 43758.5453; return s - Math.floor(s); };
+  var ph = ORB.map(function (o) { return [1, 2, 3, 4].map(function (j) { return h(o.seed * 7 + j) * TAU; }); });
+  orbs.forEach(function (el, i) { el.style.width = el.style.height = ORB[i].size * S + "px"; });
+  var tide = function (f) { return f <= CFG.tide0 ? f : CFG.tide0 + ((2 * CFG.tideLen) / Math.PI) * Math.sin((Math.PI / 2) * Math.min(1, (f - CFG.tide0) / CFG.tideLen)); };
+  var grain = kGrain(q(".goa-grain"), { opacity: 0.1, blend: "soft-light" });
+  var mix = function (c, pct) { return "color-mix(in srgb, " + c + " " + pct.toFixed(1) + "%, transparent)"; };
+
+  function render(t) {
+    var f = t * 30, tt = tide(f) * speed;
+    var orbIn = 0.35 + 0.65 * MT.ramp(t, 0, CFG.orbIn, "out"), cardIn = MT.ramp(t, CFG.card, CFG.cardDur, "snappy");
+    var c = 1 + CFG.push * MT.ramp(t, 0, CFG.camDur, "smooth"), g = 0, lead = 0, lp = null;
+    cam.forEach(function (el) { el.style.transform = "scale(" + c.toFixed(5) + ")"; });
+    ORB.forEach(function (o, i) {
+      var a = L.amp[i], p = ph[i];
+      var x = FW * L.base[i][0] + a[0] * S * (0.62 * Math.sin((TAU * tt) / o.p1 + p[0]) + 0.38 * Math.sin((TAU * tt) / o.p2 + p[1]));
+      var y = FH * L.base[i][1] + a[1] * S * (0.6 * Math.sin((TAU * tt) / o.p2 + p[2]) + 0.4 * Math.sin((TAU * tt) / o.p1 + p[3]));
+      var r = (o.size * S) / 2;
+      orbs[i].style.transform = "translate(" + (x - r).toFixed(1) + "px, " + (y - r).toFixed(1) + "px)";
+      orbs[i].style.opacity = orbIn.toFixed(3);
+      // edge glow: the orb's distance to the card centre, near -> full, far -> none, weighted by its peak
+      var d = Math.hypot(x - CX, y - CY), k = Math.min(1, Math.max(0, (CFG.far * S - d) / ((CFG.far - CFG.near) * S))) * (o.peak / 0.55) * Math.min(1, str);
+      if (k > g) { g = k; lead = i; lp = [x, y]; }
+    });
+    var lc = cols[lead], ang = lp ? (Math.atan2(lp[0] - CX, -(lp[1] - CY)) * 180) / Math.PI + 180 : 180;
+    card.style.transform = "translateY(" + ((1 - cardIn) * CFG.rise * S).toFixed(2) + "px) scale(" + (0.96 + 0.04 * cardIn).toFixed(4) + ")";
+    // the outer glow and drop shadow come in with the glass (upstream drew them from frame 0, before the card)
+    var see = Math.min(1, cardIn * 1.3), gs = g * see;
+    card.style.boxShadow = "0 0 " + (90 * gs).toFixed(1) + "px " + (8 * gs).toFixed(1) + "px " + mix(lc, 32 * gs) + ", 0 50px 120px -30px " + mix("black", 85 * see);
+    glass.style.opacity = see.toFixed(3);
+    wash.style.opacity = (0.7 * g).toFixed(3);
+    wash.style.background = "linear-gradient(" + ang.toFixed(1) + "deg, " + mix(lc, 16) + " 0%, transparent 55%)";
+    rim.style.opacity = cardIn.toFixed(3);
+    rim.style.background = "linear-gradient(" + ang.toFixed(1) + "deg, " + mix(lc, 20 + 75 * g) + " 0%, " + mix("white", 14 * g) + " 35%, transparent 62%)";
+    grain(t);
+  }
+
+  var tl = MT.scene(CFG.dur, render);
+  // title: each character comes out of a 14 px blur, 0.073 s apart (upstream TextReveal blur, 20f each, 2.2f gap)
+  kReveal(tl, units, "blur", CFG.title, { each: CFG.tEach, gap: CFG.tGap });
+  window.__timelines["glow-orb-ambient"] = tl;
+})();
+</script>
+    </template>
+  </body>
+</html>

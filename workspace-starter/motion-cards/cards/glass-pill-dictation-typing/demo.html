@@ -1,0 +1,416 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"text","type":"string","label":"听写的句子（逐字打出，不用 | 切）","default":"把这段讲解整理成三个要点"},
+    {"id":"hint","type":"string","label":"胶囊下的小字（留空不要）","default":"说话或打字都行"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底（带暖光和远景光斑）"},{"value":"off","label":"透明（胶囊磨砂压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>glass-pill-dictation-typing · 玻璃胶囊听写</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="glass-pill-dictation-typing-template">
+      <!-- Ported from video-shotcraft demos/interaction/glass-pill-dictation-typing/GlassPillDictationTyping.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette (terracotta and apricot are now the accent and a tint mixed from it; the sand stage
+           became the white-first backdrop with kit vignette and grain), system fonts, generic Chinese sentence, the
+           brand strip under the pill replaced by one muted hint line; the sentence is split into char spans laid out
+           in full and revealed one by one, so a long text wraps without re-flowing, and the typing window stays
+           8-64f whatever the length; landscape pill 1240 as upstream, portrait pill 840 wide with an 80px button;
+           light and dark glass fills; scene lengthened to 3.6 s for the hold. Timing, easings, the 1.25 landing scale,
+           defocus, the g-driven light (inner gradient, sun, floor reflection, outer glow, button) and the 5 breathing
+           bars are as upstream. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+                /* ==== kit:backdrop@1 ==== */
+        .gd-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .gd-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        /* ==== end kit:backdrop ==== */
+        /* ==== kit:vignette@1 ==== */
+        .gd-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--gd-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .gd[data-tone="dark"] .gd-vig { --vs: 0.55; }
+        /* ==== end kit:vignette ==== */
+        /* ==== kit:grain@1 ==== */
+        .gd-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+        /* ==== kit:text@2 ==== */
+        .gd-u { display: inline-block; white-space: pre; }
+        .gd-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+        /* ==== end kit:text ==== */
+        /* ==== kit:fit@1 ==== */
+        .gd-row { display: block; white-space: nowrap; }
+        /* ==== end kit:fit ==== */
+        /* the wrapper is the size container (SPEC 五); --g is the light (1 -> 0), --gl is how far the pill is still
+           above its landing (1 -> 0); both default to the settled picture so the static page is the final frame */
+        .gd { position: absolute; inset: 0; container-type: size; --g: 0; --gl: 0;
+          --gd-ap: color-mix(in srgb, var(--k-accent) 40%, #fff0d8);
+          --gd-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+          --gd-a1: 0.12; --gd-a2: 0.4; --gd-hair: 0.09;
+          --gd-g1: color-mix(in srgb, var(--k-bg) 62%, transparent);
+          --gd-g2: color-mix(in srgb, var(--k-bg) 42%, transparent);
+          --gd-g3: color-mix(in srgb, color-mix(in srgb, var(--k-bg), var(--k-accent) 8%) 50%, transparent);
+          --gd-edge: color-mix(in srgb, white 85%, transparent); --gd-in: 1; }
+        .gd[data-tone="dark"] { --gd-shade: color-mix(in srgb, var(--k-bg) 30%, black); --gd-a1: 0.31; --gd-a2: 0.9; --gd-hair: 0.5;
+          --gd-g1: color-mix(in srgb, white 15%, transparent); --gd-g2: color-mix(in srgb, white 7%, transparent);
+          --gd-g3: color-mix(in srgb, white 9%, transparent); --gd-edge: color-mix(in srgb, white 24%, transparent); --gd-in: 0.55; }
+        .gd .gd-vig { --vs: 0.22; }
+        .gd[data-tone="dark"] .gd-vig { --vs: 0.3; }
+        .gd-bg { position: absolute; inset: 0; }
+        /* the sun: warm light centred behind the pill's right end; the glass frosts it. It follows g down to a trace */
+        .gd-sun { position: absolute; left: 69.27%; top: 43.52%; width: 1100px; height: 900px; margin: -450px 0 0 -550px; border-radius: 50%;
+          background: radial-gradient(ellipse 50% 50% at 50% 50%,
+            color-mix(in srgb, var(--gd-ap) calc((15 + 60 * var(--g)) * 1%), transparent) 0%,
+            color-mix(in srgb, var(--gd-ap) calc((10 + 42 * var(--g)) * 1%), transparent) 18%,
+            color-mix(in srgb, color-mix(in srgb, var(--gd-ap) 50%, var(--k-accent)) calc((6 + 26 * var(--g)) * 1%), transparent) 40%,
+            color-mix(in srgb, color-mix(in srgb, var(--gd-ap) 25%, var(--k-accent)) calc((2 + 8 * var(--g)) * 1%), transparent) 62%,
+            transparent 80%); }
+        /* three far soft lights, only there so the glass has something to blur */
+        .gd-blob { position: absolute; border-radius: 50%; }
+        .gd-b1 { left: 27.08%; top: 43.52%; width: 440px; height: 440px; margin: -220px 0 0 -220px; background: radial-gradient(circle, color-mix(in srgb, var(--gd-ap) 22%, transparent) 0%, transparent 70%); }
+        .gd-b2 { left: 42.7%; top: 57.4%; width: 320px; height: 320px; margin: -160px 0 0 -160px; background: radial-gradient(circle, color-mix(in srgb, var(--k-accent) 28%, transparent) 0%, transparent 70%); }
+        .gd-b3 { left: 76.04%; top: 56.48%; width: 400px; height: 400px; margin: -200px 0 0 -200px; background: radial-gradient(circle, color-mix(in srgb, var(--gd-ap) 45%, transparent) 0%, transparent 70%); }
+        .gd-stage { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+        .gd-box { position: relative; flex: none; width: 1240px; }
+        .gd-floor { position: absolute; left: 35%; width: 75%; top: 90%; height: 220px;
+          background: radial-gradient(ellipse 50% 40% at 60% 20%, color-mix(in srgb, var(--k-accent) calc(22% * var(--g)), transparent) 0%, transparent 72%); }
+        .gd-pill { position: relative; box-sizing: border-box; display: flex; align-items: center; width: 100%; min-height: 132px; padding: 18px 20px 18px 58px; border-radius: 66px;
+          background: linear-gradient(180deg, var(--gd-g1) 0%, var(--gd-g2) 55%, var(--gd-g3) 100%);
+          -webkit-backdrop-filter: blur(26px) saturate(1.3); backdrop-filter: blur(26px) saturate(1.3);
+          border: 1.5px solid var(--gd-edge);
+          box-shadow: 0 0 0 1px color-mix(in srgb, var(--gd-shade) calc(var(--gd-hair) * 100%), transparent),
+            inset 0 2px 0 color-mix(in srgb, white 95%, transparent), inset 0 -10px 24px color-mix(in srgb, var(--k-accent) 14%, transparent),
+            0 calc(4px + 6px * var(--gl)) calc(10px + 10px * var(--gl)) color-mix(in srgb, var(--gd-shade) calc(var(--gd-a1) * 100%), transparent),
+            0 calc(36px + 24px * var(--gl)) 70px -28px color-mix(in srgb, var(--gd-shade) calc(var(--gd-a2) * 100%), transparent),
+            0 0 calc(60px * var(--g)) color-mix(in srgb, var(--gd-ap) calc(45% * var(--g)), transparent); }
+        .gd[data-tone="dark"] .gd-pill { box-shadow: 0 0 0 1px var(--gd-edge), inset 0 2px 0 color-mix(in srgb, white 18%, transparent),
+            0 calc(4px + 6px * var(--gl)) calc(10px + 10px * var(--gl)) color-mix(in srgb, var(--gd-shade) calc(var(--gd-a1) * 100%), transparent),
+            0 calc(36px + 24px * var(--gl)) 70px -28px color-mix(in srgb, var(--gd-shade) calc(var(--gd-a2) * 100%), transparent),
+            0 0 calc(60px * var(--g)) color-mix(in srgb, var(--gd-ap) calc(45% * var(--g)), transparent); }
+        /* the pill's own lights live in a clipped layer so the text is never inside an overflow:hidden box */
+        .gd-lights { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; pointer-events: none; }
+        .gd-in { position: absolute; inset: 0; opacity: calc(var(--g) * var(--gd-in));
+          background: linear-gradient(90deg, color-mix(in srgb, var(--k-accent) 0%, transparent) 0%, color-mix(in srgb, var(--k-accent) 18%, transparent) 38%, color-mix(in srgb, var(--k-accent) 62%, transparent) 78%, color-mix(in srgb, var(--gd-ap) 95%, transparent) 100%); }
+        .gd-in2 { position: absolute; inset: 0; opacity: calc(var(--g) * 0.7); mix-blend-mode: screen;
+          background: radial-gradient(ellipse 34% 130% at 100% 100%, color-mix(in srgb, color-mix(in srgb, var(--gd-ap) 40%, white) 90%, transparent) 0%, transparent 70%); }
+        .gd-rim { position: absolute; left: 59px; right: 59px; top: 3px; height: 1.5px;
+          background: linear-gradient(90deg, transparent, color-mix(in srgb, white 95%, transparent) 20%, color-mix(in srgb, white 70%, transparent) 75%, transparent); }
+        .gd-txt { position: relative; flex: 1; min-width: 0; margin-right: 16px; min-height: 1.25em; font-size: 56px; font-weight: 500; line-height: 1.25; white-space: pre-wrap; color: var(--k-ink); }
+        .gd-txt .gd-u { display: inline; white-space: pre-wrap; }
+        .gd-caret { position: absolute; left: 0; top: 0; width: 4px; height: 1.1em; border-radius: 2px; background: var(--k-ink); opacity: 0; }
+        .gd-btn { position: relative; box-sizing: border-box; flex: none; display: flex; align-items: center; justify-content: center; gap: 6px; width: 92px; height: 92px; margin-left: auto; border-radius: 50%;
+          background: linear-gradient(180deg, color-mix(in srgb, white calc(35% * var(--g)), transparent), transparent), color-mix(in srgb, var(--k-accent) calc(92% * var(--g)), transparent);
+          border: 1.5px solid color-mix(in srgb, var(--k-ink) 26%, transparent);
+          box-shadow: inset 0 1.5px 0 color-mix(in srgb, white 50%, transparent), 0 calc(6px * var(--g)) calc(18px * var(--g)) -6px color-mix(in srgb, var(--k-accent) calc(80% * var(--g)), transparent); }
+        .gd-bar { display: block; flex: none; width: 5px; border-radius: 3px; background: color-mix(in srgb, var(--k-ink) 72%, var(--k-bg)); }
+        .gd-hint { position: absolute; left: 10%; right: 10%; bottom: 112px; text-align: center; text-wrap: balance; font-size: 40px; font-weight: 500; line-height: 1.3; letter-spacing: 0.06em; color: var(--k-muted); }
+        /* portrait: the pill (840 wide, so the 1.25 landing scale ends at 1050 and stays on screen) sits on the 40% line;
+           the sun and soft lights keep their place relative to it; the hint hangs under it inside the 12%-68% band */
+        @container (orientation: portrait) {
+          .gd-stage { top: 12%; bottom: 32%; }
+          .gd-box { width: 840px; }
+          .gd-floor { width: 70%; }
+          .gd-pill { padding: 18px 16px 18px 44px; }
+          .gd-rim { left: 44px; right: 44px; }
+          .gd-btn { width: 80px; height: 80px; gap: 5px; }
+          .gd-sun { left: 72%; top: 35.5%; }
+          .gd-b1 { left: 24%; top: 36.4%; } .gd-b2 { left: 45%; top: 44.2%; } .gd-b3 { left: 78%; top: 43.6%; }
+          .gd-hint { top: calc(40% + 130px); bottom: auto; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="glass-pill-dictation-typing">
+        <div class="gd">
+          <div class="gd-bg"><div class="gd-backdrop"></div><div class="gd-blob gd-b1"></div><div class="gd-blob gd-b2"></div><div class="gd-blob gd-b3"></div></div>
+          <div class="gd-sun" data-layout-allow-overflow></div>
+          <div class="gd-vig"></div>
+          <div class="gd-grain"></div>
+          <div class="gd-stage">
+            <div class="gd-box">
+              <div class="gd-floor" data-layout-allow-overflow></div>
+              <div class="gd-pill">
+                <div class="gd-lights"><div class="gd-in"></div><div class="gd-in2"></div><div class="gd-rim"></div></div>
+                <div class="gd-txt">把这段讲解整理成三个要点</div>
+                <div class="gd-btn"><i class="gd-bar" style="height:30px"></i><i class="gd-bar" style="height:16px"></i><i class="gd-bar" style="height:24px"></i><i class="gd-bar" style="height:13px"></i><i class="gd-bar" style="height:20px"></i></div>
+              </div>
+            </div>
+          </div>
+          <div class="gd-hint">说话或打字都行</div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing (seconds = upstream frames / 30), shared by both orientations
+          var CFG = {
+            dur: 3.6,                                // scene length: upstream 100f plus a hold so the settled bar stays over 1 s
+            appearDur: 0.067,                        // opacity jumps to full in 2f: "it is there" before it lands
+            landDur: 0.667,                          // scale 1.25 -> 1, snappy, 20f
+            blurDur: 0.467,                          // depth-of-field blur 6px -> 0 over the first 14f
+            caretIn: 0.067, caretInDur: 0.067,       // caret leads the text (2f)
+            caretOut: 2.2, caretOutDur: 0.267,       // caret withdrawn 66f -> 74f
+            type0: 0.267, typeDur: 1.867,            // typing 8f -> 64f, uniform; the window is fixed, the pace follows the length
+            light: 0.333, lightDur: 2.067,           // g: 1 -> 0, smooth, 10f -> 72f: the same window as the typing
+            hint: 0.133, hintDur: 0.533              // hint line fades in 4f -> 20f
+          };
+          var LAND = { blur: 6 };
+          var PORT = { blur: 5 };
+          var BARS = [30, 16, 24, 13, 20];           // wave bar heights at the 92px button
+          var v = { text: "把这段讲解整理成三个要点", hint: "说话或打字都行", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".gd");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+                    // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+          // ==== kit:text@2 ====
+          var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "gd-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "gd-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          function kReveal(tl, units, variant, at, o) {
+            o = o || {};
+            var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+            units.forEach(function (u, i) {
+              var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+              if (variant === "rise") {
+                tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+                tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+              } else if (variant === "blur") {
+                tl.fromTo(u, { opacity: 0, y: fs * 0.25, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: each, ease: ease }, t0);
+              } else if (variant === "drop") {
+                tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each / 3, ease: "none" }, t0);
+                tl.fromTo(u, { y: -fs * 0.6 }, { y: 0, duration: each, ease: "overshoot" }, t0);
+              } else if (variant === "scale") {
+                tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each * 0.1, ease: "power1.out" }, t0);
+                tl.fromTo(u, { scale: 1.6, filter: "blur(8px)" }, { scale: 1, filter: "blur(0px)", duration: each, ease: ease }, t0);
+              } else {
+                tl.fromTo(u, { opacity: 0, marginRight: "0.5em" }, { opacity: 1, marginRight: "0em", duration: each, ease: ease }, t0);
+              }
+            });
+            return tl;
+          }
+          // ==== end kit:text ====
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          function kRows(el, cls) {
+            if (!el.children.length) return [];
+            var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+            var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+            kids.forEach(function (c, i) {
+              if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+              if (tops[i] != null) last = tops[i];
+              row.appendChild(c);
+            });
+            return [].slice.call(el.children);
+          }
+          // ==== end kit:fit ====
+
+          var dark = kTone(root) === "dark";
+          var off = String(v.backdrop) === "off";
+          var grain = null, blobs = [].slice.call(root.querySelectorAll(".gd-blob"));
+          // backdrop off keeps the light itself (sun, floor, pill) and drops the stage: base, soft lights, vignette, grain
+          if (off) [".gd-bg", ".gd-vig", ".gd-grain"].forEach(function (s) { q(s).style.display = "none"; });
+          else grain = kGrain(q(".gd-grain"), { opacity: dark ? 0.09 : 0.05 });
+
+          // the sentence: every char (spaces too) in its own span, laid out in full and shown one by one, so the line
+          // breaks never move while typing; it shrinks (not below 40px) to fit one line, then wraps and the pill grows
+          var txt = q(".gd-txt"), pill = q(".gd-pill"), floor = q(".gd-floor"), btn = q(".gd-btn"), hint = q(".gd-hint");
+          kSplit(txt, "char", false, String(v.text).replace(/[\r\n]+/g, " "));
+          var chars = [].slice.call(txt.children);
+          kFit(txt, { lines: 1, min: 40, spare: 0.06 });
+          var caret = document.createElement("i");
+          caret.className = "gd-caret";
+          txt.appendChild(caret);
+          var ch = caret.offsetHeight, lh = parseFloat(getComputedStyle(txt).lineHeight) || ch * 1.15;
+          // caret slot after n typed chars: 4px past the n-th char, or at the start of the line box when none is typed
+          var slot = function (c, end) { return { x: (c ? c.offsetLeft + (end ? c.offsetWidth : 0) : 0) + 4, y: c ? c.offsetTop + (c.offsetHeight - ch) / 2 : (lh - ch) / 2 }; };
+          var pos = [slot(chars[0], false)].concat(chars.map(function (c) { return slot(c, true); }));
+          var kb = btn.offsetWidth / 92;
+          var bars = [].slice.call(btn.querySelectorAll(".gd-bar"));
+          var cInk = kRGB(root, "var(--k-ink)"), cAcc = kRGB(root, "var(--k-accent)"), cOn = kRGB(root, "var(--k-on-accent)");
+          var cNeu = kRGB(root, "color-mix(in srgb, var(--k-ink) 72%, var(--k-bg))");
+          var rgb = function (a, b, p) { return "rgb(" + a.map(function (x, i) { return Math.round(x + (b[i] - x) * p); }).join(",") + ")"; };
+          if (!String(v.hint).trim()) hint.style.display = "none";
+          else { hint.textContent = String(v.hint).replace(/\s+/g, " ").trim(); kFit(hint, { lines: 1, min: 40 }); }
+
+          var tl = MT.scene(CFG.dur, function (t) {
+            var f = t * 30; // frames at 30 fps: the bars' breathing and the soft lights' drift keep the upstream per-frame periods
+            var appear = MT.ramp(t, 0, CFG.appearDur, "linear");
+            var land = MT.ramp(t, 0, CFG.landDur, "snappy");
+            var blur = L.blur * (1 - MT.ramp(t, 0, CFG.blurDur, "out"));
+            var n = Math.floor(MT.clamp((t - CFG.type0) / CFG.typeDur, 0, 1) * chars.length + 1e-6); // epsilon: the last char must show at the exact end
+            var cr = MT.ramp(t, CFG.caretIn, CFG.caretInDur, "linear") * (1 - MT.ramp(t, CFG.caretOut, CFG.caretOutDur, "out"));
+            var g = 1 - MT.ramp(t, CFG.light, CFG.lightDur, "smooth");
+            root.style.setProperty("--g", g.toFixed(4));
+            root.style.setProperty("--gl", (1 - land).toFixed(4));
+            pill.style.opacity = appear;
+            pill.style.transform = "scale(" + (1.25 - 0.25 * land).toFixed(4) + ")";
+            pill.style.filter = blur > 0.05 ? "blur(" + blur.toFixed(2) + "px)" : "";
+            floor.style.opacity = appear;
+            for (var i = 0; i < chars.length; i++) chars[i].style.opacity = i < n ? 1 : 0;
+            caret.style.opacity = cr;
+            caret.style.left = pos[n].x + "px";
+            caret.style.top = pos[n].y + "px";
+            caret.style.background = rgb(cInk, cAcc, 0.8 * g);
+            btn.style.borderColor = g > 0.5 ? "color-mix(in srgb, white 50%, transparent)" : "color-mix(in srgb, var(--k-ink) " + (16 + 10 * (1 - g)).toFixed(1) + "%, transparent)";
+            bars.forEach(function (b, j) {
+              b.style.height = (kb * (BARS[j] + 2.4 * Math.sin(f * 0.5 + j * 1.7))).toFixed(2) + "px";
+              b.style.background = rgb(cNeu, cOn, g);
+            });
+            hint.style.opacity = (MT.ramp(t, CFG.hint, CFG.hintDur, "out") * (0.9 + 0.1 * (0.5 + 0.5 * Math.sin(f / 22)))).toFixed(4);
+            blobs.forEach(function (b, j) { b.style.transform = "translateX(" + (Math.sin(f / 40 + j) * 6).toFixed(2) + "px)"; });
+            if (grain) grain(t);
+          });
+          window.__timelines["glass-pill-dictation-typing"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

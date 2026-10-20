@@ -1,0 +1,424 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"lead","type":"string","label":"导语（胶囊左边不动的半句，可空）","default":"一键换成"},
+    {"id":"words","type":"string","label":"依次被接住的词（用 | 分隔，2–6 个，第一个是起始）","default":"极简风|卡通风|复古风|海报风|你的风格"},
+    {"id":"above","type":"string","label":"上面垫着的词（| 分隔，最多 2 个，可空）","default":"商务风|科技风"},
+    {"id":"below","type":"string","label":"下面垫着的词（| 分隔，最多 2 个，可空）","default":"像素风|水彩风"},
+    {"id":"tag","type":"string","label":"计数前的字（可空，空了不要计数）","default":"风格"},
+    {"id":"beat","type":"number","label":"一拍几秒（0.4–1.2，对音乐的鼓点）","default":0.6},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>beat-step-list-theme-cycle · 节拍换肤词表</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="beat-step-list-theme-cycle-template">
+      <!-- Ported from video-shotcraft demos/rhythm/beat-step-list-theme-cycle/BeatStepListThemeCycle.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette, system fonts, generic Chinese copy, upstream wordmark and closing tagline removed;
+           five hand-picked dark fields replaced by themes mixed from the palette (pill = ink, accent-2, two oklch mixes,
+           accent; field = the pill's hue at the background's lightness); edge feathers replaced by a mask on the list;
+           pill widths measured at build time; portrait layout. Beat clock, 6-frame snap, squash and glow kept. -->
+      <style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+/* ==== kit:fonts@2 ==== */
+@font-face { font-family: "Noto Serif SC"; src: local("Noto Serif SC"), local("Noto Serif CJK SC"), local("Source Han Serif SC"); }
+@font-face { font-family: "Songti SC"; src: local("Songti SC"), local("STSong"), local("SimSun"); }
+@font-face { font-family: "Consolas"; src: local("Consolas"); }
+/* ==== end kit:fonts ==== */
+/* theme typefaces: real bold and light YaHei faces (700 on the regular face is a browser smear), rounded, kai */
+@font-face { font-family: "bsl-heavy"; font-weight: 700 900; src: local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"), local("PingFangSC-Semibold"), local("NotoSansSC-Black"); }
+@font-face { font-family: "bsl-light"; font-weight: 100 400; src: local("Microsoft YaHei Light"), local("MicrosoftYaHeiLight"), local("PingFangSC-Light"), local("NotoSansSC-Light"); }
+@font-face { font-family: "YouYuan"; src: local("YouYuan"), local("Yuanti SC"), local("STYuanti"); }
+@font-face { font-family: "KaiTi"; src: local("KaiTi"), local("STKaiti"), local("Kaiti SC"); }
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  --k-serif: var(--mc-serif, "Noto Serif SC", "Songti SC", serif);
+  --k-mono: var(--mc-mono, Consolas, monospace);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--k-font);
+  color: var(--k-ink);
+}
+.bsl { position: absolute; inset: 0; container-type: size; --bsl-hv: "bsl-heavy", var(--k-font); --bsl-lt: "bsl-light", var(--k-font); }
+/* layout tokens on the inner box (@container cannot restyle the container itself): static values = the settled
+   frame with the default copy in each orientation; the script measures and rewrites them */
+.bsl-in { position: absolute; inset: 0; --fs: 132px; --rh: 176px; --ph: 156px; --pl: 64px; --gap: 34px; --cy: 520px; --px: 957px; --pw: 668px; --i: 6; --ic: 4; --ct: 98px; --sw: 900px; }
+/* ==== kit:derived@1 (shade only) ==== */
+.bsl { --bsl-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); }
+.bsl[data-tone="dark"] { --bsl-shade: color-mix(in srgb, var(--k-bg) 30%, black); }
+/* ==== end kit:derived ==== */
+.bsl-bg { position: absolute; inset: 0; background: radial-gradient(ellipse 60% 70% at 65% 48%, color-mix(in srgb, var(--k-accent) 20%, transparent), transparent 75%), color-mix(in oklch, var(--k-bg) 88%, var(--k-accent)); }
+.bsl-cam { position: absolute; inset: 0; transform-origin: var(--px) var(--cy); }
+/* the list fades out above and below the pill (upstream: two feathers painted in the field colour) */
+.bsl-far { --m: linear-gradient(transparent 94px, #000 295px, #000 745px, transparent 946px); -webkit-mask-image: var(--m); mask-image: var(--m); }
+.bsl-list, .bsl-copy { position: absolute; left: 0; right: 0; }
+.bsl-list { top: calc(var(--cy) - var(--rh) / 2 - var(--i) * var(--rh)); }
+/* dim list words are drawn from data-w: decorative depth, kept away from the contrast check (see card.md) */
+.bsl-list i { display: flex; align-items: center; width: max-content; height: var(--rh); margin-left: calc(var(--px) + var(--pl)); font: 700 var(--fs)/1.2 var(--bsl-hv); font-style: normal; color: var(--k-ink); white-space: nowrap; opacity: 0; transform-origin: 0 50%; }
+.bsl-list i::before { content: attr(data-w); }
+.bsl-list i:nth-child(6), .bsl-list i:nth-child(8) { opacity: 0.42; }
+.bsl-list i:nth-child(5), .bsl-list i:nth-child(9) { opacity: 0.27; transform: scale(0.925); filter: blur(2.8px); }
+.bsl-list i:nth-child(4) { opacity: 0.12; transform: scale(0.875); filter: blur(6.3px); }
+.bsl-pill { position: absolute; left: var(--px); top: calc(var(--cy) - var(--ph) / 2); width: var(--pw); height: var(--ph); border-radius: calc(var(--ph) / 2); transform-origin: 0 50%;
+  background: var(--k-accent); box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.5), 0 30px 90px -20px color-mix(in srgb, var(--k-accent) 50%, transparent); }
+/* the lens: the pill clips its own copy of the list (clip-path, so the checker never reads it as occluded) */
+.bsl-lens { position: absolute; inset: 0; clip-path: inset(0 round calc(var(--ph) / 2)); }
+.bsl-hi { position: absolute; left: 0; right: 0; top: 0; height: 45%; background: linear-gradient(rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0)); }
+.bsl-copy { top: calc(var(--ph) / 2 - var(--rh) / 2 - var(--ic) * var(--rh)); }
+.bsl-copy b { display: flex; align-items: center; height: var(--rh); padding-left: var(--pl); font-weight: 400; white-space: nowrap; }
+.bsl-copy span { display: block; font-size: var(--fs); line-height: 1.2; color: color-mix(in srgb, var(--k-accent) 12%, black); }
+.bsl-f0 { letter-spacing: 0.02em; }
+.bsl-f1 { font-family: "YouYuan", var(--k-font); }
+.bsl-f2 { font-family: var(--k-serif); font-weight: 700; }
+.bsl-f3 { font-family: var(--bsl-hv); font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+.bsl-f4 { font-family: "KaiTi", var(--k-font); }
+.bsl .bsl-lat { letter-spacing: -0.03em; }
+.bsl .bsl-lat.bsl-f3 { letter-spacing: 0.01em; }
+.bsl-lead { position: absolute; right: calc(100% - var(--px) + var(--gap)); top: var(--cy); width: 699px; transform: translateY(-50%); text-align: right; font: 300 var(--fs)/1.2 var(--bsl-lt); color: var(--k-ink); }
+/* corner echo on the same beat: a rolling counter and one swatch per theme */
+.bsl-ct { position: absolute; right: 11%; top: var(--ct); display: flex; align-items: center; gap: 18px; white-space: nowrap; }
+.bsl-tag { font-size: 28px; font-weight: 700; letter-spacing: 0.16em; color: var(--k-muted); }
+.bsl-num, .bsl-of { font: 36px/1.2 var(--k-mono); }
+.bsl-num { display: block; height: 1.2em; color: var(--k-ink); clip-path: inset(0); --n: 4; }
+.bsl-num::before { content: attr(data-d); display: block; white-space: pre; transform: translateY(calc(var(--n) * -1.2em)); }
+.bsl-of { color: var(--k-muted); }
+.bsl-sw { position: absolute; left: 10%; top: var(--sw); display: flex; align-items: center; gap: 22px; }
+.bsl-sw i { display: block; width: 46px; height: 46px; border-radius: 50%; transform: scale(0.62); opacity: 0.55; background: var(--k-accent); }
+.bsl-sw i:nth-child(1) { background: var(--k-ink); }
+.bsl-sw i:nth-child(2) { background: var(--k-accent-2); }
+.bsl-sw i:nth-child(3) { background: color-mix(in oklch longer hue, var(--k-accent), var(--k-accent-2)); }
+.bsl-sw i:nth-child(4) { background: color-mix(in oklch, var(--k-accent), var(--k-accent-2)); }
+.bsl-sw i:nth-child(5) { transform: none; opacity: 1; box-shadow: 0 0 0 7px color-mix(in srgb, var(--k-ink) 85%, transparent); }
+/* ==== kit:grain@1 ==== */
+.bsl-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+/* ==== kit:vignette@1 ==== */
+.bsl-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--bsl-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.bsl[data-tone="dark"] .bsl-vig { --vs: 0.5; --vin: 42%; }
+/* ==== end kit:vignette ==== */
+/* ==== kit:text@2 ==== */
+.bsl-u { display: inline-block; white-space: pre; }
+/* ==== end kit:text ==== */
+.bsl-off .bsl-bg, .bsl-off .bsl-vig, .bsl-off .bsl-grain { display: none; }
+@container (orientation: portrait) {
+  .bsl-in { --fs: 88px; --rh: 117.33px; --ph: 104px; --pl: 42.67px; --gap: 22.67px; --cy: 768px; --px: 508px; --pw: 445px; --ct: 259px; --sw: 1219px; }
+  .bsl-far { --m: linear-gradient(transparent 381px, #000 557px, #000 979px, transparent 1155px); }
+  .bsl-bg { background: radial-gradient(ellipse 60% 70% at 65% 40%, color-mix(in srgb, var(--k-accent) 20%, transparent), transparent 75%), color-mix(in oklch, var(--k-bg) 88%, var(--k-accent)); }
+  .bsl-lead { width: 360px; }
+}
+      </style>
+
+      <div id="root" data-composition-id="beat-step-list-theme-cycle">
+        <div class="bsl"><div class="bsl-in">
+          <div class="bsl-bg"></div>
+          <div class="bsl-cam bsl-far">
+            <div class="bsl-list" data-layout-allow-overflow><i data-w="商务风"></i><i data-w="科技风"></i><i data-w="极简风"></i><i data-w="卡通风"></i><i data-w="复古风"></i><i data-w="海报风"></i><i data-w="你的风格"></i><i data-w="像素风"></i><i data-w="水彩风"></i></div>
+          </div>
+          <div class="bsl-vig"></div>
+          <div class="bsl-grain"></div>
+          <div class="bsl-cam bsl-near">
+            <div class="bsl-pill">
+              <div class="bsl-lens">
+                <div class="bsl-hi"></div>
+                <div class="bsl-copy" data-layout-allow-overflow><b><span class="bsl-f0">极简风</span></b><b><span class="bsl-f1">卡通风</span></b><b><span class="bsl-f2">复古风</span></b><b><span class="bsl-f3">海报风</span></b><b><span class="bsl-f4">你的风格</span></b></div>
+              </div>
+            </div>
+            <div class="bsl-lead">一键换成</div>
+          </div>
+          <div class="bsl-ct"><span class="bsl-tag">风格</span><span class="bsl-num" data-d="01&#10;02&#10;03&#10;04&#10;05"></span><span class="bsl-of">/ 05</span></div>
+          <div class="bsl-sw"><i></i><i></i><i></i><i></i><i></i></div>
+        </div></div>
+      </div>
+
+      <script>
+        (function () {
+// timing in frames at 30 fps (upstream values), shared by both orientations: only LAND / PORT differ
+var CFG = { first: 30, jump: 6, pow: 3.2, hold: 1.2, open: [2, 16], list: [4, 18], lead: [2, 16, 4], push: 0.03, blur: [0.16, 9] };
+// word size in px for a 1080 px short side and its floor; centre line, counter and swatch rows (share of the
+// frame height); the list mask: fully visible within fade[0] rows of the pill, gone at fade[1] rows
+var LAND = { fs: 132, min: 96, cy: 0.4815, ct: 0.0907, sw: 0.8333, fade: [1.28, 2.42] };
+var PORT = { fs: 104, min: 72, cy: 0.4, ct: 0.135, sw: 0.635, fade: [1.8, 3.3] };
+var DEF = "极简风|卡通风|复古风|海报风|你的风格";
+var v = { lead: "一键换成", words: DEF, above: "商务风|科技风", below: "像素风|水彩风", tag: "风格", beat: 0.6, backdrop: "on" };
+try {
+  var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+  for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+} catch (e) {}
+
+var root = document.querySelector(".bsl");
+var q = function (s) { return root.querySelector(s); };
+var FW = root.clientWidth, FH = root.clientHeight;
+if (!FW || !FH) {
+  // not laid out yet: the host clip's declared size, then the window
+  var hc = root.closest("[data-width][data-height]");
+  FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+  FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+}
+var P = FH > FW, L = P ? PORT : LAND, UM = Math.min(FW, FH) / 1.08e3;
+root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+// ==== kit:text@2 (kWords, kSplit) ====
+var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+function kWords(s, key) {
+  s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+  var cut = function (x) {
+    if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+    return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+  };
+  var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+  var pre = "";
+  bits.forEach(function (x) {
+    var t = x.trim(), last = out[out.length - 1];
+    if (last && /^ /.test(x)) last.sp = true;
+    if (!t) return;
+    if (!/[\p{L}\p{N}]/u.test(t)) {
+      if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+      else { last.t += t; last.sp = / $/.test(x); }
+      return;
+    }
+    out.push({ t: pre + t, sp: / $/.test(x) });
+    pre = "";
+  });
+  if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+  if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+  if (out.length) out[out.length - 1].sp = false;
+  return out;
+}
+function kSplit(el, by, rise, text) {
+  var s = text != null ? String(text) : el.textContent, units = [];
+  var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+  el.textContent = "";
+  parts.forEach(function (p) {
+    var u = document.createElement("span"), box = u;
+    u.className = "bsl-u"; u.textContent = p.t;
+    if (by === "line") u.style.display = "block";
+    if (!p.t.trim()) { el.appendChild(u); return; }
+    if (rise) { box = document.createElement("span"); box.className = "bsl-cut"; box.style.display = u.style.display; box.appendChild(u); }
+    el.appendChild(box);
+    if (p.sp) el.appendChild(document.createTextNode(" "));
+    units.push(u);
+  });
+  return units;
+}
+// ==== end kit:text ====
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+      "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+      "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+      "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+      "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+}
+// ==== end kit:grain ====
+
+var off = String(v.backdrop) === "off";
+if (off) root.classList.add("bsl-off");
+// a host font replaces the bold and light YaHei faces too
+if (getComputedStyle(root).getPropertyValue("--mc-font").trim()) { root.style.setProperty("--bsl-hv", "var(--k-font)"); root.style.setProperty("--bsl-lt", "var(--k-font)"); }
+
+// words: the caught ones (2-6, the first is where the pill starts) and up to two dim ones above and below
+// "|" separates the items (spaces inside an item stay); without "|" the whole value is one item
+var words = function (s) { s = String(s); return s.indexOf("|") < 0 ? (s.trim() ? [s.trim()] : []) : kWords(s).map(function (u) { return u.t; }); };
+var W = words(v.words).slice(0, 6);
+if (W.length < 2) W = words(DEF);
+var UP = words(v.above).slice(-2), DN = words(v.below).slice(0, 2), ALL = UP.concat(W, DN), S0 = UP.length, N = W.length - 1;
+var BL = MT.clamp(+v.beat || 0.6, 0.4, 1.2) * 30, JW = Math.min(CFG.jump, BL / 3), D = (CFG.first + (N - 1) * BL + JW) / 30 + CFG.hold;
+
+// colours: any CSS colour to sRGB bytes through a canvas (Chrome serialises oklch mixes as oklch(), which
+// a regex over the computed string misreads), then HSL for the fields and WCAG ratio for the pill text
+var cv = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
+var rgb = function (c) {
+  var p = document.createElement("i");
+  p.style.color = c; root.appendChild(p);
+  cv.fillStyle = "#000"; cv.fillStyle = getComputedStyle(p).color; root.removeChild(p);
+  cv.fillRect(0, 0, 1, 1);
+  var d = cv.getImageData(0, 0, 1, 1).data;
+  return [d[0], d[1], d[2]];
+};
+var hsl = function (c) {
+  var r = c[0] / 255, g = c[1] / 255, b = c[2] / 255, M = Math.max(r, g, b), m = Math.min(r, g, b), l = (M + m) / 2, d = M - m, h = 0;
+  if (d) h = 60 * (M === r ? ((g - b) / d + 6) % 6 : M === g ? (b - r) / d + 2 : (r - g) / d + 4);
+  return [h, d ? d / (1 - Math.abs(2 * l - 1)) : 0, l];
+};
+var unhsl = function (h, s, l) {
+  var a = s * Math.min(l, 1 - l), f = function (n) { var k = (n + h / 30) % 12; return 255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1))); };
+  return [f(0), f(8), f(4)];
+};
+var lum = function (c) { return c.reduce(function (a, x, i) { x /= 255; return a + [0.2126, 0.7152, 0.0722][i] * (x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4)); }, 0); };
+var ratio = function (a, b) { var x = lum(a) + 0.05, y = lum(b) + 0.05; return x > y ? x / y : y / x; };
+var css = function (c, a) { var s = c.map(function (x) { return Math.round(x); }).join(","); return a == null || a >= 1 ? "rgb(" + s + ")" : "rgba(" + s + "," + Math.max(0, a).toFixed(3) + ")"; };
+var mixc = function (a, b, p) { return a.map(function (x, i) { return x + (b[i] - x) * p; }); };
+var lift = function (c, k) { return c.map(function (x) { return x + (255 - x) * k; }); };
+
+// five themes, the last word always on the accent: pill colour, field (the pill's hue at the background's
+// lightness, no olive on dark skins: a yellow pill gets navy, as upstream), and the clearer of a dark and a light ink
+var TC = ["var(--k-ink)", "var(--k-accent-2)", "color-mix(in oklch longer hue, var(--k-accent), var(--k-accent-2))", "color-mix(in oklch, var(--k-accent), var(--k-accent-2))", "var(--k-accent)"];
+// tone from --k-bg (as kit:tone): dark skins get the upstream dark-field values for vignette, grain and light
+var BG = hsl(rgb("var(--k-bg)")), dark = lum(rgb("var(--k-bg)")) < 0.18, FL = dark ? BG[2] + 0.045 : BG[2] - 0.065;
+root.setAttribute("data-tone", dark ? "dark" : "light");
+var TH = W.map(function (w, k) {
+  var i = (k - W.length + 55) % 5, c = rgb(TC[i]), h = hsl(c);
+  var a = unhsl(h[0], Math.min(h[1], 0.8), 0.07), b = unhsl(h[0], 0.3, 0.97);
+  var fh = dark && h[0] > 38 && h[0] < 115 ? 222 : h[0];
+  return { i: i, c: c, f: unhsl(fh, Math.min(h[1], dark ? 0.55 : 0.75), FL), ink: ratio(a, c) >= ratio(b, c) ? a : b };
+});
+var SH = rgb("var(--bsl-shade)"), RING = css(rgb("var(--k-ink)"), 0.85), KEY = dark ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.5)";
+
+// build: dim list, the lens copy (theme typefaces), swatches, counter, lead
+var far = q(".bsl-list"), copy = q(".bsl-copy"), lead = q(".bsl-lead"), sw = q(".bsl-sw"), num = q(".bsl-num"), pill = q(".bsl-pill"), bg = q(".bsl-bg");
+var cams = [q(".bsl-far"), q(".bsl-near")], ct = q(".bsl-ct");
+far.innerHTML = copy.innerHTML = sw.innerHTML = "";
+var lat = function (w) { return kCJK.test(w) ? "" : " bsl-lat"; };
+var add = function (box, tag, cls) { var e = document.createElement(tag); e.className = cls; return box.appendChild(e); };
+var fars = ALL.map(function (w) { var e = add(far, "i", lat(w).trim()); e.setAttribute("data-w", w); return e; });
+var cps = W.map(function (w, k) { var e = add(add(copy, "b", ""), "span", "bsl-f" + TH[k].i + lat(w)); e.textContent = w; e.style.color = css(TH[k].ink); return e; });
+var sws = W.map(function (w, k) { var e = add(sw, "i", ""); e.style.background = css(TH[k].c); return e; });
+var two = function (n) { return (n < 10 ? "0" : "") + n; };
+num.setAttribute("data-d", W.map(function (w, k) { return two(k + 1); }).join("\n"));
+q(".bsl-of").textContent = "/ " + two(W.length);
+if (String(v.tag).trim()) q(".bsl-tag").textContent = String(v.tag).trim();
+else ct.style.display = "none";
+var units = String(v.lead).trim() ? kSplit(lead, "word", false, v.lead) : [];
+// lead units blur in 4 frames apart (upstream), closer for a long lead so the last one is sharp before the first beat
+var LG = Math.min(CFG.lead[2], 12 / Math.max(1, units.length - 1));
+if (!units.length) lead.style.display = "none";
+if (lat(String(v.lead))) lead.classList.add("bsl-lat");
+
+// layout (the card's fit): one size for the lead and the words, measured at the CSS size, scaled down until
+// lead + gap + the widest pill (or dim word) fit inside the 10% side margins, never below L.min
+var CY = L.cy * FH, MX = 0.105 * FW, Z = 1 + CFG.push, u, RH, PH, PL, PR, GAP, LW, right;
+var inn = q(".bsl-in"), set = function (n, x) { inn.style.setProperty(n, x); };
+var size = function (fs) {
+  u = fs / 132; RH = 176 * u; PH = 156 * u; PL = 64 * u; PR = 76 * u; GAP = units.length ? 34 * u : 0;
+  [["--fs", fs], ["--rh", RH], ["--ph", PH], ["--pl", PL], ["--gap", GAP]].forEach(function (p) { set(p[0], p[1] + "px"); });
+  lead.style.width = "auto"; lead.style.whiteSpace = "nowrap";
+  LW = units.length ? lead.offsetWidth : 0;
+  cps.forEach(function (e, k) { TH[k].w = e.offsetWidth + PL + PR; });
+  right = Math.max.apply(null, TH.map(function (t) { return t.w; }).concat(fars.map(function (e) { return PL + e.offsetWidth; })));
+  return LW + GAP + right;
+};
+var fs = L.fs * UM, need = size(fs) * Z, room = FW - 2 * MX; // Z: the slow push grows the row about the pill's left end
+if (need > room) { fs = Math.max(L.min * UM, Math.floor((fs * room) / need)); size(fs); }
+var mean = TH.reduce(function (a, t) { return a + t.w; }, 0) / TH.length;
+var PX = Math.min((FW - (LW + GAP + mean)) / 2 + LW + GAP, FW - MX - Z * right);
+PX = Math.max(PX, Math.min(MX + Z * (LW + GAP), FW - MX - Z * right));
+// at the floor a lead that is still too long wraps inside its box (lead | gap | pill keep their places)
+lead.style.width = Math.max(0, (PX - MX) / Z - GAP) + "px"; lead.style.whiteSpace = "";
+[["--cy", CY + "px"], ["--px", PX + "px"], ["--i", S0], ["--ic", 0], ["--ct", L.ct * FH + "px"], ["--sw", L.sw * FH + "px"]].forEach(function (p) { set(p[0], p[1]); });
+cams[0].style.setProperty("--m", "linear-gradient(transparent " + (CY - L.fade[1] * RH) + "px, #000 " + (CY - L.fade[0] * RH) + "px, #000 " + (CY + L.fade[0] * RH) + "px, transparent " + (CY + L.fade[1] * RH) + "px)");
+var GX = ((PX + mean / 2) / FW) * 100, GY = (CY / FH) * 100;
+
+// vertical speed blur for the two lists while they jump (upstream SpeedBlur: 0.16 px per px/frame, max 9)
+var FID = "bsl-sb" + (window.__bslN = (window.__bslN || 0) + 1);
+var svg = add(root, "i", "");
+svg.innerHTML = '<svg width="0" height="0" style="position:absolute"><filter id="' + FID + '" x="-5%" y="-20%" width="110%" height="140%"><feGaussianBlur stdDeviation="0 0"/></filter></svg>';
+var fe = svg.querySelector("feGaussianBlur");
+var grain = kGrain(q(".bsl-grain"));
+
+// the one clock: beats fired so far and the in-beat progress (the jump takes the first 6 frames, then still)
+var snap = function (x) { return 1 - Math.pow(1 - MT.clamp(x, 0, 1), CFG.pow); };
+var clock = function (f) {
+  var b = Math.min(N, Math.max(0, Math.floor((f - CFG.first) / BL) + 1)), s0 = CFG.first + (b - 1) * BL, tb = b ? snap((f - s0) / JW) : 1;
+  return { b: b, tb: tb, s: b ? b - 1 + tb : 0, since: b ? f - s0 : 99 };
+};
+var ease = MT.ease("snappy"), eout = MT.ease("out"), esm = MT.ease("smooth"), eover = MT.ease("overshoot");
+var R = function (f, a, d, e) { return e(MT.clamp((f - a) / d, 0, 1)); };
+var CL = { extrapolateLeft: "clamp", extrapolateRight: "clamp" };
+var px = function (n) { return (n * u).toFixed(1) + "px"; };
+
+var tl = MT.scene(D, function (t) {
+  var f = t * 30, c = clock(f), b = c.b, tb = c.tb, at = S0 + c.s; // f: frames at 30 fps
+  var A = TH[Math.max(0, b - 1)], B = TH[b], mt = b ? tb : 1, hit = b ? Math.exp(-c.since / 3.2) : 0;
+  var pc = mixc(A.c, B.c, mt), fc = mixc(A.f, B.f, mt);
+  var open = R(f, CFG.open[0], CFG.open[1], ease), lin = R(f, CFG.list[0], CFG.list[1], eout);
+  var vy = (clock(f + 0.5).s - clock(f - 0.5).s) * RH, sb = Math.min(CFG.blur[1] * u, Math.abs(vy) * CFG.blur[0]);
+  // three channels on one tb: the field and its pill-coloured glow, the list step, the pill colour and squash
+  bg.style.background = "radial-gradient(ellipse 60% 70% at " + GX.toFixed(1) + "% " + GY.toFixed(1) + "%, " + css(pc, 0.2 + 0.06 * hit) + " 0%, " + css(pc, 0.06) + " 45%, " + css(pc, 0) + " 75%), radial-gradient(ellipse 55% 55% at 18% 0%, " + KEY + ", rgba(255,255,255,0) 70%), " + css(fc);
+  var cam = "scale(" + (1 + CFG.push * esm(t / D)).toFixed(4) + ")";
+  cams[0].style.transform = cams[1].style.transform = cam;
+  far.style.transform = "translateY(" + (-c.s * RH + (1 - lin) * 40 * u).toFixed(2) + "px)";
+  copy.style.transform = "translateY(" + (-c.s * RH).toFixed(2) + "px)";
+  fe.setAttribute("stdDeviation", "0 " + sb.toFixed(2));
+  far.style.filter = copy.style.filter = sb >= 0.35 ? "url(#" + FID + ")" : "none";
+  fars.forEach(function (e, i) {
+    var d = Math.abs(i - at), bl = (Math.max(0, d - 1.2) * 3.5 + (1 - lin) * 10) * u;
+    e.style.opacity = (Math.max(0, 0.42 - 0.15 * Math.max(0, d - 1)) * lin).toFixed(3);
+    e.style.transform = "scale(" + (1 - Math.min(0.14, 0.05 * Math.max(0, d - 0.5))).toFixed(4) + ")";
+    e.style.filter = bl > 0.3 ? "blur(" + bl.toFixed(2) + "px)" : "none";
+  });
+  // only words overlapping the pill are drawn; while they cross its edge (or the pill fades in) the copy is
+  // half clipped, blurred or see-through, so it sits out the layout check for those frames
+  cps.forEach(function (e, k) { e.style.opacity = Math.abs(k - c.s) < 0.9 ? Math.min(1, open * 2).toFixed(3) : 0; });
+  if (open < 0.5 || (b && tb < 1)) copy.setAttribute("data-layout-ignore", "");
+  else copy.removeAttribute("data-layout-ignore");
+  var sx = b ? MT.interpolate(tb, [0, 0.6, 1], [0.97, 1.01, 1], CL) : 1, sy = b ? MT.interpolate(tb, [0, 0.6, 1], [1.14, 0.96, 1], CL) : 1;
+  var ps = pill.style;
+  ps.width = MT.mix(A.w, B.w, mt).toFixed(1) + "px";
+  ps.transform = "scale(" + (sx * MT.mix(0.55, 1, open)).toFixed(4) + "," + sy.toFixed(4) + ")";
+  ps.opacity = Math.min(1, open * 2.5).toFixed(3);
+  ps.background = "linear-gradient(180deg, " + css(lift(pc, 0.16 + 0.07 * hit)) + " 0%, " + css(lift(pc, 0.03 * hit)) + " 50%, " + css(pc.map(function (x) { return x * 0.9; })) + " 100%)";
+  ps.boxShadow = "inset 0 " + px(2) + " 0 rgba(255,255,255,0.5), inset 0 " + px(-3) + " " + px(8) + " rgba(0,0,0,0.12), 0 " + px(3) + " " + px(6) + " " + css(SH, dark ? 0.35 : 0.2) +
+    ", 0 " + px(30) + " " + px(90) + " " + px(-20) + " " + css(pc, 0.5 + 0.25 * hit) + ", 0 0 " + px(40 + 60 * hit) + " " + css(pc, 0.18 + 0.2 * hit);
+  units.forEach(function (e, i) {
+    var p = R(f, CFG.lead[0] + LG * i, CFG.lead[1], ease);
+    e.style.opacity = p.toFixed(3);
+    e.style.filter = p < 1 ? "blur(" + (14 * u * (1 - p)).toFixed(2) + "px)" : "none";
+    e.style.transform = "translateY(" + (0.25 * (1 - p)).toFixed(3) + "em)";
+  });
+  // corner echo: the counter rolls one step and the swatches pop on the same tb (no full-frame hit)
+  num.style.setProperty("--n", (b ? b - 1 + tb : 0).toFixed(3));
+  ct.style.opacity = R(f, 0, 12, eout).toFixed(3);
+  sws.forEach(function (e, k) {
+    var cur = k === b, pop = cur && b ? MT.interpolate(tb, [0, 0.6, 1], [0.7, 1.12, 1], CL) : 1;
+    e.style.transform = "scale(" + ((cur ? 1 : 0.62) * pop * R(f, 6 + 2 * k, 12, eover)).toFixed(4) + ")";
+    e.style.opacity = cur ? 1 : k < b ? 0.55 : 0.32;
+    e.style.boxShadow = cur ? "0 0 0 " + 5 * UM + "px " + (off ? "transparent" : css(fc)) + ", 0 0 0 " + 7 * UM + "px " + RING + ", 0 0 " + 30 * UM + "px " + css(TH[k].c, 0.6) : "none";
+  });
+  grain(t);
+});
+window.__timelines["beat-step-list-theme-cycle"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

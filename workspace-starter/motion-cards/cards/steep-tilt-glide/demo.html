@@ -1,0 +1,485 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"页面标题（终点那一节的大标题）","default":"本周任务"},
+    {"id":"items","type":"string","label":"任务行（用 | 分隔，1–4 条）","default":"整理第 3 节素材|录制操作演示|写好本周小结|导出成片初稿"},
+    {"id":"name","type":"string","label":"应用名（顶栏字标）","default":"示例应用"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>steep-tilt-glide · 斜墙页面自滑</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="steep-tilt-glide-template">
+<!-- Ported from video-shotcraft demos/camera/steep-tilt-glide/SteepTiltGlide.tsx
+  (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+  Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+  Changes (2026-10): Remotion/React re-implemented as a HyperFrames MT sub-composition, frames to seconds; --k-*
+  palette, system fonts, generic Chinese page; upstream mark and wordmark -> neutral mark and a `name` slot, clapper ->
+  picture glyph, stray "W" -> "02", faint header tabs -> bars, widget day labels 40px (upstream 34); list section
+  tighter (rows 150px apart, upstream 210), title 210px (upstream 150); light skins: stage, reveal veil and depth fog
+  in a palette grey (upstream near-black), lavender halo -> soft shadow; kit vignette and grain (light 0.16 / overlay
+  0.05, dark 0.5 / soft-light 0.07); the three full-panel ghosts (hidden under the opaque page) -> one content copy at
+  the 3.2-frame offset, under the content, blurred along the page x. Kept: perspective 1100, origin 30% 58%, rotateY
+  -60, rotateZ -2, scale 0.62, glide 60 -> -4100 on bezier(0.3,0.12,0.72,0.9) over 4 s, veil 0.7/0.4/0, glow ramp,
+  land beats, lifts, fall curve, floater and shadow offsets, scale, blur, opacity, ghost opacity per speed.
+  Portrait: another camera only. -->
+<style>
+ @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+ @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+ @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+ #root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--k-font);
+  color: var(--k-ink);
+ }
+ /* ==== kit:derived@1 ==== */
+ .st {
+  --st-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+  --st-panel-2: color-mix(in srgb, var(--k-panel), var(--k-ink) 5%);
+  --st-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+  --st-hi: color-mix(in srgb, white 80%, transparent);
+ }
+ .st[data-tone="dark"] {
+  --st-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+  --st-hi: color-mix(in srgb, white 6%, transparent);
+ }
+ /* ==== end kit:derived ==== */
+ /* ==== kit:vignette@1 ==== */
+ .st-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--st-shade);
+  background:
+   radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+   radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+ }
+ .st[data-tone="dark"] .st-vig { --vs: 0.55; }
+ /* ==== end kit:vignette ==== */
+ /* ==== kit:light@1 ==== */
+ .st-light { mix-blend-mode: multiply; }
+ .st[data-tone="dark"] .st-light { mix-blend-mode: screen; }
+ /* ==== end kit:light ==== */
+ /* ==== kit:grain@1 ==== */
+ .st-grain { position: absolute; inset: 0; pointer-events: none; }
+ /* ==== end kit:grain ==== */
+ /* ==== kit:text@2 ==== */
+ .st-u { display: inline-block; white-space: pre; }
+ /* ==== end kit:text ==== */
+
+ /* stage darker than the page (the bright subject, as upstream); veil and fog share its grey */
+ .st { position: absolute; inset: 0; container-type: size; --st-f: color-mix(in srgb, var(--k-ink) 8%, transparent);
+  --st-stage: color-mix(in srgb, var(--k-bg), var(--k-ink) 16%); --st-stage-2: color-mix(in srgb, var(--k-bg), var(--k-ink) 30%); }
+ .st[data-tone="dark"] { --st-stage: color-mix(in srgb, var(--k-bg), black 62%); --st-stage-2: color-mix(in srgb, var(--k-bg), black 88%); }
+ .st-stage, .st-glow, .st-cam, .st-con, .st-trail, .st-veil, .st-edge, .st-sh, .st-fog { position: absolute; inset: 0; }
+ .st-trail, .st-veil, .st-edge, .st-sh, .st-fog { pointer-events: none; }
+ .st-stage { background: radial-gradient(ellipse 80% 90% at 62% 40%, var(--st-stage), var(--st-stage-2)); }
+ .st-glow { background: radial-gradient(ellipse 40% 50% at 20% 66%, color-mix(in srgb, var(--k-accent-2) 30%, transparent), transparent 70%); }
+ /* camera (upstream CAM) never moves; static = the last frame */
+ .st-cam { perspective: 1100px; perspective-origin: 30% 58%; }
+ .st-rig { position: absolute; left: 40%; top: 15%; transform-origin: 0 0; transform: rotateY(-60deg) rotateZ(-2deg); }
+ .st-slide { transform-origin: 0 0; transform: scale(0.62) translateX(-4100px); }
+ /* the page, in upstream page px (6200 x 2400) */
+ .st-page { position: relative; width: 6200px; height: 2400px; border-radius: 64px; overflow: hidden; background: var(--k-panel); line-height: 1.25;
+  box-shadow: 0 60px 200px -40px color-mix(in srgb, var(--st-shade) 40%, transparent); }
+ .st[data-tone="dark"] .st-page { box-shadow: 0 0 220px color-mix(in srgb, var(--k-accent-2) 30%, transparent); }
+ .st-veil { background: var(--st-stage); opacity: 0; }
+ .st-edge { background: linear-gradient(90deg, color-mix(in srgb, var(--st-stage) 90%, transparent), transparent 42%); opacity: 0; }
+ .st-mark * { fill: var(--k-on-accent); }
+ .st-mark :first-child { fill: var(--k-accent); }
+ .st-i { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+ .st-i, .st-mark, .st-dot, .st-bar, .st-bar i, .st-todo b, .st-r b, .st-r i, .st-r em, .st-rn, .st-pct, .st-name, .st-title { display: block; flex: none; }
+ .st-fw { position: absolute; }
+ .st-top { position: absolute; left: 0; top: 0; width: 6200px; height: 230px; box-sizing: border-box; padding-left: 130px; display: flex; align-items: center; border-bottom: 4px solid var(--st-line); }
+ .st-top .st-fw { position: relative; }
+ .st-fl, .st-wh, .st-todo div, .st-tabs, .st-tabs > span, .st-r { display: flex; align-items: center; }
+ .st-tab0 { gap: 34px; font-size: 66px; font-weight: 500; }
+ .st-brand { margin-left: 110px; }
+ .st-name { width: 1500px; margin-left: 70px; font-size: 165px; line-height: 1.2; font-weight: 700; }
+ .st-ft { position: absolute; top: 96px; height: 40px; border-radius: 20px; background: var(--st-f); }
+ .st-ws { gap: 26px; font-size: 92px; line-height: 1.2; font-weight: 700; }
+ .st-tile { width: 620px; height: 350px; justify-content: center; gap: 60px; border-radius: 56px; background: var(--st-panel-2); color: var(--k-muted); }
+ .st-ico { display: flex; width: 210px; height: 210px; align-items: center; justify-content: center; border-radius: 44px; background: var(--k-bg); box-shadow: 0 6px 60px color-mix(in srgb, var(--st-shade) 14%, transparent); }
+ .st-home { width: 2900px; height: 168px; box-sizing: border-box; gap: 40px; padding-left: 56px; border-radius: 34px; border: 3.5px solid color-mix(in srgb, var(--k-accent) 75%, transparent);
+  background: color-mix(in srgb, var(--k-accent) 9%, transparent); color: color-mix(in srgb, var(--k-accent), var(--k-ink) 32%); font-size: 70px; font-weight: 600; }
+ .st-side { gap: 40px; font-size: 70px; }
+ .st-sq { width: 58px; height: 58px; box-sizing: border-box; border: 6px solid var(--k-muted); border-radius: 14px; }
+ .st-big { position: absolute; left: 3050px; top: 300px; font-size: 430px; line-height: 1.2; font-weight: 700; }
+ .st-card, .st-sec { box-sizing: border-box; background: linear-gradient(180deg, var(--k-bg), color-mix(in srgb, var(--k-bg), var(--k-panel) 50%)); }
+ .st-card { position: absolute; padding: 52px 60px; overflow: hidden; border-radius: 56px; border: 3px solid color-mix(in srgb, var(--k-ink) 5%, transparent);
+  box-shadow: inset 0 4px 0 var(--st-hi), 0 8px 24px color-mix(in srgb, var(--st-shade) 16%, transparent), 0 40px 90px -30px color-mix(in srgb, var(--st-shade) 32%, transparent); }
+ .st-wh { gap: 22px; font-size: 46px; font-weight: 600; }
+ .st-dot { width: 22px; height: 22px; border-radius: 7px; background: var(--k-accent); }
+ .st-pct { margin-top: 40px; font-size: 120px; line-height: 1; font-weight: 700; }
+ .st-bar { height: 22px; margin-top: 34px; border-radius: 11px; background: var(--st-f); }
+ .st-bar i { width: 72%; height: 100%; border-radius: 11px; background: linear-gradient(90deg, var(--k-accent), color-mix(in srgb, var(--k-accent), white 30%)); }
+ .st-todo { display: flex; flex-direction: column; gap: 30px; margin-top: 36px; }
+ .st-todo div { gap: 24px; font-size: 40px; }
+ .st-todo b { width: 30px; height: 30px; box-sizing: border-box; border-radius: 9px; border: 4px solid var(--st-line); }
+ .st-todo div:first-child b { border-color: var(--k-accent-2); background: var(--k-accent-2); }
+ .st-todo div:first-child span:first-of-type { color: var(--k-muted); text-decoration: line-through; }
+ .st-todo span + span, .st-n, .st-col { margin-left: auto; color: var(--k-muted); }
+ /* the list section the glide ends on */
+ .st-sec { position: absolute; left: 3560px; top: 230px; width: 2640px; height: 2170px; padding: 170px 0 0 220px;
+  box-shadow: -3px 0 0 color-mix(in srgb, var(--k-ink) 6%, transparent), -40px 0 90px -20px color-mix(in srgb, var(--st-shade) 22%, transparent); }
+ .st-title { width: 1300px; font-size: 210px; line-height: 1.2; font-weight: 700; }
+ .st-tabs { gap: 110px; margin: 80px 0 0 20px; font-size: 62px; }
+ .st-tabs > span { gap: 26px; }
+ .st-tabs .st-on { padding: 20px 40px; border-radius: 22px; background: var(--st-panel-2); font-weight: 600; }
+ .st-n { margin-left: -40px; font-size: 56px; }
+ .st-rule { width: 1500px; height: 3px; margin: 34px 0 0 680px; background: var(--st-line); }
+ .st-prog { display: inline-block; margin: 87px 0 0 20px; padding: 14px 30px; border-radius: 14px; background: color-mix(in srgb, var(--k-accent) 14%, var(--k-bg));
+  color: color-mix(in srgb, var(--k-accent), var(--k-ink) 40%); font-size: 46px; font-weight: 700; letter-spacing: 0.06em; }
+ /* dark: accent in a dark panel turns olive */
+ .st[data-tone="dark"] .st-prog { background: color-mix(in srgb, var(--k-bg), white 12%); }
+ .st[data-tone="dark"] .st-home { background: color-mix(in srgb, white 5%, transparent); }
+ .st-col { margin: 44px 0 0 24px; font-size: 44px; font-weight: 700; letter-spacing: 0.08em; }
+ .st-rows { margin: 45px 0 0 60px; }
+ .st-r { gap: 56px; min-height: 90px; margin-bottom: 60px; }
+ .st-r b { width: 42px; height: 42px; border-radius: 12px; background: var(--k-accent); }
+ .st-rn { width: 1100px; font-size: 64px; font-weight: 600; }
+ .st-r:nth-child(2) .st-rn { color: color-mix(in srgb, var(--k-ink) 86%, var(--k-bg)); }
+ .st-r:nth-child(3) .st-rn { color: color-mix(in srgb, var(--k-ink) 74%, var(--k-bg)); }
+ .st-r:nth-child(4) .st-rn { color: color-mix(in srgb, var(--k-ink) 64%, var(--k-bg)); }
+ .st-r i { width: 56px; height: 56px; border-radius: 50%; background: var(--k-accent-2); }
+ .st-r:nth-child(even) i { background: color-mix(in srgb, var(--k-accent), var(--k-accent-2) 50%); }
+ .st-r em { width: 420px; height: 18px; border-radius: 9px; background: var(--st-f); }
+ /* screen-space depth fog over the far (left) end */
+ .st-fog { background: linear-gradient(100deg, color-mix(in srgb, var(--st-stage) 62%, transparent), color-mix(in srgb, var(--st-stage) 28%, transparent) 18%, transparent 40%); }
+ .st .st-vig { --vx: 55%; --vy: 42%; }
+ .st[data-tone="dark"] .st-vig { --vs: 0.5; }
+ /* portrait: same page and beats, another camera */
+ @container (orientation: portrait) {
+  .st-cam { perspective-origin: 45% 50%; }
+  .st-rig { left: 55%; top: 13%; }
+  .st-slide { transform: scale(0.55) translateX(-4100px); }
+  .st-title { width: 860px; font-size: 200px; }
+  .st-rn { width: 600px; }
+ }
+</style>
+
+<div id="root" data-composition-id="steep-tilt-glide">
+ <div class="st">
+  <div class="st-stage"></div>
+  <div class="st-glow st-light"></div>
+  <div class="st-cam" data-layout-allow-overflow>
+  <div class="st-rig">
+  <div class="st-slide">
+  <div class="st-page">
+  <div class="st-trail"></div>
+  <div class="st-con">
+  <div class="st-top">
+  <div class="st-fw"><div class="st-fl st-tab0"><svg class="st-i" width="58" height="58" viewBox="0 0 40 40" stroke-width="3.5"><rect x="4" y="4" width="13" height="13" rx="3" /><rect x="23" y="4" width="13" height="13" rx="3" /><rect x="4" y="23" width="13" height="13" rx="3" /><rect x="23" y="23" width="13" height="13" rx="3" /></svg><span>概览</span></div></div>
+  <div class="st-fw"><div class="st-fl st-brand"><svg class="st-mark" width="150" height="150" viewBox="0 0 128 128"><rect x="8" y="8" width="112" height="112" rx="30" /><circle cx="46" cy="46" r="16" /><rect x="30" y="78" width="68" height="16" rx="8" /></svg><div class="st-name">示例应用</div></div></div>
+  <i class="st-ft" style="left: 3050px; width: 420px"></i><i class="st-ft" style="left: 3900px; width: 380px"></i><i class="st-ft" style="left: 4650px; width: 300px"></i>
+  </div>
+  <div class="st-fw" style="left: 120px; top: 560px"><div class="st-fl st-ws"><svg class="st-mark" width="104" height="104" viewBox="0 0 128 128"><rect x="8" y="8" width="112" height="112" rx="30" /><circle cx="46" cy="46" r="16" /><rect x="30" y="78" width="68" height="16" rx="8" /></svg><span>工作区</span></div></div>
+  <div class="st-fw" style="left: 1330px; top: 440px"><div class="st-fl st-tile"><span class="st-ico"><svg width="130" height="130" viewBox="0 0 100 100"><rect x="10" y="18" width="80" height="64" rx="10" style="fill: var(--k-ink)" /><circle cx="34" cy="40" r="8" style="fill: var(--k-accent)" /><path d="M18 74 42 52 56 64 68 54 84 74Z" style="fill: var(--k-accent-2)" /></svg></span><svg class="st-i" width="90" height="90" viewBox="0 0 40 40" stroke-width="3.6"><path d="M10 15 20 26 30 15" /></svg></div></div>
+  <div class="st-fw" style="left: 110px; top: 830px"><div class="st-fl st-home"><svg class="st-i" width="66" height="66" viewBox="0 0 40 40" stroke-width="3.4"><path d="M6 20 20 7 34 20M11 17V33H29V17" /></svg><span>首页</span></div></div>
+  <div class="st-fw" style="left: 166px; top: 1070px"><div class="st-fl st-side"><svg class="st-i" width="64" height="64" viewBox="0 0 40 40" stroke-width="3"><path d="M20 5C13 5 10 10 10 16V24L6 30H34L30 24V16C30 10 27 5 20 5ZM16 33C16 36 24 36 24 33" /></svg><span>收件箱</span></div></div>
+  <div class="st-fw" style="left: 166px; top: 1310px"><div class="st-fl st-side"><i class="st-sq"></i><span>文档</span></div></div>
+  <div class="st-fw" style="left: 166px; top: 1550px"><div class="st-fl st-side"><i class="st-sq"></i><span>仪表盘</span></div></div>
+  <svg class="st-i" width="120" height="120" viewBox="0 0 40 40" stroke-width="4.4" style="position: absolute; left: 2440px; top: 1060px"><path d="M26 6 12 20 26 34" /></svg>
+  <div class="st-big">02</div>
+  <div class="st-card" style="left: 2620px; top: 620px; width: 640px; height: 380px"><div class="st-wh"><i class="st-dot"></i><span>导出进度</span></div><span class="st-pct">72%</span><i class="st-bar"><i></i></i></div>
+  <div class="st-card" style="left: 2740px; top: 1360px; width: 720px; height: 420px"><div class="st-wh"><i class="st-dot" style="background: var(--k-accent-2)"></i><span>待办</span></div>
+  <div class="st-todo"><div><b></b><span>写脚本</span><span>周一</span></div><div><b></b><span>录旁白</span><span>周三</span></div><div><b></b><span>导出成片</span><span>周五</span></div></div></div>
+  <div class="st-card" style="left: 2620px; top: 1900px; width: 560px; height: 330px"><div class="st-wh"><i class="st-dot" style="background: color-mix(in srgb, var(--k-accent), var(--k-accent-2) 50%)"></i><span>播放量</span></div>
+  <svg width="440" height="150" viewBox="0 0 440 150" style="display: block; margin-top: 34px"><path d="M0 120C50 110 70 70 120 78S200 120 250 72 340 30 440 18V150H0Z" style="fill: color-mix(in srgb, var(--k-accent-2) 12%, transparent)" /><path d="M0 120C50 110 70 70 120 78S200 120 250 72 340 30 440 18" style="fill: none; stroke: var(--k-accent-2); stroke-width: 8; stroke-linecap: round" /></svg></div>
+  <div class="st-sec">
+  <div class="st-title">本周任务</div>
+  <div class="st-tabs">
+  <span class="st-on"><svg class="st-i" width="56" height="56" viewBox="0 0 40 40" stroke-width="3.6"><path d="M7 9h.1M15 9h18M7 20h.1M15 20h18M7 31h.1M15 31h18" /></svg>列表</span>
+  <span><svg class="st-i" width="56" height="56" viewBox="0 0 40 40" stroke-width="3"><rect x="5" y="7" width="12" height="26" rx="3" /><rect x="23" y="7" width="12" height="18" rx="3" /></svg>看板</span>
+  <span class="st-n">4</span>
+  </div>
+  <div class="st-rule"></div>
+  <div class="st-prog">进行中</div>
+  <div class="st-col">任务名称</div>
+  <div class="st-rows">
+  <div class="st-r"><b></b><span class="st-rn">整理第 3 节素材</span><i></i><em></em></div>
+  <div class="st-r"><b></b><span class="st-rn">录制操作演示</span><i></i><em></em></div>
+  <div class="st-r"><b></b><span class="st-rn">写好本周小结</span><i></i><em></em></div>
+  <div class="st-r"><b></b><span class="st-rn">导出成片初稿</span><i></i><em></em></div>
+  </div>
+  </div>
+  </div>
+  <div class="st-veil"></div>
+  <div class="st-edge"></div>
+  </div>
+  </div>
+  </div>
+  </div>
+  <div class="st-fog"></div>
+  <div class="st-vig"></div>
+  <div class="st-grain"></div>
+ </div>
+</div>
+
+<script>
+ (function () {
+  // s = upstream frames / 30. lx: page x (page px); shade: veil keys (f 0/18/44); glow: f 14-70;
+  // drop: floater progress over f 4-100; land / lift: per floater in DOM order (lift in page px)
+  var CFG = { dur: 4, lx: [60, -4100], shade: [0, 0.6, 1.467], glow: [0.467, 2.333], drop: [0.133, 3.333], fall: 0.32,
+   land: [0.3, 0.42, 0.54, 0.62, 0.68, 0.8, 0.86, 0.92], lift: [230, 280, 250, 260, 260, 240, 230, 230], trail: 0.107 };
+  // camera and text slots (page px) per orientation
+  var LAND = { s: 0.62, d: 1100, titleF: 210, titleW: 1300, rowW: 1100 };
+  var PORT = { s: 0.55, d: 1100, titleF: 200, titleW: 860, rowW: 600 };
+  var v = { title: "本周任务", items: "整理第 3 节素材|录制操作演示|写好本周小结|导出成片初稿", name: "示例应用", backdrop: "on" };
+  try {
+   var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+   for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+  } catch (e) {}
+
+  var root = document.querySelector(".st");
+  var q = function (s) { return root.querySelector(s); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+   // not laid out yet: the host clip's declared size, then the window
+   var hc = root.closest("[data-width][data-height]");
+   FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+   FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND, U = Math.min(FW, FH) / 1.08e3;
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+  // ==== kit:tone@1 ====
+  function kRGB(el, color) {
+   var p = document.createElement("i");
+   p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+   el.appendChild(p);
+   var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+   el.removeChild(p);
+   return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+  }
+  function kTone(wrap) {
+   var c = kRGB(wrap, "var(--k-bg)");
+   var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+   wrap.setAttribute("data-tone", tone);
+   return tone;
+  }
+  // ==== end kit:tone ====
+  // ==== kit:grain@1 ====
+  function kGrain(layer, o) {
+   o = o || {};
+   var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+   var dark = tones && tones.getAttribute("data-tone") === "dark";
+   var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+     "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+     "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+     "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+     "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+   });
+   layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+   layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+   layer.style.backgroundSize = size + "px " + size + "px";
+   return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+   };
+  }
+  // ==== end kit:grain ====
+  // ==== kit:speedblur@1 ====
+  function kSpeedBlur(box, prefix, o) {
+   o = o || {};
+   var amount = o.amount || 0.45, max = o.max || 36;
+   var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+   var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+   svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+   svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+   var outer = document.createElement("div"), inner = document.createElement("div");
+   outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+   while (box.firstChild) inner.appendChild(box.firstChild);
+   outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+   var fe = svg.firstChild.firstChild;
+   return function (vx, vy) {
+    vy = vy || 0;
+    var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+    if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+    var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+    fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+    outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+    inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+    outer.style.filter = "url(#" + id + ")";
+   };
+  }
+  // ==== end kit:speedblur ====
+  // ==== kit:text@2 ====
+  var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+  function kWords(s, key) {
+   s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+   var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+   var cut = function (x) {
+    if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+    return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+   };
+   var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+   var pre = "";
+   bits.forEach(function (x) {
+    var t = x.trim(), last = out[out.length - 1];
+    if (last && /^ /.test(x)) last.sp = true;
+    if (!t) return;
+    if (!/[\p{L}\p{N}]/u.test(t)) {
+     if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+     else { last.t += t; last.sp = / $/.test(x); }
+     return;
+    }
+    out.push({ t: pre + t, sp: / $/.test(x) });
+    pre = "";
+   });
+   if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+   if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+   if (out.length) out[out.length - 1].sp = false;
+   return out;
+  }
+  function kSplit(el, by, rise, text) {
+   var s = text != null ? String(text) : el.textContent, units = [];
+   var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+   el.textContent = "";
+   parts.forEach(function (p) {
+    var u = document.createElement("span"), box = u;
+    u.className = "st-u"; u.textContent = p.t;
+    if (by === "line") u.style.display = "block";
+    if (!p.t.trim()) { el.appendChild(u); return; }
+    if (rise) { box = document.createElement("span"); box.className = "st-cut"; box.style.display = u.style.display; box.appendChild(u); }
+    el.appendChild(box);
+    if (p.sp) el.appendChild(document.createTextNode(" "));
+    units.push(u);
+   });
+   return units;
+  }
+  // ==== end kit:text ====
+  // ==== kit:fit@1 ====
+  function kFit(el, o) {
+   o = o || {};
+   var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+   var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+   for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+   }
+   if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+   }
+   return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+  }
+  function kLines(el) {
+   var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+   var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+   while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+     var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+     if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+     row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+   }
+   return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+  }
+  // ==== end kit:fit ====
+
+  var dark = kTone(root) === "dark";
+  if (String(v.backdrop) === "off") ["stage", "glow", "fog", "vig", "grain"].forEach(function (c) { q(".st-" + c).style.display = "none"; });
+
+  // text slots, measured flat (camera off): shrink to fit, then wrap
+  var rig = q(".st-rig"), slide = q(".st-slide"), con = q(".st-con");
+  rig.style.transform = slide.style.transform = "none";
+  var nm = q(".st-name"), ti = q(".st-title");
+  kSplit(nm, "word", 0, v.name);
+  kFit(nm, { min: 100, width: 1500 });
+  kSplit(ti, "word", 0, v.title);
+  ti.style.width = L.titleW + "px";
+  // one line down to 140px, else two lines from full size down to 110px
+  if (!kFit(ti, { max: L.titleF, min: 140, width: L.titleW }).fits) kFit(ti, { max: L.titleF, lines: 2, min: 110, width: L.titleW });
+  // rows cut at | only (kWords would cut a bare Chinese line into words)
+  var items = (/\|/.test(v.items) ? kWords(v.items) : [{ t: String(v.items).trim() }]).slice(0, 4), rowsBox = q(".st-rows"), proto = rowsBox.firstElementChild;
+  rowsBox.textContent = "";
+  items.forEach(function (u) {
+   var r = proto.cloneNode(true), n = r.querySelector(".st-rn");
+   rowsBox.appendChild(r);
+   n.style.width = L.rowW + "px";
+   kSplit(n, "word", 0, u.t);
+   kFit(n, { min: 48, width: L.rowW });
+  });
+  q(".st-n").textContent = items.length;
+  rig.style.transform = "";
+
+  // speed trail (upstream ghosts): the content at an earlier position, under it, blurred along page x
+  var trail = q(".st-trail");
+  trail.appendChild(con.cloneNode(true));
+  var tfl = [].slice.call(trail.querySelectorAll(".st-fl"));
+  var blur = kSpeedBlur(trail, "st", { amount: 0.8, max: 45 });
+  // floaters (upstream FloatWrap): a shadow copy in the same slot, under the floater
+  var fl = [].slice.call(con.querySelectorAll(".st-fl")).map(function (e, i) {
+   var c = e.cloneNode(true);
+   c.classList.add("st-sh");
+   e.parentNode.insertBefore(c, e);
+   return { e: e, g: tfl[i], c: c.style };
+  });
+  // veil, fog, vignette cover the page on purpose; on the slanted wall stacked lines' boxes overlap
+  [].forEach.call(root.querySelectorAll(".st-page span, .st-page div"), function (el) {
+   var own = [].some.call(el.childNodes, function (n) { return n.nodeType === 3 && n.data.trim(); });
+   if (!own) return;
+   el.setAttribute("data-layout-allow-occlusion", "");
+   el.setAttribute("data-layout-allow-overlap", "");
+   if (el.closest(".st-trail, .st-sh")) el.setAttribute("data-layout-allow-caption-zone", "");
+  });
+
+  q(".st-cam").style.perspective = L.d * U + "px";
+  var grain = kGrain(q(".st-grain"), dark ? { opacity: 0.07, blend: "soft-light" } : {});
+  var veil = q(".st-veil").style, edge = q(".st-edge").style, glow = q(".st-glow").style, tr = trail.style;
+  var glide = MT.bezier(0.3, 0.12, 0.72, 0.9), fallE = MT.bezier(0.5, 0.05, 0.6, 1); // upstream glide / easeFall
+  var lxAt = function (t) { return MT.mix(CFG.lx[0], CFG.lx[1], glide(MT.clamp(t / CFG.dur, 0, 1))); };
+  var C = { extrapolateLeft: "clamp", extrapolateRight: "clamp" };
+  var render = function (t) {
+   var lx = lxAt(t), f = 1 / 30;
+   slide.style.transform = "scale(" + (L.s * U).toFixed(4) + ") translateX(" + lx.toFixed(2) + "px)";
+   var shade = MT.interpolate(t, CFG.shade, [0.7, 0.4, 0], C);
+   veil.opacity = shade;
+   edge.opacity = Math.min(1, shade * 1.6);
+   glow.opacity = MT.interpolate(t, CFG.glow, [0.15, 1], C);
+   // speed (page px per frame) sets the trail
+   var sp = Math.abs(lxAt(t - f) - lxAt(t + f)) / 2;
+   tr.transform = "translateX(" + (lxAt(t - CFG.trail) - lx).toFixed(2) + "px)";
+   tr.opacity = Math.min(0.3, sp * 0.021);
+   blur(sp * 30, 0);
+   // floater h: lifted up-left (0.34h, 0.8h), its shadow down-right
+   var dp = MT.interpolate(t, CFG.drop, [0, 1], C);
+   fl.forEach(function (o, i) {
+    var h = (1 - fallE(MT.clamp((dp - CFG.land[i] + CFG.fall) / CFG.fall, 0, 1))) * CFG.lift[i];
+    o.e.style.transform = o.g.style.transform = h > 0.01 ? "translate(" + (-0.34 * h).toFixed(2) + "px," + (-0.8 * h).toFixed(2) + "px)" : "";
+    o.c.display = h > 2 ? "" : "none";
+    o.c.transform = "translate(" + (0.24 * h).toFixed(2) + "px," + (0.46 * h).toFixed(2) + "px) scale(" + (1 + 0.0012 * h).toFixed(4) + ")";
+    o.c.filter = "blur(" + (9 + 0.13 * h).toFixed(2) + "px) brightness(0.2) saturate(0)";
+    o.c.opacity = Math.min(0.26, 0.1 + 0.0011 * h);
+   });
+   grain(t);
+  };
+  var tl = MT.scene(CFG.dur, render);
+  window.__timelines["steep-tilt-glide"] = tl;
+ })();
+</script>
+</template>
+  </body>
+</html>

@@ -1,0 +1,484 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"kicker","type":"string","label":"眉题标签（留空不要）","default":"计费周期"},
+    {"id":"name","type":"string","label":"眉题名字（留空连标志一起去掉）","default":"示例应用"},
+    {"id":"question","type":"string","label":"问句（用 | 切意群）","default":"你想选|哪一种方案？"},
+    {"id":"options","type":"string","label":"选项（用 | 分隔，2–5 条）","default":"按年付费|按月付费|两年合约优惠|学生价|公益价"},
+    {"id":"pick","type":"number","label":"选第几个（1–5）","default":1,"min":1,"max":5,"step":1},
+    {"id":"was","type":"string","label":"原价（留空不要）","default":"42.00"},
+    {"id":"now","type":"string","label":"现价（数字，大字）","default":"34.44"},
+    {"id":"unit","type":"string","label":"现价后缀（留空不要）","default":"/月"},
+    {"id":"note","type":"string","label":"省额说明（留空不要）","default":"省 18% · 年付共 413.28"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>chip-grid-single-select-blackout · 单选反黑</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="chip-grid-single-select-blackout-template">
+      <!-- Ported from video-shotcraft demos/interaction/chip-grid-single-select-blackout/ChipGridSingleSelectBlackout.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition (MT.scene), frames to
+           seconds; neutral --k-* palette (the black target is --k-ink, so a dark skin inverts to a light chip), system
+           fonts, generic Chinese copy, upstream mark and wordmark replaced by a neutral mark and a name variable, prices
+           without currency; chip text 36 -> 48px, chip widths measured from the text, rows 3+2 landscape and 2+2+1
+           portrait, the chip to pick is a variable, the cursor starts inside the frame, porcelain stage replaced by
+           backdrop, vignette and grain; the one-frame grey flash, 5-frame linear blackout, sin 0.04 pulse, 18% lock,
+           blur values, ease names and every frame number kept. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+/* ==== kit:derived@1 ==== */
+.cg {
+  --cg-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+  --cg-panel-2: color-mix(in srgb, var(--k-panel), var(--k-ink) 4%);
+  --cg-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+  --cg-hi: color-mix(in srgb, white 80%, transparent);
+}
+.cg[data-tone="dark"] {
+  --cg-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+  --cg-hi: color-mix(in srgb, white 6%, transparent);
+}
+/* ==== end kit:derived ==== */
+
+/* ==== kit:backdrop@1 ==== */
+.cg-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+.cg-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+/* ==== end kit:backdrop ==== */
+
+/* ==== kit:vignette@1 ==== */
+.cg-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--cg-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.cg[data-tone="dark"] .cg-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+
+/* ==== kit:grain@1 ==== */
+.cg-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+
+/* ==== kit:text@2 ==== */
+.cg-u { display: inline-block; white-space: pre; }
+.cg-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+/* ==== end kit:text ==== */
+
+/* ==== kit:fit@1 ==== */
+/* ==== end kit:fit ==== */
+
+/* ==== kit:mark@1 ==== */
+.cg-mark { display: block; flex: none; }
+/* ==== end kit:mark ==== */
+
+
+        .cg { position: absolute; inset: 0; container-type: size; --cg-top: var(--k-bg); --cg-bot: var(--k-panel); --cg-itop: color-mix(in srgb, var(--k-ink) 88%, var(--k-bg)); --cg-faint: color-mix(in srgb, var(--k-muted) 82%, var(--k-bg)); }
+        .cg[data-tone="dark"] { --cg-top: color-mix(in srgb, var(--k-panel), white 7%); }
+        .cg-backdrop::after { background: radial-gradient(ellipse 58% 62% at 50% 12%, color-mix(in srgb, var(--k-bg) 90%, transparent) 0%, transparent 70%); }
+        .cg-cam { position: absolute; inset: 0; }
+        /* static page = the final picture: the selected chip at the lifted position and the price parts; head and cursor are gone by then */
+        .cg-head { position: absolute; left: 10%; right: 10%; top: 168px; text-align: center; opacity: 0; }
+        .cg-kick { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 14px; }
+        .cg-nm { font-size: 32px; font-weight: 700; letter-spacing: 0.01em; white-space: nowrap; }
+        .cg-lb { display: block; font-size: 28px; font-weight: 600; color: var(--k-accent); letter-spacing: 0.24em; }
+        .cg-q { display: block; margin: 22px auto 0; max-width: 80%; font-size: 84px; font-weight: 700; line-height: 1.2; }
+        .cg-chip { position: absolute; left: 50%; top: 330px; width: max-content; transform: translate(-50%, -50%) scale(0.88); }
+        .cg-face { position: relative; box-sizing: border-box; min-height: 96px; padding: 18px 72px; border-radius: 48px; display: flex; align-items: center; justify-content: center; font-size: 48px; font-weight: 600; line-height: 1.3; color: var(--k-ink); background: linear-gradient(180deg, var(--cg-top), var(--cg-bot)); border: 1px solid var(--cg-line); }
+        .cg-on .cg-face { color: var(--k-bg); background: linear-gradient(180deg, var(--cg-itop), var(--k-ink)); border-color: var(--k-ink); }
+        .cg-flash { position: absolute; inset: 0; border-radius: inherit; background: color-mix(in srgb, var(--k-muted) 60%, transparent); opacity: 0; }
+        .cg-lab { position: relative; display: flex; align-items: center; justify-content: center; min-width: 0; }
+        .cg-txt { display: block; text-align: center; }
+        .cg-tick { display: block; flex: none; width: 0; height: 30px; margin: 0; opacity: 0; fill: none; stroke: var(--k-bg); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+        .cg-on .cg-tick { width: 30px; margin: 0 14px 0 -12px; opacity: 1; }
+        .cg-glow { position: absolute; left: -120px; right: -120px; top: 34px; height: 125px; background: radial-gradient(ellipse 50% 50% at 50% 50%, color-mix(in srgb, var(--k-accent) var(--ga, 0%), transparent) 0%, transparent 70%); filter: blur(6px); }
+        .cg-cur { position: absolute; left: 0; top: 0; width: 46px; height: 50px; opacity: 0; transform-origin: 4px 2px; filter: drop-shadow(0 3px 5px color-mix(in srgb, var(--cg-shade) 28%, transparent)); }
+        .cg-res { position: absolute; left: 10%; right: 10%; top: 452px; display: flex; justify-content: center; align-items: flex-end; gap: 44px; }
+        .cg-was { flex: none; height: 82px; clip-path: inset(0); }
+        .cg-wt { position: relative; font-size: 60px; font-weight: 600; line-height: 1.3; font-variant-numeric: tabular-nums; color: var(--cg-faint); white-space: nowrap; }
+        .cg-strike { position: absolute; left: -4px; top: 54%; width: calc(100% + 8px); height: 4px; border-radius: 2px; background: var(--cg-faint); }
+        .cg-now { display: flex; align-items: baseline; gap: 10px; }
+        .cg-big { font-size: 180px; font-weight: 700; line-height: 0.94; letter-spacing: -0.05em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .cg-unit { font-size: 48px; font-weight: 500; color: var(--k-muted); white-space: nowrap; }
+        .cg-pill { position: absolute; left: 10%; right: 10%; top: 690px; display: flex; justify-content: center; }
+        .cg-pt { max-width: 100%; box-sizing: border-box; padding: 12px 30px; border-radius: 99px; background: var(--k-accent); color: var(--k-on-accent); font-size: 40px; font-weight: 600; line-height: 1.3; text-align: center; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 10px 26px -10px color-mix(in srgb, var(--k-accent) 80%, transparent); }
+        @container (orientation: portrait) {
+          .cg-head { top: 262px; }
+          .cg-chip { top: 520px; }
+          .cg-on .cg-tick { width: 30px; margin: 0 14px 0 -12px; opacity: 1; }
+        .cg-glow { left: -96px; right: -96px; }
+          .cg-res { top: 690px; flex-direction: column; align-items: center; gap: 8px; }
+          .cg-pill { top: 1010px; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="chip-grid-single-select-blackout">
+        <div class="cg">
+          <div class="cg-backdrop"></div>
+          <div class="cg-vig"></div>
+          <div class="cg-grain"></div>
+          <div class="cg-cam">
+            <div class="cg-head">
+              <div class="cg-kick"><span class="cg-lb">计费周期</span></div>
+              <div class="cg-q">你想选哪一种方案？</div>
+            </div>
+            <div class="cg-chips">
+              <div class="cg-chip cg-on"><div class="cg-face"><span class="cg-lab"><svg class="cg-tick" viewBox="0 0 18 18"><path d="M3.5 9.5 L7.3 13 L14.5 5"/></svg><span class="cg-txt">按年付费</span></span></div></div>
+            </div>
+            <div class="cg-res">
+              <div class="cg-was"><div class="cg-wt">42.00<div class="cg-strike"></div></div></div>
+              <div class="cg-now"><span class="cg-big">34.44</span><span class="cg-unit">/月</span></div>
+            </div>
+            <div class="cg-pill"><div class="cg-pt">省 18% · 年付共 413.28</div></div>
+            <svg class="cg-cur" viewBox="0 0 20 22"><path d="M2 1 L2 17 L6.5 13.2 L9.4 20 L12.4 18.7 L9.5 12 L15 11.6 Z" style="fill:var(--k-ink);stroke:var(--k-bg);stroke-width:1.4;stroke-linejoin:round"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== end kit:tone ====
+
+// ==== kit:shadow@1 ====
+function kShadow(e, strength) {
+  e = Math.max(0, e);
+  var s = strength == null ? 1 : strength, r = function (x) { return Math.round(x * 10) / 10; };
+  var c = function (a) { return "color-mix(in srgb, var(--cg-shade) " + r(Math.min(1, a) * 100) + "%, transparent)"; };
+  return "0 " + r(0.5 + e * 0.06) + "px " + r(1 + e * 0.18) + "px " + c((0.12 * s) / (1 + e / 24)) + ", " +
+    "0 " + r(e * 0.55) + "px " + r(e * 1.3) + "px " + r(-e * 0.22) + "px " + c((0.08 + (Math.min(e, 64) / 64) * 0.22) * s);
+}
+// ==== end kit:shadow ====
+
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+      "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+      "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+      "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+      "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+}
+// ==== end kit:grain ====
+
+// ==== kit:text@2 ====
+var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+function kWords(s, key) {
+  s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+  var cut = function (x) {
+    if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+    return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+  };
+  var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+  var pre = "";
+  bits.forEach(function (x) {
+    var t = x.trim(), last = out[out.length - 1];
+    if (last && /^ /.test(x)) last.sp = true;
+    if (!t) return;
+    if (!/[\p{L}\p{N}]/u.test(t)) {
+      if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+      else { last.t += t; last.sp = / $/.test(x); }
+      return;
+    }
+    out.push({ t: pre + t, sp: / $/.test(x) });
+    pre = "";
+  });
+  if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+  if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+  if (out.length) out[out.length - 1].sp = false;
+  return out;
+}
+function kSplit(el, by, rise, text) {
+  var s = text != null ? String(text) : el.textContent, units = [];
+  var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+  el.textContent = "";
+  parts.forEach(function (p) {
+    var u = document.createElement("span"), box = u;
+    u.className = "cg-u"; u.textContent = p.t;
+    if (by === "line") u.style.display = "block";
+    if (!p.t.trim()) { el.appendChild(u); return; }
+    if (rise) { box = document.createElement("span"); box.className = "cg-cut"; box.style.display = u.style.display; box.appendChild(u); }
+    el.appendChild(box);
+    if (p.sp) el.appendChild(document.createTextNode(" "));
+    units.push(u);
+  });
+  return units;
+}
+// ==== end kit:text ====
+
+// ==== kit:fit@1 ====
+function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+      var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+      if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+      row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+
+// ==== kit:mark@1 ====
+function kMark(size) {
+  return '<svg class="cg-mark" width="' + size + '" height="' + size + '" viewBox="0 0 128 128" aria-hidden="true">' +
+    '<rect class="cg-mark-box" x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/>' +
+    '<circle class="cg-mark-dot" cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/>' +
+    '<rect class="cg-mark-bar" x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg>';
+}
+// ==== end kit:mark ====
+
+
+          var S = function (f) { return f / 30; };
+          var CFG = { // frames / 30
+            dur: 5.8, kickDur: S(10), trackDur: S(18),
+            q: S(3), qEach: S(16), qGap: S(2.5),
+            chip: S(8), chipGap: S(3), chipDur: S(16),
+            cur: S(26), curDur: S(28), showAt: S(24), showDur: S(8), hideAt: S(70), hideDur: S(12),
+            flash: 56, blackDur: 5, pulseDur: 9, fadeDur: 9,       // flash = the one grey frame; blackout 57-62f, pulse and 18% lock 57-66f
+            collapse: 101, goneDur: 9, liftDur: S(18), titleOut: S(97), titleOutDur: S(16),
+            was: 108, strikeAt: S(118), strikeDur: S(8), now: S(116), nowEach: S(14), nowGap: S(1.2), unitAt: S(124), unitDur: S(10),
+            pill: S(128), pillDur: S(14), push: 0.015, pushIn: [S(20), S(60)], pushOut: S(30)
+          };
+          // layout per orientation (px): chips per row, first row y, lift target (the chip's centre y), cursor start (fractions of the frame)
+          var LAND = { per: 3, rowY: 452, target: 330, rowMax: 0.84, curX: 0.78, curY: 0.89 };
+          var PORT = { per: 2, rowY: 640, target: 520, rowMax: 0.8, curX: 0.8, curY: 0.6 };
+          var v = { kicker: "计费周期", name: "示例应用", question: "你想选|哪一种方案？", options: "按年付费|按月付费|两年合约优惠|学生价|公益价", pick: 1, was: "42.00", now: "34.44", unit: "/月", note: "省 18% · 年付共 413.28", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".cg");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          var dark = kTone(root) === "dark";
+          var off = String(v.backdrop) === "off";
+          var grain = null;
+          if (off) [".cg-backdrop", ".cg-vig", ".cg-grain"].forEach(function (s) { q(s).style.display = "none"; });
+          else grain = kGrain(q(".cg-grain"));
+          var txt = function (x) { return String(x == null ? "" : x).trim(); };
+          var lin = function (f, a, b) { return MT.clamp((f - a) / (b - a), 0, 1); };
+          var oq = function (x) { return 1 - (1 - x) * (1 - x); };
+          var rgb = function (c) { return kRGB(root, c); };
+          var C = { top: rgb("var(--cg-top)"), bot: rgb("var(--cg-bot)"), itop: rgb("var(--cg-itop)"), ink: rgb("var(--k-ink)"), bg: rgb("var(--k-bg)"), faint: rgb("var(--cg-faint)"), muted: rgb("var(--k-muted)") };
+          var mixc = function (a, b, p) { return "rgb(" + a.map(function (x, i) { return Math.round(x + (b[i] - x) * p); }).join(",") + ")"; };
+          var cam = q(".cg-cam"), sk = dark ? 2.4 : 1;
+
+          // eyebrow: neutral mark + name + tracked label (each part leaves when its variable is empty)
+          var head = q(".cg-head"), kick = q(".cg-kick"), lab = q(".cg-lb");
+          var nm = txt(v.name), kt = txt(v.kicker), ne = null;
+          kick.innerHTML = "";
+          if (nm) {
+            var mk = document.createElement("span");
+            mk.style.display = "flex";
+            mk.innerHTML = kMark(32);
+            kick.appendChild(mk);
+            ne = document.createElement("span");
+            ne.className = "cg-nm"; ne.textContent = nm;
+            kick.appendChild(ne);
+          }
+          if (kt) { lab.textContent = (nm ? "· " : "") + kt; kick.appendChild(lab); }
+          if (!nm && !kt) kick.style.display = "none";
+          var headW = head.clientWidth || FW * 0.8;
+          if (kt) kFit(lab, { lines: 1, min: 28, width: Math.max(160, headW - (ne ? 32 + 14 + ne.offsetWidth + 14 : 0)) });
+
+          // question: units rise out of their own line, one per word
+          var qe = q(".cg-q"), qUnits = [];
+          if (txt(v.question)) {
+            qUnits = kSplit(qe, "word", true, v.question);
+            kFit(qe, { lines: P ? 2 : 1, min: 72 });
+          } else qe.style.display = "none";
+
+          // chips: built from the options, measured, then placed on rows (3+2 landscape, 2+2+1 portrait); positions stay locked
+          var opts = txt(v.options).split("|").map(txt).filter(Boolean).slice(0, 5);
+          if (opts.length < 2) opts = ["按年付费", "按月付费"];
+          var n = opts.length, pick = MT.clamp(Math.round(+v.pick || 1), 1, n) - 1;
+          var per = P ? L.per : (n === 4 ? 2 : Math.min(L.per, n));
+          var box = q(".cg-chips"), GAP = 22, rowMax = FW * L.rowMax, maxW = (rowMax - GAP * (per - 1)) / per;
+          box.innerHTML = "";
+          var chips = opts.map(function (s, i) {
+            var c = document.createElement("div");
+            c.className = "cg-chip";
+            c.style.cssText = "left:0;top:0;transform:none;max-width:" + maxW + "px";
+            c.innerHTML = (i === pick ? '<i class="cg-glow" data-layout-allow-overflow></i>' : "") + '<div class="cg-face"><i class="cg-flash"></i><span class="cg-lab"><svg class="cg-tick" viewBox="0 0 18 18"><path d="M3.5 9.5 L7.3 13 L14.5 5"/></svg><span class="cg-txt"></span></span></div>';
+            var tx = c.querySelector(".cg-txt");
+            tx.textContent = s;
+            box.appendChild(c);
+            var f = kFit(tx, { lines: 1, min: 40, width: maxW - 144 - (i === pick ? 32 : 0) });
+            if (i !== pick) c.querySelector(".cg-face").style.boxShadow = "inset 0 1px 0 var(--cg-hi)," + kShadow(6, 1.1 * sk);
+            if (f.lines === 1) tx.style.whiteSpace = "nowrap";
+            return { el: c, face: c.querySelector(".cg-face"), flash: c.querySelector(".cg-flash"), tick: c.querySelector(".cg-tick"), glow: c.querySelector(".cg-glow"), w: c.offsetWidth, h: c.offsetHeight };
+          });
+          var y = L.rowY;
+          for (var r = 0; r < n; r += per) {
+            var row = chips.slice(r, r + per), rw = GAP * (row.length - 1), rh = 0;
+            row.forEach(function (c) { rw += c.w; rh = Math.max(rh, c.h); });
+            var x = (FW - rw) / 2;
+            row.forEach(function (c) { c.x = x; c.y = y; x += c.w + GAP; });
+            y += rh + GAP;
+          }
+          chips.forEach(function (c) {
+            c.el.style.cssText = "left:" + c.x + "px;top:" + c.y + "px;width:" + c.w + "px;height:" + c.h + "px";
+          });
+          var sel = chips[pick], tgx = sel.x + sel.w * 0.62, tgy = sel.y + sel.h * 0.58;
+          var cx0 = sel.x + sel.w / 2, cy0 = sel.y + sel.h / 2;
+
+          // result: old price (struck), new price (chars rise), unit, saving pill
+          var res = q(".cg-res"), was = q(".cg-was"), wt = q(".cg-wt"), strike = q(".cg-strike"), nowEl = q(".cg-big"), unitEl = q(".cg-unit"), pill = q(".cg-pill"), pt = q(".cg-pt");
+          var wv = txt(v.was), nv = txt(v.now), uv = txt(v.unit), pv = txt(v.note);
+          if (wv) { wt.textContent = wv; wt.appendChild(strike); } else was.style.display = "none";
+          var nowUnits = [];
+          if (nv) {
+            nowUnits = kSplit(nowEl, "char", true, nv);
+            kFit(nowEl, { lines: 1, min: 72, width: (res.clientWidth || FW * 0.8) - (wv && !P ? was.offsetWidth + 44 : 0) - (uv ? 150 : 0) });
+          } else nowEl.style.display = "none";
+          if (uv) unitEl.textContent = uv; else unitEl.style.display = "none";
+          if (pv) { pt.textContent = pv; kFit(pt, { lines: 1, min: 40, width: (pill.clientWidth || FW * 0.8) - 60 }); } else pill.style.display = "none";
+
+          var rise = function (u, p) {
+            u.style.opacity = p > 0 ? 1 : 0;
+            u.style.transform = "translateY(calc(" + ((1 - p) * 105).toFixed(2) + "% + " + ((1 - p) * 0.3).toFixed(3) + "em))";
+          };
+
+          function render(t) {
+            var f = t * 30 + 1e-4; // frames at 30 fps
+            if (grain) grain(t);
+            // camera: a very slow 1.5% push while the question is read, back to 1 after the collapse
+            cam.style.transform = "scale(" + (1 + CFG.push * MT.ramp(t, CFG.pushIn[0], CFG.pushIn[1], "smooth") - CFG.push * MT.ramp(t, S(CFG.collapse), CFG.pushOut, "smooth")).toFixed(4) + ")";
+            // head
+            var tOut = MT.ramp(t, CFG.titleOut, CFG.titleOutDur, "exit");
+            head.style.opacity = 1 - tOut;
+            head.style.transform = "translateY(" + (-30 * tOut).toFixed(2) + "px)";
+            kick.style.opacity = MT.ramp(t, 0, CFG.kickDur, "out");
+            lab.style.letterSpacing = (0.24 + 0.3 * (1 - MT.ramp(t, 0, CFG.trackDur, "snappy"))).toFixed(3) + "em";
+            qUnits.forEach(function (u, i) { rise(u, MT.ramp(t, CFG.q + i * CFG.qGap, CFG.qEach, "snappy")); });
+            // two-step press: one grey frame, then five linear frames to black, a sin pulse, the rest sink to 18% in place
+            var flash = f >= CFG.flash && f < CFG.flash + 1 ? 1 : 0;
+            var bk = lin(f, CFG.flash + 1, CFG.flash + 1 + CFG.blackDur);
+            var pr = lin(f, CFG.flash + 1, CFG.flash + 1 + CFG.pulseDur);
+            var pulse = 1 + (pr > 0 ? Math.sin(pr * Math.PI) * 0.04 : 0);
+            var fade = oq(lin(f, CFG.flash + 1, CFG.flash + 1 + CFG.fadeDur));
+            var gone = oq(lin(f, CFG.collapse, CFG.collapse + CFG.goneDur));
+            var lift = MT.ramp(t, S(CFG.collapse), CFG.liftDur, "smooth");
+            chips.forEach(function (c, i) {
+              var inP = MT.ramp(t, CFG.chip + i * CFG.chipGap, CFG.chipDur, "snappy"), s = c.el.style;
+              s.top = (c.y + (1 - inP) * 30).toFixed(2) + "px";
+              if (i !== pick) { s.opacity = (inP * MT.mix(1, 0.18, fade) * (1 - gone)).toFixed(4); s.transform = "none"; return; }
+              s.opacity = inP.toFixed(4);
+              s.transform = "translate(" + ((FW / 2 - cx0) * lift).toFixed(2) + "px," + ((L.target - cy0) * lift).toFixed(2) + "px) scale(" + (pulse * MT.mix(1, 0.88, lift)).toFixed(4) + ")";
+              var fs = c.face.style, elev = 6 + 10 * bk + 26 * lift;
+              fs.background = "linear-gradient(180deg," + mixc(C.top, C.itop, bk) + "," + mixc(C.bot, C.ink, bk) + ")";
+              fs.borderColor = bk > 0 ? "color-mix(in srgb, var(--k-ink) " + (10 + 90 * bk).toFixed(1) + "%, transparent)" : "var(--cg-line)";
+              fs.boxShadow = "inset 0 1px 0 color-mix(in srgb, var(--cg-hi) " + (100 * (1 - 0.85 * bk)).toFixed(1) + "%, transparent)," + kShadow(elev, (1.1 + 0.9 * bk) * sk);
+              fs.color = mixc(C.ink, C.bg, bk);
+              c.flash.style.opacity = flash;
+              c.tick.style.cssText = "opacity:" + bk + ";width:" + (30 * bk).toFixed(2) + "px;margin:0 " + (14 * bk).toFixed(2) + "px 0 " + (-12 * bk).toFixed(2) + "px";
+              c.glow.style.setProperty("--ga", (20 * bk * (1 - 0.5 * lift)).toFixed(2) + "%");
+            });
+            // cursor: arc in from the lower right, presses at the flash frame, leaves
+            var cp = MT.ramp(t, CFG.cur, CFG.curDur, "swift");
+            var press = f >= CFG.flash - 1 && f < CFG.flash + 6 ? 1 - 0.16 * Math.sin(Math.PI * (f - CFG.flash + 1) / 7) : 1;
+            var cs = q(".cg-cur").style;
+            cs.left = MT.mix(FW * L.curX, tgx, cp).toFixed(2) + "px";
+            cs.top = (MT.mix(FH * L.curY, tgy, cp) - Math.sin(Math.PI * cp) * 60).toFixed(2) + "px";
+            cs.transform = "scale(" + press.toFixed(3) + ")";
+            cs.opacity = (MT.ramp(t, CFG.showAt, CFG.showDur, "out") * (1 - MT.ramp(t, CFG.hideAt, CFG.hideDur, "out"))).toFixed(4);
+            // result
+            was.style.opacity = f >= CFG.was ? 1 : 0;
+            var oldIn = MT.ramp(t, S(CFG.was), S(14), "snappy"), sw = MT.ramp(t, CFG.strikeAt, CFG.strikeDur, "swift");
+            wt.style.transform = "translateY(" + ((1 - oldIn) * 110).toFixed(1) + "%)";
+            wt.style.color = mixc(C.muted, C.faint, sw);
+            strike.style.width = "calc(" + (sw * 100).toFixed(1) + "% + " + (8 * sw).toFixed(1) + "px)";
+            nowUnits.forEach(function (u, i) { rise(u, MT.ramp(t, CFG.now + i * CFG.nowGap, CFG.nowEach, "snappy")); });
+            unitEl.style.opacity = MT.ramp(t, CFG.unitAt, CFG.unitDur, "out");
+            var sv = MT.ramp(t, CFG.pill, CFG.pillDur, "overshoot");
+            pill.style.opacity = Math.min(1, sv * 1.5);
+            pt.style.transform = "translateY(" + ((1 - sv) * 16).toFixed(2) + "px) scale(" + (0.8 + 0.2 * sv).toFixed(3) + ")";
+          }
+          window.__timelines["chip-grid-single-select-blackout"] = MT.scene(CFG.dur, render);
+        })();
+      </script>
+    </template>
+  </body>
+</html>

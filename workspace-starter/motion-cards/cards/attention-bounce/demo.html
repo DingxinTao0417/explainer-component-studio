@@ -1,0 +1,476 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"面板标题（| 切意群）","default":"笔记一键整理"},
+    {"id":"kicker","type":"string","label":"眉题（留空不要）","default":"本次更新"},
+    {"id":"items","type":"string","label":"面板条目（| 分隔，1–3 条）","default":"自动分出段落|生成要点摘要|导出成文档"},
+    {"id":"badge","type":"string","label":"角标（1–3 个字符，留空不要）","default":"1"},
+    {"id":"logo","type":"string","label":"图标上的标志图（从项目根目录写起；留空用示意标志）","default":""},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底（墙面和窗光）"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>attention-bounce · 图标求关注弹跳</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="attention-bounce-template">
+      <!-- Ported from video-shotcraft demos/effects/icon-performance-moves/AttentionBounce.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds
+           (take-off and landing snapped to the 30 fps grid); neutral --k-* palette, system fonts, generic copy: the sand
+           wall becomes the background mixed 14-22% toward ink+accent with a key light of 45% background (upstream cream
+           0.9), neighbour tiles mixed from muted / accent / accent-2 / ink, the window-blind bands plain white at 0.5 on
+           light skins and soft-light 0.6 on dark ones (upstream soft-light 0.9: invisible on a pale wall); the upstream
+           app icon and mark become a light tile with the neutral placeholder mark or a logo variable; panel copy from
+           variables, kicker 32px (upstream 24), title 72px (68), row names 44px (36), row index 01-03 in 40px mono
+           (time codes, 32px), right-hand meta column dropped, panel 860 wide anchored by its bottom edge at y 580
+           (upstream top 148, 392 high); portrait re-stacks the scene (icon centred at x 540, panel above it, two
+           neighbours, camera centre 540,790, band layer 2400px tall) and opens the panel from 20px below without the
+           side slide; hold extended to 5.6s. Kept: 4 jumps 12/28/48/72f with 14/18/22/26f air time and 0.35/0.6/0.85/1.2
+           icon-height peaks, speed stretch 0.1, 2f contact squash 0.1-0.167 (x1.4 then x0.9), 6-12f crouch 0.08,
+           damped-cosine final landing, ripples and splash dots, two contact shadows, neighbour defocus 30-96f (7px,
+           saturate 0.7, opacity 0.6), camera push 1.015 / +0.065 at 72-90f / +0.012 at 110-156f around 720,700, badge
+           spring 11/260 at 100f, run dot 102-110f, panel spring 17/150 at 106f from -120,260 and scale 0.2, rows 114f
+           +3f each, band drift 14px, vignette 0.16 and grain. -->
+      <style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+/* ==== kit:fonts@2 ==== (mono only) */
+@font-face { font-family: "Consolas"; src: local("Consolas"); }
+#root {
+--k-bg: var(--mc-bg, #ffffff);
+--k-panel: var(--mc-panel, #f4f5f7);
+--k-ink: var(--mc-ink, #15171c);
+--k-muted: var(--mc-muted, #6b7280);
+--k-accent: var(--mc-accent, #e8590c);
+--k-accent-2: var(--mc-accent-2, #2563eb);
+--k-on-accent: var(--mc-on-accent, #ffffff);
+--k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+--k-mono: var(--mc-mono, Consolas, monospace);
+position: absolute;
+inset: 0;
+overflow: hidden;
+font-family: var(--k-font);
+color: var(--k-ink);
+}
+/* ==== kit:derived@1 ==== */
+.ab {
+--ab-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+--ab-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+--ab-hi: color-mix(in srgb, white 80%, transparent);
+}
+.ab[data-tone="dark"] {
+--ab-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+--ab-hi: color-mix(in srgb, white 6%, transparent);
+}
+/* ==== kit:vignette@1 ==== */
+.ab-vig {
+position: absolute; inset: 0; pointer-events: none;
+--vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--ab-shade);
+background:
+  radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+  radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.ab[data-tone="dark"] .ab-vig { --vs: 0.55; }
+/* ==== kit:grain@1 ==== */
+.ab-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== kit:text@2 ==== */
+.ab-u { display: inline-block; white-space: pre; }
+
+/* Static = the landed frame (5.2s+): camera pushed to 1.092, neighbours defocused, badge, run dot and panel in.
+  Landscape is laid out on 1920x1080 as upstream (icon 360px at x 420-780, ground y 960); portrait below. */
+.ab { position: absolute; inset: 0; container-type: size; --ab-tint: color-mix(in srgb, var(--k-ink) 78%, var(--k-accent)); }
+.ab-bg, .ab-wall, .ab-cam { position: absolute; inset: 0; }
+/* wall: key light top-left, accent-2 fill top-right, a warm vertical wash (upstream sand stage) */
+.ab-wall {
+background:
+  radial-gradient(ellipse 58% 62% at 30% 5%, color-mix(in srgb, var(--k-bg) 45%, transparent), transparent 70%),
+  radial-gradient(ellipse 50% 46% at 85% 20%, color-mix(in srgb, var(--k-accent-2) 10%, transparent), transparent 72%),
+  linear-gradient(180deg, color-mix(in srgb, var(--k-bg), var(--ab-tint) 14%), color-mix(in srgb, var(--k-bg), var(--ab-tint) 18%) 60%, color-mix(in srgb, var(--k-bg), var(--ab-tint) 22%));
+}
+.ab[data-tone="dark"] .ab-wall {
+background:
+  radial-gradient(ellipse 58% 62% at 30% 5%, color-mix(in srgb, var(--k-ink) 12%, transparent), transparent 70%),
+  radial-gradient(ellipse 50% 46% at 85% 20%, color-mix(in srgb, var(--k-accent-2) 20%, transparent), transparent 72%),
+  linear-gradient(180deg, color-mix(in srgb, var(--k-bg), white 5%), var(--k-bg) 60%, color-mix(in srgb, var(--k-bg), black 30%));
+}
+/* window-blind light: two soft bright bands per 620px fading out down the wall; plain white on light skins (soft-light
+   white barely lifts a pale wall), soft-light as upstream on dark ones */
+.ab-shaft {
+position: absolute; left: -400px; top: -200px; width: 2800px; height: 1500px; transform-origin: 0 0; transform: translateX(11px) rotate(-24deg);
+background: repeating-linear-gradient(90deg, transparent 0 250px, color-mix(in srgb, white 85%, transparent) 280px, color-mix(in srgb, white 70%, transparent) 400px, transparent 430px 620px);
+filter: blur(6px); opacity: 0.5;
+-webkit-mask-image: linear-gradient(180deg, #000 45%, transparent 75%); mask-image: linear-gradient(180deg, #000 45%, transparent 75%);
+}
+.ab[data-tone="dark"] .ab-shaft { opacity: 0.6; mix-blend-mode: soft-light; }
+.ab-cam { transform-origin: 720px 700px; transform: scale(1.092); }
+/* the dock: a frosted bar running past both frame edges */
+.ab-dock {
+position: absolute; left: -80px; right: -80px; top: 570px; height: 424px; border-radius: 72px;
+background: linear-gradient(180deg, color-mix(in srgb, var(--k-bg) 72%, transparent), color-mix(in srgb, var(--k-panel) 60%, transparent));
+box-shadow: inset 0 1.5px 0 var(--ab-hi), inset 0 0 0 1px color-mix(in srgb, var(--k-ink) 7%, transparent), 0 2.3px 6.4px color-mix(in srgb, var(--ab-shade) 5.9%, transparent), 0 16.5px 39px -6.6px color-mix(in srgb, var(--ab-shade) 20.1%, transparent);
+}
+.ab-nb {
+position: absolute; top: 600px; width: 360px; height: 360px; border-radius: 82px; overflow: hidden;
+--g: color-mix(in srgb, white 90%, var(--c));
+background: linear-gradient(180deg, color-mix(in srgb, var(--c), white 16%), color-mix(in srgb, var(--c), black 14%));
+box-shadow: inset 0 2px 0 color-mix(in srgb, white 35%, transparent), inset 0 -6px 14px color-mix(in srgb, black 12%, transparent), 0 1px 2.4px color-mix(in srgb, var(--ab-shade) 9%, transparent), 0 4.4px 10.4px -1.8px color-mix(in srgb, var(--ab-shade) 10.8%, transparent);
+filter: blur(7px) saturate(0.7); opacity: 0.6;
+}
+.ab-nb svg { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: var(--g); stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; }
+.ab-nb .ab-f { fill: var(--g); }
+.ab-n0 { left: 0; --c: color-mix(in srgb, var(--k-muted) 72%, var(--k-accent)); }
+.ab-n1 { left: 840px; --c: color-mix(in srgb, var(--k-muted) 60%, var(--k-accent-2)); }
+.ab-n2 { left: 1260px; --c: color-mix(in srgb, var(--k-panel), var(--k-ink) 12%); --g: var(--k-muted); }
+.ab[data-tone="dark"] .ab-n0 { --c: color-mix(in srgb, var(--k-muted) 75%, var(--k-bg)); } /* a yellow accent mixed in goes olive */
+.ab-n3 { left: 1680px; --c: color-mix(in srgb, var(--k-ink) 88%, var(--k-bg)); --g: var(--k-bg); }
+.ab-fx { position: absolute; left: 110px; top: 760px; width: 980px; height: 300px; overflow: visible; }
+.ab-fx ellipse { fill: none; stroke: var(--k-muted); filter: blur(2.5px); }
+.ab-fx circle { fill: color-mix(in srgb, var(--k-muted) 70%, var(--k-bg)); }
+/* contact shadows: small and firm + wide and soft, centred under the icon (the script sets their widths) */
+.ab-s1, .ab-s2 { position: absolute; left: 600px; border-radius: 50%; }
+.ab-s1 { top: 950px; height: 22px; width: 302px; margin-left: -151px; background: color-mix(in srgb, var(--ab-shade) 34%, transparent); filter: blur(7px); }
+.ab-s2 { top: 944px; height: 46px; width: 374px; margin-left: -187px; background: color-mix(in srgb, var(--ab-shade) 16%, transparent); filter: blur(16px); }
+.ab-dot { position: absolute; left: 593px; top: 976px; width: 14px; height: 14px; border-radius: 7px; background: var(--k-muted); }
+.ab-hero {
+position: absolute; left: 420px; top: 600px; width: 360px; height: 360px; border-radius: 82px; transform-origin: 50% 100%;
+box-shadow: 0 1.1px 2.8px color-mix(in srgb, var(--ab-shade) 10.2%, transparent), 0 5.5px 13px -2.2px color-mix(in srgb, var(--ab-shade) 13.7%, transparent);
+}
+.ab-face {
+position: absolute; inset: 0; border-radius: 82px; overflow: hidden; display: flex; align-items: center; justify-content: center;
+background: linear-gradient(180deg, color-mix(in srgb, var(--k-bg), var(--k-panel) 25%), color-mix(in srgb, var(--k-panel), var(--k-ink) 4%));
+box-shadow: inset 0 2px 0 var(--ab-hi), inset 0 -6px 14px color-mix(in srgb, var(--ab-shade) 12%, transparent), inset 0 0 0 1px color-mix(in srgb, var(--k-ink) 8%, transparent);
+}
+.ab-face::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse closest-side at 38% 0%, color-mix(in srgb, white 35%, transparent), transparent); }
+.ab-mark { display: block; width: 62%; height: 62%; background: center / contain no-repeat; }
+.ab-badge {
+position: absolute; right: -34px; top: -34px; box-sizing: border-box; min-width: 104px; height: 104px; padding: 0 24px; border-radius: 52px;
+display: flex; align-items: center; justify-content: center; font-size: 56px; font-weight: 700; line-height: 1; white-space: nowrap; color: var(--k-on-accent);
+background: linear-gradient(180deg, color-mix(in srgb, var(--k-accent), white 10%), color-mix(in srgb, var(--k-accent), black 8%));
+box-shadow: 0 0 0 7px var(--k-bg), 0 10px 22px color-mix(in srgb, var(--k-accent) 35%, transparent);
+}
+/* the panel springs from its bottom-left corner (portrait: from above the icon's right shoulder) */
+.ab-panel {
+position: absolute; left: 880px; bottom: 500px; width: 860px; box-sizing: border-box; padding: 36px 46px; border-radius: 36px; transform-origin: 0% 100%;
+background: linear-gradient(180deg, var(--k-bg), color-mix(in srgb, var(--k-bg), var(--k-panel) 70%));
+box-shadow: inset 0 1.5px 0 var(--ab-hi), inset 0 0 0 1px color-mix(in srgb, var(--k-ink) 8%, transparent), 0 3.1px 8.9px color-mix(in srgb, var(--ab-shade) 5.3%, transparent), 0 24.2px 57.2px -9.7px color-mix(in srgb, var(--ab-shade) 28.9%, transparent);
+}
+.ab-kick { display: flex; align-items: center; gap: 16px; font-size: 32px; font-weight: 700; line-height: 1.25; letter-spacing: 0.16em; color: var(--k-accent); }
+.ab-kick::after { content: ""; flex: 1; min-width: 40px; height: 1.5px; background: var(--ab-line); }
+.ab-kt { display: block; max-width: 80%; }
+.ab-title { margin-top: 16px; font-size: 72px; font-weight: 700; line-height: 1.2; }
+.ab-list { margin-top: 20px; display: flex; flex-direction: column; gap: 6px; }
+.ab-it { display: flex; align-items: center; gap: 24px; min-height: 56px; }
+.ab-it b { flex: none; width: 64px; font: 400 40px/1.25 var(--k-mono); color: var(--k-muted); }
+.ab-it i { flex: none; width: 8px; height: 48px; border-radius: 4px; background: var(--k-accent-2); }
+.ab-it:nth-child(2) i { background: color-mix(in srgb, var(--k-muted) 60%, var(--k-accent-2)); }
+.ab-it:nth-child(3) i { background: var(--k-accent); }
+.ab-nm { flex: 1; min-width: 0; font-size: 44px; font-weight: 600; line-height: 1.25; }
+/* portrait 1080x1920: icon centred on x 540, ground y 1194, panel bottom at y 774 above it, two neighbours;
+  settled (zoom 1.092 around 540,790) the panel spans x 114-966 from y 320, the dock ends at y 1268 */
+@container (orientation: portrait) {
+.ab-shaft { left: -700px; top: -300px; height: 2400px; }
+.ab-cam { transform-origin: 540px 790px; }
+.ab-dock { top: 804px; }
+.ab-nb { top: 834px; }
+.ab-n0 { left: -60px; }
+.ab-n1 { left: 780px; }
+.ab-n2, .ab-n3 { display: none; }
+.ab-fx { left: 50px; top: 994px; }
+.ab-s1, .ab-s2 { left: 540px; }
+.ab-s1 { top: 1184px; }
+.ab-s2 { top: 1178px; }
+.ab-dot { left: 533px; top: 1210px; }
+.ab-hero { left: 360px; top: 834px; }
+.ab-panel { left: 150px; bottom: 1146px; width: 780px; padding: 36px 40px; transform-origin: 75% 100%; }
+}
+</style>
+
+      <div id="root" data-composition-id="attention-bounce">
+  <div class="ab">
+    <div class="ab-bg">
+      <div class="ab-wall"></div>
+      <div class="ab-shaft" data-layout-allow-overflow></div>
+      <div class="ab-vig"></div>
+      <div class="ab-grain"></div>
+    </div>
+    <div class="ab-cam">
+      <div class="ab-dock" data-layout-allow-overflow></div>
+      <div class="ab-nb ab-n0" data-layout-allow-overflow><svg viewBox="0 0 360 360"><path d="M110 250C110 150 190 100 260 100C260 190 210 250 110 250ZM110 250L200 160" /></svg></div>
+      <div class="ab-nb ab-n1" data-layout-allow-overflow><svg viewBox="0 0 360 360"><rect x="90" y="120" width="180" height="130" rx="18" /><path d="M95 130L180 195L265 130" /></svg></div>
+      <div class="ab-nb ab-n2"><svg viewBox="0 0 360 360"><rect x="95" y="130" width="170" height="120" rx="22" /><circle cx="180" cy="190" r="36" /><path d="M140 130L150 108L210 108L220 130" /></svg></div>
+      <div class="ab-nb ab-n3" data-layout-allow-overflow><svg viewBox="0 0 360 360"><path d="M150 240L150 110L250 92L250 222" /><circle class="ab-f" cx="128" cy="242" r="24" /><circle class="ab-f" cx="228" cy="224" r="24" /></svg></div>
+      <svg class="ab-fx" viewBox="-490 -200 980 300"></svg>
+      <i class="ab-s2"></i><i class="ab-s1"></i>
+      <i class="ab-dot"></i>
+      <div class="ab-hero">
+        <div class="ab-face">
+          <!-- kit:mark@1 markup (kMark), inlined so the static page shows it -->
+          <svg class="ab-mark" viewBox="0 0 128 128" aria-hidden="true"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)" /><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)" /><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)" /></svg>
+        </div>
+        <b class="ab-badge">1</b>
+      </div>
+      <div class="ab-panel">
+        <div class="ab-kick"><span class="ab-kt">本次更新</span></div>
+        <div class="ab-title">笔记一键整理</div>
+        <div class="ab-list">
+          <div class="ab-it"><b>01</b><i></i><span class="ab-nm">自动分出段落</span></div>
+          <div class="ab-it"><b>02</b><i></i><span class="ab-nm">生成要点摘要</span></div>
+          <div class="ab-it"><b>03</b><i></i><span class="ab-nm">导出成文档</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // timing (s) = upstream frames / 30. jumps: [take-off, air time, peak in icon heights]; air time grows with
+  // the square root of the peak (one gravity). Landings at 0.867 / 1.533 / 2.333 / 3.267 s.
+  var CFG = {
+    jumps: [[0.4, 0.467, 0.35], [0.933, 0.6, 0.6], [1.6, 0.733, 0.85], [2.4, 0.867, 1.2]],
+    crouch: 0.2, contact: 0.067, ripple: 0.6, focus: [1, 2.2], badge: 3.333, dot: [3.4, 0.267],
+    panel: 3.533, rows: 3.8, rowGap: 0.1, rowDur: 0.533, dur: 5.6
+  };
+  // per orientation: where the panel starts its spring from (px, multiplied by its 1 - progress)
+  var LAND = { dx: -120, dy: 260 };
+  var PORT = { dx: 0, dy: 20 };
+  var v = { title: "笔记一键整理", kicker: "本次更新", items: "自动分出段落|生成要点摘要|导出成文档", badge: "1", logo: "", backdrop: "on" };
+  try {
+    var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k]; // "" clears kicker, badge
+  } catch (e) {}
+
+  var root = document.querySelector(".ab");
+  var q = function (s) { return root.querySelector(s); }, qa = function (s) { return [].slice.call(root.querySelectorAll(s)); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+    // not laid out yet: the host clip's declared size, then the window
+    var hc = root.closest("[data-width][data-height]");
+    FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+    FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND, U = Math.min(FW, FH) / 1.08e3;
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+      "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+      "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+      "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+      "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+}
+// ==== kit:shadow@1 ====
+function kShadow(e, strength) {
+  e = Math.max(0, e);
+  var s = strength == null ? 1 : strength, r = function (x) { return Math.round(x * 10) / 10; };
+  var c = function (a) { return "color-mix(in srgb, var(--ab-shade) " + r(Math.min(1, a) * 100) + "%, transparent)"; };
+  return "0 " + r(0.5 + e * 0.06) + "px " + r(1 + e * 0.18) + "px " + c((0.12 * s) / (1 + e / 24)) + ", " +
+    "0 " + r(e * 0.55) + "px " + r(e * 1.3) + "px " + r(-e * 0.22) + "px " + c((0.08 + (Math.min(e, 64) / 64) * 0.22) * s);
+}
+// ==== kit:text@2 ==== (kWords, kSplit)
+var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+function kWords(s, key) {
+  s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+  var cut = function (x) {
+    if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+    return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+  };
+  var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+  var pre = "";
+  bits.forEach(function (x) {
+    var t = x.trim(), last = out[out.length - 1];
+    if (last && /^ /.test(x)) last.sp = true;
+    if (!t) return;
+    if (!/[\p{L}\p{N}]/u.test(t)) {
+      if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+      else { last.t += t; last.sp = / $/.test(x); }
+      return;
+    }
+    out.push({ t: pre + t, sp: / $/.test(x) });
+    pre = "";
+  });
+  if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+  if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+  if (out.length) out[out.length - 1].sp = false;
+  return out;
+}
+function kSplit(el, by, rise, text) {
+  var s = text != null ? String(text) : el.textContent, units = [];
+  var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+  el.textContent = "";
+  parts.forEach(function (p) {
+    var u = document.createElement("span"), box = u;
+    u.className = "ab-u"; u.textContent = p.t;
+    if (by === "line") u.style.display = "block";
+    if (!p.t.trim()) { el.appendChild(u); return; }
+    if (rise) { box = document.createElement("span"); box.className = "ab-cut"; box.style.display = u.style.display; box.appendChild(u); }
+    el.appendChild(box);
+    if (p.sp) el.appendChild(document.createTextNode(" "));
+    units.push(u);
+  });
+  return units;
+}
+// ==== kit:fit@1 ==== (kFit, kLines)
+function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+      var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+      if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+      row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit ====
+
+  var SS = kTone(root) === "dark" ? 2.6 : 1; // shadow strength: x2.6 on dark skins
+  if (String(v.backdrop) === "off") q(".ab-bg").style.display = "none";
+
+  // text slots: every one goes through kSplit / kWords, then kFit (landscape title may shrink to 56px on one
+  // line; the portrait title keeps 72px and takes up to two lines; body text never under 40px)
+  var show = function (el, s) { el.style.display = String(s).trim() ? "" : "none"; return String(s).trim(); };
+  var kick = q(".ab-kick"), kt = q(".ab-kt"), title = q(".ab-title"), list = q(".ab-list"), badge = q(".ab-badge");
+  if (show(kick, v.kicker)) { kSplit(kt, "word", 0, v.kicker); kFit(kt, { width: kick.clientWidth * 0.8, min: 28 }); }
+  if (show(title, v.title)) { kSplit(title, "word", 0, v.title); kFit(title, P ? { lines: 2, min: 72 } : { min: 56 }); }
+  var items = kWords(String(v.items).trim() ? String(v.items) + "|" : "").slice(0, 3);
+  list.innerHTML = "";
+  show(list, items.length ? "x" : "");
+  var rows = items.map(function (u, i) {
+    var row = list.appendChild(document.createElement("div"));
+    row.className = "ab-it";
+    row.innerHTML = "<b>0" + (i + 1) + "</b><i></i><span class=\"ab-nm\"></span>";
+    var nm = row.lastChild;
+    kSplit(nm, "word", 0, u.t);
+    kFit(nm, { min: 40 });
+    return row;
+  });
+  if (show(badge, v.badge)) { badge.textContent = String(v.badge).trim(); kFit(badge, { width: 230 * U, spare: 0.2 }); }
+  var logo = String(v.logo).trim();
+  if (logo) q(".ab-face").innerHTML = '<i class="ab-mark" style="background-image:url(&quot;' + logo.replace(/"/g, "") + '&quot;)"></i>';
+
+  var cam = q(".ab-cam"), hero = q(".ab-hero"), panel = q(".ab-panel"), s1 = q(".ab-s1"), s2 = q(".ab-s2"), dot = q(".ab-dot");
+  var shaft = q(".ab-shaft"), nbs = qa(".ab-nb"), IC = hero.offsetHeight;
+  // take-off and touch-down snapped to the 30 fps grid: the contact squash must start on the landing frame itself
+  var sn = function (x) { return Math.round(x * 30) / 30; }, J = CFG.jumps.map(function (j) { return [sn(j[0]), sn(j[0] + j[1]) - sn(j[0]), j[2]]; }), LF = J[3][0] + J[3][1];
+  // landing ripples + splash dots, in px around the ground point under the icon (upstream sin hash)
+  var hs = function (n) { var x = Math.sin(n * 91.345 + 47.853) * 43758.5453; return x - Math.floor(x); };
+  var fx = q(".ab-fx");
+  fx.innerHTML = new Array(5).join("<g><ellipse/><circle/><circle/><circle/><circle/></g>");
+  var rip = [].slice.call(fx.children);
+  var grain = kGrain(q(".ab-grain"));
+  var R = function (t, a, d, e) { return MT.ramp(t, a, d, e); }, px = function (n) { return n.toFixed(2) + "px"; };
+
+  var tl = MT.scene(CFG.dur, function (t) {
+    // body: height y off the dock, normalised vertical speed vv, contact squash sq
+    var y = 0, vv = 0, sq = 0;
+    J.forEach(function (j, n) {
+      var p = (t - j[0]) / j[1], at = j[0] + j[1], c = 0.1 + n / 30;
+      if (p > 0 && p < 0.9999) { y = j[2] * IC * 4 * p * (1 - p); vv = 1 - 2 * p; }
+      if (n < 3 && t > at - 1e-4 && t < at + CFG.contact - 1e-3) sq = c * (1.4 - (t - at) / CFG.contact);
+    });
+    if (t >= CFG.crouch && t < J[0][0]) sq = 0.08 * R(t, CFG.crouch, J[0][0] - CFG.crouch, "out");
+    if (t > LF - 1e-4) { var f = (t - LF) * 30; sq = 0.2 * Math.exp(-f * 0.38) * Math.cos(f * 0.72); } // frames at 30 fps
+    var st = y > 0 ? Math.abs(vv) * 0.1 : 0, sx = 1 + sq - st / 2, sy = 1 - sq + st, lift = y / (1.2 * IC);
+    hero.style.transform = "translateY(" + px(-y) + ") scale(" + sx.toFixed(4) + "," + sy.toFixed(4) + ")";
+    hero.style.boxShadow = kShadow(10 + lift * 40, 1.2 * SS);
+    var w1 = IC * 0.84 * sx * (1 - lift * 0.4), w2 = IC * 1.04 * (1 - lift * 0.25);
+    s1.style.width = px(w1); s1.style.marginLeft = px(-w1 / 2); s1.style.opacity = Math.max(0, 1 - lift * 1.8);
+    s2.style.width = px(w2); s2.style.marginLeft = px(-w2 / 2); s2.style.opacity = 1 - lift * 0.6;
+    // camera: a slow creep, the push on the highest jump, a last 1% in the hold
+    var z = 1 + 0.015 * R(t, 0, 2.4, "smooth") + 0.065 * R(t, 2.4, 0.6, "smooth") + 0.012 * R(t, 3.667, 1.533, "smooth");
+    cam.style.transform = "scale(" + z.toFixed(5) + ")";
+    // the neighbours fall out of focus (rack focus)
+    var d = R(t, CFG.focus[0], CFG.focus[1], "swift");
+    nbs.forEach(function (n) { n.style.filter = "blur(" + px(d * 7 * U) + ") saturate(" + (1 - 0.3 * d).toFixed(3) + ")"; n.style.opacity = 1 - 0.4 * d; });
+    var b = t >= CFG.badge ? MT.spring({ t: t, delay: CFG.badge, damping: 11, stiffness: 260 }) : 0;
+    badge.style.transform = "scale(" + b.toFixed(4) + ")";
+    var o = R(t, CFG.dot[0], CFG.dot[1], "out");
+    dot.style.opacity = o; dot.style.transform = "scale(" + o.toFixed(4) + ")";
+    var p = t >= CFG.panel ? MT.spring({ t: t, delay: CFG.panel, damping: 17, stiffness: 150 }) : 0;
+    panel.style.opacity = p > 0.001 ? Math.min(1, p * 2.5) : 0;
+    panel.style.transform = "translate(" + px((1 - p) * L.dx * U) + "," + px((1 - p) * L.dy * U) + ") scale(" + MT.mix(0.2, 1, p).toFixed(4) + ")";
+    rows.forEach(function (r, i) {
+      var e = R(t, CFG.rows + i * CFG.rowGap, CFG.rowDur, "snappy");
+      r.style.opacity = e; r.style.transform = "translateY(" + px((1 - e) * 22 * U) + ")";
+    });
+    rip.forEach(function (g, k) {
+      var a = (t - J[k][0] - J[k][1]) / CFG.ripple;
+      g.style.display = a > 0 && a < 1 ? "" : "none";
+      if (!(a > 0 && a < 1)) return;
+      var e = MT.ease("snappy")(a), el = g.firstChild;
+      el.setAttribute("cy", 6 * U); el.setAttribute("rx", MT.mix(IC * 0.48, IC * (0.85 + 0.15 * k), e)); el.setAttribute("ry", MT.mix(14, 34 + 6 * k, e) * U);
+      el.setAttribute("stroke-width", MT.mix(10, 3, e) * U); el.setAttribute("opacity", (1 - a) * (0.5 + k * 0.17) * 0.3);
+      for (var i = 0; i < 4; i++) {
+        var c = g.children[i + 1], side = i % 2 ? 1 : -1;
+        c.setAttribute("cx", side * (IC * 0.5 + (40 + 60 * hs(k * 7 + i)) * U * e * (0.7 + k * 0.25)));
+        c.setAttribute("cy", (-4 - (30 + 40 * hs(k * 11 + i)) * 4 * a * (1 - a) * (0.6 + k * 0.2)) * U);
+        c.setAttribute("r", (4 + 3 * hs(i + k)) * U); c.setAttribute("opacity", (1 - a) * 0.7);
+      }
+    });
+    shaft.style.transform = "translateX(" + px(Math.sin((t * 30) / 70) * 14 * U) + ") rotate(-24deg)";
+    grain(t);
+  });
+  window.__timelines["attention-bounce"] = tl;
+})();
+      </script>
+    </template>
+  </body>
+</html>

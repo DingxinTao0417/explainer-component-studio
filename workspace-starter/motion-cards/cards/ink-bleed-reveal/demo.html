@@ -1,0 +1,397 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"旧页大字（| 处换行，最多三行）","default":"先跑通|再优化"},
+    {"id":"kicker","type":"string","label":"旧页眉题（可空）","default":"第 2 章"},
+    {"id":"sub","type":"string","label":"旧页副题（可空）","default":"先看结论，|再看例子"},
+    {"id":"from","type":"string","label":"旧页换成一张图（从项目根目录写起；留空画扉页）","default":""},
+    {"id":"to","type":"string","label":"新页换成一张图（从项目根目录写起；留空画示意界面）","default":""},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"新页透明（洇开处露出宿主画面）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>ink-bleed-reveal · 墨渗揭示</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="ink-bleed-reveal-template">
+      <!-- Ported from video-shotcraft demos/transition/print-texture-transitions/InkBleedReveal.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette (paper = bg + 1-3.5% accent + 1-8% ink, ink = ink + 7% accent-2, halo = ink + 20% accent;
+           dark skin: lighter paper, light ink, black halo at 0.4), system serif, generic Chinese copy (kicker 32px was
+           22px mono, title 600 / line-height 1.2 / no tracking or italic line, subtitle 40px was 34px); FakeDashboard
+           with its mark and product name replaced by a text-free fake UI or a `to` picture. Layers inverted so backdrop
+           off can show the host: the old page is cut by the bleed disc (CSS mask on an SVG mask) and ink, core and halo
+           are rings (own disc minus the bleed disc) - same picture as the new page masked on top; filter regions are
+           the frame + 220px. Portrait drop at 41.7% / 36%, radius = farthest corner + 150px (1450px in landscape, as
+           upstream). Added `from` / `to` / backdrop off. Kept: drop 14-22f overshoot 16px, bleed 20-98f quad-out,
+           +-8% sin(0.32f) wobble fading 78-98f, lead 20-42-20px, ink .42 / core .86 / halo .12 +110px, displacement
+           60-160 (x1.08 / 1.03 / 1.3), blur 3.2 / 1 / 34, noise 0.02 x3 (halo 0.012 x2) seed 7, develop 1.035 to 1 over
+           20-100f, masks off at 100f, static paper grain 0.07 multiply. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        @font-face { font-family: "Noto Serif SC"; src: local("Noto Serif SC"), local("Noto Serif CJK SC"), local("Source Han Serif SC"); }
+        @font-face { font-family: "Songti SC"; src: local("Songti SC"), local("STSong"), local("SimSun"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          --k-serif: var(--mc-serif, "Noto Serif SC", "Songti SC", serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* paper (old page), ink (indigo-tinted ink colour) and wet (the faint halo) are mixed from the palette */
+        .ib {
+          position: absolute; inset: 0; container-type: size; overflow: hidden;
+          --ib-p0: color-mix(in srgb, color-mix(in srgb, var(--k-bg), var(--k-accent) 1%), var(--k-ink) 1%);
+          --ib-p1: color-mix(in srgb, color-mix(in srgb, var(--k-bg), var(--k-accent) 2%), var(--k-ink) 4%);
+          --ib-p2: color-mix(in srgb, color-mix(in srgb, var(--k-bg), var(--k-accent) 3.5%), var(--k-ink) 8%);
+          --ib-ink: color-mix(in srgb, var(--k-ink) 93%, var(--k-accent-2));
+          --ib-wet: color-mix(in srgb, var(--k-ink) 80%, var(--k-accent));
+        }
+        .ib[data-tone="dark"] {
+          --ib-p0: color-mix(in srgb, var(--k-bg), white 7%);
+          --ib-p1: color-mix(in srgb, var(--k-bg), white 4%);
+          --ib-p2: var(--k-bg);
+          --ib-wet: black;
+        }
+        .ib-new, .ib-old, .ib-fx, .ib-paper, .ib-pic, .ib-grain { position: absolute; inset: 0; }
+        .ib-new { background: var(--k-bg) center / cover no-repeat; }
+        .ib-new > svg, .ib-fx { display: block; width: 100%; height: 100%; }
+        .ib-f0 { fill: var(--k-bg); }
+        .ib-f1 { fill: var(--k-panel); }
+        /* static page = the settled frame: the old page shows only once the script runs */
+        .ib-old { opacity: 0; }
+        .ib-paper { background: radial-gradient(ellipse 80% 70% at 42% 38%, var(--ib-p0) 0%, var(--ib-p1) 55%, var(--ib-p2) 100%); }
+        .ib-pic { display: none; background: center / cover no-repeat; }
+        /* paper fibre: one fixed grain tile (upstream Grain at freq 0.9, multiply 0.07, never re-seeded) */
+        .ib-grain {
+          opacity: 0.07; mix-blend-mode: multiply; background-size: 256px 256px;
+          background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='256' height='256'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='3' stitchTiles='stitch'/><feColorMatrix values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/><feComponentTransfer><feFuncR type='linear' slope='2.4' intercept='-0.7'/><feFuncG type='linear' slope='2.4' intercept='-0.7'/><feFuncB type='linear' slope='2.4' intercept='-0.7'/></feComponentTransfer></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>");
+        }
+        .ib[data-tone="dark"] .ib-grain { opacity: 0.09; mix-blend-mode: soft-light; }
+        .ib-box { position: absolute; top: 0; bottom: 0; left: 12%; right: 12%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        .ib-kick { display: block; width: 100%; margin-bottom: 34px; font-size: 32px; line-height: 1.3; letter-spacing: 0.32em; text-indent: 0.32em; color: color-mix(in srgb, var(--k-muted) 60%, var(--k-ink)); }
+        .ib-title { display: block; width: 100%; font-family: var(--k-serif); font-size: 112px; font-weight: 600; line-height: 1.2; }
+        .ib-rule { display: block; flex: none; width: 120px; height: 2px; margin: 44px auto 30px; background: color-mix(in srgb, var(--k-ink) 26%, transparent); }
+        .ib-sub { display: block; width: 100%; font-family: var(--k-serif); font-size: 40px; line-height: 1.4; color: var(--k-muted); }
+        .ib-u { display: inline-block; white-space: pre; }
+        .ib-fx { pointer-events: none; }
+        .ib-halo { opacity: 0.12; }
+        .ib[data-tone="dark"] .ib-halo { opacity: 0.4; }
+        @container (orientation: portrait) {
+          .ib-box { top: 12%; bottom: 32%; left: 11%; right: 11%; }
+          .ib-kick { margin-bottom: 30px; }
+          .ib-title { font-size: 96px; }
+          .ib-rule { margin: 36px auto 26px; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="ink-bleed-reveal">
+        <div class="ib">
+          <div class="ib-new" data-layout-allow-overflow>
+            <svg aria-hidden="true">
+              <rect class="ib-f0" width="100%" height="100%" />
+              <rect class="ib-f1" width="12%" height="100%" />
+              <rect class="ib-f1" x="15%" y="11%" width="26%" height="40%" rx="14" />
+              <rect class="ib-f1" x="43%" y="11%" width="26%" height="40%" rx="14" />
+              <rect class="ib-f1" x="71%" y="11%" width="26%" height="40%" rx="14" />
+              <rect class="ib-f1" x="15%" y="55%" width="26%" height="40%" rx="14" />
+              <rect class="ib-f1" x="43%" y="55%" width="26%" height="40%" rx="14" />
+              <rect class="ib-f1" x="71%" y="55%" width="26%" height="40%" rx="14" />
+            </svg>
+          </div>
+          <div class="ib-old">
+            <div class="ib-paper"></div>
+            <div class="ib-pic"></div>
+            <div class="ib-box">
+              <div class="ib-kick" data-layout-allow-occlusion>第 2 章</div>
+              <div class="ib-title"><span class="ib-u" style="display: block" data-layout-allow-occlusion>先跑通</span><span class="ib-u" style="display: block" data-layout-allow-occlusion>再优化</span></div>
+              <span class="ib-rule"></span>
+              <div class="ib-sub" data-layout-allow-occlusion>先看结论，再看例子</div>
+            </div>
+            <div class="ib-grain"></div>
+          </div>
+          <svg class="ib-fx" aria-hidden="true"></svg>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing (s) = upstream frames / 30, both orientations: drop 14-22f, bleed 20-98f, calm 78-98f, develop 20-100f, mask off at 100f
+          var CFG = { drop: 0.467, dropDur: 0.267, bleed: 0.667, full: 3.267, calm: 2.6, devDur: 2.667, settle: 3.333, dur: 4.333,
+            wob: 0.08, lead: 20, leadGrow: 22, halo: 110, disp0: 60, disp1: 160, dropR: 16, dev: 1.035 };
+          // the drop point as a share of the frame; the bleed radius reaches the farthest corner + 150 px of ragged edge
+          var LAND = { cx: 0.4167, cy: 0.3889 };
+          var PORT = { cx: 0.4167, cy: 0.36 };
+          var v = { title: "先跑通|再优化", kicker: "第 2 章", sub: "先看结论，|再看例子", from: "", to: "", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k]; // "" clears kicker / sub
+          } catch (e) {}
+          if (!String(v.title).trim()) v.title = "先跑通|再优化";
+
+          var root = document.querySelector(".ib");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          var S = Math.min(FW, FH) / 1.08e3;
+          kTone(root);
+
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+
+          // ==== kit:text@2 ====
+          var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "ib-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "ib-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          // ==== end kit:text ====
+
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          function kRows(el, cls) {
+            if (!el.children.length) return [];
+            var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+            var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+            kids.forEach(function (c, i) {
+              if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+              if (tops[i] != null) last = tops[i];
+              row.appendChild(c);
+            });
+            return [].slice.call(el.children);
+          }
+          // ==== end kit:fit ====
+
+          // ==== kit:fakeui@1 ====
+          function kFakeUI(w, h, kind, seed) {
+            var rnd = MT.seeded(seed || 7), out = [], cards = [], u = Math.min(w / 1600, h / 900);
+            var ink = "color-mix(in srgb, var(--k-ink) 22%, var(--k-panel))", line = "color-mix(in srgb, var(--k-ink) 9%, var(--k-bg))";
+            var R = function (x, y, rw, rh, r, c) { out.push('<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + rw.toFixed(1) + '" height="' + rh.toFixed(1) + '" rx="' + (r * u).toFixed(1) + '" style="fill:' + c + '"/>'); };
+            var side = 190 * u, top = 64 * u, pad = 30 * u, gap = 22 * u;
+            R(0, 0, w, h, 0, "var(--k-bg)");
+            R(0, 0, side, h, 0, "var(--k-panel)");
+            for (var i = 0; i < 6; i++) { R(24 * u, (92 + i * 46) * u, 18 * u, 18 * u, 5, i === 1 ? "var(--k-accent)" : ink); R(54 * u, (96 + i * 46) * u, (60 + rnd() * 60) * u, 10 * u, 5, ink); }
+            R(side, top - u, w - side, Math.max(1, u), 0, line);
+            R(side + pad, 22 * u, 170 * u, 18 * u, 9, ink);
+            R(w - pad - 260 * u, 16 * u, 260 * u, 32 * u, 16, "var(--k-panel)");
+            var x0 = side + pad, y0 = top + pad, cw = w - x0 - pad, ch = h - y0 - pad;
+            if (kind === "list") {
+              var rh = (ch - gap * 4) / 5;
+              for (var r = 0; r < 5; r++) {
+                var y = y0 + r * (rh + gap), m = y + rh / 2;
+                cards.push({ x: x0, y: y, w: cw, h: rh });
+                R(x0, y, cw, rh, 12, "var(--k-panel)");
+                R(x0 + 24 * u, m - 18 * u, 36 * u, 36 * u, 10, r === 0 ? "var(--k-accent)" : ink);
+                R(x0 + 80 * u, m - 14 * u, (260 + rnd() * 260) * u, 12 * u, 6, ink);
+                R(x0 + 80 * u, m + 6 * u, (140 + rnd() * 160) * u, 9 * u, 4.5, line);
+                R(x0 + cw - 150 * u, m - 13 * u, 110 * u, 26 * u, 13, line);
+              }
+            } else {
+              var gw = (cw - gap * 2) / 3, gh = (ch - gap) / 2;
+              for (var k = 0; k < 6; k++) {
+                var cx = x0 + (k % 3) * (gw + gap), cy = y0 + Math.floor(k / 3) * (gh + gap), base = cy + gh - 24 * u;
+                cards.push({ x: cx, y: cy, w: gw, h: gh });
+                R(cx, cy, gw, gh, 14, "var(--k-panel)");
+                R(cx + 22 * u, cy + 24 * u, (90 + rnd() * 70) * u, 12 * u, 6, ink);
+                R(cx + 22 * u, cy + 52 * u, (110 + rnd() * 70) * u, 28 * u, 8, k === 0 ? "var(--k-accent)" : ink);
+                if (k % 2) {
+                  for (var j = 0; j < 7; j++) { var bh = (0.25 + rnd() * 0.75) * gh * 0.4; R(cx + 22 * u + j * (gw - 44 * u) / 7, base - bh, (gw - 44 * u) / 7 - 8 * u, bh, 4, j === 5 ? "var(--k-accent-2)" : ink); }
+                } else {
+                  var pts = [];
+                  for (var q = 0; q <= 12; q++) pts.push((cx + 22 * u + (q * (gw - 44 * u)) / 12).toFixed(1) + "," + (base - (0.2 + 0.6 * (0.5 + 0.5 * Math.sin(q * 0.7 + k)) * (0.6 + 0.4 * rnd())) * gh * 0.4).toFixed(1));
+                  out.push('<polyline points="' + pts.join(" ") + '" style="fill:none;stroke:var(--k-accent-2);stroke-width:' + (3 * u).toFixed(1) + ';stroke-linejoin:round;stroke-linecap:round"/>');
+                }
+              }
+            }
+            return { svg: '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + " " + h + '" aria-hidden="true">' + out.join("") + "</svg>", cards: cards };
+          }
+          // ==== end kit:fakeui ====
+
+          // old page: a chapter page on paper, or a picture
+          var old = q(".ib-old"), nu = q(".ib-new"), url = function (s) { return 'url("' + String(s).replace(/"/g, "%22") + '")'; };
+          var occl = function (els) { [].forEach.call(els, function (e) { e.setAttribute("data-layout-allow-occlusion", ""); }); };
+          if (String(v.from).trim()) {
+            q(".ib-pic").style.cssText = "display:block;background-image:" + url(v.from.trim());
+            q(".ib-box").style.display = q(".ib-grain").style.display = q(".ib-paper").style.display = "none";
+          } else {
+            var title = q(".ib-title"), kick = q(".ib-kick"), sub = q(".ib-sub");
+            var lines = kSplit(title, "line", false, v.title).length;
+            kFit(title, { lines: lines, min: 72 });
+            if (String(v.kicker).trim()) { kSplit(kick, "word", false, v.kicker); kFit(kick, { min: 28 }); } else kick.style.display = "none";
+            if (String(v.sub).trim()) { kSplit(sub, "word", false, v.sub); kFit(sub, { lines: 2 }); } else sub.style.display = q(".ib-rule").style.display = "none";
+            occl(old.querySelectorAll(".ib-u"));
+          }
+          // new page: a picture, the text-free fake UI, or nothing (backdrop off: the host shows where the ink has spread)
+          if (String(v.backdrop) === "off") nu.style.display = "none";
+          else if (String(v.to).trim()) { nu.innerHTML = ""; nu.style.backgroundImage = url(v.to.trim()); }
+          else nu.innerHTML = kFakeUI(FW, FH, "grid", 7).svg;
+
+          // the ink: one SVG over the old page. Every mask is a ring: its own ragged disc minus the bleed disc, so the
+          // old page (masked with the same bleed disc cut out) and the rings meet on one edge
+          var cx = FW * L.cx, cy = FH * L.cy;
+          var RMAX = Math.max(Math.hypot(cx, cy), Math.hypot(FW - cx, cy), Math.hypot(cx, FH - cy), Math.hypot(FW - cx, FH - cy)) + 150 * S;
+          var N = (window.__ibN = (window.__ibN || 0) + 1), id = "ib" + N + "-", pad = 220 * S;
+          var reg = ' filterUnits="userSpaceOnUse" x="' + -pad + '" y="' + -pad + '" width="' + (FW + 2 * pad) + '" height="' + (FH + 2 * pad) + '"';
+          var noise = function (f, o) { return '<feTurbulence type="fractalNoise" baseFrequency="' + (f / S).toFixed(4) + '" numOctaves="' + o + '" seed="7" result="n"/>'; };
+          var filt = function (n, f, o, blur) {
+            return '<filter id="' + id + n + '"' + reg + ">" + noise(f, o) + '<feDisplacementMap in="SourceGraphic" in2="n" scale="0" xChannelSelector="R" yChannelSelector="G"/>' +
+              (blur ? '<feGaussianBlur stdDeviation="' + blur * S + '"/>' : "") + "</filter>";
+          };
+          var disc = function (n, white) { return '<circle cx="' + cx + '" cy="' + cy + '" r="0" fill="' + (white ? "white" : "black") + '" filter="url(#' + id + n + ')"/>'; };
+          var dot = '<circle class="ib-dot" cx="' + cx + '" cy="' + cy + '" r="0" fill="white"/>';
+          var mask = function (n, body) { return '<mask id="' + id + n + '" maskUnits="userSpaceOnUse" x="0" y="0" width="' + FW + '" height="' + FH + '">' + body + "</mask>"; };
+          var fx = q(".ib-fx");
+          fx.setAttribute("viewBox", "0 0 " + FW + " " + FH);
+          fx.innerHTML = "<defs>" + filt("b", 0.02, 3) + filt("f", 0.02, 3, 3.2) + filt("c", 0.02, 3, 1) + filt("h", 0.012, 2, 34) +
+            mask("mo", '<rect width="' + FW + '" height="' + FH + '" fill="white"/>' + disc("b")) +
+            mask("mh", disc("h", 1) + disc("b")) + mask("mi", disc("f", 1) + dot + disc("b")) + mask("mc", disc("c", 1) + dot + disc("b")) + "</defs>" +
+            '<g class="ib-ink"><rect class="ib-halo" width="100%" height="100%" fill="var(--ib-wet)" mask="url(#' + id + 'mh)"/>' +
+            '<rect width="100%" height="100%" fill="var(--ib-ink)" opacity="0.42" mask="url(#' + id + 'mi)"/>' +
+            '<rect width="100%" height="100%" fill="var(--ib-ink)" opacity="0.86" mask="url(#' + id + 'mc)"/></g>';
+          var all = function (s) { return [].slice.call(fx.querySelectorAll(s)); };
+          var dm = {}; ["b", "f", "c", "h"].forEach(function (n) { dm[n] = fx.querySelector("#" + id + n + " feDisplacementMap"); });
+          var circ = function (n) { return all('circle[filter="url(#' + id + n + ')"]'); };
+          var cB = circ("b"), cF = circ("f"), cC = circ("c"), cH = circ("h"), dots = all(".ib-dot"), ink = fx.querySelector(".ib-ink");
+          var setR = function (list, r) { list.forEach(function (c) { c.setAttribute("r", Math.max(0, r).toFixed(2)); }); };
+          nu.style.transformOrigin = cx + "px " + cy + "px";
+
+          var tl = MT.scene(CFG.dur, function (t) {
+            var f = t * 30; // upstream frame, for the per-frame wobble
+            var settled = t >= CFG.settle;
+            // the bleed: ease-out radius, +-8% slow sine wobble that dies away over the last 20 frames
+            var base = RMAX * MT.ramp(t, CFG.bleed, CFG.full - CFG.bleed, "power1.out");
+            var env = 1 - MT.ramp(t, CFG.calm, CFG.full - CFG.calm, "linear");
+            var r = Math.max(0, base * (1 + CFG.wob * Math.sin(f * 0.32) * env));
+            var on = r > 0.5 && !settled;
+            // the ink runs ahead of the picture: 20 px at the start, 42 px mid-bleed, back to 20 px
+            var lead = (CFG.lead + CFG.leadGrow * Math.sin(Math.PI * MT.ramp(t, CFG.bleed, CFG.full - CFG.bleed, "linear"))) * S;
+            var d = MT.interpolate(t, [CFG.bleed, CFG.full], [CFG.disp0, CFG.disp1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) * S;
+            dm.b.setAttribute("scale", d.toFixed(2));
+            dm.f.setAttribute("scale", (d * 1.08).toFixed(2));
+            dm.c.setAttribute("scale", (d * 1.03).toFixed(2));
+            dm.h.setAttribute("scale", (d * 1.3).toFixed(2));
+            setR(cB, on ? r : 0);
+            setR(cF, on ? r + lead : 0);
+            setR(cC, on ? r + lead * 0.45 : 0);
+            setR(cH, on ? r + lead + CFG.halo * S : 0);
+            // the drop: a small dot falls with overshoot before the bleed opens around it
+            var dr = CFG.dropR * S * MT.ramp(t, CFG.drop, CFG.dropDur, "overshoot");
+            dots[0].setAttribute("r", Math.max(0, dr).toFixed(2));
+            dots[1].setAttribute("r", Math.max(0, dr * 0.86).toFixed(2));
+            // the new page develops: 1.035 -> exactly 1 before the mask comes off
+            nu.style.transform = "scale(" + MT.mix(CFG.dev, 1, MT.ramp(t, CFG.bleed, CFG.devDur, "out")).toFixed(5) + ")";
+            // from 100f the bleed covers everything: drop the masks so the last second is truly still
+            old.style.opacity = settled ? 0 : 1;
+            old.style.mask = on ? "url(#" + id + "mo)" : "none";
+            ink.style.display = settled ? "none" : "";
+          });
+          window.__timelines["ink-bleed-reveal"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

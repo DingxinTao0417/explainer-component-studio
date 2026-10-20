@@ -1,0 +1,521 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"subject","type":"string","label":"不变的主语（第一行）","default":"AI 助手"},
+    {"id":"verbs","type":"string","label":"轮换的词（用 | 分隔，2–4 个）","default":"写文档|做表格|查资料"},
+    {"id":"notes","type":"string","label":"每个词下面的注脚（用 | 分隔，和词一一对应；留空不要）","default":"一段需求，三分钟出初稿|一列数据，自动整理成表|一个问题，带出处的回答"},
+    {"id":"shots","type":"string","label":"左列换成截图（从项目根目录写起，用 | 分隔，第 k 张配第 k 个词；留空画示意页面）","default":""},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>word-relay-filmstrip · 胶片步进词接力</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="word-relay-filmstrip-template">
+      <!-- Ported from video-shotcraft demos/typography/word-relay-filmstrip/WordRelayFilmstrip.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette on a lit white backdrop instead of the graphite stage (key light, fill light, vignette and
+           grain kept, light-skin strengths), system serif/mono fonts, generic Chinese copy, upstream mark and wordmark
+           removed; the six detailed fake pages (pacing report, storyboard, render pipeline, PR review, scan viewer,
+           shipments table) redrawn as text-free bar layouts in two palette tones, optional screenshots instead; the gold
+           period is an accent dot; footnote 32 -> 40px; 2-4 words instead of 3 (4th switch at frame 162); neighbours dim
+           towards the page colour instead of the dark stage. Card 940x530 / gap 105, 18-frame swift step, depth formula,
+           letter relay (10f grey, 8f exit, +7f, 1.2f stagger, 16f snappy), leader timing, 1.02 push-in kept. -->
+      <style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--k-font);
+  color: var(--k-ink);
+}
+/* ==== kit:fonts@2 ==== */
+@font-face { font-family: "Noto Serif SC"; src: local("Noto Serif SC"), local("Noto Serif CJK SC"), local("Source Han Serif SC"); }
+@font-face { font-family: "Songti SC"; src: local("Songti SC"), local("STSong"), local("SimSun"); }
+@font-face { font-family: "Consolas"; src: local("Consolas"); }
+#root {
+  --k-serif: var(--mc-serif, "Noto Serif SC", "Songti SC", serif);
+  --k-mono: var(--mc-mono, Consolas, monospace);
+}
+/* ==== end kit:fonts ==== */
+/* ==== kit:derived@1 ==== */
+.wr {
+  --wr-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+  --wr-hi: color-mix(in srgb, white 80%, transparent);
+}
+.wr[data-tone="dark"] {
+  --wr-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+  --wr-hi: color-mix(in srgb, white 6%, transparent);
+}
+/* ==== end kit:derived ==== */
+/* ==== kit:vignette@1 ==== */
+.wr-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--wr-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.wr[data-tone="dark"] .wr-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+/* ==== kit:grain@1 ==== */
+.wr-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+/* ==== kit:text@2 ==== */
+.wr-u { display: inline-block; white-space: pre; }
+.wr-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+/* ==== end kit:text ==== */
+
+.wr { position: absolute; inset: 0; }
+/* lit white: a faint vertical falloff, a key light top right and a cool fill bottom left (upstream Stage positions) */
+.wr-bg { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+.wr-key { position: absolute; inset: 0; background: radial-gradient(ellipse 58% 62% at 72% 12%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 70%); }
+.wr-fill { position: absolute; inset: 0; background: radial-gradient(ellipse 50% 46% at 15% 100%, color-mix(in srgb, var(--k-accent-2) 9%, transparent) 0%, transparent 72%); }
+.wr-cam { position: absolute; inset: 0; transform-origin: 50% 50%; }
+.wr-film { position: absolute; inset: 0; }
+/* one page: 940x530, alternating face tones; --f face, --t1 strong bar, --t2 weak bar, --ln rule, --pn inset panel */
+.wr-card {
+  position: absolute; left: 100px; top: 275px; width: 940px; height: 530px; border-radius: 18px; overflow: hidden;
+  background: var(--f); border: 1px solid var(--bd);
+  box-shadow: inset 0 1px 0 var(--wr-hi), 0 2px 6px color-mix(in srgb, var(--wr-shade) 22%, transparent), 0 40px 90px -30px color-mix(in srgb, var(--wr-shade) 48%, transparent);
+  --a1: var(--k-accent); --a2: var(--k-accent-2);
+}
+.wr-l {
+  --f: color-mix(in srgb, var(--k-bg) 70%, var(--k-panel)); --bd: color-mix(in srgb, var(--k-ink) 16%, transparent);
+  --t1: color-mix(in srgb, var(--k-ink) 78%, var(--f)); --t2: color-mix(in srgb, var(--k-ink) 22%, var(--f));
+  --ln: color-mix(in srgb, var(--k-ink) 10%, var(--f)); --pn: color-mix(in srgb, var(--k-ink) 5%, var(--f));
+}
+.wr-d {
+  --f: color-mix(in srgb, var(--k-ink) 94%, var(--k-bg)); --bd: color-mix(in srgb, var(--k-bg) 10%, transparent);
+  --t1: color-mix(in srgb, var(--k-bg) 82%, var(--f)); --t2: color-mix(in srgb, var(--k-bg) 30%, var(--f));
+  --ln: color-mix(in srgb, var(--k-bg) 12%, var(--f)); --pn: color-mix(in srgb, var(--k-bg) 6%, var(--f));
+}
+.wr-card > svg, .wr-img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; object-fit: cover; }
+.wr-dim { position: absolute; inset: 0; background: var(--k-bg); opacity: 0; }
+/* leader from the focused page's right edge to the word block's middle line (y 540) */
+.wr-lead { position: absolute; left: 1054px; top: 539px; width: 102px; height: 2px; transform-origin: 0 50%; background: linear-gradient(90deg, var(--k-accent), color-mix(in srgb, var(--k-accent) 35%, transparent)); }
+.wr-pin { position: absolute; left: 1047px; top: 533px; width: 14px; height: 14px; border-radius: 7px; background: var(--k-accent); box-shadow: 0 0 16px color-mix(in srgb, var(--k-accent) 60%, transparent); }
+.wr-idx { position: absolute; left: 1202px; top: 328px; font: 28px/1.2 var(--k-mono); letter-spacing: 0.04em; color: var(--k-muted); white-space: pre; }
+.wr-idx b { font-weight: 400; color: var(--k-accent); }
+/* two 154px line boxes from y 386: the block's middle is the focused page's middle */
+.wr-words { position: absolute; left: 1196px; top: 386px; width: 628px; font-family: var(--k-serif); }
+.wr-noun { height: 154px; font-size: 140px; line-height: 154px; font-weight: 500; color: var(--k-muted); white-space: nowrap; }
+.wr-vrow { position: relative; height: 154px; clip-path: inset(0 -200px); }
+.wr-verb { position: absolute; left: 0; right: 0; top: 0; height: 154px; font-size: 140px; line-height: 154px; font-weight: 600; color: var(--k-ink); white-space: nowrap; }
+.wr-it { font-style: italic; letter-spacing: -0.01em; }
+.wr-dot { display: inline-block; width: 0.13em; height: 0.13em; margin-left: 0.05em; border-radius: 50%; background: var(--k-accent); }
+.wr-notes { position: absolute; left: 1202px; top: 734px; width: 622px; }
+.wr-note { position: absolute; left: 0; right: 0; top: 0; font-size: 40px; line-height: 1.3; color: var(--k-muted); }
+      </style>
+
+      <div id="root" data-composition-id="word-relay-filmstrip" data-width="1920" data-height="1080">
+        <div class="wr">
+          <div class="wr-bg"></div>
+          <div class="wr-key"></div>
+          <div class="wr-fill"></div>
+          <div class="wr-vig"></div>
+          <div class="wr-grain"></div>
+          <div class="wr-cam">
+            <div class="wr-film" data-layout-allow-overflow>
+              <div class="wr-card wr-d" style="top: -360px; transform: scale(0.94)"><div class="wr-dim" style="opacity: 0.68"></div></div>
+              <div class="wr-card wr-l"></div>
+              <div class="wr-card wr-d" style="top: 910px; transform: scale(0.94)"><div class="wr-dim" style="opacity: 0.68"></div></div>
+            </div>
+            <div class="wr-lead"></div>
+            <div class="wr-pin"></div>
+            <div class="wr-idx"><b>03</b> / 03</div>
+            <div class="wr-words">
+              <div class="wr-noun">AI 助手</div>
+              <div class="wr-vrow"><div class="wr-verb">查资料<span class="wr-dot"></span></div></div>
+            </div>
+            <div class="wr-notes"><div class="wr-note">一个问题，带出处的回答</div></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+(function () {
+  // timing (seconds; upstream frames / 30). sw: the switch moments, the first n are used for n words
+  var CFG = {
+    sw: [0.533, 2.2, 3.8, 5.4], step: 0.6, // film steps one page in 18 frames, swift
+    inLag: 0.233, letter: 0.533, letterGap: 0.04, // new word 7f after the switch, 16f per letter, 1.2f apart
+    grey: 0.333, out: 0.267, // old word greys in the 10f before the switch, then leaves upward in 8f
+    noteLag: 0.2, noteIn: 0.467, noteOut: 0.233,
+    lineOut: 0.2, lineGap: 0.333, lineIn: 0.533, // leader retracts 6f, redraws 10f after the switch for 16f
+    hold: 2.2, push: 0.02 // after the last switch; slow push-in over the whole card
+  };
+  // geometry (px, landscape only)
+  var G = { cardW: 940, cardH: 530, gap: 105, focusTop: 275, line: 154, dim: 0.68, shrink: 0.06, blur: 3 };
+  var STEP = G.cardH + G.gap;
+  var v = { subject: "AI 助手", verbs: "写文档|做表格|查资料", notes: "一段需求，三分钟出初稿|一列数据，自动整理成表|一个问题，带出处的回答", shots: "", backdrop: "on" };
+  try {
+    var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+  } catch (e) {}
+
+  var root = document.querySelector(".wr");
+  var q = function (s) { return root.querySelector(s); };
+  var FH = root.clientHeight || 1080;
+
+  // ==== kit:tone@1 ====
+  function kRGB(el, color) {
+    var p = document.createElement("i");
+    p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+    el.appendChild(p);
+    var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+    el.removeChild(p);
+    return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+  }
+  function kTone(wrap) {
+    var c = kRGB(wrap, "var(--k-bg)");
+    var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+    wrap.setAttribute("data-tone", tone);
+    return tone;
+  }
+  // ==== end kit:tone ====
+  // ==== kit:text@2 ====
+  var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+  function kWords(s, key) {
+    s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+    var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+    var cut = function (x) {
+      if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+      return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+    };
+    var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+    var pre = "";
+    bits.forEach(function (x) {
+      var t = x.trim(), last = out[out.length - 1];
+      if (last && /^ /.test(x)) last.sp = true;
+      if (!t) return;
+      if (!/[\p{L}\p{N}]/u.test(t)) {
+        if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+        else { last.t += t; last.sp = / $/.test(x); }
+        return;
+      }
+      out.push({ t: pre + t, sp: / $/.test(x) });
+      pre = "";
+    });
+    if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+    if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+    if (out.length) out[out.length - 1].sp = false;
+    return out;
+  }
+  function kSplit(el, by, rise, text) {
+    var s = text != null ? String(text) : el.textContent, units = [];
+    var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+    el.textContent = "";
+    parts.forEach(function (p) {
+      var u = document.createElement("span"), box = u;
+      u.className = "wr-u"; u.textContent = p.t;
+      if (by === "line") u.style.display = "block";
+      if (!p.t.trim()) { el.appendChild(u); return; }
+      if (rise) { box = document.createElement("span"); box.className = "wr-cut"; box.style.display = u.style.display; box.appendChild(u); }
+      el.appendChild(box);
+      if (p.sp) el.appendChild(document.createTextNode(" "));
+      units.push(u);
+    });
+    return units;
+  }
+  // ==== end kit:text ====
+  // ==== kit:fit@1 ====
+  function kFit(el, o) {
+    o = o || {};
+    var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+    var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+    for (;;) {
+      el.style.fontSize = f + "px";
+      m = kLines(el);
+      if ((m.w <= W && m.n <= n) || f <= min) break;
+      f = Math.max(min, f - 2);
+    }
+    if (m.w > W) {
+      [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+      m = kLines(el);
+    }
+    return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+  }
+  function kLines(el) {
+    var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+    var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+    while ((t = it.nextNode())) {
+      if (!t.data.trim()) continue;
+      r.selectNodeContents(t);
+      [].forEach.call(r.getClientRects(), function (b) {
+        var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+        if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+        row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+      });
+    }
+    return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+  }
+  // ==== end kit:fit ====
+  // ==== kit:grain@1 ====
+  function kGrain(layer, o) {
+    o = o || {};
+    var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+    var dark = tones && tones.getAttribute("data-tone") === "dark";
+    var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+      var f = "type='linear' slope='2.4' intercept='-0.7'";
+      var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+        "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+        "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+        "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+        "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+      return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+    });
+    layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+    layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+    layer.style.backgroundSize = size + "px " + size + "px";
+    return function (t) {
+      var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+      layer.style.backgroundImage = tiles[k % 6];
+      layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+    };
+  }
+  // ==== end kit:grain ====
+  // ==== kit:speedblur@1 ====
+  function kSpeedBlur(box, prefix, o) {
+    o = o || {};
+    var amount = o.amount || 0.45, max = o.max || 36;
+    var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+    svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+    var outer = document.createElement("div"), inner = document.createElement("div");
+    outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+    while (box.firstChild) inner.appendChild(box.firstChild);
+    outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+    var fe = svg.firstChild.firstChild;
+    return function (vx, vy) {
+      vy = vy || 0;
+      var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+      if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+      var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+      fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+      outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+      inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+      outer.style.filter = "url(#" + id + ")";
+    };
+  }
+  // ==== end kit:speedblur ====
+
+  kTone(root);
+  var off = String(v.backdrop) === "off";
+  if (off) [".wr-bg", ".wr-key", ".wr-fill", ".wr-vig", ".wr-grain"].forEach(function (s) { q(s).style.display = "none"; });
+
+  var words = kWords(v.verbs).map(function (u) { return u.t; }).slice(0, 4);
+  if (words.length < 1) words = ["查资料"];
+  var n = words.length, notes = String(v.notes == null ? "" : v.notes).split("|"); // positional: an empty slot means "no note for this word"
+  var shots = String(v.shots || "").split("|").map(function (s) { return s.trim(); }).filter(Boolean);
+  var sw = CFG.sw.slice(0, n), inAt = sw.map(function (s) { return s + CFG.inLag; });
+  var DUR = sw[n - 1] + CFG.hold;
+
+  // a text-free page drawing (bars stand for text): kind 0-5 = report, article, pipeline, code review, viewer, table
+  var page = function (kind) {
+    var o = [], rnd = MT.seeded(kind * 7 + 3);
+    var R = function (x, y, w, h, c, r) {
+      o.push('<rect x="' + x + '" y="' + y + '" width="' + Math.round(w) + '" height="' + h + '" rx="' + (r == null ? Math.min(h / 2, 6) : r) + '" style="fill:var(--' + c + ')"/>');
+    };
+    var W = function (a, b) { return a + rnd() * (b - a); };
+    var i;
+    if (kind === 0) { // pacing report: rows of bars, a summary strip
+      R(46, 34, 230, 12, "a1"); R(46, 62, 420, 26, "t1"); R(46, 112, 2, 252, "ln", 0);
+      for (i = 0; i < 6; i++) {
+        var y = 118 + i * 40, h = i === 5 ? 22 : 16, f = [0.24, 0.33, 0.46, 0.58, 0.69, 0.86][i];
+        R(74, y + 3, 40, 12, "t2"); R(130, y, 520, h, "pn", 4); R(130, y, 520 * f, h, i === 5 ? "a1" : "t2", 4); R(668, y + 2, 56, 14, i === 5 ? "a1" : "t1");
+      }
+      R(46, 384, 848, 104, "pn", 10);
+      for (i = 0; i < 3; i++) { R(76 + i * 230, 406, 44 + i * 16, 24, "a1"); R(76 + i * 230, 446, 150, 12, "t2"); }
+    } else if (kind === 1) { // article: masthead, headline, body, side box, small chart
+      R(46, 32, 26, 26, "a1", 7); R(84, 38, 130, 14, "t1");
+      for (i = 0; i < 4; i++) R(600 + i * 76, 40, 52, 10, i ? "t2" : "t1");
+      R(46, 76, 848, 1, "ln", 0); R(46, 98, 260, 10, "a1"); R(46, 122, 520, 30, "t1"); R(46, 162, 410, 30, "t1");
+      for (i = 0; i < 6; i++) R(46, 216 + i * 26, i === 5 ? 250 : W(420, 480), 11, "t2");
+      R(566, 208, 328, 176, "pn", 10); R(588, 226, 90, 10, "a1");
+      for (i = 0; i < 4; i++) { R(588, 254 + i * 30, 40, 12, "t1"); R(644, 255 + i * 30, W(120, 200), 10, "t2"); }
+      R(46, 410, 848, 1, "ln", 0);
+      for (i = 0; i < 8; i++) { var bh = 50 * [0.18, 0.24, 0.31, 0.46, 0.58, 0.72, 0.9, 1][i]; R(46 + i * 20, 486 - bh, 14, bh, i === 7 ? "a1" : "t2", 2); }
+      R(230, 458, 330, 12, "t2"); R(740, 458, 154, 12, "t2");
+    } else if (kind === 2) { // pipeline: steps, a log, three stat boxes
+      R(40, 30, 280, 18, "t1"); R(334, 30, 52, 18, "ln", 9); R(724, 32, 176, 14, "a1");
+      for (i = 0; i < 5; i++) {
+        if (i) R(40 + i * 176 - 56, 92, 56, 2, i < 4 ? "a2" : "ln", 0);
+        R(40 + i * 176, 76, 120, 32, i < 4 ? "pn" : "a1", 9); R(54 + i * 176, 87, i < 4 ? 80 : 70, 10, i < 4 ? "t1" : "f");
+      }
+      R(40, 132, 530, 250, "pn", 10);
+      for (i = 0; i < 6; i++) { R(62, 154 + i * 36, 14, 12, i === 5 ? "a1" : "a2"); R(88, 154 + i * 36, i ? W(220, 380) : 330, 12, i ? "t2" : "t1"); }
+      for (i = 0; i < 3; i++) { R(590, 132 + i * 86, 310, 74, "pn", 10); R(610, 146 + i * 86, 90, 10, "t2"); R(610, 166 + i * 86, W(90, 150), 24, "t1"); }
+    } else if (kind === 3) { // code review: title bar, file tree, diff rows, a comment
+      R(28, 18, 330, 16, "t1"); R(372, 20, 160, 12, "t2"); R(756, 14, 150, 24, "a2", 12); R(0, 52, 940, 1, "ln", 0); R(200, 53, 1, 477, "ln", 0);
+      R(14, 128, 176, 26, "pn", 6);
+      for (i = 0; i < 7; i++) R(26 + [0, 1, 2, 2, 0, 1, 1][i] * 14, 76 + i * 30, W(60, 110), 11, i === 2 ? "a2" : "t2");
+      for (i = 0; i < 8; i++) {
+        var cy = 84 + i * 30, d = [0, 0, 1, 2, 2, 0, 0, 0][i], x = 262;
+        if (d) R(201, cy - 9, 739, 30, d === 2 ? "pn" : "ln", 0);
+        if (d) R(244, cy, 10, 11, d === 2 ? "a2" : "a1", 2);
+        R(214, cy, 22, 11, "t2");
+        for (var s = 0; s < 3 && i !== 6; s++) { var w = W(40, 150); R(x, cy, w, 11, ["a1", "a2", "t1"][(i + s) % 3]); x += w + 12; }
+      }
+      R(262, 340, 30, 30, "pn", 15); R(304, 334, 440, 62, "pn", 10); R(322, 348, 160, 11, "t1"); R(322, 370, 380, 11, "t2");
+    } else if (kind === 4) { // viewer: side lists around a soft round image with three marks
+      R(0, 46, 940, 1, "ln", 0); R(24, 17, 110, 13, "t1"); R(150, 19, 210, 10, "t2"); R(780, 19, 130, 10, "a1");
+      R(190, 47, 1, 483, "ln", 0); R(740, 47, 1, 483, "ln", 0); R(18, 66, 70, 9, "a1"); R(14, 144, 162, 26, "pn", 6);
+      for (i = 0; i < 5; i++) R(26, 92 + i * 29 + (i === 2 ? 6 : 0), W(70, 120), 11, i === 2 ? "t1" : "t2");
+      [[150, 180, 0.12], [118, 146, 0.22], [84, 104, 0.38], [48, 60, 0.6]].forEach(function (e) {
+        o.push('<ellipse cx="465" cy="290" rx="' + e[0] + '" ry="' + e[1] + '" style="fill:var(--t1);opacity:' + e[2] + '"/>');
+      });
+      [[404, 230], [500, 286], [432, 350]].forEach(function (p) {
+        o.push('<circle cx="' + p[0] + '" cy="' + p[1] + '" r="8" style="fill:none;stroke:var(--a1);stroke-width:2.5"/>');
+      });
+      for (i = 0; i < 3; i++) { R(758, 70 + i * 62, 26, 11, "a1"); R(758, 90 + i * 62, W(110, 150), 10, "t2"); }
+    } else { // table: header, rule, seven rows with a dot and three numbers
+      R(40, 30, 30, 30, "a1", 8); R(84, 36, 300, 20, "t1"); R(700, 40, 90, 11, "t2"); R(806, 40, 90, 11, "t2");
+      [[40, 14], [80, 70], [560, 60], [670, 70], [810, 48]].forEach(function (c) { R(c[0], 82, c[1], 10, "t2"); });
+      R(40, 102, 860, 1, "ln", 0);
+      for (i = 0; i < 7; i++) {
+        var ry = 118 + i * 54;
+        R(40, ry + 6, 14, 11, "t2"); R(80, ry + 6, 10, 10, ["a1", "a2", "t2"][i % 3], 5); R(100, ry + 5, W(110, 190), 13, "t1");
+        R(560, ry + 5, 70, 13, "t1"); R(670, ry + 5, 80, 13, "t1"); R(810, ry + 5, 48, 13, i === 4 ? "a1" : "a2"); R(40, ry + 36, 860, 1, "ln", 0);
+      }
+    }
+    return '<svg viewBox="0 0 940 530" width="940" height="530" aria-hidden="true">' + o.join("") + "</svg>";
+  };
+
+  // the film: pages -1 .. n+1; word k (1-based) stops on page k, page 0 is the opening page
+  var film = q(".wr-film");
+  film.innerHTML = "";
+  var cards = [];
+  for (var i = -1; i <= n + 1; i++) {
+    var kind = ((i % 6) + 6) % 6, el = document.createElement("div");
+    el.className = "wr-card " + (i % 2 === 0 ? "wr-d" : "wr-l");
+    if (shots.length) {
+      var img = document.createElement("img");
+      img.className = "wr-img"; img.alt = "";
+      img.setAttribute("src", shots[(((i - 1) % shots.length) + shots.length) % shots.length]);
+      el.appendChild(img);
+    } else el.innerHTML = page(kind);
+    var dim = document.createElement("div");
+    dim.className = "wr-dim";
+    el.appendChild(dim);
+    film.appendChild(el);
+    cards.push({ i: i, el: el, dim: dim });
+  }
+  var blur = kSpeedBlur(film, "wr", { amount: 0.22, max: 10 });
+  var grain = off ? null : kGrain(q(".wr-grain"));
+
+  // words: the subject stays; each verb is split into letters plus an accent dot, all verbs share one size
+  var noun = q(".wr-noun");
+  noun.textContent = String(v.subject).trim();
+  if (noun.textContent) kFit(noun, { lines: 1, min: 64 });
+  else { // no subject: the verb row alone is centred on the page's middle line
+    noun.style.display = "none";
+    q(".wr-words").style.top = G.focusTop + G.cardH / 2 - G.line / 2 + "px";
+    q(".wr-idx").style.top = G.focusTop + G.cardH / 2 - G.line / 2 - 58 + "px";
+    q(".wr-notes").style.top = G.focusTop + G.cardH / 2 + G.line / 2 + 40 + "px";
+  }
+  var vrow = q(".wr-vrow");
+  vrow.innerHTML = "";
+  var verbs = words.map(function (w) {
+    var el = document.createElement("div");
+    el.className = "wr-verb" + (kCJK.test(w) ? "" : " wr-it");
+    vrow.appendChild(el);
+    var units = kSplit(el, "char", false, w), dot = document.createElement("span");
+    dot.className = "wr-dot";
+    el.appendChild(dot);
+    units.push(dot);
+    return { el: el, units: units, size: kFit(el, { lines: 1, min: 64 }).size };
+  });
+  var vs = Math.min.apply(null, verbs.map(function (b) { return b.size; })); // all verbs share the smallest fitted size
+  verbs.forEach(function (b) { b.el.style.fontSize = vs + "px"; });
+  var nbox = q(".wr-notes");
+  nbox.innerHTML = "";
+  var noteEls = words.map(function (w, k) {
+    var t = String(notes[k] || "").trim(), el = document.createElement("div");
+    el.className = "wr-note";
+    el.textContent = t;
+    nbox.appendChild(el);
+    if (t) kFit(el, { lines: 2, min: 40 });
+    return el;
+  });
+  var idx = q(".wr-idx"), pad = function (x) { return (x < 10 ? "0" : "") + x; };
+  var lead = q(".wr-lead"), pin = q(".wr-pin"), cam = q(".wr-cam"), key = q(".wr-key");
+  var c0 = kRGB(root, "var(--k-ink)"), c1 = kRGB(root, "color-mix(in srgb, var(--k-ink) 40%, var(--k-bg))");
+
+  // the film moves only inside the switch windows: whole pages, asymmetric in-out, zero motion in between
+  var steps = function (t) { var s = 0; for (var k = 0; k < n; k++) s += MT.ramp(t, sw[k], CFG.step, "swift"); return s; };
+  var scrollAt = function (t) { return steps(t) * STEP; };
+
+  var render = function (t) {
+    if (grain) grain(t);
+    key.style.opacity = ((1 + 0.048 * Math.sin((t * 30) / 38)) / 1.048).toFixed(3); // frames at 30 fps: the key light breathes
+    cam.style.transform = "scale(" + MT.mix(1, 1 + CFG.push, MT.ramp(t, 0, DUR, "swift")).toFixed(4) + ")";
+    var scroll = scrollAt(t);
+    blur(0, -MT.velocity(scrollAt, t));
+    cards.forEach(function (c) {
+      var y = G.focusTop + c.i * STEP - scroll;
+      c.el.style.display = y > FH + 120 || y < -G.cardH - 120 ? "none" : "";
+      // depth of field: dimmer, smaller and softer with distance from the focus slot
+      var d = Math.min(1.4, Math.abs(y - G.focusTop) / STEP), dm = Math.min(G.dim, d * G.dim), b = Math.min(G.blur, d * G.blur);
+      c.el.style.top = y.toFixed(2) + "px";
+      c.el.style.transform = "scale(" + (1 - G.shrink * Math.min(1, d)).toFixed(4) + ")";
+      c.el.style.filter = b > 0.15 ? "blur(" + b.toFixed(2) + "px)" : "";
+      if (off) c.el.style.opacity = (1 - dm).toFixed(3);
+      else c.dim.style.opacity = dm.toFixed(3);
+    });
+    verbs.forEach(function (b, k) {
+      var outAt = k + 1 < n ? sw[k + 1] : null;
+      var gr = outAt === null ? 0 : MT.ramp(t, outAt - CFG.grey, CFG.grey, "smooth");
+      var po = outAt === null ? 0 : MT.ramp(t, outAt, CFG.out, "exit");
+      if (t < inAt[k] || po >= 1) { b.el.style.opacity = 0; return; }
+      b.el.style.opacity = (1 - po * 0.6).toFixed(3);
+      b.el.style.transform = "translateY(" + (-po * G.line * 0.9).toFixed(2) + "px)";
+      b.el.style.color = "rgb(" + [0, 1, 2].map(function (j) { return Math.round(MT.mix(c0[j], c1[j], gr)); }).join(",") + ")";
+      b.units.forEach(function (u, j) {
+        var p = MT.ramp(t, inAt[k] + j * CFG.letterGap, CFG.letter, "snappy");
+        u.style.opacity = p > 0 ? 1 : 0;
+        u.style.transform = "translateY(" + ((1 - p) * G.line * 0.95).toFixed(2) + "px)";
+      });
+      b.units[b.units.length - 1].style.background = gr < 0.5 ? "" : "currentColor"; // the dot turns grey with its word
+    });
+    noteEls.forEach(function (el, k) {
+      var pi = MT.ramp(t, inAt[k] + CFG.noteLag, CFG.noteIn, "snappy");
+      var po = k + 1 < n ? MT.ramp(t, sw[k + 1], CFG.noteOut, "exit") : 0;
+      el.style.opacity = (pi * (1 - po)).toFixed(3);
+      el.style.transform = "translateY(" + ((1 - pi) * 14 - po * 10).toFixed(2) + "px)";
+    });
+    var at = inAt.filter(function (s) { return t >= s; }).length;
+    idx.innerHTML = "<b>" + pad(at) + "</b> / " + pad(n);
+    // leader: drawn at the start; each switch retracts it, it redraws once the new page has nearly landed
+    var last = null;
+    sw.forEach(function (s) { if (t >= s) last = s; });
+    var lp = last === null ? MT.ramp(t, 0, CFG.lineIn, "snappy")
+      : t < last + CFG.lineGap ? 1 - MT.ramp(t, last, CFG.lineOut, "exit") : MT.ramp(t, last + CFG.lineGap, CFG.lineIn, "snappy");
+    lead.style.transform = "scaleX(" + lp.toFixed(4) + ")";
+    pin.style.opacity = Math.min(1, lp * 2).toFixed(3);
+  };
+
+  var tl = MT.scene(DUR, render);
+  window.__timelines["word-relay-filmstrip"] = tl;
+})();
+      </script>
+    </template>
+  </body>
+</html>

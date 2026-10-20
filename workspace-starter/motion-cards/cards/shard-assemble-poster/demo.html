@@ -1,0 +1,441 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"海报标题（| 切意群；一行横屏 10–18 字、竖屏 7–10 字，再长折行）","default":"把复杂的事|讲清楚"},
+    {"id":"sub","type":"string","label":"副题（留空不要；| 处换行）","default":"第 1 课：新手入门"},
+    {"id":"logo","type":"string","label":"标志图（空：示意标志；none：不要标志）","default":""},
+    {"id":"image","type":"string","label":"海报底图（空：深色渐变）","default":""},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（只留碎片和字）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>shard-assemble-poster · 碎片聚成海报</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="shard-assemble-poster-template">
+      <!-- Ported from video-shotcraft demos/opening/fracture/Fracture.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds
+           (s = t * 155 / 30); neutral --k-* palette, system fonts, generic copy, upstream mark and wordmark removed: the
+           INTRODUCING kicker and wordmark became a neutral mark alone in cell (row 1, col 2), a title (row 2) and a subline
+           (row 3) from variables, plus optional logo and poster image; poster face mixed from --k-stage and --k-accent-2
+           (was hue 218), its horizon arc lowered to top out at 72% of the poster (was ~46%, through the type row); dark
+           stage replaced by the lit white backdrop on light skins (vignette 0.16; 0.55 and a cool key light on dark skins),
+           the glow behind the poster multiplies there; CameraMotionBlur (8 samples, 170 deg) replaced by a blur along each
+           tile's screen velocity, sigma = 0.12 x px per frame, max 36, none under 1, off-frame tiles not drawn; the
+           unsliced type is the only DOM text and hands over to ::before copies on the tiles when they leave; the tiles'
+           lit top edge is drawn above the slice (upstream's inset shadow sat under it); grain 0.08 soft-light sits under
+           the type; portrait: 864 x 1076 poster in the safe area, scatter and exit x / y ranges swapped. Kept: 5 x 5 grid and rand() seeds, scatter, spins, ring delay 0.045,
+           flight 0.34 on bezier(0.42,0,0.3,1), settle wobble, opacity ramp, type 0.42-0.52, 3% push 0.45-1, glow
+           0.28-0.55 / 0.7-0.86, exit 0.7 + delay * 0.5 over 0.18 (inCubic), exit distances and spin, 2px seams. -->
+      <style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+@font-face { font-family: "sh-heavy"; font-weight: 700 900; src: local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"), local("PingFangSC-Semibold"), local("NotoSansSC-Black"); }
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  --k-stage: var(--mc-stage, #0b0d12);
+  --k-on-stage: var(--mc-on-stage, #f3f5f8);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--k-font);
+  color: var(--k-ink);
+}
+/* ==== kit:derived@1 ==== */
+.sh { --sh-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); }
+.sh[data-tone="dark"] { --sh-shade: color-mix(in srgb, var(--k-bg) 30%, black); }
+/* ==== end kit:derived ==== */
+/* ==== kit:backdrop@1 ==== (key light moved to 50% 8%, as upstream's stage) */
+.sh-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+.sh-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 50% 8%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+/* ==== end kit:backdrop ==== */
+/* dark skins: upstream's dark stage light, a cool 16% glow from the top */
+.sh[data-tone="dark"] .sh-backdrop::after { background: radial-gradient(ellipse 62% 70% at 50% 8%, color-mix(in srgb, var(--sh-l1) 16%, transparent), transparent 72%); }
+/* ==== kit:vignette@1 ==== */
+.sh-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--sh-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.sh[data-tone="dark"] .sh-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+/* ==== kit:light@1 ==== */
+.sh-light { mix-blend-mode: multiply; }
+.sh[data-tone="dark"] .sh-light { mix-blend-mode: screen; }
+/* ==== end kit:light ==== */
+/* ==== kit:grain@1 ==== */
+.sh-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+/* ==== kit:text@2 ==== */
+.sh-u { display: inline-block; white-space: pre; }
+/* ==== end kit:text ==== */
+/* ==== kit:mark@1 ==== */
+.sh-mark { display: block; flex: none; }
+/* ==== end kit:mark ==== */
+/* the poster face: a cool dark field mixed from --k-stage and a light tint of --k-accent-2, a top-left light,
+   a ground glow and a glowing horizon arc whose top sits at 72% of the poster height (--sh-ay per orientation).
+   Every tile paints the whole face and is cut down to its own cell, so the tiles add up to one picture. */
+.sh {
+  position: absolute; inset: 0; container-type: size;
+  --sh-hv: sh-heavy, var(--k-font);
+  --sh-l1: color-mix(in srgb, var(--k-accent-2) 50%, white);
+}
+/* declared below the container: @container rules cannot restyle the container itself */
+.sh-pos {
+  --sh-base: linear-gradient(165deg, color-mix(in srgb, var(--k-stage), var(--sh-l1) 22%) 0%, color-mix(in srgb, var(--k-stage), var(--sh-l1) 10%) 55%, color-mix(in srgb, var(--k-stage), var(--sh-l1) 4%) 100%);
+  --sh-r: 64cqw; --sh-ay: 206%;
+  --sh-face: radial-gradient(circle var(--sh-r) at 64% var(--sh-ay), transparent 100%, color-mix(in srgb, var(--sh-l1) 85%, transparent) 101%, color-mix(in srgb, var(--k-accent-2) 28%, transparent) 103.6%, transparent 114.8%),
+    radial-gradient(ellipse 70% 55% at 64% 100%, color-mix(in srgb, var(--k-accent-2) 32%, transparent), transparent 70%),
+    radial-gradient(ellipse 55% 75% at 18% 0%, color-mix(in srgb, var(--sh-l1) 30%, transparent), transparent 65%),
+    var(--sh-base);
+}
+.sh-glow, .sh-cam { --sh-cy: 50%; }
+/* light from behind the poster while it is whole (upstream: 26% of the accent hue) */
+.sh-glow { position: absolute; inset: 0; opacity: 0; background: radial-gradient(ellipse 52% 56% at 50% calc(var(--sh-cy) + 2%), color-mix(in srgb, var(--k-accent-2) 26%, transparent), transparent 70%); }
+.sh-cam { position: absolute; inset: 0; perspective: 333.3cqmin; perspective-origin: 50% var(--sh-cy); }
+/* poster box: 1520 x 920 centred in landscape, the 864 x 1076 safe area (x 108-972, y 230-1306) in portrait */
+.sh-pos, .sh-txt { position: absolute; left: 10.4167cqw; width: 79.1667cqw; top: 7.4074cqh; height: 85.1852cqh; }
+.sh-pos { transform-style: preserve-3d; }
+.sh-face, .sh-sl { position: absolute; background: var(--sh-face); }
+.sh-face { inset: 0; }
+/* 2px seams between the 5 x 5 cells (0.5 design px upstream), on the static face and on the unsliced type */
+.sh-seam { mask: linear-gradient(90deg, #0000 1px, #000 0 calc(100% - 1px), #0000 0) 0 0 / 20% 100%, linear-gradient(#0000 1px, #000 0 calc(100% - 1px), #0000 0) 0 0 / 100% 20%; mask-composite: intersect; }
+.sh-tl { position: absolute; }
+.sh-cl { position: absolute; inset: 0; overflow: hidden; border-radius: 6px; }
+/* lit top edge and a faint rim on every tile */
+.sh-cl::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 1.4px 0 color-mix(in srgb, white 16%, transparent), inset 0 0 0 1.2px color-mix(in srgb, white 7%, transparent); }
+.sh-sd { position: absolute; inset: 0; background: var(--k-stage); opacity: 0; }
+/* type printed on the poster: mark in cell (row 1, col 2), title centred in row 2, subline at the top of row 3 */
+.sh-type { position: absolute; inset: 0; color: var(--k-on-stage); }
+.sh-mk { position: absolute; left: 40%; width: 20%; top: 20%; height: 20%; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 20px; box-sizing: border-box; }
+.sh-mk svg, .sh-mk img { width: 112px; height: 112px; object-fit: contain; }
+.sh-ti { position: absolute; left: 0; right: 0; top: 40%; height: 20%; display: flex; align-items: center; justify-content: center; }
+.sh-tt { width: 88%; text-align: center; font: 700 120px/1.2 var(--sh-hv); letter-spacing: 0.02em; }
+.sh-su { position: absolute; left: 0; right: 0; top: calc(60% + 22px); display: flex; justify-content: center; }
+.sh-st { width: 80%; text-align: center; font: 600 40px/1.3 var(--k-font); letter-spacing: 0.12em; color: color-mix(in srgb, var(--k-on-stage) 82%, var(--k-accent-2)); }
+/* the tiles' copies of the type: the same layout drawn from data-t, so only the unsliced type is DOM text */
+.sh-gh { opacity: var(--sh-g, 0); }
+.sh-gh i { font-style: normal; }
+.sh-gh i::before { content: attr(data-t); }
+@container (orientation: portrait) {
+  .sh-pos { --sh-ay: 136%; }
+  .sh-glow, .sh-cam { --sh-cy: 40%; }
+  .sh-pos, .sh-txt { left: 10cqw; width: 80cqw; top: 11.9792cqh; height: 56.0417cqh; }
+  .sh-mk svg, .sh-mk img { width: 100px; height: 100px; }
+  .sh-tt { width: 92%; font-size: 100px; }
+  .sh-st { width: 86%; }
+}
+      </style>
+
+      <div id="root" data-composition-id="shard-assemble-poster">
+        <div class="sh">
+          <div class="sh-backdrop"></div>
+          <div class="sh-vig"></div>
+          <div class="sh-glow sh-light"></div>
+          <div class="sh-cam" data-layout-allow-overflow>
+            <div class="sh-pos" data-layout-allow-orbit><div class="sh-face sh-seam"></div></div>
+          </div>
+          <div class="sh-grain"></div>
+          <div class="sh-txt sh-seam">
+            <div class="sh-type">
+              <div class="sh-mk"><!-- kit:mark@1 kMark(112) --><svg class="sh-mark" width="112" height="112" viewBox="0 0 128 128" aria-hidden="true"><rect class="sh-mark-box" x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle class="sh-mark-dot" cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect class="sh-mark-bar" x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg></div>
+              <div class="sh-ti"><div class="sh-tt">把复杂的事讲清楚</div></div>
+              <div class="sh-su"><div class="sh-st">第 1 课：新手入门</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+(function () {
+  // timing (seconds), shared by both orientations. Upstream works in t = 0-1 over 156 frames: s = t * 155 / 30.
+  // wave: delay per ring of Manhattan distance from the centre cell; land: each tile's flight; out: first tile
+  // leaves (centre), outWave: later per ring, outDur: each exit; type: the printed type fades in; push: 3% push-in;
+  // glow: light behind the poster rises and fades with the exit; blur: motion blur, sigma per px/frame of speed
+  var CFG = { dur: 5.2, wave: 0.2325, land: 1.757, out: 3.617, outWave: 0.116, outDur: 0.93, type: 2.17, typeDur: 0.517, push: 2.325, pushDur: 2.842, glow: 1.447, glowDur: 1.395, glowOut: 0.827, blur: 0.12 };
+  // per orientation: where the poster centre sits (perspective origin), scatter amplitude and exit distance in
+  // design px (x, y); portrait swaps the x and y ranges so the cloud fills the tall frame the way it fills the wide one
+  var LAND = { cy: 0.5, ax: 900, ay: 600, ex: [620, 260], ey: [470, 220] };
+  var PORT = { cy: 0.4, ax: 600, ay: 900, ex: [470, 220], ey: [620, 260] };
+  var v = { title: "把复杂的事|讲清楚", sub: "第 1 课：新手入门", logo: "", image: "", backdrop: "on" };
+  try {
+    var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+  } catch (e) {}
+
+  var root = document.querySelector(".sh");
+  var q = function (s) { return root.querySelector(s); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+    // not laid out yet: the host clip's declared size, then the window
+    var hc = root.closest("[data-width][data-height]");
+    FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+    FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND;
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+  // ==== kit:tone@1 ====
+  function kRGB(el, color) {
+    var p = document.createElement("i");
+    p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+    el.appendChild(p);
+    var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+    el.removeChild(p);
+    return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+  }
+  function kTone(wrap) {
+    var c = kRGB(wrap, "var(--k-bg)");
+    var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+    wrap.setAttribute("data-tone", tone);
+    return tone;
+  }
+  // ==== end kit:tone ====
+  // ==== kit:hash@1 ====
+  function kHash(n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+  // ==== end kit:hash ====
+  // ==== kit:grain@1 ====
+  function kGrain(layer, o) {
+    o = o || {};
+    var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+    var dark = tones && tones.getAttribute("data-tone") === "dark";
+    var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+      var f = "type='linear' slope='2.4' intercept='-0.7'";
+      var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+        "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+        "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+        "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+        "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+      return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+    });
+    layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+    layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+    layer.style.backgroundSize = size + "px " + size + "px";
+    return function (t) {
+      var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+      layer.style.backgroundImage = tiles[k % 6];
+      layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+    };
+  }
+  // ==== end kit:grain ====
+  // ==== kit:speedblur@1 ====
+  function kSpeedBlur(box, prefix, o) {
+    o = o || {};
+    var amount = o.amount || 0.45, max = o.max || 36;
+    var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+    svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+    var outer = document.createElement("div"), inner = document.createElement("div");
+    outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+    while (box.firstChild) inner.appendChild(box.firstChild);
+    outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+    var fe = svg.firstChild.firstChild;
+    return function (vx, vy) {
+      vy = vy || 0;
+      var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+      if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+      var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+      fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+      outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+      inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+      outer.style.filter = "url(#" + id + ")";
+    };
+  }
+  // ==== end kit:speedblur ====
+  // ==== kit:text@2 ====
+  var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+  function kWords(s, key) {
+    s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+    var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+    var cut = function (x) {
+      if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+      return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+    };
+    var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+    var pre = "";
+    bits.forEach(function (x) {
+      var t = x.trim(), last = out[out.length - 1];
+      if (last && /^ /.test(x)) last.sp = true;
+      if (!t) return;
+      if (!/[\p{L}\p{N}]/u.test(t)) {
+        if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+        else { last.t += t; last.sp = / $/.test(x); }
+        return;
+      }
+      out.push({ t: pre + t, sp: / $/.test(x) });
+      pre = "";
+    });
+    if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+    if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+    if (out.length) out[out.length - 1].sp = false;
+    return out;
+  }
+  function kSplit(el, by, rise, text) {
+    var s = text != null ? String(text) : el.textContent, units = [];
+    var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+    el.textContent = "";
+    parts.forEach(function (p) {
+      var u = document.createElement("span"), box = u;
+      u.className = "sh-u"; u.textContent = p.t;
+      if (by === "line") u.style.display = "block";
+      if (!p.t.trim()) { el.appendChild(u); return; }
+      if (rise) { box = document.createElement("span"); box.className = "sh-cut"; box.style.display = u.style.display; box.appendChild(u); }
+      el.appendChild(box);
+      if (p.sp) el.appendChild(document.createTextNode(" "));
+      units.push(u);
+    });
+    return units;
+  }
+  // ==== end kit:text ====
+  // ==== kit:fit@1 ====
+  function kFit(el, o) {
+    o = o || {};
+    var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+    var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+    for (;;) {
+      el.style.fontSize = f + "px";
+      m = kLines(el);
+      if ((m.w <= W && m.n <= n) || f <= min) break;
+      f = Math.max(min, f - 2);
+    }
+    if (m.w > W) {
+      [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+      m = kLines(el);
+    }
+    return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+  }
+  function kLines(el) {
+    var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+    var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+    while ((t = it.nextNode())) {
+      if (!t.data.trim()) continue;
+      r.selectNodeContents(t);
+      [].forEach.call(r.getClientRects(), function (b) {
+        var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+        if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+        row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+      });
+    }
+    return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+  }
+  // ==== end kit:fit ====
+
+  var tone = kTone(root), off = String(v.backdrop) === "off";
+  if (getComputedStyle(root).getPropertyValue("--mc-font").trim()) root.style.setProperty("--sh-hv", "var(--k-font)");
+  var pos = q(".sh-pos"), txt = q(".sh-txt"), type = q(".sh-type"), glow = q(".sh-glow"), mk = q(".sh-mk");
+  if (off) ["backdrop", "vig", "glow", "grain"].forEach(function (n) { q(".sh-" + n).style.display = "none"; });
+  var img = String(v.image).trim(), logo = String(v.logo).trim(), sub = String(v.sub).trim();
+  // a picture as the poster: darkened toward the bottom so the light type reads on any photo
+  if (img) pos.style.setProperty("--sh-base", "linear-gradient(color-mix(in srgb, var(--k-stage) 35%, transparent), color-mix(in srgb, var(--k-stage) 68%, transparent)), url(\"" + img.replace(/"/g, "%22") + "\") 50% 50% / cover no-repeat");
+  if (logo === "none") mk.style.display = "none";
+  else if (logo) { mk.innerHTML = ""; var li = document.createElement("img"); li.src = logo; li.alt = ""; mk.appendChild(li); }
+  // text slots: the title in "|" phrases, the subline as whole lines (kWords drops the space after a lone " · ");
+  // then the measured fit: title one line down to 72px, then two; subline one line down to 40px, then it wraps
+  var tt = q(".sh-tt"), st = q(".sh-st");
+  kSplit(tt, "word", false, v.title);
+  kFit(tt, { lines: 1, min: 72 });
+  if (sub) { kSplit(st, "line", false, sub); kFit(st, { lines: 1, min: 40 }); } else q(".sh-su").style.display = "none";
+  // geometry: u = one upstream design px (480 x 270 stage), the poster box comes from the CSS
+  var u = Math.min(FW, FH) / 270, PW = txt.offsetWidth || FW * 0.8, PH = txt.offsetHeight || FH * 0.56, TW = PW / 5, TH = PH / 5, S = u / 2, D = Math.PI / 180;
+  // a title taller than its row (three lines in portrait) pushes the mark up inside its cell and the subline down
+  var over = Math.max(0, tt.offsetHeight - TH * 0.9) / 2;
+  if (over) { mk.style.paddingBottom = 20 + over + "px"; q(".sh-su").style.marginTop = over + "px"; }
+
+  // the tiles' copy of the type: same nodes and sizes, every text run turned into <i data-t> drawn by ::before
+  var gh = type.cloneNode(true), tw = document.createTreeWalker(gh, NodeFilter.SHOW_TEXT), tn, runs = [];
+  while ((tn = tw.nextNode())) if (tn.data.trim()) runs.push(tn);
+  runs.forEach(function (n) { var i = document.createElement("i"); i.setAttribute("data-t", n.data); n.parentNode.replaceChild(i, n); });
+  gh.classList.add("sh-gh");
+
+  // perspective (900 design px), its origin and the poster centre in frame px, half a cell's diagonal: the off-frame test
+  var PP = 900 * u, OX = FW / 2, OY = FH * L.cy, PX = txt.offsetLeft + PW / 2, PY = txt.offsetTop + PH / 2, HD = Math.hypot(TW, TH) / 2;
+  q(".sh-cam").style.perspective = PP + "px";
+  pos.removeChild(q(".sh-face"));
+  var LE = MT.bezier(0.42, 0, 0.3, 1), IN2 = MT.ease("power2.in"), OUT2 = MT.ease("power2.out"), IO1 = MT.ease("power1.inOut"), IN1 = MT.ease("power1.in");
+  // the parts of the type (mark, title, subline) as boxes in poster px, 8px spare for overhang: a cell only carries
+  // the parts it shows, which keeps the page small for the layout checks
+  var tr = txt.getBoundingClientRect(), parts = [].map.call(type.children, function (p) {
+    var g = document.createRange(), b;
+    g.selectNodeContents(p); b = g.getBoundingClientRect();
+    return b.width ? [b.left - tr.left - 8, b.top - tr.top - 8, b.right - tr.left + 8, b.bottom - tr.top + 8] : null;
+  });
+  var tiles = [];
+  for (var i = 0; i < 25; i++) {
+    var r = (i / 5) | 0, c = i % 5, m = Math.abs(r - 2) + Math.abs(c - 2), H = function (n) { return kHash(i + n); };
+    // exit heading: away from the centre with +-0.4 cell of jitter; the centre tile takes a seeded angle
+    var ang = m ? Math.atan2(r - 2 + (H(310) - 0.5) * 0.8, c - 2 + (H(320) - 0.5) * 0.8) : H(300) * Math.PI * 2;
+    var el = document.createElement("div");
+    el.className = "sh-tl";
+    el.style.cssText = "left:" + (c * TW + S / 2) + "px;top:" + (r * TH + S / 2) + "px;width:" + (TW - S) + "px;height:" + (TH - S) + "px";
+    el.innerHTML = '<div class="sh-cl"><div class="sh-sl" style="left:' + (-c * TW - S / 2) + "px;top:" + (-r * TH - S / 2) + "px;width:" + PW + "px;height:" + PH + 'px"></div><div class="sh-sd"></div></div>';
+    var gc = gh.cloneNode(true), keep = 0;
+    for (var k = parts.length - 1; k >= 0; k--) {
+      var b = parts[k];
+      if (b && b[0] < (c + 1) * TW && b[2] > c * TW && b[1] < (r + 1) * TH && b[3] > r * TH) keep = 1;
+      else gc.removeChild(gc.children[k]);
+    }
+    if (keep) el.querySelector(".sh-sl").appendChild(gc);
+    pos.appendChild(el);
+    tiles.push({
+      el: el, sd: el.querySelector(".sh-sd"), cx: (c + 0.5) * TW - PW / 2, cy: (r + 0.5) * TH - PH / 2, d: m * CFG.wave, o: CFG.out + m * CFG.outWave, wob: H(360) < 0.5 ? -1 : 1,
+      dx: (H(0) - 0.5) * L.ax, dy: (H(50) - 0.5) * L.ay, dz: (H(100) - 0.3) * 700,
+      rx: (H(150) - 0.5) * 360, ry: (H(200) - 0.5) * 360, rz: (H(250) - 0.5) * 360,
+      ex: Math.cos(ang) * (L.ex[0] + H(330) * L.ex[1]), ey: Math.sin(ang) * (L.ey[0] + H(340) * L.ey[1]), er: (H(350) - 0.5) * 300,
+      blur: kSpeedBlur(el, "sh", { amount: CFG.blur })
+    });
+  }
+  // one tile's pose at t: scatter -> cell (tin), a damped rotateX click after landing, then out along its heading (tout)
+  var pose = function (T, t) {
+    var tin = MT.ramp(t, T.d, CFG.land, LE), inv = 1 - tin, tout = MT.ramp(t, T.o, CFG.outDur, IN2);
+    var f = (t - T.d - CFG.land) * 30, st = f > 0 && f < 14 ? Math.exp(-f / 3.2) * Math.sin(f * 0.75) : 0; // frames at 30 fps
+    return { x: (T.dx * inv + T.ex * tout) * u, y: (T.dy * inv + T.ey * tout) * u, z: (T.dz * inv - 4 * Math.abs(st)) * u,
+      rx: T.rx * inv + T.wob * 2.5 * st, ry: T.ry * inv, rz: T.rz * inv + T.er * tout, a: Math.min(1, tin * 2.5) };
+  };
+  var grain = off ? function () {} : kGrain(q(".sh-grain"), { opacity: 0.08, blend: "soft-light" });
+
+  var tl = MT.scene(CFG.dur, function (t) {
+    var ps = 1 + 0.03 * MT.ramp(t, CFG.push, CFG.pushDur, IO1), k = "scale(" + ps.toFixed(5) + ")", whole = t < CFG.out;
+    pos.style.transform = txt.style.transform = k;
+    glow.style.opacity = (MT.ramp(t, CFG.glow, CFG.glowDur, OUT2) * (1 - MT.ramp(t, CFG.out, CFG.glowOut, IN1))).toFixed(3);
+    // the unsliced type holds the poster until the first tile leaves, then the tiles' copies take over
+    txt.style.opacity = whole ? MT.ramp(t, CFG.type, CFG.typeDur, OUT2).toFixed(3) : 0;
+    root.style.setProperty("--sh-g", whole ? 0 : 1);
+    tiles.forEach(function (T) {
+      var p = pose(T, t), a = pose(T, t - 1 / 60), b = pose(T, t + 1 / 60), vx = (b.x - a.x) * 30, vy = (b.y - a.y) * 30, w = -p.rz * D;
+      // a tile wholly outside the frame (centre projected through the perspective, half diagonal + 120px spare) is not
+      // drawn: its blur filter is most of the paint cost of a frame
+      var f = PP / (PP - p.z - HD), X = OX + (PX + ps * (T.cx + p.x) - OX) * f, Y = OY + (PY + ps * (T.cy + p.y) - OY) * f, R = HD * f + 120;
+      if (X + R < 0 || X - R > FW || Y + R < 0 || Y - R > FH) { T.el.style.opacity = 0; T.blur(0, 0); return; }
+      T.el.style.opacity = p.a.toFixed(3);
+      T.el.style.transform = "translate3d(" + p.x.toFixed(2) + "px," + p.y.toFixed(2) + "px," + p.z.toFixed(2) + "px) rotateX(" + p.rx.toFixed(3) + "deg) rotateY(" + p.ry.toFixed(3) + "deg) rotateZ(" + p.rz.toFixed(3) + "deg)";
+      // facing shade: darker the more the tile turns away from the camera
+      T.sd.style.opacity = ((1 - Math.abs(Math.cos(p.rx * D) * Math.cos(p.ry * D))) * 0.6).toFixed(3);
+      // motion blur along the screen velocity, turned into the tile's own plane; under sigma 1 (250 px/s) it is not
+      // visible and only costs paint time, so it starts there
+      if (Math.hypot(vx, vy) * CFG.blur < 30) T.blur(0, 0);
+      else T.blur(vx * Math.cos(w) - vy * Math.sin(w), vx * Math.sin(w) + vy * Math.cos(w));
+    });
+    grain(t);
+  });
+  window.__timelines["shard-assemble-poster"] = tl;
+})();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,250 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（界面压在画面上，空隙露出宿主）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>jump-cut-punch-in · 三级跳切推近</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="jump-cut-punch-in-template">
+      <!-- Ported from video-shotcraft demos/rhythm/rhythm-interrupt-moves/JumpCutPunchIn.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette, upstream FakeDashboard replaced by a wordless generated UI that follows the skin;
+           selection ring uses --k-accent; vignette and grain kept (grain frozen after the last push); upstream label
+           overlay dropped; portrait pins a top-row card with zoom steps 1 / 1.6 / 2.4 instead of 1 / 1.6 / 2.6;
+           landscape zoom steps, jump frames, 2-frame brightness pulse, drift and ring timing are unchanged. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* wrapper = size container; the scene is built by the script, so nothing here depends on orientation */
+        .jc { position: absolute; inset: 0; container-type: size; }
+        .jc-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .jc-cam { position: absolute; inset: 0; }
+        .jc-scene { position: absolute; display: block; }
+        .jc-scene svg { display: block; }
+        .jc-ring { position: absolute; box-sizing: border-box; pointer-events: none; --ra: 42%; --ha: 7%;
+          border: 1.5px solid color-mix(in srgb, var(--k-accent) var(--ra), transparent);
+          box-shadow: 0 0 0 5px color-mix(in srgb, var(--k-accent) var(--ha), transparent), 0 18px 48px -18px color-mix(in srgb, var(--k-accent) calc(var(--ha) * 1.6), transparent); }
+        /* ==== kit:grain@1 ==== */
+.jc-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+
+/* ==== kit:vignette@1 ==== */
+.jc-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--jc-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.jc[data-tone="dark"] .jc-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+
+/* ==== kit:derived@1 ==== */
+.jc {
+  --jc-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+  --jc-panel-2: color-mix(in srgb, var(--k-panel), var(--k-ink) 4%);
+  --jc-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+  --jc-hi: color-mix(in srgb, white 80%, transparent);
+}
+.jc[data-tone="dark"] {
+  --jc-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+  --jc-hi: color-mix(in srgb, white 6%, transparent);
+}
+/* ==== end kit:derived ==== */
+      </style>
+
+      <div id="root" data-composition-id="jump-cut-punch-in">
+        <div class="jc">
+          <div class="jc-bg"></div>
+          <div class="jc-cam" data-layout-allow-overflow>
+            <div class="jc-scene"></div>
+          </div>
+          <div class="jc-vig"></div>
+          <div class="jc-grain"></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing (seconds = original frames / 30, kept as fractions so the cuts land exactly on frames), shared by both orientations
+          var CFG = { jump1: 35 / 30, jump2: 70 / 30, driftTo: 1.008, driftLen: 35 / 30, settleLen: 16 / 30, lockLen: 8 / 30, pulseLen: 2 / 30, end: 4.5 };
+          // layout per orientation: zoom steps, which grid card is the target (0-5, row by row), vignette strength per step
+          var LAND = { steps: [1, 1.6, 2.6], target: 4, px: 0.5, py: 0.5, vig: [0.1, 0.14, 0.18], vy: 0.56 };
+          var PORT = { steps: [1, 1.6, 2.4], target: 1, px: 0.5, py: 0.78, vig: [0.1, 0.14, 0.18], vy: 0.4 };
+          var v = { backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".jc");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          var off = String(v.backdrop) === "off";
+          if (off) { q(".jc-bg").style.display = "none"; q(".jc-vig").style.display = "none"; q(".jc-grain").style.display = "none"; }
+
+          // ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== end kit:tone ====
+
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+      "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+      "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+      "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+      "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+}
+// ==== end kit:grain ====
+
+// ==== kit:fakeui@1 ====
+function kFakeUI(w, h, kind, seed) {
+  var rnd = MT.seeded(seed || 7), out = [], cards = [], u = Math.min(w / 1600, h / 900);
+  var ink = "color-mix(in srgb, var(--k-ink) 22%, var(--k-panel))", line = "color-mix(in srgb, var(--k-ink) 9%, var(--k-bg))";
+  var R = function (x, y, rw, rh, r, c) { out.push('<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + rw.toFixed(1) + '" height="' + rh.toFixed(1) + '" rx="' + (r * u).toFixed(1) + '" style="fill:' + c + '"/>'); };
+  var side = 190 * u, top = 64 * u, pad = 30 * u, gap = 22 * u;
+  R(0, 0, w, h, 0, "var(--k-bg)");
+  R(0, 0, side, h, 0, "var(--k-panel)");
+  for (var i = 0; i < 6; i++) { R(24 * u, (92 + i * 46) * u, 18 * u, 18 * u, 5, i === 1 ? "var(--k-accent)" : ink); R(54 * u, (96 + i * 46) * u, (60 + rnd() * 60) * u, 10 * u, 5, ink); }
+  R(side, top - u, w - side, Math.max(1, u), 0, line);
+  R(side + pad, 22 * u, 170 * u, 18 * u, 9, ink);
+  R(w - pad - 260 * u, 16 * u, 260 * u, 32 * u, 16, "var(--k-panel)");
+  var x0 = side + pad, y0 = top + pad, cw = w - x0 - pad, ch = h - y0 - pad;
+  if (kind === "list") {
+    var rh = (ch - gap * 4) / 5;
+    for (var r = 0; r < 5; r++) {
+      var y = y0 + r * (rh + gap), m = y + rh / 2;
+      cards.push({ x: x0, y: y, w: cw, h: rh });
+      R(x0, y, cw, rh, 12, "var(--k-panel)");
+      R(x0 + 24 * u, m - 18 * u, 36 * u, 36 * u, 10, r === 0 ? "var(--k-accent)" : ink);
+      R(x0 + 80 * u, m - 14 * u, (260 + rnd() * 260) * u, 12 * u, 6, ink);
+      R(x0 + 80 * u, m + 6 * u, (140 + rnd() * 160) * u, 9 * u, 4.5, line);
+      R(x0 + cw - 150 * u, m - 13 * u, 110 * u, 26 * u, 13, line);
+    }
+  } else {
+    var gw = (cw - gap * 2) / 3, gh = (ch - gap) / 2;
+    for (var k = 0; k < 6; k++) {
+      var cx = x0 + (k % 3) * (gw + gap), cy = y0 + Math.floor(k / 3) * (gh + gap), base = cy + gh - 24 * u;
+      cards.push({ x: cx, y: cy, w: gw, h: gh });
+      R(cx, cy, gw, gh, 14, "var(--k-panel)");
+      R(cx + 22 * u, cy + 24 * u, (90 + rnd() * 70) * u, 12 * u, 6, ink);
+      R(cx + 22 * u, cy + 52 * u, (110 + rnd() * 70) * u, 28 * u, 8, k === 0 ? "var(--k-accent)" : ink);
+      if (k % 2) {
+        for (var j = 0; j < 7; j++) { var bh = (0.25 + rnd() * 0.75) * gh * 0.4; R(cx + 22 * u + j * (gw - 44 * u) / 7, base - bh, (gw - 44 * u) / 7 - 8 * u, bh, 4, j === 5 ? "var(--k-accent-2)" : ink); }
+      } else {
+        var pts = [];
+        for (var q = 0; q <= 12; q++) pts.push((cx + 22 * u + (q * (gw - 44 * u)) / 12).toFixed(1) + "," + (base - (0.2 + 0.6 * (0.5 + 0.5 * Math.sin(q * 0.7 + k)) * (0.6 + 0.4 * rnd())) * gh * 0.4).toFixed(1));
+        out.push('<polyline points="' + pts.join(" ") + '" style="fill:none;stroke:var(--k-accent-2);stroke-width:' + (3 * u).toFixed(1) + ';stroke-linejoin:round;stroke-linecap:round"/>');
+      }
+    }
+  }
+  return { svg: '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + " " + h + '" aria-hidden="true">' + out.join("") + "</svg>", cards: cards };
+}
+// ==== end kit:fakeui ====
+
+          kTone(root);
+          var grain = off ? null : kGrain(q(".jc-grain"), { opacity: 0.045 });
+          // the generated UI fills the frame; a point on the target card is the zoom pin (landscape: its centre; portrait: low on a tall card so the zoomed card stays above the caption band) and stays put on screen at every step
+          var ui = kFakeUI(FW, FH, "grid", 7);
+          var tc = ui.cards[L.target];
+          var OX = tc.x + tc.w * L.px, OY = tc.y + tc.h * L.py;
+          var scene = q(".jc-scene");
+          scene.style.width = FW + "px"; scene.style.height = FH + "px";
+          scene.innerHTML = (off ? ui.svg.replace(/<rect[^>]*var\(--k-bg\)"\/>/, "") : ui.svg) + '<div class="jc-ring"></div>';
+          var ring = q(".jc-ring"), cam = q(".jc-cam"), vig = q(".jc-vig");
+          var u = Math.min(FW / 1600, FH / 900);
+          ring.style.left = tc.x - 5 * u + "px"; ring.style.top = tc.y - 5 * u + "px";
+          ring.style.width = tc.w + 10 * u + "px"; ring.style.height = tc.h + 10 * u + "px";
+          ring.style.borderRadius = 19 * u + "px";
+          vig.style.setProperty("--vx", (OX / FW) * 100 + "%");
+          vig.style.setProperty("--vy", L.vy * 100 + "%");
+          vig.style.setProperty("--vin", "52%");
+          var dark = root.getAttribute("data-tone") === "dark";
+
+          var tl = MT.scene(CFG.end, function (t) {
+            // the hard cuts land on frame boundaries (30 fps)
+            var st = t < CFG.jump1 - 1e-6 ? 0 : t < CFG.jump2 - 1e-6 ? 1 : 2;
+            var s = L.steps[st];
+            // the zoom is a hard step (no tween); CSS zoom scales the node's own left/top too, so the pin stays fixed
+            scene.style.zoom = s;
+            scene.style.left = OX / s - OX + "px"; scene.style.top = OY / s - OY + "px";
+            // in-step drift: 0.8% push, smooth in-out in the first two steps, ease-out then dead still in the last
+            var d = st === 0 ? MT.ramp(t, 0, CFG.driftLen, "smooth") : st === 1 ? MT.ramp(t, CFG.jump1, CFG.driftLen, "smooth") : MT.ramp(t, CFG.jump2, CFG.settleLen, "out");
+            cam.style.transformOrigin = OX + "px " + OY + "px";
+            cam.style.transform = "scale(" + MT.mix(1, CFG.driftTo, d) + ")";
+            // 2-frame darker pulse on each cut
+            var pulse = (t >= CFG.jump1 - 1e-6 && t < CFG.jump1 + CFG.pulseLen - 1e-6) || (t >= CFG.jump2 - 1e-6 && t < CFG.jump2 + CFG.pulseLen - 1e-6);
+            cam.style.filter = pulse ? "brightness(0.92)" : "none";
+            // the selection ring deepens one notch on the third cut
+            var lock = MT.ramp(t, CFG.jump2, CFG.lockLen, "out");
+            ring.style.setProperty("--ra", MT.mix(42, 85, lock).toFixed(2) + "%");
+            ring.style.setProperty("--ha", MT.mix(7, 14, lock).toFixed(2) + "%");
+            vig.style.setProperty("--vs", dark ? [0.45, 0.5, 0.55][st] : L.vig[st]);
+            if (grain) grain(Math.min(t, CFG.jump2 + CFG.settleLen)); // grain freezes once the last push is done
+          });
+          window.__timelines["jump-cut-punch-in"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

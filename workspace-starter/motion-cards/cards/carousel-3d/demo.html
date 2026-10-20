@@ -1,0 +1,441 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"items","type":"string","label":"卡上的名字，用 | 分隔，8 个最好（少于 8 个循环补满，多于 8 个只取前 8 个；留空时卡面不写字、不出字幕）","default":"自动整理|一键导出|多人协作|版本记录|模板市场|数据看板|智能搜索|权限管理"},
+    {"id":"images","type":"string","label":"卡面图片（可空，用 | 分隔，和名字一一对应；留空时卡面画示意图形）","default":""},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+<head>
+<meta charset="UTF-8" />
+<title>carousel-3d · 环形转盘</title>
+<script src="../../lib/preview.js"></script>
+</head>
+<body>
+<template id="carousel-3d-template">
+<!-- Ported from video-shotcraft demos/ui-entrance/carousel-3d/Carousel3D.tsx
+     (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+     Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+     Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+     neutral --k-* palette on a lit light backdrop (accent key light only on dark skins) instead of the lime dark stage,
+     system fonts, generic copy; upstream mark, wordmark and the "1080P · 30 FPS" corner label removed. Card face: index
+     without "SHOT" at 28 px, the eight generated graphics kept (the rings' "FPS 30" text became two bars), the big stat,
+     unit and meta line replaced by a 52 px fitted name and two grey bars. Air fades faces towards --k-bg; reflection 5%
+     on light skins (the recipe's value for white), 8% on dark; caption index 32 px in accent mixed 15% towards ink,
+     every caption name at one fitted size; items / images / backdrop variables; portrait camera (ring x0.84, radius
+     620, tilt 12deg, perspective 1354 px). Turn (50% even + 50% 21-frame steps with an 8-frame dwell), radius 700,
+     perspective 2200, tilt 9deg, 44 px push, +-26deg light window, 70% air, floor disc, ticks and under-glow unchanged. -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+/* ==== kit:fonts@2 (mono only) ==== */
+@font-face { font-family: "Consolas"; src: local("Consolas"); }
+/* ==== end kit:fonts ==== */
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  --k-mono: var(--mc-mono, Consolas, monospace);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--k-font);
+  color: var(--k-ink);
+}
+/* the wrapper is the size container (static layout switches with @container) and carries no layout itself */
+.cr{position:absolute;inset:0;container-type:size;--cr-gray:color-mix(in srgb,var(--k-ink) 36%,var(--k-bg));--cr-dim:color-mix(in srgb,var(--k-ink) 10%,transparent);--cr-f0:var(--k-bg);--cr-f1:var(--k-bg);--cr-f2:color-mix(in srgb,var(--k-bg),var(--k-ink) 6%);--rfo:.05}
+.cr[data-tone="dark"]{--cr-f0:color-mix(in srgb,var(--k-panel),var(--k-ink) 6%);--cr-f1:var(--k-panel);--cr-f2:color-mix(in srgb,var(--k-panel),black 40%);--rfo:.08}
+/* ==== kit:derived@1 (line, shade, hi) ==== */
+.cr {
+  --cr-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+  --cr-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+  --cr-hi: color-mix(in srgb, white 80%, transparent);
+}
+.cr[data-tone="dark"] {
+  --cr-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+  --cr-hi: color-mix(in srgb, white 6%, transparent);
+}
+/* ==== end kit:derived ==== */
+/* ==== kit:backdrop@1 ==== */
+.cr-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+.cr-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+/* ==== end kit:backdrop ==== */
+/* key light where upstream's stage had it: top centre */
+.cr-backdrop::after{background:radial-gradient(ellipse 62% 70% at 50% 16%,color-mix(in srgb,var(--k-bg) 95%,transparent) 0%,transparent 72%)}
+/* ==== kit:vignette@1 ==== */
+.cr-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--cr-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.cr[data-tone="dark"] .cr-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+/* ==== kit:light@1 ==== */
+.cr-light { mix-blend-mode: multiply; }
+.cr[data-tone="dark"] .cr-light { mix-blend-mode: screen; }
+/* ==== end kit:light ==== */
+/* ==== kit:grain@1 ==== */
+.cr-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+/* stage lights: an accent key at the top (dark skins only), an accent-2 fill from below, a glow under the front card */
+.cr-key{position:absolute;inset:0;--kk:0%;--kf:5%;background:radial-gradient(ellipse 58% 62% at 50% 16%,color-mix(in srgb,var(--k-accent) var(--kk),transparent) 0%,transparent 70%),radial-gradient(ellipse 50% 46% at 50% 100%,color-mix(in srgb,var(--k-accent-2) var(--kf),transparent) 0%,transparent 72%)}
+.cr[data-tone="dark"] .cr-key{--kk:27.5%;--kf:11%}
+.cr-up{position:absolute;left:440px;top:590px;width:1040px;height:420px;border-radius:50%;background:radial-gradient(ellipse at 50% 40%,color-mix(in srgb,var(--k-accent) 16%,transparent) 0%,transparent 65%)}
+/* fixed camera: perspective 2200, the ring pushed back by its radius (front card at z 0) and tilted 9° */
+.cr-scene{position:absolute;inset:0;--R:700px;--S:1;--T:-9deg;perspective:2200px;perspective-origin:50% 37.96%}
+.cr-wrap{position:absolute;left:50%;top:43.52%;width:0;height:0;transform-style:preserve-3d;transform:translateZ(calc(var(--R) * -1 * var(--S))) rotateX(var(--T)) scale3d(var(--S),var(--S),var(--S))}
+.cr-ring,.cr-rf{position:absolute;left:0;top:0;transform-style:preserve-3d}
+.cr-rf{transform:translateY(480px) scaleY(-1)}
+.cr-disc{position:absolute;left:calc(var(--R) * -1.35);top:calc(240px - var(--R) * 1.35);width:calc(var(--R) * 2.7);height:calc(var(--R) * 2.7);border-radius:50%;transform:rotateX(90deg);background:radial-gradient(circle,color-mix(in srgb,var(--k-accent) 10%,transparent) 0%,color-mix(in srgb,var(--k-accent) 3%,transparent) 45%,transparent 66%)}
+.cr-tk{position:absolute;overflow:visible}
+.cr-tc,.cr-tm,.cr-tj{fill:none;stroke-width:2;stroke:color-mix(in srgb,var(--k-ink) 8%,transparent)}
+.cr-tm{stroke:color-mix(in srgb,var(--k-ink) 12%,transparent)}
+.cr-tj{stroke:color-mix(in srgb,var(--k-accent) 50%,transparent);stroke-width:3}
+/* a card only orbits (rotateY, then out along its normal), never turns about X or Z: always upright */
+.cr-c{position:absolute;left:-170px;top:-230px;width:340px;height:460px;transform-style:preserve-3d;transform:rotateY(calc(var(--i) * 45deg)) translateZ(var(--R));--hl:0;--a:0;--b:var(--cr-line);--o:var(--k-muted);--cr-g:color-mix(in srgb,var(--k-accent) calc(var(--hl) * 100%),var(--cr-gray))}
+.cr-ring>.cr-c:first-child{transform:translateZ(calc(var(--R) + 44px));--hl:1;--b:color-mix(in srgb,var(--k-accent) 85%,transparent);--o:var(--k-accent)}
+/* two faces with the same content, the back one turned 180°: seen from inside the ring it still reads the right way */
+.cr-f{position:absolute;inset:0;box-sizing:border-box;padding:30px;border-radius:26px;overflow:hidden;border:1.5px solid var(--b);-webkit-backface-visibility:hidden;backface-visibility:hidden;box-shadow:inset 0 1px 0 var(--cr-hi);background:radial-gradient(120% 55% at 30% 0%,color-mix(in srgb,white 7%,transparent),transparent 60%),linear-gradient(165deg,var(--cr-f0),var(--cr-f1) 60%,var(--cr-f2))}
+.cr-bk{transform:rotateY(180deg)}
+.cr-hd{display:flex;justify-content:space-between;align-items:center;height:36px}
+.cr-ix{font:28px/36px var(--k-mono);letter-spacing:.14em;color:var(--k-muted)}
+.cr-dot{display:block;width:14px;height:14px;border-radius:50%;background:var(--o)}
+.cr-gx{position:relative;height:150px;margin-top:20px}
+.cr-gx svg{display:block;overflow:visible}
+.cr-a{fill:var(--cr-g)}
+.cr-d{fill:var(--cr-dim)}
+.cr-i{fill:var(--k-ink)}
+.cr-s,.cr-z{fill:none;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke:var(--cr-g)}
+.cr-z{stroke:var(--cr-dim)}
+.cr-im{position:absolute;inset:0;border-radius:14px;background:center/cover;filter:grayscale(calc(1 - var(--hl)))}
+.cr-nm{display:block;margin-top:26px;font-size:52px;font-weight:700;line-height:1.15}
+.cr-bar{position:absolute;left:30px;bottom:50px;width:62%;height:10px;border-radius:5px;background:var(--cr-dim)}
+.cr-b2{bottom:30px;width:36%}
+/* air perspective: the further round the ring, the more a face fades into the background colour */
+.cr-air{position:absolute;inset:0;background:var(--k-bg);opacity:var(--a)}
+.cr-rf [data-t]::before{content:attr(data-t)}
+.cr-rf .cr-f{opacity:var(--rfo);-webkit-mask-image:linear-gradient(180deg,transparent 62%,rgba(0,0,0,.85));mask-image:linear-gradient(180deg,transparent 62%,rgba(0,0,0,.85))}
+/* caption: two rows roll through a clip-path window (overflow: hidden reads as occlusion to the checker) */
+.cr-cap{position:absolute;left:10%;right:10%;top:79.81%;height:120px;clip-path:inset(0)}
+.cr-cr{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:34px}
+.cr-ci{flex:none;font:32px var(--k-mono);letter-spacing:.14em;color:color-mix(in srgb,var(--k-accent) 85%,var(--k-ink))}
+.cr-cn{font-size:72px;font-weight:700;line-height:1.2;text-align:center}
+@container (orientation: portrait) {
+  .cr-scene{--R:620px;--S:.84;--T:-12deg;perspective:1354px;perspective-origin:50% 30.71%}
+  .cr-wrap{top:33.33%}
+  .cr-up{left:103px;top:741px;width:874px;height:353px}
+  .cr-cap{top:51.56%;height:132px}
+  .cr-cn{font-size:80px}
+}
+/* measuring pass only: the ring laid flat so text is measured at its own size */
+.cr-flat .cr-wrap,.cr-flat .cr-ring .cr-c{transform:none}
+</style>
+
+<div id="root" data-composition-id="carousel-3d">
+<div class="cr">
+<div class="cr-backdrop"></div>
+<div class="cr-key cr-light"></div>
+<div class="cr-vig"></div>
+<div class="cr-grain"></div>
+<div class="cr-up cr-light"></div>
+<div class="cr-scene">
+<div class="cr-wrap">
+<div class="cr-disc" data-layout-allow-overflow></div>
+<svg class="cr-tk" data-layout-allow-overflow aria-hidden="true"></svg>
+<div class="cr-rf" data-layout-allow-overflow></div>
+<div class="cr-ring">
+<div class="cr-c" style="--i:0"><div class="cr-f"><div class="cr-hd"><span class="cr-ix">01</span><i class="cr-dot"></i></div><div class="cr-gx"></div><b class="cr-nm">自动整理</b><i class="cr-bar"></i><i class="cr-bar cr-b2"></i><i class="cr-air"></i></div></div>
+<div class="cr-c" style="--i:1;--a:.1"><div class="cr-f"><div class="cr-hd"><span class="cr-ix">02</span><i class="cr-dot"></i></div><div class="cr-gx"></div><b class="cr-nm">一键导出</b><i class="cr-bar"></i><i class="cr-bar cr-b2"></i><i class="cr-air"></i></div></div>
+<div class="cr-c" style="--i:2;--a:.35"><div class="cr-f"><div class="cr-hd"><span class="cr-ix">03</span><i class="cr-dot"></i></div><div class="cr-gx"></div><b class="cr-nm">多人协作</b><i class="cr-bar"></i><i class="cr-bar cr-b2"></i><i class="cr-air"></i></div></div>
+<div class="cr-c" style="--i:3;--a:.6"><div class="cr-f"><div class="cr-hd"><span class="cr-ix">04</span><i class="cr-dot"></i></div><div class="cr-gx"></div><b class="cr-nm">版本记录</b><i class="cr-bar"></i><i class="cr-bar cr-b2"></i><i class="cr-air"></i></div></div>
+<div class="cr-c" style="--i:4;--a:.7"><div class="cr-f"><div class="cr-hd"><span class="cr-ix">05</span><i class="cr-dot"></i></div><div class="cr-gx"></div><b class="cr-nm">模板市场</b><i class="cr-bar"></i><i class="cr-bar cr-b2"></i><i class="cr-air"></i></div></div>
+<div class="cr-c" style="--i:5;--a:.6"><div class="cr-f"><div class="cr-hd"><span class="cr-ix">06</span><i class="cr-dot"></i></div><div class="cr-gx"></div><b class="cr-nm">数据看板</b><i class="cr-bar"></i><i class="cr-bar cr-b2"></i><i class="cr-air"></i></div></div>
+<div class="cr-c" style="--i:6;--a:.35"><div class="cr-f"><div class="cr-hd"><span class="cr-ix">07</span><i class="cr-dot"></i></div><div class="cr-gx"></div><b class="cr-nm">智能搜索</b><i class="cr-bar"></i><i class="cr-bar cr-b2"></i><i class="cr-air"></i></div></div>
+<div class="cr-c" style="--i:7;--a:.1"><div class="cr-f"><div class="cr-hd"><span class="cr-ix">08</span><i class="cr-dot"></i></div><div class="cr-gx"></div><b class="cr-nm">权限管理</b><i class="cr-bar"></i><i class="cr-bar cr-b2"></i><i class="cr-air"></i></div></div>
+</div>
+</div>
+</div>
+<div class="cr-cap">
+<div class="cr-cr"><span class="cr-ci" data-layout-allow-occlusion>01 / 08</span><b class="cr-cn" data-layout-allow-occlusion>自动整理</b></div>
+<div class="cr-cr" style="opacity:0"><span class="cr-ci" data-layout-allow-occlusion>02 / 08</span><b class="cr-cn" data-layout-allow-occlusion>一键导出</b></div>
+</div>
+</div>
+</div>
+
+<script>
+(function () {
+// timing (s), both orientations: a beat is 21 frames (8 dwell + 13 move); 8 beats make one full turn, the loop
+var CFG = { beat: 0.7, dwell: 0.267, uni: 0.5, win: 26, push: 44, air: 0.7, fade: 0.9 };
+// layout in card units (a card is 340 x 460): ring scale, radius, tilt (deg), ring centre and caption top as fractions
+// of the frame height, perspective, eye height above the ring centre, caption window, smallest caption name.
+// The static CSS mirrors these numbers.
+var LAND = { s: 1, R: 700, tilt: 9, cy: 0.4352, persp: 2200, eye: 60, cap: 0.7981, capH: 120, capMin: 56 };
+var PORT = { s: 0.84, R: 620, tilt: 12, cy: 0.3333, persp: 1612, eye: 60, cap: 0.5156, capH: 132, capMin: 72 };
+var N = 8, FLOOR = 240, DUR = N * CFG.beat;
+var v = { items: "自动整理|一键导出|多人协作|版本记录|模板市场|数据看板|智能搜索|权限管理", images: "", backdrop: "on" };
+try {
+  var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+  for (var key in got) if (got[key] !== undefined && got[key] !== null) v[key] = got[key];
+} catch (e) {}
+
+var root = document.querySelector(".cr");
+var q = function (s) { return root.querySelector(s); };
+var qa = function (s, el) { return [].slice.call((el || root).querySelectorAll(s)); };
+var FW = root.clientWidth, FH = root.clientHeight;
+if (!FW || !FH) {
+  // not laid out yet: the host clip's declared size, then the window
+  var hc = root.closest("[data-width][data-height]");
+  FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+  FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+}
+var P = FH > FW, L = P ? PORT : LAND, u = Math.min(FW, FH) / 1.08e3, K = L.s * u, R = L.R;
+root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== end kit:tone ====
+// ==== kit:hash@1 ====
+function kHash(n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+// ==== end kit:hash ====
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+      "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+      "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+      "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+      "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+}
+// ==== end kit:grain ====
+// ==== kit:text@2 (kWords only: the names are whole items, nothing reveals per unit) ====
+var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+function kWords(s, key) {
+  s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+  var cut = function (x) {
+    if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+    return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+  };
+  var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+  var pre = "";
+  bits.forEach(function (x) {
+    var t = x.trim(), last = out[out.length - 1];
+    if (last && /^ /.test(x)) last.sp = true;
+    if (!t) return;
+    if (!/[\p{L}\p{N}]/u.test(t)) {
+      if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+      else { last.t += t; last.sp = / $/.test(x); }
+      return;
+    }
+    out.push({ t: pre + t, sp: / $/.test(x) });
+    pre = "";
+  });
+  if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+  if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+  if (out.length) out[out.length - 1].sp = false;
+  return out;
+}
+// ==== end kit:text ====
+// ==== kit:fit@1 (kRows not needed) ====
+function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+      var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+      if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+      row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+
+kTone(root);
+if (String(v.backdrop) === "off") qa(".cr-backdrop,.cr-key,.cr-vig,.cr-grain,.cr-up,.cr-disc").forEach(function (e) { e.style.display = "none"; });
+
+// camera and floor, fixed for the whole card: the ring is built in card units and scaled by K about its centre
+var scene = q(".cr-scene"), ring = q(".cr-ring"), rf = q(".cr-rf"), tk = q(".cr-tk"), cy = L.cy * FH;
+scene.style.cssText = "--R:" + R + "px;--S:" + K + ";--T:" + -L.tilt + "deg;perspective:" + L.persp * K + "px;perspective-origin:50% " + (cy - L.eye * K) + "px";
+q(".cr-wrap").style.top = cy + "px";
+q(".cr-up").style.cssText = "left:" + (FW / 2 - 520 * K) + "px;top:" + (cy + 120 * K) + "px;width:" + 1040 * K + "px;height:" + 420 * K + "px";
+// 96 floor ticks round the ring, every 12th long and in the accent; they turn with the ring
+var mj = "", mn = "", r1 = R * 1.08, tw = R * 2.4;
+for (var n = 0; n < 96; n++) {
+  var an = (n / 96) * 2 * Math.PI, r0 = R * (n % 12 ? 1.05 : 1.02), ca = Math.cos(an), sa = Math.sin(an);
+  var seg = "M" + (r0 * ca).toFixed(1) + " " + (r0 * sa).toFixed(1) + "L" + (r1 * ca).toFixed(1) + " " + (r1 * sa).toFixed(1);
+  if (n % 12) mn += seg; else mj += seg;
+}
+tk.setAttribute("width", tw);
+tk.setAttribute("height", tw);
+tk.setAttribute("viewBox", -tw / 2 + " " + -tw / 2 + " " + tw + " " + tw);
+tk.style.cssText = "left:" + -tw / 2 + "px;top:" + (FLOOR - tw / 2) + "px";
+tk.innerHTML = '<circle r="' + r1.toFixed(1) + '" class="cr-tc"/><path d="' + mn + '" class="cr-tm"/><path d="' + mj + '" class="cr-tj"/>';
+
+// card art: upstream's eight generated graphics, no text; grey when unlit, the accent when lit (--cr-g follows --hl)
+function gx(j) {
+  var o = "", p = [], k;
+  var rc = function (x, y, w, h, r, c) { return '<rect x="' + x + '" y="' + y.toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="' + r + '" class="cr-' + c + '"/>'; };
+  var pa = function (d, c, st) { return '<path d="' + d + '" class="cr-' + c + '"' + (st ? ' style="' + st + '"' : "") + "/>"; };
+  if (j === 0) { // split rows, one lit, a dashed cut
+    for (k = 0; k < 8; k++) o += rc(0, k * 19, 150 + kHash(k) * 110, 11, 5.5, k === 5 ? "a" : "d");
+    o += pa("M210 0V150", "s", "stroke-width:2;stroke-dasharray:4 5");
+  } else if (j === 1) { // climb: zigzag over its own area
+    for (k = 0; k < 14; k++) p.push(((k * 280) / 13).toFixed(1) + "," + (130 - (k % 4 < 2 ? k % 4 : 4 - (k % 4)) * 46 - kHash(1 + k) * 10).toFixed(1));
+    o = pa("M" + p.join("L") + "L280,150L0,150Z", "a", "fill-opacity:.16") + pa("M" + p.join("L"), "s");
+  } else if (j === 2) { // four hits, each decaying
+    for (k = 0; k < 57; k++) { var bt = k % 14, am = bt < 2 ? 0 : 62 * Math.exp(-(bt - 2) * 0.32); p.push(k * 5 + "," + (75 + am * (k % 2 ? 1 : -1) + Math.sin(k * 0.7) * 2).toFixed(1)); }
+    o = pa("M" + p.join("L"), "s");
+  } else if (j === 3) { // three progress rings and a read-out block
+    [0.86, 0.62, 0.4].forEach(function (f, k) {
+      var r = 66 - k * 19, C = 2 * Math.PI * r;
+      o += '<circle cx="75" cy="75" r="' + r + '" class="cr-z" style="stroke-width:12"/><circle cx="75" cy="75" r="' + r + '" class="cr-s" transform="rotate(-90 75 75)" style="stroke-width:12;stroke-opacity:' + (1 - k * 0.3).toFixed(1) + ";stroke-dasharray:" + (C * f).toFixed(1) + " " + C.toFixed(1) + '"/>';
+    });
+    o += rc(168, 56, 46, 12, 6, "d") + rc(168, 80, 58, 26, 7, "i");
+  } else if (j === 4) { // strobe bars
+    for (k = 0; k < 10; k++) o += rc(k * 28, 20, 14, 130, 4, "a") + rc(k * 28 + 16, 100, 8, 50, 3, "d");
+  } else if (j === 5) { // bar chart, one bar lit
+    for (k = 0; k < 7; k++) { var h = 40 + kHash(55 + k) * 105; o += rc(k * 40, 150 - h, 26, h, 6, k === 4 ? "a" : "d"); }
+  } else if (j === 6) { // three ease curves, the middle one lit
+    for (k = 0; k < 3; k++) o += pa("M0 " + (40 + k * 36) + "C70 " + (10 + k * 36) + ",140 " + (80 + k * 36) + ",280 " + (30 + k * 36), k === 1 ? "s" : "z", k === 1 ? "stroke-width:5" : "");
+  } else { // a path walked as far as a marker
+    o = pa("M10 120C60 20,120 140,170 60S250 30,270 40", "z", "stroke-width:10") + pa("M10 120C60 20,120 140,170 60", "s", "stroke-width:10") +
+      '<circle cx="170" cy="60" r="12" class="cr-s" style="fill:var(--cr-f1);stroke-width:5"/><circle cx="270" cy="40" r="8" class="cr-i"/>';
+  }
+  return '<svg width="280" height="150" viewBox="0 0 280 150" aria-hidden="true">' + o + "</svg>";
+}
+
+// items: names cut at "|" and cycled over the 8 cards; optional pictures in the same order
+var names = kWords(String(v.items) + "|").map(function (w) { return w.t; }).slice(0, N);
+var pics = String(v.images).split("|").map(function (x) { return x.trim(); }).filter(Boolean);
+var M = Math.min(N, names.length || pics.length || N);
+var pad = function (j) { return (j < 9 ? "0" : "") + (j + 1); };
+var item = function (b) { return (b % N) % M; };
+var cards = qa(".cr-c", ring).map(function (el, i) {
+  var j = i % M, f = el.firstElementChild, nm = f.querySelector(".cr-nm");
+  f.querySelector(".cr-ix").textContent = pad(j);
+  nm.textContent = names[j] || "";
+  f.querySelector(".cr-gx").innerHTML = pics.length ? '<i class="cr-im" style="background-image:url(\'' + pics[j % pics.length].replace(/'/g, "%27") + '\')"></i>' : gx(j);
+  qa(".cr-bar", f).forEach(function (b, k) { b.style.width = (k ? 24 + kHash(j * 5 + 2) * 18 : 46 + kHash(j * 3 + 1) * 30) + "%"; });
+  return { el: el, f: f, nm: nm };
+});
+// face names: one line if it fits down to 40 px, else two lines; measured with the ring laid flat
+root.classList.add("cr-flat");
+var NM = parseFloat(getComputedStyle(cards[0].nm).fontSize);
+cards.forEach(function (c) { if (!kFit(c.nm, { max: NM, min: 40 }).fits) kFit(c.nm, { lines: 2, max: NM, min: 40 }); });
+root.classList.remove("cr-flat");
+// faces overlap round the ring by design
+qa(".cr-ix,.cr-nm", ring).forEach(function (e) { e.setAttribute("data-layout-allow-occlusion", ""); e.setAttribute("data-layout-allow-overlap", ""); });
+// back face = the same face turned 180°; the reflection = every card again, mirrored under the floor. Its fade mask
+// only shows a face's lower part, so the art is left out; its names are drawn by ::before (a mirror image, not text)
+cards.forEach(function (c) {
+  var b = c.f.cloneNode(true);
+  b.classList.add("cr-bk");
+  c.el.appendChild(b);
+  c.r = c.el.cloneNode(true);
+  qa(".cr-ix,.cr-nm", c.r).forEach(function (e) { e.setAttribute("data-t", e.textContent); e.textContent = ""; });
+  qa(".cr-gx", c.r).forEach(function (e) { e.innerHTML = ""; });
+  rf.appendChild(c.r);
+});
+
+// caption: every name at one size (the largest that fits all of them on one line); the window grows if one wraps
+var cap = q(".cr-cap"), rows = qa(".cr-cr"), ci = qa(".cr-ci"), cn = qa(".cr-cn");
+var lab = function (b) { return pad(item(b)) + " / " + pad(M - 1); };
+cap.style.top = L.cap * FH + "px";
+ci[0].textContent = lab(0);
+var avail = cap.clientWidth - ci[0].offsetWidth - 34 * u, CS = parseFloat(getComputedStyle(cn[0]).fontSize), size = CS, H = L.capH * u;
+names.forEach(function (t) { cn[0].textContent = t; size = Math.min(size, kFit(cn[0], { max: CS, min: L.capMin, width: avail }).size); });
+cn.forEach(function (e) { e.style.fontSize = size + "px"; e.style.maxWidth = avail + "px"; });
+names.forEach(function (t) { cn[0].textContent = t; H = Math.max(H, cn[0].offsetHeight + 34 * u); });
+cap.style.height = H + "px";
+// no names at all: the ring alone (a loop background), no counter left on its own
+if (!names.join("")) cap.style.display = "none";
+
+var sm = MT.ease("smooth"), grain = kGrain(q(".cr-grain")), shown = [];
+function render(t) {
+  // the turn: half an even spin, half a 45° push per beat that lands on the beat and then dwells
+  var b = Math.floor(t / CFG.beat), roll = sm(MT.clamp((t - b * CFG.beat - CFG.dwell) / (CFG.beat - CFG.dwell)));
+  var spin = (CFG.uni * t / DUR + ((1 - CFG.uni) * (b + roll)) / N) * 360, rs = "rotateY(" + (-spin).toFixed(3) + "deg)";
+  ring.style.transform = rs;
+  rf.style.transform = "translateY(" + 2 * FLOOR + "px) scaleY(-1) " + rs;
+  tk.style.transform = "rotateX(90deg) rotateZ(" + spin.toFixed(3) + "deg)";
+  cards.forEach(function (c, i) {
+    // azimuth 0 = facing the camera: lit within ±26°, pushed out along its normal, faded towards the back
+    var az = ((((i * 360) / N - spin) % 360) + 360) % 360, hl;
+    if (az > 180) az -= 360;
+    hl = sm(MT.clamp(1 - Math.abs(az) / CFG.win));
+    var tf = "transform:rotateY(" + (i * 360) / N + "deg) translateZ(" + (R + CFG.push * hl).toFixed(2) + "px);--a:" + ((CFG.air * (1 - Math.cos((az * Math.PI) / 180))) / 2).toFixed(3);
+    c.el.style.cssText = tf + ";--hl:" + hl.toFixed(3) + ";--b:" + (hl > 0.01 ? "color-mix(in srgb, var(--k-accent) " + (25 + 60 * hl).toFixed(1) + "%, transparent)" : "var(--cr-line)") + ";--o:var(--k-" + (hl > 0.5 ? "accent)" : "muted)");
+    c.r.style.cssText = tf;
+  });
+  // the caption follows the step, not the true angle: it holds through the dwell and rolls up during the push
+  [b, b + 1].forEach(function (x, j) {
+    var o = Math.abs(j - roll);
+    if (shown[j] !== x) { shown[j] = x; ci[j].textContent = lab(x); cn[j].textContent = names[item(x)] || ""; }
+    rows[j].style.transform = "translateY(" + ((j - roll) * H).toFixed(2) + "px)";
+    rows[j].style.opacity = o < 1 ? (1 - CFG.fade * o).toFixed(3) : 0;
+  });
+  grain(t);
+}
+
+var tl = MT.scene(DUR, render);
+window.__timelines["carousel-3d"] = tl;
+})();
+</script>
+</template>
+</body>
+</html>

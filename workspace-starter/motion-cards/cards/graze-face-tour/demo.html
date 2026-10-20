@@ -1,0 +1,299 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"items","type":"string","label":"任务行（用 | 分隔，2–5 条，按落下的先后排）","default":"整理第 3 节素材|录制操作演示|写好本周小结|导出成片初稿"},
+    {"id":"label","type":"string","label":"分组标签","default":"今天"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>graze-face-tour · 贴面低飞巡礼</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="graze-face-tour-template">
+      <!-- Ported from video-shotcraft demos/camera/graze-face-tour/GrazeFaceTour.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette on a light floor, system fonts, generic Chinese task list, upstream mark removed;
+           only the list-row scene, eased at both ends; landscape look-at y 533->1028 (upstream 620->1240) so the landed
+           rows fill the frame; shadow copy in the palette shade, x1.5 opacity on light skins; depth of field is one masked
+           backdrop-filter; neon frames and grain dropped; "List" chip text mixed 30% toward ink; light skin: far-side
+           shade 0.2/0.4 from 50% (upstream 0.22/0.5 from 34%), vignette 0.38 landscape, 0.3 portrait (upstream 0.62).
+           Kept: perspective 1050, tilt 14/28/-5 deg with the 2-degree roll, cruise curve, land times, fall curve
+           bezier(0.5,0.05,0.6,1) over 0.34 of the segment, lift heights, floating-copy offset, shadow-copy offset,
+           scale, blur and opacity, focus ellipse. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* ==== kit:derived@1 — card-local colours mixed from the palette; shade: shadows and vignettes (tinted, never
+           pure black); [data-tone] comes from kTone() in the script ==== */
+        .gf {
+          --gf-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+          --gf-panel-2: color-mix(in srgb, var(--k-panel), var(--k-ink) 4%);
+          --gf-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+          --gf-hi: color-mix(in srgb, white 80%, transparent);
+        }
+        .gf[data-tone="dark"] {
+          --gf-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+          --gf-hi: color-mix(in srgb, white 6%, transparent);
+        }
+        /* ==== end kit:derived ==== */
+        /* ==== kit:vignette@1 — palette-tinted vignette: --vs strength, --vin clear centre, --vx / --vy centre ==== */
+        .gf-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--gf-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .gf[data-tone="dark"] .gf-vig { --vs: 0.55; }
+        /* ==== end kit:vignette ==== */
+
+        /* the wrapper is the size container; the plane is bigger than the frame by design */
+        .gf { position: absolute; inset: 0; container-type: size; --gf-fx: 46%; --gf-fy: 50%;
+          --gf-soft: color-mix(in srgb, var(--k-accent) 11%, var(--k-bg)); --gf-faint: color-mix(in srgb, var(--k-ink) 22%, transparent); }
+        /* the floor: a shade darker than the plane on light skins, much darker on dark ones */
+        .gf-floor { position: absolute; inset: 0; background: radial-gradient(ellipse 75% 80% at var(--gf-fx) var(--gf-fy), color-mix(in srgb, var(--k-bg), var(--k-ink) 6%), color-mix(in srgb, var(--k-bg), var(--k-ink) 16%)); }
+        .gf[data-tone="dark"] .gf-floor { background: radial-gradient(ellipse 75% 80% at var(--gf-fx) var(--gf-fy), color-mix(in srgb, var(--k-bg), black 30%), color-mix(in srgb, var(--k-bg), black 65%)); }
+        .gf .gf-vig { --vs: 0.38; --vin: 42%; --vx: var(--gf-fx); --vy: var(--gf-fy); }
+        .gf[data-tone="dark"] .gf-vig { --vs: 0.62; }
+        /* camera: vanishing point 4% above the rig, the rig (rotation centre) at the frame centre */
+        .gf-cam { position: absolute; inset: 0; perspective: 1050px; perspective-origin: 50% 46%; }
+        /* static fallback = the end of the move */
+        .gf-rig { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform: scale(1.05) rotateX(14deg) rotateY(28deg) rotateZ(-4deg); }
+        .gf-plane { position: absolute; left: 0; top: 0; width: 2900px; height: 2200px; padding-top: 60px; box-sizing: border-box; background: var(--k-bg); transform: translate(-680px, -1240px);
+          box-shadow: 0 30px 90px -10px color-mix(in srgb, var(--gf-shade) 30%, transparent); }
+        /* rim light on the near (left) edge: a haze and a thin line */
+        .gf-rim { position: absolute; left: -80px; top: -40px; width: 120px; height: 104%; background: linear-gradient(185deg, var(--k-accent), var(--k-accent-2)); filter: blur(70px); opacity: 0.75; }
+        .gf-rim2 { position: absolute; left: -7px; top: 0; width: 6px; height: 100%; border-radius: 3px; background: linear-gradient(180deg, color-mix(in srgb, var(--k-accent) 55%, white), color-mix(in srgb, var(--k-accent-2) 55%, white)); filter: blur(2px); opacity: 0.9; }
+        .gf[data-tone="dark"] .gf-rim { opacity: 0.85; }
+        /* far side of the plane darkens (it recedes to the right) */
+        .gf-far { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(105deg, transparent 50%, color-mix(in srgb, var(--gf-shade) 20%, transparent) 75%, color-mix(in srgb, var(--gf-shade) 40%, transparent) 100%); }
+        .gf[data-tone="dark"] .gf-far { background: linear-gradient(105deg, transparent 34%, color-mix(in srgb, var(--gf-shade) 22%, transparent) 75%, color-mix(in srgb, var(--gf-shade) 50%, transparent) 100%); }
+        /* screen-space depth of field: blurred 15px outside the focus ellipse */
+        .gf-dof { position: absolute; inset: 0; pointer-events: none; -webkit-backdrop-filter: blur(15px); backdrop-filter: blur(15px);
+          -webkit-mask-image: radial-gradient(ellipse 58% 52% at var(--gf-fx) var(--gf-fy), transparent 34%, rgba(0, 0, 0, 0.85) 72%, black 92%);
+          mask-image: radial-gradient(ellipse 58% 52% at var(--gf-fx) var(--gf-fy), transparent 34%, rgba(0, 0, 0, 0.85) 72%, black 92%); }
+        /* the list UI (upstream scene C, its pixel sizes kept) */
+        .gf-fl { position: relative; display: block; }
+        .gf-i { display: block; flex: none; width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+        .gf-tabs { display: flex; gap: 80px; padding-left: 120px; font-size: 52px; line-height: 1.25; color: var(--k-muted); }
+        .gf-tabs span { position: relative; display: block; }
+        .gf-tabs .gf-on { color: var(--k-ink); font-weight: 700; }
+        .gf-on::after { content: ""; position: absolute; left: 0; right: 0; bottom: -22px; height: 5px; border-radius: 3px; background: var(--k-accent); }
+        .gf-view { display: flex; align-items: center; gap: 30px; margin-top: 66px; padding-left: 120px; font-size: 48px; line-height: 1.25; color: var(--k-muted); }
+        .gf-chip { display: flex; align-items: center; gap: 16px; padding: 20px 40px; border-radius: 18px; background: var(--gf-soft); border: 3px solid color-mix(in srgb, var(--k-accent) 22%, transparent); color: color-mix(in srgb, var(--k-accent), var(--k-ink) 30%); font-weight: 700; }
+        .gf-alt { display: flex; align-items: center; gap: 16px; }
+        .gf-tools { display: flex; gap: 70px; margin-left: 500px; font-size: 44px; }
+        .gf-rule { height: 40px; margin: 0 120px; border-bottom: 3px solid var(--gf-line); }
+        .gf-tag { margin-top: 60px; padding-left: 120px; }
+        .gf-badge { display: inline-flex; align-items: center; gap: 16px; padding: 18px 40px; border-radius: 16px; background: var(--k-accent); color: var(--k-on-accent); font-size: 40px; line-height: 1.25; font-weight: 700; letter-spacing: 0.12em; white-space: nowrap; }
+        .gf-badge .gf-i { stroke-width: 2.2; font-size: 38px; }
+        .gf-head { display: flex; margin-top: 60px; padding: 0 120px; font-size: 40px; line-height: 1.25; letter-spacing: 0.12em; color: var(--k-ink); }
+        .gf-hp { margin-left: auto; width: 520px; }
+        .gf-hd { width: 260px; text-align: right; }
+        .gf-rows { margin-top: 30px; }
+        .gf-row { display: flex; align-items: center; gap: 40px; height: 170px; margin: 0 120px; border-bottom: 3px solid var(--gf-line); }
+        .gf-box { display: block; flex: none; width: 42px; height: 42px; box-sizing: border-box; border-radius: 13px; border: 4px solid var(--gf-faint); }
+        .gf-row:first-child .gf-box { border-color: var(--k-accent); background: var(--gf-soft); }
+        .gf-name { display: block; font-size: 56px; line-height: 1.25; font-weight: 700; white-space: nowrap; }
+        .gf-av { display: block; flex: none; width: 64px; height: 64px; box-sizing: border-box; margin-left: auto; border-radius: 50%; border: 5px solid var(--k-bg); box-shadow: 0 0 0 3px color-mix(in srgb, var(--k-ink) 6%, transparent); background: var(--k-accent); }
+        .gf-row:nth-child(2) .gf-av { background: var(--k-accent-2); }
+        .gf-row:nth-child(3) .gf-av { background: color-mix(in srgb, var(--k-accent) 55%, var(--k-accent-2)); }
+        .gf-row:nth-child(4) .gf-av { background: color-mix(in srgb, var(--k-accent-2) 45%, var(--k-bg)); }
+        .gf-row:nth-child(5) .gf-av { background: var(--gf-faint); }
+        .gf-bar { display: block; flex: none; width: 400px; height: 16px; border-radius: 8px; background: color-mix(in srgb, var(--k-ink) 7%, transparent); }
+        .gf-bar i { display: block; height: 100%; border-radius: 8px; background: color-mix(in srgb, var(--k-ink) 28%, transparent); }
+        .gf-row:first-child .gf-bar i { background: var(--k-accent); }
+        .gf-due { display: block; flex: none; width: 220px; text-align: right; font-size: 44px; line-height: 1.25; white-space: nowrap; }
+        .gf-due.gf-now { font-weight: 700; }
+        .gf-more { font-size: 50px; color: var(--k-muted); stroke-width: 3.2; }
+        /* portrait: a narrower list (no progress, no tools), the rig higher, focus on the 44% line */
+        @container (orientation: portrait) {
+          .gf-floor, .gf-dof, .gf-vig { --gf-fx: 50%; --gf-fy: 44%; }
+          .gf .gf-vig { --vs: 0.3; }
+          .gf-cam { perspective-origin: 50% 40%; }
+          .gf-rig { top: 44%; transform: scale(0.95) rotateX(30deg) rotateY(16deg) rotateZ(-2deg); }
+          .gf-plane { width: 1100px; height: 2000px; transform: translate(-495px, -860px); }
+          .gf-tabs, .gf-view, .gf-tag { padding-left: 90px; }
+          .gf-head { padding: 0 90px; }
+          .gf-rule, .gf-row { margin: 0 90px; }
+          .gf-tools, .gf-bar, .gf-hp { display: none; }
+          .gf-hd { margin-left: auto; }
+        }
+        /* the shadow (upstream FloatWrap): a copy of each floater left at its slot, every painted part in the shade */
+        .gf .gf-sh { position: absolute; margin: 0; box-sizing: border-box; pointer-events: none; }
+        .gf-sh, .gf-sh * { color: var(--gf-shade) !important; border-color: var(--gf-shade) !important; box-shadow: none !important; }
+        .gf-sh .gf-chip, .gf-sh .gf-badge, .gf-sh .gf-av, .gf-sh i i, .gf-sh .gf-on::after { background: var(--gf-shade) !important; }
+      </style>
+
+      <div id="root" data-composition-id="graze-face-tour">
+        <div class="gf" data-layout-allow-overflow>
+          <div class="gf-floor"></div>
+          <div class="gf-cam">
+            <div class="gf-rig">
+              <div class="gf-plane">
+                <div class="gf-rim"></div>
+                <div class="gf-rim2"></div>
+                <div class="gf-fl gf-tabs"><span class="gf-on">待办</span><span>评论</span><span>已完成</span><span>已指派</span></div>
+                <div class="gf-fl gf-view">
+                  <span class="gf-chip"><svg class="gf-i" viewBox="0 0 24 24"><path d="M8.5 6.5h11M8.5 12h11M8.5 17.5h11M4.5 6.5h.01M4.5 12h.01M4.5 17.5h.01" /></svg>列表</span>
+                  <span class="gf-alt"><svg class="gf-i" viewBox="0 0 24 24"><path d="M4.5 4.5h6v6h-6zM13.5 4.5h6v6h-6zM4.5 13.5h6v6h-6zM13.5 13.5h6v6h-6z" /></svg>看板</span>
+                  <span class="gf-tools"><span>筛选</span><span>分组</span><span>排序</span></span>
+                </div>
+                <div class="gf-rule"></div>
+                <div class="gf-fl gf-tag"><span class="gf-badge"><svg class="gf-i" viewBox="0 0 24 24"><path d="M6 9.5l6 6 6-6" /></svg><span class="gf-label">今天</span></span></div>
+                <div class="gf-fl gf-head"><span>任务名称</span><span class="gf-hp">进度</span><span class="gf-hd">截止</span></div>
+                <div class="gf-rows">
+                  <div class="gf-fl gf-row"><i class="gf-box"></i><span class="gf-name">整理第 3 节素材</span><i class="gf-av"></i><i class="gf-bar"><i style="width: 72%"></i></i><span class="gf-due gf-now">今天</span><svg class="gf-i gf-more" viewBox="0 0 24 24"><path d="M6 12h.01M12 12h.01M18 12h.01" /></svg></div>
+                  <div class="gf-fl gf-row"><i class="gf-box"></i><span class="gf-name">录制操作演示</span><i class="gf-av"></i><i class="gf-bar"><i style="width: 45%"></i></i><span class="gf-due gf-now">今天</span><svg class="gf-i gf-more" viewBox="0 0 24 24"><path d="M6 12h.01M12 12h.01M18 12h.01" /></svg></div>
+                  <div class="gf-fl gf-row"><i class="gf-box"></i><span class="gf-name">写好本周小结</span><i class="gf-av"></i><i class="gf-bar"><i style="width: 30%"></i></i><span class="gf-due">明天</span><svg class="gf-i gf-more" viewBox="0 0 24 24"><path d="M6 12h.01M12 12h.01M18 12h.01" /></svg></div>
+                  <div class="gf-fl gf-row"><i class="gf-box"></i><span class="gf-name">导出成片初稿</span><i class="gf-av"></i><i class="gf-bar"><i style="width: 86%"></i></i><span class="gf-due">周五</span><svg class="gf-i gf-more" viewBox="0 0 24 24"><path d="M6 12h.01M12 12h.01M18 12h.01" /></svg></div>
+                </div>
+                <div class="gf-far"></div>
+              </div>
+            </div>
+          </div>
+          <div class="gf-dof"></div>
+          <div class="gf-vig"></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing (s): one upstream segment of 50 frames (seg) from `at`; land times and fall are fractions of it
+          var CFG = { at: 0.2, seg: 1.667, fall: 0.34, dur: 3, land: [0.22, 0.32, 0.44, 0.54], rows: 0.62, rowGap: 0.09, lift: [150, 150, 160, 150], rowLift: 160 };
+          // camera: tilt (deg), scale, look-at x (start, end); y0 / y1 = look-at y from row 1's top / the last row's middle
+          var LAND = { rx: 14, ry: 28, rz: -5, s: 1.05, cx: [900, 680], y0: -90, y1: -190, nameW: 1680 };
+          var PORT = { rx: 30, ry: 16, rz: -3, s: 0.95, cx: [520, 495], y0: -220, y1: -345, nameW: 384 };
+          var DUE = ["今天", "今天", "明天", "周五", "下周"], PROG = [72, 45, 30, 86, 20];
+          var v = { items: "整理第 3 节素材|录制操作演示|写好本周小结|导出成片初稿", label: "今天", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".gf");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+          // ==== kit:tone@1 — light or dark skin, read from --k-bg; sets data-tone on the wrapper ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+          // shadow opacity x1.5 on light skins (thin CJK strokes blur away at upstream strength)
+          var SH = kTone(root) === "dark" ? 1 : 1.5;
+          // backdrop off: no floor or vignette; a no-op filter makes the wrapper the backdrop root (lens blur skips footage)
+          if (String(v.backdrop) === "off") {
+            ["floor", "vig"].forEach(function (c) { q(".gf-" + c).style.display = "none"; });
+            root.style.filter = "opacity(1)";
+          }
+
+          // rows from the variable: the static HTML holds the four defaults, the script rebuilds them
+          var items = String(v.items).split("|").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 5);
+          if (!items.length) items = ["整理第 3 节素材", "录制操作演示"];
+          q(".gf-label").textContent = String(v.label);
+          var box = q(".gf-rows"), proto = box.firstElementChild.cloneNode(true);
+          box.innerHTML = "";
+          // the longest name sets one size for all rows (CJK 1em, Latin 0.6em), 56px down to 40px
+          var em = Math.max.apply(null, items.map(function (n) { var w = 0; for (var c = 0; c < n.length; c++) w += n.charCodeAt(c) > 255 ? 1 : 0.6; return w; }));
+          var nameSize = Math.max(40, Math.min(56, Math.floor(L.nameW / Math.max(1, em)))) + "px";
+          var rows = items.map(function (name, i) {
+            var r = proto.cloneNode(true), due = r.querySelector(".gf-due"), nm = r.querySelector(".gf-name");
+            nm.textContent = name;
+            nm.style.fontSize = nameSize;
+            due.textContent = DUE[i];
+            due.className = "gf-due" + (i < 2 ? " gf-now" : "");
+            r.querySelector(".gf-bar i").style.width = PROG[i] + "%";
+            box.appendChild(r);
+            return r;
+          });
+
+          // vignette and lens blur cover the UI on purpose; the checker needs the mark on every text node
+          [].forEach.call(root.querySelectorAll(".gf-plane span"), function (el) { el.setAttribute("data-layout-allow-occlusion", ""); });
+          // floaters: [element, land time (fraction of the segment), lift height px]; rows land 0.09 apart from 0.62
+          var fl = [".gf-tabs", ".gf-view", ".gf-tag", ".gf-head"].map(function (s, i) { return [q(s), CFG.land[i], CFG.lift[i]]; });
+          rows.forEach(function (r, i) { fl.push([r, CFG.rows + i * CFG.rowGap, CFG.rowLift]); });
+
+          var rig = q(".gf-rig"), plane = q(".gf-plane"), last = rows[rows.length - 1], at = fl[0][0];
+          var cy0 = rows[0].offsetTop + L.y0, cy1 = last.offsetTop + last.offsetHeight / 2 + L.y1;
+          // each floater's shadow copy takes its slot box on the plane, painted under all the floaters
+          fl.forEach(function (f) {
+            var e = f[0], c = e.cloneNode(true);
+            c.classList.add("gf-sh");
+            [].forEach.call(c.querySelectorAll("span"), function (x) { x.setAttribute("data-layout-allow-overlap", ""); });
+            c.style.cssText = "left:" + e.offsetLeft + "px;top:" + e.offsetTop + "px;width:" + e.offsetWidth + "px;height:" + e.offsetHeight + "px";
+            plane.insertBefore(c, at);
+            f.push(c.style);
+          });
+          var fall = MT.bezier(0.5, 0.05, 0.6, 1); // accelerates down, soft landing (upstream easeFall)
+          // upstream cruise(u, first, last) for a single segment: quadratic ease over the first and last 30%, linear between
+          var cruise = function (u) {
+            var A = 0.3, f = function (x) { return x < A ? (x * x) / (2 * A) : x - A / 2; };
+            u = MT.clamp(u, 0, 1);
+            return u <= 0.5 ? f(u) / (1 - A) : 1 - f(1 - u) / (1 - A);
+          };
+          var render = function (t) {
+            var u = (t - CFG.at) / CFG.seg, p = cruise(u);
+            var cx = L.cx[0] + (L.cx[1] - L.cx[0]) * p, cy = cy0 + (cy1 - cy0) * p;
+            rig.style.transform = "scale(" + L.s + ") rotateX(" + L.rx + "deg) rotateY(" + L.ry + "deg) rotateZ(" + (L.rz + (p - 0.5) * 2).toFixed(3) + "deg)";
+            plane.style.transform = "translate(" + (-cx).toFixed(2) + "px," + (-cy).toFixed(2) + "px)";
+            fl.forEach(function (f) {
+              // lift h: floater moved (-0.34h, -0.78h); shadow copy at the slot moved (0.22h, 0.42h), scaled 1 + 0.0011h
+              // about the full-width block's centre (text left of it gets its shadow further left), blurred 2 + 0.09h,
+              // opacity 0.08 + 0.0026h (max 0.22); gone below 1.5px
+              var h = (1 - fall(MT.clamp((u - f[1] + CFG.fall) / CFG.fall, 0, 1))) * f[2], c = f[3];
+              f[0].style.transform = h > 0.01 ? "translate(" + (-0.34 * h).toFixed(2) + "px," + (-0.78 * h).toFixed(2) + "px)" : "";
+              c.display = h > 1.5 ? "" : "none";
+              c.transform = "translate(" + (0.22 * h).toFixed(2) + "px," + (0.42 * h).toFixed(2) + "px) scale(" + (1 + 0.0011 * h).toFixed(4) + ")";
+              c.filter = "blur(" + (2 + 0.09 * h).toFixed(2) + "px)";
+              c.opacity = (Math.min(0.22, 0.08 + 0.0026 * h) * SH).toFixed(3);
+            });
+          };
+          var tl = MT.scene(CFG.dur, render);
+          window.__timelines["graze-face-tour"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

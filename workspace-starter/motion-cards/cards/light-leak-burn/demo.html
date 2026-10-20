@@ -1,0 +1,445 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"kicker_a","type":"string","label":"前幕眉题（留空不显示）","default":"01 — 夜景"},
+    {"id":"title_a","type":"string","label":"前幕标题（| 分词）","default":"先把方案|想清楚"},
+    {"id":"kicker_b","type":"string","label":"后幕眉题（留空不显示）","default":"02 — 黄昏"},
+    {"id":"title_b","type":"string","label":"后幕标题（| 分词）","default":"再动手|做出来"},
+    {"id":"modes","type":"string","label":"底部三个模式名（| 分隔）","default":"夜景|黄昏|人像"},
+    {"id":"from","type":"string","label":"前幕图片地址（留空画夜景）","default":""},
+    {"id":"to","type":"string","label":"后幕图片地址（留空画黄昏）","default":""},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"带两幕画面（预览用）"},{"value":"off","label":"透明（只留漏光，压在两镜上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>light-leak-burn · 暖色漏光烧切</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="light-leak-burn-template">
+      <!-- Ported from video-shotcraft demos/transition/transition-hidden-cut/LightLeakBurn.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette with --k-stage (night page), warm colours mixed from --k-accent, system fonts, generic
+           copy; upstream mark, wordmark and exposure readouts removed; both pages, corner brackets and mode dial
+           redrawn in DOM, titles moved up into the dark sky, optional from/to images, backdrop off (leak only) and
+           portrait (blob angle and size for 9:16) added; envelope, cut frame, sweep curve, blob stack, white-hot
+           core, burn filter values, grain, vignette and the 2-frame warm lift kept. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          --k-stage: var(--mc-stage, #0b0d12);
+          --k-on-stage: var(--mc-on-stage, #f3f5f8);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .ll {
+          position: absolute; inset: 0; container-type: size; overflow: hidden; background: var(--k-stage);
+          --ll-shade: color-mix(in srgb, var(--k-stage), var(--k-accent) 14%);
+          --ll-ink: color-mix(in srgb, var(--k-on-stage), var(--k-accent) 8%);
+          --ll-lt: oklch(from var(--k-accent) l c calc(h - max(0, h - 60) * 0.8));
+          --ll-amber: color-mix(in oklch, var(--ll-lt) 62%, white);
+          --ll-ember: var(--k-accent);
+          --ll-ochre: color-mix(in oklch, var(--k-accent) 76%, black);
+          --ll-core: color-mix(in oklch, var(--k-accent) 8%, white);
+          --ll-line: color-mix(in srgb, var(--ll-ink) 80%, transparent);
+          --ll-ac: oklch(from var(--k-accent) l c calc(h - 4 - max(0, h - 60) * 0.8)); /* darks lean redder: a yellow accent would turn olive */
+          --ll-g0: color-mix(in srgb, var(--ll-ac) 18%, black); --ll-g1: color-mix(in srgb, var(--ll-ac) 60%, black);
+          --ll-g2: color-mix(in srgb, var(--ll-lt) 86%, white); --ll-g3: color-mix(in oklch, var(--ll-lt) 52%, white);
+          --ll-gr1: color-mix(in srgb, var(--ll-ac) 76%, black); --ll-gr2: color-mix(in srgb, var(--ll-ac) 46%, black); --ll-gr3: color-mix(in srgb, var(--ll-ac) 18%, black);
+          --ll-n0: color-mix(in srgb, var(--k-stage), black 22%); --ll-n1: color-mix(in srgb, var(--k-stage), white 5%); --ll-n2: color-mix(in srgb, color-mix(in srgb, var(--k-stage), white 10%), var(--k-accent) 5%);
+          --ll-nr1: color-mix(in srgb, var(--k-stage), white 9%); --ll-nr2: var(--k-stage); --ll-nr3: color-mix(in srgb, var(--k-stage), black 55%);
+        }
+        /* ==== kit:grain@1 ==== */
+        .ll-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+
+        /* ==== kit:text@2 ==== */
+        .ll-u { display: inline-block; white-space: pre; }
+        .ll-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+        /* ==== end kit:text ==== */
+
+        /* ==== kit:fit@1 ==== */
+        .ll-row { display: block; white-space: nowrap; }
+        /* ==== end kit:fit ==== */
+
+        /* ==== kit:vignette@1 ==== */
+        .ll-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--ll-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .ll[data-tone="dark"] .ll-vig { --vs: 0.55; }
+        /* ==== end kit:vignette ==== */
+        .ll-page, .ll-zoom, .ll-scene, .ll-sky, .ll-art, .ll-dim, .ll-vf, .ll-leak, .ll-gate, .ll-veil, .ll-wash, .ll-pic { position: absolute; inset: 0; }
+        .ll-art { width: 100%; height: 100%; }
+        .ll-defs { position: absolute; width: 0; height: 0; }
+        .ll-sky { background: linear-gradient(180deg, var(--ll-g0) 0%, var(--ll-g1) 30%, var(--ll-g2) 50%, var(--ll-g3) 62%); }
+        .ll-sa .ll-sky { background: linear-gradient(180deg, var(--ll-n0) 0%, var(--ll-n1) 45%, var(--ll-n2) 62%); }
+        .ll-pic { background-size: cover; background-position: 50% 50%; }
+        .ll-r1 { fill: var(--ll-gr1); } .ll-r2 { fill: var(--ll-gr2); } .ll-r3 { fill: var(--ll-gr3); }
+        .ll-sa .ll-r1 { fill: var(--ll-nr1); } .ll-sa .ll-r2 { fill: var(--ll-nr2); } .ll-sa .ll-r3 { fill: var(--ll-nr3); }
+        .ll-sung, .ll-sunc { cx: 1300px; cy: 600px; }
+        .ll-sunc { fill: var(--ll-core); }
+        .ll-st { fill: var(--k-on-stage); }
+        .ll-moon, .ll-moong { position: absolute; border-radius: 50%; }
+        .ll-moong { width: 340px; height: 340px; left: calc(75.5% - 170px); top: calc(23.1% - 170px); background: radial-gradient(closest-side, color-mix(in srgb, var(--ll-ink) 35%, transparent), transparent); }
+        .ll-moon { width: 92px; height: 92px; left: calc(75.5% - 46px); top: calc(23.1% - 46px); background: var(--ll-ink);
+          -webkit-mask-image: radial-gradient(circle 42px at 66px 34px, transparent 41.5px, #000 42.5px); mask-image: radial-gradient(circle 42px at 66px 34px, transparent 41.5px, #000 42.5px); }
+        .ll-win { fill: var(--ll-amber); } .ll-wing { fill: color-mix(in srgb, var(--ll-amber) 20%, transparent); }
+        .ll-dim { background: linear-gradient(180deg, color-mix(in srgb, black 25%, transparent) 0%, transparent 22%, transparent 52%, color-mix(in srgb, var(--ll-shade) 72%, transparent) 100%); }
+        /* titles live in the dark sky, upper left; both pages share one box */
+        .ll-copy { position: absolute; left: 156px; right: 156px; top: 176px; }
+        .ll-kick { display: block; min-height: 56px; line-height: 56px; font-size: 40px; font-weight: 700; letter-spacing: 0.2em; color: var(--ll-amber); }
+        .ll-title { display: block; margin-top: 18px; font-size: 140px; font-weight: 800; line-height: 1.2; color: var(--ll-ink); text-shadow: 0 2px 28px color-mix(in srgb, var(--ll-shade) 55%, transparent); }
+        .ll-kick:empty, .ll-title:empty { display: none; }
+        .ll[data-pic] .ll-dim { background: linear-gradient(180deg, color-mix(in srgb, var(--ll-shade) 62%, transparent), color-mix(in srgb, var(--ll-shade) 40%, transparent) 40%, color-mix(in srgb, var(--ll-shade) 72%, transparent)); }
+        /* viewfinder: corner brackets and the mode dial */
+        .ll-c { position: absolute; width: 56px; height: 56px; border: 0 solid var(--ll-line); }
+        .ll-c1 { left: 72px; top: 72px; border-width: 3px 0 0 3px; } .ll-c2 { right: 72px; top: 72px; border-width: 3px 3px 0 0; }
+        .ll-c3 { left: 72px; bottom: 72px; border-width: 0 0 3px 3px; } .ll-c4 { right: 72px; bottom: 72px; border-width: 0 3px 3px 0; }
+        .ll-dial { position: absolute; left: 50%; bottom: 92px; width: 780px; height: 64px; margin-left: -390px; border-radius: 32px; display: flex; background: color-mix(in srgb, var(--ll-shade) 78%, transparent); }
+        .ll-hl { position: absolute; left: 33.333%; top: 0; width: 33.333%; height: 64px; box-sizing: border-box; border-radius: 32px; background: color-mix(in srgb, var(--k-stage), var(--ll-ember) 14%); border: 1.5px solid color-mix(in srgb, var(--ll-amber) 55%, transparent); box-shadow: 0 0 24px color-mix(in srgb, var(--ll-amber) 25%, transparent); }
+        .ll-m { position: relative; flex: 1 1 0; min-width: 0; text-align: center; line-height: 64px; font-size: 28px; font-weight: 700; letter-spacing: 0.14em; color: color-mix(in srgb, var(--ll-ink) 62%, transparent); }
+        .ll-m.on { color: var(--ll-amber); }
+        /* light leak: three stretched warm ellipses, a film-gate strip along the right and top edges, a white-hot core, a warm veil */
+        .ll-leak { display: none; pointer-events: none; }
+        .ll-gate { mix-blend-mode: screen; opacity: 0; background: linear-gradient(250deg, color-mix(in srgb, var(--ll-amber) 90%, transparent) 0%, color-mix(in srgb, var(--ll-ember) 55%, transparent) 14%, color-mix(in srgb, var(--ll-ochre) 20%, transparent) 30%, transparent 46%); }
+        .ll-blob, .ll-core { position: absolute; border-radius: 50%; mix-blend-mode: screen; opacity: 0; background: radial-gradient(closest-side, var(--c) 0%, color-mix(in srgb, var(--c) 65%, transparent) 35%, color-mix(in srgb, var(--c) 0%, transparent) 100%); }
+        .ll-b1 { --c: var(--ll-ochre); } .ll-b2 { --c: var(--ll-ember); } .ll-b3 { --c: var(--ll-amber); }
+        .ll-core { --c: var(--ll-core); background: radial-gradient(closest-side, var(--ll-core) 0%, color-mix(in srgb, var(--ll-core) 90%, transparent) 40%, color-mix(in srgb, var(--ll-core) 0%, transparent) 100%); }
+        .ll-veil { background: var(--ll-amber); mix-blend-mode: screen; opacity: 0; }
+        .ll-wash { display: none; background: color-mix(in srgb, var(--ll-amber) 70%, white); opacity: 0; }
+        .ll[data-bare] .ll-page, .ll[data-bare] .ll-vig, .ll[data-bare] .ll-grain { display: none; }
+        .ll[data-bare] .ll-wash { display: block; }
+        .ll[data-bare] { background: none; }
+        @container (orientation: portrait) {
+          .ll-sky { background: linear-gradient(180deg, var(--ll-g0) 0%, var(--ll-g1) 40%, var(--ll-g2) 62%, var(--ll-g3) 70%); }
+          .ll-t { transform: translateY(840px); }
+          .ll-sx { transform: scaleX(0.5625); }
+          .ll-sung, .ll-sunc { cx: 731px; }
+          .ll-moong { left: calc(80% - 170px); top: calc(19.8% - 170px); }
+          .ll-moon { left: calc(80% - 46px); top: calc(19.8% - 46px); }
+          .ll-copy { left: 112px; right: 112px; top: 500px; }
+          .ll-kick { font-size: 36px; }
+          .ll-title { font-size: 120px; }
+            .ll-dial { bottom: auto; top: 1160px; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="light-leak-burn">
+        <div class="ll">
+          <svg class="ll-defs" width="0" height="0" aria-hidden="true"><defs>
+            <path id="ll-rf" d="M0 640 C 180 600 300 560 420 580 C 560 604 640 520 780 500 C 900 484 1000 560 1120 570 C 1260 582 1380 500 1520 490 C 1680 480 1800 560 1920 548 L1920 1080 L0 1080 Z"/>
+            <path id="ll-rm" d="M0 760 C 160 700 300 690 440 720 C 600 756 720 650 880 640 C 1040 630 1140 720 1300 730 C 1460 740 1600 660 1760 670 C 1840 676 1890 700 1920 706 L1920 1080 L0 1080 Z"/>
+            <path id="ll-rn" d="M0 880 C 220 820 420 830 600 860 C 800 892 980 800 1180 812 C 1380 824 1560 900 1760 880 C 1840 872 1890 864 1920 862 L1920 1080 L0 1080 Z"/>
+            <radialGradient id="ll-gs" cx="0.5" cy="0.5" r="0.5"><stop offset="0" style="stop-color: var(--ll-core)" stop-opacity="0.95"/><stop offset="0.25" style="stop-color: var(--ll-amber)" stop-opacity="0.55"/><stop offset="1" style="stop-color: var(--ll-amber)" stop-opacity="0"/></radialGradient>
+            <linearGradient id="ll-gh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color: var(--ll-amber)" stop-opacity="0"/><stop offset="0.5" style="stop-color: var(--ll-amber)" stop-opacity="0.35"/><stop offset="1" style="stop-color: var(--ll-amber)" stop-opacity="0"/></linearGradient>
+          </defs></svg>
+          <div class="ll-page">
+            <div class="ll-zoom" data-layout-allow-overflow>
+              <div class="ll-scene ll-sb">
+                <div class="ll-sky"></div>
+                <svg class="ll-art" aria-hidden="true"><g class="ll-t">
+                  <circle class="ll-sung" cx="1300" cy="600" r="420" fill="url(#ll-gs)"/>
+                  <circle class="ll-sunc" cx="1300" cy="600" r="96"/>
+                  <use class="ll-sx ll-r1" href="#ll-rf"/>
+                  <rect x="0" y="520" width="100%" height="160" fill="url(#ll-gh)"/>
+                  <use class="ll-sx ll-r2" href="#ll-rm"/>
+                  <use class="ll-sx ll-r3" href="#ll-rn"/>
+                </g></svg>
+              </div>
+            </div>
+            <div class="ll-dim"></div>
+            <div class="ll-copy ll-cb"><div class="ll-kick">02 — 黄昏</div><div class="ll-title">再动手做出来</div></div>
+            <div class="ll-vf">
+              <div class="ll-c ll-c1"></div><div class="ll-c ll-c2"></div><div class="ll-c ll-c3"></div><div class="ll-c ll-c4"></div>
+              <div class="ll-dial"><div class="ll-hl"></div><div class="ll-m">夜景</div><div class="ll-m on">黄昏</div><div class="ll-m">人像</div></div>
+            </div>
+          </div>
+          <div class="ll-leak" data-layout-allow-overflow>
+            <div class="ll-gate"></div>
+            <div class="ll-blob ll-b1"></div><div class="ll-blob ll-b2"></div><div class="ll-blob ll-b3"></div>
+            <div class="ll-core"></div>
+            <div class="ll-veil"></div>
+          </div>
+          <div class="ll-wash"></div>
+          <div class="ll-vig"></div>
+          <div class="ll-grain"></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // seconds = upstream frames / 30
+          var CFG = {
+            slot: 4.4,
+            leakIn: 0.8, peak: 1.7333, leakOut: 3.1667,   // envelope: ease-in 28f up to the peak frame (the cut), ease-out 43f down
+            cut: 1.75,                                     // pages swap between frame 52 (last old frame) and frame 53
+            lift: 0.25, liftFrom: 51.5, liftTo: 53.5,      // 2-frame extra warm lift at the cut (frames 52-53), as frame numbers
+            zoomA: 0.02, zoomB: 0.04, zoomBDur: 1.4667,    // old page pushes in 1 -> 1.02, new page settles 1.04 -> 1
+            slideLag: 0.0667, slideDur: 0.4667,            // dial highlight slides 2f after the peak, 14f
+            titleA: 0.0667, titleB: 2.0667, rise: 0.6667, gap: 0.1333 // title words rise (upstream 20f each, 4f apart)
+          };
+          var LAND = { k: 1, rot: -34, min: 72 };           // k scales the blobs; rot is the stretch angle of the blobs
+          var PORT = { k: 0.62, rot: -64, min: 72 };
+          var BLOBS = [{ d: 3000, a: 0.6, o: 360 }, { d: 2300, a: 0.8, o: 160 }, { d: 1700, a: 0.95, o: 0 }];
+          var v = { kicker_a: "01 — 夜景", title_a: "先把方案|想清楚", kicker_b: "02 — 黄昏", title_b: "再动手|做出来", modes: "夜景|黄昏|人像", from: "", to: "", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".ll");
+          var q = function (s, r) { return (r || root).querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          if (String(v.backdrop) === "off") root.setAttribute("data-bare", "");
+
+          // ==== kit:hash@1 ====
+          function kHash(n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+          // ==== end kit:hash ====
+
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+
+          // ==== kit:text@2 (kReveal trimmed to rise) ====
+          var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "ll-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "ll-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          function kReveal(tl, units, variant, at, o) {
+            o = o || {};
+            var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+            units.forEach(function (u, i) {
+              var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+              if (variant === "rise") {
+                tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+                tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+              }
+            });
+            return tl;
+          }
+          // ==== end kit:text ====
+
+          // ==== kit:fit@1 (kRows dropped) ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          // ==== end kit:fit ====
+
+          var S = function (x) { return String(x == null ? "" : x).trim(); };
+          var zoom = q(".ll-zoom"), sb = q(".ll-sb"), copyB = q(".ll-cb");
+          var pic = function (url) { return '<div class="ll-pic" style="background-image:url(&quot;' + S(url).replace(/["\\()]/g, "") + '&quot;)"></div>'; };
+
+          // old page: night scene (70 stars, moon, ridges, one warm window) or an image
+          var sa = document.createElement("div");
+          sa.className = "ll-scene ll-sa";
+          var stars = [], i, svg = "";
+          if (S(v.from)) sa.innerHTML = pic(v.from);
+          else {
+            for (i = 0; i < 70; i++) {
+              stars.push({ r: 0.8 + kHash(i * 7.3) * 1.8, p: kHash(i * 11.1) * 6.28 });
+              svg += '<circle class="ll-st" cx="' + (kHash(i * 3.1 + 1) * 100).toFixed(2) + '%" cy="' + (kHash(i * 5.7 + 2) * 48).toFixed(2) + '%" r="' + stars[i].r.toFixed(2) + '"/>';
+            }
+            sa.innerHTML = '<div class="ll-sky"></div><svg class="ll-art" aria-hidden="true">' + svg + '</svg><div class="ll-moong"></div><div class="ll-moon"></div>' +
+              '<svg class="ll-art" aria-hidden="true"><g class="ll-t"><use class="ll-sx ll-r1" href="#ll-rf"/><use class="ll-sx ll-r2" href="#ll-rm"/><use class="ll-sx ll-r3" href="#ll-rn"/>' +
+              '<circle class="ll-wing" cx="' + (1606 * (P ? 0.5625 : 1)) + '" cy="898" r="28"/><rect class="ll-win" x="' + (1600 * (P ? 0.5625 : 1)) + '" y="890" width="12" height="10" rx="2"/></g></svg>';
+          }
+          zoom.appendChild(sa);
+          if (S(v.to)) sb.innerHTML = pic(v.to);
+          var starEls = [].slice.call(sa.querySelectorAll(".ll-st"));
+
+          // titles: one box per page, words split by kSplit, shrunk to fit (two lines)
+          var copyA = copyB.cloneNode(true);
+          copyA.className = "ll-copy ll-ca";
+          copyB.parentNode.insertBefore(copyA, copyB);
+          var fill = function (box, kick, title) {
+            var ke = q(".ll-kick", box), te = q(".ll-title", box), W = box.clientWidth || FW - 2 * 156;
+            ke.textContent = S(kick);
+            var us = S(title) ? kSplit(te, "word", true, S(title)) : (te.textContent = "", []);
+            if (S(kick)) kFit(ke, { lines: 1, min: 32, width: W });
+            if (us.length) kFit(te, { lines: 2, min: L.min, width: W });
+            return us;
+          };
+          var unitsA = fill(copyA, v.kicker_a, v.title_a), unitsB = fill(copyB, v.kicker_b, v.title_b);
+
+          var hl = q(".ll-hl"), dial = q(".ll-dial");
+          var names = S(v.modes).split("|").map(S).filter(Boolean).slice(0, 3);
+          [].forEach.call(dial.querySelectorAll(".ll-m"), function (m, j) {
+            m.textContent = names[j] || "";
+            if (names[j]) kFit(m, { lines: 1, min: 28, width: dial.clientWidth / 3 - 28 });
+          });
+          var ms = dial.querySelectorAll(".ll-m"), pw = dial.clientWidth / 3;
+          if (names.length < 2) dial.style.display = "none";
+          if (S(v.from) || S(v.to)) root.setAttribute("data-pic", "");
+          [].forEach.call(root.querySelectorAll(".ll-kick, .ll-u, .ll-m"), function (e) { e.setAttribute("data-layout-allow-occlusion", ""); });
+
+          var gate = q(".ll-gate"), blobs = [].slice.call(root.querySelectorAll(".ll-blob")), core = q(".ll-core"), veil = q(".ll-veil");
+          var leak = q(".ll-leak"), wash = q(".ll-wash"), page = q(".ll-page"), vig = q(".ll-vig"), draw = kGrain(q(".ll-grain"), { step: 2, blend: "soft-light" });
+          blobs.forEach(function (b, j) { b.style.width = BLOBS[j].d * L.k + "px"; b.style.height = (BLOBS[j].d * L.k) / 1.35 + "px"; });
+          core.style.width = 2200 * L.k + "px"; core.style.height = 1400 * L.k + "px";
+          var ux = Math.cos((L.rot * Math.PI) / 180), uy = Math.sin((L.rot * Math.PI) / 180);
+          var tails = function (x) { return 1 - Math.pow(1 - x, 1.2); };
+
+          function render(t) {
+            var f = t * 30, golden = t > CFG.cut;
+            // light intensity: ease-in up to the peak (the cut), ease-out after
+            var it = t <= CFG.peak ? MT.ramp(t, CFG.leakIn, CFG.peak - CFG.leakIn, function (p) { return p * p; }) : 1 - MT.ramp(t, CFG.peak, CFG.leakOut - CFG.peak, "out");
+            var sw = MT.ramp(t, CFG.leakIn, CFG.leakOut - CFG.leakIn, tails);
+            var cx = FW * MT.mix(1.1719, -0.2604, sw), cy = FH * MT.mix(-0.3519, 1.2963, sw);
+            var zm = golden ? 1 + CFG.zoomB * (1 - MT.ramp(t, CFG.peak, CFG.zoomBDur, "out")) : 1 + CFG.zoomA * MT.ramp(t, 0, CFG.peak, "smooth");
+            var aWash = golden ? 1 : 1 - 0.75 * Math.pow(it, 1.6);
+            var slide = MT.ramp(t, CFG.peak + CFG.slideLag, CFG.slideDur, "swift");
+            var core3 = Math.pow(it, 3), lift = f >= CFG.liftFrom && f < CFG.liftTo ? CFG.lift : 0;
+            var vis = it > 0.003;
+            zoom.style.transform = "scale(" + zm.toFixed(5) + ")";
+            page.style.filter = it > 0.01 ? "brightness(" + (1 + it * 0.85).toFixed(3) + ") contrast(" + (1 - it * 0.5).toFixed(3) + ") saturate(" + (1 - it * 0.25).toFixed(3) + ")" : "";
+            sa.style.opacity = golden ? 0 : 1;
+            copyA.style.opacity = golden ? 0 : aWash.toFixed(3);
+            copyB.style.opacity = golden ? 1 : 0;
+            hl.style.left = (pw * slide).toFixed(1) + "px";
+            ms[0].className = "ll-m" + (slide < 0.5 ? " on" : ""); ms[1].className = "ll-m" + (slide >= 0.5 ? " on" : "");
+            if (!golden) starEls.forEach(function (s, j) { s.style.opacity = (0.25 + 0.55 * (0.5 + 0.5 * Math.sin(f / 7 + stars[j].p))).toFixed(3); });
+            else q(".ll-sung").style.r = (420 * (1 + 0.03 * Math.sin(f / 18))).toFixed(1) + "px"; // sun glow breathes (frames at 30 fps)
+            leak.style.display = vis ? "block" : "none";
+            wash.style.opacity = (0.45 * Math.pow(it, 1.5)).toFixed(3);
+            if (vis) {
+              gate.style.opacity = it.toFixed(3);
+              blobs.forEach(function (b, j) {
+                var o = BLOBS[j].o * L.k, d = BLOBS[j].d * L.k;
+                b.style.left = (cx - d / 2 + ux * o).toFixed(1) + "px"; b.style.top = (cy - d / 2.7 + uy * o).toFixed(1) + "px";
+                b.style.transform = "rotate(" + L.rot + "deg)"; b.style.opacity = (BLOBS[j].a * it).toFixed(3);
+              });
+              core.style.left = (cx - 1100 * L.k).toFixed(1) + "px"; core.style.top = (cy - 700 * L.k).toFixed(1) + "px";
+              core.style.transform = "rotate(" + L.rot + "deg)"; core.style.opacity = core3.toFixed(3);
+              veil.style.opacity = (0.4 * it * it + lift).toFixed(3);
+            }
+            vig.style.setProperty("--vs", (0.5 * (1 - 0.6 * it)).toFixed(3)); vig.style.setProperty("--vin", "48%");
+            draw(t);
+            q(".ll-grain").style.opacity = (0.08 + 0.08 * it).toFixed(3);
+          }
+
+          var tl = MT.timeline({ duration: CFG.slot });
+          tl.each(render);
+          kReveal(tl, unitsA, "rise", CFG.titleA, { each: CFG.rise, gap: CFG.gap });
+          kReveal(tl, unitsB, "rise", CFG.titleB, { each: CFG.rise, gap: CFG.gap });
+          window.__timelines["light-leak-burn"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

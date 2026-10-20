@@ -1,0 +1,521 @@
+<!doctype html>
+<html
+lang="zh-CN"
+data-composition-variables='[
+{"id":"old","type":"string","label":"旧页标题（| 切意群，最后一段用次级色）","default":"正在发布|第 3 版"},
+{"id":"new","type":"string","label":"新页标题（| 切意群，最后一段用强调色）","default":"第 3 版|已上线。"},
+{"id":"name","type":"string","label":"左上角应用名（留空不显示）","default":"示例应用"},
+{"id":"from","type":"string","label":"旧页换成一张图（从项目根目录写起；留空画示意控制台）","default":""},
+{"id":"to","type":"string","label":"新页换成一张图（从项目根目录写起；留空画示意控制台）","default":""},
+{"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（页面只留内容，撕开处露出宿主画面）"}]}
+]'
+>
+<head>
+<meta charset="UTF-8" />
+<title>glitch-displace · 横条撕裂切</title>
+<script src="../../lib/preview.js"></script>
+</head>
+<body>
+<template id="glitch-displace-template">
+ <!-- Ported from video-shotcraft demos/transition/tear-streak-transitions/GlitchDisplace.tsx
+ (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+ Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+ Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+ neutral --k-* palette (light first, midnight look dropped), system fonts, generic copy, upstream mark removed;
+ band copies are DOM clones, ghosts are duotone copies of the whole page (multiply on light, screen on dark);
+ footer microtext drawn as bars, text raised to 40px; from/to images and portrait relayout added;
+ 16 bands, energies, 70px amplitude, 12px ghosts, envelope, cut frame, flash and kick kept. -->
+ <style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+@font-face { font-family: "Consolas"; src: local("Consolas"); }
+#root {
+ --k-bg: var(--mc-bg, #ffffff);
+ --k-panel: var(--mc-panel, #f4f5f7);
+ --k-ink: var(--mc-ink, #15171c);
+ --k-muted: var(--mc-muted, #6b7280);
+ --k-accent: var(--mc-accent, #e8590c);
+ --k-accent-2: var(--mc-accent-2, #2563eb);
+ --k-on-accent: var(--mc-on-accent, #ffffff);
+ --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+ --k-mono: var(--mc-mono, Consolas, monospace);
+ position: absolute;
+ inset: 0;
+ overflow: hidden;
+ font-family: var(--k-font);
+ color: var(--k-ink);
+}
+.gd { position: absolute; inset: 0; container-type: size; --gd-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); --gd-cut: color-mix(in srgb, var(--k-ink) 16%, transparent); --gd-hi: color-mix(in srgb, var(--k-accent-2), var(--k-accent)); }
+.gd[data-tone="dark"] { --gd-shade: color-mix(in srgb, var(--k-bg) 30%, black); --gd-cut: rgba(223, 232, 255, 0.5); --gd-hi: #fff; }
+.gd * { box-sizing: border-box; }
+.gd-stage, .gd-base, .gd-page, .gd-bg, .gd-ct, .gd-strips, .gd-sp, .gd-gh { position: absolute; inset: 0; }
+/* a page: opaque backdrop (gradient, light, dot grid) + console content; --c is the state colour */
+.gd-page { --c: var(--k-accent-2); --gl: var(--k-accent-2); overflow: hidden; }
+.gd-page[data-s="a"] { --c: var(--k-accent); --gl: var(--k-muted); }
+/* ==== kit:backdrop@1 ==== */
+.gd-bg { background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+.gd-bg::before { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+/* ==== end kit:backdrop ==== */
+.gd-glow { position: absolute; inset: 0; opacity: 0.3; background: radial-gradient(ellipse 62% 70% at 22% 18%, color-mix(in srgb, var(--gl) 42%, transparent), transparent 70%), radial-gradient(ellipse 60% 34% at 70% 104%, color-mix(in srgb, var(--gl) 20%, transparent), transparent 72%); }
+.gd[data-tone="dark"] .gd-glow { opacity: 1; }
+/* ==== kit:light@1 ==== */
+.gd-light { mix-blend-mode: multiply; }
+.gd[data-tone="dark"] .gd-light { mix-blend-mode: screen; }
+/* ==== end kit:light ==== */
+.gd-dots { position: absolute; inset: 0; opacity: 0.55; background: radial-gradient(circle, color-mix(in srgb, var(--k-ink) 16%, transparent) 1.4px, transparent 1.8px) 20px 20px / 40px 40px; }
+.gd-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.gd-top { position: absolute; left: 120px; top: 76px; display: flex; align-items: center; gap: 20px; font-size: 36px; color: var(--k-muted); white-space: nowrap; }
+.gd-mark { display: block; flex: none; }
+.gd-name { font-size: 40px; font-weight: 700; color: var(--k-ink); white-space: nowrap; }
+.gd-pill { position: absolute; right: 120px; top: 70px; height: 58px; padding: 0 26px; border-radius: 29px; display: flex; align-items: center; gap: 18px; border: 1.5px solid color-mix(in srgb, var(--c) 45%, transparent); background: color-mix(in srgb, var(--c) 10%, transparent); font-size: 30px; font-weight: 600; color: color-mix(in srgb, var(--c), var(--k-ink) 40%); white-space: nowrap; }
+.gd-led { position: relative; display: block; width: 14px; height: 14px; border-radius: 50%; background: var(--c); }
+.gd-ping { position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--c); opacity: 0; }
+.gd-kick { position: absolute; left: 120px; top: 236px; font-size: 40px; font-weight: 600; letter-spacing: 0.06em; color: color-mix(in srgb, var(--c), var(--k-ink) 40%); white-space: nowrap; }
+.gd-title { position: absolute; left: 114px; top: 300px; width: 680px; font-size: 132px; font-weight: 700; line-height: 1.15; }
+.gd-hl { color: var(--c); }
+.gd-page[data-s="a"] .gd-hl { color: var(--k-muted); }
+.gd-u { display: inline-block; white-space: pre; }
+.gd-br .gd-u { display: block; }
+.gd-chart { position: absolute; left: 800px; top: 298px; width: 600px; height: 260px; }
+.gd-chart svg, .gd-cl { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.gd-grid { stroke: color-mix(in srgb, var(--k-ink) 14%, transparent); stroke-width: 1.5; stroke-dasharray: 4 8; }
+.gd-ar { mask-image: linear-gradient(#000, transparent 85%); }
+.gd-ar path { fill: var(--c); opacity: 0.32; }
+.gd-ln { fill: none; stroke: var(--c); stroke-width: 4.5; stroke-linejoin: round; stroke-linecap: round; }
+.gd-dot { position: absolute; left: 96.67%; top: 71.92%; width: 26px; height: 26px; margin: -13px 0 0 -13px; border: 4px solid var(--c); border-radius: 50%; background: var(--k-bg); box-shadow: 0 0 0 9px color-mix(in srgb, var(--c) 18%, transparent); }
+.gd-big { position: absolute; right: 120px; top: 300px; text-align: right; }
+.gd-num { font: 600 196px/1 var(--k-mono); letter-spacing: -0.05em; white-space: nowrap; }
+.gd-num small { font-size: 84px; color: var(--k-muted); letter-spacing: -0.02em; }
+.gd-lab { margin-top: 14px; font-size: 40px; color: var(--k-muted); white-space: nowrap; }
+.gd-cells { position: absolute; left: 120px; right: 120px; top: 628px; display: grid; grid-template-columns: repeat(18, 1fr); gap: 12px; }
+.gd-cells i { --w: 0; display: block; height: 84px; border-radius: 12px; background: linear-gradient(180deg, color-mix(in srgb, var(--c) 95%, transparent), color-mix(in srgb, var(--c) 72%, transparent)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 calc(18px + var(--w) * 40px) color-mix(in srgb, var(--c) calc(25% + var(--w) * 50%), transparent); filter: brightness(calc(1 + var(--w) * 0.6)); }
+.gd-cells i.off { background: var(--k-panel); box-shadow: none; filter: none; border: 1.5px solid color-mix(in srgb, var(--c) calc(18% + var(--w) * 1%), transparent); }
+.gd-rows { position: absolute; left: 120px; right: 120px; top: 780px; display: flex; gap: 48px; }
+.gd-st { flex: 1; padding-top: 22px; border-top: 2px solid color-mix(in srgb, var(--c) 50%, transparent); white-space: nowrap; }
+.gd-st b { display: block; font-size: 72px; font-weight: 700; line-height: 1; }
+.gd-st span { display: block; margin-top: 12px; font-size: 40px; color: var(--k-muted); }
+.gd-page[data-s="a"] .gd-rows { display: block; }
+.gd-lg { display: flex; align-items: center; gap: 28px; height: 56px; font-size: 40px; color: var(--k-muted); white-space: nowrap; }
+.gd-lg b { width: 300px; font-weight: 400; color: var(--k-ink); }
+.gd-lg span { flex: 1; }
+.gd-lg em { font: 40px var(--k-mono); }
+.gd-lg i { display: block; flex: none; width: 30px; height: 30px; }
+.gd-lg i::after { content: ""; display: block; width: 12px; height: 22px; margin: 0 0 0 9px; border: solid var(--c); border-width: 0 4px 4px 0; transform: rotate(45deg); }
+.gd-lg i.w::after { width: 24px; height: 24px; margin: 3px; border: 3px dashed var(--k-muted); border-radius: 50%; transform: none; }
+.gd-foot { position: absolute; left: 120px; right: 120px; bottom: 64px; display: flex; justify-content: space-between; }
+.gd-foot i { display: block; width: 360px; height: 12px; border-radius: 6px; background: color-mix(in srgb, var(--k-ink) 14%, transparent); }
+.gd-foot i + i { width: 240px; }
+/* tear layers (built by the script): bands, ghost copies, cut edges, scan lines */
+.gd-strip { position: absolute; left: 0; width: 100%; overflow: hidden; display: none; }
+.gd-gh { mix-blend-mode: multiply; display: none; }
+.gd-gh .gd-vig, .gd-gh .gd-grain { display: none; }
+.gd[data-tone="dark"] .gd-gh { mix-blend-mode: screen; }
+.gd-et, .gd-eb { position: absolute; left: 0; right: 0; }
+.gd-et { top: 0; height: 1.5px; background: var(--gd-cut); }
+.gd-eb { bottom: 0; height: 3px; background: linear-gradient(transparent, color-mix(in srgb, var(--gd-shade) 75%, transparent)); }
+.gd-scan { position: absolute; left: 0; right: 0; display: none; background: linear-gradient(90deg, transparent, var(--k-accent-2) 30%, var(--gd-hi) 60%, transparent); box-shadow: 0 0 12px color-mix(in srgb, var(--k-accent-2) 60%, transparent); }
+.gd-base[data-act] .gd-ct { opacity: 0; }
+.gd[data-bare] .gd-bg, .gd[data-bare] .gd-vig, .gd[data-bare] .gd-grain { display: none; }
+.gd[data-bare] .gd-base[data-act] { opacity: 0; }
+/* ==== kit:vignette@1 ==== */
+.gd-vig {
+ position: absolute; inset: 0; pointer-events: none;
+ --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--gd-shade);
+ background:
+  radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+  radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.gd[data-tone="dark"] .gd-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+/* ==== kit:grain@1 ==== */
+.gd-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+/* portrait: the console restacks into 12%-68% and 12% off each side (room for the 1.035x kick) */
+@container (orientation: portrait) {
+ .gd-top { left: 128px; top: 262px; gap: 16px; }
+ .gd-sl, .gd-foot { display: none; }
+ .gd-pill { right: 128px; top: 256px; height: 54px; padding: 0 22px; }
+ .gd-kick { left: 128px; top: 350px; }
+ .gd-title { left: 124px; top: 410px; width: 832px; font-size: 104px; }
+ .gd-big { left: 128px; right: auto; top: 690px; text-align: left; }
+ .gd-num { font-size: 150px; }
+ .gd-num small { font-size: 64px; }
+ .gd-lab { margin-top: 10px; }
+ .gd-chart { left: 470px; top: 690px; width: 484px; height: 210px; }
+ .gd-cells { left: 128px; right: 128px; top: 930px; grid-template-columns: repeat(6, 1fr); }
+ .gd-cells i { height: 62px; }
+ .gd-rows { left: 128px; right: 128px; top: 1150px; gap: 24px; }
+ .gd-st { padding-top: 16px; }
+ .gd-st b { font-size: 56px; }
+ .gd-lg { height: 46px; gap: 20px; }
+ .gd-lg b { width: 200px; }
+}
+ </style>
+
+ <div id="root" data-composition-id="glitch-displace">
+  <div class="gd">
+   <div class="gd-stage">
+  <div class="gd-base">
+   <div class="gd-page" data-s="b">
+    <div class="gd-bg" data-layout-allow-overflow><i class="gd-glow gd-light"></i><i class="gd-dots"></i></div>
+    <div class="gd-vig"></div><div class="gd-grain"></div>
+    <div class="gd-ct">
+     <div class="gd-top"><svg class="gd-mark" width="48" height="48" viewBox="0 0 128 128"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg><b class="gd-name">示例应用</b><span class="gd-sl">/ 发布</span></div>
+     <div class="gd-pill"><i class="gd-led"><i class="gd-ping"></i></i><span class="gd-pt">已上线</span></div>
+     <div class="gd-kick">18 / 18 个节点就绪</div>
+     <div class="gd-title gd-br"><span class="gd-u">第 3 版</span> <span class="gd-u gd-hl">已上线。</span></div>
+     <div class="gd-chart">
+      <svg viewBox="-20 -20 600 260"><path class="gd-grid" d="M0 0H560M0 110H560M0 220H560"/></svg>
+      <div class="gd-cl">
+       <svg class="gd-ar" viewBox="-20 -20 600 260"><path/></svg>
+       <svg viewBox="-20 -20 600 260"><path class="gd-ln"/></svg>
+      </div>
+      <i class="gd-dot"></i>
+     </div>
+     <div class="gd-big"><div class="gd-num"><span class="gd-n">41</span><small>ms</small></div><div class="gd-lab">平均响应</div></div>
+     <div class="gd-cells"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+     <div class="gd-rows">
+      <div class="gd-st"><b>99.99%</b><span>发布期间可用</span></div>
+      <div class="gd-st"><b>0</b><span>失败请求</span></div>
+      <div class="gd-st"><b>2 分钟</b><span>全网生效</span></div>
+     </div>
+     <div class="gd-foot"><i></i><i></i></div>
+    </div>
+   </div>
+  </div>
+  <div class="gd-strips" data-layout-allow-overflow></div>
+  <i class="gd-scan" data-layout-allow-overflow></i><i class="gd-scan" data-layout-allow-overflow></i>
+   </div>
+  </div>
+ </div>
+
+ <script>
+(function () {
+ // seconds (upstream frame / 30); both orientations share them
+ var CFG = {
+  dur: 4.5,
+  prog: 1.333, logAt: 0.133, logGap: 0.3, logDur: 0.467, // old page: 86% -> 99%, log rows rise
+  pre: [30, 31], // precursor frames: two bands twitch 12px
+  tearIn: 1.467, rise: 0.1, cut: 1.8, tearOut: 2.0, // rise, plateau, hard cut, linear decay
+  push: 0.018, kick: 0.016, kickDur: 0.2, preKick: 0.006, // push-in + kick at the cut
+  chartAt: 0.067, chartDur: 0.8, countAt: 0.133, countDur: 1.0,
+  waveAt: 0.2, waveGap: 0.0433, waveUp: 0.2, waveDown: 0.533, statAt: 0.333, statGap: 0.167, statDur: 0.667, ping: 1.333
+ };
+ var TEAR = { bands: 16, amp: 70, ghost: 12, edge: 25 }; // px on a full-HD short side
+ var LAND = { tw: 680, nw: 560 };
+ var PORT = { tw: 832, nw: 520 };
+ var v = { old: "正在发布|第 3 版", "new": "第 3 版|已上线。", name: "示例应用", from: "", to: "", backdrop: "on" };
+ try {
+  var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+  for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+ } catch (e) {}
+
+ var root = document.querySelector(".gd");
+ var q = function (s, el) { return (el || root).querySelector(s); };
+ var qa = function (s, el) { return [].slice.call((el || root).querySelectorAll(s)); };
+ var FW = root.clientWidth, FH = root.clientHeight;
+ if (!FW || !FH) {
+  // not laid out yet: the host clip's declared size, then the window
+  var hc = root.closest("[data-width][data-height]");
+  FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+  FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+ }
+ var P = FH > FW, L = P ? PORT : LAND, S = Math.min(FW, FH) / 1.08e3;
+ root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+ // ==== kit:tone@1 ====
+ function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+ }
+ function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+ }
+ // ==== end kit:tone ====
+ // ==== kit:text@2 (kWords, kSplit) ====
+ var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+ function kWords(s, key) {
+  s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+  var cut = function (x) {
+   if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+   return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+  };
+  var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+  var pre = "";
+  bits.forEach(function (x) {
+   var t = x.trim(), last = out[out.length - 1];
+   if (last && /^ /.test(x)) last.sp = true;
+   if (!t) return;
+   if (!/[\p{L}\p{N}]/u.test(t)) {
+    if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+    else { last.t += t; last.sp = / $/.test(x); }
+    return;
+   }
+   out.push({ t: pre + t, sp: / $/.test(x) });
+   pre = "";
+  });
+  if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+  if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+  if (out.length) out[out.length - 1].sp = false;
+  return out;
+ }
+ function kSplit(el, by, rise, text) {
+  var s = text != null ? String(text) : el.textContent, units = [];
+  var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+  el.textContent = "";
+  parts.forEach(function (p) {
+   var u = document.createElement("span"), box = u;
+   u.className = "gd-u"; u.textContent = p.t;
+   if (by === "line") u.style.display = "block";
+   if (!p.t.trim()) { el.appendChild(u); return; }
+   if (rise) { box = document.createElement("span"); box.className = "gd-cut"; box.style.display = u.style.display; box.appendChild(u); }
+   el.appendChild(box);
+   if (p.sp) el.appendChild(document.createTextNode(" "));
+   units.push(u);
+  });
+  return units;
+ }
+ // ==== end kit:text ====
+ // ==== kit:fit@1 (kFit, kLines) ====
+ function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+   el.style.fontSize = f + "px";
+   m = kLines(el);
+   if ((m.w <= W && m.n <= n) || f <= min) break;
+   f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+   [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+   m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+ }
+ function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+   if (!t.data.trim()) continue;
+   r.selectNodeContents(t);
+   [].forEach.call(r.getClientRects(), function (b) {
+    var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+    if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+    row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+   });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+ }
+ // ==== end kit:fit ====
+ // ==== kit:grain@1 ====
+ function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+   var f = "type='linear' slope='2.4' intercept='-0.7'";
+   var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+    "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+    "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+    "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+    "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+   return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+   var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+   layer.style.backgroundImage = tiles[k % 6];
+   layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+ }
+ // ==== end kit:grain ====
+
+ var DARK = kTone(root) === "dark";
+ if (String(v.backdrop) === "off") root.setAttribute("data-bare", "");
+ // upstream hash: bands, energies and jitter match the original
+ var h = function (n) { var s = Math.sin(n * 127.3) * 43758.5453; return s - Math.floor(s); };
+
+ // B (new page) is in the HTML, A (old) is a clone
+ var base = q(".gd-base"), pB = q(".gd-page"), pA = pB.cloneNode(true);
+ pA.setAttribute("data-s", "a");
+ base.insertBefore(pA, pB);
+ [[".gd-pt", "发布中"], [".gd-kick", "第 3 版 · 构建 2047"], [".gd-lab", "流量已切换"], [".gd-num small", "%"]].forEach(function (x) { q(x[0], pA).textContent = x[1]; });
+ q(".gd-rows", pA).innerHTML = [["节点 01", "正常", "38 ms"], ["节点 02", "正常", "44 ms"], ["节点 18", "正在切换…", ""]].map(function (r, i) {
+  return '<div class="gd-lg"><i' + (i > 1 ? ' class="w"' : "") + "></i><b>" + r[0] + "</b><span>" + r[1] + "</span><em>" + r[2] + "</em></div>";
+ }).join("");
+ // chart data (0-1, up): A traffic climbs, B latency falls
+ var TRA = [0.02, 0.03, 0.05, 0.08, 0.14, 0.22, 0.33, 0.45, 0.58, 0.7, 0.8, 0.88, 0.93, 0.96, 0.98];
+ var LAT = [0.92, 0.9, 0.86, 0.88, 0.8, 0.72, 0.66, 0.56, 0.5, 0.42, 0.36, 0.3, 0.27, 0.25, 0.24];
+ var path = function (d) { return d.map(function (y, i) { return (i ? "L" : "M") + Math.round((i / 14) * 560) + " " + Math.round((1 - y) * 220); }).join(" "); };
+ [[pA, TRA], [pB, LAT]].forEach(function (x) {
+  q(".gd-ln", x[0]).setAttribute("d", path(x[1]));
+  q(".gd-ar path", x[0]).setAttribute("d", path(x[1]) + " L560 220 L0 220Z");
+ });
+ [[pA, v.old, v.from], [pB, v["new"], v.to]].forEach(function (x) {
+  var pg = x[0], img = String(x[2] || "").trim();
+  if (img) { q(".gd-ct", pg).innerHTML = '<img class="gd-img" alt="" data-layout-allow-overflow />'; q(".gd-img", pg).setAttribute("src", img); return; }
+  var nm = q(".gd-name", pg), name = String(v.name).trim();
+  if (!name) nm.style.display = "none";
+  else { nm.textContent = name; kFit(nm, { width: L.nw, min: 32 }); }
+  var tt = q(".gd-title", pg), u = kSplit(tt, "word", false, x[1]);
+  if (u.length > 1) u[u.length - 1].className += " gd-hl";
+  tt.classList.toggle("gd-br", /\|/.test(x[1])); // "|" breaks lines
+  kFit(tt, { lines: Math.max(2, u.length), min: 72, width: L.tw });
+ });
+
+ // duotone ghost filters: ink becomes one palette colour, the ground goes neutral for the blend
+ var MID = (window.__gdN = (window.__gdN || 0) + 1), fsvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+ fsvg.setAttribute("width", "0"); fsvg.setAttribute("height", "0"); fsvg.style.position = "absolute";
+ fsvg.innerHTML = ["--k-accent-2", "--k-accent"].map(function (c, j) {
+  var rgb = kRGB(root, "var(" + c + ")"), rows = rgb.map(function (x) {
+   var t = x / 255, a = DARK ? t : 1 - t, b = DARK ? 0 : t;
+   return [0.2126 * a, 0.7152 * a, 0.0722 * a, 0, b].map(function (n) { return n.toFixed(4); }).join(" ");
+  });
+  return '<filter id="gd-g' + MID + j + '" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="' + rows.join(" ") + ' 0 0 0 1 0"/></filter>';
+ }).join("");
+ root.appendChild(fsvg);
+
+ // 16 unequal bands (weights 0.45-1.35), each holding full-page copies
+ var bands = [], top = 0, wsum = 0, wts = [], i;
+ for (i = 0; i < TEAR.bands; i++) { wts.push(0.45 + h(i * 13 + 5) * 0.9); wsum += wts[i]; }
+ var hold = q(".gd-strips"), cloneP = function () {
+  var c = base.cloneNode(true);
+  c.className = "gd-base gd-cp";
+  // clipped duplicates of the checked base page
+  qa("*", c).forEach(function (e) { e.setAttribute("data-layout-allow-overlap", ""); e.setAttribute("data-layout-allow-occlusion", ""); e.setAttribute("data-layout-allow-caption-zone", ""); });
+  return c;
+ };
+ var refs = function (c) {
+  return [0, 1].map(function (j) {
+   var pg = c.children[j];
+   return { pg: pg, n: q(".gd-n", pg), cl: q(".gd-cl", pg), dot: q(".gd-dot", pg), cells: qa(".gd-cells i", pg), rows: qa(".gd-rows > *", pg), ping: q(".gd-ping", pg) };
+  });
+ };
+ for (i = 0; i < TEAR.bands; i++) {
+  var bh = i === TEAR.bands - 1 ? FH - top : Math.round((wts[i] / wsum) * FH), r = h(i * 7 + 101);
+  var st = document.createElement("div"), sp = document.createElement("div");
+  st.className = "gd-strip"; sp.className = "gd-sp";
+  st.style.top = top + "px"; st.style.height = bh + "px";
+  sp.style.top = -top + "px"; sp.style.height = FH + "px"; sp.style.bottom = "auto";
+  var b = { el: st, sp: sp, en: r < 0.2 ? 0 : r > 0.68 ? 1 : 0.18 + r * 0.35, pg: cloneP(), gh: [] };
+  sp.appendChild(b.pg);
+  for (var j = 0; j < 2; j++) {
+   var g = document.createElement("div");
+   g.className = "gd-gh"; g.style.filter = "url(#gd-g" + MID + j + ")";
+   g.appendChild(cloneP()); sp.appendChild(g);
+   b.gh.push({ el: g, r: refs(g.firstChild) });
+  }
+  b.r = refs(b.pg); b.vg = qa(".gd-vig", b.pg);
+  st.appendChild(sp);
+  st.insertAdjacentHTML("beforeend", '<i class="gd-et"></i><i class="gd-eb"></i>');
+  b.et = st.children[1]; b.eb = st.children[2];
+  hold.appendChild(st);
+  bands.push(b);
+  top += bh;
+ }
+ var R0 = refs(base), scans = qa(".gd-scan"), stage = q(".gd-stage"), grainL = q(".gd-grain"), grain = kGrain(grainL), grains = qa(".gd-grain").filter(function (e) { return !e.closest(".gd-gh"); });
+
+ // one page copy at time t
+ function draw(R, live, t) {
+  R[0].pg.style.display = live ? "none" : "block";
+  R[1].pg.style.display = live ? "block" : "none";
+  var p = R[live ? 1 : 0], f = t * 30, d, drawn;
+  if (!p.n) return; // an image page
+  if (live) {
+   var c = t - CFG.cut;
+   p.n.textContent = Math.round(58 - 17 * MT.ramp(c, CFG.countAt, CFG.countDur, "out"));
+   drawn = 0.35 + 0.65 * MT.ramp(c, CFG.chartAt, CFG.chartDur, "out");
+   d = (c % CFG.ping) / CFG.ping;
+   p.ping.style.transform = "scale(" + (1 + d * 1.5).toFixed(3) + ")";
+   p.ping.style.opacity = ((1 - d) * 0.8).toFixed(3);
+   // a wave of light runs across the cells, left to right
+   p.cells.forEach(function (e, i) {
+    e.className = "";
+    e.style.setProperty("--w", (MT.ramp(c, CFG.waveAt + i * CFG.waveGap, CFG.waveUp, "out") * (1 - MT.ramp(c, CFG.waveAt + CFG.waveUp + i * CFG.waveGap, CFG.waveDown, "out"))).toFixed(3));
+   });
+  } else {
+   var prog = 0.86 + 0.13 * MT.ramp(t, 0, CFG.prog, "out"), lit = Math.min(17, Math.floor(prog * 18 + 0.4));
+   p.n.textContent = Math.floor(prog * 100);
+   drawn = 0.25 + 0.75 * ((prog - 0.86) / 0.13);
+   p.cells.forEach(function (e, i) {
+    e.className = i < lit ? "" : "off";
+    e.style.setProperty("--w", i === lit ? (35 + 35 * Math.sin(f / 3.2)).toFixed(2) : 0); // frames at 30 fps
+   });
+  }
+  p.rows.forEach(function (e, i) {
+   var k = live ? MT.ramp(t - CFG.cut, CFG.statAt + i * CFG.statGap, CFG.statDur, "snappy") : MT.ramp(t, CFG.logAt + i * CFG.logGap, CFG.logDur, "snappy");
+   e.style.opacity = k.toFixed(3);
+   e.style.transform = "translateY(" + ((1 - k) * (live ? 26 : 18) * S).toFixed(1) + "px)";
+  });
+  var dat = live ? LAT : TRA, xi = drawn * 14, i0 = Math.min(13, Math.floor(xi)), y = dat[i0] + (dat[i0 + 1] - dat[i0]) * (xi - i0);
+  var ex = ((drawn * 560 + 20) / 6);
+  p.cl.style.clipPath = "inset(-5% " + (100 - ex).toFixed(2) + "% -5% -5%)";
+  p.dot.style.left = ex.toFixed(2) + "%";
+  p.dot.style.top = (((1 - y) * 220 + 20) / 2.6).toFixed(2) + "%";
+ }
+
+ function render(t) {
+  var fr = Math.floor(t * 30 + 1e-3), CUT = Math.round(CFG.cut * 30), live = fr >= CUT;
+  var pre = CFG.pre.indexOf(fr) >= 0, tear = fr >= Math.round(CFG.tearIn * 30) && fr < Math.round(CFG.tearOut * 30), act = pre || tear;
+  // slow push 1 -> 1.018 plus a 1.6% kick at the cut
+  var zoom = 1 + CFG.push * MT.ramp(t, 0, CFG.dur, "smooth") +
+   (live ? CFG.kick * (1 - MT.ramp(t, CFG.cut, CFG.kickDur, "out")) : CFG.preKick * MT.ramp(t, CFG.tearIn, CFG.cut - CFG.tearIn, "exit"));
+  var env = tear ? Math.min(MT.ramp(t, CFG.tearIn, CFG.rise, "power2.out"), 1 - MT.ramp(t, CFG.cut, CFG.tearOut - CFG.cut, "none")) : 0;
+  var expo = fr === CUT ? 1.28 : fr === CUT + 1 ? 1.12 : 1;
+  stage.style.transform = "scale(" + zoom.toFixed(5) + ")";
+  stage.style.filter = expo > 1 ? "brightness(" + expo + ")" : "";
+  draw(R0, live, t);
+  if (act) base.setAttribute("data-act", ""); else base.removeAttribute("data-act");
+  bands.forEach(function (b, i) {
+   b.el.style.display = act ? "block" : "none";
+   if (!act) return;
+   var dx = 0, r = h(i * 31 + fr * 7);
+   if (pre) dx = i === 5 || i === 12 ? (r > 0.5 ? 1 : -1) * 12 * S : 0;
+   else { r = r * 2 - 1; dx = (r < 0 ? -1 : 1) * Math.pow(Math.abs(r), 0.6) * TEAR.amp * S * b.en * env; }
+   var ad = Math.abs(dx), g = tear ? Math.min(1, ad / (36 * S)) * env : 0;
+   b.sp.style.transform = "translateX(" + dx.toFixed(1) + "px)";
+   b.vg.forEach(function (e) { e.style.transform = "translateX(" + (-dx).toFixed(1) + "px)"; });
+   draw(b.r, live, t);
+   b.gh.forEach(function (x, j) {
+    x.el.style.display = g > 0.04 ? "block" : "none";
+    if (g <= 0.04) return;
+    x.el.style.transform = "translateX(" + ((j ? -1 : 1) * TEAR.ghost * S) + "px)";
+    x.el.style.opacity = ((j ? 0.6 : 0.55) * g).toFixed(3);
+    draw(x.r, live, t);
+   });
+   b.et.style.opacity = MT.clamp((ad - TEAR.edge * S) / (30 * S), 0, 1).toFixed(3);
+   b.eb.style.opacity = Math.min(1, ad / (30 * S)).toFixed(3);
+  });
+  // two scan lines jump every frame
+  scans.forEach(function (s, k) {
+   s.style.display = tear ? "block" : "none";
+   if (!tear) return;
+   s.style.top = Math.floor(h(fr * 13 + k * 71) * FH) + "px";
+   s.style.height = 1 + Math.floor(h(fr + k * 9) * 3) + "px";
+   s.style.opacity = ((0.25 + 0.55 * h(fr * 5 + k)) * env).toFixed(3);
+  });
+  // grain thickens, re-rolls every frame
+  grain(tear ? t * 2 : t);
+  grainL.style.opacity = ((DARK ? 0.08 : 0.05) + (DARK ? 0.14 : 0.09) * env).toFixed(3);
+  grains.forEach(function (e) { if (e !== grainL) e.style.cssText = grainL.style.cssText; });
+ }
+
+ var tl = MT.scene(CFG.dur, render);
+ window.__timelines["glitch-displace"] = tl;
+})();
+ </script>
+</template>
+</body>
+</html>

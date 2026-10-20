@@ -1,0 +1,322 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"标题（用 | 切成逐段升起的词组）","default":"这么多做法，|先学这一种"},
+    {"id":"sub","type":"string","label":"副句","default":"每一种都配了示例，可以直接套用"},
+    {"id":"pick","type":"string","label":"中间主卡的名字（2–4 字）","default":"入门做法"},
+    {"id":"srcs","type":"string","label":"卡面图片（可空，用 | 分隔，从左到右）","default":""},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>stack-build-fan · 码成一摞再扇开</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="stack-build-fan-template">
+      <!-- Ported from video-shotcraft demos/ui-entrance/card-stack/CardStack.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette, system fonts, generic copy, upstream mark, eyebrow, counter, grain, floor band and card names removed;
+           covers redrawn without text and moved under a two-bar header, the centre card's name in its top strip; transform-origin
+           50% 130% rebuilt as a pivot node; z depth hint dropped; portrait shows the middle 7 cards. Springs, stagger, dip, camera,
+           fan and pull-out kept. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .sbf { position: absolute; inset: 0; container-type: size; --sbf-card: var(--k-bg); }
+        .sbf[data-tone="dark"] { --sbf-card: var(--k-panel); }
+        /* stage: light gradient, key light top centre */
+        .sbf-bg { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 52%, color-mix(in srgb, var(--k-bg), var(--k-ink) 8%) 100%); }
+        .sbf-bg::before { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 58% 62% at 50% 12%, color-mix(in srgb, var(--k-bg) 90%, transparent) 0%, transparent 70%); }
+        .sbf-cam, .sbf-floor, .sbf-pv, .sbf-card, .sbf-face, .sbf-cov, .sbf-sheen, .sbf-bar { position: absolute; display: block; }
+        .sbf-cam { inset: 0; }
+        .sbf-floor { height: 70px; border-radius: 50%; background: radial-gradient(ellipse at center, color-mix(in srgb, var(--sbf-shade) 28%, transparent) 0%, transparent 70%); }
+        .sbf-pv { left: 0; top: 0; width: 0; height: 0; }
+        /* a card hangs from its pivot, which sits 130% down the card (upstream transform-origin: 50% 130%) */
+        .sbf-card { left: -160px; top: -572px; width: 320px; height: 440px; }
+        .sbf-face { inset: 0; border-radius: 22px; overflow: hidden; background: var(--sbf-card); border: 1px solid var(--sbf-line); box-sizing: border-box; }
+        .sbf-cov { left: 12px; right: 12px; top: 104px; bottom: 12px; border-radius: 14px; overflow: hidden; background-size: cover; background-position: center; }
+        .sbf-bar { left: 24px; border-radius: 6px; }
+        .sbf-sheen { inset: 0; mix-blend-mode: soft-light; pointer-events: none; opacity: 0; --sp: -18%;
+          background: linear-gradient(108deg, transparent calc(var(--sp) - 18%), color-mix(in srgb, white 70%, transparent) var(--sp), transparent calc(var(--sp) + 18%)); }
+        .sbf-pick { position: absolute; z-index: 1; left: 22px; top: 38px; font-size: 52px; font-weight: 700; line-height: 1.2; white-space: nowrap; color: var(--k-ink); }
+        .sbf-head { position: absolute; left: 10%; right: 10%; top: 150px; text-align: center; text-wrap: balance; }
+        .sbf-title { display: block; font-size: 88px; font-weight: 700; line-height: 1.2; }
+        .sbf-sub { display: block; margin: 12px auto 0; font-size: 40px; line-height: 1.3; color: var(--k-muted); }
+        @container (orientation: portrait) {
+          .sbf-head { left: 11%; right: 11%; top: 300px; }
+          .sbf-title { font-size: 96px; }
+          .sbf-sub { margin-top: 20px; }
+        }
+        /* title rise: a clip-path cut, not overflow: hidden (read as occlusion) */
+        .sbf-u { display: inline-block; white-space: pre-wrap; }
+        .sbf-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+        /* ==== kit:derived@1 — colours mixed from the palette ====
+           line: hairlines; shade: shadows (tinted, never black); hi: lit top edge; tint: cover wash (white on dark: accent goes olive) */
+        .sbf {
+          --sbf-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+          --sbf-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+          --sbf-hi: color-mix(in srgb, white 80%, transparent);
+          --sbf-tint: var(--k-accent);
+        }
+        .sbf[data-tone="dark"] {
+          --sbf-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+          --sbf-hi: color-mix(in srgb, white 6%, transparent);
+          --sbf-tint: white;
+        }
+        /* ==== end kit:derived ==== */
+        /* vignette as upstream Polish.Vignette (0.16 light, 0.55 dark), one layer */
+        .sbf-vig { position: absolute; inset: 0; --vs: 16%; background: radial-gradient(ellipse 72% 72% at 50% 46%, transparent 45%, color-mix(in srgb, var(--sbf-shade) calc(var(--vs) * 0.32), transparent) 75%, color-mix(in srgb, var(--sbf-shade) var(--vs), transparent)); }
+        .sbf[data-tone="dark"] .sbf-vig { --vs: 55%; }
+      </style>
+
+      <div id="root" data-composition-id="stack-build-fan">
+        <div class="sbf">
+          <div class="sbf-bg"></div>
+          <div class="sbf-vig"></div>
+          <div class="sbf-head">
+            <div class="sbf-title">这么多做法，先学这一种</div>
+            <div class="sbf-sub">每一种都配了示例，可以直接套用</div>
+          </div>
+          <div class="sbf-cam"><div class="sbf-floor"></div></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing in seconds (upstream frames / 30), shared by both orientations
+          var CFG = {
+            dur: 5.5,
+            in0: 0.067, inSpan: 1.333, // take-offs spread by "out": gaps shrink
+            inDamp: 13, inStiff: 150, // rise spring, one overshoot
+            dipLag: 0.2, dipLen: 0.3, dipPx: 5, // pile sinks 5px per landing
+            prep: 2.067, prepLen: 0.333, prepAmt: 0.02, // tighten 2% (62-72f)
+            fan: 2.267, fanDamp: 20, fanStiff: 95, // shared fan clock
+            push: 2.133, pushTo: 1.06, pull: 1.4, pullTo: 0.88, hold: 4.067, holdLen: 0.933, holdTo: 1.017,
+            lift: 3.4, liftLen: 0.6, liftPx: 72, // centre card pull-out
+            ring: 3.467, ringLen: 0.4, sheen: 3.6, sheenLen: 0.733,
+            title: 3.533, word: 0.6, wordGap: 0.1, sub: 3.867,
+            floor: 0.2,
+            rot: 6.5, tx: 138, tilt: 9, jitR: 6.4, jitX: 22
+          };
+          // layout: s scales the card, cy = pile centre / FH, drop in card units (null: just inside the frame)
+          var LAND = { s: 1, cy: 0.565, drop: 820, ids: [0, 1, 2, 3, 4, 5, 6, 7, 8], titleLines: 1 };
+          var PORT = { s: 0.72, cy: 0.48, drop: null, ids: [1, 2, 3, 4, 5, 6, 7], titleLines: 2 };
+          var v = { title: "这么多做法，|先学这一种", sub: "每一种都配了示例，可以直接套用", pick: "入门做法", srcs: "", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var key in got) if (got[key] !== undefined && got[key] !== null && got[key] !== "") v[key] = got[key];
+          } catch (e) {}
+
+          var root = document.querySelector(".sbf");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          if (String(v.backdrop) === "off") { q(".sbf-bg").style.display = "none"; q(".sbf-vig").style.display = "none"; }
+
+          // ==== kit:tone@1 — light or dark skin from --k-bg; sets data-tone ====
+          // [r, g, b] of a CSS colour as resolved inside el
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+
+          // ==== kit:shadow@1 — contact + ambient shadow e px up (4 at rest, 48+ flying), --sbf-shade; strength ~2.6 on dark ====
+          function kShadow(e, strength) {
+            e = Math.max(0, e);
+            var s = strength == null ? 1 : strength, r = function (x) { return Math.round(x * 10) / 10; };
+            var c = function (a) { return "color-mix(in srgb, var(--sbf-shade) " + r(Math.min(1, a) * 100) + "%, transparent)"; };
+            return "0 " + r(0.5 + e * 0.06) + "px " + r(1 + e * 0.18) + "px " + c((0.12 * s) / (1 + e / 24)) + ", " +
+              "0 " + r(e * 0.55) + "px " + r(e * 1.3) + "px " + r(-e * 0.22) + "px " + c((0.08 + (Math.min(e, 64) / 64) * 0.22) * s);
+          }
+          // ==== end kit:shadow ====
+
+          // ==== kit:hash@1 — upstream's sin hash ====
+          function kHash(n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+          // ==== end kit:hash ====
+
+          var dark = kTone(root) === "dark";
+          var em = function (s) { var w = 0; for (var c = 0; c < s.length; c++) w += s.charCodeAt(c) > 255 ? 1 : 0.6; return w; };
+          // largest size (up to the CSS one) that packs the phrases into `lines` lines; one wider than a line wraps as a block
+          var fit = function (el, parts, width, lines) {
+            var f = Math.floor(parseFloat(getComputedStyle(el).fontSize) || 40), W = width * 0.96, a = parts.map(em);
+            for (; f > 12; f--) {
+              var n = 1, x = 0;
+              a.forEach(function (w) { w *= f; var k = w > W ? Math.ceil(w / (W - f)) : 1; if (x && (k > 1 || x + w > W)) { n++; x = 0; } n += k - 1; x = k > 1 ? W : x + w; });
+              if (n <= lines) break;
+            }
+            el.style.fontSize = f + "px";
+          };
+
+          // text: title (| cuts the rising phrases), sub
+          var head = q(".sbf-head"), HW = head.clientWidth || FW * 0.8;
+          var tEl = q(".sbf-title"), sEl = q(".sbf-sub"), parts = String(v.title).split("|").filter(Boolean);
+          fit(tEl, parts, HW, L.titleLines);
+          sEl.textContent = String(v.sub);
+
+          // card units (upstream px), scaled by s at the pivots
+          var s = L.s, ids = L.ids, n = ids.length, CX = FW / 2, CY = FH * L.cy, OY = CY + 120 * s;
+          var D = L.drop || (OY + (FH - 70 - OY) / CFG.pushTo - CY - 220 * s) / s;
+          var outE = MT.ease("out");
+          // 9-card take-off ticks in both orientations (portrait uses the first 7)
+          var S = ids.map(function (i, j) { return CFG.in0 + outE(j / 8) * CFG.inSpan; });
+          var cam = q(".sbf-cam"), floor = q(".sbf-floor");
+          cam.style.transformOrigin = CX + "px " + OY + "px";
+
+          // faces: drawn covers (no text nodes) or the user's pictures
+          var imgs = String(v.srcs).split("|").map(function (x) { return x.trim(); }).filter(Boolean);
+          var A = "var(--k-accent)", B = "var(--k-accent-2)", OA = "color-mix(in srgb, var(--k-on-accent) 75%, transparent)";
+          var mx = function (c, p) { return "color-mix(in srgb, " + c + " " + p + "%, var(--sbf-card))"; };
+          var INK = function (p) { return mx("var(--k-ink)", p); };
+          var R = function (x, y, w, h, r, c) { return '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + h.toFixed(1) + '" rx="' + r + '" style="fill:' + c + '"/>'; };
+          var LINE = function (d, c) { return '<path d="' + d + '" style="fill:none;stroke:' + c + ';stroke-width:4;stroke-linejoin:round;stroke-linecap:round"/>'; };
+          var ring = function (cx, cy, r, st) { return '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" style="fill:none;' + st + '"/>'; };
+          var T = mx("var(--sbf-tint)", 8), TINT = [T, INK(5), mx(B, 9), T, "", INK(5), mx(B, 9), T, INK(5)];
+          function cover(i) {
+            var o = "", k, h, pts = [];
+            if (i === 0) { // gantt rows and a dashed playhead
+              for (k = 0; k < 6; k++) o += R(24 + kHash(i * 9 + k) * 110, 70 + k * 32, 60 + kHash(i * 5 + k) * 110, 18, 9, k === 2 ? A : k === 4 ? B : INK(16));
+              o += '<path d="M168 54V270" style="stroke:' + A + ';stroke-width:2;stroke-dasharray:4 5"/>';
+            } else if (i === 1) { // bar chart, one bar in the accent
+              for (k = 0; k < 7; k++) { h = 50 + kHash(i * 11 + k) * 130; o += R(28 + k * 36, 248 - h, 22, h, 5, k === 5 ? A : INK(14)); }
+              o += R(20, 248, 256, 1, 0, INK(10));
+            } else if (i === 2) { // growth line, area, end dot; a bar for the figure
+              for (k = 0; k < 9; k++) pts.push((24 + k * 31) + "," + (224 - k * 15 - kHash(i * 7 + k) * 40).toFixed(1));
+              h = "M" + pts.join("L");
+              o += '<path d="' + h + 'L272,264L24,264Z" style="fill:' + mx(B, 18) + '"/>' + LINE(h, B) + '<circle cx="272" cy="' + pts[8].split(",")[1] + '" r="8" style="fill:var(--sbf-card);stroke:' + B + ';stroke-width:4"/>' + R(24, 58, 96, 28, 14, INK(70));
+            } else if (i === 3) { // three progress rings
+              [0.82, 0.64, 0.46].forEach(function (p, k) {
+                var r = 86 - k * 22, c = 2 * Math.PI * r;
+                o += ring(148, 162, r, "stroke:" + INK(8) + ";stroke-width:14") + '<g transform="rotate(-90 148 162)">' + ring(148, 162, r, "stroke:" + [A, B, INK(45)][k] + ";stroke-width:14;stroke-linecap:round;stroke-dasharray:" + (c * p).toFixed(1) + " " + c.toFixed(1)) + "</g>";
+              });
+            } else if (i === 4) { // centre card: accent, corner rings, sparkle, bar
+              for (k = 0; k < 5; k++) o += ring(250, 60, 60 + k * 44, "stroke:var(--k-on-accent);stroke-opacity:" + (0.22 - k * 0.035).toFixed(3) + ";stroke-width:2");
+              o += '<path d="M64 196Q68 228 96 232Q68 236 64 268Q60 236 32 232Q60 228 64 196Z" style="fill:var(--k-on-accent)"/>' + R(24, 288, 112, 14, 7, OA);
+            } else if (i === 5) { // table rows: dot, label bar, status pill
+              for (k = 0; k < 6; k++) { h = 60 + k * 34; o += '<circle cx="31" cy="' + (h + 17) + '" r="9" style="fill:' + (k === 1 ? A : INK(14)) + '"/>' + R(52, h + 13, 70 + kHash(i * 3 + k) * 70, 8, 4, INK(k ? 16 : 32)) + R(230, h + 9, 44, 16, 8, k === 1 ? mx(B, 30) : INK(7)) + R(22, h + 33, 252, 1, 0, INK(10)); }
+            } else if (i === 6) { // month grid
+              for (k = 0; k < 35; k++) o += R(24 + (k % 7) * 36.4, 74 + Math.floor(k / 7) * 36.4, 29.4, 29.4, 6, k === 17 ? A : kHash(i * 13 + k) > 0.66 ? mx(B, 35) : INK(7));
+            } else if (i === 7) { // kanban: three columns of cards
+              [4, 3, 2].forEach(function (m, c) {
+                var x = 22 + c * 87.3;
+                o += R(x, 60, 40, 8, 4, INK(30));
+                for (k = 0; k < m; k++) { var on = c === 1 && !k; o += R(x, 77 + k * 49, 77.3, 40, 8, on ? A : "var(--sbf-card)") + R(x + 9, 86 + k * 49, 30 + kHash(i + c * 5 + k) * 30, 6, 3, on ? OA : INK(18)); }
+              });
+            } else { // big figure block, change pill, sparkline
+              o += R(24, 66, 168, 52, 12, INK(78)) + R(24, 136, 92, 30, 15, mx(B, 22)) + R(38, 147, 62, 8, 4, B);
+              for (k = 0; k < 12; k++) pts.push((24 + k * 22.5).toFixed(1) + "," + (264 - k * 4 - kHash(k + 40) * 26).toFixed(1));
+              o += LINE("M" + pts.join("L"), A);
+            }
+            return '<svg width="294" height="322" viewBox="0 0 294 322" style="display:block" aria-hidden="true">' + o + "</svg>";
+          }
+
+          // a vertical blur per card (upstream feGaussianBlur "0 y"), ids per mount
+          var mount = (window.__sbfN = (window.__sbfN || 0) + 1), fx = document.createElement("div");
+          fx.style.cssText = "position:absolute;width:0;height:0";
+          fx.innerHTML = '<svg width="0" height="0">' + ids.map(function (i) { return '<filter id="sbf' + mount + "b" + i + '" x="-10%" y="-30%" width="120%" height="160%"><feGaussianBlur stdDeviation="0 0"/></filter>'; }).join("") + "</svg>";
+          root.appendChild(fx);
+
+          var cards = ids.map(function (i, j) {
+            var pv = document.createElement("div"), hero = i === 4, img = imgs.length ? imgs[i % imgs.length] : "";
+            pv.className = "sbf-pv";
+            pv.style.cssText = "left:" + CX + "px;top:" + (CY + 352 * s) + "px";
+            var bg = img ? "background-image:url('" + img.replace(/'/g, "%27") + "')" : "background:" + (hero ? "radial-gradient(circle at 80% 10%, color-mix(in srgb, " + A + ", white 35%), " + A + " 100%)" : TINT[i]);
+            pv.innerHTML = '<div class="sbf-card"><div class="sbf-face"><div class="sbf-cov"' + (hero ? " data-layout-allow-overflow" : "") + ' style="' + bg + '">' + (img ? "" : cover(i)) + "</div>" +
+              '<i class="sbf-bar" style="top:26px;height:10px;width:' + (hero ? 92 : 56 + kHash(i + 20) * 50).toFixed(0) + "px;background:" + (hero ? A : INK(18)) + '"></i>' +
+              (hero ? '<div class="sbf-sheen"></div><div class="sbf-pick" data-layout-allow-occlusion></div>'
+                    : '<i class="sbf-bar" style="top:56px;height:22px;border-radius:11px;width:' + (120 + kHash(i + 30) * 90).toFixed(0) + "px;background:" + INK(30) + '"></i>') +
+              "</div></div>";
+            cam.appendChild(pv);
+            return { pv: pv, face: pv.querySelector(".sbf-face"), fe: fx.querySelector("#sbf" + mount + "b" + i + " feGaussianBlur"), i: i, k: i - 4, hero: hero, sheen: pv.querySelector(".sbf-sheen") };
+          });
+          var pick = q(".sbf-pick");
+          if (pick) { pick.textContent = String(v.pick); fit(pick, [String(v.pick)], 172, 1); }
+
+          var inAt = function (t, j) { return t < S[j] ? 0 : MT.spring({ t: t, delay: S[j], damping: CFG.inDamp, stiffness: CFG.inStiff }); };
+          var str = dark ? 2.6 : 1.15;
+
+          function render(t) {
+            var dip = 0, j;
+            for (j = 0; j < n; j++) dip += Math.sin(MT.clamp((t - S[j] - CFG.dipLag) / CFG.dipLen) * Math.PI) * CFG.dipPx;
+            var squeeze = 1 - CFG.prepAmt * Math.sin(MT.clamp((t - CFG.prep) / CFG.prepLen) * Math.PI);
+            var fan = t < CFG.fan ? 0 : MT.spring({ t: t, delay: CFG.fan, damping: CFG.fanDamp, stiffness: CFG.fanStiff });
+            var c = MT.mix(MT.mix(1, CFG.pushTo, MT.ramp(t, 0, CFG.push, "smooth")), CFG.pullTo, MT.ramp(t, CFG.push, CFG.pull, "smooth")) * MT.mix(1, CFG.holdTo, MT.ramp(t, CFG.hold, CFG.holdLen, "smooth"));
+            cam.style.transform = "scale(" + c.toFixed(4) + ")";
+            var lift = MT.ramp(t, CFG.lift, CFG.liftLen, "overshoot"), rg = MT.ramp(t, CFG.ring, CFG.ringLen, "out"), sh = MT.ramp(t, CFG.sheen, CFG.sheenLen, "smooth");
+            // floor contact shadow widens with the fan
+            var fw = MT.mix(220, 760, fan) * s;
+            floor.style.cssText = "left:" + (CX - fw / 2) + "px;width:" + fw + "px;height:" + 70 * s + "px;top:" + (CY + (190 + dip) * s) + "px;opacity:" + MT.ramp(t, CFG.floor, 0.667, "out");
+            cards.forEach(function (cd, j) {
+              var p = inAt(t, j), y = (1 - p) * D, i = cd.i;
+              var blur = Math.min(10, Math.abs((inAt(t - 1 / 60, j) - inAt(t + 1 / 60, j)) * D) * 0.18);
+              var tilt = (i % 2 ? 1 : -1) * CFG.tilt * (y / D);
+              var rot = MT.mix((kHash(i * 3 + 1) - 0.5) * CFG.jitR + tilt, cd.k * CFG.rot, fan);
+              var tx = MT.mix((kHash(i * 5 + 2) - 0.5) * CFG.jitX, cd.k * CFG.tx, fan);
+              var ly = cd.hero ? -CFG.liftPx * lift : 0;
+              cd.pv.style.opacity = t < S[j] ? 0 : MT.clamp((t - S[j]) * 15);
+              cd.pv.style.transform = "translate(" + (tx * s).toFixed(2) + "px," + ((y + dip + ly) * s).toFixed(2) + "px) rotate(" + rot.toFixed(3) + "deg) scale(" + (squeeze * s).toFixed(4) + ")";
+              cd.face.style.boxShadow = "inset 0 1px 0 var(--sbf-hi), " + kShadow(6 + (y / D) * 50 + (cd.hero ? 26 * lift : 0), str) +
+                (cd.hero && rg > 0 ? ", 0 0 0 " + (3 * rg).toFixed(2) + "px color-mix(in srgb, " + A + " " + (90 * rg).toFixed(1) + "%, transparent)" : "");
+              cd.fe.setAttribute("stdDeviation", "0 " + blur.toFixed(2));
+              cd.face.style.filter = blur > 0.4 ? "url(#sbf" + mount + "b" + i + ")" : "none";
+              if (cd.sheen) cd.sheen.style.cssText = "opacity:" + (sh > 0 && sh < 1 ? 1 : 0) + ";--sp:" + ((-0.18 + 1.36 * sh) * 100).toFixed(1) + "%";
+            });
+          }
+
+          var tl = MT.scene(CFG.dur, render);
+          // phrases climb out of their cuts; the opacity gate hides them from the checker
+          tEl.textContent = "";
+          parts.forEach(function (w, k) {
+            var c = document.createElement("span"), u = document.createElement("span"), t0 = CFG.title + k * CFG.wordGap;
+            // a space between Latin phrases
+            if (k && /[!-~]$/.test(parts[k - 1]) && /^[!-~]/.test(w)) tEl.appendChild(document.createTextNode(" "));
+            c.className = "sbf-cut"; u.className = "sbf-u"; u.textContent = w; c.appendChild(u); tEl.appendChild(c);
+            tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+            tl.fromTo(u, { y: u.offsetHeight * 1.05 + parseFloat(getComputedStyle(u).fontSize) * 0.3 }, { y: 0, duration: CFG.word, ease: "snappy" }, t0);
+          });
+          tl.fromTo(sEl, { opacity: 0 }, { opacity: 1, duration: 0.467, ease: "out" }, CFG.sub);
+          tl.fromTo(sEl, { y: 16 }, { y: 0, duration: 0.6, ease: "snappy" }, CFG.sub);
+          window.__timelines["stack-build-fan"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

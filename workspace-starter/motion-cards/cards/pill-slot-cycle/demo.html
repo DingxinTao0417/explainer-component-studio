@@ -1,0 +1,430 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"stem","type":"string","label":"句干（一直不动的前半句）","default":"一个工具帮你"},
+    {"id":"items","type":"string","label":"轮换的短语（用 | 分隔，2–8 条，字数尽量接近）","default":"整理资料|写好初稿|做出图表|配上旁白|剪成视频|一键导出"},
+    {"id":"icons","type":"string","label":"每条的图标（用 | 分隔，和短语一一对应；可用 grid pen bars sound camera play frame check；留空不要图标）","default":"grid|pen|bars|sound|camera|play"},
+    {"id":"end","type":"string","label":"收束词（补完整句的后半句）","default":"全部搞定。"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（只留字和胶囊）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>pill-slot-cycle · 句尾胶囊轮换</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="pill-slot-cycle-template">
+      <!-- Ported from video-shotcraft demos/typography/pill-slot-cycle/PillSlotCycle.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette (indigo accent -> --k-accent, icon tiles white on dark skins), system fonts, generic
+           Chinese copy and icon set (pen and check added, capture kept as frame), upstream product copy removed;
+           stem, items, icons and end are variables (2-8 items); distances, blur caps, perspective and shadow lift
+           scale with the font (in 120 / out 130 per 64px pill, end 90 per 96px stem); sizes fit the 80% band;
+           the stem's left anchor moves left when the widest pill would pass 90%; portrait stacks the stem over the
+           slot and each row centres on its own at the close; slot 6.9s (was 6.67s) for a 1s hold after the
+           centring. Beat 21f, swap 8f, out 7f, close 14f back(1.4), centring 26f smooth from close+12f, rotateX
+           -38/34, scale 0.94, velocity blur gains 0.55 / 0.45 / 0.5, lit backdrop, vignette 0.14, grain 0.045 kept. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* card-local colours (kit:derived@1 shade, plus the pill's face, hairline, lit edge and icon tile) */
+        .psc {
+          position: absolute; inset: 0; container-type: size;
+          --psc-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+          --psc-hair: color-mix(in srgb, var(--k-ink) 10%, transparent);
+          --psc-hi: rgba(255, 255, 255, 0.95);
+          --psc-p1: var(--k-bg);
+          --psc-p2: color-mix(in srgb, var(--k-bg), var(--k-ink) 2%);
+          --psc-soft: color-mix(in srgb, var(--k-accent) 11%, transparent);
+          --psc-ring: color-mix(in srgb, var(--k-accent) 14%, transparent);
+          --psc-glow: color-mix(in srgb, white 95%, transparent);
+          --psc-tint: color-mix(in srgb, var(--k-accent) 7%, transparent);
+        }
+        /* dark skins: near-black shade, faint lit edge, panel-coloured pills; the tile and tint avoid mixing the
+           yellow dark-skin accent into dark (it turns olive) */
+        .psc[data-tone="dark"] {
+          --psc-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+          --psc-hi: rgba(255, 255, 255, 0.06);
+          --psc-p1: color-mix(in srgb, var(--k-panel), white 4%);
+          --psc-p2: var(--k-panel);
+          --psc-soft: color-mix(in srgb, white 8%, transparent);
+          --psc-ring: color-mix(in srgb, white 12%, transparent);
+          --psc-glow: color-mix(in srgb, var(--k-accent-2) 14%, transparent);
+          --psc-tint: color-mix(in srgb, var(--k-accent-2) 12%, transparent);
+        }
+        .psc[data-backdrop="off"] .psc-deco { display: none; }
+        /* lit backdrop (upstream Backdrop light: base gradient, key light at 40% / 30%, accent tint opposite it) */
+        .psc-bk { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .psc-bk::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 55% 60% at 60% 88%, var(--psc-tint) 0%, transparent 70%), radial-gradient(ellipse 62% 70% at 40% 30%, var(--psc-glow) 0%, transparent 72%); }
+        /* ==== kit:vignette@1 ==== */
+        .psc-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.14; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--psc-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .psc[data-tone="dark"] .psc-vig { --vs: 0.5; }
+        /* ==== kit:grain@1 ==== */
+        .psc-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== kit:text@2 ==== */
+        .psc-u { display: inline-block; white-space: pre; }
+        /* static picture = the closing sentence, centred; the script lays every part out in px (.psc-live) */
+        .psc-row { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+        .psc-stem, .psc-end { display: block; font-size: 96px; font-weight: 800; line-height: 1.2; white-space: nowrap; }
+        .psc-slot { position: relative; display: block; }
+        .psc-live { display: block; }
+        .psc-live > .psc-stem, .psc-live > .psc-slot, .psc-live .psc-end, .psc-pill { position: absolute; left: 0; top: 0; }
+        .psc[data-latin] .psc-stem, .psc[data-latin] .psc-end { letter-spacing: -0.035em; }
+        /* the pill: every size in em of its own font (upstream 64px: padding 14 38 14 18, gap 18, tile 62 r18, icon 34) */
+        .psc-pill {
+          display: inline-flex; align-items: center; gap: 0.281em; padding: 0.219em 0.594em 0.219em 0.281em;
+          border-radius: 999px; border: 1px solid var(--psc-hair); background: linear-gradient(180deg, var(--psc-p1) 0%, var(--psc-p2) 100%);
+          font-size: 64px; font-weight: 700; line-height: 1.2; white-space: nowrap; opacity: 0;
+        }
+        .psc[data-latin] .psc-pill { letter-spacing: -0.025em; }
+        .psc-noic { padding: 0.219em 0.594em; }
+        .psc-ic { display: flex; flex: none; align-items: center; justify-content: center; width: 0.969em; height: 0.969em; border-radius: 0.281em; background: var(--psc-soft); box-shadow: inset 0 0 0 1px var(--psc-ring); color: var(--k-accent); }
+        .psc-ic svg { display: block; width: 0.531em; height: 0.531em; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+        @container (orientation: portrait) {
+          .psc-row { bottom: 20%; flex-direction: column; }
+          .psc-stem, .psc-end { font-size: 112px; }
+          .psc-slot { margin-top: 34px; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="pill-slot-cycle">
+        <div class="psc">
+          <div class="psc-deco"><div class="psc-bk"></div><div class="psc-vig"></div><div class="psc-grain"></div></div>
+          <div class="psc-row">
+            <span class="psc-stem">一个工具帮你</span>
+            <span class="psc-slot"><span class="psc-end">全部搞定。</span></span>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing (seconds = upstream frames / 30), shared by both orientations: intro 12f, beat 21f, swap 8f,
+          // out 7f, close 14f, centring 26f starting 12f into the close, then a 1s hold
+          var CFG = { intro: 0.4, beat: 0.7, swap: 0.267, out: 0.233, fin: 0.467, cAt: 0.4, center: 0.867, hold: 1.033 };
+          // layout per orientation: max font sizes (px), side margin, row centre line; portrait stacks stem over slot
+          var LAND = { stem: 96, pill: 64, side: 0.1, cy: 0.5, x0: 0.15625, stack: false };
+          var PORT = { stem: 112, pill: 72, side: 0.1, cy: 0.4, stack: true };
+          var v = { stem: "一个工具帮你", items: "整理资料|写好初稿|做出图表|配上旁白|剪成视频|一键导出", icons: "grid|pen|bars|sound|camera|play", end: "全部搞定。", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+          var def = function (s, d) { s = String(s == null ? "" : s).trim(); return s || d; };
+
+          var root = document.querySelector(".psc");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          if (String(v.backdrop) === "off") root.setAttribute("data-backdrop", "off");
+
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+
+          // ==== kit:text@2 (kWords, kSplit) ====
+          var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "psc-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "psc-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          // ==== end kit:text ====
+
+          // ==== kit:fit@1 (kFit, kLines) ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          // ==== end kit:fit ====
+
+          // ==== kit:shadow@1 ====
+          function kShadow(e, strength) {
+            e = Math.max(0, e);
+            var s = strength == null ? 1 : strength, r = function (x) { return Math.round(x * 10) / 10; };
+            var c = function (a) { return "color-mix(in srgb, var(--psc-shade) " + r(Math.min(1, a) * 100) + "%, transparent)"; };
+            return "0 " + r(0.5 + e * 0.06) + "px " + r(1 + e * 0.18) + "px " + c((0.12 * s) / (1 + e / 24)) + ", " +
+              "0 " + r(e * 0.55) + "px " + r(e * 1.3) + "px " + r(-e * 0.22) + "px " + c((0.08 + (Math.min(e, 64) / 64) * 0.22) * s);
+          }
+          // ==== end kit:shadow ====
+
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+
+          var dark = kTone(root) === "dark";
+          var grain = kGrain(q(".psc-grain"), { opacity: dark ? 0.08 : 0.045 });
+
+          // 24-unit line icons, stroke = currentColor (the accent)
+          var ICON = {
+            grid: '<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M12 4.5v15M3.5 12h17"/>',
+            pen: '<path d="M4 20h4L19.5 8.5l-4-4L4 16zM13.5 6.5l4 4"/>',
+            bars: '<path d="M5 10v4M8.5 7v10M12 4v16M15.5 8v8M19 10.5v3"/>',
+            sound: '<path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4zM15.5 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/>',
+            camera: '<rect x="3" y="7" width="12" height="10" rx="2"/><path d="M15 10.5l5.5-3v9l-5.5-3z"/>',
+            play: '<rect x="3.5" y="5" width="17" height="14" rx="2.5"/><path d="M10 9.2v5.6l4.8-2.8z"/>',
+            frame: '<path d="M4 8.5v-3A1.5 1.5 0 0 1 5.5 4h3m7 0h3A1.5 1.5 0 0 1 20 5.5v3m0 7v3a1.5 1.5 0 0 1-1.5 1.5h-3m-7 0h-3A1.5 1.5 0 0 1 4 18.5v-3"/><rect x="8" y="9" width="8" height="6" rx="1"/>',
+            check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>'
+          };
+
+          var row = q(".psc-row"), stem = q(".psc-stem"), slot = q(".psc-slot"), end = q(".psc-end");
+          var sText = def(v.stem, "一个工具帮你"), eText = def(v.end, "全部搞定。");
+          var items = def(v.items, "整理资料").split("|").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 8);
+          var icons = String(v.icons == null ? "" : v.icons).split("|").map(function (s) { return s.trim(); });
+          if (!icons.join("")) icons = [];
+          var N = items.length;
+          if (!kCJK.test(sText + eText + items.join(""))) root.setAttribute("data-latin", "");
+          // the stem and the closing words read as one sentence: a word space only between two Latin ends
+          var joinSp = !kCJK.test(sText.slice(-1)) && !kCJK.test(eText.charAt(0));
+          var texts = [].concat(kSplit(stem, "word", 0, sText), kSplit(end, "word", 0, eText));
+          row.classList.add("psc-live");
+          var pills = items.map(function (s, i) {
+            var ic = icons.length ? ICON[icons[i % icons.length]] : "", p = document.createElement("span");
+            p.className = "psc-pill" + (ic ? "" : " psc-noic");
+            p.innerHTML = (ic ? '<span class="psc-ic"><svg viewBox="0 0 24 24">' + ic + "</svg></span>" : "") + '<span class="psc-tx"></span>';
+            texts = texts.concat(kSplit(p.lastChild, "word", 0, s));
+            slot.appendChild(p);
+            return p;
+          });
+          // pills swap through one another and the end words land under the last one: overlap on purpose
+          texts.forEach(function (u) { u.setAttribute("data-layout-allow-overlap", ""); u.setAttribute("data-layout-allow-occlusion", ""); });
+
+          // ---- sizes: fit the band between the side margins, never below 72px (stem) and 40px (pills) ----
+          var AV = FW * (1 - 2 * L.side), S = L.stem, PF = L.pill, stack = L.stack;
+          var setF = function () { stem.style.fontSize = end.style.fontSize = S + "px"; pills.forEach(function (p) { p.style.fontSize = PF + "px"; }); };
+          var pw = function () { return Math.max.apply(null, pills.map(function (p) { return p.offsetWidth; })); };
+          setF();
+          if (!stack) {
+            var need = Math.max(stem.offsetWidth + 0.375 * S + pw(), stem.offsetWidth + (joinSp ? 0.1875 * S : 0) + end.offsetWidth);
+            var kk = Math.min(1, (AV * 0.96) / need);
+            if (S * kk < 72 || PF * kk < 40) stack = true;
+            else { S = Math.floor(S * kk); PF = Math.floor(PF * kk); setF(); }
+          }
+          if (stack) {
+            // two rows: each text slot fits on its own, the stem and the end share the smaller size
+            [stem, end].forEach(function (el) { el.style.whiteSpace = "normal"; el.style.width = AV + "px"; });
+            S = Math.min(kFit(stem, { max: S, min: 72, lines: 2, width: AV }).size, kFit(end, { max: S, min: 72, lines: 2, width: AV }).size);
+            PF = Math.max(40, Math.min(PF, Math.floor((PF * AV * 0.96) / pw())));
+            setF();
+            [stem, end].forEach(function (el) { el.style.width = Math.ceil(kLines(el).w) + 2 + "px"; });
+            // a pill still wider than the band at 40px wraps inside itself
+            pills.forEach(function (p) { if (p.offsetWidth > AV) { p.style.whiteSpace = "normal"; p.lastChild.style.width = AV * 0.96 - (p.offsetWidth - p.lastChild.offsetWidth) + "px"; } });
+          }
+          var sw = stem.offsetWidth, ew = end.offsetWidth, sh = stem.offsetHeight, eh = end.offsetHeight;
+          var pws = pills.map(function (p) { return p.offsetWidth; }), phs = pills.map(function (p) { return p.offsetHeight; });
+          var maxPw = Math.max.apply(null, pws), slotH = Math.max(eh, Math.max.apply(null, phs));
+          var kb = PF / 64, ks = S / 96;
+
+          // ---- positions (px): the stem is pinned at x0 for the whole cycle; only the close moves it. The slot box
+          // starts where the end words go; the pills sit the stem gap (0.375em) after the stem ----
+          var x0, sTop, slTop, slX, pX, dS, dE, side = FW * L.side;
+          if (!stack) {
+            var gap = 0.375 * S, wg = joinSp ? 0.1875 * S : 0, lineW = sw + gap + maxPw;
+            x0 = Math.max(side, Math.min(FW * L.x0, FW - side - lineW));
+            sTop = FH * L.cy - sh / 2; slTop = FH * L.cy - slotH / 2; slX = x0 + sw + wg; pX = gap - wg;
+            dS = dE = (FW - (sw + wg + ew)) / 2 - x0;
+          } else {
+            var gapV = 0.3 * S, top = FH * L.cy - (sh + gapV + slotH) / 2;
+            x0 = (FW - Math.max(sw, maxPw)) / 2;
+            sTop = top; slTop = top + sh + gapV; slX = x0; pX = 0;
+            dS = (FW - sw) / 2 - x0; dE = (FW - ew) / 2 - x0;
+          }
+          stem.style.left = x0 + "px"; stem.style.top = sTop + "px";
+          slot.style.left = slX + "px"; slot.style.top = slTop + "px";
+          slot.style.width = Math.max(pX + maxPw, ew) + "px"; slot.style.height = slotH + "px";
+          slot.style.perspective = 1400 * kb + "px";
+          end.style.top = (slotH - eh) / 2 + "px";
+          pills.forEach(function (p, i) { p.style.left = pX + "px"; p.style.top = (slotH - phs[i]) / 2 + "px"; });
+
+          // vertical-only blur filters, ids carry a per-mount number (two mounts share the document)
+          var ID = "psc-b" + (window.__pscN = (window.__pscN || 0) + 1) + "-", fe = [];
+          var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+          svg.innerHTML = [0, 1, 2, 3].map(function (i) { return '<filter id="' + ID + i + '" x="-10%" y="-60%" width="120%" height="220%"><feGaussianBlur stdDeviation="0 0"/></filter>'; }).join("");
+          root.appendChild(svg);
+          [0, 1, 2, 3].forEach(function (i) { fe[i] = svg.childNodes[i].firstChild; });
+          var blur = function (el, i, sd) {
+            if (sd > 0.3) { fe[i].setAttribute("stdDeviation", "0 " + sd.toFixed(2)); el.style.filter = "url(#" + ID + i + ")"; }
+            else el.style.filter = "";
+          };
+
+          // ---- motion (upstream curves; distances per font px: in +120 / out -130 per 64px pill, end +90 per 96px stem) ----
+          var IN = 1.875 * PF, OUT = -2.031 * PF, FIN = 0.9375 * S, H = 0.5 / 30;
+          var cEnd = CFG.intro + N * CFG.beat, SS = dark ? 2.6 : 1;
+          var inY = function (tb) { return MT.mix(IN, 0, MT.ramp(tb, 0, CFG.swap, "snappy")); };
+          var outY = function (tb) { return MT.mix(0, OUT, MT.ramp(tb, 0, CFG.out, "exit")); };
+          var finY = function (t) { return (1 - MT.ramp(t, cEnd, CFG.fin, "back.out(1.4)")) * FIN; };
+          // one pill's pose: y, rotateX around its top (in) or bottom (out) edge, scale, opacity, lift 0..1 for the shadow
+          var pose = function (p, y, rx, sc, op, lift, bi, sd, org) {
+            p.style.transformOrigin = org;
+            p.style.transform = "translateY(" + y.toFixed(2) + "px) rotateX(" + rx.toFixed(2) + "deg) scale(" + sc.toFixed(4) + ")";
+            p.style.opacity = op;
+            p.style.boxShadow = "inset 0 1px 0 var(--psc-hi), " + kShadow((6 + lift * 30) * kb, SS);
+            blur(p, bi, sd);
+          };
+
+          var tl = MT.scene(cEnd + CFG.cAt + CFG.center + CFG.hold, function (t) {
+            grain(t);
+            // intro: the sentence rises 0.52em and focuses in; the close centres it (per row when stacked)
+            var st = MT.ramp(t, 0, CFG.intro, "out"), rise = ((1 - st) * 0.52 * S).toFixed(2);
+            var ct = MT.ramp(t, cEnd + CFG.cAt, CFG.center, "smooth"), f = st < 0.98 ? "blur(" + ((1 - st) * 6 * ks).toFixed(2) + "px)" : "";
+            stem.style.transform = "translate(" + (ct * dS).toFixed(2) + "px, " + rise + "px)";
+            slot.style.transform = "translate(" + (ct * dE).toFixed(2) + "px, " + rise + "px)";
+            stem.style.opacity = slot.style.opacity = st;
+            stem.style.filter = slot.style.filter = f;
+            pills.forEach(function (p) { p.style.opacity = 0; });
+            end.style.opacity = 0;
+            var rel = t - CFG.intro;
+            if (t < cEnd) {
+              if (rel < 0) return;
+              // beat i: pill i lands from below while pill i-1 leaves upward, both inside the first 8f of the beat
+              var i = Math.min(Math.floor(rel / CFG.beat), N - 1), tb = rel - i * CFG.beat, a = MT.ramp(tb, 0, CFG.swap, "snappy");
+              pose(pills[i], inY(tb), -38 * (1 - a), MT.mix(0.94, 1, a), i ? Math.min(1, a * 1.6) : a, 1 - a, 0, Math.min(14 * kb, Math.abs(inY(tb + H) - inY(tb - H)) * 0.55), "50% 0%");
+              var o = MT.ramp(tb, 0, CFG.out, "exit");
+              if (i && o < 1) pose(pills[i - 1], outY(tb), 34 * o, MT.mix(1, 0.94, o), 1 - o, o, 1, Math.min(12 * kb, Math.abs(outY(tb + H) - outY(tb - H)) * 0.45), "50% 100%");
+              return;
+            }
+            // close: the last pill flies off (7f) while the end words land with the only overshoot of the card
+            var lo = MT.ramp(t, cEnd, CFG.out, "exit");
+            if (lo < 1) pose(pills[N - 1], OUT * lo, 34 * lo, MT.mix(1, 0.94, lo), 1 - lo, lo, 3, lo * 12 * kb, "50% 100%");
+            var fT = MT.ramp(t, cEnd, CFG.fin, "back.out(1.4)");
+            end.style.opacity = Math.min(1, fT * 1.4);
+            end.style.transform = "translateY(" + finY(t).toFixed(2) + "px)";
+            blur(end, 2, Math.min(10 * ks, Math.abs(finY(t + H) - finY(t - H)) * 0.5));
+          });
+          window.__timelines["pill-slot-cycle"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

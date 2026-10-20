@@ -1,0 +1,415 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"line1","type":"string","label":"第一句（扫过的线性渐变；用 | 分词，逐词升起）","default":"让光|拐个弯"},
+    {"id":"line2","type":"string","label":"第二句（游走聚焦的径向渐变；用 | 分词）","default":"再聚|到一点"},
+    {"id":"kicker","type":"string","label":"收尾眉题（可留空）","default":"今天介绍"},
+    {"id":"title","type":"string","label":"收尾大字（可留空）","default":"示例应用"},
+    {"id":"sub","type":"string","label":"收尾副题（可留空）","default":"把复杂的事讲清楚"},
+    {"id":"mark","type":"enum","label":"收尾大字前的示意标志","default":"on","options":[{"value":"on","label":"显示"},{"value":"off","label":"不要"}]},
+    {"id":"readout","type":"enum","label":"底部渐变参数读数","default":"on","options":[{"value":"on","label":"显示"},{"value":"off","label":"不要"}]},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底（整屏渐变）"},{"value":"off","label":"透明（暗部透出画面，只留亮色和字）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>gradient-transition · 渐变换型</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="gradient-transition-template">
+      <!-- Ported from video-shotcraft demos/transition/gradient-transition/GradientTransition.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette with --k-stage (the three gradients are mixed from --k-accent / --k-accent-2 in oklch
+           instead of fixed purple / magenta / ice-blue HSL, and interpolated in oklch, not per-channel HSL), system fonts,
+           generic copy, upstream mark and wordmark removed; both text beats, the closing lockup, all stage times,
+           angles, radii, the 4x small-canvas painting, the conic blur and the crossfade windows kept; readout and
+           mark are optional and portrait is added (small canvas 270x480, centres move along the same percentages). -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* ==== kit:fonts@2 ==== */
+        @font-face { font-family: "Noto Serif SC"; src: local("Noto Serif SC"), local("Noto Serif CJK SC"), local("Source Han Serif SC"); }
+        @font-face { font-family: "Songti SC"; src: local("Songti SC"), local("STSong"), local("SimSun"); }
+        @font-face { font-family: "Consolas"; src: local("Consolas"); }
+        #root {
+          --k-serif: var(--mc-serif, "Noto Serif SC", "Songti SC", serif);
+          --k-mono: var(--mc-mono, Consolas, monospace);
+        }
+        /* ==== end kit:fonts ==== */
+
+        /* ==== kit:stage-tokens@1 ==== */
+        #root {
+          --k-stage: var(--mc-stage, #0b0d12);
+          --k-on-stage: var(--mc-on-stage, #f3f5f8);
+        }
+        /* ==== end kit:stage-tokens ==== */
+        /* the gradient is its own dark stage: near-black outer rings (radial) and dark stops (linear) are what make the
+           bright parts read as light, so the base and the scrims use --k-stage on every skin */
+        .gt { position: absolute; inset: 0; container-type: size; overflow: hidden; --gt-a: var(--k-accent); --gt-b: var(--k-accent-2); --gt-dk: var(--k-stage); }
+        .gt[data-bare] { --gt-dk: transparent; }
+        .gt[data-bare] .gt-base, .gt[data-bare] .gt-grain { display: none; }
+        .gt-base { position: absolute; inset: 0; background: var(--k-stage); }
+        /* small canvas: a quarter of the frame in each direction, painted small and scaled 4x (soft by construction) */
+        .gt-sc { position: absolute; left: 0; top: 0; width: 25%; height: 25%; transform: scale(4); transform-origin: 0 0; }
+        .gt-g, .gt-sa, .gt-sb, .gt-sl, .gt-vig { position: absolute; inset: 0; }
+        .gt-g { opacity: 0; }
+        .gt-g3 { opacity: 1; }
+        /* static page = the settled conic ring; the script repaints all three layers every frame */
+        .gt-cn { position: absolute; inset: -14px; filter: blur(9px); background: conic-gradient(in oklch from 250deg at 64% 54%, var(--gt-a), color-mix(in oklch, var(--gt-b) 50%, var(--gt-a)), color-mix(in oklab, var(--gt-b) 78%, white), var(--gt-a)); }
+        .gt-sa { background: radial-gradient(ellipse 62% 78% at 64% 54%, transparent 18%, color-mix(in srgb, var(--gt-dk) 55%, transparent) 64%, color-mix(in srgb, var(--gt-dk) 92%, transparent) 100%); }
+        .gt-sb { background: linear-gradient(90deg, color-mix(in srgb, var(--gt-dk) 55%, transparent) 0%, transparent 46%); }
+        .gt-sl { opacity: 0; background: linear-gradient(90deg, color-mix(in srgb, var(--gt-dk) 42%, transparent) 0%, transparent 55%); }
+        .gt-vig { background: radial-gradient(ellipse 80% 80% at 50% 50%, transparent 55%, color-mix(in srgb, var(--gt-dk) 55%, transparent) 100%); }
+        /* ==== kit:text@2 ==== */
+        .gt-u { display: inline-block; white-space: pre; }
+        .gt-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+        /* ==== end kit:text ==== */
+
+        /* ==== kit:fit@1 ==== */
+        .gt-row { display: block; white-space: nowrap; }
+        /* ==== end kit:fit ==== */
+
+        /* ==== kit:grain@1 ==== */
+        .gt-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+        .gt-beat { position: absolute; left: 8.333%; right: 8.333%; top: 3%; bottom: 11%; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; color: var(--k-on-stage); }
+        .gt-b1, .gt-b2 { opacity: 0; }
+        .gt-line { display: block; width: 100%; font-size: 180px; font-weight: 800; line-height: 1.2; text-shadow: 0 10px 50px color-mix(in srgb, var(--k-stage) 35%, transparent); }
+        .gt-kick { display: block; max-width: 100%; font-size: 40px; font-weight: 700; line-height: 1.3; letter-spacing: 0.3em; text-transform: uppercase; color: color-mix(in srgb, var(--k-on-stage) 78%, transparent); }
+        .gt-lock { display: flex; align-items: center; gap: 44px; width: 100%; margin-top: 30px; }
+        .gt-mk { display: block; flex: none; width: 168px; height: 168px; }
+        .gt-name { flex: 1; min-width: 0; font-size: 156px; font-weight: 800; line-height: 1.2; letter-spacing: 0.01em; text-shadow: 0 12px 60px color-mix(in srgb, var(--k-stage) 40%, transparent); }
+        .gt-sub { display: block; max-width: 100%; margin-top: 40px; font-size: 60px; font-weight: 500; line-height: 1.3; color: color-mix(in srgb, var(--k-on-stage) 82%, transparent); text-shadow: 0 8px 40px color-mix(in srgb, var(--k-stage) 35%, transparent); }
+        .gt-ro { position: absolute; left: 8.333%; right: 8.333%; bottom: 8.9%; }
+        .gt-rule { height: 1.5px; background: color-mix(in srgb, var(--k-on-stage) 20%, transparent); }
+        .gt-rr { display: flex; align-items: baseline; margin-top: 22px; font-family: var(--k-mono); font-size: 30px; line-height: 1.3; white-space: nowrap; color: color-mix(in srgb, var(--k-on-stage) 78%, transparent); }
+        .gt-ri { margin-left: auto; padding-left: 24px; }
+        .gt-ri b { font-weight: 600; color: var(--k-on-stage); }
+        /* portrait: beats sit in the 12%-68% band around the 40% line, 10% off each side; the readout stays above 68% */
+        @container (orientation: portrait) {
+          .gt-beat { left: 10%; right: 10%; top: 12%; bottom: 32%; }
+          .gt-line { font-size: 120px; }
+          .gt-kick { font-size: 36px; }
+          .gt-lock { flex-direction: column; align-items: flex-start; gap: 30px; margin-top: 26px; }
+          .gt-mk { width: 120px; height: 120px; }
+          .gt-name { flex: none; width: 100%; font-size: 108px; }
+          .gt-sub { margin-top: 30px; font-size: 48px; }
+          .gt-ro { left: 10%; right: 10%; bottom: 33.5%; }
+          .gt-rr { font-size: 28px; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="gradient-transition">
+        <div class="gt">
+          <div class="gt-base"></div>
+          <div class="gt-sc">
+            <div class="gt-g gt-g1"></div>
+            <div class="gt-g gt-g2"></div>
+            <div class="gt-g gt-g3">
+              <div class="gt-cn" data-layout-allow-overflow></div>
+              <div class="gt-sa"></div>
+              <div class="gt-sb"></div>
+            </div>
+          </div>
+          <div class="gt-sl"></div>
+          <div class="gt-vig"></div>
+          <div class="gt-grain"></div>
+          <div class="gt-beat gt-b1"><div class="gt-line">让光拐个弯</div></div>
+          <div class="gt-beat gt-b2"><div class="gt-line">再聚到一点</div></div>
+          <div class="gt-beat gt-b3">
+            <div class="gt-kick">今天介绍</div>
+            <div class="gt-lock">
+              <!-- kit:mark@1 shape, recoloured for the stage: a light tile with a dark dot and bar -->
+              <svg class="gt-mk" viewBox="0 0 128 128" aria-hidden="true"><rect class="gt-mk-box" x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-on-stage)"/><circle class="gt-mk-dot" cx="46" cy="46" r="16" style="fill:var(--k-stage)"/><rect class="gt-mk-bar" x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-stage)"/></svg>
+              <div class="gt-name">示例应用</div>
+            </div>
+            <div class="gt-sub">把复杂的事讲清楚</div>
+          </div>
+          <div class="gt-ro">
+            <div class="gt-rule"></div>
+            <div class="gt-rr"><span class="gt-rd">conic-gradient(from 250deg at 64% 54%)</span><span class="gt-ri"><b>03</b> / 03</span></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // seconds = upstream frames / 30 (200 frames = 6.667 s); same timeline in both orientations
+          var CFG = {
+            dur: 6.667,
+            lin: 0, linD: 2.267,        // linear: angle 18 -> 198 deg
+            rad: 1.867, radD: 2.533,    // radial: centre (24,72)% -> (68,38)%, radius 48 -> 80%
+            con: 3.933, conD: 2.733,    // conic: start angle 0 -> 250 deg, long ease-out tail
+            x12: 1.867, x12D: 0.4,      // crossfade linear -> radial (both layers keep moving)
+            x23: 3.933, x23D: 0.467,    // crossfade radial -> conic
+            at1: 0.2, at2: 2.2, each: 0.667, gap: 0.167,    // first word of each line; one word's time; between words
+            out1: 1.733, out2: 3.8, outD: 0.4,              // each line blurs up and out
+            kick: 4.133, kickD: 0.533, lock: 4.267, lockD: 0.4, settle: 0.867, boxD: 0.6, cut: 4.6, cutD: 0.467,
+            sub: 4.733, subD: 0.667, ro: 0.533                // lockup parts, closing line, readout fade-in
+          };
+          var SLOW = MT.bezier(0.45, 0, 0.2, 1);
+          // text-fit limits per orientation: lines allowed before shrinking further (floor 72 px for big text)
+          var LAND = { n: 1, rise: 18 };
+          var PORT = { n: 2, rise: 18 };
+          var v = { line1: "让光|拐个弯", line2: "再聚|到一点", kicker: "今天介绍", title: "示例应用", sub: "把复杂的事讲清楚", mark: "on", readout: "on", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".gt");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          if (String(v.backdrop) === "off") root.setAttribute("data-bare", "");
+
+          // ==== kit:text@2 ====
+          var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "gt-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "gt-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          function kReveal(tl, units, variant, at, o) {
+            o = o || {};
+            var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+            units.forEach(function (u, i) {
+              var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+              if (variant === "rise") {
+                tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+                tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+              } else if (variant === "blur") {
+                tl.fromTo(u, { opacity: 0, y: fs * 0.25, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: each, ease: ease }, t0);
+              } else if (variant === "drop") {
+                tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each / 3, ease: "none" }, t0);
+                tl.fromTo(u, { y: -fs * 0.6 }, { y: 0, duration: each, ease: "overshoot" }, t0);
+              } else if (variant === "scale") {
+                tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each * 0.1, ease: "power1.out" }, t0);
+                tl.fromTo(u, { scale: 1.6, filter: "blur(8px)" }, { scale: 1, filter: "blur(0px)", duration: each, ease: ease }, t0);
+              } else {
+                tl.fromTo(u, { opacity: 0, marginRight: "0.5em" }, { opacity: 1, marginRight: "0em", duration: each, ease: ease }, t0);
+              }
+            });
+            return tl;
+          }
+          // ==== end kit:text ====
+
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          function kRows(el, cls) {
+            if (!el.children.length) return [];
+            var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+            var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+            kids.forEach(function (c, i) {
+              if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+              if (tops[i] != null) last = tops[i];
+              row.appendChild(c);
+            });
+            return [].slice.call(el.children);
+          }
+          // ==== end kit:fit ====
+
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+
+          // text slots: split through kSplit (typed spaces survive), then fit by measuring; empty slot = block removed
+          var txt = function (el, s, by, o) {
+            s = String(s).trim();
+            if (!s) { el.style.display = "none"; return null; }
+            var u = kSplit(el, by, false, s);
+            kFit(el, o);
+            return u;
+          };
+          var b1 = q(".gt-b1"), b2 = q(".gt-b2"), l1 = q(".gt-b1 .gt-line"), l2 = q(".gt-b2 .gt-line");
+          var u1 = txt(l1, v.line1, "word", { lines: L.n, min: 72 });
+          var u2 = txt(l2, v.line2, "word", { lines: L.n, min: 72 });
+          var kick = q(".gt-kick"), lock = q(".gt-lock"), name = q(".gt-name"), sub = q(".gt-sub"), mk = q(".gt-mk");
+          txt(kick, v.kicker, "word", { lines: L.n, min: 28 });
+          txt(sub, v.sub, "word", { lines: L.n + 1, min: 40 });
+          if (String(v.mark) === "off") { mk.parentNode.removeChild(mk); mk = null; }
+          var named = String(v.title).trim();
+          if (!named) { name.style.display = "none"; if (!mk) lock.style.display = "none"; }
+          else { txt(name, named, "word", { lines: L.n, min: 72 }); kRows(name, "gt-row"); }
+          var ro = q(".gt-ro"), rd = q(".gt-rd"), ri = q(".gt-ri");
+          if (String(v.readout) === "off") ro.style.display = "none";
+
+          // ---- background: three CSS gradients mixed from the palette, repainted from t every frame ----
+          var A = "var(--gt-a)", B = "var(--gt-b)", D = "var(--gt-dk)";
+          var m = function (a, pa, b, sp) { return "color-mix(in " + (sp || "oklab") + ", " + a + " " + pa.toFixed(1) + "%, " + b + ")"; };
+          var hue = function (qb) { return m(B, qb * 100, A, "oklch"); };   // qb = share of accent-2; hue goes the short way round
+          var lite = function (c, k) { return m(c, 100 - k, "white"); };
+          var clear = function (c, k) { return m(c, k, "transparent", "srgb"); };
+          var g1 = q(".gt-g1"), g2 = q(".gt-g2"), g3 = q(".gt-g3"), cn = q(".gt-cn"), sl = q(".gt-sl");
+          var SZ = Math.max(FW, FH) / 4;   // the small canvas's long side: radial radius percentages refer to it
+          var gr = String(v.backdrop) === "off" ? function () {} : kGrain(q(".gt-grain"), { opacity: 0.1, blend: "soft-light" });
+          var last = "";
+          var draw = function (t) {
+            var p1 = MT.ramp(t, CFG.lin, CFG.linD, "swift"), p2 = MT.ramp(t, CFG.rad, CFG.radD, "swift"), p3 = MT.ramp(t, CFG.con, CFG.conD, SLOW);
+            var x12 = MT.ramp(t, CFG.x12, CFG.x12D, "smooth"), x23 = MT.ramp(t, CFG.x23, CFG.x23D, "smooth");
+            // linear: angle sweep; stops 64 -> 40 -> 7 in lightness so the bright band's direction reads
+            var ang = MT.mix(18, 198, p1), la = lite(hue(MT.mix(0.55, 0.35, p1)), 16), lb = m(B, 86, D), lc = m(D, 90, B);
+            g1.style.background = "radial-gradient(ellipse 60% 70% at " + MT.mix(18, 70, p1).toFixed(1) + "% " + MT.mix(10, 22, p1).toFixed(1) + "%, " + clear(la, 30) + ", transparent 70%), " +
+              "linear-gradient(" + ang.toFixed(2) + "deg, " + la + " 0%, " + lb + " 34%, " + lc + " 78%, " + lc + " 100%)";
+            // radial: centre travels the diagonal while the radius grows; the outer ring must stay dark
+            var rcx = MT.mix(24, 68, p2), rcy = MT.mix(72, 38, p2), rr = MT.mix(48, 80, p2);
+            g2.style.background = "radial-gradient(circle " + ((rr / 100) * SZ).toFixed(1) + "px at " + rcx.toFixed(2) + "% " + rcy.toFixed(2) + "%, " +
+              lite(hue(MT.mix(0.4, 0.7, p2)), 18) + " 0%, " + m(hue(MT.mix(0.8, 0.92, p2)), 64, D) + " 36%, " + m(D, 92, B) + " 100%)";
+            // conic: A -> mid -> B -> A ring, the start angle turns less than a full circle
+            var from = MT.mix(0, 250, p3);
+            cn.style.background = "conic-gradient(in oklch from " + from.toFixed(2) + "deg at 64% 54%, " + A + ", " + hue(0.5) + ", " + lite(B, 22) + ", " + A + ")";
+            g1.style.opacity = 1 - x12; g2.style.opacity = x12 - x23; g3.style.opacity = x23; sl.style.opacity = 1 - x23;
+            gr(t);
+            var ph = t < 2.067 ? 0 : t < 4.167 ? 1 : 2;
+            var s = [
+              "linear-gradient(" + Math.round(ang) + "deg, …)",
+              "radial-gradient(circle " + Math.round(rr) + "% at " + Math.round(rcx) + "% " + Math.round(rcy) + "%)",
+              "conic-gradient(from " + Math.round(from) + "deg at 64% 54%)"
+            ][ph];
+            if (s !== last) { last = s; rd.textContent = s; ri.innerHTML = "<b>0" + (ph + 1) + "</b> / 03"; }
+          };
+
+          var tl = MT.timeline({ duration: CFG.dur });
+          // each line: blur-in word by word, then the whole line blurs up and out as its gradient hands over
+          var beat = function (b, line, units, at, out) {
+            if (!units) return;
+            var fs = parseFloat(getComputedStyle(line).fontSize);
+            tl.set(b, { opacity: 1 }, 0);
+            kReveal(tl, units, "blur", at, { each: CFG.each, gap: CFG.gap });
+            tl.fromTo(b, { opacity: 1, filter: "blur(0px)", y: 0 }, { opacity: 0, filter: "blur(10px)", y: -0.15 * fs, duration: CFG.outD, ease: "exit" }, out);
+          };
+          beat(b1, l1, u1, CFG.at1, CFG.out1);
+          beat(b2, l2, u2, CFG.at2, CFG.out2);
+          // closing lockup: eyebrow, then mark + title (blur and tracking settle together), then the closing line
+          tl.fromTo(kick, { opacity: 0 }, { opacity: 1, duration: CFG.kickD, ease: "out" }, CFG.kick);
+          tl.fromTo(lock, { opacity: 0 }, { opacity: 1, duration: CFG.lockD, ease: "out" }, CFG.lock);
+          tl.fromTo(lock, { filter: "blur(14px)" }, { filter: "blur(0px)", duration: CFG.settle, ease: "snappy" }, CFG.lock);
+          tl.fromTo(name, { letterSpacing: "0.1em" }, { letterSpacing: "0.01em", duration: CFG.settle, ease: "snappy" }, CFG.lock);
+          if (mk) {
+            tl.fromTo(mk.querySelector(".gt-mk-box"), { scale: 0.6, opacity: 0, transformOrigin: "50% 50%" }, { scale: 1, opacity: 1, duration: CFG.boxD, ease: "snappy" }, CFG.lock);
+            tl.fromTo([mk.querySelector(".gt-mk-dot"), mk.querySelector(".gt-mk-bar")], { scale: 0, transformOrigin: "50% 50%" }, { scale: 1, duration: CFG.cutD, ease: "snappy", stagger: 0.07 }, CFG.cut);
+          }
+          tl.fromTo(sub, { opacity: 0, y: L.rise }, { opacity: 1, y: 0, duration: CFG.subD, ease: "snappy" }, CFG.sub);
+          tl.fromTo(ro, { opacity: 0 }, { opacity: 1, duration: CFG.ro, ease: "out" }, 0);
+          tl.each(draw);
+          draw(0);
+          window.__timelines["gradient-transition"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

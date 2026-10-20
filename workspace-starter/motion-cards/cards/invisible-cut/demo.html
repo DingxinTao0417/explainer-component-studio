@@ -1,0 +1,437 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"kicker","type":"string","label":"旧页眉题（可空）","default":"第 3 节 · 动手做"},
+    {"id":"title","type":"string","label":"旧页标题（| 换行，[ ] 强调色）","default":"把复杂的事|[一步步]|讲清楚"},
+    {"id":"action","type":"string","label":"按钮文字","default":"开始导出"},
+    {"id":"busy","type":"string","label":"按下后的按钮文字","default":"导出中…"},
+    {"id":"donekicker","type":"string","label":"新页眉题（可空）","default":"导出完成"},
+    {"id":"done","type":"string","label":"新页大字（| 换行，[ ] 强调色）","default":"一晃就|[好了]"},
+    {"id":"note","type":"string","label":"新页说明（| 换行，可空）","default":"12 段内容已按顺序拼好|文件已经存好，随时能用"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>invisible-cut · 遮挡隐形切</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="invisible-cut-template">
+<!-- Ported from video-shotcraft demos/transition/transition-hidden-cut/InvisibleCut.tsx
+       (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+       Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+       Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+       neutral --k-* palette on white (picture mixed from accent, white and black; the occluder is ink with 12% accent,
+       a dark mix on dark skins), system fonts, generic copy, upstream mark and product page removed (an export page
+       and a ticket stub instead); portrait re-stacked, occluder sized from the frame width so the full-cover window
+       stays 13% of the sweep; sweep, cut frame, pan, shove, press, stamp spring and tick draw kept; the "final cut"
+       eyebrow, the file-saved line and the tent lights dropped. -->
+<style>
+  @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+  @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+  @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+  @font-face { font-family: "Noto Serif SC"; src: local("Noto Serif SC"), local("Noto Serif CJK SC"), local("Source Han Serif SC"); }
+  @font-face { font-family: "Songti SC"; src: local("Songti SC"), local("STSong"), local("SimSun"); }
+  @font-face { font-family: "Consolas"; src: local("Consolas"); }
+  #root {
+    --k-bg: var(--mc-bg, #ffffff);
+    --k-panel: var(--mc-panel, #f4f5f7);
+    --k-ink: var(--mc-ink, #15171c);
+    --k-muted: var(--mc-muted, #6b7280);
+    --k-accent: var(--mc-accent, #e8590c);
+    --k-accent-2: var(--mc-accent-2, #2563eb);
+    --k-on-accent: var(--mc-on-accent, #ffffff);
+    --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+    --k-serif: var(--mc-serif, "Noto Serif SC", "Songti SC", serif);
+    --k-mono: var(--mc-mono, Consolas, monospace);
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    font-family: var(--k-font);
+    color: var(--k-ink);
+  }
+  /* colours mixed from the palette: hairline, shadow tint, lit top edge, the dark foreground object */
+  .ic {
+    position: absolute; inset: 0; container-type: size; overflow: hidden;
+    --ic-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+    --ic-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+    --ic-hi: color-mix(in srgb, white 80%, transparent);
+    --ic-o: color-mix(in srgb, var(--k-ink), var(--k-accent) 12%);
+    --ic-hole: color-mix(in srgb, var(--k-bg), var(--k-ink) 5%);
+  }
+  .ic[data-tone="dark"] { --ic-shade: color-mix(in srgb, var(--k-bg) 30%, black); --ic-hi: color-mix(in srgb, white 6%, transparent); --ic-o: color-mix(in srgb, var(--k-bg), black 45%); }
+  .ic[data-bare] .ic-backdrop, .ic[data-bare] .ic-vig, .ic[data-bare] .ic-grain, .ic[data-bare] .ic-hole { display: none; }
+  /* stage: a faint vertical gradient with a key light top left and a warm fill bottom right, then edges pressed down, then grain */
+  .ic-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+  .ic-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 30% 5%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%), radial-gradient(ellipse 50% 60% at 90% 95%, color-mix(in srgb, var(--k-accent) 7%, transparent) 0%, transparent 70%); }
+  .ic-vig {
+    position: absolute; inset: 0; pointer-events: none;
+    --vs: 0.2; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--ic-shade);
+    background:
+      radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+      radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+  }
+  .ic[data-tone="dark"] .ic-vig { --vs: 0.55; }
+  .ic-grain { position: absolute; inset: 0; pointer-events: none; }
+  .ic-u { display: block; white-space: pre; }
+  .ic-pan, .ic-pg { position: absolute; inset: 0; }
+  .ic-a { opacity: 0; }
+  .ic-hl { color: var(--k-accent); }
+  /* page A: picture on the left, text and the button on the right */
+  .ic-pic, .ic-tk { position: absolute; overflow: hidden; }
+  .ic-pic { left: 120px; top: 160px; width: 860px; height: 760px; border-radius: 36px; box-shadow: 0 2px 4px color-mix(in srgb, var(--ic-shade) 12%, transparent), 0 40px 90px -30px color-mix(in srgb, var(--ic-shade) 45%, transparent); }
+  .ic-dunes { --a: var(--k-accent); position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+  .ic-tag { position: absolute; left: 32px; top: 32px; height: 60px; padding: 0 24px; border-radius: 30px; display: flex; align-items: center; gap: 12px; background: color-mix(in srgb, var(--k-bg) 88%, transparent); box-shadow: 0 8px 24px -8px color-mix(in srgb, var(--ic-shade) 40%, transparent); font-size: 30px; font-weight: 700; white-space: nowrap; }
+  .ic-tag span { color: var(--k-muted); font-weight: 500; }
+  .ic-tag svg { display: block; flex: none; width: 36px; height: 36px; }
+  .ic-acol { position: absolute; left: 1064px; top: 150px; width: 736px; }
+  .ic-kick { display: flex; align-items: center; gap: 16px; font-size: 32px; font-weight: 700; letter-spacing: 0.14em; line-height: 1.2; color: var(--k-accent); }
+  .ic-kick i { display: block; flex: none; width: 14px; height: 14px; border-radius: 7px; background: var(--k-accent); }
+  .ic-kick span { display: block; }
+  .ic-title { margin-top: 26px; font-family: var(--k-serif); font-size: 88px; font-weight: 600; line-height: 1.15; }
+  .ic-stats { display: flex; margin-top: 40px; border-top: 1.5px solid var(--ic-line); border-bottom: 1.5px solid var(--ic-line); }
+  .ic-stats div { flex: 1; padding: 22px 0 22px 0; }
+  .ic-stats div + div { padding-left: 32px; border-left: 1.5px solid var(--ic-line); }
+  .ic-sl { display: block; font-size: 28px; font-weight: 700; letter-spacing: 0.1em; line-height: 1.2; color: var(--k-muted); }
+  .ic-sv { display: block; margin-top: 6px; font-size: 40px; font-weight: 700; line-height: 1.3; }
+  .ic-spec { display: flex; align-items: baseline; gap: 16px; margin-top: 30px; }
+  .ic-spec b { font-size: 76px; font-weight: 700; line-height: 1.2; }
+  .ic-spec span { font-size: 40px; font-weight: 500; color: var(--k-muted); }
+  .ic-btn { display: flex; align-items: center; justify-content: center; gap: 18px; height: 116px; margin-top: 30px; padding: 0 40px; border-radius: 58px; background: linear-gradient(180deg, color-mix(in srgb, var(--k-accent), white 6%) 0%, var(--k-accent) 100%); box-shadow: inset 0 1px 0 color-mix(in srgb, white 30%, transparent), 0 18px 40px -12px color-mix(in srgb, color-mix(in srgb, var(--k-accent), black 50%) 55%, transparent); font-size: 42px; font-weight: 700; color: var(--k-on-accent); }
+  .ic-lb { display: inline-block; text-align: center; }
+  .ic-lb2, .ic-spin { display: none; }
+  .ic-spin { flex: none; width: 30px; height: 30px; box-sizing: border-box; border-radius: 15px; border: 4px solid color-mix(in srgb, var(--k-on-accent) 35%, transparent); border-top-color: var(--k-on-accent); }
+  /* page B: big words on the left, a ticket stub on the right (the picture carries over) */
+  .ic-bcol { position: absolute; left: 120px; top: 214px; width: 900px; }
+  .ic-done { margin-top: 30px; font-family: var(--k-serif); font-size: 168px; font-weight: 600; line-height: 1.2; }
+  .ic-note { margin-top: 52px; font-size: 42px; font-weight: 500; line-height: 1.35; color: var(--k-muted); }
+  .ic-tk { left: 1140px; top: 150px; width: 660px; height: 780px; border-radius: 34px; background: var(--k-bg); box-shadow: inset 0 1px 0 var(--ic-hi), 0 2px 4px color-mix(in srgb, var(--ic-shade) 10%, transparent), 0 44px 90px -30px color-mix(in srgb, var(--ic-shade) 42%, transparent); }
+  .ic-tkpic { position: absolute; left: 0; top: 0; width: 100%; height: 330px; overflow: hidden; }
+  .ic-punch { position: absolute; left: 44px; right: 44px; top: 520px; border-top: 3px dashed color-mix(in srgb, var(--k-muted) 45%, transparent); }
+  .ic-hole { position: absolute; top: 494px; width: 52px; height: 52px; border-radius: 26px; background: var(--ic-hole); box-shadow: inset 0 2px 6px color-mix(in srgb, var(--ic-shade) 18%, transparent); }
+  .ic-hole.l { left: -26px; } .ic-hole.r { right: -26px; }
+  .ic-tkrow { position: absolute; left: 52px; top: 362px; width: 556px; display: flex; gap: 150px; }
+  .ic-tkrow b { display: block; margin-top: 4px; font-family: var(--k-serif); font-size: 64px; font-weight: 600; line-height: 1.2; }
+  .ic-code { position: absolute; left: 52px; top: 570px; }
+  .ic-code b { display: block; margin-top: 8px; font-family: var(--k-mono); font-size: 64px; font-weight: 700; letter-spacing: 0.02em; line-height: 1.2; }
+  .ic-code span.s { display: block; margin-top: 14px; font-size: 40px; font-weight: 500; line-height: 1.3; color: var(--k-muted); }
+  .ic-seal { position: absolute; left: 1640px; top: 270px; width: 150px; height: 150px; transform: rotate(-8deg); }
+  .ic-seal svg { display: block; overflow: visible; filter: drop-shadow(0 14px 22px color-mix(in srgb, color-mix(in srgb, var(--k-accent) 45%, black) 45%, transparent)); }
+  /* the occluder: out-of-focus dark column, soft both sides, rim light on its leading edge, shadow ahead of it */
+  .ic-lead, .ic-occ { position: absolute; top: 0; left: 0; opacity: 0; pointer-events: none; }
+  .ic-occ { top: -40px; bottom: -40px; }
+  .ic-rim, .ic-sh { position: absolute; top: 0; bottom: 0; }
+  .ic-sh { left: 0; right: 0; background: linear-gradient(180deg, color-mix(in srgb, white 8%, transparent) 0%, transparent 40%, color-mix(in srgb, black 25%, transparent) 100%); }
+  /* portrait: stacked, everything in the 12%-68% band, 150px side margins (the 40px pan and 28px shove stay inside) */
+  @container (orientation: portrait) {
+    .ic-pic { left: 150px; top: 250px; width: 780px; height: 380px; border-radius: 28px; }
+    .ic-tag { left: 24px; top: 24px; height: 52px; padding: 0 20px; border-radius: 26px; gap: 10px; font-size: 30px; }
+    .ic-tag svg { width: 32px; height: 32px; }
+    .ic-acol { left: 150px; top: 668px; width: 780px; }
+    .ic-title { margin-top: 16px; font-size: 76px; }
+    .ic-stats { margin-top: 24px; }
+    .ic-stats div { padding: 14px 0; }
+    .ic-spec { display: none; }
+    .ic-btn { height: 100px; margin-top: 30px; border-radius: 50px; }
+    .ic-bcol { left: 150px; top: 250px; width: 700px; }
+    .ic-done { margin-top: 22px; font-size: 120px; }
+    .ic-note { margin-top: 24px; font-size: 40px; }
+    .ic-tk { left: 150px; top: 770px; width: 780px; height: 500px; border-radius: 30px; }
+    .ic-tkpic { height: 175px; }
+    .ic-punch { left: 40px; right: 40px; top: 330px; }
+    .ic-hole { top: 304px; }
+    .ic-tkrow { left: 44px; top: 198px; width: 692px; }
+    .ic-tkrow b { font-size: 56px; }
+    .ic-code { left: 44px; top: 352px; }
+    .ic-code b { font-size: 56px; }
+    .ic-code span.s { display: none; }
+    .ic-seal { left: 784px; top: 887px; width: 116px; height: 116px; }
+    .ic-seal svg { width: 116px; height: 116px; }
+  }
+</style>
+
+<div id="root" data-composition-id="invisible-cut">
+  <div class="ic">
+    <div class="ic-backdrop"></div>
+    <div class="ic-vig"></div>
+    <div class="ic-grain"></div>
+    <div class="ic-pan" data-layout-allow-overflow>
+      <!-- A: the page before the cut (hidden in the static frame, which is the settled page B) -->
+      <div class="ic-pg ic-a">
+        <div class="ic-pic" data-layout-allow-overflow>
+          <div class="ic-dunes-a"></div>
+          <div class="ic-tag"><svg viewBox="0 0 128 128" aria-hidden="true"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg>第 03 段 <span>· 日落</span></div>
+        </div>
+        <div class="ic-acol">
+          <div class="ic-kick"><span>第 3 节 · 动手做</span></div>
+          <div class="ic-title"><span class="ic-u">把复杂的事</span><span class="ic-u"><span class="ic-hl">一步步</span></span><span class="ic-u">讲清楚</span></div>
+          <div class="ic-stats"><div><span class="ic-sl">段落</span><span class="ic-sv">12 段</span></div><div><span class="ic-sl">时长</span><span class="ic-sv">0:45 · 30 帧</span></div></div>
+          <div class="ic-spec"><b>1080p</b><span>MP4 · 自动配乐</span></div>
+          <div class="ic-btn"><span class="ic-spin"></span><span class="ic-lb ic-lb1">开始导出</span><span class="ic-lb ic-lb2">导出中…</span></div>
+        </div>
+      </div>
+      <!-- B: the page after the cut, settled -->
+      <div class="ic-pg ic-b">
+        <div class="ic-bcol">
+          <div class="ic-kick"><i></i><span>导出完成</span></div>
+          <div class="ic-done"><span class="ic-u">一晃就</span><span class="ic-u"><span class="ic-hl">好了</span></span></div>
+          <div class="ic-note"><span class="ic-u">12 段内容已按顺序拼好</span><span class="ic-u">文件已经存好，随时能用</span></div>
+        </div>
+        <div class="ic-tk">
+          <div class="ic-tkpic" data-layout-allow-overflow>
+            <svg class="ic-dunes ic-dunes-src" viewBox="0 0 860 760" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+              <defs>
+                <linearGradient id="ic-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:color-mix(in srgb,var(--a) 66%,white)"/><stop offset="0.4" style="stop-color:color-mix(in srgb,var(--a) 42%,white)"/><stop offset="0.6" style="stop-color:color-mix(in srgb,var(--a) 22%,white)"/></linearGradient>
+                <radialGradient id="ic-sun"><stop offset="0" stop-color="#fff" stop-opacity="0.85"/><stop offset="0.4" stop-color="#fff" stop-opacity="0.45"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+                <linearGradient id="ic-d1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:color-mix(in srgb,var(--a) 70%,white)"/><stop offset="1" style="stop-color:color-mix(in srgb,var(--a) 86%,white)"/></linearGradient>
+                <linearGradient id="ic-d2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:color-mix(in srgb,var(--a) 88%,black)"/><stop offset="1" style="stop-color:color-mix(in srgb,var(--a) 66%,black)"/></linearGradient>
+                <linearGradient id="ic-d3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:color-mix(in srgb,var(--a) 58%,black)"/><stop offset="1" style="stop-color:color-mix(in srgb,var(--a) 34%,black)"/></linearGradient>
+                <linearGradient id="ic-sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0.6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.3"/></linearGradient>
+              </defs>
+              <rect width="860" height="760" fill="url(#ic-sky)"/>
+              <circle class="ic-sunc" cx="560" cy="400" r="190" fill="url(#ic-sun)" opacity="0.95"/>
+              <circle cx="560" cy="400" r="56" fill="#fff" fill-opacity="0.95"/>
+              <path d="M0 440 C 140 400 260 420 380 440 C 520 462 640 410 860 420 L860 760 L0 760 Z" fill="url(#ic-d1)"/>
+              <path d="M0 540 C 120 470 230 460 330 500 C 430 540 520 470 640 486 C 740 498 800 530 860 520 L860 760 L0 760 Z" fill="url(#ic-d2)"/>
+              <path d="M0 540 C 120 470 230 460 330 500 C 430 540 520 470 640 486" fill="none" stroke="#fff" stroke-width="3" opacity="0.4"/>
+              <path d="M0 650 C 160 590 300 600 430 640 C 560 680 700 600 860 620 L860 760 L0 760 Z" fill="url(#ic-d3)"/>
+              <g fill="#000" fill-opacity="0.78"><path d="M196 598 L214 572 L232 598 Z"/><path d="M242 594 L260 568 L278 594 Z"/><path d="M288 590 L306 564 L324 590 Z"/></g>
+              <rect width="860" height="760" fill="url(#ic-sh)"/>
+            </svg>
+          </div>
+          <div class="ic-punch"></div>
+          <div class="ic-hole l" data-layout-allow-overflow></div><div class="ic-hole r" data-layout-allow-overflow></div>
+          <div class="ic-tkrow"><div><span class="ic-sl">段落</span><b>12</b></div><div><span class="ic-sl">时长</span><b>0:45</b></div></div>
+          <div class="ic-code"><span class="ic-sl">导出编号</span><b>NO-4821</b><span class="s">12 段 · 0:45 · 1080p</span></div>
+        </div>
+        <div class="ic-seal">
+          <svg width="150" height="150" viewBox="0 0 150 150" aria-hidden="true">
+            <circle cx="75" cy="75" r="70" style="fill:var(--k-accent)"/>
+            <circle cx="75" cy="75" r="58" fill="none" stroke-width="2" stroke-dasharray="3 6" style="stroke:color-mix(in srgb,var(--k-on-accent) 50%,transparent)"/>
+            <path class="ic-chk" d="M48 77 L 67 96 L 104 56" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="90" stroke-dashoffset="0" style="stroke:var(--k-on-accent)"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="ic-lead" data-layout-allow-overflow></div>
+    <div class="ic-occ" data-layout-allow-overflow><div class="ic-rim"></div><div class="ic-sh"></div></div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    // seconds = upstream frames / 30 (110 frames)
+    var CFG = {
+      slot: 3.667,
+      press: 0.8, pressDur: 0.133, busyAt: 0.933, upAt: 0.967, upDur: 0.267, // button press, label swap, release
+      sw0: 1.067, sw1: 1.533, cut: 1.3, // occluder in view; the swap frame
+      shoveLead: 0.067, shoveOut: 0.467, // A dragged left, B settles from the right
+      rows: 1.5, rowGap: 0.167, rowDur: 0.6, // B rows rise in turn
+      seal: 1.533, check: 1.7, checkDur: 0.467 // stamp, then tick
+    };
+    var SWEEP = MT.bezier(0.3, 0, 0.7, 1); // soft start and stop, fastest in the middle
+    var v = {}; // only the variables the host sets: anything unset keeps the static default text
+    try {
+      var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+      for (var k in got) if (got[k] != null) v[k] = got[k];
+    } catch (e) {}
+
+    var root = document.querySelector(".ic");
+    var q = function (s) { return root.querySelector(s); };
+    var FW = root.clientWidth, FH = root.clientHeight;
+    if (!FW || !FH) {
+      // not laid out yet: the host clip's declared size, then the window
+      var hc = root.closest("[data-width][data-height]");
+      FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+      FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+    }
+    var P = FH > FW;
+    root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+    // ==== kit:tone@1 — light or dark skin, read from --k-bg; sets data-tone on the wrapper ====
+    function kRGB(el, color) {
+      var p = document.createElement("i");
+      p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+      el.appendChild(p);
+      var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+      el.removeChild(p);
+      return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+    }
+    function kTone(wrap) {
+      var c = kRGB(wrap, "var(--k-bg)");
+      var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+      wrap.setAttribute("data-tone", tone);
+      return tone;
+    }
+    // ==== kit:fit@1 — fit a text slot to its box by measuring the real layout (kRows left out) ====
+    function kFit(el, o) {
+      o = o || {};
+      var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+      var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+      for (;;) {
+        el.style.fontSize = f + "px";
+        m = kLines(el);
+        if ((m.w <= W && m.n <= n) || f <= min) break;
+        f = Math.max(min, f - 2);
+      }
+      if (m.w > W) {
+        [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+        m = kLines(el);
+      }
+      return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+    }
+    function kLines(el) {
+      var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+      var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+      while ((t = it.nextNode())) {
+        if (!t.data.trim()) continue;
+        r.selectNodeContents(t);
+        [].forEach.call(r.getClientRects(), function (b) {
+          var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+          if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+          row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+        });
+      }
+      return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+    }
+    // ==== kit:text@2 — kSplit "line" mode only (a line per "|"; nothing the user typed is trimmed) ====
+    function kSplit(el, text) {
+      var units = [];
+      el.textContent = "";
+      String(text).split(/\n|\|/).forEach(function (t) {
+        var u = document.createElement("span");
+        u.className = "ic-u"; u.textContent = t;
+        el.appendChild(u); units.push(u);
+      });
+      return units;
+    }
+    // ==== kit:grain@1 — film grain on a full-size layer: 6 seeded noise tiles, a new tile and offset every 2 frames ====
+    function kGrain(layer, o) {
+      o = o || {};
+      var size = o.size || 256, step = o.step || 2, dark = !!layer.closest('[data-tone="dark"]');
+      var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+        var f = "type='linear' slope='2.4' intercept='-0.7'";
+        var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+          "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+          "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+          "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+          "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+        return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+      });
+      layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+      layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+      layer.style.backgroundSize = size + "px " + size + "px";
+      return function (t) {
+        var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+        layer.style.backgroundImage = tiles[k % 6];
+        layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+      };
+    }
+
+    kTone(root);
+    if (String(v.backdrop) === "off") root.setAttribute("data-bare", "");
+    var drawGrain = kGrain(q(".ic-grain"));
+
+    // the picture is drawn once (ticket); page A gets a copy with its own gradient ids
+    var src = q(".ic-dunes-src"), holder = q(".ic-dunes-a");
+    holder.outerHTML = src.outerHTML.replace(/ic-(sky|sun|d1|d2|d3|sh)\b/g, "ic-$1a").replace("ic-dunes-src", "");
+    var suns = root.querySelectorAll(".ic-sunc");
+
+    // text slots: "|" lines, [accent] words, measured and shrunk to the floor, then wrapped
+    var has = function (k) { return v[k] != null && String(v[k]).trim() !== ""; };
+    var accent = function (u) {
+      var s = u.textContent;
+      if (s.indexOf("[") < 0) return;
+      u.textContent = "";
+      s.split(/(\[[^\]]*\])/).forEach(function (p) {
+        if (!p) return;
+        if (p.charAt(0) !== "[" || p.slice(-1) !== "]") return u.appendChild(document.createTextNode(p));
+        var e = document.createElement("span"); e.className = "ic-hl"; e.textContent = p.slice(1, -1); u.appendChild(e);
+      });
+    };
+    var slot = function (el, text, min) {
+      var n = kSplit(el, text); n.forEach(accent);
+      kFit(el, { lines: Math.max(1, n.length), min: min });
+    };
+    var show = function (el, on) { el.style.display = on ? "" : "none"; };
+    var kA = q(".ic-a .ic-kick"), kB = q(".ic-b .ic-kick"), TT = P ? 72 : 56;
+    var setKick = function (box, text) {
+      var s = box.querySelector("span"), has = String(text).trim() !== "";
+      s.textContent = text; show(box, has);
+      if (has) kFit(s, { lines: 1, min: 28, width: box.clientWidth - 40 });
+    };
+    if (v.kicker != null) setKick(kA, v.kicker);
+    if (v.donekicker != null) setKick(kB, v.donekicker);
+    if (has("title")) slot(q(".ic-a .ic-title"), v.title, TT);
+    if (has("done")) slot(q(".ic-done"), v.done, TT);
+    var note = q(".ic-note");
+    if (v.note != null) { show(note, has("note")); if (has("note")) slot(note, v.note, 40); }
+    var btn = q(".ic-btn"), l1 = q(".ic-lb1"), l2 = q(".ic-lb2"), spin = q(".ic-spin");
+    if (has("action")) l1.textContent = v.action;
+    if (has("busy")) l2.textContent = v.busy;
+    l2.style.display = "inline-block"; // measured while shown
+    [l1, l2].forEach(function (l) { kFit(l, { lines: 1, min: 40, width: btn.clientWidth - 150 }); });
+    l2.style.display = "";
+
+    var a = q(".ic-a"), b = q(".ic-b"), pan = q(".ic-pan"), occ = q(".ic-occ"), lead = q(".ic-lead");
+    var chk = q(".ic-chk"), seal = q(".ic-seal"), notes = [note, 0, q(".ic-code")];
+   
+    // occluder sized from the frame width: same full-cover slice of the sweep in both orientations
+    var SOFT = FW * 0.17708, CORE = FW * 1.35417, OCC_W = CORE + 2 * SOFT, LEAD = FW * 0.33333; // upstream 340 / 2600 / 640 px of 1920
+    var oc = function (pct) { return "color-mix(in srgb, var(--ic-o) " + pct + "%, transparent)"; };
+    occ.style.width = OCC_W + "px";
+    occ.style.background = "linear-gradient(90deg," + oc(0) + " 0px," + oc(85) + " " + SOFT * 0.6 + "px,var(--ic-o) " + SOFT + "px,var(--ic-o) " + (SOFT + CORE) + "px," + oc(80) + " " + (SOFT + CORE + SOFT * 0.4) + "px," + oc(0) + " " + OCC_W + "px)";
+    var rim = q(".ic-rim"), sh = q(".ic-sh"), rg = "color-mix(in srgb, var(--k-accent) 42%, transparent)", mk = "linear-gradient(90deg, transparent 0px, #000 " + SOFT + "px, #000 " + (SOFT + CORE) + "px, transparent " + OCC_W + "px)";
+    rim.style.left = SOFT * 0.35 + "px"; rim.style.width = FW * 0.13542 + "px";
+    rim.style.background = "linear-gradient(90deg, transparent 0%," + rg + " 45%, transparent 100%)";
+    sh.style.webkitMaskImage = sh.style.maskImage = mk;
+    lead.style.width = LEAD + SOFT + "px"; lead.style.bottom = "0px";
+    lead.style.background = "linear-gradient(90deg," + oc(0) + " 0px," + oc(38) + " " + LEAD + "px," + oc(50) + " " + (LEAD + SOFT) + "px)";
+    b.style.transform = "translateX(40px)"; // B sits 40px right, cancelling the pan end point
+
+    var ox = function (t) { return MT.mix(FW + 20, -OCC_W - 20, MT.ramp(t, CFG.sw0, CFG.sw1 - CFG.sw0, SWEEP)); };
+
+    function render(t) {
+      var before = t < CFG.cut - 1e-6;
+      a.style.opacity = before ? 1 : 0; b.style.opacity = before ? 0 : 1;
+      // slow pan through the cut; shove: A dragged left, B settles from the right
+      var drift = 40 - 80 * MT.ramp(t, 0, CFG.slot, "smooth");
+      var shove = before ? -28 * MT.ramp(t, CFG.sw0 - CFG.shoveLead, CFG.cut - CFG.sw0 + CFG.shoveLead, "exit") : 28 * (1 - MT.ramp(t, CFG.cut, CFG.shoveOut, "out"));
+      pan.style.transform = "translateX(" + (drift + shove).toFixed(2) + "px)";
+      var x = ox(t), on = t >= CFG.sw0 && t <= CFG.sw1 ? 1 : 0;
+      occ.style.opacity = lead.style.opacity = on;
+      // while the occluder is in view the checks treat the pages as set dressing (audited at rest)
+      if (on) pan.setAttribute("data-layout-ignore", ""); else pan.removeAttribute("data-layout-ignore");
+      occ.style.transform = "translateX(" + x.toFixed(1) + "px)";
+      lead.style.transform = "translateX(" + (x - LEAD).toFixed(1) + "px)";
+      var r = (190 * (1 + 0.04 * Math.sin((t * 30) / 16))).toFixed(2); // breathing sun, frames at 30 fps
+      for (var i = 0; i < suns.length; i++) suns[i].setAttribute("r", r);
+      // A: the button is pressed, then reads as busy
+      var down = MT.ramp(t, CFG.press, CFG.pressDur, "out") * (1 - MT.ramp(t, CFG.upAt, CFG.upDur, "out"));
+      var busy = t >= CFG.busyAt;
+      btn.style.transform = "scale(" + (1 - 0.04 * down).toFixed(4) + ")";
+      btn.style.filter = down > 0.01 ? "brightness(" + (1 - 0.12 * down).toFixed(3) + ")" : "";
+      btn.style.boxShadow = "inset 0 1px 0 color-mix(in srgb, white 30%, transparent), 0 " + MT.mix(18, 6, down).toFixed(1) + "px " + MT.mix(40, 16, down).toFixed(1) + "px -12px color-mix(in srgb, color-mix(in srgb, var(--k-accent) 50%, black) 55%, transparent)";
+      l1.style.display = busy ? "none" : "inline-block"; l2.style.display = busy ? "inline-block" : "none"; spin.style.display = busy ? "block" : "none";
+      spin.style.transform = "rotate(" + ((t - CFG.press) * 720).toFixed(1) + "deg)";
+      // B: rows rise, stamp springs down, tick drawn
+      for (i = 0; i < 3; i += 2) {
+        var p = MT.ramp(t, CFG.rows + i * CFG.rowGap, CFG.rowDur, "snappy");
+        notes[i].style.opacity = p.toFixed(3);
+        notes[i].style.transform = "translateY(" + ((1 - p) * (i ? 20 : 22)).toFixed(1) + "px)";
+      }
+      var sp = MT.spring({ t: t, delay: CFG.seal, damping: 13, stiffness: 190 });
+      seal.style.transform = "rotate(" + MT.mix(-30, -8, sp).toFixed(2) + "deg) scale(" + MT.mix(1.8, 1, sp).toFixed(4) + ")";
+      seal.style.opacity = Math.min(1, sp * 3).toFixed(3);
+      chk.style.strokeDashoffset = (90 * (1 - MT.ramp(t, CFG.check, CFG.checkDur, "out"))).toFixed(2);
+      drawGrain(t);
+    }
+    var tl = MT.scene(CFG.slot, render);
+    window.__timelines["invisible-cut"] = tl;
+  })();
+</script>
+    </template>
+  </body>
+</html>

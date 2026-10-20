@@ -1,0 +1,414 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"跟拍的大字（一行，横屏 2–7 字、竖屏 2–5 字最好）","default":"踩准每一拍"},
+    {"id":"sub","type":"string","label":"重拍后升起的副标题（可留空，| 切意群）","default":"每一个剪辑点|都踩在重拍上"},
+    {"id":"bpm","type":"number","label":"节拍速度 BPM（90–160，卡长 = 0.53 秒 + 8 拍 + 1.92 秒）","default":128,"min":90,"max":160,"step":1},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>font-weight-pump · 字重脉冲</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="font-weight-pump-template">
+      <!-- Ported from video-shotcraft demos/typography/type-rhythm-sync/FontWeightPump.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           white-first neutral --k-* palette instead of the dark aurora stage (kit backdrop + vignette 0.16 + grain;
+           dark skin gets vignette 0.55 and screen light), purple/pink -> accent-2/accent, drop gradient mixed in oklch;
+           SF Pro -> Noto Sans SC variable font (weights 100-900, local); upstream mark, wordmark and slogan removed,
+           Chinese copy in variables (title, sub), bpm variable (beats = 60 / bpm, decay windows scale with the beat);
+           halo and text glow cut to 17% / 20% on light skins (contrast), BPM label without its intro fade, DROP
+           label 22 -> 28 px; title 240 px landscape / 180 px portrait, echo distances and pushes as multiples of the
+           title size. Kept: 16 f first beat, 14 f beat, drop on beat 9, env (1 - t / D)^0.8, D 9 f + 1.6 f per char
+           from the centre, 250 / 900 / 780 weights, 900-weight slots, +6% downbeat and +8% drop stretch, echo rows
+           2 f late from 64 f, 26 / 60 px pushes, 16 f streak, 8 + 1 step sequencer, subtitle 8 f after the drop. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        /* the pump needs a continuous weight axis: the variable Noto Sans SC, declared with its whole range */
+        @font-face { font-family: "fw-vf"; font-weight: 100 900; src: local("Noto Sans SC"), local("NotoSansSC-Thin"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .fw { position: absolute; inset: 0; container-type: size; --fw-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); }
+        .fw[data-tone="dark"] { --fw-shade: color-mix(in srgb, var(--k-bg) 30%, black); }
+        /* ==== kit:backdrop@1 ==== */
+        .fw-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .fw-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        /* ==== end kit:backdrop ==== */
+        /* ==== kit:vignette@1 ==== */
+        .fw-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--fw-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .fw[data-tone="dark"] .fw-vig { --vs: 0.55; }
+        /* ==== end kit:vignette ==== */
+        /* ==== kit:grain@1 ==== */
+        .fw-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+        /* ==== kit:light@1 ==== */
+        .fw-light { mix-blend-mode: multiply; }
+        .fw[data-tone="dark"] .fw-light { mix-blend-mode: screen; }
+        /* ==== end kit:light ==== */
+        /* ==== kit:text@2 ==== */
+        .fw-u { display: inline-block; white-space: pre; }
+        .fw-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+        /* ==== end kit:text ==== */
+        /* the title stack: its font size is the title size, its top is the title's middle line (46.8% / 40%) */
+        .fw-stack { position: absolute; left: 0; right: 0; top: 46.76%; height: 0; font-size: 210px; }
+        .fw-glow { position: absolute; left: 13.5%; right: 13.5%; top: -1em; height: 2em; border-radius: 50%; background: radial-gradient(ellipse 50% 50% at 50% 50%, color-mix(in srgb, var(--k-accent) 4%, transparent), transparent); }
+        .fw-streak { position: absolute; left: 0; top: -3px; width: 600px; height: 6px; border-radius: 3px; opacity: 0; }
+        .fw-row { position: absolute; left: 10%; right: 10%; top: -0.5em; text-align: center; font-family: var(--mc-font, "fw-vf", var(--k-font)); line-height: 1; letter-spacing: -0.01em; }
+        .fw-c, .fw-row i { position: relative; display: inline-block; font-style: normal; white-space: pre; }
+        /* each glyph sits in a slot laid out at weight 900, so the line never reflows while the weight pumps */
+        .fw-c::before, .fw-row i::before { content: attr(data-t); font-weight: 900; opacity: 0; }
+        .fw-v, .fw-row i::after { position: absolute; left: 50%; top: 0; transform: translateX(-50%); white-space: pre; }
+        .fw-v { font-style: normal; font-weight: 780; color: color-mix(in oklch, var(--k-accent-2), var(--k-accent) calc(var(--g) * 100%)); }
+        .fw-echo { opacity: 0.75; --fw-es: color-mix(in srgb, var(--k-accent) 55%, transparent); }
+        .fw-e1 { transform: translateY(-1.02em); }
+        .fw-e2 { transform: translateY(1.02em); }
+        .fw-row i { font-weight: 780; }
+        .fw-row i::after { content: attr(data-t); color: transparent; -webkit-text-stroke: 2px var(--fw-es); }
+        .fw-sub { position: absolute; left: 10%; right: 10%; top: 78.7%; text-align: center; font-size: 40px; font-weight: 500; line-height: 1.3; color: var(--k-ink); }
+        .fw-seq { position: absolute; left: 0; right: 0; top: 87.4%; display: flex; justify-content: center; gap: 16px; }
+        .fw-cell { position: relative; flex: none; width: 54px; height: 54px; border-radius: 12px; background: color-mix(in srgb, var(--k-ink) 5%, transparent); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--k-ink) 14%, transparent); }
+        .fw-cell.fw-dn { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--k-accent) 35%, transparent); }
+        .fw-cell:nth-child(5), .fw-cell:nth-child(9) { margin-left: 22px; }
+        .fw-cell:nth-child(9) { width: 132px; }
+        .fw-fill { position: absolute; inset: 0; border-radius: 12px; background: var(--k-accent-2); opacity: 0.28; }
+        .fw-dn .fw-fill { background: var(--k-accent); }
+        .fw-cell:nth-child(9) .fw-fill { opacity: 0.9; }
+        /* the DROP badge is decoration (drawn as ::after): the beat number it stands for is the cell itself */
+        .fw-cell:nth-child(9)::after { content: "DROP"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; letter-spacing: 0.12em; color: var(--lc, var(--k-on-accent)); }
+        .fw-bpm { position: absolute; right: 6.25%; top: 8.9%; font-size: 32px; font-weight: 600; letter-spacing: 0.12em; color: var(--k-muted); font-variant-numeric: tabular-nums; }
+        .fw-bar { margin-left: 18px; }
+        /* portrait: the stack's middle line at 40%, subtitle and sequencer below it, all inside y 12%-68%, x 10%-90% */
+        @container (orientation: portrait) {
+          .fw-stack { top: 40%; font-size: 180px; }
+          .fw-glow { left: 4%; right: 4%; }
+          .fw-row { left: 11%; right: 11%; }
+          .fw-sub { left: 11%; right: 11%; top: 56.5%; font-size: 44px; }
+          .fw-seq { top: 61.6%; }
+          .fw-bpm { right: 11%; top: 13%; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="font-weight-pump">
+        <div class="fw">
+          <div class="fw-backdrop"></div>
+          <div class="fw-vig"></div>
+          <div class="fw-grain"></div>
+          <div class="fw-stack">
+            <div class="fw-glow fw-light"></div>
+            <div class="fw-streak fw-light"></div>
+            <div class="fw-row fw-echo fw-e1" aria-hidden="true"><i data-t="踩"></i><i data-t="准"></i><i data-t="每"></i><i data-t="一"></i><i data-t="拍"></i></div>
+            <div class="fw-row fw-echo fw-e2" aria-hidden="true"><i data-t="踩"></i><i data-t="准"></i><i data-t="每"></i><i data-t="一"></i><i data-t="拍"></i></div>
+            <div class="fw-row fw-main"><span class="fw-c" data-t="踩" style="--g:0"><b class="fw-v">踩</b></span><span class="fw-c" data-t="准" style="--g:0.25"><b class="fw-v">准</b></span><span class="fw-c" data-t="每" style="--g:0.5"><b class="fw-v">每</b></span><span class="fw-c" data-t="一" style="--g:0.75"><b class="fw-v">一</b></span><span class="fw-c" data-t="拍" style="--g:1"><b class="fw-v">拍</b></span></div>
+          </div>
+          <div class="fw-sub">每一个剪辑点都踩在重拍上</div>
+          <div class="fw-seq"><i class="fw-cell fw-dn"><b class="fw-fill"></b></i><i class="fw-cell"><b class="fw-fill"></b></i><i class="fw-cell"><b class="fw-fill"></b></i><i class="fw-cell"><b class="fw-fill"></b></i><i class="fw-cell fw-dn"><b class="fw-fill"></b></i><i class="fw-cell"><b class="fw-fill"></b></i><i class="fw-cell"><b class="fw-fill"></b></i><i class="fw-cell"><b class="fw-fill"></b></i><i class="fw-cell fw-dn"><b class="fw-fill"></b></i></div>
+          <div class="fw-bpm"><span class="fw-n">128</span> BPM<span class="fw-bar">2 / 2</span></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing in seconds (upstream frames / 30). Beats fall every 60 / bpm s; the windows marked "f/14" are upstream
+          // frames of a 14-frame beat and scale with the beat, so a faster tempo keeps decays shorter than the beat
+          var CFG = {
+            first: 0.533, tail: 1.917,      // first beat 16 f; the card ends 1.917 s after the drop (drop = 9th beat)
+            rest: 250, peak: 900, fin: 780, // weights: thin at rest, black on the hit, 780 once the drop settles
+            decay: 9, spread: 1.6, cap: 13, // decay window f/14: 9 at the centre, +1.6 per char outwards, never past 13
+            echoAt: 6, echoDur: 0.333, lag: 0.067, echoDecay: 11, // echo rows from 6 f/14 after beat 4, 2 f late
+            dropTail: 4, dropFall: 0.533, echoFall: 0.6, shine: 0.8, streak: 0.533, // drop afterglows: 4 f/14, 16 / 18 / 24 / 16 f
+            subAt: 0.267, subEach: 0.467, subGap: 0.083, // subtitle rises word by word 8 f after the drop, 14 f each, 2.5 f apart
+            accX: 0.06, dropX: 0.08,        // downbeat / drop horizontal stretch
+            dy: 0.85, dyCJK: 1.02, pull: -0.167, push: 0.108, dropPush: 0.25 // echo distance (Latin caps / CJK, whose glyphs fill the em) and pushes in title sizes (204 / -40 / 26 / 60 px at 240)
+          };
+          var LAND = { max: 210, min: 120 };
+          var PORT = { max: 180, min: 96 };
+          var v = { title: "踩准每一拍", sub: "每一个剪辑点|都踩在重拍上", bpm: 128, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".fw");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND, K = Math.min(FW, FH) / 1.08e3;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          if (String(v.backdrop) === "off") [".fw-backdrop", ".fw-vig", ".fw-grain"].forEach(function (s) { q(s).style.display = "none"; });
+
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+          // ==== kit:text@2 ====
+          var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "fw-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "fw-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          function kReveal(tl, units, variant, at, o) {
+            o = o || {};
+            var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+            units.forEach(function (u, i) {
+              var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+              tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+              tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+            });
+            return tl;
+          }
+          // ==== end kit:text ====
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          // ==== end kit:fit ====
+
+          var dark = kTone(root) === "dark";
+          var LK = dark ? 1 : 0.17, LS = dark ? 1 : 0.2; // halo / text glow strength: full on dark skins, <= 10% behind text on light
+          var grain = kGrain(q(".fw-grain"));
+
+          // ---- beats ----
+          var bpm = Math.min(160, Math.max(90, +v.bpm || 128)), B = 60 / bpm, F = B / 14; // F: one upstream frame of a 14-frame beat
+          var BT = [0, 1, 2, 3, 4, 5, 6, 7].map(function (i) { return CFG.first + i * B; });
+          var DROP = CFG.first + 8 * B, DUR = DROP + CFG.tail, FIN = (CFG.fin - CFG.rest) / (CFG.peak - CFG.rest);
+          var down = function (i) { return i === 0 || i === 4; };
+          q(".fw-n").textContent = bpm;
+
+          // ---- title: one glyph per 900-weight slot, the same slots in both echo rows ----
+          var stack = q(".fw-stack"), main = q(".fw-main"), echoes = [q(".fw-e1"), q(".fw-e2")];
+          var text = kWords(String(v.title).trim() || "踩准每一拍").map(function (u) { return u.t + (u.sp ? " " : ""); }).join("");
+          var glyphs = Array.from(text), n = glyphs.length;
+          var esc = function (c) { return c.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;"); };
+          main.innerHTML = glyphs.map(function (c, i) { return '<span class="fw-c" data-t="' + esc(c) + '" style="--g:' + (n > 1 ? i / (n - 1) : 1).toFixed(3) + '"><b class="fw-v">' + esc(c) + "</b></span>"; }).join("");
+          echoes.forEach(function (e) { e.innerHTML = glyphs.map(function (c) { return '<i data-t="' + esc(c) + '"></i>'; }).join(""); });
+          var fit = kFit(main, { max: L.max, min: L.min, spare: 0.06 }); // 6% spare: the drop stretches the line by 8% and it must stay inside the 10% margins
+          stack.style.fontSize = fit.size + "px";
+          main.style.fontSize = "";
+          var S = fit.size / 240, H = main.offsetHeight / fit.size, DY = (kCJK.test(text) ? CFG.dyCJK : CFG.dy) * H; // H: title height in title sizes (2 when it wraps)
+          stack.style.marginTop = (-(H - 1) * 0.5 * fit.size).toFixed(1) + "px"; // a wrapped title grows both ways around the middle line
+
+          // decay window per glyph: centre glyphs recoil first, the outer ones later (measured per line)
+          var cells = [].slice.call(main.children), lines = {};
+          cells.forEach(function (c) { var y = c.offsetTop; (lines[y] = lines[y] || []).push(c); });
+          var CH = cells.map(function (c, i) {
+            var row = lines[c.offsetTop], x0 = row[0].offsetLeft, x1 = row[row.length - 1].offsetLeft + row[row.length - 1].offsetWidth;
+            var u = Math.abs(c.offsetLeft + c.offsetWidth / 2 - (x0 + x1) / 2) / (fit.size * 1.0);
+            return {
+              v: c.firstChild, e: echoes.map(function (e) { return e.children[i]; }),
+              d: Math.min(CFG.cap, CFG.decay + Math.max(0, u - 0.5) * CFG.spread) * F,
+              g: "color-mix(in oklch, var(--k-accent-2), var(--k-accent) " + (n > 1 ? (100 * i) / (n - 1) : 100).toFixed(1) + "%)"
+            };
+          });
+
+          // ---- subtitle (optional) ----
+          var subEl = q(".fw-sub"), subUnits = [];
+          if (String(v.sub).trim()) {
+            subUnits = kSplit(subEl, "word", true, v.sub); kFit(subEl, { lines: 2, min: 40 });
+            // each unit rises out of its clip box, so its first ~0.07 s is hidden on purpose (the dense check reads it as occluded)
+            subUnits.forEach(function (u) { u.setAttribute("data-layout-allow-occlusion", ""); });
+          }
+          else subEl.style.display = "none";
+
+          var seq = [].slice.call(q(".fw-seq").children), fills = seq.map(function (c) { return c.firstChild; });
+          var glow = q(".fw-glow"), streak = q(".fw-streak"), bar = q(".fw-bar"), barN = 0;
+
+          // ---- envelopes (seconds) ----
+          var env = function (x, b, d) { var u = x - b; return u < 0 || u >= d ? 0 : Math.pow(1 - u / d, 0.8); };
+          var pulse = function (x, d) { var e = 0, k = -1; for (var i = 0; i < 8; i++) { var y = env(x, BT[i], d); if (y > e) { e = y; k = i; } } return { e: e, k: k }; };
+          var dropEnv = function (x, d) { var u = x - DROP; return u < 0 ? 0 : FIN + (1 - FIN) * Math.pow(1 - MT.clamp(u / (d + CFG.dropTail * F), 0, 1), 1.4); };
+          var cm = function (c, a) { return "color-mix(in srgb, " + c + " " + (100 * a).toFixed(1) + "%, transparent)"; };
+
+          function render(t) {
+            var f = t * 30, p0 = pulse(t, CFG.decay * F), dn = p0.k >= 0 && down(p0.k), dropped = t >= DROP;
+            var dEnv = dropped ? Math.pow(1 - MT.clamp((t - DROP) / CFG.dropFall, 0, 1), 1.2) : 0;
+            var sx = 1 + CFG.accX * (dn ? p0.e : 0) + CFG.dropX * dEnv;
+            main.style.transform = "scaleX(" + sx.toFixed(4) + ")";
+            // main glyphs: weight from the envelope, tint toward the beat colour, drop gradient after the drop
+            CH.forEach(function (c) {
+              var p = pulse(t, c.d), e = Math.max(p.e, dropEnv(t, c.d)), hot = p.k >= 0 && down(p.k) ? "var(--k-accent)" : "var(--k-accent-2)";
+              var col = dropped ? c.g : "color-mix(in oklch, var(--k-ink), " + hot + " " + (100 * Math.min(1, p.e * 1.25)).toFixed(1) + "%)";
+              var sh = dropped ? 0.35 + 0.65 * Math.pow(1 - MT.clamp((t - DROP) / CFG.shine, 0, 1), 2) : p.e;
+              c.v.style.fontWeight = Math.round(CFG.rest + (CFG.peak - CFG.rest) * e);
+              c.v.style.color = col;
+              c.v.style.textShadow = sh > 0.05 ? "0 0 " + (18 * sh * S).toFixed(1) + "px " + cm(dropped ? c.g : hot, 0.5 * sh * LS) + ", 0 0 " + (70 * sh * S).toFixed(1) + "px " + cm(dropped ? c.g : hot, 0.35 * sh * LS) : "none";
+              // echo glyphs: the same pump 2 f late
+              var x = t - CFG.lag, pe = pulse(x, c.d), we = Math.round(CFG.rest + (CFG.peak - CFG.rest) * Math.max(pe.e, dropEnv(x, c.d)));
+              c.e[0].style.fontWeight = c.e[1].style.fontWeight = we;
+            });
+            // echo rows: from beat 4 on they open out, get pushed 2 f after each hit, and once more by the drop
+            var eIn = MT.ramp(t, BT[3] + CFG.echoAt * F, CFG.echoDur, "snappy");
+            var eEnv = pulse(t - CFG.lag, CFG.echoDecay * F).e;
+            var eDrop = t >= DROP + CFG.lag ? Math.pow(1 - MT.clamp((t - DROP - CFG.lag) / CFG.echoFall, 0, 1), 1.6) : 0;
+            var push = MT.mix(CFG.pull, 0, eIn) + CFG.push * eEnv * eIn + CFG.dropPush * eDrop;
+            echoes.forEach(function (e, i) {
+              e.style.opacity = (0.75 * eIn).toFixed(3);
+              e.style.transform = "translateY(" + ((i ? 1 : -1) * (DY + push)).toFixed(4) + "em) scaleX(" + (1 + (sx - 1) * 0.5).toFixed(4) + ")";
+              e.style.setProperty("--fw-es", cm(t >= DROP + CFG.lag ? "var(--k-accent)" : "var(--k-ink)", 0.55));
+            });
+            // halo behind the title: breathes before the first beat, flares on every hit
+            var br = 0.5 + 0.5 * Math.sin(f / 9);
+            var ga = Math.min(0.6, 0.1 + 0.05 * br * (1 - MT.clamp(f / 16, 0, 1)) + 0.3 * p0.e * (dn ? 1.3 : 1) + 0.4 * dEnv + (dropped ? 0.12 : 0));
+            glow.style.background = "radial-gradient(ellipse 50% 50% at 50% 50%, " + cm(dn || dropped ? "var(--k-accent)" : "var(--k-accent-2)", ga * LK) + " 0%, transparent 100%)";
+            // drop streak: once, left to right across the title, under the glyphs
+            var sp = MT.ramp(t, DROP, CFG.streak, "out");
+            streak.style.opacity = sp > 0 && sp < 1 ? (1 - sp * 0.6).toFixed(3) : 0;
+            streak.style.transform = "translateX(" + MT.mix(-600 * K, FW, sp).toFixed(1) + "px) scale(" + K.toFixed(3) + ")";
+            streak.style.background = "linear-gradient(90deg, transparent, " + cm(dark ? "#fff" : "var(--k-accent)", 0.9) + " 70%, transparent)";
+            streak.style.boxShadow = "0 0 30px " + cm(dark ? "var(--k-accent)" : "var(--k-accent-2)", 0.8 * (dark ? 1 : 0.5));
+            // step sequencer: the cell of the beat lights and grows 12%, passed cells stay dimly lit
+            seq.forEach(function (c, i) {
+              var isD = i === 8, b = isD ? DROP : BT[i], e = isD ? dEnv : env(t, b, CFG.decay * F), passed = t >= b;
+              c.style.transform = "scale(" + (1 + 0.12 * e).toFixed(3) + ")";
+              fills[i].style.opacity = e > 0.02 ? Math.max(isD ? 0.9 : 0, 0.35 + 0.65 * e).toFixed(3) : passed ? (isD ? 0.9 : 0.28) : 0;
+              fills[i].style.boxShadow = e > 0.02 ? "0 0 " + (30 * e).toFixed(1) + "px " + cm(isD || down(i) ? "var(--k-accent)" : "var(--k-accent-2)", 0.8) : "none";
+              if (isD) c.style.setProperty("--lc", passed ? "var(--k-on-accent)" : "var(--k-muted)");
+            });
+            q(".fw-seq").style.opacity = MT.ramp(t, 0, 0.4, "out").toFixed(3);
+            var nb = t >= BT[4] ? 2 : 1;
+            if (nb !== barN) { barN = nb; bar.textContent = nb + " / 2"; }
+            grain(t);
+          }
+
+          // the card runs on until the last subtitle unit has been still for 1 s (long subtitles stretch the card)
+          DUR = Math.max(DUR, DROP + CFG.subAt + Math.max(0, subUnits.length - 1) * CFG.subGap + CFG.subEach + 1);
+          var tl = MT.scene(DUR, render);
+          kReveal(tl, subUnits, "rise", DROP + CFG.subAt, { each: CFG.subEach, gap: CFG.subGap });
+          window.__timelines["font-weight-pump"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

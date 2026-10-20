@@ -1,0 +1,490 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"label","type":"string","label":"眉题（留空不要）","default":"增长数据 · 2026"},
+    {"id":"title","type":"string","label":"标题（用 | 切意群）","default":"每月|新增用户"},
+    {"id":"kpi","type":"string","label":"右上合计的名字","default":"全年合计"},
+    {"id":"values","type":"string","label":"各期数值（| 分隔，6–12 个，最后一个远超前面）","default":"2.2|3|2.6|3.8|3.5|4.7|4.4|5.8|5.5|6.6|7.2|34"},
+    {"id":"labels","type":"string","label":"各期名字（| 分隔）","default":"1月|2月|3月|4月|5月|6月|7月|8月|9月|10月|11月|12月"},
+    {"id":"unit","type":"string","label":"数值单位","default":"万"},
+    {"id":"vs","type":"string","label":"涨幅前面的字","default":"比上月"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>axis-rescale-shock · 爆表重标</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="axis-rescale-shock-template">
+<!-- Ported from video-shotcraft demos/data/chart-live-moves/AxisRescaleShockV2.tsx
+     (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+     Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+     Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT scene, frames to seconds;
+     neutral --k-* palette on white (upstream: sand paper; spike = accent), system fonts, generic copy in 万,
+     upstream mark and wordmark removed; labels 32px to 40px (ticks stay 32px); 6-12 points, both axis ranges,
+     KPI and the value tag computed from the variables (upstream: fixed 12 months, 100k to 400k); value tag sized to its
+     text and only scales (upstream also faded it: white on accent fails contrast half-faded); portrait layout; slot 5.3 (upstream 5.6). Draw, warning, 226px shock with crack, shards and shake,
+     KPI kick, 14-frame rescale, tick swap, dense grid, marker and tag timing kept. -->
+<style>
+  @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+  @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+  @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+  #root {
+    --k-bg: var(--mc-bg, #ffffff);
+    --k-panel: var(--mc-panel, #f4f5f7);
+    --k-ink: var(--mc-ink, #15171c);
+    --k-muted: var(--mc-muted, #6b7280);
+    --k-accent: var(--mc-accent, #e8590c);
+    --k-accent-2: var(--mc-accent-2, #2563eb);
+    --k-on-accent: var(--mc-on-accent, #ffffff);
+    --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    font-family: var(--k-font);
+    color: var(--k-ink);
+  }
+  /* ==== kit:derived@1 (shade line only) ==== */
+  .ar { --ar-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); }
+  .ar[data-tone="dark"] { --ar-shade: color-mix(in srgb, var(--k-bg) 30%, black); }
+  /* ==== end kit:derived ==== */
+  /* ==== kit:backdrop@1 ==== */
+  .ar-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+  .ar-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+  /* ==== end kit:backdrop ==== */
+
+  /* ==== kit:vignette@1 ==== */
+  .ar-vig {
+    position: absolute; inset: 0; pointer-events: none;
+    --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--ar-shade);
+    background:
+      radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+      radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+  }
+  .ar[data-tone="dark"] .ar-vig { --vs: 0.55; }
+  /* ==== end kit:vignette ==== */
+
+  /* ==== kit:grain@1 ==== */
+  .ar-grain { position: absolute; inset: 0; pointer-events: none; }
+  /* ==== end kit:grain ==== */
+
+  /* ==== kit:text@2 ==== */
+  .ar-u { display: inline-block; white-space: pre; }
+  .ar-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+  /* ==== end kit:text ==== */
+
+  /* ==== kit:fit@1 ==== */
+  .ar-row { display: block; white-space: nowrap; }
+  /* ==== end kit:fit ==== */
+
+  .ar { position: absolute; inset: 0; container-type: size; }
+  .ar-cam, .ar-ch { position: absolute; inset: 0; }
+  .ar-cam { transform-origin: 60% 45%; }
+  .ar-eb { position: absolute; left: 96px; top: 88px; width: 1000px; font-size: 40px; font-weight: 600; line-height: 1.25; color: var(--k-muted); }
+  .ar-title { position: absolute; left: 90px; top: 140px; width: 1100px; font-size: 124px; font-weight: 800; line-height: 1.15; }
+  .ar-kl, .ar-kv { position: absolute; right: 96px; text-align: right; white-space: nowrap; }
+  .ar-kl { top: 88px; font-size: 40px; font-weight: 650; line-height: 1.25; color: var(--k-muted); }
+  .ar-kv { top: 140px; font-size: 124px; font-weight: 800; line-height: 1.15; font-variant-numeric: tabular-nums; }
+  .ar.hit .ar-kl, .ar.hit .ar-kv { color: var(--k-accent); }
+  .ar-tk { position: absolute; width: 200px; height: 40px; }
+  .ar-tk span, .ar-mo { position: absolute; left: 0; top: 0; font-size: 32px; font-weight: 500; line-height: 1.25; color: var(--k-muted); white-space: nowrap; }
+  .ar-tk .warn, .ar-mo.on { color: color-mix(in srgb, var(--k-accent) 78%, var(--k-ink)); font-weight: 750; }
+  .ar-mo { transform: translateX(-50%); }
+  .ar-svg { position: absolute; left: 0; top: 0; overflow: visible; }
+  .ar-ink { stroke: var(--k-ink); }
+  .ar-acc { stroke: var(--k-accent); }
+  .ar-tag { position: absolute; left: 1431px; top: 373px; transform-origin: 100% 50%; }
+  .ar-tb { display: flex; flex-direction: column; justify-content: center; height: 140px; padding: 0 32px 0 30px; box-sizing: border-box; border-radius: 6px; white-space: nowrap;
+    background: var(--k-accent); color: var(--k-on-accent); box-shadow: 0 18px 40px -12px color-mix(in srgb, var(--ar-shade) 45%, transparent); }
+  .ar-tv { display: block; font-size: 76px; font-weight: 800; line-height: 1.05; font-variant-numeric: tabular-nums; }
+  .ar-ts { display: block; margin-top: 4px; font-size: 40px; font-weight: 600; line-height: 1.2; }
+  .ar-tp { position: absolute; right: -10px; top: 60px; width: 20px; height: 20px; background: var(--k-accent); transform: rotate(45deg); }
+  /* portrait: title, then the KPI on its own row, then a taller chart that the spike shoots up into the KPI */
+  @container (orientation: portrait) {
+    .ar-eb { left: 124px; top: 262px; width: 836px; }
+    .ar-title { left: 124px; top: 302px; width: 836px; font-size: 96px; }
+    .ar-kl, .ar-kv { right: 120px; }
+    .ar-kl { top: 432px; }
+    .ar-kv { top: 478px; font-size: 100px; }
+    .ar-mo { font-size: 30px; }
+    .ar-tag { left: 551px; top: 702px; }
+  }
+</style>
+
+<div id="root" data-composition-id="axis-rescale-shock">
+  <div class="ar hit">
+    <div class="ar-backdrop"></div>
+    <div class="ar-vig"></div>
+    <div class="ar-grain"></div>
+    <div class="ar-cam">
+      <div class="ar-eb">增长数据 · 2026</div>
+      <div class="ar-title">每月新增用户</div>
+      <div class="ar-kl">全年合计</div>
+      <div class="ar-kv" data-layout-allow-occlusion>83.3万</div>
+      <div class="ar-ch">
+        <svg class="ar-svg"></svg>
+        <div class="ar-tag"><div class="ar-tb"><span class="ar-tv">34万</span><span class="ar-ts">比上月 +372%</span></div><div class="ar-tp"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // timing (s) = upstream frames / 30, both orientations: line writes in, warning, shock through the ceiling,
+  // held beat, 14-frame rescale, marker and tag, KPI roll; a slow push over the whole card
+  var CFG = { draw: 0.4667, drawDur: 1.4, warn: 1.6667, shock: 2.0667, shockDur: 0.4667, beat: 3.1333, rescale: 0.4667, mark: 3.5333, end: 5.3, push: 1.018 };
+  // layout (px): margin, plot left / right, ceiling, baseline, shock height over the ceiling, label every n-th period
+  var LAND = { m: 96, x0: 268, x1: 1800, ceil: 362, base: 902, shock: 226, every: 1 };
+  var PORT = { m: 120, x0: 240, x1: 920, ceil: 700, base: 1180, shock: 200, every: 2 };
+  var v = { label: "增长数据 · 2026", title: "每月|新增用户", kpi: "全年合计", values: "2.2|3|2.6|3.8|3.5|4.7|4.4|5.8|5.5|6.6|7.2|34",
+    labels: "1月|2月|3月|4月|5月|6月|7月|8月|9月|10月|11月|12月", unit: "万", vs: "比上月", backdrop: "on" };
+  try {
+    var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+  } catch (e) {}
+
+  // ==== kit:tone@1 ====
+  function kRGB(el, color) {
+    var p = document.createElement("i");
+    p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+    el.appendChild(p);
+    var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+    el.removeChild(p);
+    return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+  }
+  function kTone(wrap) {
+    var c = kRGB(wrap, "var(--k-bg)");
+    var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+    wrap.setAttribute("data-tone", tone);
+    return tone;
+  }
+  // ==== end kit:tone ====
+
+  // ==== kit:grain@1 ====
+  function kGrain(layer, o) {
+    o = o || {};
+    var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+    var dark = tones && tones.getAttribute("data-tone") === "dark";
+    var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+      var f = "type='linear' slope='2.4' intercept='-0.7'";
+      var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+        "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+        "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+        "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+        "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+      return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+    });
+    layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+    layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+    layer.style.backgroundSize = size + "px " + size + "px";
+    return function (t) {
+      var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+      layer.style.backgroundImage = tiles[k % 6];
+      layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+    };
+  }
+  // ==== end kit:grain ====
+
+  // ==== kit:text@2 ====
+  var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+  function kWords(s, key) {
+    s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+    var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+    var cut = function (x) {
+      if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+      return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+    };
+    var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+    var pre = "";
+    bits.forEach(function (x) {
+      var t = x.trim(), last = out[out.length - 1];
+      if (last && /^ /.test(x)) last.sp = true;
+      if (!t) return;
+      if (!/[\p{L}\p{N}]/u.test(t)) {
+        if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+        else { last.t += t; last.sp = / $/.test(x); }
+        return;
+      }
+      out.push({ t: pre + t, sp: / $/.test(x) });
+      pre = "";
+    });
+    if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+    if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+    if (out.length) out[out.length - 1].sp = false;
+    return out;
+  }
+  function kSplit(el, by, rise, text) {
+    var s = text != null ? String(text) : el.textContent, units = [];
+    var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+    el.textContent = "";
+    parts.forEach(function (p) {
+      var u = document.createElement("span"), box = u;
+      u.className = "ar-u"; u.textContent = p.t;
+      if (by === "line") u.style.display = "block";
+      if (!p.t.trim()) { el.appendChild(u); return; }
+      if (rise) { box = document.createElement("span"); box.className = "ar-cut"; box.style.display = u.style.display; box.appendChild(u); }
+      el.appendChild(box);
+      if (p.sp) el.appendChild(document.createTextNode(" "));
+      units.push(u);
+    });
+    return units;
+  }
+  function kReveal(tl, units, variant, at, o) {
+    o = o || {};
+    var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+    units.forEach(function (u, i) {
+      var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+      if (variant === "rise") {
+        tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+        tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+      } else if (variant === "blur") {
+        tl.fromTo(u, { opacity: 0, y: fs * 0.25, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: each, ease: ease }, t0);
+      } else if (variant === "drop") {
+        tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each / 3, ease: "none" }, t0);
+        tl.fromTo(u, { y: -fs * 0.6 }, { y: 0, duration: each, ease: "overshoot" }, t0);
+      } else if (variant === "scale") {
+        tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each * 0.1, ease: "power1.out" }, t0);
+        tl.fromTo(u, { scale: 1.6, filter: "blur(8px)" }, { scale: 1, filter: "blur(0px)", duration: each, ease: ease }, t0);
+      } else {
+        tl.fromTo(u, { opacity: 0, marginRight: "0.5em" }, { opacity: 1, marginRight: "0em", duration: each, ease: ease }, t0);
+      }
+    });
+    return tl;
+  }
+  // ==== end kit:text ====
+
+  // ==== kit:fit@1 ====
+  function kFit(el, o) {
+    o = o || {};
+    var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+    var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+    for (;;) {
+      el.style.fontSize = f + "px";
+      m = kLines(el);
+      if ((m.w <= W && m.n <= n) || f <= min) break;
+      f = Math.max(min, f - 2);
+    }
+    if (m.w > W) {
+      [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+      m = kLines(el);
+    }
+    return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+  }
+  function kLines(el) {
+    var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+    var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+    while ((t = it.nextNode())) {
+      if (!t.data.trim()) continue;
+      r.selectNodeContents(t);
+      [].forEach.call(r.getClientRects(), function (b) {
+        var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+        if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+        row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+      });
+    }
+    return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+  }
+  function kRows(el, cls) {
+    if (!el.children.length) return [];
+    var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+    var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+    kids.forEach(function (c, i) {
+      if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+      if (tops[i] != null) last = tops[i];
+      row.appendChild(c);
+    });
+    return [].slice.call(el.children);
+  }
+  // ==== end kit:fit ====
+
+  var root = document.querySelector(".ar");
+  var q = function (s) { return root.querySelector(s); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+    // not laid out yet: the host clip's declared size, then the window
+    var hc = root.closest("[data-width][data-height]");
+    FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+    FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND;
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+  kTone(root);
+  var off = String(v.backdrop) === "off";
+  if (off) ["backdrop", "vig", "grain"].forEach(function (c) { q(".ar-" + c).style.display = "none"; });
+  var grain = off ? null : kGrain(q(".ar-grain"));
+
+  // ---- data: the history sets the first scale (4 nice ticks), the last value sets the second
+  var sp = function (s) { return String(s).split("|").map(function (x) { return x.trim(); }); };
+  var DATA = sp(v.values).map(function (x) { return parseFloat(x.replace(/,/g, "")) || 0; }).slice(0, 12), LB = sp(v.labels);
+  while (DATA.length < 3) DATA.push(DATA.length ? DATA[DATA.length - 1] * 3 : 1);
+  var N = DATA.length, H = DATA.slice(0, N - 1), LAST = DATA[N - 1], PREV = DATA[N - 2];
+  var dec = Math.max.apply(null, sp(v.values).map(function (x) { return (x.split(".")[1] || "").length; }).concat([0]));
+  var nice = function (mx) { var s = mx / 4, p = Math.pow(10, Math.floor(Math.log10(s || 1))); return 4 * p * ([1, 2.5, 5, 10].filter(function (c) { return c * p >= s - 1e-9; })[0]); };
+  var OLD = nice(Math.max.apply(null, H)), NEW = Math.max(OLD, nice(LAST)), unit = String(v.unit).trim();
+  var num = function (n, d) { return (d == null ? +n.toFixed(2) : n.toFixed(d)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); };
+  var sumH = H.reduce(function (a, b) { return a + b; }, 0);
+
+  // ---- text
+  var eb = q(".ar-eb"), title = q(".ar-title"), kl = q(".ar-kl"), kv = q(".ar-kv"), tag = q(".ar-tag");
+  eb.textContent = String(v.label).trim();
+  kl.textContent = String(v.kpi).trim();
+  kv.textContent = num(sumH + LAST, dec) + unit;
+  var kvW = kv.offsetWidth + 40;
+  kFit(eb, { lines: 1, width: P ? 836 : FW - 2 * L.m - kl.offsetWidth - 60 });
+  var TU = kSplit(title, "word", true, String(v.title));
+  kFit(title, { lines: 1, min: P ? 72 : 60, width: P ? 836 : FW - 2 * L.m - kvW });
+  q(".ar-tv").textContent = num(LAST) + unit;
+  q(".ar-ts").textContent = (String(v.vs).trim() + " " + (LAST >= PREV ? "+" : "") + Math.round((LAST / (PREV || 1) - 1) * 100) + "%").trim();
+  root.classList.remove("hit");
+
+  // ---- chart: the SVG holds rules, grid, hatch area, line, points, shock segment; HTML holds ticks and labels
+  var X0 = L.x0, X1 = L.x1, CEIL = L.ceil, BASE = L.base, PH = BASE - CEIL, ST = CEIL - L.shock, M = L.m, RX = FW - L.m;
+  var xOf = function (i) { return X0 + (i / (N - 1)) * (X1 - X0); };
+  var tickY = function (i) { return BASE - ((i + 1) / 4) * PH; };
+  var uid = "ar" + (window.__arMount = (window.__arMount || 0) + 1), ch = q(".ar-ch"), svg = q(".ar-svg");
+  svg.setAttribute("width", FW); svg.setAttribute("height", FH);
+  var s = '<defs><pattern id="' + uid + 'h" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="12" class="ar-ink" stroke-opacity="0.16" stroke-width="2"/></pattern>' +
+    '<filter id="' + uid + 'g" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="10"/></filter></defs>';
+  for (var i = 0; i < 3; i++) s += '<line class="ar-ink ar-gd" stroke-opacity="0.14" stroke-width="1.5"/>';
+  for (i = 0; i < 4; i++) s += '<line class="ar-ink ar-dn" stroke-opacity="0.08" stroke-width="1.5" stroke-dasharray="2 8"/>';
+  s += '<path class="ar-area" fill="url(#' + uid + 'h)"/><line class="ar-ink ar-bl" stroke-width="3"/><line class="ar-c0" stroke-width="3"/><line class="ar-c1" stroke-width="3"/>';
+  for (i = 0; i < 3; i++) s += '<rect class="ar-sh" height="4" style="fill:var(--k-accent)"/>';
+  s += '<path class="ar-ink ar-ln" fill="none" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>';
+  for (i = 0; i < N - 1; i++) s += '<circle class="ar-ink ar-pt" r="6" stroke-width="3.5" style="fill:var(--k-bg)"/>';
+  s += '<circle class="ar-ink ar-pen" r="9" style="fill:var(--k-ink)"/><circle class="ar-acc ar-pre" fill="none" stroke-width="3"/>' +
+    '<line class="ar-acc ar-hg" stroke-linecap="round" filter="url(#' + uid + 'g)"/><line class="ar-acc ar-sk" stroke-linecap="round"/>' +
+    '<circle class="ar-acc ar-hd" r="12" stroke-width="5" style="fill:var(--k-bg)"/><circle class="ar-acc ar-ring" fill="none" stroke-width="2.5"/>' +
+    '<circle class="ar-acc ar-rp" fill="none" stroke-width="3"/><circle class="ar-mk" style="fill:var(--k-accent);stroke:var(--k-bg)"/>';
+  svg.innerHTML = s;
+  var $ = function (c) { return [].slice.call(svg.querySelectorAll(".ar-" + c)); }, at = function (e, o) { for (var a in o) e.setAttribute(a, o[a]); };
+  var GD = $("gd"), DN = $("dn"), SH = $("sh"), PT = $("pt"), C0 = $("c0")[0], C1 = $("c1")[0], LN = $("ln")[0], AREA = $("area")[0];
+  var BL = $("bl")[0], PEN = $("pen")[0], PRE = $("pre")[0], HG = $("hg")[0], SK = $("sk")[0], HD = $("hd")[0], RING = $("ring")[0], RP = $("rp")[0], MK = $("mk")[0];
+  // y ticks: "0" plus four slots, each with the old and the new value stacked for the swap
+  var tk = function (y, a, b) {
+    var e = document.createElement("div"); e.className = "ar-tk"; e.setAttribute("data-layout-allow-overflow", ""); e.style.left = M + "px"; e.style.top = y + "px";
+    e.innerHTML = "<span></span>" + (b != null ? "<span></span>" : ""); e.firstChild.textContent = a; if (b != null) e.lastChild.textContent = b;
+    ch.appendChild(e); return e;
+  };
+  var fmtT = function (n) { return num(n) + unit; };
+  var T0 = tk(BASE - 48, "0"), TK = [0, 1, 2, 3].map(function (i) { return tk(tickY(i) - 48, fmtT((OLD * (i + 1)) / 4), fmtT((NEW * (i + 1)) / 4)); });
+  var MO = DATA.map(function (x, i) {
+    var e = document.createElement("div"); e.className = "ar-mo"; e.textContent = LB[i] || "";
+    e.style.left = xOf(i) + "px"; e.style.top = BASE + 22 + "px";
+    if ((N - 1 - i) % L.every) e.style.display = "none";
+    ch.insertBefore(e, tag); return e;
+  });
+  // the moment the shock crosses the ceiling, solved once (upstream: quarter-frame steps)
+  var easeShock = MT.bezier(0.7, 0, 0.36, 1.06), nx = xOf(N - 2);
+  var PIERCE = CFG.shock + CFG.shockDur;
+  for (var f = 0; f <= CFG.shockDur * 30; f += 0.25) {
+    var ny0 = BASE - (PREV / OLD) * PH;
+    if (MT.mix(ny0, ST, easeShock(f / (CFG.shockDur * 30))) <= CEIL) { PIERCE = CFG.shock + f / 30; break; }
+  }
+  var TAG = function () { return tag.offsetWidth; };
+  var tw = TAG();
+  TK.forEach(function (e) { kFit(e.firstChild, { width: X0 - M - 12, min: 28 }); kFit(e.lastChild, { width: X0 - M - 12, min: 28 }); });
+
+  var tl = MT.scene(CFG.end, render);
+  kReveal(tl, TU, "rise", 0.0667, { each: 0.6, gap: 0.1667 });
+
+  function render(t) {
+    var f = Math.round(t * 30000) / 1000; // frames at 30 fps, rounded so a frame edge never reads as 56.9999
+    if (grain) grain(t);
+    var rule = function (d) { return MT.ramp(f, d, 20, "snappy"); };
+    var rp = MT.ramp(t, CFG.beat, CFG.rescale, "snappy"), range = MT.mix(OLD, NEW, rp);
+    var yOf = function (x) { return BASE - (x / range) * PH; };
+
+    // history line writes in point by point
+    var dT = MT.ramp(t, CFG.draw, CFG.drawDur, "swift") * (N - 2), n = Math.floor(dT), pts = [];
+    for (var i = 0; i <= n; i++) pts.push([xOf(i), yOf(DATA[i])]);
+    if (dT < N - 2 && dT > n) pts.push([MT.mix(xOf(n), xOf(n + 1), dT - n), MT.mix(yOf(DATA[n]), yOf(DATA[n + 1]), dT - n)]);
+    LN.setAttribute("d", pts.map(function (p, i) { return (i ? "L" : "M") + p[0].toFixed(2) + "," + p[1].toFixed(2); }).join(""));
+    PT.forEach(function (c, i) { var ok = i < pts.length - (dT < N - 2 ? 1 : 0); c.style.display = ok ? "" : "none"; if (ok) at(c, { cx: pts[i][0], cy: pts[i][1] }); });
+    var last = pts[pts.length - 1];
+    PEN.style.display = f >= 14 && f < 57 ? "" : "none";
+    at(PEN, { cx: last[0], cy: last[1] });
+
+    // the shock: from the last history point to the right edge, past the ceiling, then back to its true value
+    var on = t >= CFG.shock, sT = MT.ramp(t, CFG.shock, CFG.shockDur, easeShock), ny = yOf(PREV);
+    var hx = MT.mix(nx, X1, Math.min(1, sT)), hy = MT.mix(ny, MT.mix(ST, yOf(LAST), rp), sT);
+    var all = on ? pts.concat([[hx, hy]]) : pts;
+    AREA.setAttribute("d", all.length > 1 ? "M" + all[0][0] + "," + BASE + all.map(function (p) { return "L" + p[0].toFixed(2) + "," + p[1].toFixed(2); }).join("") + "L" + all[all.length - 1][0].toFixed(2) + "," + BASE + "Z" : "");
+    var crossX = nx + ((yOf(PREV) - CEIL) / (yOf(PREV) - ST)) * (X1 - nx), sinceP = f - PIERCE * 30;
+    var crack = sinceP >= 0 ? MT.ramp(f, PIERCE * 30, 8, "snappy") * (1 - MT.ramp(f, CFG.beat * 30, 14, "smooth")) : 0;
+    var kick = sinceP >= 0 && sinceP < 14 ? 10 * Math.exp(-sinceP / 3.4) * Math.sin(sinceP * 1.8) : 0;
+    var sTop = f - Math.round((CFG.shock + CFG.shockDur) * 30) + 2, kpiKick = sTop >= 0 && sTop < 16 ? -14 * Math.exp(-sTop / 3.8) * Math.cos(sTop * 1.5) : 0;
+    var warn = MT.ramp(t, CFG.warn, 0.3333, "out") * (1 - MT.ramp(t, CFG.beat, 0.4, "out"));
+    var hang = on ? MT.ramp(t, CFG.shock + CFG.shockDur - 0.1333, 0.2667, "out") * (1 - MT.ramp(t, CFG.beat, 0.4667, "out")) : 0;
+    var sw = MT.mix(12, 7, MT.ramp(t, CFG.beat, 0.5333, "out"));
+    var markS = MT.ramp(t, CFG.mark, 0.4, "overshoot"), ripple = MT.ramp(t, CFG.mark + 0.0667, 0.6667, "out");
+    var valS = MT.ramp(t, CFG.mark + 0.1333, 0.4667, "overshoot"), totalP = MT.ramp(t, CFG.mark + 0.0667, 0.6667, "snappy");
+    SK.style.display = on ? "" : "none";
+    at(SK, { x1: nx, y1: ny, x2: hx, y2: hy, "stroke-width": sw });
+    at(HG, { x1: nx, y1: ny, x2: hx, y2: hy, "stroke-width": sw + 16 });
+    HG.style.opacity = 0.35 * hang; HG.style.display = on && hang > 0.01 ? "" : "none";
+    HD.style.display = on && markS <= 0 ? "" : "none"; at(HD, { cx: hx, cy: hy });
+    var pr = MT.ramp(f, PIERCE * 30, 10, "out");
+    RING.style.display = sinceP >= 0 && sinceP < 10 && rp < 0.02 ? "" : "none";
+    at(RING, { cx: crossX, cy: CEIL, r: MT.mix(8, 70, pr) }); RING.style.opacity = 0.8 * (1 - pr);
+    // shards: three pieces of the ceiling rule thrown off the crack
+    SH.forEach(function (r, k) {
+      var ok = sinceP >= 0 && sinceP <= 32; r.style.display = ok ? "" : "none";
+      if (!ok) return;
+      var u = sinceP / 32, dir = k % 2 ? 1 : -1, w = [40, 30, 18][k];
+      var x = crossX + dir * (18 + 190 * [1, 0.75, 0.55][k] * MT.EASE.out(u)), y = CEIL - (170 - k * 40) * MT.EASE.out(u) + 300 * u * u;
+      at(r, { x: x - w / 2, y: y - 2, width: w, transform: "rotate(" + dir * (240 - k * 50) * u + " " + x + " " + y + ")" });
+      r.style.opacity = 1 - MT.EASE.exit(u);
+    });
+    // warning: the Nov point pulses, the ceiling and the top tick turn accent
+    PRE.style.display = f >= Math.round(CFG.warn * 30) && f < Math.round(CFG.shock * 30) + 6 ? "" : "none";
+    var pw = MT.ramp(t, CFG.warn, 0.5333, "out");
+    at(PRE, { cx: nx, cy: ny, r: MT.mix(10, 46, pw) }); PRE.style.opacity = 0.7 * (1 - pw);
+    // marker and value tag
+    MK.style.display = markS > 0 ? "" : "none"; RP.style.display = markS > 0 && ripple < 1 ? "" : "none";
+    at(MK, { cx: hx, cy: hy, r: Math.max(0, 15 * markS), "stroke-width": Math.max(0, 5 * markS) });
+    at(RP, { cx: hx, cy: hy, r: MT.mix(16, 64, ripple) }); RP.style.opacity = 0.6 * (1 - ripple);
+    tag.style.display = valS > 0 ? "" : "none";
+    tag.style.left = hx - 40 - tw + "px"; tag.style.top = hy - 70 + "px";
+    // white on accent never fades (half-faded white fails contrast): the tag only scales, its second line cuts in mid-fade
+    tag.style.transform = "scale(" + Math.max(0, valS).toFixed(4) + ")";
+    q(".ar-ts").style.opacity = t >= CFG.mark + 0.5 ? 0.9 : 0;
+
+    // rules and grid draw in from the left; the rescale adds four dashed lines
+    at(BL, { x1: M, x2: MT.mix(M, RX, rule(0)), y1: BASE, y2: BASE });
+    GD.forEach(function (l, i) { at(l, { x1: M, x2: MT.mix(M, RX, rule(2 + i * 2)), y1: tickY(i), y2: tickY(i) }); });
+    DN.forEach(function (l, k) { var d = MT.ramp(f, CFG.beat * 30 + 1 + k * 2, 12, "snappy"), y = BASE - ((2 * k + 1) / 8) * PH; l.style.display = d > 0 ? "" : "none"; at(l, { x1: M, x2: MT.mix(M, RX, d), y1: y, y2: y }); });
+    var cc = warn > 0.02 ? "var(--k-accent)" : "var(--k-ink)", xr = MT.mix(M, RX, rule(2)), gap = 26 * crack;
+    at(C0, { x1: M, x2: crack > 0.001 ? crossX - gap : xr, y1: CEIL, y2: CEIL });
+    at(C1, { x1: crossX + gap, x2: xr, y1: CEIL, y2: CEIL }); C1.style.display = crack > 0.001 ? "" : "none";
+    C0.style.stroke = C1.style.stroke = cc; C0.style.strokeOpacity = C1.style.strokeOpacity = 0.85 + 0.15 * warn;
+    // ticks: old values drop out, new ones slide in from above, top first
+    T0.style.opacity = rule(4);
+    TK.forEach(function (e, i) {
+      var w = MT.ramp(f, CFG.beat * 30 + (3 - i) * 2, 12, "snappy"), b = w > 0.02 && w < 0.98 ? "blur(" + (Math.sin(Math.PI * w) * 3).toFixed(2) + "px)" : "none";
+      e.style.opacity = rule(4 + i * 2);
+      e.firstChild.className = i === 3 && warn > 0.02 ? "warn" : "";
+      e.firstChild.style.opacity = 1 - w; e.firstChild.style.transform = "translateY(" + (w * 46).toFixed(2) + "px)"; e.firstChild.style.filter = b;
+      e.lastChild.style.opacity = w; e.lastChild.style.transform = "translateY(" + ((w - 1) * 46).toFixed(2) + "px)"; e.lastChild.style.filter = b;
+    });
+    MO.forEach(function (e, i) { e.style.opacity = MT.ramp(f, 6 + i, 12, "out"); e.className = "ar-mo" + (i === N - 1 && on ? " on" : ""); });
+
+    // header: eyebrow, KPI (kicked by the shock, then rolls to the new total)
+    eb.style.opacity = MT.ramp(f, 0, 12, "out");
+    kl.style.opacity = MT.ramp(f, 6, 14, "out");
+    kv.style.opacity = MT.ramp(f, 8, 14, "out");
+    kv.style.transform = "translateY(" + kpiKick.toFixed(2) + "px)";
+    kv.textContent = num(MT.mix(sumH, sumH + LAST, totalP), dec) + unit;
+    root.classList.toggle("hit", totalP > 0.5);
+    ch.style.transform = "translateY(" + kick.toFixed(2) + "px)";
+    q(".ar-cam").style.transform = "scale(" + MT.mix(1, CFG.push, MT.ramp(t, 0, CFG.end, "smooth")).toFixed(5) + ")";
+  }
+  window.__timelines["axis-rescale-shock"] = tl;
+})();
+</script>
+    </template>
+  </body>
+</html>

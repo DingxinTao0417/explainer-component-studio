@@ -1,0 +1,326 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"task","type":"string","label":"任务标题（第一个冒号前的部分显示成灰色）","default":"任务：给登录页加“记住我”"},
+    {"id":"steps","type":"string","label":"步骤（用 | 分隔，2–6 步）","default":"读懂登录页的代码|加一个“记住我”选项|保存登录状态|跑测试确认"},
+    {"id":"details","type":"string","label":"每步的调用细节（用 | 对应每一步，步内用 ; 分两行，可空）","default":"读取 src/login.tsx;找到表单组件 LoginForm|修改 LoginForm.tsx;新增 1 个复选框|修改 auth.ts 3 处;写入 localStorage|运行 npm test;12 个测试全部通过"},
+    {"id":"cues","type":"string","label":"每步完成的秒数（逗号分隔，留空均匀排开）","default":""},
+    {"id":"fail","type":"number","label":"第几步失败（0 = 全部成功）","default":0},
+    {"id":"summary","type":"string","label":"小结标签","default":"完成 · 用时 38 秒"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>agent-run · 代理执行清单</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="agent-run-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        @font-face { font-family: "Consolas"; src: local("Consolas"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* .ar = size container; no script: the finished run in normal flow; .ar-js = script layout */
+        .ar { position: absolute; inset: 0; container-type: size; }
+        .ar-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        .ar-stage { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+        .ar-panel { position: relative; flex: none; width: 71cqw; box-sizing: border-box; padding: 44px 56px; border-radius: 30px; background: var(--k-panel); border: 2px solid color-mix(in srgb, var(--k-muted) 22%, transparent); box-shadow: 0 28px 70px rgba(0, 0, 0, 0.07); }
+        .ar-task { display: block; font-size: 56px; font-weight: 800; line-height: 1.3; white-space: nowrap; }
+        .ar-tag { color: var(--k-muted); }
+        .ar-meter { display: flex; align-items: center; gap: 28px; height: 40px; margin-top: 22px; }
+        .ar-track { position: relative; display: block; flex: 1; height: 10px; border-radius: 5px; background: color-mix(in srgb, var(--k-muted) 22%, transparent); overflow: hidden; }
+        .ar-fill { position: absolute; inset: 0; display: block; border-radius: 5px; background: var(--k-accent-2); transform-origin: 0% 50%; }
+        .ar-count { display: block; flex: none; font: 700 40px/1 Consolas, "Courier New", monospace; }
+        .ar-list { position: relative; margin-top: 34px; }
+        .ar-step { position: relative; display: flex; align-items: center; gap: 26px; height: 88px; }
+        .ar-ico { position: relative; display: block; flex: none; width: 56px; height: 56px; }
+        .ar-ico svg { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+        .ar-ico circle { fill: none; stroke: var(--k-muted); stroke-opacity: 0.4; stroke-width: 3; }
+        .ar-ico .ar-arc { stroke: var(--k-accent-2); stroke-opacity: 1; stroke-width: 4.5; stroke-linecap: round; opacity: 0; }
+        .ar-ico path { fill: none; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1 1.2; }
+        .ar-ok { stroke: var(--k-accent-2); }
+        .ar-x1, .ar-x2 { stroke: var(--k-accent); opacity: 0; }
+        .ar-label { display: block; font-size: 50px; font-weight: 600; line-height: 1.3; white-space: nowrap; }
+        .ar-det, .ar-band { display: none; }
+        .ar-dl { display: block; height: 52px; font: 40px/52px Consolas, "Courier New", "Microsoft YaHei", monospace; color: var(--k-muted); white-space: pre; }
+        .ar-caret { display: inline-block; width: 0.5em; height: 0.92em; margin-left: 4px; vertical-align: -0.12em; background: var(--k-accent-2); }
+        .ar-sum { display: inline-flex; align-items: center; gap: 16px; margin-top: 22px; height: 72px; box-sizing: border-box; padding: 0 32px 0 22px; border-radius: 36px; background: color-mix(in srgb, var(--k-accent-2) 14%, var(--k-panel)); font-size: 40px; font-weight: 700; white-space: nowrap; transform-origin: 0% 50%; }
+        .ar-sum svg { display: block; flex: none; width: 40px; height: 40px; }
+        .ar-sum path { fill: none; stroke: var(--k-accent-2); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+        .ar-sx, .ar-bad .ar-sok { display: none; }
+        .ar-bad .ar-sx { display: block; }
+        .ar-sum.ar-bad { background: color-mix(in srgb, var(--k-accent) 14%, var(--k-panel)); }
+        .ar-bad path { stroke: var(--k-accent); }
+        /* animated layout */
+        .ar-js .ar-stage { inset: 0; display: block; }
+        .ar-js .ar-panel { position: absolute; left: 0; right: 0; margin: 0 auto; }
+        .ar-js .ar-step, .ar-js .ar-det, .ar-js .ar-sum, .ar-js .ar-band { position: absolute; left: 0; margin: 0; }
+        .ar-js .ar-step { right: 0; }
+        .ar-js .ar-label { color: var(--k-muted); }
+        .ar-js .ar-ok { opacity: 0; }
+        .ar-js .ar-det { display: block; left: 27px; right: 0; box-sizing: border-box; padding-left: 52px; border-left: 3px solid color-mix(in srgb, var(--k-muted) 35%, transparent); }
+        .ar-js .ar-band { display: block; left: -20px; right: -20px; }
+        .ar-bfill { position: absolute; inset: 0; display: block; border-radius: 18px; background: var(--k-accent-2); opacity: 0.06; }
+        .ar-bedge { position: absolute; left: 0; top: 16px; bottom: 16px; display: block; width: 6px; border-radius: 3px; background: var(--k-accent-2); }
+        /* portrait: panel 80% wide inside the 12%-68% band */
+        @container (orientation: portrait) {
+          .ar-stage { top: 12%; bottom: 32%; }
+          .ar-panel { width: 80cqw; padding: 40px; border-radius: 26px; }
+          .ar-task { white-space: normal; }
+          .ar-meter { margin-top: 20px; }
+          .ar-list { margin-top: 30px; }
+          .ar-step { gap: 24px; }
+          .ar-label { font-size: 46px; }
+          .ar-dl { height: 48px; font-size: 34px; line-height: 48px; }
+          .ar-js .ar-det { padding-left: 50px; }
+          .ar-js .ar-band { left: -16px; right: -16px; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="agent-run">
+        <div class="ar">
+          <div class="ar-bg"></div>
+          <div class="ar-stage">
+            <div class="ar-panel">
+              <div class="ar-task"><span class="ar-tag">任务：</span>给登录页加“记住我”</div>
+              <div class="ar-meter"><span class="ar-track"><span class="ar-fill"></span></span><span class="ar-count">4/4</span></div>
+              <div class="ar-list">
+                <div class="ar-band"><span class="ar-bfill"></span><span class="ar-bedge"></span></div>
+                <div class="ar-step"><span class="ar-ico"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18"/><circle class="ar-arc" cx="24" cy="24" r="18" pathLength="1"/><path class="ar-ok" d="M13 25.5c2.6 2.1 5 4.6 7.4 7.7c3.8-6.7 8.4-12.5 14.6-18.7" pathLength="1"/><path class="ar-x1" d="M16 16.5L31.6 32" pathLength="1"/><path class="ar-x2" d="M32 16L16.4 32" pathLength="1"/></svg></span><span class="ar-label">读懂登录页的代码</span></div>
+                <div class="ar-step"><span class="ar-ico"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18"/><path class="ar-ok" d="M13 25.5c2.6 2.1 5 4.6 7.4 7.7c3.8-6.7 8.4-12.5 14.6-18.7" pathLength="1"/></svg></span><span class="ar-label">加一个“记住我”选项</span></div>
+                <div class="ar-step"><span class="ar-ico"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18"/><path class="ar-ok" d="M13 25.5c2.6 2.1 5 4.6 7.4 7.7c3.8-6.7 8.4-12.5 14.6-18.7" pathLength="1"/></svg></span><span class="ar-label">保存登录状态</span></div>
+                <div class="ar-step"><span class="ar-ico"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18"/><path class="ar-ok" d="M13 25.5c2.6 2.1 5 4.6 7.4 7.7c3.8-6.7 8.4-12.5 14.6-18.7" pathLength="1"/></svg></span><span class="ar-label">跑测试确认</span></div>
+                <div class="ar-sum"><svg viewBox="0 0 48 48"><path class="ar-sok" d="M11 25l9 9l17-19"/><path class="ar-sx" d="M14 14l20 20M34 14l-20 20"/></svg><span class="ar-stxt">完成 · 用时 38 秒</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing (s), both orientations. first/gap: default cues; the result line is up `read` before the cue, stays `keep`, fades
+          var CFG = { inAt: 0.05, inDur: 0.45, deal: 0.2, dealEach: 0.05, dealDur: 0.3, start: 0.75, first: 1.8, gap: 1.3, minGap: 0.9,
+            open: 0.3, bandIn: 0.15, typeLag: 0.2, cps: 45, beat2: 0.1, read: 0.3, spin: 1.4, arc: 0.28, mark: 0.26, keep: 0.25, fade: 0.12, failLag: 0.3, sumLag: 0.22, sumDur: 0.4 };
+          // layout (px), matching the CSS; ind = label x, mono = detail font size
+          var LAND = { panelW: 0.71, padX: 56, padY: 44, titleFs: 56, titleLines: 1, meter: 62, listGap: 34, rowH: 88, ind: 82, labelFs: 50, mono: 40, lineH: 52, detPad: 16, sumGap: 22, sumH: 72, sumFs: 40, slide: 28, rise: 30 };
+          var PORT = { panelW: 0.8, padX: 40, padY: 40, titleFs: 56, titleLines: 2, meter: 60, listGap: 30, rowH: 88, ind: 80, labelFs: 46, mono: 34, lineH: 48, detPad: 16, sumGap: 22, sumH: 72, sumFs: 40, slide: 24, rise: 26 };
+          var DEF = "完成 · 用时 38 秒";
+          var v = { task: "任务：给登录页加“记住我”", steps: "读懂登录页的代码|加一个“记住我”选项|保存登录状态|跑测试确认", details: "读取 src/login.tsx;找到表单组件 LoginForm|修改 LoginForm.tsx;新增 1 个复选框|修改 auth.ts 3 处;写入 localStorage|运行 npm test;12 个测试全部通过", cues: "", fail: 0, summary: DEF, backdrop: "on" };
+          var s0 = v.steps, d0 = v.details;
+          try {
+            var hf = window.__hyperframes, got = (hf && hf.getVariables && hf.getVariables()) || {};
+            for (var k in got) if (got[k] != null && (got[k] !== "" || k == "details")) v[k] = got[k];
+          } catch (e) {}
+          // "" clears details; new steps + default details would show login-page lines
+          if (v.steps !== s0 && v.details === d0) v.details = "";
+
+          var root = document.querySelector(".ar");
+          var q = function (s, el) { return (el || root).querySelector(s); };
+          // orientation = the box the host clip gave (the root has no size)
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          root.classList.add("ar-js");
+          if (String(v.backdrop) === "off") q(".ar-bg").style.display = "none";
+
+          // width in em (CJK 1, Latin 0.55: exact for mono); cut() trims with an ellipsis
+          var em = function (s) { var w = 0; for (var c = 0; c < s.length; c++) w += s.charCodeAt(c) > 255 ? 1 : 0.55; return Math.max(w, 1); };
+          var cut = function (s, max) { if (em(s) <= max) return s; var o = ""; for (var c = 0; c < s.length && em(o + s[c]) <= max - 1; c++) o += s[c]; return o + "…"; };
+          var trim = function (s) { return s.trim(); };
+          var CW = Math.round(FW * L.panelW) - 2 * L.padX, LW = CW - L.ind;
+          // proportional text: estimate, then measure (caps run wider): shrink to 40px, then trim
+          var fit = function (el, s, fs, room, ok, set) {
+            fs = Math.max(40, Math.min(fs, Math.floor(room / em(s))));
+            for (s = cut(s, room / fs); ; ) {
+              el.style.fontSize = fs + "px";
+              (set || function (x) { el.textContent = x; })(s);
+              if (ok(fs) || s.length < 3) return fs;
+              if (fs > 40) fs -= 2;
+              else s = s.slice(0, -2) + "…";
+            }
+          };
+
+          // title: text before a colon (under 6 chars) is a grey tag
+          var tEl = q(".ar-task");
+          var tfs = fit(tEl, String(v.task).trim(), L.titleFs, CW * L.titleLines * 0.95, function (f) {
+            return tEl.scrollWidth <= tEl.clientWidth && tEl.offsetHeight <= L.titleLines * f * 1.3 + 2;
+          }, function (s) {
+            var ci = s.search(/[：:]/);
+            tEl.textContent = "";
+            if (ci > 0 && ci < 6) { var tg = document.createElement("span"); tg.className = "ar-tag"; tg.textContent = s.slice(0, ci + 1); tEl.appendChild(tg); s = s.slice(ci + 1); }
+            tEl.appendChild(document.createTextNode(s));
+          });
+          var titleH = tEl.offsetHeight || L.titleLines * Math.round(tfs * 1.3);
+
+          var labels = String(v.steps).split("|").map(trim).filter(Boolean).slice(0, 6), n = labels.length;
+          var dets = String(v.details).split("|");
+          var fail = parseInt(v.fail, 10);
+          if (!(fail >= 1 && fail <= n)) fail = 0;
+          var last = fail ? fail - 1 : n - 1; // the last step that runs
+          // cues: given ones, continued at their mean spacing, with a floor and a minimum step
+          var cues = String(v.cues).split(/[,，\s]+/).map(parseFloat).filter(function (x) { return isFinite(x); }).slice(0, n);
+          var gap = cues.length > 1 ? (cues[cues.length - 1] - cues[0]) / (cues.length - 1) : CFG.gap;
+          if (!cues.length) cues.push(CFG.first);
+          while (cues.length < n) cues.push(cues[cues.length - 1] + gap);
+          cues[0] = Math.max(cues[0], CFG.start + CFG.minGap);
+          for (var i = 1; i < n; i++) cues[i] = Math.max(cues[i], cues[i - 1] + CFG.minGap);
+          var hand = CFG.keep + CFG.fade;
+
+          var list = q(".ar-list"), band = q(".ar-band"), pill = q(".ar-sum"), proto = q(".ar-step"), fill = q(".ar-fill"), count = q(".ar-count");
+          list.textContent = "";
+          list.appendChild(band);
+          var st = labels.map(function (txt, k) {
+            var row = proto.cloneNode(true), lab = q(".ar-label", row), s = { row: row, lab: lab, ico: q(".ar-ico", row), arc: q(".ar-arc", row), ok: q(".ar-ok", row), x1: q(".ar-x1", row), x2: q(".ar-x2", row) };
+            list.appendChild(row);
+            // never above the title size
+            fit(lab, txt, Math.min(L.labelFs, tfs), LW * 0.97, function () { return lab.offsetWidth <= LW; });
+            s.run = k <= last;
+            s.bad = k === fail - 1;
+            var lines = s.run ? String(dets[k] || "").split(/[;；]/).map(trim).filter(Boolean).slice(0, 2).map(function (x) { return cut(x, (LW - 16) / L.mono); }) : [];
+            s.dH = lines.length ? lines.length * L.lineH + L.detPad : 0;
+            s.S = k ? cues[k - 1] + hand : CFG.start;
+            s.C = cues[k];
+            s.close = s.bad ? Infinity : s.C + hand;
+            if (lines.length) {
+              // line 1 (the call) is typed; line 2 (the result) prints whole a beat later
+              var det = document.createElement("div");
+              det.className = "ar-det";
+              det.innerHTML = '<div class="ar-dl"><span></span><i class="ar-caret"></i></div>' + (lines[1] ? '<div class="ar-dl"></div>' : "");
+              list.appendChild(det);
+              s.det = det;
+              s.l1 = det.firstChild.firstChild;
+              s.caret = det.firstChild.lastChild;
+              s.l2 = lines[1] ? det.lastChild : null;
+              s.t1 = lines[0];
+              s.t2 = lines[1] || "";
+              s.ty = s.S + CFG.typeLag;
+              var end1 = s.C - CFG.read - (lines[1] ? CFG.beat2 : 0);
+              s.cps = Math.max(CFG.cps, s.t1.length / Math.max(0.05, end1 - s.ty));
+              s.l1end = s.ty + s.t1.length / s.cps;
+              s.l2at = s.l1end + CFG.beat2;
+            }
+            return s;
+          });
+          list.appendChild(pill);
+          var endT = fail ? cues[fail - 1] + CFG.failLag : cues[n - 1] + hand; // the summary's room opens here
+          if (fail) pill.classList.add("ar-bad");
+          var sum = fail && String(v.summary) === DEF ? "第 " + fail + " 步失败 · 已停下" : String(v.summary);
+          fit(q(".ar-stxt", pill), sum, L.sumFs, CW - 100, function () { return pill.offsetWidth <= CW; });
+
+          // panel top from its tallest moment
+          var extra = L.sumGap + L.sumH, fH = fail ? st[fail - 1].dH : 0;
+          st.forEach(function (s) { extra = Math.max(extra, s.dH); });
+          extra = Math.max(extra, fH + (fail ? L.sumGap + L.sumH : 0));
+          var Hmax = 2 * L.padY + titleH + L.meter + L.listGap + n * L.rowH + extra;
+          var top = P ? Math.min(Math.max(0.4 * FH - Hmax / 2, 0.12 * FH + 8), 0.68 * FH - 8 - Hmax) : (FH - Hmax) / 2;
+          q(".ar-panel").style.top = Math.round(Math.max(0, top)) + "px";
+
+          // layout from time: open blocks push lower rows down; band, text, counter follow
+          function render(t) {
+            var y = 0, tops = [], hs = [], done = 0, k, s, o;
+            for (k = 0; k < n; k++) {
+              s = st[k];
+              s.row.style.top = y + "px";
+              tops.push(y);
+              y += L.rowH;
+              o = s.det ? MT.ramp(t, s.S, CFG.open, "power2.inOut") - MT.ramp(t, s.close, CFG.open, "power2.inOut") : 0;
+              hs.push(L.rowH + o * (s.dH - L.detPad / 2));
+              if (s.det) {
+                s.det.style.top = y + "px";
+                s.det.style.height = Math.max(0, o * (s.dH - L.detPad)) + "px";
+                var live = t < s.close, c1 = live ? MT.clamp(Math.floor((t - s.ty) * s.cps + 1e-6), 0, s.t1.length) : 0;
+                s.l1.textContent = s.t1.slice(0, c1);
+                s.caret.style.opacity = live && t >= s.ty && t < s.l2at ? 1 : 0;
+                if (s.l2) s.l2.textContent = live && t >= s.l2at ? s.t2 : "";
+              }
+              y += o * s.dH;
+              if (s.run && !s.bad && t >= s.C + 0.08) done++;
+            }
+            // band: bottom edge reaches the new row first (bandIn), top follows the fold
+            var bi = 0, g = 0;
+            for (k = 1; k <= last; k++) { bi += MT.ramp(t, st[k].S, CFG.open, "power2.inOut"); g += MT.ramp(t, st[k].S, CFG.bandIn, "power3.out"); }
+            var i0 = Math.min(Math.floor(bi), n - 1), i1 = Math.min(i0 + 1, n - 1), bt = tops[i0] + (tops[i1] - tops[i0]) * (bi - i0), b0 = tops[i0] + hs[i0];
+            band.style.top = bt + "px";
+            band.style.height = b0 + (tops[i1] + hs[i1] - b0) * Math.min(1, g - i0) - bt + "px";
+            band.style.opacity = MT.ramp(t, CFG.start, 0.25, "power2.out") - (fail ? 0 : MT.ramp(t, endT, 0.25, "power2.out"));
+            pill.style.top = y + L.sumGap + "px";
+            list.style.height = y + MT.ramp(t, endT, CFG.open, "power2.inOut") * (L.sumGap + L.sumH) + "px";
+            count.textContent = done + "/" + n;
+          }
+
+          var tl = MT.timeline();
+          var draw = function (path, at, dur) {
+            tl.fromTo(path, { opacity: 0 }, { opacity: 1, duration: 0.01, ease: "none" }, at);
+            tl.fromTo(path, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: dur, ease: "power2.out" }, at);
+          };
+          // swell 0.1s, overshoot settle 0.28s
+          var pop = function (el, at, to) {
+            tl.fromTo(el, { scale: 1 }, { scale: to, duration: 0.1, ease: "power2.out" }, at);
+            tl.fromTo(el, { scale: to }, { scale: 1, duration: 0.28, ease: "back.out(3)" }, at + 0.1);
+          };
+          tl.fromTo(q(".ar-panel"), { opacity: 0, y: L.rise }, { opacity: 1, y: 0, duration: CFG.inDur, ease: "power3.out" }, CFG.inAt);
+          tl.fromTo(st.map(function (s) { return s.row; }), { opacity: 0, x: -L.slide }, { opacity: 1, x: 0, duration: CFG.dealDur, ease: "power3.out", stagger: CFG.dealEach }, CFG.deal);
+          tl.set(fill, { scaleX: 0 }, 0);
+          var ok = 0, arcOn = CFG.arc + " " + (1 - CFG.arc);
+          st.forEach(function (s) {
+            if (!s.run) return;
+            var S = s.S, C = s.C, spinEnd = C + 0.2;
+            // arc grows, circles by dash offset (no transform: the row may move), shrinks as the mark draws; 0.25 = 12 o'clock
+            tl.fromTo(s.arc, { opacity: 0, strokeDasharray: "0 1" }, { opacity: 1, strokeDasharray: arcOn, duration: 0.22, ease: "power2.out" }, S);
+            tl.fromTo(s.arc, { strokeDashoffset: 0.25 }, { strokeDashoffset: 0.25 - (spinEnd - S) * CFG.spin, duration: spinEnd - S, ease: "none" }, S);
+            tl.fromTo(s.arc, { strokeDasharray: arcOn }, { strokeDasharray: "0 1", duration: 0.18, ease: "power2.in" }, C);
+            tl.fromTo(s.arc, { opacity: 1 }, { opacity: 0, duration: 0.04, ease: "none" }, C + 0.16);
+            if (!s.bad) {
+              draw(s.ok, C + 0.06, CFG.mark);
+              pop(s.ico, C, 1.18);
+              tl.fromTo(s.lab, { color: "var(--k-muted)" }, { color: "var(--k-ink)", duration: 0.2, ease: "power2.out" }, C);
+              tl.fromTo(fill, { scaleX: ok / n }, { scaleX: (ok + 1) / n, duration: 0.4, ease: "power3.out" }, C);
+              ok++;
+              pop(count, C + 0.08, 1.25);
+              if (s.det) tl.fromTo(s.det, { opacity: 1 }, { opacity: 0, duration: CFG.fade, ease: "none" }, C + CFG.keep);
+            } else {
+              // failure: two-stroke cross, shake, accent text; later steps never start
+              draw(s.x1, C + 0.06, 0.16);
+              draw(s.x2, C + 0.2, 0.16);
+              // shake from +9px; the ease ends at 1 (MT shows the end value after a tween)
+              tl.fromTo(s.ico, { x: 9 }, { x: 0, duration: 0.32, immediateRender: false, ease: function (p) { return 1 - Math.cos(p * 3 * Math.PI) * (1 - p); } }, C);
+              tl.fromTo(s.lab, { color: "var(--k-muted)" }, { color: "var(--k-accent)", duration: 0.2, ease: "power2.out" }, C);
+              if (s.det) tl.fromTo(s.l2 || s.l1.parentNode, { color: "var(--k-muted)" }, { color: "var(--k-accent)", duration: 0.2, ease: "power2.out" }, C);
+              tl.fromTo([fill, q(".ar-bfill"), q(".ar-bedge")], { backgroundColor: "var(--k-accent-2)" }, { backgroundColor: "var(--k-accent)", duration: 0.2, ease: "power2.out" }, C);
+            }
+          });
+          // the summary pops (opaque scale) into the room the last fold leaves
+          tl.fromTo(pill, { scale: 0 }, { scale: 1, duration: CFG.sumDur, ease: "back.out(1.7)" }, endT + CFG.sumLag);
+          tl.each(render);
+          render(0);
+          window.__timelines["agent-run"] = tl;
+        })();
+      </script>
+        </template>
+  </body>
+</html>

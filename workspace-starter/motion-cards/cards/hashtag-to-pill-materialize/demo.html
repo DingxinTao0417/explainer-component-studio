@@ -1,0 +1,438 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"word","type":"string","label":"话题词（不用打 #，建议 2–6 个字）","default":"入门教程"},
+    {"id":"title","type":"string","label":"成品页标题（留空不要）","default":"怎么整理学习笔记"},
+    {"id":"body","type":"string","label":"成品页正文（用 | 分行，最多 3 行，留空不要）","default":"把常用的标签收在一起|写笔记时点一下就能用|再也不用重新打一遍"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>hashtag-to-pill-materialize · 话题词变胶囊</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="hashtag-to-pill-materialize-template">
+      <!-- Ported from video-shotcraft demos/interaction/hashtag-to-pill-materialize/HashtagToPillMaterialize.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette (cursor and icon use the accent, pill and page tints are mixed from the palette),
+           system fonts, generic Chinese copy, upstream mark and the clapper-board icon replaced by a plain tag icon;
+           pill and text sizes now follow the word length (pill width is content-fit with a 5.6em minimum, the
+           original fixed 740px) and shrink to fit; landscape/portrait layouts added; typing, hard cuts, hold, move
+           curve and reveal times are the original frame numbers; the shadow, highlight and speed-blur numbers are kept. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute; inset: 0; overflow: hidden; font-family: var(--k-font); color: var(--k-ink);
+        }
+        /* wrapper = size container; the static layout is the FINAL picture (page revealed, pill parked in its slot);
+           data-st a/b/c is set by the script: a typing, b pill, c page. Sizes below are for 1920x1080, the
+           @container block overrides them for 1080x1920 (LAND / PORT in the script hold the same numbers) */
+        .hp {
+          position: absolute; inset: 0; container-type: size;
+          --hp-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+          --hp-hi: color-mix(in srgb, white 70%, transparent);
+          --hp-ink: color-mix(in srgb, var(--k-ink) 80%, var(--k-bg));
+          --hp-meta: color-mix(in srgb, var(--k-ink) 62%, var(--k-bg));
+          --hp-body: color-mix(in srgb, var(--k-ink) 85%, var(--k-bg));
+          --hp-pill: color-mix(in srgb, var(--k-panel), var(--k-ink) 4%);
+          --hp-pill-on: color-mix(in srgb, var(--k-accent) 16%, var(--k-bg));
+          --hp-page: color-mix(in srgb, var(--k-bg) 94%, var(--k-accent));
+          --hp-page-2: color-mix(in srgb, var(--k-bg) 89%, var(--k-accent));
+          --hp-sheen: white;
+        }
+        .hp[data-tone="dark"] {
+          --hp-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+          --hp-hi: color-mix(in srgb, white 8%, transparent);
+          --hp-pill-on: color-mix(in srgb, white 14%, var(--k-bg));
+          --hp-page: color-mix(in srgb, var(--k-bg) 95%, white);
+          --hp-page-2: color-mix(in srgb, var(--k-bg) 90%, white);
+          --hp-sheen: transparent;
+        }
+        .hp-bgb { position: absolute; inset: 0; background: linear-gradient(180deg, var(--hp-page) 0%, var(--hp-page-2) 100%); }
+        .hp-bga { display: none; }
+        .hp[data-st="a"] .hp-bga, .hp[data-st="b"] .hp-bga { display: block; }
+        .hp[data-st="a"] .hp-bgb, .hp[data-st="b"] .hp-bgb { display: none; }
+        .hp[data-bd="off"] .hp-bga, .hp[data-bd="off"] .hp-bgb, .hp[data-bd="off"] .hp-grain { display: none !important; }
+        /* the finished note page: revealed by the second hard cut */
+        .hp[data-st="a"] .hp-page, .hp[data-st="b"] .hp-page { display: none; }
+        .hp-crumb { position: absolute; left: 160px; right: 160px; top: 86px; display: flex; justify-content: space-between; font-size: 32px; line-height: 1.3; letter-spacing: 0.02em; color: var(--hp-meta); }
+        .hp-rule { position: absolute; left: 160px; right: 160px; top: 144px; height: 1px; background: linear-gradient(90deg, color-mix(in srgb, var(--k-ink) 16%, transparent), color-mix(in srgb, var(--k-ink) 5%, transparent)); }
+        .hp-title { position: absolute; left: 160px; right: 160px; top: 168px; font-size: 122px; font-weight: 700; line-height: 1.2; letter-spacing: 0.005em; }
+        .hp-body { position: absolute; left: 160px; right: 160px; top: 618px; font-size: 70px; line-height: 1.33; letter-spacing: 0.005em; color: var(--hp-body); }
+        /* typing layer (state a only): text plus an always-on cursor, centred as one group by the script */
+        .hp-line { display: none; position: absolute; left: 0; top: 0; font-size: 132px; line-height: 1.3; white-space: nowrap; color: var(--hp-ink); letter-spacing: 0.015em; }
+        .hp[data-st="a"] .hp-line { display: block; }
+        .hp-txt { position: relative; display: inline-block; }
+        .hp-cur { position: absolute; top: 0.082em; width: 0.053em; height: 1.136em; border-radius: 0.015em; background: var(--k-accent); }
+        /* the pill: drawn big, scaled as a whole from its top-left corner (the anchor), so it never drifts */
+        .hp-pillbox { position: absolute; inset: 0; }
+        .hp[data-st="a"] .hp-pillbox { display: none; }
+        .hp-anchor { position: absolute; left: 160px; top: 473px; transform-origin: 0 0; transform: scale(0.554); }
+        .hp-pill {
+          --pb: var(--hp-pill-on); --pi: var(--k-accent); --pt: var(--k-ink);
+          display: flex; align-items: center; box-sizing: border-box; height: 1.79em; min-width: 5.6em; padding: 0 0.9em 0 0.727em; gap: 0.5em;
+          border-radius: 999px; font-size: 132px; white-space: nowrap; transform: translate(0, -50%); color: var(--pt);
+          background: linear-gradient(180deg, color-mix(in srgb, var(--hp-sheen) 32%, transparent) 0%, transparent 46%, color-mix(in srgb, var(--hp-shade) 3%, transparent) 100%), var(--pb);
+          box-shadow: inset 0 3px 0 var(--hp-hi), inset 0 -2px 0 color-mix(in srgb, var(--hp-shade) 3%, transparent), 0 1px 2px color-mix(in srgb, var(--hp-shade) 4%, transparent);
+        }
+        .hp[data-st="b"] .hp-pill { --pb: var(--hp-pill); --pi: var(--k-muted); --pt: var(--hp-ink); }
+        .hp-ico { display: block; flex: none; width: 0.788em; height: 0.788em; color: var(--pi); }
+        .hp-lab { display: block; letter-spacing: 0.015em; }
+        @container (orientation: portrait) {
+          .hp-crumb { left: 120px; right: 120px; top: 270px; font-size: 30px; }
+          .hp-rule { left: 120px; right: 120px; top: 340px; }
+          .hp-title { left: 120px; right: 120px; top: 420px; font-size: 96px; }
+          .hp-body { left: 120px; right: 120px; top: 890px; font-size: 58px; line-height: 1.5; }
+          .hp-line { font-size: 108px; }
+          .hp-anchor { left: 120px; top: 740px; transform: scale(0.62); }
+          .hp-pill { font-size: 108px; }
+        }
+        /* ==== kit:text@2 ==== */
+        .hp-u { display: inline-block; white-space: pre; }
+        .hp-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+        /* ==== end kit:text ==== */
+
+        /* ==== kit:fit@1 ==== */
+        .hp-row { display: block; white-space: nowrap; }
+        /* ==== end kit:fit ==== */
+
+        /* ==== kit:grain@1 ==== */
+        .hp-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+
+        /* ==== kit:backdrop@1 ==== */
+        .hp-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .hp-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        /* ==== end kit:backdrop ==== */
+      </style>
+
+      <div id="root" data-composition-id="hashtag-to-pill-materialize">
+        <div class="hp">
+          <div class="hp-bga hp-backdrop"></div>
+          <div class="hp-bgb"></div>
+          <div class="hp-grain"></div>
+          <div class="hp-page">
+            <div class="hp-crumb"><span>笔记 / 标签</span><span>刚刚编辑</span></div>
+            <div class="hp-rule"></div>
+            <div class="hp-title">怎么整理学习笔记</div>
+            <div class="hp-body"><span class="hp-u" style="display:block">把常用的标签收在一起</span><span class="hp-u" style="display:block">写笔记时点一下就能用</span><span class="hp-u" style="display:block">再也不用重新打一遍</span></div>
+          </div>
+          <div class="hp-line"><span class="hp-txt">#入门教程</span><span class="hp-cur"></span></div>
+          <div class="hp-pillbox">
+            <div class="hp-anchor">
+              <div class="hp-pill">
+                <svg class="hp-ico" viewBox="0 0 48 48"><path fill="currentColor" fill-rule="evenodd" d="M6 8h18l18 18a3 3 0 0 1 0 4.2L30.2 42a3 3 0 0 1-4.2 0L6 24zM15 12.5a3.5 3.5 0 1 0 .001 0z"/></svg>
+                <span class="hp-lab">入门教程</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // seconds (original frame numbers at 30 fps in the comments), shared by both orientations
+          var CFG = {
+            dur: 4, type: 0.267,        // typing starts, f8
+            morph: 1.6,                 // hard cut to the pill, f48
+            settle: 0.1,                // 1.03 -> 1 after the cut, 3 frames
+            moveStart: 2.2, moveEnd: 2.667,   // shrink and slide, f66 - f80
+            reveal: 2.767,              // hard cut to the finished page, f83
+            lift: 10, endGap: 1.333     // pill floats 10px at the start; last typed char no later than f40
+          };
+          // fs: hero font size (pill and typed text are the same size), min: smallest it shrinks to, end: pill scale when parked,
+          // left / slotY: parked pill's left edge and middle line, heroY: where the hero sits (share of the height), maxW: widest hero (share of the width).
+          // The same numbers are in the CSS above (static final picture).
+          var LAND = { fs: 132, min: 72, end: 0.554, left: 160, slotY: 473, heroY: 0.5, maxW: 0.8, titleLines: 1 };
+          var PORT = { fs: 108, min: 72, end: 0.62, left: 120, slotY: 740, heroY: 0.4, maxW: 0.8, titleLines: 2 };
+          var v = { word: "入门教程", title: "怎么整理学习笔记", body: "把常用的标签收在一起|写笔记时点一下就能用|再也不用重新打一遍", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".hp");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          if (String(v.backdrop) === "off") root.setAttribute("data-bd", "off");
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+
+          // ==== kit:text@2 ====
+          var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "hp-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "hp-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          function kReveal(tl, units, variant, at, o) {
+            o = o || {};
+            var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+            units.forEach(function (u, i) {
+              var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+              if (variant === "rise") {
+                tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+                tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+              } else if (variant === "blur") {
+                tl.fromTo(u, { opacity: 0, y: fs * 0.25, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: each, ease: ease }, t0);
+              } else if (variant === "drop") {
+                tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each / 3, ease: "none" }, t0);
+                tl.fromTo(u, { y: -fs * 0.6 }, { y: 0, duration: each, ease: "overshoot" }, t0);
+              } else if (variant === "scale") {
+                tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each * 0.1, ease: "power1.out" }, t0);
+                tl.fromTo(u, { scale: 1.6, filter: "blur(8px)" }, { scale: 1, filter: "blur(0px)", duration: each, ease: ease }, t0);
+              } else {
+                tl.fromTo(u, { opacity: 0, marginRight: "0.5em" }, { opacity: 1, marginRight: "0em", duration: each, ease: ease }, t0);
+              }
+            });
+            return tl;
+          }
+          // ==== end kit:text ====
+
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          function kRows(el, cls) {
+            if (!el.children.length) return [];
+            var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+            var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+            kids.forEach(function (c, i) {
+              if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+              if (tops[i] != null) last = tops[i];
+              row.appendChild(c);
+            });
+            return [].slice.call(el.children);
+          }
+          // ==== end kit:fit ====
+
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+
+          // ==== kit:speedblur@1 ====
+          function kSpeedBlur(box, prefix, o) {
+            o = o || {};
+            var amount = o.amount || 0.45, max = o.max || 36;
+            var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+            var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+            svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+            var outer = document.createElement("div"), inner = document.createElement("div");
+            outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+            while (box.firstChild) inner.appendChild(box.firstChild);
+            outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+            var fe = svg.firstChild.firstChild;
+            return function (vx, vy) {
+              vy = vy || 0;
+              var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+              if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+              var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+              fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+              outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+              inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+              outer.style.filter = "url(#" + id + ")";
+            };
+          }
+          // ==== end kit:speedblur ====
+          var tone = kTone(root);
+          var gdraw = kGrain(q(".hp-grain"), { step: 2 });
+
+          // ---- page slots (title and body are optional): split, then fit by measuring ----
+          var titleEl = q(".hp-title"), bodyEl = q(".hp-body");
+          var title = String(v.title).trim();
+          if (title) {
+            kSplit(titleEl, "word", false, title);
+            // one line if it fits at 72px or more, otherwise the orientation's own line count at the biggest size that fits
+            if (!kFit(titleEl, { lines: 1, min: 72 }).fits && L.titleLines > 1) { titleEl.style.fontSize = ""; kFit(titleEl, { lines: L.titleLines, min: 72 }); }
+          } else titleEl.style.display = "none";
+          var lines = String(v.body).split("|").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 3);
+          if (lines.length) { kSplit(bodyEl, "line", false, lines.join("|")); kFit(bodyEl, { lines: 3, min: 40 }); } else bodyEl.style.display = "none";
+
+          // ---- hero: the typed "#word" and the pill share one font size; both must fit the width, and the pill's
+          // extras (icon, paddings) grow with the font, so the loop measures both instead of using kFit's fixed width ----
+          var pill = q(".hp-pill"), lab = q(".hp-lab"), txt = q(".hp-txt"), line = q(".hp-line"), cur = q(".hp-cur"), anchor = q(".hp-anchor");
+          line.style.display = "block";
+          var fs = L.fs, chars = Array.from(String(v.word).replace(/^[#＃\s]+/, "").trim() || "入门教程"), cut = false;
+          var apply = function () {
+            pill.style.fontSize = line.style.fontSize = fs + "px";
+            lab.textContent = chars.join("") + (cut ? "…" : "");
+            txt.textContent = "#" + lab.textContent;
+          };
+          var wide = function () { return Math.max(pill.offsetWidth, txt.offsetWidth + 0.12 * fs) > FW * L.maxW; };
+          apply();
+          while (wide() && fs > L.min) { fs -= 2; apply(); }
+          while (wide() && chars.length > 1) { chars.pop(); cut = true; apply(); }
+          var units = kSplit(txt, "char", false, txt.textContent);
+          var ends = [0].concat(units.map(function (u) { return u.offsetLeft + u.offsetWidth; }));
+          var curGap = 0.06 * fs, curW = 0.053 * fs, lineH = line.offsetHeight, pw = pill.offsetWidth, K = fs / 132;
+          line.style.display = "";
+
+          // typing times: upstream's 4-6 frame gaps from a seeded generator; a long word is squeezed so the last char lands by f40
+          var mb = function (a) { return function () { a = (a + 0x6d2b79f5) >>> 0; var t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+          var rnd = mb(20260717), at = [], f = 0;
+          units.forEach(function () { at.push(f); f += 4 + Math.floor(rnd() * 3); });
+          var span = at[at.length - 1], sq = span > 0 ? Math.min(1, (CFG.endGap - CFG.type) * 30 / span) : 1;
+          at = at.map(function (x) { return CFG.type + (x * sq) / 30; });
+
+          // geometry: hero in the middle, parked pill at the left edge of the page column
+          var HX = FW / 2, HY = FH * L.heroY, SX = L.left + (pw * L.end) / 2, SY = L.slotY;
+          anchor.style.left = anchor.style.top = "0px";
+          pill.style.transform = "translate(-50%, -50%)";
+          var sb = kSpeedBlur(q(".hp-pillbox"), "hp", { amount: 0.1, max: 7 });
+          var move = function (t) { return MT.interpolate(t, [CFG.moveStart, CFG.moveEnd], [0, 1], { easing: "cubic-bezier(0.5,0,0.25,1)", extrapolateLeft: "clamp", extrapolateRight: "clamp" }); };
+          var pxAt = function (t) { return MT.mix(HX, SX, move(t)); };
+          var pyAt = function (t) { return MT.mix(HY, SY, move(t)); };
+          var shadow = function (l) {
+            var c = function (a) { return "color-mix(in srgb, var(--hp-shade) " + (Math.min(1, a * (tone === "dark" ? 2.6 : 1)) * 100).toFixed(1) + "%, transparent)"; };
+            return "inset 0 " + (3 * K).toFixed(1) + "px 0 var(--hp-hi), inset 0 " + (-2 * K).toFixed(1) + "px 0 " + c(0.03) + ", 0 " + (K * (1 + l * 0.12)).toFixed(1) + "px " + (K * (2 + l * 0.3)).toFixed(1) + "px " + c(0.04 + l * 0.003) +
+              ", 0 " + (K * l * 1.6).toFixed(1) + "px " + (K * l * 4).toFixed(1) + "px " + (-K * l * 0.6).toFixed(1) + "px " + c(l * 0.009);
+          };
+
+          // everything is a pure function of t: typing (a), pill (b), page (c)
+          var tl = MT.scene(CFG.dur, function (t) {
+            var E = 2e-3, st = t >= CFG.reveal - E ? "c" : t >= CFG.morph - E ? "b" : "a";
+            if (root.getAttribute("data-st") !== st) root.setAttribute("data-st", st);
+            gdraw(t);
+            if (st === "a") {
+              var n = 0;
+              at.forEach(function (x, i) { if (t >= x - E) n = i + 1; });
+              units.forEach(function (u, i) { u.style.opacity = i < n ? 1 : 0; });
+              cur.style.left = (ends[n] + curGap) + "px";
+              line.style.transform = "translate(" + ((FW - (ends[n] + curGap + curW)) / 2).toFixed(1) + "px, " + (HY - lineH / 2).toFixed(1) + "px)";
+              return;
+            }
+            var m = move(t), settle = MT.interpolate(t, [CFG.morph, CFG.morph + CFG.settle], [1.03, 1], { easing: "power2.out", extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+            var lift = CFG.lift * (1 - MT.interpolate(m, [0.35, 1], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }));
+            anchor.style.transform = "translate(" + pxAt(t).toFixed(2) + "px, " + pyAt(t).toFixed(2) + "px) scale(" + (MT.mix(1, L.end, m) * settle).toFixed(4) + ")";
+            pill.style.boxShadow = shadow(lift);
+            sb(MT.velocity(pxAt, t), MT.velocity(pyAt, t));
+          });
+          window.__timelines["hashtag-to-pill-materialize"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

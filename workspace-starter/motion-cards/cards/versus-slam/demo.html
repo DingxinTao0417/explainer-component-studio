@@ -1,0 +1,519 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+{"id":"kicker","type":"string","label":"眉题（可空）","default":"方案对比"},
+{"id":"question","type":"string","label":"开场设问（| 切意群）","default":"做一支讲解短片|要多久？"},
+{"id":"left","type":"string","label":"左方（竖屏在上）","default":"老办法"},
+{"id":"leftNum","type":"string","label":"左方大数字","default":"14"},
+{"id":"leftUnit","type":"string","label":"左方单位（可空）","default":"天"},
+{"id":"leftNote","type":"string","label":"左方说明（可空，| 切意群）","default":"写稿、找素材、剪辑，|改三轮才定稿"},
+{"id":"leftItems","type":"string","label":"左方清单，划掉（| 分隔，可空，竖屏不显示）","default":"脚本|素材|剪辑|返工"},
+{"id":"right","type":"string","label":"右方（竖屏在下）","default":"新办法"},
+{"id":"rightNum","type":"string","label":"右方大数字","default":"1"},
+{"id":"rightUnit","type":"string","label":"右方单位（可空）","default":"个下午"},
+{"id":"rightNote","type":"string","label":"右方说明（可空，| 切意群）","default":"套用模板，|素材自动对齐节拍"},
+{"id":"rightItems","type":"string","label":"右方清单，打勾（| 分隔，可空，竖屏不显示）","default":"选好镜头|对齐节拍"},
+{"id":"verdict","type":"string","label":"结论条（可空）","default":"先跑通，再优化"},
+{"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（从宿主画面上撞进来）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>versus-slam · 对撞开屏</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="versus-slam-template">
+<!-- Ported from video-shotcraft demos/transition/transition-hidden-cut/VersusSlam.tsx
+     (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+     Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+     Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+     neutral --k-* palette (ink vs accent poster, paper = --k-bg), system fonts, generic copy, upstream mark -> neutral
+     mark, text slots are variables; portrait re-laid out as top/bottom posters slamming
+     vertically on a 78 deg seam, lists dropped there; grain moved under the text (setup + each poster); labels 30 to 40px,
+     list 32 to 40px, stamp and verdict text appear in one cut once their disc / pill is half opaque; 105-frame timing,
+     ease-in cubic rush, shake 16px e^(-f/1.7), stamp spring 12/260, ring, 12 speed lines, flash 0.85 and push kept. -->
+<style>
+@font-face{font-family:"Microsoft YaHei";src:local("Microsoft YaHei"), local("MicrosoftYaHei")}
+@font-face{font-family:"PingFang SC";src:local("PingFang SC")}
+@font-face{font-family:"Noto Sans SC";src:local("Noto Sans SC"), local("Noto Sans CJK SC")}
+@font-face{font-family:"vm-heavy";font-weight:700 900;src:local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"), local("PingFangSC-Semibold"), local("NotoSansSC-Black")}
+#root {
+--k-bg:var(--mc-bg, #ffffff);
+--k-panel:var(--mc-panel, #f4f5f7);
+--k-ink:var(--mc-ink, #15171c);
+--k-muted:var(--mc-muted, #6b7280);
+--k-accent:var(--mc-accent, #e8590c);
+--k-accent-2:var(--mc-accent-2, #2563eb);
+--k-on-accent:var(--mc-on-accent, #ffffff);
+--k-font:var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+position:absolute;
+inset:0;
+overflow:hidden;
+font-family:var(--k-font);
+color:var(--k-ink);
+}
+/* ==== kit:derived@1 (shade only) ==== */
+.vm{--vm-shade:color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2))}
+.vm[data-tone="dark"]{--vm-shade:color-mix(in srgb, var(--k-bg) 30%, black)}
+/* ==== end kit:derived ==== */
+/* ==== kit:backdrop@1 (key light top centre, as upstream Stage keyLight 0.5 / 0.2) ==== */
+.vm-backdrop{position:absolute;inset:0;background:linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%)}
+.vm-backdrop::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 62% 70% at 50% 20%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%)}
+/* ==== end kit:backdrop ==== */
+/* ==== kit:vignette@1 (upstream 0.14) ==== */
+.vm-vig {
+position:absolute;inset:0;pointer-events:none;
+--vs:0.14;--vin:45%;--vx:50%;--vy:46%;--vc:var(--vm-shade);
+background:
+radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.vm[data-tone="dark"] .vm-vig{--vs:0.55}
+/* ==== end kit:vignette ==== */
+/* ==== kit:grain@1 ==== */
+.vm-grain{position:absolute;inset:0;pointer-events:none}
+/* ==== end kit:grain ==== */
+/* ==== kit:text@2 ==== */
+.vm-u{display:inline-block;white-space:pre}
+.vm-cut{display:inline-block;vertical-align:top;clip-path:inset(-0.06em -0.04em -0.22em -0.04em)}
+/* ==== end kit:text ==== */
+/* ==== kit:mark@1 ==== */
+.vm-mark{display:block;flex:none}
+/* ==== end kit:mark ==== */
+
+.vm{position:absolute;inset:0;container-type:size;
+--vm-pa:color-mix(in srgb, var(--k-ink), var(--k-bg) 10%);
+--vm-pc:color-mix(in srgb, var(--k-ink), black 40%);
+--vm-aa:color-mix(in srgb, var(--k-accent), white 18%);
+--vm-ac:color-mix(in srgb, var(--k-accent), black 13%)}
+.vm[data-tone="dark"]{--vm-pc:color-mix(in srgb, var(--k-ink), var(--k-bg) 22%);--vm-aa:color-mix(in srgb, var(--k-accent), white 30%);--vm-ac:color-mix(in srgb, var(--k-accent), var(--k-bg) 16%)}
+.vm-cam{position:absolute;inset:0}
+/* setup, kicker + question on the paper, an ink line where the seam will be (hidden in the static final frame) */
+.vm-setup{position:absolute;inset:0;opacity:0}
+.vm-q{position:absolute;left:120px;right:120px;top:386px;text-align:center}
+.vm-kick{font-size:40px;font-weight:800;line-height:1.2;letter-spacing:0.2em;color:var(--k-accent);margin-bottom:30px}
+.vm-qt{font-size:124px;font-weight:800;line-height:1.2}
+.vm-ink{position:absolute;left:calc(50% - 1px);top:calc(50% - 700px);width:2px;height:1400px;background:var(--k-ink);transform:rotate(12.02deg)}
+/* the two posters, cut along the 78 deg seam (top x 56%, bottom x 44%) */
+.vm-half, .vm-move, .vm-pbg{position:absolute;inset:0}
+.vm-l .vm-move{clip-path:polygon(0% 0%, 55.99% 0%, 44.01% 100%, 0% 100%)}
+.vm-r .vm-move{clip-path:polygon(55.99% 0%, 100% 0%, 100% 100%, 44.01% 100%)}
+.vm-l .vm-pbg{background:radial-gradient(ellipse 70% 80% at 18% 10%, var(--vm-pa) 0%, var(--k-ink) 60%, var(--vm-pc) 100%)}
+.vm-r .vm-pbg{background:radial-gradient(ellipse 70% 80% at 85% 10%, var(--vm-aa) 0%, var(--k-accent) 55%, var(--vm-ac) 100%)}
+.vm-side{position:absolute;top:0;height:100%;left:120px;width:700px;color:var(--k-bg);--vm-sub:color-mix(in srgb, var(--k-bg) 64%, var(--k-ink))}
+.vm-r .vm-side{left:1190px;width:620px;color:var(--k-on-accent);--vm-sub:var(--k-on-accent)}
+.vm-lab{position:absolute;left:0;right:0;top:132px;display:flex;align-items:center;gap:16px}
+.vm-lab i{display:block;flex:none;width:16px;height:16px;background:currentColor}
+.vm-r .vm-lab i{border-radius:8px}
+.vm-lt{flex:1;min-width:0;font-size:40px;font-weight:800;line-height:1.2;letter-spacing:0.16em;color:var(--vm-sub)}
+.vm-r .vm-lt{color:inherit}
+.vm-num{position:absolute;left:-14px;right:0;top:196px;display:flex;align-items:baseline;gap:0.06em;font-size:360px;transform-origin:0% 100%}
+.vm-n{font-family:"vm-heavy", var(--k-font);font-weight:900;line-height:0.9;letter-spacing:-0.07em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.vm-un{font-size:0.267em;font-weight:800;line-height:1.2;white-space:nowrap}
+.vm-cap{position:absolute;left:0;right:0;top:590px;font-size:44px;font-weight:600;line-height:1.18}
+.vm-list{position:absolute;left:0;right:0;top:800px;display:flex;flex-wrap:wrap;column-gap:30px;row-gap:6px;font-size:40px;font-weight:600;line-height:1.25;color:var(--vm-sub)}
+.vm-it{display:flex;align-items:baseline;gap:12px;white-space:nowrap}
+.vm-it b{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums}
+.vm-l .vm-it s{text-decoration-thickness:2px}
+/* after the hit:the paper cut on the seam, burst, stamp, verdict */
+.vm-seam{position:absolute;left:calc(50% - 22px);top:calc(50% - 700px);width:44px;height:1400px;transform:rotate(12.02deg);
+background:linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--vm-shade) 35%, transparent) 38%, var(--k-bg) 43%, var(--k-bg) 57%, color-mix(in srgb, var(--vm-shade) 35%, transparent) 62%, transparent 100%)}
+.vm-burst{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible}
+.vm-stamp{position:absolute;left:calc(50% - 130px);top:calc(50% - 130px);width:260px;height:260px;display:flex;align-items:center;justify-content:center;transform:rotate(12.02deg)}
+/* the disc is drawn by pseudo-elements faded with --do, so the VS text has no element above or below it */
+.vm-stamp::before{content:"";position:absolute;inset:0;box-sizing:border-box;border-radius:50%;background:var(--k-bg);border:8px solid var(--k-ink);opacity:var(--do,1);
+box-shadow:0 4px 0 color-mix(in srgb, var(--k-ink) 90%, transparent), 0 30px 60px -12px color-mix(in srgb, var(--vm-shade) 60%, transparent)}
+.vm-stamp::after{content:"";position:absolute;inset:18px;border-radius:50%;border:2px solid color-mix(in srgb, var(--k-ink) 35%, transparent);opacity:var(--do,1)}
+.vm-vs{position:relative;z-index:1;font-family:"vm-heavy", var(--k-font);font-size:124px;font-weight:900;font-style:italic;line-height:1;letter-spacing:-0.06em;margin:-4px 0 0 -10px;color:var(--k-ink)}
+/* verdict pill: bottom edge fixed (upstream 930 + 84), a second line grows it upwards */
+.vm-ver{position:absolute;left:50%;bottom:66px;width:max-content;min-height:84px;max-width:1400px;padding:12px 44px;box-sizing:border-box;display:flex;align-items:center;gap:18px;transform:translateX(-50%)}
+.vm-pill{position:absolute;inset:0;border-radius:42px;background:var(--k-bg);box-shadow:0 20px 44px -14px color-mix(in srgb, var(--vm-shade) 55%, transparent)}
+.vm-vt{position:relative;min-width:0;font-size:40px;font-weight:800;line-height:1.2}
+.vm-mk{position:relative;flex:none}
+.vm-flash{position:absolute;inset:0;background:var(--k-bg);opacity:0;pointer-events:none}
+/* portrait:posters stacked on a seam from (0, 43.5%) to (100%, 31.5%), centre on the 37.5% line;lists dropped */
+@container (orientation:portrait) {
+.vm-q{left:108px;right:108px;top:280px}
+.vm-kick{margin-bottom:24px}
+.vm-qt{font-size:96px}
+.vm-ink, .vm-seam{top:calc(37.5% - 700px);transform:rotate(77.98deg)}
+.vm-l .vm-move{clip-path:polygon(0% 0%, 100% 0%, 100% 31.51%, 0% 43.49%)}
+.vm-r .vm-move{clip-path:polygon(0% 43.49%, 100% 31.51%, 100% 100%, 0% 100%)}
+.vm-side, .vm-r .vm-side{left:116px;width:780px}
+.vm-r .vm-side{width:848px}
+.vm-lab{top:244px}
+.vm-num{left:0;top:292px;font-size:220px}
+.vm-cap{top:520px;font-size:40px}
+.vm-r .vm-lab{top:858px}
+.vm-r .vm-num{top:904px}
+.vm-r .vm-cap{top:1126px}
+.vm-list{display:none}
+.vm-stamp{left:calc(50% - 110px);top:calc(37.5% - 110px);width:220px;height:220px;transform:rotate(-12.02deg)}
+.vm-vs{font-size:104px}
+.vm-ver{bottom:624px;max-width:864px}
+}
+</style>
+
+<div id="root" data-composition-id="versus-slam">
+<div class="vm">
+<div class="vm-backdrop"></div>
+<div class="vm-vig"></div>
+<div class="vm-cam">
+<div class="vm-setup">
+<div class="vm-grain vm-g0"></div>
+<div class="vm-ink" data-layout-allow-overflow></div>
+<div class="vm-q"><div class="vm-kick">方案对比</div><div class="vm-qt">做一支讲解短片要多久？</div></div>
+</div>
+<div class="vm-half vm-l" data-layout-allow-overflow><div class="vm-move"><div class="vm-pbg"></div><div class="vm-grain"></div>
+<div class="vm-side"><div class="vm-lab"><i></i><span class="vm-lt">老办法</span></div>
+<div class="vm-num"><span class="vm-n">14</span><span class="vm-un">天</span></div>
+<div class="vm-cap">写稿、找素材、剪辑，改三轮才定稿</div>
+<div class="vm-list"><span class="vm-it"><b>01</b><s>脚本</s></span><span class="vm-it"><b>02</b><s>素材</s></span><span class="vm-it"><b>03</b><s>剪辑</s></span><span class="vm-it"><b>04</b><s>返工</s></span></div></div>
+</div></div>
+<div class="vm-half vm-r" data-layout-allow-overflow><div class="vm-move"><div class="vm-pbg"></div><div class="vm-grain"></div>
+<div class="vm-side"><div class="vm-lab"><i></i><span class="vm-lt">新办法</span></div>
+<div class="vm-num"><span class="vm-n">1</span><span class="vm-un">个下午</span></div>
+<div class="vm-cap">套用模板，素材自动对齐节拍</div>
+<div class="vm-list"><span class="vm-it"><b>✓</b><span>选好镜头</span></span><span class="vm-it"><b>✓</b><span>对齐节拍</span></span></div></div>
+</div></div>
+<div class="vm-seam" data-layout-allow-overflow></div>
+<svg class="vm-burst" aria-hidden="true" data-layout-allow-overflow></svg>
+<div class="vm-stamp"><div class="vm-vs">VS</div></div>
+<div class="vm-ver"><div class="vm-pill"></div><span class="vm-mk"></span><span class="vm-vt">先跑通，再优化</span></div>
+</div>
+<div class="vm-flash"></div>
+</div>
+</div>
+
+<script>
+(function () {
+// seconds = upstream frames / 30: question 1f (+3f a word, 14f each), ink line 2-16f, rush 18-28f, hit 28f,
+// numbers settle from 30f, notes 36f / lists 42f (+4f right), verdict 54-72f, push 38-105f
+var CFG = { end: 3.5, q: 0.0333, qEach: 0.4667, qGap: 0.1, grow: 0.0667, growDur: 0.4667, rush: 0.6, rushDur: 0.3333, hit: 0.9333,
+flash: 0.85, flashDur: 0.1, wave: 0.5333, lines: 0.2333, settle: 1.0, note: 1.2, list: 1.4, lag: 0.1333, textDur: 0.6,
+verdict: 1.8, push: 1.2667, pushAmt: 0.015, shake: 16, blur: 0.1, blurMax: 36 };
+// per orientation: rush axis and distance (px), seam ends as frame fractions (a = top / right end, b = bottom / left end)
+var LAND = { axis: "x", dist: 1240, a: [0.5599, 0], b: [0.4401, 1], c: [0.5, 0.5], tilt: 0, qLines: 2, noteLines: 2 };
+var PORT = { axis: "y", dist: 1360, a: [1, 0.3151], b: [0, 0.4349], c: [0.5, 0.375], tilt: -90, qLines: 2, noteLines: 1 };
+var v = { kicker: "方案对比", question: "做一支讲解短片|要多久？", left: "老办法", leftNum: "14", leftUnit: "天", leftNote: "写稿、找素材、剪辑，|改三轮才定稿",
+leftItems: "脚本|素材|剪辑|返工", right: "新办法", rightNum: "1", rightUnit: "个下午", rightNote: "套用模板，|素材自动对齐节拍", rightItems: "选好镜头|对齐节拍",
+verdict: "先跑通，再优化", backdrop: "on" };
+try {
+var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+} catch (e) {}
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+var p = document.createElement("i");
+p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+el.appendChild(p);
+var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+el.removeChild(p);
+return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+var c = kRGB(wrap, "var(--k-bg)");
+var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+wrap.setAttribute("data-tone", tone);
+return tone;
+}
+// ==== end kit:tone ====
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+o = o || {};
+var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+var dark = tones && tones.getAttribute("data-tone") === "dark";
+var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+var f = "type='linear' slope='2.4' intercept='-0.7'";
+var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+"<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+"<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+"<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+"<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+});
+layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+layer.style.backgroundSize = size + "px " + size + "px";
+return function (t) {
+var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+layer.style.backgroundImage = tiles[k % 6];
+layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+};
+}
+// ==== end kit:grain ====
+// ==== kit:speedblur@1 ====
+function kSpeedBlur(box, prefix, o) {
+o = o || {};
+var amount = o.amount || 0.45, max = o.max || 36;
+var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+var outer = document.createElement("div"), inner = document.createElement("div");
+outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+while (box.firstChild) inner.appendChild(box.firstChild);
+outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+var fe = svg.firstChild.firstChild;
+return function (vx, vy) {
+vy = vy || 0;
+var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+outer.style.filter = "url(#" + id + ")";
+};
+}
+// ==== end kit:speedblur ====
+// ==== kit:text@2 (kWords without key + local fix: a lone mark keeps its trailing space; kSplit word mode, kReveal rise only) ====
+var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+function kWords(s) {
+s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+var bar = s.indexOf("|") >= 0, out = [];
+var cut = function (x) {
+if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+};
+var bits = bar ? s.split("|") : cut(s);
+var pre = "";
+bits.forEach(function (x) {
+var t = x.trim(), last = out[out.length - 1];
+if (last && /^ /.test(x)) last.sp = true;
+if (pre && /^ /.test(x)) pre += " ";
+if (!t) return;
+if (!/[\p{L}\p{N}]/u.test(t)) {
+if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t + (/ $/.test(x) ? " " : "");
+else { last.t += t; last.sp = / $/.test(x); }
+return;
+}
+out.push({ t: pre + t, sp: / $/.test(x) });
+pre = "";
+});
+if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+if (out.length) out[out.length - 1].sp = false;
+return out;
+}
+function kSplit(el, by, rise, text) {
+var s = text != null ? String(text) : el.textContent, units = [];
+var parts = kWords(s);
+el.textContent = "";
+parts.forEach(function (p) {
+var u = document.createElement("span"), box = u;
+u.className = "vm-u"; u.textContent = p.t;
+if (!p.t.trim()) { el.appendChild(u); return; }
+if (rise) { box = document.createElement("span"); box.className = "vm-cut"; box.appendChild(u); }
+el.appendChild(box);
+if (p.sp) el.appendChild(document.createTextNode(" "));
+units.push(u);
+});
+return units;
+}
+function kReveal(tl, units, variant, at, o) {
+o = o || {};
+var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+units.forEach(function (u, i) {
+var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+});
+return tl;
+}
+// ==== end kit:text ====
+// ==== kit:fit@1 (no kRows) ====
+function kFit(el, o) {
+o = o || {};
+var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+for (;;) {
+el.style.fontSize = f + "px";
+m = kLines(el);
+if ((m.w <= W && m.n <= n) || f <= min) break;
+f = Math.max(min, f - 2);
+}
+if (m.w > W) {
+[].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+m = kLines(el);
+}
+return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+while ((t = it.nextNode())) {
+if (!t.data.trim()) continue;
+r.selectNodeContents(t);
+[].forEach.call(r.getClientRects(), function (b) {
+var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+});
+}
+return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+// ==== kit:mark@1 (part classes dropped) ====
+function kMark(size) {
+return '<svg class="vm-mark" width="' + size + '" height="' + size + '" viewBox="0 0 128 128" aria-hidden="true">' +
+'<rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/>' +
+'<circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/>' +
+'<rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg>';
+}
+// ==== end kit:mark ====
+
+var root = document.querySelector(".vm");
+var q = function (s) { return root.querySelector(s); }, qa = function (s) { return [].slice.call(root.querySelectorAll(s)); };
+var FW = root.clientWidth, FH = root.clientHeight;
+if (!FW || !FH) {
+// not laid out yet: the host clip's declared size, then the window
+var hc = root.closest("[data-width][data-height]");
+FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+}
+var P = FH > FW, L = P ? PORT : LAND;
+root.setAttribute("data-orient", P ? "portrait" : "landscape");
+kTone(root);
+var K = Math.min(FW, FH) / (4 * 270); // fixed px amounts scale with the short side
+var off = String(v.backdrop) === "off";
+if (off) [".vm-backdrop", ".vm-vig", ".vm-g0"].forEach(function (s) { q(s).style.display = "none"; });
+var grains = qa(".vm-grain").map(function (g) { return kGrain(g, { opacity: 0.06, blend: "overlay" }); });
+
+// seam geometry from the two ends: centre, angle of a vertical bar turned onto it (deg)
+var ax = L.a[0] * FW, ay = L.a[1] * FH, bx = L.b[0] * FW, by = L.b[1] * FH, cx = L.c[0] * FW, cy = L.c[1] * FH;
+var DEG = (Math.atan2(ax - bx, by - ay) * 180) / Math.PI, TILT = DEG + L.tilt;
+
+// text slots: kSplit -> kFit; empty optional slots hide as a whole
+var has = function (s) { return String(s == null ? "" : s).trim() !== ""; };
+var fill = function (el, text, o) { kSplit(el, "word", false, text); return kFit(el, o); };
+var kick = q(".vm-kick"), qt = q(".vm-qt");
+if (has(v.kicker)) fill(kick, v.kicker, { min: 40 }); else kick.style.display = "none";
+var qUnits = kSplit(qt, "word", true, v.question);
+kFit(qt, { lines: L.qLines, min: 72 });
+qa(".vm-q .vm-u").forEach(function (u) { u.setAttribute("data-layout-allow-occlusion", ""); u.setAttribute("data-layout-allow-overlap", ""); });
+[["l", "left", "s"], ["r", "right", "span"]].forEach(function (d) {
+var side = q(".vm-" + d[0] + " .vm-side"), p = d[1];
+fill(side.querySelector(".vm-lt"), v[p], { min: 40 });
+var num = side.querySelector(".vm-num"), un = side.querySelector(".vm-un");
+kSplit(num.querySelector(".vm-n"), "word", false, v[p + "Num"]);
+if (has(v[p + "Unit"])) kSplit(un, "word", false, v[p + "Unit"]); else un.style.display = "none";
+kFit(num, { min: P ? 120 : 160, width: side.clientWidth + 14 });
+var cap = side.querySelector(".vm-cap");
+if (has(v[p + "Note"])) fill(cap, v[p + "Note"], { lines: L.noteLines, min: 40 }); else cap.style.display = "none";
+var list = side.querySelector(".vm-list"), items = kWords(v[p + "Items"]).slice(0, 5);
+list.innerHTML = "";
+items.forEach(function (it, i) {
+var s = document.createElement("span");
+s.className = "vm-it";
+s.innerHTML = "<b></b><" + d[2] + "></" + d[2] + ">";
+s.firstChild.textContent = d[0] === "l" ? (i < 9 ? "0" : "") + (i + 1) : "✓";
+s.lastChild.textContent = it.t;
+list.appendChild(s);
+});
+if (!items.length) list.style.display = "none"; else if (!P) kFit(list, { min: 40 });
+});
+var ver = q(".vm-ver");
+q(".vm-mk").innerHTML = kMark(44);
+if (has(v.verdict)) fill(q(".vm-vt"), v.verdict, { min: 40, width: Math.min(FW * (P ? 0.8 : 0.73), 1400) - 150 }); else ver.style.display = "none";
+
+// the ink line leaves a gap where the setup text is (landscape: the line runs through it; portrait: text sits above)
+var ink = q(".vm-ink"), seam = q(".vm-seam"), qb = q(".vm-q");
+[ink, seam].forEach(function (el) {
+el.style.left = cx + "px"; el.style.top = cy + "px"; el.style.marginLeft = (-el.offsetWidth / 2) + "px"; el.style.marginTop = "-700px";
+el.style.transform = "rotate(" + DEG.toFixed(3) + "deg)";
+});
+if (!P) {
+var cosA = Math.cos((DEG * Math.PI) / 180), y0 = qb.offsetTop - 16, y1 = qb.offsetTop + qb.offsetHeight + 16;
+var g0 = (((y0 - cy) / cosA + 700) / 14).toFixed(1), g1 = (((y1 - cy) / cosA + 700) / 14).toFixed(1);
+ink.style.webkitMaskImage = ink.style.maskImage = "linear-gradient(180deg, #000 0%, #000 " + (g0 - 2.5) + "%, transparent " + g0 + "%, transparent " + g1 + "%, #000 " + (+g1 + 2.5) + "%, #000 100%)";
+}
+
+// burst: one ring and 12 speed lines around the stamp
+var NS = "http://www.w3.org/2000/svg", burst = q(".vm-burst");
+burst.setAttribute("viewBox", "0 0 " + FW + " " + FH);
+var ring = document.createElementNS(NS, "circle");
+ring.setAttribute("cx", cx); ring.setAttribute("cy", cy); ring.setAttribute("fill", "none"); ring.style.stroke = "var(--k-bg)";
+burst.appendChild(ring);
+var rays = [];
+for (var i = 0; i < 12; i++) {
+var ln = document.createElementNS(NS, "line");
+ln.setAttribute("stroke-linecap", "round"); ln.style.stroke = "var(--k-bg)";
+burst.appendChild(ln); rays.push(ln);
+}
+
+var stamp = q(".vm-stamp"), vs = q(".vm-vs"), pill = q(".vm-pill");
+var cam = q(".vm-cam"), setup = q(".vm-setup"), flash = q(".vm-flash");
+var halves = qa(".vm-half"), moves = qa(".vm-move");
+var blurs = halves.map(function (h) { return kSpeedBlur(h, "vm", { amount: CFG.blur, max: CFG.blurMax }); });
+var nums = qa(".vm-num"), caps = qa(".vm-cap"), lists = qa(".vm-list"), verRow = [q(".vm-mk"), q(".vm-vt")];
+var ramp = MT.ramp, mix = MT.mix;
+// rush: ease-in cubic, the left / top poster from -dist to 0 (the other one mirrors it)
+var pos = function (t) { return -L.dist * K * (1 - Math.pow(ramp(t, CFG.rush, CFG.rushDur, "linear"), 3)); };
+
+var tl = MT.scene(CFG.end, function (t) {
+var f = t * 30, hit = f >= 28 - 1e-6, since = f - 28; // frames at 30 fps
+grains.forEach(function (g) { g(t); });
+// camera: hard shake from the hit (16px * e^(-f/1.7)), then a slow 1 -> 1.015 push
+var env = since >= 0 ? CFG.shake * K * Math.exp(-since / 1.7) : 0;
+var sx = env * Math.sin(since * 3.3), sy = env * 0.55 * Math.sin(since * 4.2 + 0.8);
+cam.style.transform = "translate(" + sx.toFixed(2) + "px," + sy.toFixed(2) + "px) scale(" + (1 + CFG.pushAmt * ramp(t, CFG.push, CFG.end - CFG.push, "smooth")).toFixed(5) + ")";
+// setup until the hit; the ink line grows from its middle, thickens 2 -> 6px during the rush
+setup.style.opacity = hit ? 0 : 1;
+var iw = mix(2, 6, ramp(t, CFG.rush, CFG.rushDur, "exit")) * K;
+ink.style.width = iw.toFixed(2) + "px"; ink.style.marginLeft = (-iw / 2).toFixed(2) + "px";
+ink.style.transform = "rotate(" + DEG.toFixed(3) + "deg) scaleY(" + ramp(t, CFG.grow, CFG.growDur, "snappy").toFixed(4) + ")";
+// the two posters and their motion blur
+var x = pos(t), vel = MT.velocity(pos, t);
+moves.forEach(function (m, i) {
+var s = i ? -1 : 1;
+m.style.transform = L.axis === "x" ? "translateX(" + (s * x).toFixed(2) + "px)" : "translateY(" + (s * x).toFixed(2) + "px)";
+if (L.axis === "x") blurs[i](s * vel, 0); else blurs[i](0, s * vel);
+});
+// after the hit: numbers bounce 1.05 -> 1, notes and lists rise (right side 4 frames later)
+nums.forEach(function (n) { n.style.transform = "scale(" + (hit ? mix(1.05, 1, MT.spring({ t: t, delay: CFG.settle, damping: 14, stiffness: 220 })) : 1).toFixed(4) + ")"; });
+[[caps, CFG.note, 26], [lists, CFG.list, 20]].forEach(function (g) {
+g[0].forEach(function (el, i) {
+var p = ramp(t, g[1] + i * CFG.lag, CFG.textDur, "snappy");
+el.style.opacity = p.toFixed(3);
+el.style.transform = "translateY(" + ((1 - p) * g[2] * K).toFixed(2) + "px)";
+});
+});
+seam.style.opacity = hit ? 1 : 0;
+// ring (16 frames) and 12 speed lines (7 frames), once
+var w = ramp(t, CFG.hit, CFG.wave, "out"), ls = ramp(t, CFG.hit, CFG.lines, "out");
+ring.style.opacity = hit && w < 1 ? 1 : 0;
+ring.setAttribute("r", (mix(130, 640, w) * K).toFixed(1));
+ring.setAttribute("stroke-width", (mix(14, 1, w) * K).toFixed(2));
+ring.style.strokeOpacity = (0.85 * (1 - w)).toFixed(3);
+rays.forEach(function (ln, i) {
+var a = (i / 12) * Math.PI * 2 + 0.26, r0 = mix(170, 420, ls) * K, r1 = mix(260, 720, ls) * K;
+ln.setAttribute("x1", (cx + Math.cos(a) * r0).toFixed(1)); ln.setAttribute("y1", (cy + Math.sin(a) * r0).toFixed(1));
+ln.setAttribute("x2", (cx + Math.cos(a) * r1).toFixed(1)); ln.setAttribute("y2", (cy + Math.sin(a) * r1).toFixed(1));
+ln.setAttribute("stroke-width", (mix(8, 2, ls) * K).toFixed(2));
+ln.style.opacity = hit && ls < 1 ? (1 - ls).toFixed(3) : 0;
+});
+// stamp: spring 12 / 260 from 1.9x, untwists 8 deg onto the seam tilt; VS cuts in on frame 29 (disc 50%)
+var st = hit ? MT.spring({ t: t, delay: CFG.hit, damping: 12, stiffness: 260 }) : 0;
+stamp.style.opacity = hit ? 1 : 0;
+stamp.style.transform = "rotate(" + (TILT - 8 * (1 - st)).toFixed(3) + "deg) scale(" + mix(1.9, 1, st).toFixed(4) + ")";
+stamp.style.setProperty("--do", Math.min(1, st * 4).toFixed(3));
+vs.style.opacity = st >= 0.1 ? 1 : 0;
+// verdict pill rises 40px; its text cuts in at half opacity
+var vp = ramp(t, CFG.verdict, CFG.textDur, "snappy");
+ver.style.transform = "translate(-50%," + ((1 - vp) * 40 * K).toFixed(2) + "px)";
+pill.style.opacity = vp.toFixed(3);
+verRow.forEach(function (el) { el.style.opacity = vp >= 0.5 ? 1 : 0; });
+// paper flash 0.85 -> 0 over 3 frames, outside the shake
+flash.style.opacity = hit ? (CFG.flash * (1 - ramp(t, CFG.hit, CFG.flashDur, "linear"))).toFixed(3) : 0;
+});
+kReveal(tl, qUnits, "rise", CFG.q, { each: CFG.qEach, gap: CFG.qGap });
+window.__timelines["versus-slam"] = tl;
+})();
+</script>
+</template>
+</body>
+</html>

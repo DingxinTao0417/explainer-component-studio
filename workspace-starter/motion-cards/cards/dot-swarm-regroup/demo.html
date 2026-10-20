@@ -1,0 +1,502 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"label","type":"string","label":"眉题（留空不要）","default":"学员构成 · 本学期"},
+    {"id":"items","type":"string","label":"分组名（用 | 分隔，2–3 组）","default":"视频课|直播课|图文课"},
+    {"id":"values","type":"string","label":"各组数值（用 | 分隔，和分组对应）","default":"7210|4102|1535"},
+    {"id":"key","type":"number","label":"强调第几组","default":2},
+    {"id":"unit","type":"string","label":"图注单位（每个点 ≈ N 单位）","default":"位学员"},
+    {"id":"t1","type":"string","label":"第一幕标题（{n} 换成每点的数）","default":"每个点|代表 {n} 位学员"},
+    {"id":"t2","type":"string","label":"第二幕标题（聚成团）","default":"按课程|分成三组"},
+    {"id":"t3","type":"string","label":"第三幕标题（码成柱）","default":"再按课程|码成三根柱"},
+    {"id":"t4","type":"string","label":"终幕标题（拼成总数）","default":"学员|总数"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>dot-swarm-regroup · 点阵重组</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="dot-swarm-regroup-template">
+<!-- Ported from video-shotcraft demos/data/chart-live-moves/UnitDotSwarmRegroupV2.tsx
+     (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+     Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+     Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT scene, frames to seconds; --k-* palette
+     (hero group accent, others grey and ink), system fonts, generic copy, upstream mark and wordmark removed; labels
+     32-36px to 40px; group sizes, total and 0-9 dot glyphs from the variables (upstream: fixed 12,847); dot size from
+     the glyph spacing; clusters and bars laid out from the radii; dots on one canvas with a fixed shadow (upstream: divs,
+     shadow grew with speed, 1px highlight); slot 6.0 (upstream 6.4), push from 4.0s. Spring 150/13/0.8 in 24 frames,
+     staggers, Vogel clusters, 8-column bars, speed stretch, pop and act times kept. -->
+<style>
+  @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+  @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+  @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+  #root {
+    --k-bg: var(--mc-bg, #ffffff);
+    --k-panel: var(--mc-panel, #f4f5f7);
+    --k-ink: var(--mc-ink, #15171c);
+    --k-muted: var(--mc-muted, #6b7280);
+    --k-accent: var(--mc-accent, #e8590c);
+    --k-accent-2: var(--mc-accent-2, #2563eb);
+    --k-on-accent: var(--mc-on-accent, #ffffff);
+    --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    font-family: var(--k-font);
+    color: var(--k-ink);
+  }
+  /* ==== kit:derived@1 (shade line only) ==== */
+  .ds { --ds-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); }
+  .ds[data-tone="dark"] { --ds-shade: color-mix(in srgb, var(--k-bg) 30%, black); }
+  /* ==== end kit:derived ==== */
+  /* ==== kit:backdrop@1 ==== */
+  .ds-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+  .ds-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+  /* ==== end kit:backdrop ==== */
+
+  /* ==== kit:vignette@1 ==== */
+  .ds-vig {
+    position: absolute; inset: 0; pointer-events: none;
+    --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--ds-shade);
+    background:
+      radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+      radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+  }
+  .ds[data-tone="dark"] .ds-vig { --vs: 0.55; }
+  /* ==== end kit:vignette ==== */
+
+  /* ==== kit:grain@1 ==== */
+  .ds-grain { position: absolute; inset: 0; pointer-events: none; }
+  /* ==== end kit:grain ==== */
+
+  /* ==== kit:text@2 ==== */
+  .ds-u { display: inline-block; white-space: pre; }
+  .ds-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+  /* ==== end kit:text ==== */
+
+  /* ==== kit:fit@1 ==== */
+  .ds-row { display: block; white-space: nowrap; }
+  /* ==== end kit:fit ==== */
+
+  .ds { position: absolute; inset: 0; container-type: size; --a0: color-mix(in srgb, var(--k-accent), white 30%); --a1: var(--k-accent); }
+  .ds-cam { position: absolute; inset: 0; transform-origin: 50% 52%; }
+  /* group colours (legend swatches; the canvas dots read the same mixes): top-lit beads */
+  .g0 { --c0: color-mix(in srgb, var(--k-muted) 42%, var(--k-bg)); --c1: color-mix(in srgb, var(--k-muted) 62%, var(--k-bg)); }
+  .g1 { --c0: var(--a0); --c1: var(--a1); }
+  .g2 { --c0: color-mix(in srgb, var(--k-ink) 72%, var(--k-accent-2)); --c1: var(--k-ink); }
+  .ds-dots { position: absolute; left: 0; top: 0; }
+  .ds-eb { position: absolute; left: 96px; top: 88px; width: 1100px; font-size: 40px; font-weight: 600; line-height: 1.25; color: var(--k-muted); }
+  .ds-h { position: absolute; left: 90px; top: 150px; width: 1500px; font-size: 84px; font-weight: 800; line-height: 1.2; }
+  .ds-pre { opacity: 0; }
+  .ds-cl, .ds-bv, .ds-bn { position: absolute; width: 400px; text-align: center; }
+  .ds-cv, .ds-bv { white-space: nowrap; }
+  .ds-cn, .ds-bn { display: block; font-size: 40px; font-weight: 650; line-height: 1.25; color: var(--k-muted); }
+  .ds-cv, .ds-bv { display: block; font-size: 60px; font-weight: 750; line-height: 1.2; font-variant-numeric: tabular-nums; }
+  .ds-cl.on .ds-cn, .ds-cl.on .ds-cv, .ds-bv.on, .ds-bn.on { color: var(--k-accent); }
+  .ds-base { position: absolute; height: 3px; border-radius: 2px; background: var(--k-ink); opacity: 0.85; transform-origin: 0 50%; }
+  .ds-leg { position: absolute; left: 96px; right: 96px; top: 784px; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 64px; }
+  .ds-li { display: flex; align-items: center; gap: 16px; white-space: nowrap; font-size: 40px; line-height: 1.25; }
+  .ds-ld { display: block; flex: none; width: 22px; height: 22px; border-radius: 11px; background: linear-gradient(180deg, var(--c0), var(--c1)); }
+  .ds-ln { font-weight: 650; }
+  .ds-li.on .ds-ln { color: var(--k-accent); }
+  .ds-lv { font-weight: 450; color: var(--k-muted); font-variant-numeric: tabular-nums; }
+  .ds-cap { position: absolute; left: 0; right: 0; top: 856px; text-align: center; font-size: 40px; font-weight: 500; line-height: 1.25; color: var(--k-muted); }
+  /* without the script: the total as plain type where the dots would spell it */
+  .ds-ph { position: absolute; left: 0; right: 0; top: 380px; text-align: center; font-size: 300px; font-weight: 800; line-height: 1; color: var(--k-accent); font-variant-numeric: tabular-nums; }
+  /* portrait: eyebrow and title in the top of the band, everything else under them; the legend becomes a column */
+  @container (orientation: portrait) {
+    .ds-eb { left: 124px; top: 262px; width: 830px; }
+    .ds-h { left: 124px; top: 318px; width: 830px; }
+    .ds-leg { left: 120px; right: 120px; top: 846px; flex-direction: column; align-items: center; gap: 12px; }
+    .ds-cap { left: 120px; right: 120px; top: 1066px; }
+    .ds-ph { top: 590px; font-size: 200px; }
+  }
+</style>
+
+<div id="root" data-composition-id="dot-swarm-regroup">
+  <div class="ds">
+    <div class="ds-backdrop"></div>
+    <div class="ds-vig"></div>
+    <div class="ds-grain"></div>
+    <div class="ds-cam">
+      <canvas class="ds-dots"></canvas>
+      <div class="ds-eb">学员构成 · 本学期</div>
+      <div class="ds-h ds-pre"></div><div class="ds-h ds-pre"></div><div class="ds-h ds-pre"></div><div class="ds-h">学员总数</div>
+      <div class="ds-ph">12,847</div>
+      <div class="ds-leg">
+        <div class="ds-li g0"><span class="ds-ld"></span><span class="ds-ln">视频课</span><span class="ds-lv">7,210</span></div>
+        <div class="ds-li g1 on"><span class="ds-ld"></span><span class="ds-ln">直播课</span><span class="ds-lv">4,102</span></div>
+        <div class="ds-li g2"><span class="ds-ld"></span><span class="ds-ln">图文课</span><span class="ds-lv">1,535</span></div>
+      </div>
+      <div class="ds-cap">每个点 ≈ 40 位学员</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // timing (s) = upstream frames / 30, both orientations: migrations at m1 / m2 / m3, each dot's spring (k, c, mass)
+  // squeezed into `dur` after its stagger (up to `stag` frames); title swaps; cluster / bar labels; legend; caption
+  var CFG = { m1: 0.8, m2: 2.0667, m3: 3.3333, dur: 0.8, stag: 8, k: 150, c: 13, mass: 0.8,
+    tIn: [0.0667, 1.2667, 2.4667, 3.8], tOut: [0.9333, 2.1333, 3.4], cl: 1.2667, bl: 2.6, base: 2.2, leg: 4, cap: 4.4, end: 6, push: 1.02 };
+  // layout (px): dot radius cap, glyph spacing per dot diameter, scatter box [x, y, w, h], cluster line, cluster gap,
+  // bar baseline, highest bar top, widest number, number centre line, pop-in reach
+  var LAND = { r: 10, sp: 0.915, scat: [200, 330, 1520, 640], cy: 650, gap: 170, base: 900, top: 300, gw: 1302, gcy: 541, reach: 900 };
+  var PORT = { r: 10, sp: 0.76, scat: [150, 560, 780, 620], cy: 830, gap: 60, base: 1150, top: 640, gw: 820, gcy: 692, reach: 600 };
+  var v = { label: "学员构成 · 本学期", items: "视频课|直播课|图文课", values: "7210|4102|1535", key: 2, unit: "位学员",
+    t1: "每个点|代表 {n} 位学员", t2: "按课程|分成三组", t3: "再按课程|码成三根柱", t4: "学员|总数", backdrop: "on" };
+  try {
+    var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+  } catch (e) {}
+
+  // ==== kit:tone@1 ====
+  function kRGB(el, color) {
+    var p = document.createElement("i");
+    p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+    el.appendChild(p);
+    var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+    el.removeChild(p);
+    return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+  }
+  function kTone(wrap) {
+    var c = kRGB(wrap, "var(--k-bg)");
+    var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+    wrap.setAttribute("data-tone", tone);
+    return tone;
+  }
+  // ==== end kit:tone ====
+
+  // ==== kit:grain@1 ====
+  function kGrain(layer, o) {
+    o = o || {};
+    var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+    var dark = tones && tones.getAttribute("data-tone") === "dark";
+    var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+      var f = "type='linear' slope='2.4' intercept='-0.7'";
+      var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+        "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+        "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+        "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+        "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+      return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+    });
+    layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+    layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+    layer.style.backgroundSize = size + "px " + size + "px";
+    return function (t) {
+      var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+      layer.style.backgroundImage = tiles[k % 6];
+      layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+    };
+  }
+  // ==== end kit:grain ====
+
+  // ==== kit:text@2 ====
+  var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+  function kWords(s, key) {
+    s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+    var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+    var cut = function (x) {
+      if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+      return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+    };
+    var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+    var pre = "";
+    bits.forEach(function (x) {
+      var t = x.trim(), last = out[out.length - 1];
+      if (last && /^ /.test(x)) last.sp = true;
+      if (!t) return;
+      if (!/[\p{L}\p{N}]/u.test(t)) {
+        if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+        else { last.t += t; last.sp = / $/.test(x); }
+        return;
+      }
+      out.push({ t: pre + t, sp: / $/.test(x) });
+      pre = "";
+    });
+    if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+    if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+    if (out.length) out[out.length - 1].sp = false;
+    return out;
+  }
+  function kSplit(el, by, rise, text) {
+    var s = text != null ? String(text) : el.textContent, units = [];
+    var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+    el.textContent = "";
+    parts.forEach(function (p) {
+      var u = document.createElement("span"), box = u;
+      u.className = "ds-u"; u.textContent = p.t;
+      if (by === "line") u.style.display = "block";
+      if (!p.t.trim()) { el.appendChild(u); return; }
+      if (rise) { box = document.createElement("span"); box.className = "ds-cut"; box.style.display = u.style.display; box.appendChild(u); }
+      el.appendChild(box);
+      if (p.sp) el.appendChild(document.createTextNode(" "));
+      units.push(u);
+    });
+    return units;
+  }
+  function kReveal(tl, units, variant, at, o) {
+    o = o || {};
+    var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+    units.forEach(function (u, i) {
+      var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+      if (variant === "rise") {
+        tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+        tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+      } else if (variant === "blur") {
+        tl.fromTo(u, { opacity: 0, y: fs * 0.25, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: each, ease: ease }, t0);
+      } else if (variant === "drop") {
+        tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each / 3, ease: "none" }, t0);
+        tl.fromTo(u, { y: -fs * 0.6 }, { y: 0, duration: each, ease: "overshoot" }, t0);
+      } else if (variant === "scale") {
+        tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each * 0.1, ease: "power1.out" }, t0);
+        tl.fromTo(u, { scale: 1.6, filter: "blur(8px)" }, { scale: 1, filter: "blur(0px)", duration: each, ease: ease }, t0);
+      } else {
+        tl.fromTo(u, { opacity: 0, marginRight: "0.5em" }, { opacity: 1, marginRight: "0em", duration: each, ease: ease }, t0);
+      }
+    });
+    return tl;
+  }
+  // ==== end kit:text ====
+
+  // ==== kit:fit@1 ====
+  function kFit(el, o) {
+    o = o || {};
+    var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+    var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+    for (;;) {
+      el.style.fontSize = f + "px";
+      m = kLines(el);
+      if ((m.w <= W && m.n <= n) || f <= min) break;
+      f = Math.max(min, f - 2);
+    }
+    if (m.w > W) {
+      [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+      m = kLines(el);
+    }
+    return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+  }
+  function kLines(el) {
+    var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+    var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+    while ((t = it.nextNode())) {
+      if (!t.data.trim()) continue;
+      r.selectNodeContents(t);
+      [].forEach.call(r.getClientRects(), function (b) {
+        var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+        if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+        row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+      });
+    }
+    return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+  }
+  function kRows(el, cls) {
+    if (!el.children.length) return [];
+    var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+    var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+    kids.forEach(function (c, i) {
+      if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+      if (tops[i] != null) last = tops[i];
+      row.appendChild(c);
+    });
+    return [].slice.call(el.children);
+  }
+  // ==== end kit:fit ====
+
+  var root = document.querySelector(".ds");
+  var q = function (s) { return root.querySelector(s); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+    // not laid out yet: the host clip's declared size, then the window
+    var hc = root.closest("[data-width][data-height]");
+    FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+    FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND;
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+  kTone(root);
+  var off = String(v.backdrop) === "off";
+  if (off) ["backdrop", "vig", "grain"].forEach(function (c) { q(".ds-" + c).style.display = "none"; });
+  var grain = off ? null : kGrain(q(".ds-grain"));
+  q(".ds-ph").style.display = "none";
+
+  // ---- data: 2-3 groups; 320 dots shared out by value (largest remainder)
+  var N = 320, sp = function (s) { return String(s).split("|").map(function (x) { return x.trim(); }); }, sum = function (a) { return a.reduce(function (x, y) { return x + y; }, 0); };
+  var names = sp(v.items), vals = sp(v.values).map(function (x) { return Math.max(0, parseFloat(x.replace(/,/g, "")) || 0); }).slice(0, 3);
+  while (vals.length < 2) vals.push(1);
+  var G = vals.length, total = sum(vals) || 1;
+  var fmt = function (n) { return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); };
+  var cnt = vals.map(function (x) { return Math.floor((x / total) * N); }), rest = N - sum(cnt);
+  vals.map(function (x, g) { return [(x / total) * N - cnt[g], g]; }).sort(function (a, b) { return b[0] - a[0]; }).slice(0, rest).forEach(function (r) { cnt[r[1]]++; });
+  var hero = Math.min(G, Math.max(1, Math.round(+v.key) || 2)) - 1;
+  // colour class per group: the hero takes the accent, the others grey then ink
+  var cls = []; for (var g = 0, o = 0; g < G; g++) cls.push(g === hero ? "g1" : ["g0", "g2"][o++]);
+  var per = +(total / N).toPrecision(2);
+  var sub = function (s) { return String(s).replace("{n}", per); };
+
+  // ---- the number: one stroke skeleton per glyph (200 x 280 box), 160 points at equal arc length, two rows
+  var A = function (cx, cy, r, a0, a1, ry, n) {
+    n = n || 48; var o = [];
+    for (var j = 0; j <= n; j++) { var a = ((a0 + ((a1 - a0) * j) / n) * Math.PI) / 180; o.push([cx + r * Math.cos(a), cy + (ry || r) * Math.sin(a)]); }
+    return o;
+  };
+  var GL = {
+    0: [A(100, 140, 72, -90, 270, 116)], 1: [[[58, 64], [112, 22], [112, 258]], [[52, 258], [172, 258]]],
+    2: [A(100, 86, 64, 198, 378).concat([[36, 258], [172, 258]])], 3: [A(100, 82, 58, 200, 450).concat(A(100, 198, 60, -90, 160))],
+    4: [[[142, 258], [142, 22], [26, 188], [118, 188]], [[164, 188], [200, 188]]], 5: [[[164, 24], [54, 24], [46, 128]].concat(A(98, 186, 72, -126, 150))],
+    6: [A(230, 200, 193, 245, 183, 0, 16).concat(A(102, 190, 66, -180, 180))], 7: [[[26, 24], [176, 24], [84, 258]]],
+    8: [A(100, 76, 53, -90, 270, 0, 56), A(100, 198, 62, -90, 270, 0, 64)], 9: [A(98, 90, 66, 0, 360).concat(A(-30, 80, 193, 3, 65, 0, 16))],
+    ",": [[[22, 236], [4, 290]]]
+  };
+  var str = fmt(total), segs = [], x0 = 0, gw = 0;
+  str.split("").forEach(function (ch) {
+    if (!GL[ch]) return;
+    GL[ch].forEach(function (s) { for (var j = 0; j < s.length - 1; j++) segs.push([x0 + s[j][0], s[j][1], x0 + s[j + 1][0], s[j + 1][1]]); });
+    gw = x0 + (ch === "," ? 26 : 200); x0 += ch === "," ? 78 : 232;
+  });
+  var GS = Math.min(1.08, L.gw / gw), GX = (FW - gw * GS) / 2, GY = L.gcy - 156 * GS, len = 0;
+  segs.forEach(function (s) { for (var j = 0; j < 4; j++) s[j] = (j % 2 ? GY : GX) + s[j] * GS; s[4] = Math.hypot(s[2] - s[0], s[3] - s[1]); len += s[4]; });
+  // dot size follows the spacing along the strokes (upstream: 18.3 px apart, radius 10; portrait packs tighter)
+  var R = Math.min(L.r, len / N / L.sp), U = R / 10;
+  var DG = [], si = 0, acc = 0;
+  for (var j = 0; j < N / 2; j++) {
+    var tg = ((j + 0.5) / (N / 2)) * len;
+    while (si < segs.length - 1 && acc + segs[si][4] < tg) acc += segs[si++][4];
+    var s = segs[si], u = s[4] ? (tg - acc) / s[4] : 0, nx = -(s[3] - s[1]) / (s[4] || 1), ny = (s[2] - s[0]) / (s[4] || 1);
+    var px = s[0] + (s[2] - s[0]) * u, py = s[1] + (s[3] - s[1]) * u;
+    DG.push([px + nx * 10.5 * U, py + ny * 10.5 * U], [px - nx * 10.5 * U, py - ny * 10.5 * U]);
+  }
+
+  // ---- per dot: group, scatter, cluster (Vogel spiral), bar slot, staggers
+  var rnd = function (i, salt) { var x = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453; return x - Math.floor(x); };
+  var VO = 12.6 * U, SPC = 23 * U, sc = L.scat;
+  var CR = cnt.map(function (n) { return VO * Math.sqrt(n) + R; });
+  var rowsMax = Math.floor((L.base - L.top) / SPC), cols = Math.max(8, Math.ceil(Math.max.apply(null, cnt) / rowsMax));
+  var CX = [], wsum = 2 * sum(CR) + L.gap * (G - 1), cx = (FW - wsum) / 2;
+  CR.forEach(function (r) { CX.push(cx + r); cx += 2 * r + L.gap; });
+  var D = [], dots = q(".ds-dots");
+  for (var i = 0, gi = 0, ii = 0; i < N; i++, ii++) {
+    while (ii >= cnt[gi]) { ii = 0; gi++; }
+    var kk = ii + 0.5, ra = VO * Math.sqrt(kk), an = kk * 2.39996 + gi, row = Math.floor(ii / cols), rows = Math.ceil(cnt[gi] / cols);
+    var S = [sc[0] + ((rnd(i, 1) + rnd(i, 11)) / 2) * sc[2], sc[1] + ((rnd(i, 2) + rnd(i, 12)) / 2) * sc[3]];
+    D.push({ g: gi, S: S, C: [CX[gi] + ra * Math.cos(an), L.cy + ra * Math.sin(an)], B: [CX[gi] + ((ii % cols) - (cols - 1) / 2) * SPC, L.base - R - row * SPC], T: DG[i],
+      s0: rnd(i, 7) * CFG.stag, s1: Math.sqrt(row / Math.max(1, rows - 1)) * CFG.stag + rnd(i, 13) * 2, s2: ((DG[i][0] - GX) / (gw * GS)) * (CFG.stag + 4) + rnd(i, 14) * 1.5,
+      pop: MT.EASE.out(Math.min(1, Math.hypot(S[0] - FW / 2, (S[1] - (sc[1] + sc[3] / 2)) * 1.6) / L.reach)) * 10 });
+  }
+  // one canvas under the text for all dots (320 nodes made the checker time out); palette colours read once
+  var DPR = Math.min(2, window.devicePixelRatio || 1), ctx = dots.getContext("2d"), rgb = function (el, c, a) { return "rgba(" + kRGB(el, c).join(",") + "," + (a == null ? 1 : a) + ")"; };
+  dots.width = FW * DPR; dots.height = FH * DPR; dots.style.width = FW + "px"; dots.style.height = FH + "px";
+  var GC = cls.map(function (c) { var e = document.createElement("i"); e.className = c; root.appendChild(e); var r = [rgb(e, "var(--c0)"), rgb(e, "var(--c1)")]; root.removeChild(e); return r; });
+  var AC = [rgb(root, "var(--a0)"), rgb(root, "var(--a1)")], SHD = rgb(root, "var(--ds-shade)", 0.16);
+
+  // Remotion's spring squeezed into `dur` (durationInFrames): natural length in frames, rest threshold 1e-4
+  var sprg = function (t) { return MT.spring({ t: t, damping: CFG.c, stiffness: CFG.k, mass: CFG.mass }); };
+  var NAT = (function () {
+    var f = 0, fin, n;
+    while (Math.abs(sprg(f / 30) - 1) >= 1e-4) f++;
+    fin = f;
+    for (n = 0; n < 20; n++) { f++; if (Math.abs(sprg(f / 30) - 1) >= 1e-4) { n = 0; fin = f + 1; } }
+    return fin;
+  })();
+  var DUR = CFG.dur * 30;
+  var mig = function (fr) { return fr <= 0 ? 0 : fr > DUR ? 1 : sprg((fr * NAT) / DUR / 30); };
+  var pos = function (d, i, t) {
+    var f = t * 30, x = d.S[0] + 9 * U * Math.sin(f / 21 + rnd(i, 8) * 6.28), y = d.S[1] + 7 * U * Math.cos(f / 27 + rnd(i, 9) * 6.28), m;
+    m = mig(f - CFG.m1 * 30 - d.s0); x += (d.C[0] - x) * m; y += (d.C[1] - y) * m;
+    m = mig(f - CFG.m2 * 30 - d.s1); x += (d.B[0] - x) * m; y += (d.B[1] - y) * m;
+    m = mig(f - CFG.m3 * 30 - d.s2); x += (d.T[0] - x) * m; y += (d.T[1] - y) * m;
+    return [x, y];
+  };
+
+  // ---- text: eyebrow, the four act titles, cluster and bar labels, legend, caption
+  var eb = q(".ds-eb");
+  eb.textContent = String(v.label).trim();
+  kFit(eb, { lines: 1 });
+  var HU = [].map.call(root.querySelectorAll(".ds-h"), function (h, n) {
+    h.style.opacity = 1;
+    var us = kSplit(h, "word", true, sub(v["t" + (n + 1)]));
+    kFit(h, { lines: 1, min: P ? 72 : 60 });
+    // a rising unit is clipped; over the canvas the checker calls that occluded
+    us.forEach(function (u) { u.setAttribute("data-layout-allow-occlusion", ""); });
+    return us;
+  });
+  var cam = q(".ds-cam"), leg = q(".ds-leg"), mk = function (c, html) { var e = document.createElement("div"); e.className = c; e.innerHTML = html || ""; cam.insertBefore(e, leg); return e; };
+  var CL = [], BV = [], BN = [];
+  for (g = 0; g < G; g++) {
+    var on = g === hero ? " on" : "", nm = names[g] || "", vl = fmt(vals[g]), bt = L.base - R - (Math.ceil(cnt[g] / cols) - 1) * SPC;
+    CL.push(mk("ds-cl" + on, '<span class="ds-cn"></span><span class="ds-cv"></span>'));
+    CL[g].firstChild.textContent = nm; CL[g].lastChild.textContent = vl;
+    CL[g].style.left = CX[g] - 200 + "px"; CL[g].style.top = L.cy - CR[g] - 140 + "px";
+    BV.push(mk("ds-bv" + on)); BV[g].textContent = vl; BV[g].style.left = CX[g] - 200 + "px"; BV[g].style.top = bt - R - 92 + "px";
+    BN.push(mk("ds-bn" + on)); BN[g].textContent = nm; BN[g].style.left = CX[g] - 200 + "px"; BN[g].style.top = L.base + 22 + "px";
+  }
+  // labels keep to a column (narrowest cluster + gap): names shrink to 28px, then wrap; cluster labels grow upward
+  var colW = Math.min(400, 2 * Math.min.apply(null, CR) + L.gap - 20);
+  [].concat(CL, BV, BN).forEach(function (e, n) {
+    var el = e.firstChild.nodeType === 1 ? e.firstChild : e, nm = e !== BV[n - G];
+    e.style.width = colW + "px"; e.style.marginLeft = 200 - colW / 2 + "px";
+    kFit(el, nm ? { width: colW, min: 28, lines: 2 } : { width: colW });
+    if (n < G) e.style.top = L.cy - CR[n] - 18 - e.offsetHeight + "px";
+  });
+  var bw = (cols - 1) * SPC + 2 * R + 232 * U, base = mk("ds-base");
+  base.style.left = CX[0] - bw / 2 + "px"; base.style.width = CX[G - 1] - CX[0] + bw + "px"; base.style.top = L.base + 2 + "px";
+  leg.innerHTML = "";
+  var LI = vals.map(function (x, g) {
+    var e = document.createElement("div");
+    e.className = "ds-li " + cls[g] + (g === hero ? " on" : "");
+    e.innerHTML = '<span class="ds-ld"></span><span class="ds-ln"></span><span class="ds-lv"></span>';
+    e.children[1].textContent = names[g] || ""; e.children[2].textContent = fmt(x);
+    leg.appendChild(e);
+    return e;
+  });
+  var cap = q(".ds-cap");
+  cap.textContent = String(v.unit).trim() ? "每个点 ≈ " + per + " " + String(v.unit).trim() : "";
+
+  // ---- one scene: dots and labels per frame, titles as tweens
+  var tl = MT.scene(CFG.end, render);
+  HU.forEach(function (us, n) {
+    kReveal(tl, us, "rise", CFG.tIn[n], { each: 0.5333, gap: 0.1 });
+    if (n < 3) us.forEach(function (u) {
+      tl.fromTo(u, { y: 0 }, { y: -(u.offsetHeight * 1.05 + parseFloat(getComputedStyle(u).fontSize) * 0.3), duration: 0.3333, ease: "exit", immediateRender: false }, CFG.tOut[n]);
+      tl.set(u, { opacity: 0 }, CFG.tOut[n] + 0.3333);
+    });
+  });
+
+  function render(t) {
+    var f = t * 30; // frames at 30 fps
+    if (grain) grain(t);
+    eb.style.opacity = MT.ramp(t, 0, 0.4, "out");
+    // top-lit capsules stretched along the velocity (px per frame x 0.45, at most 20), soft drop shadow
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.clearRect(0, 0, FW, FH);
+    ctx.shadowColor = SHD; ctx.shadowBlur = 4 * DPR; ctx.shadowOffsetY = 2 * DPR;
+    D.forEach(function (d, i) {
+      var p = pos(d, i, t), b = pos(d, i, t - 1 / 30), vx = p[0] - b[0], vy = p[1] - b[1], spd = Math.hypot(vx, vy);
+      var st = Math.min(spd * 0.45, 20 * U), w = 2 * R + st, pop = MT.spring({ t: t - d.pop / 30, damping: 12, stiffness: 200 });
+      if (pop <= 0) return;
+      var l = MT.ramp(f, CFG.m3 * 30 + d.s2 + 10, 12, "out"), gr = ctx.createLinearGradient(0, -R, 0, R);
+      gr.addColorStop(0, l > 0 ? MT.mix(GC[d.g][0], AC[0], l) : GC[d.g][0]); gr.addColorStop(1, l > 0 ? MT.mix(GC[d.g][1], AC[1], l) : GC[d.g][1]);
+      ctx.save(); ctx.translate(p[0], p[1]); ctx.rotate(spd > 0.3 ? Math.atan2(vy, vx) : 0); ctx.scale(pop, pop * (1 - Math.min(st / 120, 0.18)));
+      ctx.beginPath(); ctx.roundRect(-w / 2, -R, w, 2 * R, R); ctx.fillStyle = gr; ctx.fill(); ctx.restore();
+    });
+    var clOp = Math.min(MT.ramp(t, CFG.cl, 0.4, "out"), 1 - MT.ramp(t, CFG.m2 - 0.0667, 0.2667, "exit"));
+    var blOp = Math.min(MT.ramp(t, CFG.bl, 0.4, "out"), 1 - MT.ramp(t, CFG.m3 - 0.0667, 0.2667, "exit"));
+    for (var g = 0; g < G; g++) {
+      CL[g].style.opacity = clOp; CL[g].style.transform = "translateY(" + MT.mix(14, 0, MT.ramp(t, CFG.cl + g * 0.1, 0.4667, "snappy")).toFixed(2) + "px)";
+      BV[g].style.opacity = BN[g].style.opacity = blOp; BV[g].style.transform = "translateY(" + MT.mix(16, 0, MT.ramp(t, CFG.bl + g * 0.1, 0.4667, "snappy")).toFixed(2) + "px)";
+    }
+    base.style.transform = "scaleX(" + Math.min(MT.ramp(t, CFG.base, 0.6, "snappy"), 1 - MT.ramp(t, CFG.m3 - 0.0667, 0.3333, "exit")) + ")";
+    LI.forEach(function (e, k) { var a = MT.ramp(t, CFG.leg + k * 0.1333, 0.4667, "snappy"); e.style.opacity = a; e.style.transform = "translateY(" + MT.mix(18, 0, a).toFixed(2) + "px)"; });
+    cap.style.opacity = MT.ramp(t, CFG.cap, 0.4667, "out");
+    cam.style.transform = "scale(" + MT.mix(1, CFG.push, MT.ramp(t, CFG.leg, CFG.end - CFG.leg, "smooth")).toFixed(5) + ")";
+  }
+  window.__timelines["dot-swarm-regroup"] = tl;
+})();
+</script>
+    </template>
+  </body>
+</html>

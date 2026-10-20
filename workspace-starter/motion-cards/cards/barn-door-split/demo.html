@@ -1,0 +1,321 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"old","type":"string","label":"旧页文字：眉题|大字|副题","default":"现在的做法|手动整理|每周要花两个小时"},
+    {"id":"new","type":"string","label":"新页文字：眉题|大字|副题（大字里用 [ ] 标出强调色的部分）","default":"换一种做法|[自动]整理|十分钟就能搞定"},
+    {"id":"from","type":"string","label":"旧页换成一张图（从项目根目录写起；留空画文字页）","default":""},
+    {"id":"to","type":"string","label":"新页换成一张图（从项目根目录写起；留空画文字页）","default":""},
+    {"id":"seam","type":"enum","label":"裂缝方向","default":"vertical","options":[{"value":"vertical","label":"竖缝，左右开门"},{"value":"horizontal","label":"横缝，上下开门"}]},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（只留字和光）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>barn-door-split · 对开门裂幕</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="barn-door-split-template">
+      <!-- Ported from video-shotcraft demos/transition/page-turn-transitions/BarnDoorSplit.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds
+           (whole timeline 10 frames earlier); neutral --k-* palette on white (light from the seam is an accent tint on
+           light skins, a screen-blended glow on dark ones), system fonts, generic copy, upstream mark removed;
+           ember stage, dust and the follow-up stat roll / subtitle reveal dropped; optional from/to images, horizontal
+           seam and portrait added; crack, pre-gap, door curve, blur tuning, new-page scale and hold drift kept. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* light skins: the seam light is an accent tint (multiply keeps text dark); dark skins: a warm screen glow */
+        .bd {
+          position: absolute; inset: 0; container-type: size; overflow: hidden;
+          --bd-blend: multiply; --bd-ta: 20%; --bd-b1: 26%; --bd-b2: 40%; --bd-ga: 30%; --bd-ha: 10%; --bd-c1: var(--k-accent); --bd-c2: var(--k-accent);
+          --bd-ax: 180deg; --bd-bx: 90deg;
+          --bd-p0: color-mix(in srgb, var(--k-panel), var(--k-bg) 55%); --bd-p2: color-mix(in srgb, var(--k-panel), var(--k-ink) 6%);
+          --bd-n0: var(--k-bg); --bd-n1: color-mix(in srgb, var(--k-bg), var(--k-ink) 5%);
+        }
+        .bd[data-tone="dark"] {
+          --bd-blend: screen; --bd-ta: 50%; --bd-b1: 55%; --bd-b2: 85%; --bd-ga: 55%; --bd-ha: 16%;
+          --bd-c1: color-mix(in srgb, var(--k-accent), white 75%); --bd-c2: color-mix(in srgb, var(--k-accent), white 88%);
+          --bd-p0: color-mix(in srgb, var(--k-panel), var(--k-ink) 6%); --bd-p2: color-mix(in srgb, var(--k-panel), black 35%);
+          --bd-n0: color-mix(in srgb, var(--k-bg), var(--k-accent) 10%); --bd-n1: var(--k-bg);
+        }
+        .bd[data-seam="h"] { --bd-ax: 90deg; --bd-bx: 180deg; }
+        .bd-bg, .bd-new, .bd-zoom, .bd-page, .bd-doors, .bd-sb { position: absolute; inset: 0; }
+        /* new page: a soft key light from above */
+        .bd-bg { background: radial-gradient(ellipse 90% 80% at 50% 30%, var(--bd-n0) 40%, var(--bd-n1)); }
+        .bd-zoom { transform-origin: 50% 46%; }
+        /* both pages share one layout (same slots), so the new title lands where the old one stood */
+        .bd-col { position: absolute; left: 9%; right: 9%; top: 0; bottom: 8%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .bd-kick { display: flex; align-items: center; gap: 18px; height: 56px; font-size: 40px; font-weight: 700; letter-spacing: 0.22em; white-space: nowrap; color: var(--k-accent); }
+        .bd-title { position: relative; isolation: isolate; margin-top: 26px; font-size: 200px; font-weight: 800; line-height: 1.2; white-space: nowrap; }
+        .bd-sub { margin-top: 34px; font-size: 52px; font-weight: 500; line-height: 1.3; white-space: nowrap; color: var(--k-muted); }
+        .bd-hl { color: var(--k-accent); }
+        .bd-pn .bd-title::before { content: ""; position: absolute; z-index: -1; left: 50%; top: 50%; width: 175%; height: 220%; transform: translate(-50%, -50%); background: radial-gradient(ellipse 50% 50% at 50% 50%, color-mix(in srgb, var(--k-accent) var(--bd-ha), transparent) 0%, transparent 70%); }
+        .bd-img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
+        /* the old page: a cold, brushed plate in muted ink, no accent */
+        .bd-po { position: absolute; left: 0; top: 0; width: 200%; height: 100%; background: radial-gradient(ellipse 70% 60% at 50% 30%, var(--bd-p0) 0%, var(--k-panel) 45%, var(--bd-p2) 100%); }
+        .bd-po::before { content: ""; position: absolute; inset: 0; opacity: 0.5; background: repeating-linear-gradient(180deg, color-mix(in srgb, var(--k-ink) 4%, transparent) 0 1px, transparent 1px 4px); }
+        .bd-po .bd-kick, .bd-po .bd-sub { color: var(--k-muted); }
+        .bd-po .bd-title { color: color-mix(in srgb, var(--k-ink) 62%, var(--k-panel)); }
+        .bd-po .bd-hl { color: inherit; }
+        .bd[data-bare] .bd-bg, .bd[data-bare] .bd-po::before { display: none; }
+        .bd[data-bare] .bd-po { background: none; }
+        /* the doors: each a half-frame window onto one full copy of the old page (static frame = doors gone) */
+        .bd-doors { opacity: 0; }
+        .bd-door { position: absolute; top: 0; left: 0; width: 50%; height: 100%; overflow: hidden; --bd-dir: to left; }
+        .bd-d2 { left: 50%; --bd-dir: to right; }
+        .bd-d2 .bd-po { left: -100%; }
+        .bd-tint, .bd-edge { position: absolute; top: 0; right: 0; height: 100%; opacity: 0; }
+        .bd-d2 .bd-tint, .bd-d2 .bd-edge { right: auto; left: 0; }
+        .bd-tint { width: 64.6%; mix-blend-mode: var(--bd-blend); background: linear-gradient(var(--bd-dir), color-mix(in srgb, var(--k-accent) var(--bd-ta), transparent) 0%, color-mix(in srgb, var(--k-accent) calc(var(--bd-ta) * 0.28), transparent) 30%, transparent 100%); }
+        .bd-edge { width: 10px; background: linear-gradient(var(--bd-dir), color-mix(in srgb, var(--k-accent), white 75%) 0%, var(--k-accent) 35%, color-mix(in srgb, var(--k-accent), black 62%) 100%); }
+        .bd[data-seam="h"] .bd-door { width: 100%; height: 50%; --bd-dir: to top; }
+        .bd[data-seam="h"] .bd-d2 { left: 0; top: 50%; --bd-dir: to bottom; }
+        .bd[data-seam="h"] .bd-po { width: 100%; height: 200%; }
+        .bd[data-seam="h"] .bd-d2 .bd-po { left: 0; top: -100%; }
+        .bd[data-seam="h"] .bd-tint, .bd[data-seam="h"] .bd-edge { left: 0; right: 0; top: auto; bottom: 0; width: auto; height: 64.6%; }
+        .bd[data-seam="h"] .bd-edge { height: 10px; }
+        .bd[data-seam="h"] .bd-d2 .bd-tint, .bd[data-seam="h"] .bd-d2 .bd-edge { top: 0; bottom: auto; }
+        /* the hairline that marks the split point, and the over-exposed beam that pours through the slit */
+        .bd-crack { position: absolute; left: calc(50% - 1px); top: 0; width: 2px; height: 100%; opacity: 0; background: linear-gradient(var(--bd-ax), transparent 0%, var(--bd-c1) 22%, var(--bd-c2) 50%, var(--bd-c1) 78%, transparent 100%); box-shadow: 0 0 5.4px color-mix(in srgb, var(--k-accent) 50%, transparent), 0 0 21.6px color-mix(in srgb, var(--k-accent) 40%, transparent), 0 0 63px color-mix(in srgb, var(--k-accent) 27%, transparent); }
+        .bd[data-seam="h"] .bd-crack { left: 0; top: calc(50% - 1px); width: 100%; height: 2px; }
+        .bd-beam { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; mix-blend-mode: var(--bd-blend); background: linear-gradient(var(--bd-bx), transparent 0%, color-mix(in srgb, var(--k-accent) var(--bd-b1), transparent) 40%, color-mix(in srgb, var(--bd-c2) var(--bd-b2), transparent) 50%, color-mix(in srgb, var(--k-accent) var(--bd-b1), transparent) 60%, transparent 100%); }
+        /* ==== kit:mark@1 — the neutral mark from kMark() and a generic wordmark next to it ==== */
+        .bd-mark { display: block; flex: none; }
+        /* ==== end kit:mark ==== */
+        .bd-kick:has(span:empty) .bd-mark { display: none; }
+        /* portrait: the block sits in the 12%-68% band around the 40% line */
+        @container (orientation: portrait) {
+          .bd-zoom { transform-origin: 50% 40%; }
+          .bd-col { left: 11%; right: 11%; top: 12%; bottom: 32%; }
+          .bd-kick { gap: 14px; }
+          .bd-title { margin-top: 22px; font-size: 120px; }
+          .bd-sub { margin-top: 28px; font-size: 44px; }
+          .bd-mark { width: 48px; height: 48px; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="barn-door-split">
+        <div class="bd" data-layout-allow-overflow>
+          <div class="bd-bg"></div>
+          <div class="bd-new">
+            <div class="bd-zoom">
+              <div class="bd-page bd-pn">
+                <div class="bd-col">
+                  <div class="bd-kick">
+                    <!-- kit:mark@1: kMark(56), inlined so the static page is complete -->
+                    <svg class="bd-mark" width="56" height="56" viewBox="0 0 128 128" aria-hidden="true"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg>
+                    <span>换一种做法</span>
+                  </div>
+                  <div class="bd-title"><span class="bd-hl">自动</span>整理</div>
+                  <div class="bd-sub">十分钟就能搞定</div>
+                </div>
+              </div>
+              <div class="bd-beam"></div>
+            </div>
+          </div>
+          <div class="bd-doors">
+            <div class="bd-sb bd-s1">
+              <div class="bd-door bd-d1">
+                <div class="bd-po">
+                  <div class="bd-col">
+                    <div class="bd-kick"><span data-layout-allow-occlusion>现在的做法</span></div>
+                    <div class="bd-title" data-layout-allow-occlusion>手动整理</div>
+                    <div class="bd-sub" data-layout-allow-occlusion>每周要花两个小时</div>
+                  </div>
+                </div>
+                <div class="bd-tint"></div>
+                <div class="bd-edge"></div>
+              </div>
+            </div>
+            <div class="bd-sb bd-s2">
+              <div class="bd-door bd-d2"><div class="bd-tint"></div><div class="bd-edge"></div></div>
+            </div>
+            <div class="bd-crack"></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // seconds = upstream frames / 30, all 10 frames earlier (upstream holds the old page for 20 frames first)
+          var CFG = {
+            slot: 3.5,
+            crack: 0.333, crackDur: 0.333, lightDur: 0.4, // hairline drawn from the middle out, door faces warm up
+            gap: 0.667, gapDur: 0.333, gapPx: 16,         // pre-gap: the slit eases open to 16px, the new page mounts
+            slide: 1.0, slideDur: 0.8, travel: 1.0417,    // doors accelerate out, each 1.0417 x its own depth
+            dimDur: 0.467, flashIn: 0.4, flashLag: 0.2, flashOut: 1.0, beam: 0.1667, // beam reaches 1/6 depth past the edge
+            newLag: 0.067, newDur: 1.2, newFrom: 1.08,    // new page 1.08 -> 1, two frames after the doors go
+            push: 0.015, settle: 2.267, drift: 0.018, driftDur: 2.4 // slow camera push on the old page / the held new page
+          };
+          var BLUR = { amount: 0.09, max: 22 };          // upstream SpeedBlur tuning for these doors
+          var SLIDE = MT.bezier(0.42, 0, 0.8, 0.25);     // ease-in that is visible from the start, not a last-frame vanish
+          var v = { old: "现在的做法|手动整理|每周要花两个小时", "new": "换一种做法|[自动]整理|十分钟就能搞定", from: "", to: "", seam: "vertical", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".bd");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          root.setAttribute("data-orient", FH > FW ? "portrait" : "landscape");
+
+          // ==== kit:tone@1 — light or dark skin, read from --k-bg; sets data-tone on the wrapper ====
+          // [r, g, b] (0-255) of any CSS colour as the browser resolves it inside el (var(), color-mix() included)
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          // "dark" when --k-bg is dark (a dark skin): CSS keyed on [data-tone="dark"] switches the dark-tuned values
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+
+          // ==== kit:speedblur@1 — directional motion blur along the velocity, only while the layer moves fast ====
+          // box: a full-size, absolutely positioned wrapper around the moving content (its children are moved inside two new
+          // layers; call this before building the timeline). Returns set(vx, vy) in px per SECOND, e.g. from MT.velocity.
+          // Upstream tuning: blur = min(36, px-per-frame * 0.45), none below 0.35. Filter ids carry a per-mount number,
+          // because two mounts of one card share the document.
+          function kSpeedBlur(box, prefix, o) {
+            o = o || {};
+            var amount = o.amount || 0.45, max = o.max || 36;
+            var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+            var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+            svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+            var outer = document.createElement("div"), inner = document.createElement("div");
+            outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+            while (box.firstChild) inner.appendChild(box.firstChild);
+            outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+            var fe = svg.firstChild.firstChild;
+            return function (vx, vy) {
+              vy = vy || 0;
+              var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+              if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+              var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+              fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+              outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+              inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+              outer.style.filter = "url(#" + id + ")";
+            };
+          }
+          // ==== end kit:speedblur ====
+
+          kTone(root);
+          var HZ = String(v.seam) === "horizontal";
+          if (HZ) root.setAttribute("data-seam", "h");
+          if (String(v.backdrop) === "off") root.setAttribute("data-bare", "");
+
+          // pages: "kicker|title|subtitle", [..] in the title = accent part; each line shrinks to fit its column
+          // (CSS size is the largest it gets; CJK counts 1em, Latin 0.6em, the kicker's tracking 0.22em more)
+          var em = function (s) { var w = 0; for (var c = 0; c < s.length; c++) w += s.charCodeAt(c) > 255 ? 1 : 0.6; return w; };
+          // wrap: two balanced lines rather than going below min
+          var fit = function (el, text, width, min, track, wrap) {
+            var max = parseFloat(getComputedStyle(el).fontSize) || 60, n = Math.max(1, em(text) * track), s = Math.floor((width * 0.96) / n);
+            if (wrap && s < min) { el.style.whiteSpace = "normal"; el.style.textWrap = "balance"; s = Math.floor((width * 0.96) / Math.ceil(n / 2)); }
+            el.style.fontSize = Math.max(min, Math.min(max, s)) + "px";
+          };
+          var fill = function (page, spec, img) {
+            if (img) { page.innerHTML = '<img class="bd-img" alt="" />'; page.firstChild.setAttribute("src", String(img)); return; }
+            var p = String(spec).split("|");
+            if (p.length < 2) p.unshift(""); // no "|": the whole value is the title
+            var title = (p[1] || "").trim(), col = page.querySelector(".bd-col");
+            var W = col.clientWidth || FW * 0.8, kick = page.querySelector(".bd-kick span"), tt = page.querySelector(".bd-title"), sub = page.querySelector(".bd-sub");
+            kick.textContent = (p[0] || "").trim(); sub.textContent = (p[2] || "").trim();
+            fit(kick, kick.textContent, W - 80, 32, 1.22);
+            fit(sub, sub.textContent, W, 40, 1, 1);
+            fit(tt, title.replace(/[\[\]]/g, ""), W, FH > FW ? 72 : 56, 1, 1); // portrait title >= 72px
+            tt.textContent = "";
+            title.split(/(\[[^\]]*\])/).forEach(function (part) {
+              if (!part) return;
+              if (part.charAt(0) !== "[") return tt.appendChild(document.createTextNode(part));
+              var s = document.createElement("span");
+              s.className = "bd-hl"; s.textContent = part.slice(1, -1);
+              if (page === po) s.setAttribute("data-layout-allow-occlusion", ""); // the two door copies overlap by design
+              tt.appendChild(s);
+            });
+          };
+          var po = q(".bd-po");
+          fill(po, v.old, v.from);
+          fill(q(".bd-pn"), v["new"], v.to);
+          var D1 = q(".bd-d1"), D2 = q(".bd-d2");
+          D2.insertBefore(po.cloneNode(true), D2.firstChild); // the right (lower) door shows the other half of the same page
+          var blur1 = kSpeedBlur(q(".bd-s1"), "bd", BLUR), blur2 = kSpeedBlur(q(".bd-s2"), "bd", BLUR);
+
+          var half = (HZ ? FH : FW) / 2, travel = half * CFG.travel, F = 1 / 30, ax = HZ ? "Y" : "X";
+          var nw = q(".bd-new"), zoom = q(".bd-zoom"), beam = q(".bd-beam"), doors = q(".bd-doors"), crack = q(".bd-crack");
+          var lit = root.querySelectorAll(".bd-tint"), edges = root.querySelectorAll(".bd-edge"), hls = root.querySelectorAll(".bd-pn .bd-hl");
+          // one door's outward offset: half the pre-gap plus the slide
+          var doorAt = function (t) { return (CFG.gapPx * MT.ramp(t, CFG.gap, CFG.gapDur, "exit")) / 2 + travel * MT.ramp(t, CFG.slide, CFG.slideDur, SLIDE); };
+
+          function render(t) {
+            var d = doorAt(t), vel = MT.velocity(doorAt, t), i;
+            var cr = MT.ramp(t, CFG.crack, CFG.crackDur, "snappy");
+            var warm = MT.ramp(t, CFG.crack, CFG.lightDur, "out") * (1 - 0.6 * MT.ramp(t, CFG.slide, CFG.dimDur, "out"));
+            var flash = MT.ramp(t, CFG.gap, CFG.flashIn, "exit") * (1 - MT.ramp(t, CFG.slide + CFG.flashLag, CFG.flashOut, "out"));
+            var bs = MT.mix(CFG.newFrom, 1, MT.ramp(t, CFG.slide + CFG.newLag, CFG.newDur, "snappy")) * MT.mix(1, 1 + CFG.drift, MT.ramp(t, CFG.settle, CFG.driftDur, "smooth"));
+            var push = MT.mix(1, 1 + CFG.push, MT.ramp(t, 0, CFG.slide, "smooth"));
+            var open = t >= CFG.gap, sd = Math.min(BLUR.max, (Math.abs(vel) / 30) * BLUR.amount);
+            // the new page only shows inside the slit (plus the blur fringe), so see-through doors still reveal it
+            var cut = d * push + 3 * sd;
+            nw.style.opacity = open ? 1 : 0;
+            nw.style.clipPath = cut >= half ? "none" : HZ ? "inset(calc(50% - " + cut.toFixed(1) + "px) 0px)" : "inset(0px calc(50% - " + cut.toFixed(1) + "px))";
+            zoom.style.transform = "scale(" + bs.toFixed(5) + ")";
+            var bw = d + half * CFG.beam;
+            beam.style.opacity = flash.toFixed(3);
+            beam.style[HZ ? "top" : "left"] = ((HZ ? FH : FW) / 2 - bw).toFixed(1) + "px";
+            beam.style[HZ ? "height" : "width"] = (2 * bw).toFixed(1) + "px";
+            doors.style.opacity = t > CFG.slide + CFG.slideDur ? 0 : 1;
+            doors.style.transform = "scale(" + push.toFixed(5) + ")";
+            D1.style.transform = "translate" + ax + "(" + (-d).toFixed(2) + "px)";
+            D2.style.transform = "translate" + ax + "(" + d.toFixed(2) + "px)";
+            blur1(HZ ? 0 : -vel, HZ ? -vel : 0);
+            blur2(HZ ? 0 : vel, HZ ? vel : 0);
+            for (i = 0; i < lit.length; i++) { lit[i].style.opacity = warm.toFixed(3); edges[i].style.opacity = open ? 1 : 0; }
+            crack.style.opacity = cr > 0 && t < CFG.slide + 4 * F ? (1 - MT.ramp(t, CFG.slide, 4 * F, "out")).toFixed(3) : 0;
+            crack.style.transform = "scale" + (HZ ? "X" : "Y") + "(" + cr.toFixed(4) + ")";
+            var b = 0.85 + 0.15 * Math.sin((t * 30) / 16); // glow breath, frames at 30 fps as upstream
+            for (i = 0; i < hls.length; i++) hls[i].style.textShadow = "0 0 " + (30 * b).toFixed(1) + "px color-mix(in srgb, var(--k-accent) var(--bd-ga), transparent)";
+          }
+
+          var tl = MT.scene(CFG.slot, render);
+          window.__timelines["barn-door-split"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

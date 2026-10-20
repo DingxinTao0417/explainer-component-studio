@@ -1,0 +1,515 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"head","type":"string","label":"旧页标题（可留空）","default":"本周学习榜"},
+    {"id":"who","type":"string","label":"第 3 行的名字（它的头像是圆心）","default":"你"},
+    {"id":"pct","type":"number","label":"新页圆环走到百分之几","default":87,"min":0,"max":100,"step":1},
+    {"id":"label","type":"string","label":"环中数字下的说明（可留空）","default":"目标完成度"},
+    {"id":"kicker","type":"string","label":"新页眉题（可留空）","default":"本周进度"},
+    {"id":"title","type":"string","label":"新页标题（| 分词组，逐个升起）","default":"只差|一步了"},
+    {"id":"sub","type":"string","label":"新页副题（可留空）","default":"再学两节课就达标"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>circle-match-iris · 圆心匹配光圈</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="circle-match-iris-template">
+      <!-- Ported from video-shotcraft demos/transition/circle-match-iris/CircleMatchIris.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds,
+           8 frames earlier; neutral --k-* palette on white (lime look as dark-skin tuning), system fonts, generic copy,
+           upstream mark, wordmark and names removed; row entrance, stats row and rank pill dropped; other rows as bars;
+           anchor measured from the avatar slot; portrait added; focus, pulses, ripples, push, disc-to-ring, iris curve,
+           push-away, rim light, fall shadow, dial, sweep and count kept. -->
+      <style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--k-font);
+  color: var(--k-ink);
+}
+/* ==== kit:derived@1 ==== */
+.cm {
+--cm-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+--cm-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+--cm-hi: color-mix(in srgb, white 80%, transparent);
+}
+.cm[data-tone="dark"] {
+--cm-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+--cm-hi: color-mix(in srgb, white 6%, transparent);
+}
+/* ==== end kit:derived ==== */
+
+/* ==== kit:backdrop@1 ==== */
+.cm-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+.cm-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at var(--lx, 32%) var(--ly, 18%), color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+/* ==== end kit:backdrop ==== */
+
+/* ==== kit:vignette@1 ==== */
+.cm-vig {
+position: absolute; inset: 0; pointer-events: none;
+--vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--cm-shade);
+background:
+radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.cm[data-tone="dark"] .cm-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+/* ==== kit:grain@1 ==== */
+.cm-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+/* ==== kit:text@2 ==== */
+.cm-u { display: inline-block; white-space: pre; }
+.cm-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+/* ==== end kit:text ==== */
+/* --cm-x/y anchor, --cm-k dial scale: static fallbacks, the script sets measured ones; dark = lime tuning */
+.cm {
+  position: absolute; inset: 0; container-type: size; overflow: hidden;
+  --cm-x: 28.125%; --cm-y: 50%; --cm-k: 1;
+  --cm-row: var(--k-bg); --cm-bar: color-mix(in srgb, var(--k-ink) 13%, transparent); --cm-bar2: color-mix(in srgb, var(--k-ink) 7%, transparent);
+  --cm-me0: 6%; --cm-me1: 4%; --cm-fs: 28%; --cm-trk: color-mix(in srgb, var(--k-ink) 8%, var(--k-bg)); --cm-g0: 10%; --cm-g1: 3%;
+  --cm-a0: color-mix(in srgb, var(--k-accent), white 35%); --cm-a2: color-mix(in srgb, var(--k-accent), black 22%);
+}
+.cm[data-tone="dark"] {
+  --cm-row: color-mix(in srgb, var(--k-bg), white 4%); --cm-me0: 10%; --cm-me1: 5%; --cm-fs: 45%;
+  --cm-trk: color-mix(in srgb, var(--k-accent) 16%, var(--k-bg)); --cm-g0: 20%; --cm-g1: 6%;
+  --cm-a0: color-mix(in srgb, var(--k-accent), white 70%);
+}
+.cm-a, .cm-n, .cm-fall, .cm-plate, .cm-key, .cm-glow, .cm-rim { position: absolute; inset: 0; }
+.cm-a { transform-origin: var(--cm-x) var(--cm-y); }
+.cm-a .cm-backdrop { --lx: 50%; --ly: -6%; }
+.cm-n .cm-backdrop { --lx: 78%; --ly: 14%; }
+.cm[data-tone="dark"] .cm-backdrop { background: linear-gradient(180deg, color-mix(in srgb, var(--k-bg), white 5%), var(--k-bg) 52%, color-mix(in srgb, var(--k-bg), black 35%)); }
+.cm[data-tone="dark"] .cm-n .cm-backdrop { background: linear-gradient(180deg, color-mix(in srgb, var(--k-bg), black 12%), color-mix(in srgb, var(--k-bg), black 42%) 55%, color-mix(in srgb, var(--k-bg), black 66%)); }
+/* dark: key + fill light, screen */
+.cm-key { display: none; mix-blend-mode: screen; background: radial-gradient(ellipse 58% 62% at 50% -6%, color-mix(in srgb, var(--k-accent) 38%, transparent), transparent 70%), radial-gradient(ellipse 50% 46% at 92% 98%, color-mix(in srgb, var(--k-accent-2) 15%, transparent), transparent 72%); }
+.cm[data-tone="dark"] .cm-key { display: block; }
+.cm[data-bare] .cm-plate, .cm[data-bare] .cm-backdrop, .cm[data-bare] .cm-glow, .cm[data-bare] .cm-grain { display: none; }
+/* old page: heading + 5 rows; row 3's avatar slot is the anchor */
+.cm-head { position: absolute; left: 20%; right: 20%; bottom: calc(50% + 328px); font-size: 84px; font-weight: 800; line-height: 1.2; }
+.cm-list { position: absolute; left: 20%; right: 20%; top: calc(50% - 302px); display: flex; flex-direction: column; gap: 16px; }
+.cm-r {
+  display: grid; grid-template-columns: 84px 72px 1fr auto; align-items: center; height: 108px; box-sizing: border-box;
+  padding: 0 40px 0 36px; border-radius: 22px; background: var(--cm-row);
+  box-shadow: inset 0 0 0 1px var(--cm-line), inset 0 1px 0 var(--cm-hi), 0 2px 5px -1px color-mix(in srgb, var(--cm-shade) 12%, transparent);
+}
+.cm-rk, .cm-v { display: flex; align-items: center; }
+.cm-rk i, .cm-nm i, .cm-v i { display: block; height: 14px; width: 34px; border-radius: 9px; background: var(--cm-bar); }
+.cm-nm { margin-left: 28px; }
+.cm-nm i { height: 20px; }
+.cm-nm .cm-s { height: 12px; margin-top: 12px; background: var(--cm-bar2); }
+.cm-v { gap: 26px; }
+.cm-v i { width: 96px; height: 30px; }
+.cm-v .cm-d { width: 40px; height: 12px; background: color-mix(in srgb, var(--k-accent) 40%, transparent); }
+.cm-av { position: relative; width: 72px; height: 72px; border-radius: 50%; background: color-mix(in srgb, var(--k-ink) 17%, var(--cm-row)); }
+.cm-me {
+  --fo: 1;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--k-accent) calc(var(--cm-me0) + var(--cm-me1) * var(--fo)), var(--cm-row)), var(--cm-row) 46%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--k-accent) calc(18% + 20% * var(--fo)), transparent), inset 0 1px 0 var(--cm-hi), 0 30px 60px -30px color-mix(in srgb, var(--cm-shade) 55%, transparent);
+}
+.cm-me .cm-av { background: none; }
+.cm-rank { font-size: 40px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; color: var(--k-accent); }
+.cm-who { display: block; font-size: 40px; font-weight: 700; line-height: 1.2; }
+.cm-disc {
+  position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: center; overflow: hidden; border-radius: 50%;
+  background: radial-gradient(circle at 36% 30%, color-mix(in srgb, var(--k-accent), white 45%) 0%, var(--k-accent) 55%, color-mix(in srgb, var(--k-accent), black 20%) 100%);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--k-accent) 35%, transparent), inset 0 -3px 6px rgba(0, 0, 0, 0.25);
+}
+.cm-disc svg { display: block; width: 46px; height: 46px; fill: color-mix(in srgb, var(--k-on-accent) 88%, transparent); }
+.cm-wave { position: absolute; left: 50%; top: 50%; box-sizing: border-box; border: 0 solid var(--k-accent); border-radius: 50%; opacity: 0; }
+/* new page (inside the iris) */
+.cm-glow { background: radial-gradient(circle at var(--cm-x) var(--cm-y), color-mix(in srgb, var(--k-accent) calc(var(--cm-g0) * (1 + 0.15 * var(--cm-br, 0))), transparent) 0px, color-mix(in srgb, var(--k-accent) var(--cm-g1), transparent) calc(380px * var(--cm-k)), transparent calc(760px * var(--cm-k))); }
+.cm-dial { position: absolute; left: calc(var(--cm-x) - 400px * var(--cm-k)); top: calc(var(--cm-y) - 400px * var(--cm-k)); width: calc(800px * var(--cm-k)); height: calc(800px * var(--cm-k)); }
+.cm-dial circle { fill: none; }
+.cm-t1 { stroke: color-mix(in srgb, var(--k-ink) 16%, transparent); stroke-width: 12; stroke-dasharray: 1.5 16.931; stroke-dashoffset: 0.75; }
+.cm-t2 { stroke: color-mix(in srgb, var(--k-ink) 45%, transparent); stroke-width: 26; stroke-dasharray: 2.5 185.472; stroke-dashoffset: 1.25; }
+.cm-in { stroke: color-mix(in srgb, var(--k-ink) 6%, transparent); stroke-width: 1.5; }
+.cm-trk { stroke: var(--cm-trk); stroke-width: 44; }
+.cm-arc { stroke: url(#cm-arc); stroke-width: 44; stroke-linecap: round; stroke-dasharray: 1639.92 1884.96; filter: drop-shadow(0 0 14px color-mix(in srgb, var(--k-accent) 45%, transparent)); }
+.cm-dial .cm-hd { fill: url(#cm-hd); }
+.cm-num { position: absolute; left: calc(var(--cm-x) - 240px * var(--cm-k)); top: calc(var(--cm-y) - 130px * var(--cm-k)); width: calc(480px * var(--cm-k)); height: calc(260px * var(--cm-k)); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.cm-big { display: flex; align-items: baseline; font-size: 200px; font-weight: 800; line-height: 0.94; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.cm-pc { margin-left: 2px; font-size: 60px; font-weight: 700; letter-spacing: 0; color: var(--k-accent); }
+.cm-lab { align-self: stretch; margin-top: 8px; font-size: 40px; line-height: 1.2; color: var(--k-muted); }
+.cm-txt { position: absolute; left: 52.6%; right: 4.7%; top: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; }
+.cm-kick { font-size: 40px; font-weight: 700; line-height: 1.3; letter-spacing: 0.12em; color: var(--k-accent); }
+.cm-title { margin-top: 22px; font-size: 120px; font-weight: 800; line-height: 1.15; }
+.cm-sub { margin-top: 26px; font-size: 40px; line-height: 1.3; color: var(--k-muted); }
+.cm-rim { width: 100%; height: 100%; }
+.cm-rc { fill: none; stroke: var(--k-accent); stroke-width: 2; opacity: 0; filter: drop-shadow(0 0 10px color-mix(in srgb, var(--k-accent) 60%, transparent)); }
+/* portrait: anchor 50% / 33.3%, rows centred on the avatar, text under the ring */
+@container (orientation: portrait) {
+  .cm-a, .cm-n { --cm-x: 50%; --cm-y: 33.333%; --cm-k: 0.8333; }
+  .cm-head { left: 13.3%; right: 13.3%; bottom: calc(66.667% + 290px); font-size: 72px; line-height: 1.1; }
+  .cm-list { left: 10%; right: 10%; top: calc(33.333% - 278px); gap: 14px; }
+  .cm-r { grid-template-columns: 1fr 72px 1fr; column-gap: 28px; height: 100px; padding: 0 36px; }
+  .cm-rk { grid-area: 1 / 1; justify-self: end; }
+  .cm-v { grid-area: 1 / 1; justify-self: start; }
+  .cm-av { grid-area: 1 / 2; }
+  .cm-nm { grid-area: 1 / 3; margin-left: 0; }
+  .cm-big { font-size: 168px; }
+  .cm-pc { font-size: 50px; }
+  .cm-txt { left: 10%; right: 10%; top: calc(var(--cm-y) + 408px * var(--cm-k)); bottom: auto; text-align: center; }
+  .cm-title { margin-top: 16px; font-size: 104px; }
+  .cm-sub { margin-top: 18px; }
+}
+</style>
+
+<div id="root" data-composition-id="circle-match-iris">
+  <div class="cm">
+    <div class="cm-a" data-layout-allow-overflow>
+      <div class="cm-plate"><div class="cm-backdrop"></div><div class="cm-key"></div><div class="cm-vig"></div><div class="cm-grain"></div></div>
+      <div class="cm-head" data-layout-allow-occlusion>本周学习榜</div>
+      <div class="cm-list">
+        <div class="cm-r cm-me">
+          <span class="cm-rk"><b class="cm-rank" data-layout-allow-occlusion>03</b></span>
+          <span class="cm-av"><i class="cm-wave"></i><i class="cm-wave"></i><i class="cm-disc"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9.6" r="4.4"/><path d="M3 24c0-5.2 4-8.6 9-8.6s9 3.4 9 8.6z"/></svg></i></span>
+          <span class="cm-nm"><span class="cm-who" data-layout-allow-occlusion>你</span><i class="cm-s" style="width:170px"></i></span>
+          <span class="cm-v"><i class="cm-d"></i><i></i></span>
+        </div>
+      </div>
+    </div>
+    <div class="cm-fall"></div>
+    <div class="cm-n">
+      <div class="cm-backdrop"></div><div class="cm-glow"></div><div class="cm-grain"></div>
+      <svg class="cm-dial" viewBox="-400 -400 800 800" aria-hidden="true">
+        <defs>
+          <linearGradient id="cm-arc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--cm-a0)"/><stop offset=".55" style="stop-color:var(--k-accent)"/><stop offset="1" style="stop-color:var(--cm-a2)"/></linearGradient>
+          <radialGradient id="cm-hd"><stop offset="0" style="stop-color:var(--cm-a0);stop-opacity:.9"/><stop offset=".4" style="stop-color:var(--k-accent);stop-opacity:.35"/><stop offset="1" style="stop-color:var(--k-accent);stop-opacity:0"/></radialGradient>
+        </defs>
+        <g class="cm-tk"><circle class="cm-t1" r="352"/><circle class="cm-t2" r="359"/></g>
+        <circle class="cm-in" r="256"/>
+        <circle class="cm-trk" r="300"/>
+        <circle class="cm-arc" r="300" transform="rotate(-90)"/>
+        <circle class="cm-hd" cx="-218.7" cy="-205.3" r="55"/>
+      </svg>
+      <div class="cm-num"><div class="cm-big"><span class="cm-nv">87</span><span class="cm-pc">%</span></div><div class="cm-lab">目标完成度</div></div>
+      <div class="cm-txt"><div class="cm-kick">本周进度</div><div class="cm-title">只差一步了</div><div class="cm-sub">再学两节课就达标</div></div>
+    </div>
+    <svg class="cm-rim" aria-hidden="true"><circle class="cm-rc" r="0" data-layout-allow-overflow/></svg>
+  </div>
+</div>
+
+<script>
+(function () {
+// seconds = upstream frames / 30, all 8 frames earlier (upstream row entrance cut)
+var CFG = {
+  slot: 4.7,
+  push: -0.133, pushDur: 1.333, focus: 0.2, focusDur: 0.6, // camera creep 3%; other rows to 32%
+  p1: 0.333, p2: 0.733, up: 0.167, down: 0.367, wave: 0.733, // two pulses (+16%) with ripples
+  anticip: 1.067, anticipDur: 0.233, // disc dips to 0.9
+  open: 1.3, grow: 0.933, thin: 0.733, // disc -> ring: radius, stroke
+  iris: 1.533, irisDur: 1.0, away: 1.133, // iris out; old page pushed away (from open)
+  track: 1.4, trackDur: 0.467, // accent -> track colour
+  sweep: 1.733, sweepDur: 1.933, num: 1.667, numDur: 0.533, numPop: 0.733,
+  dial: 1.6, dialDur: 1.0, spin: 1.8, // deg/s
+  rimIn: 1.367, rimInDur: 0.133, rimOut: 2.067, rimOutDur: 0.467,
+  kick: 2.133, kickDur: 0.467, title: 2.267, word: 0.667, wordGap: 0.167, wordSpan: 0.667, sub: 2.6, subDur: 0.6,
+  breathe: 3.667 // glow breath after the sweep
+};
+var IRIS = MT.bezier(0.62, 0, 0.32, 1), SWEEP = MT.bezier(0.4, 0, 0.12, 1);
+// anchor fallback (fractions), ring radius (px per 1080), title lines, heading floor
+var LAND = { cx: 0.28125, cy: 0.5, R: 300, tl: 2, hmin: 48 };
+var PORT = { cx: 0.5, cy: 0.3333, R: 250, tl: 1, hmin: 72 };
+var v = { head: "本周学习榜", who: "你", pct: 87, label: "目标完成度", kicker: "本周进度", title: "只差|一步了", sub: "再学两节课就达标", backdrop: "on" };
+try {
+  var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+  for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+} catch (e) {}
+
+var root = document.querySelector(".cm");
+var q = function (s) { return root.querySelector(s); };
+var FW = root.clientWidth, FH = root.clientHeight;
+if (!FW || !FH) {
+  // not laid out yet: the host clip's declared size, then the window
+  var hc = root.closest("[data-width][data-height]");
+  FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+  FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+}
+var P = FH > FW, L = P ? PORT : LAND, S = Math.min(FW, FH) / 1.08e3;
+root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+var p = document.createElement("i");
+p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+el.appendChild(p);
+var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+el.removeChild(p);
+return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+var c = kRGB(wrap, "var(--k-bg)");
+var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+wrap.setAttribute("data-tone", tone);
+return tone;
+}
+// ==== end kit:tone ====
+
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+o = o || {};
+var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+var dark = tones && tones.getAttribute("data-tone") === "dark";
+var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+var f = "type='linear' slope='2.4' intercept='-0.7'";
+var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+"<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+"<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+"<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+"<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+});
+layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+layer.style.backgroundSize = size + "px " + size + "px";
+return function (t) {
+var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+layer.style.backgroundImage = tiles[k % 6];
+layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+};
+}
+// ==== end kit:grain ====
+
+// ==== kit:text@2 ====
+var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+function kWords(s, key) {
+s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+var cut = function (x) {
+if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+};
+var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+var pre = "";
+bits.forEach(function (x) {
+var t = x.trim(), last = out[out.length - 1];
+if (last && /^ /.test(x)) last.sp = true;
+if (!t) return;
+if (!/[\p{L}\p{N}]/u.test(t)) {
+if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+else { last.t += t; last.sp = / $/.test(x); }
+return;
+}
+out.push({ t: pre + t, sp: / $/.test(x) });
+pre = "";
+});
+if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+if (out.length) out[out.length - 1].sp = false;
+return out;
+}
+function kSplit(el, by, rise, text) {
+var s = text != null ? String(text) : el.textContent, units = [];
+var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+el.textContent = "";
+parts.forEach(function (p) {
+var u = document.createElement("span"), box = u;
+u.className = "cm-u"; u.textContent = p.t;
+if (by === "line") u.style.display = "block";
+if (!p.t.trim()) { el.appendChild(u); return; }
+if (rise) { box = document.createElement("span"); box.className = "cm-cut"; box.style.display = u.style.display; box.appendChild(u); }
+el.appendChild(box);
+if (p.sp) el.appendChild(document.createTextNode(" "));
+units.push(u);
+});
+return units;
+}
+function kReveal(tl, units, variant, at, o) {
+o = o || {};
+var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+units.forEach(function (u, i) {
+var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+// rise only
+tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+});
+return tl;
+}
+// ==== end kit:text ====
+
+// ==== kit:fit@1 ====
+function kFit(el, o) {
+o = o || {};
+var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+for (;;) {
+el.style.fontSize = f + "px";
+m = kLines(el);
+if ((m.w <= W && m.n <= n) || f <= min) break;
+f = Math.max(min, f - 2);
+}
+if (m.w > W) {
+[].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+m = kLines(el);
+}
+return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+while ((t = it.nextNode())) {
+if (!t.data.trim()) continue;
+r.selectNodeContents(t);
+[].forEach.call(r.getClientRects(), function (b) {
+var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+});
+}
+return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+
+var tone = kTone(root), bare = String(v.backdrop) === "off";
+if (bare) root.setAttribute("data-bare", "");
+// text slot: kSplit -> kFit; empty hides the slot
+var put = function (el, s, o, occl) {
+  s = String(s == null ? "" : s).trim();
+  el.style.display = s ? "" : "none";
+  if (!s) return [];
+  var u = kSplit(el, "word", !!o.rise, s);
+  if (occl) u.forEach(function (x) { x.setAttribute("data-layout-allow-occlusion", ""); }); // covered by the new page
+  o.fit = kFit(el, o);
+  return u;
+};
+var ho = { lines: 1, min: L.hmin }, hd0 = q(".cm-head");
+put(hd0, v.head, ho, 1);
+// portrait: a 2-line heading replaces the top row (stays under the 12% bar)
+var drop = P && ho.fit && ho.fit.lines > 1;
+if (drop) { hd0.style.bottom = "calc(66.667% + 176px)"; q(".cm-list").style.paddingTop = "114px"; }
+// other rows: bars only (px widths)
+var me = q(".cm-me");
+[[300, 190], [240, 160], [280, 200], [220, 150]].forEach(function (w, i) {
+  if (drop && !i) return;
+  var r = document.createElement("div");
+  r.className = "cm-r";
+  r.innerHTML = '<span class="cm-rk"><i></i></span><span class="cm-av"></span><span class="cm-nm"><i style="width:' + w[0] + 'px"></i><i class="cm-s" style="width:' + w[1] + 'px"></i></span><span class="cm-v"><i class="cm-d"></i><i></i></span>';
+  me.parentNode.insertBefore(r, i < 2 ? me : null); // rows 1-2 above, 4-5 below
+});
+var wo = { lines: 1, min: 40 };
+put(q(".cm-who"), v.who, wo, 1);
+if (wo.fit && wo.fit.lines > 1) q(".cm-me .cm-s").style.display = "none"; // wrapped name: no bar
+put(q(".cm-lab"), v.label, { lines: 1, min: 40 });
+var kick = q(".cm-kick"), sub = q(".cm-sub"), title = q(".cm-title");
+put(kick, v.kicker, { lines: 1, min: 40 });
+var words = put(title, v.title, { lines: L.tl, min: 72, rise: 1 });
+put(sub, v.sub, { lines: 2, min: 40 });
+var pv = parseFloat(v.pct), goal = MT.clamp((isNaN(pv) ? 87 : pv) / 100, 0, 1);
+
+// one anchor for every circle: the avatar slot's centre, measured before anything moves
+var A = q(".cm-a"), N = q(".cm-n"), slot = q(".cm-me .cm-av");
+var rb = root.getBoundingClientRect(), sb = slot.getBoundingClientRect(), sc = rb.width / (root.offsetWidth || 1) || 1;
+var CX = sb.width ? (sb.left + sb.width / 2 - rb.left) / sc : L.cx * FW, CY = sb.width ? (sb.top + sb.height / 2 - rb.top) / sc : L.cy * FH;
+var AV = (slot.offsetWidth || 72) / 2, R = L.R * S, kk = R / 300; // dial SVG units: ring r = 300
+[A, N].forEach(function (e) { e.style.setProperty("--cm-x", CX + "px"); e.style.setProperty("--cm-y", CY + "px"); e.style.setProperty("--cm-k", kk); });
+var cover = Math.max(Math.hypot(CX, CY), Math.hypot(FW - CX, CY), Math.hypot(CX, FH - CY), Math.hypot(FW - CX, FH - CY)) + 2;
+// SVG ids carry a mount number
+var M = (window.__cmN = (window.__cmN || 0) + 1);
+q("#cm-arc").id = "cm-arc" + M; q("#cm-hd").id = "cm-hd" + M;
+var disc = q(".cm-disc"), waves = root.querySelectorAll(".cm-wave");
+var rest = [].filter.call(root.querySelectorAll(".cm-r"), function (r) { return r !== me; });
+var tk = q(".cm-tk"), inn = q(".cm-in"), trk = q(".cm-trk"), arc = q(".cm-arc"), hd = q(".cm-hd"), num = q(".cm-num"), nv = q(".cm-nv");
+var fall = q(".cm-fall"), rc = q(".cm-rc"), key = q(".cm-key"), g1 = q(".cm-plate .cm-grain"), g2 = q(".cm-n .cm-grain");
+arc.style.stroke = "url(#cm-arc" + M + ")"; hd.style.fill = "url(#cm-hd" + M + ")";
+rc.setAttribute("cx", CX); rc.setAttribute("cy", CY);
+var rgb = function (c) { return "rgb(" + kRGB(root, c).map(Math.round).join(",") + ")"; };
+var ACC = rgb("var(--k-accent)"), TRK = rgb("var(--cm-trk)");
+var grain = kGrain(g1, tone === "dark" ? { opacity: 0.08 } : {});
+var C = CFG, FS = "color-mix(in srgb, var(--cm-shade) var(--cm-fs), transparent)";
+
+function render(t) {
+  var rp = MT.ramp;
+  var i, open = t >= C.open;
+  // old page: creeps 3% to the anchor, then pushed to 1.22 and dimmed to 45%
+  var push = rp(t, C.push, C.pushDur, "smooth"), away = rp(t, C.open, C.away, "exit"), aS = 1 + 0.03 * push + 0.19 * away;
+  A.style.transform = "scale(" + aS.toFixed(4) + ")";
+  A.style.filter = away > 0 ? "brightness(" + (1 - 0.55 * away).toFixed(3) + ")" : "none";
+  var fo = rp(t, C.focus, C.focusDur, "out");
+  me.style.setProperty("--fo", fo);
+  for (i = 0; i < rest.length; i++) rest[i].style.opacity = 1 - 0.68 * fo;
+  key.style.opacity = 0.95 + 0.048 * Math.sin((t * 30) / 38); // stage breath, frames at 30 fps
+  // anchor: two pulses with ripples, a dip before the cut
+  var pulse = function (s) { return rp(t, s, C.up, "snappy") - rp(t, s + C.up, C.down, "out"); };
+  var av = 1 + 0.16 * (pulse(C.p1) + pulse(C.p2)) - 0.1 * rp(t, C.anticip, C.anticipDur, "swift"), gl = Math.max(0, av - 1);
+  disc.style.opacity = open ? 0 : 1;
+  disc.style.transform = "scale(" + av.toFixed(4) + ")";
+  disc.style.boxShadow = "0 0 " + (18 + 40 * (av - 1)).toFixed(1) + "px color-mix(in srgb, var(--k-accent) " + Math.round(Math.min(1, 0.35 + 1.2 * gl) * 100) + "%, transparent), inset 0 -3px 6px rgba(0,0,0,.25)";
+  [C.p1, C.p2].forEach(function (s, j) {
+    var p = rp(t, s, C.wave, "out"), w = MT.mix(4, 1, p), r = AV + 10 + p * 64, el = waves[j];
+    el.style.opacity = !open && t >= s && t < s + C.wave ? 0.85 * (1 - p) : 0;
+    el.style.width = el.style.height = (2 * r + w).toFixed(1) + "px";
+    el.style.margin = (-(r + w / 2)).toFixed(1) + "px";
+    el.style.borderWidth = w + "px";
+  });
+  grain(t);
+  g2.style.cssText = g1.style.cssText;
+  if (!open) {
+    N.style.opacity = fall.style.opacity = rc.style.opacity = 0;
+    A.style.opacity = 1;
+    A.style.maskImage = "none";
+    return;
+  }
+  // the cut: a disc (stroke = diameter) hollows into the ring; iris = ring rim + 10px, then accelerates
+  var grow = rp(t, C.open, C.grow, "snappy");
+  var rr = MT.mix(AV * 0.9, R, grow), rw = MT.mix(AV * 1.8, 44 * kk, rp(t, C.open, C.thin, "snappy"));
+  var ir = rr + rw / 2 + 10 * S + 2400 * S * rp(t, C.iris, C.irisDur, IRIS), full = ir >= cover;
+  N.style.opacity = 1;
+  N.style.clipPath = full ? "none" : "circle(" + ir.toFixed(1) + "px at " + CX + "px " + CY + "px)";
+  A.style.opacity = full ? 0 : 1;
+  if (bare) A.style.maskImage = full ? "none" : "radial-gradient(circle at " + CX + "px " + CY + "px, transparent " + (ir / aS).toFixed(1) + "px, #000 " + (ir / aS + 1).toFixed(1) + "px)";
+  fall.style.opacity = full ? 0 : 1;
+  fall.style.background = "radial-gradient(circle at " + CX + "px " + CY + "px, transparent " + ir.toFixed(1) + "px, " + FS + " " + (ir + 1).toFixed(1) + "px, transparent " + (ir + 90 * S).toFixed(1) + "px)";
+  rc.setAttribute("r", ir);
+  rc.style.opacity = 0.7 * (1 - rp(t, C.rimOut, C.rimOutDur, "out")) * rp(t, C.rimIn, C.rimInDur, "out");
+  // ring, arc, dial in dial units (px / kk)
+  var rU = rr / kk, wU = rw / kk, circ = 2 * Math.PI * rU, sw = goal * rp(t, C.sweep, C.sweepDur, SWEEP);
+  var br = t > C.breathe ? 0.5 - 0.5 * Math.cos(((t - C.breathe) * 30) / 9) : 0;
+  trk.setAttribute("r", rU); arc.setAttribute("r", rU);
+  trk.style.strokeWidth = arc.style.strokeWidth = wU;
+  trk.style.stroke = MT.mix(ACC, TRK, rp(t, C.track, C.trackDur, "out"));
+  arc.style.opacity = sw > 0.002 ? 1 : 0;
+  arc.style.strokeDasharray = (sw * circ).toFixed(2) + " " + circ.toFixed(2);
+  arc.style.filter = "drop-shadow(0 0 " + (14 + 8 * br).toFixed(1) + "px color-mix(in srgb, var(--k-accent) 45%, transparent))";
+  var ha = -Math.PI / 2 + sw * 2 * Math.PI;
+  hd.setAttribute("cx", Math.cos(ha) * rU); hd.setAttribute("cy", Math.sin(ha) * rU);
+  hd.style.opacity = sw > 0.01 ? 1 : 0;
+  var di = rp(t, C.dial, C.dialDur, "out");
+  tk.style.opacity = inn.style.opacity = di;
+  tk.setAttribute("transform", "rotate(" + ((t - C.dial) * C.spin).toFixed(3) + ")");
+  N.style.setProperty("--cm-br", br);
+  num.style.opacity = rp(t, C.num, C.numDur, "out");
+  num.style.transform = "scale(" + MT.mix(0.86, 1, rp(t, C.num, C.numPop, "snappy")).toFixed(4) + ")";
+  nv.textContent = Math.round(sw * 100);
+  kick.style.opacity = rp(t, C.kick, C.kickDur, "out");
+  sub.style.opacity = rp(t, C.sub, C.subDur, "out");
+  sub.style.transform = "translateY(" + ((1 - rp(t, C.sub, C.subDur, "snappy")) * 14 * S).toFixed(2) + "px)";
+}
+
+var tl = MT.scene(CFG.slot, render);
+// title phrases rise 20 frames each, 5 frames apart (spread capped)
+kReveal(tl, words, "rise", CFG.title, { each: CFG.word, gap: Math.min(CFG.wordGap, CFG.wordSpan / Math.max(1, words.length - 1)) });
+window.__timelines["circle-match-iris"] = tl;
+})();
+      </script>
+    </template>
+  </body>
+</html>

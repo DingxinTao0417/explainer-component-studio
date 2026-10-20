@@ -1,0 +1,457 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"name","type":"string","label":"中枢页的名字（翻过来的新页面）","default":"示例应用"},
+    {"id":"before","type":"string","label":"旧页面的标题（翻走的那一页）","default":"手动整理的周报"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>integration-hub-map · 翻页集成中枢</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+<template id="integration-hub-map-template">
+<!-- Ported from video-shotcraft demos/ui-entrance/integration-hub-map/IntegrationHubMap.tsx
+     (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+     Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+     Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+     neutral --k-* palette on a light stage (dark skins get the dark stage back), system fonts, generic copy; upstream
+     wordmark, list and document text and its five input icons removed (neutral mark, two text slots, bars for the
+     small UI text, five generic glyphs); hub title 25 -> 44 px; pages on --k-bg / --k-panel, not fixed white; rainbow
+     pipes as accent -> accent-2 through oklch; light skins: flash, glare and spark glow in the accent (glare multiplied
+     at half strength, page flash 25%, page halo 70%), ripples in accent-2; vignette (0.16 light / 0.55 dark) and grain
+     (0.05 overlay / 0.09 soft-light) under the page, not over it; glare wings merged into one layer (blur 32), flicker
+     from a sin hash; pipe ends 2 px inside the page edge (top pipe 92 -> 67 px) and each dash scaled by its measured
+     length, so all five reach the page on one frame (upstream's rounded lengths spread that over frames 66-70);
+     portrait re-laid out (600x440 page, three sources above, two below, close-up 1.75x, two lines per paragraph).
+     Kept: flip 0-180 deg from frame 14 over 35 frames (ease-out cubic), camera bezier(0.55,0,0.18,1) over 96 frames
+     from 2.05x with its pan, edge bloom keys 19/21/23/27 and streak, icons at 52 (13 frames, bezier(0.34,1.5,0.64,1)),
+     pipes at 62 growing 9 frames, comets 4.6 px a frame, ripples, breathing, nine frames with parallax. -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  position: absolute; inset: 0; overflow: hidden; font-family: var(--k-font); color: var(--k-ink);
+}
+/* kit:derived@1 (line, shade, hi) + mid = accent/accent-2 halfway in oklch (no grey or green); flash: accent on light
+   skins, white on dark ones; dark skins never mix the (yellow) accent into a surface: it turns olive */
+.ih{position:absolute;inset:0;container-type:size;--ih-hue:shorter;--ih-line:color-mix(in srgb,var(--k-ink) 10%,#0000);--ih-shade:color-mix(in srgb,var(--k-ink) 85%,var(--k-accent-2));
+  --ih-hi:color-mix(in srgb,#fff 80%,#0000);--ih-pa:var(--k-bg);--ih-b1:color-mix(in srgb,var(--k-ink) 22%,var(--ih-pa));--ih-b2:color-mix(in srgb,var(--k-ink) 10%,var(--ih-pa));
+  --ih-mid:color-mix(in oklch var(--ih-hue) hue,var(--k-accent),var(--k-accent-2));--ih-h1:color-mix(in srgb,var(--ih-mid) 25%,#fff);--ih-s1:color-mix(in srgb,var(--ih-shade) 10%,#0000);
+  --ih-s2:color-mix(in srgb,var(--ih-shade) 26%,#0000);--ih-rim:var(--ih-line);--ih-c2:var(--k-accent);--ih-l1:9%;--ih-l2:6%;--ih-l3:6%;--ih-flash:var(--k-accent);--ih-ring:var(--k-accent-2);--ih-spark:color-mix(in srgb,var(--k-accent) 55%,#0000);
+  --ih-psh:inset 0 1px 0 var(--ih-hi),0 0 0 1px var(--ih-rim),0 2px 6px var(--ih-s1),0 40px 90px -24px var(--ih-s2);
+  --ih-tsh:inset 0 1px 0 var(--ih-hi),inset 0 -2px 4px color-mix(in srgb,var(--ih-shade) 8%,#0000),0 0 0 1px var(--ih-rim),0 18px 40px -12px var(--ih-s2)}
+.ih[data-tone="dark"]{--ih-hue:longer;--ih-shade:color-mix(in srgb,var(--k-bg) 30%,#000);--ih-hi:color-mix(in srgb,#fff 7%,#0000);--ih-pa:var(--k-panel);--ih-s1:#0000005a;--ih-s2:#000000bf;
+  --ih-rim:color-mix(in srgb,#fff 9%,#0000);--ih-c2:var(--ih-mid);--ih-l1:28%;--ih-l2:13%;--ih-l3:10%;--ih-flash:#fff;--ih-ring:#ffffffe6;--ih-spark:#fff0ff80}
+.ih-bg,.ih-rects,.ih-map,.ih-cam,.ih-top,.ih-glare{position:absolute;inset:0}
+.ih *{box-sizing:border-box}
+/* ==== kit:backdrop@1 (+ upstream's three stage lights in palette colours) ==== */
+.ih-bg{background:radial-gradient(ellipse 60% 55% at 50% 50%,color-mix(in srgb,var(--ih-mid) var(--ih-l1),#0000),#0000 70%),radial-gradient(ellipse 45% 40% at 16% 80%,color-mix(in srgb,var(--ih-c2) var(--ih-l2),#0000),#0000 70%),radial-gradient(ellipse 40% 35% at 86% 18%,color-mix(in srgb,var(--k-accent-2) var(--ih-l3),#0000),#0000 70%),linear-gradient(180deg,var(--k-bg) 0%,color-mix(in srgb,var(--k-bg),var(--k-ink) 4%) 55%,color-mix(in srgb,var(--k-bg),var(--k-ink) 7%) 100%)}
+.ih-bg::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 62% 70% at 32% 18%,color-mix(in srgb,var(--k-bg) 95%,transparent) 0%,transparent 72%)}
+/* ==== end kit:backdrop ==== */
+/* ==== kit:vignette@1 ==== */
+.ih-vig{position:absolute;inset:0;pointer-events:none;--vs:0.16;--vin:45%;--vx:50%;--vy:46%;--vc:var(--ih-shade);
+  background:radial-gradient(ellipse 72% 72% at var(--vx) var(--vy),transparent var(--vin),color-mix(in srgb,var(--vc) calc(var(--vs) * 32%),transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55),color-mix(in srgb,var(--vc) calc(var(--vs) * 100%),transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy),transparent 60%,color-mix(in srgb,var(--vc) calc(var(--vs) * 60%),transparent) 100%)}
+.ih[data-tone="dark"] .ih-vig{--vs:0.55}
+/* ==== end kit:vignette ==== */
+/* ==== kit:grain@1 ==== */
+.ih-grain{position:absolute;inset:0;pointer-events:none}
+/* ==== end kit:grain ==== */
+/* ==== kit:light@1 ==== */
+.ih-light{mix-blend-mode:multiply}
+.ih[data-tone="dark"] .ih-light{mix-blend-mode:screen}
+/* ==== end kit:light ==== */
+/* ==== kit:text@2 (units only, no rise mask) ==== */
+.ih-u{display:inline-block;white-space:pre}
+/* ==== end kit:text ==== */
+/* background frames: --m = accent share */
+.ih-rects i{position:absolute;border-radius:12px;--c:color-mix(in oklch var(--ih-hue) hue,var(--k-accent) var(--m),var(--k-accent-2));border:1.5px solid color-mix(in srgb,var(--c) 50%,#0000);box-shadow:0 0 14px color-mix(in srgb,var(--c) 32%,#0000),inset 0 0 12px color-mix(in srgb,var(--c) 14%,#0000);filter:blur(.8px);opacity:.62}
+/* pipes: origin at the frame centre (1px: a 0-size svg is not painted) */
+.ih-svg{position:absolute;left:50%;top:50%;width:1px;height:1px;overflow:visible}
+.ih-svg path{fill:none;stroke-linecap:round}
+.ih-pp{stroke:var(--ih-mid);stroke-width:12;opacity:.9}
+.ih-core{stroke:#ffffffeb}
+.ih-tail{stroke:#ffffffb3}
+.ih-head{stroke:#fff}
+.ih-glo{fill:var(--ih-spark)}
+.ih-tip{fill:#fff}
+.ih-t{position:absolute;left:calc(50% + var(--x) - 56px);top:calc(50% + var(--y) - 56px);width:112px;height:112px;border-radius:28px;display:grid;place-items:center;background:linear-gradient(var(--ih-pa),color-mix(in srgb,var(--ih-pa),var(--k-ink) 5%));box-shadow:var(--ih-tsh),0 0 54px color-mix(in srgb,var(--k-accent) 40%,#0000)}
+.ih-t svg{width:54px;height:54px;fill:none;stroke:var(--k-ink);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.ih-t .a{stroke:var(--k-accent)}
+.ih-t .f{fill:var(--k-accent);stroke:none}
+/* the page: a two-faced card shown at rest (back = hub) */
+.ih-cam{perspective:1500px;--pw:820px;--ph:520px}
+.ih-rig{position:absolute;left:50%;top:50%;width:var(--pw);height:var(--ph);translate:-50% -50%;--y:25px;transform:translateY(var(--y)) rotateY(180deg);transform-style:preserve-3d}
+.ih-face{position:absolute;inset:0;backface-visibility:hidden}
+.ih-back{transform:rotateY(180deg)}
+.ih-front{opacity:0}
+.ih-pn{width:var(--pw);height:var(--ph);border-radius:14px;overflow:hidden;background:linear-gradient(var(--ih-pa),color-mix(in srgb,var(--ih-pa),var(--k-ink) 2.5%));box-shadow:var(--ih-psh),0 0 57px color-mix(in srgb,var(--ih-h1) 9%,#0000),0 0 160px color-mix(in srgb,var(--ih-mid) 13%,#0000)}
+.ih-flash{position:absolute;inset:-6px;border-radius:18px;background:var(--ih-flash);opacity:0;filter:blur(5px)}
+/* bars: i light, b dark */
+.ih-pn i,.ih-pn b{display:block;height:10px;border-radius:5px;background:var(--ih-b2)}
+.ih-pn b{background:var(--ih-b1)}
+.ih-pn p{margin:0}
+.ih-doc{padding:30px 34px}
+.ih-dh{display:flex;align-items:center;gap:12px}
+.ih-pn .ih-di{flex:none;width:26px;height:26px;border-radius:7px;background:linear-gradient(160deg,color-mix(in srgb,var(--k-accent-2) 65%,#fff),var(--k-accent-2))}
+.ih-before{flex:1;min-width:0;font-size:26px;font-weight:700;line-height:1.25}
+.ih-ed{flex:none;width:96px}
+.ih-tg{display:flex;gap:8px;margin-top:12px}
+.ih-pn .ih-tg b{width:84px;height:24px;border-radius:6px;background:linear-gradient(var(--ih-b1),var(--ih-b1)) 50% 50%/56% 8px no-repeat,color-mix(in srgb,var(--ih-pa),var(--k-ink) 5%);box-shadow:inset 0 0 0 1px var(--ih-line)}
+.ih-pn .ih-tg b+b{width:72px}
+.ih-hr{height:1px;margin-top:18px;background:var(--ih-line)}
+.ih-fl{display:flex;gap:40px;margin-top:16px}
+.ih-fl i{width:54px;height:7px}
+.ih-fl b{width:84px;height:12px;margin-top:9px}
+.ih-pn .ih-hh{width:110px;height:13px;margin-top:24px;background:color-mix(in srgb,var(--k-ink) 32%,var(--ih-pa))}
+.ih-ps i{margin-top:12px}
+.ih-ps i:nth-child(4){margin-top:26px}
+.ih-pn .ih-ps+.ih-hh{width:90px;margin-top:26px}
+.ih-pn .ih-ck{display:flex;align-items:center;gap:10px;margin-top:12px}
+.ih-pn .ih-ck b{width:15px;height:15px;border-radius:4px;background:color-mix(in srgb,var(--ih-flash) 10%,var(--ih-pa));box-shadow:inset 0 0 0 1.5px var(--k-accent)}
+.ih-pn .ih-ck+.ih-ck b{background:var(--ih-pa);box-shadow:inset 0 0 0 1.5px var(--ih-b1)}
+.ih-ck i{width:230px}
+.ih-ck+.ih-ck i{width:186px}
+.ih-hub{display:flex;gap:26px;padding:26px 30px}
+.ih-l{flex:2;min-width:0}
+.ih-hd{display:flex;align-items:center;gap:14px;min-height:54px}
+.ih-mark{flex:none;width:44px;height:44px}
+.ih-name{flex:1;min-width:0;font-size:44px;font-weight:700;line-height:1.2}
+.ih-tabs{display:flex;gap:16px;margin-top:14px;padding-bottom:10px;border-bottom:1px solid var(--ih-line)}
+.ih-tabs i{height:9px}
+.ih-pn .ih-tabs i:first-child{position:relative;background:var(--k-accent)}
+.ih-tabs i:first-child::after{content:"";position:absolute;left:0;right:0;bottom:-11px;height:2px;background:var(--k-accent)}
+.ih-pn .ih-lab{width:52px;height:7px;margin-top:16px}
+.ih-r{display:flex;align-items:center;gap:12px;margin-top:14px}
+.ih-pn .ih-r>b{flex:none;width:26px;height:26px;border-radius:7px;background:var(--c)}
+.ih-r p b{width:var(--w)}
+.ih-r p i{width:calc(var(--w) * .72);height:7px;margin-top:6px}
+.ih-rc{flex:1;border-left:1px solid var(--ih-line);padding-left:22px}
+.ih-pn .ih-btn{width:168px;height:30px;margin-top:10px;border-radius:8px;background:linear-gradient(var(--ih-b1),var(--ih-b1)) 50% 50%/96px 8px no-repeat,var(--ih-pa);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--k-ink) 14%,#0000)}
+.ih-rc .ih-lab{margin-top:28px}
+.ih-q{width:120px;margin-top:14px}
+.ih-q+.ih-q{width:96px}
+.ih-top i{position:absolute;border-radius:50%;border:2px solid var(--ih-ring);box-shadow:0 0 12px color-mix(in srgb,var(--ih-ring) 70%,#0000);opacity:0}
+.ih-glare i{position:absolute;opacity:0}
+.ih-g1{left:15.6%;top:5.6%;width:57.3%;height:83.3%;filter:blur(26px);background:radial-gradient(closest-side,var(--ih-flash),color-mix(in srgb,var(--ih-flash) 75%,#0000) 42%,color-mix(in srgb,var(--ih-mid) 40%,#0000) 68%,#0000 88%)}
+.ih-g2{inset:0;filter:blur(32px);--w1:18.3% 28.7% at 78.1% 42.6%;--w2:16.2% 24% at 18.2% 68.5%;background:radial-gradient(var(--w1),color-mix(in srgb,var(--ih-mid) 85%,#0000),color-mix(in srgb,var(--ih-mid) 40%,#0000) 60%,#0000 85%),radial-gradient(var(--w2),color-mix(in srgb,var(--k-accent-2) 60%,#fff8),color-mix(in srgb,var(--k-accent-2) 35%,#0000) 60%,#0000 85%)}
+.ih-g4{left:1.6%;top:64.8%;width:21.9%;height:40px;border-radius:20px;filter:blur(16px);background:linear-gradient(90deg,color-mix(in srgb,var(--ih-flash) 90%,#0000),color-mix(in srgb,var(--ih-mid) 70%,#0000),#0000)}
+/* portrait: 600x440 page, 3 sources above and 2 below, all in x 108-972 / y 230-1306 */
+@container (orientation: portrait) {
+  .ih-cam{--pw:600px;--ph:440px}
+  .ih-rig{--y:-170px}
+  .ih-t{left:calc(50% + var(--px) - 56px);top:calc(50% + var(--py) - 56px)}
+  .ih-pp:nth-of-type(1){d:path("M-372-500V-310Q-372-270-332-270H-298")}
+  .ih-pp:nth-of-type(2){d:path("M-170 176V48")}
+  .ih-pp:nth-of-type(3){d:path("M24-578V-388")}
+  .ih-pp:nth-of-type(4){d:path("M372-492V-310Q372-270 332-270H298")}
+  .ih-pp:nth-of-type(5){d:path("M186 184V48")}
+  .ih-doc{padding:26px 28px}
+  .ih-fl p:nth-child(4),.ih-ps i:nth-child(3n),.ih-rc,.ih-tabs i:nth-child(n+7),.ih-r:nth-child(10){display:none}
+  .ih-hub{padding:24px 26px}
+  .ih-g1{left:4%;top:16%;width:84%;height:42%}
+  .ih-g2{--w1:28% 14% at 80% 34%;--w2:28% 13% at 22% 53%}
+  .ih-g4{left:3%;top:57%;width:42%}
+}
+</style>
+
+<div id="root" data-composition-id="integration-hub-map">
+<div class="ih">
+<div class="ih-bg"></div>
+<div class="ih-rects" data-layout-allow-overflow>
+<i style="left:7.81%;top:23.61%;width:181px;height:130px;--m:25%"></i><i style="left:34.38%;top:32.87%;width:221px;height:96px;--m:45%"></i><i style="left:90.63%;top:50.46%;width:226px;height:130px;--m:60%"></i>
+<i style="left:13.02%;top:78.7%;width:212px;height:98px;--m:15%"></i><i style="left:59.9%;top:86.57%;width:151px;height:91px;--m:35%"></i><i style="left:36.46%;top:91.2%;width:247px;height:78px;--m:0%"></i>
+<i style="left:86.46%;top:76.85%;width:122px;height:61px;--m:75%"></i><i style="left:4.69%;top:51.39%;width:120px;height:66px;--m:10%"></i><i style="left:69.27%;top:70.37%;width:195px;height:116px;--m:100%"></i>
+</div>
+<div class="ih-vig"></div>
+<div class="ih-grain"></div>
+<div class="ih-map">
+<svg class="ih-svg">
+<path class="ih-pp" d="M-508-218V-100Q-508-60-468-60H-408"/>
+<path class="ih-pp" d="M-644 72H-408"/>
+<path class="ih-pp" d="M32-300V-233"/>
+<path class="ih-pp" d="M552-208V-100Q552-60 512-60H408"/>
+<path class="ih-pp" d="M680 78H408"/>
+</svg>
+<div class="ih-t" style="--x:-508px;--y:-278px;--px:-372px;--py:-560px"><svg viewBox="0 0 48 48"><rect x="5" y="8" width="38" height="32" rx="5"/><path d="M5 16H43"/><path class="a" d="M12 23h11v10H12z"/><path stroke-width="2.6" d="M29 24h8M29 30h5"/></svg></div>
+<div class="ih-t" style="--x:-708px;--y:72px;--px:-170px;--py:236px"><svg viewBox="0 0 48 48" stroke-width="3.4"><path d="M16 14L6 24l10 10M32 14l10 10-10 10"/><path class="a" d="M27.5 10l-7 28"/></svg></div>
+<div class="ih-t" style="--x:32px;--y:-362px;--px:24px;--py:-640px"><svg viewBox="0 0 48 48"><path d="M12 5h17l9 9v29H12z"/><path d="M29 5v9h9"/><path class="a" d="M18 24h14M18 31h14"/><path d="M18 38h7"/></svg></div>
+<div class="ih-t" style="--x:552px;--y:-268px;--px:372px;--py:-552px"><svg viewBox="0 0 48 48"><path d="M6 42h36"/><path stroke-width="5" d="M13 35v-9M21 35V17M29 35v-6"/><path class="a" stroke-width="5" d="M37 35V10"/></svg></div>
+<div class="ih-t" style="--x:742px;--y:78px;--px:186px;--py:244px"><svg viewBox="0 0 48 48"><path d="M9 9h30q3 0 3 3v17q0 3-3 3H23l-8 7v-7H9q-3 0-3-3V12q0-3 3-3z"/><circle class="f" cx="16" cy="20.5" r="2.4"/><circle class="f" cx="24" cy="20.5" r="2.4"/><circle class="f" cx="32" cy="20.5" r="2.4"/></svg></div>
+</div>
+<div class="ih-cam">
+<div class="ih-rig" data-layout-allow-overflow>
+<div class="ih-face ih-front"><div class="ih-z"><div class="ih-pn ih-doc">
+<div class="ih-dh"><b class="ih-di"></b><div class="ih-before">手动整理的周报</div><i class="ih-ed"></i></div>
+<div class="ih-tg"><b></b><b></b><b></b></div>
+<div class="ih-hr"></div>
+<div class="ih-fl"><p><i></i><b></b></p><p><i></i><b></b></p><p><i></i><b></b></p><p><i></i><b></b></p></div>
+<b class="ih-hh"></b>
+<div class="ih-ps"><i style="width:94%"></i><i style="width:88%"></i><i style="width:57%"></i><i style="width:97%"></i><i style="width:90%"></i><i style="width:41%"></i></div>
+<b class="ih-hh"></b><p class="ih-ck"><b></b><i></i></p><p class="ih-ck"><b></b><i></i></p>
+</div></div></div>
+<div class="ih-face ih-back"><div class="ih-z"><div class="ih-pn ih-hub">
+<div class="ih-l">
+<div class="ih-hd"><svg class="ih-mark" viewBox="0 0 128 128"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg><div class="ih-name">示例应用</div></div>
+<div class="ih-tabs"><i style="width:22px"></i><i style="width:34px"></i><i style="width:32px"></i><i style="width:70px"></i><i style="width:50px"></i><i style="width:38px"></i><i style="width:54px"></i><i style="width:48px"></i></div>
+<i class="ih-lab"></i>
+<div class="ih-r" style="--c:var(--k-accent-2);--w:168px"><b></b><p><b></b><i></i></p></div>
+<div class="ih-r" style="--c:color-mix(in srgb,var(--k-accent-2) 55%,#fff);--w:220px"><b></b><p><b></b><i></i></p></div>
+<div class="ih-r" style="--c:var(--ih-mid);--w:150px"><b></b><p><b></b><i></i></p></div>
+<div class="ih-r" style="--c:var(--k-accent);--w:190px"><b></b><p><b></b><i></i></p></div>
+<div class="ih-r" style="--c:color-mix(in srgb,var(--k-accent) 55%,#fff);--w:120px"><b></b><p><b></b><i></i></p></div>
+<div class="ih-r" style="--c:var(--ih-b1);--w:176px"><b></b><p><b></b><i></i></p></div>
+<div class="ih-r" style="--c:var(--ih-b2);--w:230px"><b></b><p><b></b><i></i></p></div>
+</div>
+<div class="ih-rc">
+<i class="ih-btn"></i><i class="ih-lab"></i><b class="ih-q"></b><b class="ih-q"></b><i class="ih-lab"></i><b class="ih-q"></b><b class="ih-q"></b><b class="ih-q"></b>
+</div>
+</div></div></div>
+<div class="ih-flash"></div>
+</div>
+</div>
+<div class="ih-top"></div>
+<div class="ih-glare ih-light"><i class="ih-g1"></i><i class="ih-g2"></i><i class="ih-g4"></i></div>
+</div>
+</div>
+
+<script>
+(function(){
+// timing in seconds (upstream frames / 30), shared by both orientations
+var CFG={
+dur:5,flip:0.467,flipLen:1.167,cam:3.2,bloom:[0.633,0.7,0.767,0.9],streak:[0.667,1.133],
+rect:1.2,rectGap:0.133,rectLen:0.667,dim:3,dimLen:1,dimTo:0.62,
+icon:1.733,iconLen:0.433,lit:2.3,litLen:0.333,pipe:2.067,grow:0.3,flowLen:0.267,ring:2.333,ringLen:0.467,
+speed:138,phase:37,breathe:4.8
+};
+// close-up zoom, start offset from the rest spot (px), old title's floor in page px (x zoom 1.96 / 1.69 when it turns away >= 40 px)
+var LAND={z0:2.05,pan:[130,95],bmin:22};
+var PORT={z0:1.75,pan:[45,-135],bmin:24};
+var v={name:"示例应用",before:"手动整理的周报",backdrop:"on"};
+try {
+var got=(window.__hyperframes&&window.__hyperframes.getVariables&&window.__hyperframes.getVariables())||{};
+for(var key in got) if(got[key]!==undefined&&got[key]!==null&&got[key]!=="") v[key]=got[key];
+} catch (e){}
+
+var root=document.querySelector(".ih");
+var q=function(s){return root.querySelector(s);},qa=function(s){return [].slice.call(root.querySelectorAll(s));};
+var FW=root.clientWidth,FH=root.clientHeight;
+if(!FW||!FH){
+// not laid out yet: the host clip's declared size, then the window
+var hc=root.closest("[data-width][data-height]");
+FW=hc?+hc.getAttribute("data-width"):window.innerWidth;
+FH=hc?+hc.getAttribute("data-height"):window.innerHeight;
+}
+var P=FH>FW,L=P?PORT:LAND;
+root.setAttribute("data-orient",P?"portrait":"landscape");
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+var p = document.createElement("i");
+p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+el.appendChild(p);
+var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+el.removeChild(p);
+return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+var c = kRGB(wrap, "var(--k-bg)");
+var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+wrap.setAttribute("data-tone", tone);
+return tone;
+}
+// ==== end kit:tone ====
+// ==== kit:text@2 (kWords only) ====
+var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+function kWords(s, key) {
+s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+var cut = function (x) {
+if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+};
+var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+var pre = "";
+bits.forEach(function (x) {
+var t = x.trim(), last = out[out.length - 1];
+if (last && /^ /.test(x)) last.sp = true;
+if (!t) return;
+if (!/[\p{L}\p{N}]/u.test(t)) {
+if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+else { last.t += t; last.sp = / $/.test(x); }
+return;
+}
+out.push({ t: pre + t, sp: / $/.test(x) });
+pre = "";
+});
+if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+if (out.length) out[out.length - 1].sp = false;
+return out;
+}
+// ==== end kit:text ====
+// ==== kit:fit@1 (kFit, kLines; no kRows) ====
+function kFit(el, o) {
+o = o || {};
+var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+for (;;) {
+el.style.fontSize = f + "px";
+m = kLines(el);
+if ((m.w <= W && m.n <= n) || f <= min) break;
+f = Math.max(min, f - 2);
+}
+if (m.w > W) {
+[].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+m = kLines(el);
+}
+return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+while ((t = it.nextNode())) {
+if (!t.data.trim()) continue;
+r.selectNodeContents(t);
+[].forEach.call(r.getClientRects(), function (b) {
+var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+});
+}
+return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+o = o || {};
+var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+var dark = tones && tones.getAttribute("data-tone") === "dark";
+var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+var f = "type='linear' slope='2.4' intercept='-0.7'";
+var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+"<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+"<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+"<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+"<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+});
+layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+layer.style.backgroundSize = size + "px " + size + "px";
+return function (t) {
+var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+layer.style.backgroundImage = tiles[k % 6];
+layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+};
+}
+// ==== end kit:grain ====
+
+var C=CFG,dark=kTone(root)==="dark",off=String(v.backdrop)==="off";
+if(off) qa(".ih-bg,.ih-rects,.ih-vig,.ih-grain").forEach(function(n){n.style.display="none";});
+var grain=off?function(){}:kGrain(q(".ih-grain"));
+var GK=dark?1:0.5,HK=dark?1:0.7;// flash and halo gain
+// titles: a block per phrase, fitted down to the floor, then wrapped
+[[".ih-name",v.name,40],[".ih-before",v.before,L.bmin]].forEach(function(a){
+var el=q(a[0]);
+el.textContent="";
+kWords(a[1]).forEach(function(u){el.appendChild(document.createElement("span")).textContent=u.t;el.lastChild.className="ih-u";if(u.sp) el.appendChild(document.createTextNode(" "));});
+kFit(el,{min:a[2]});
+});
+// pipes: each rest path (portrait: CSS d) -> glow tube, core, tip spark, comets; user-space gradients (a straight
+// line has no box)
+var svg=q(".ih-svg"),id="ih"+(window.__ihN=(window.__ihN||0)+1),defs="",body="";
+var fx=function(n,fe){return '<filter id="'+id+n+'" filterUnits="userSpaceOnUse" x="-1200" y="-1200" width="2400" height="2400">'+fe+"</filter>";};
+var pipes=qa(".ih-pp").map(function(p,i){
+var d=getComputedStyle(p).d;
+d = d && d !== "none" ? d.replace(/^path\("|"\)$/g, "") : p.getAttribute("d");
+var g=id+"r"+i,a='<path d="'+d+'" ';
+defs += '<linearGradient id="'+g+'" gradientUnits="userSpaceOnUse">'+[100,72,48,24,0].map(function(m,k){
+return '<stop offset="'+k/4+'" style="stop-color:color-mix(in oklch var(--ih-hue) hue,var(--k-accent) '+m+'%,var(--k-accent-2))"/>';
+}).join("")+"</linearGradient>";
+body += '<g><g filter="url(#' + id + 'g)">' + a + 'stroke="url(#' + g + ')" stroke-width="12"/></g>' + a + 'class="ih-core" stroke-width="3"/>' + a + 'class="ih-tail" stroke-width="8" stroke-dasharray="26 48" filter="url(#' + id + 's)"/>' +
+a + 'class="ih-head" stroke-width="6" stroke-dasharray="7 67"/><circle class="ih-glo" r="16" filter="url(#' + id + 's)"/><circle class="ih-tip" r="5.5"/></g>';
+return {};
+});
+svg.innerHTML="<defs>"+fx("g",'<feGaussianBlur stdDeviation="9" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>')+fx("s",'<feGaussianBlur stdDeviation="3.5"/>')+defs+"</defs>"+body;
+[].slice.call(svg.children,1).forEach(function(g,i){
+var c=g.children,p=pipes[i];
+p.g=g.style;p.body=c[0].firstChild;p.core=c[1];p.tail=c[2].style;p.head=c[3].style;p.dots=[c[4],c[5]];
+p.len=p.core.getTotalLength();
+var a=p.core.getPointAtLength(0),e=p.end=p.core.getPointAtLength(p.len),r=svg.querySelector("#"+id+"r"+i);
+[a.x,a.y,e.x,e.y].forEach(function(n,k){r.setAttribute(["x1","y1","x2","y2"][k],n.toFixed(1));});
+p.ring=q(".ih-top").appendChild(document.createElement("i")).style;
+});
+
+var rig=q(".ih-rig"),rs=rig.style,front=q(".ih-front").style,back=q(".ih-back").style,flash=q(".ih-flash").style;
+var zs=qa(".ih-z"),pns=qa(".ih-pn"),tiles=qa(".ih-t"),rects=qa(".ih-rects i"),rl=q(".ih-rects").style,gl=qa(".ih-glare i");
+var PW=pns[0].offsetWidth,PH=pns[0].offsetHeight,Y1=parseFloat(getComputedStyle(rig).getPropertyValue("--y"))||0;
+var CAM=MT.bezier(0.55,0,0.18,1),POP=MT.bezier(0.34,1.5,0.64,1),OUT3=MT.ease("power2.out"),CL={extrapolateLeft:"clamp",extrapolateRight:"clamp"};
+var px=function(n){return n.toFixed(2)+"px";},mx=function(c,a){return "color-mix(in srgb,var("+c+") "+a.toFixed(1)+"%,#0000)";};
+
+function render(t){
+grain(t);
+var cam=MT.ramp(t,0,C.cam,CAM),z=MT.mix(L.z0,1,cam),x=L.pan[0]*(1-cam),y=Y1+L.pan[1]*(1-cam);
+var rot=180*MT.ramp(t,C.flip,C.flipLen,"power2.out"),bloom=MT.interpolate(t,C.bloom,[0,1,0.25,0],CL);
+var on=C.pipe+C.grow,br=t>on?0.5+0.5*Math.sin((t-on)*C.breathe):0,g=bloom*1.1+br*0.16;
+// CSS zoom keeps the text sharp; the face turned away also goes to opacity 0
+rs.width=px(PW*z);rs.height=px(PH*z);
+rs.transform="translate("+px(x)+","+px(y)+") rotateY("+rot.toFixed(3)+"deg)";
+zs.forEach(function(e){e.style.zoom=z.toFixed(4);});
+front.opacity=rot<90?1:0;
+back.opacity=rot<90?0:1;
+pns.forEach(function(e){e.style.boxShadow="var(--ih-psh),0 0 "+px(50+g*90)+" "+mx("--ih-h1",(10+g*45)*HK)+",0 0 "+px(150+g*120)+" "+mx("--ih-mid",(16+g*28)*HK);});
+flash.inset=px(-6*z);flash.borderRadius=px(18*z);flash.filter="blur("+px(5*z)+")";
+flash.opacity=(Math.min(0.96,bloom*1.05)*GK*GK).toFixed(3);// light skins: 0.25, the glare carries the colour
+flash.transform=(rot>90?"rotateY(180deg) ":"")+"translateZ(1px)";
+// frames: 18% of the pan, 10% of the zoom
+rl.transform="translate("+px(x*0.18)+","+px(y*0.18)+") scale("+(1+(z-1)*0.1).toFixed(4)+")";
+var dim=MT.mix(1,C.dimTo,MT.ramp(t,C.dim,C.dimLen,"linear"));
+rects.forEach(function(e,i){e.style.opacity=(MT.ramp(t,C.rect+i*C.rectGap,C.rectLen,"power2.out")*dim).toFixed(3);});
+// beat 1: five tiles pop together
+var a=MT.clamp((t-C.icon)/C.iconLen,0,1),pop=POP(a),lit=MT.ramp(t,C.lit,C.litLen,"power2.out")*(t>on?0.82+0.18*br:1);
+tiles.forEach(function(e){
+var s=e.style;
+s.opacity=Math.min(1,a*2.2).toFixed(3);
+s.transform="translateY("+px((1-pop)*22)+") scale("+(0.72+0.28*pop).toFixed(4)+")";
+s.boxShadow="var(--ih-tsh),0 0 "+px(18+lit*40)+" "+mx("--k-accent",Math.min(1,lit)*44);
+});
+// beat 2: five pipes grow together, each over its own length
+var gr=MT.ramp(t,C.pipe,C.grow,"power1.out"),fl=gr>=1?MT.ramp(t,on,C.flowLen,"linear"):0,rk=MT.clamp((t-C.ring)/C.ringLen,0,1);
+pipes.forEach(function(p,i){
+var pulse=t>on?0.84+0.16*Math.sin((t-on)*C.breathe+i):1,dash=(p.len*gr).toFixed(2)+" "+(p.len+60).toFixed(0),hd=p.core.getPointAtLength(p.len*gr);
+var o=-((t-C.pipe)*C.speed+i*C.phase),r=6+OUT3(rk)*26,s=p.ring;
+p.g.display=gr>0?"":"none";
+[p.body,p.core].forEach(function(e,k){e.setAttribute("stroke-dasharray",dash);e.style.opacity=(k?0.8:0.9)*pulse;});
+p.dots.forEach(function(c){c.setAttribute("cx",hd.x.toFixed(2));c.setAttribute("cy",hd.y.toFixed(2));c.style.opacity=gr>0&&gr<1?1:0;});
+// comets run to the hub
+p.tail.strokeDashoffset=o.toFixed(2);p.tail.opacity=0.38*fl;
+p.head.strokeDashoffset=(o-19).toFixed(2);p.head.opacity=0.95*fl;
+s.opacity=rk>0&&rk<1?((1-rk)*0.85).toFixed(3):0;
+s.left=px(FW/2+p.end.x-r);s.top=px(FH/2+p.end.y-r);s.width=s.height=px(2*r);
+});
+// edge flash, only while the bloom is up
+var up=bloom>0.02,nz=Math.sin(Math.floor(t*30)*91.345+47.853)*43758.5453;
+[Math.min(1,bloom*(1-0.06*(nz-Math.floor(nz)))),bloom*0.88,MT.interpolate(t,C.streak,[0,0.9],CL)].forEach(function(k,i){gl[i].style.opacity=up?(k*GK).toFixed(3):0;});
+}
+
+var tl=MT.scene(C.dur,render);
+window.__timelines["integration-hub-map"]=tl;
+})();
+</script>
+</template>
+  </body>
+</html>

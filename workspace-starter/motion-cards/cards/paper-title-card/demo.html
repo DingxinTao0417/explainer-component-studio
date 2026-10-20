@@ -1,0 +1,389 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"line1","type":"string","label":"第一行（用 | 切意群）","default":"先看|结论，|再看|例子。"},
+    {"id":"line2","type":"string","label":"第二行（用 | 切意群，可留空）","default":"最后|自己|动手|试一遍。"},
+    {"id":"key","type":"string","label":"重点词（标题里的一个意群，留空则没有）","default":"动手"},
+    {"id":"digits","type":"string","label":"副行数字（会滚动落定，留空不要）","default":"12"},
+    {"id":"sub","type":"string","label":"副行文字（留空不要）","default":"个例子，三分钟看完"},
+    {"id":"exit","type":"enum","label":"收尾","default":"fade","options":[{"value":"fade","label":"整卡淡出"},{"value":"stay","label":"一直停住"}]},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>paper-title-card · 纸面压印字卡</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="paper-title-card-template">
+      <!-- Ported from video-shotcraft demos/typography/paper-title-card/PaperTitleCard.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette (warm paper = --k-bg tinted 5% with the accent, centre glow = plain --k-bg), --k-serif and
+           --k-mono system stacks, generic Chinese copy, upstream slogan removed; landscape and portrait layouts; the
+           accent word is accent-coloured (italic only for Latin keys); CJK text uses 1.2 line height and no negative
+           tracking; the digit roll is drawn with ::before so the hidden digits are not text; a light paper grain added;
+           a hold of about 1 s before the fade (upstream held 0.4 s) and an exit=stay option.
+           Stamp-in (scale 1.28 to 1, blur 0.06em to 0, opacity, bezier .2 .75 .3 1, 0.3 s, 4 frames apart), the
+           rule (0.53 to 1.13 s), the sub line fade (0.33 to 0.73 s), the odometer (0.73 s, 4 frames apart) and the
+           8-frame linear fade-out are as upstream. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* ==== kit:fonts@2 ==== */
+        @font-face { font-family: "Noto Serif SC"; src: local("Noto Serif SC"), local("Noto Serif CJK SC"), local("Source Han Serif SC"); }
+        @font-face { font-family: "Songti SC"; src: local("Songti SC"), local("STSong"), local("SimSun"); }
+        @font-face { font-family: "Consolas"; src: local("Consolas"); }
+        #root {
+          --k-serif: var(--mc-serif, "Noto Serif SC", "Songti SC", serif);
+          --k-mono: var(--mc-mono, Consolas, monospace);
+        }
+        /* ==== end kit:fonts ==== */
+        
+        /* ==== kit:text@2 ==== */
+        .pt-u { display: inline-block; white-space: pre; }
+        .pt-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+        /* ==== end kit:text ==== */
+        
+        /* ==== kit:fit@1 ==== */
+        .pt-row { display: block; white-space: nowrap; }
+        /* ==== end kit:fit ==== */
+        
+        /* ==== kit:grain@1 ==== */
+        .pt-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+        
+        /* the wrapper is the size container (SPEC 五): portrait overrides live in @container and only reach its children */
+        .pt { position: absolute; inset: 0; container-type: size; --pt-paper: color-mix(in srgb, var(--k-bg), var(--k-accent) 5%); --pt-glow: color-mix(in srgb, var(--k-bg) 85%, transparent); }
+        .pt[data-tone="dark"] { --pt-paper: var(--k-bg); --pt-glow: color-mix(in srgb, color-mix(in srgb, var(--k-bg), white 9%) 85%, transparent); }
+        /* warm paper with a lit centre: the glow is 1100 x 750 at 50% 42% upstream (57% x 69% of the frame) */
+        .pt-bg { position: absolute; inset: 0; --pt-ex: 57%; --pt-ey: 69%; --pt-cy: 42%; background: radial-gradient(ellipse var(--pt-ex) var(--pt-ey) at 50% var(--pt-cy), var(--pt-glow), transparent 65%), var(--pt-paper); }
+        .pt-box { position: absolute; top: 0; bottom: 0; left: 210px; right: 210px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        .pt-title { width: 100%; font-family: var(--k-serif); font-size: 116px; font-weight: 600; line-height: 1.2; color: var(--k-ink); }
+        .pt-title[data-lat] { line-height: 1.14; letter-spacing: -0.012em; }
+        .pt-line { display: block; text-wrap: balance; }
+        .pt-key { color: var(--k-accent); }
+        .pt-key[data-lat] { font-style: italic; }
+        .pt-rule { display: block; flex: none; width: 220px; height: 6px; margin-top: 38px; border-radius: 3px; background: var(--k-accent); }
+        .pt-sub { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 0.5em; margin-top: 34px; font-size: 40px; font-weight: 500; line-height: 1.15; letter-spacing: 0.1em; text-transform: uppercase; color: var(--k-muted); }
+        .pt-st { min-width: 0; }
+        .pt-num { display: inline-flex; font-family: var(--k-mono); font-weight: 600; color: var(--k-accent); font-variant-numeric: tabular-nums; }
+        .pt-col { display: block; flex: none; height: 1.15em; overflow: hidden; }
+        .pt-stack { display: block; }
+        .pt-d { display: block; height: 1.15em; font-style: normal; }
+        .pt-d::before { content: attr(data-d); }
+        /* portrait: the block fills the 12%-68% band (its middle is the 40% line), 11% off each side; the glow becomes a tall oval */
+        @container (orientation: portrait) {
+          .pt-bg { --pt-ex: 100%; --pt-ey: 40%; --pt-cy: 40%; }
+          .pt-box { top: 12%; bottom: 32%; left: 11%; right: 11%; }
+          .pt-title { font-size: 120px; }
+          .pt-rule { width: 176px; margin-top: 44px; }
+          .pt-sub { margin-top: 40px; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="paper-title-card">
+        <div class="pt">
+          <div class="pt-bg"></div>
+          <div class="pt-grain"></div>
+          <div class="pt-box">
+            <div class="pt-title">
+              <div class="pt-line"><span class="pt-u">先看</span><span class="pt-u">结论，</span><span class="pt-u">再看</span><span class="pt-u">例子。</span></div>
+              <div class="pt-line"><span class="pt-u">最后</span><span class="pt-u">自己</span><span class="pt-u pt-key">动手</span><span class="pt-u">试一遍。</span></div>
+            </div>
+            <span class="pt-rule"></span>
+            <div class="pt-sub"><span class="pt-num">12</span><span class="pt-st">个例子，三分钟看完</span></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing (seconds = upstream frames / 30), shared by both orientations
+          var CFG = {
+            dur: 2.667,                                  // the card: 1.37 s of motion, ~1 s hold, 8-frame fade
+            word: 0.133, each: 0.133, wordDur: 0.3,      // word i starts at 4 + 4i frames, 9-frame window
+            rule: 0.533, ruleDur: 0.6,                   // rule scaleX 0 -> 1, frames 16-34
+            sub: 0.333, subDur: 0.4,                     // sub line fades in, frames 10-22
+            roll: 0.4, rollEach: 0.133, rollDur: 0.733,  // odometer: column i starts at 12 + 4i frames, 22-frame window
+            fade: 2.4, fadeDur: 0.267                    // linear fade-out of the whole card (upstream: the last 8 frames)
+          };
+          var STAMP = "cubic-bezier(0.2,0.75,0.3,1)", RULE = "cubic-bezier(0.3,0,0.2,1)", ROLL = "cubic-bezier(0.25,0.8,0.25,1)";
+          var AMP = { scale: 0.28, blur: 0.0603 };       // stamp-in: scale 1.28 -> 1, blur 7px at 116px = 0.0603em
+          // rows allowed per source line: landscape keeps each line on one row, portrait may fold a line into two
+          var LAND = { rows: 1 };
+          var PORT = { rows: 2 };
+          var v = { line1: "先看|结论，|再看|例子。", line2: "最后|自己|动手|试一遍。", key: "动手", digits: "12", sub: "个例子，三分钟看完", exit: "fade", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".pt");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+          
+          // ==== kit:text@2 ====
+          var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "pt-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "pt-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          function kReveal(tl, units, variant, at, o) {
+            o = o || {};
+            var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+            units.forEach(function (u, i) {
+              var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+              if (variant === "rise") {
+                tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+                tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+              } else if (variant === "blur") {
+                tl.fromTo(u, { opacity: 0, y: fs * 0.25, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: each, ease: ease }, t0);
+              } else if (variant === "drop") {
+                tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each / 3, ease: "none" }, t0);
+                tl.fromTo(u, { y: -fs * 0.6 }, { y: 0, duration: each, ease: "overshoot" }, t0);
+              } else if (variant === "scale") {
+                tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each * 0.1, ease: "power1.out" }, t0);
+                tl.fromTo(u, { scale: 1.6, filter: "blur(8px)" }, { scale: 1, filter: "blur(0px)", duration: each, ease: ease }, t0);
+              } else {
+                tl.fromTo(u, { opacity: 0, marginRight: "0.5em" }, { opacity: 1, marginRight: "0em", duration: each, ease: ease }, t0);
+              }
+            });
+            return tl;
+          }
+          // ==== end kit:text ====
+          
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          function kRows(el, cls) {
+            if (!el.children.length) return [];
+            var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+            var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+            kids.forEach(function (c, i) {
+              if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+              if (tops[i] != null) last = tops[i];
+              row.appendChild(c);
+            });
+            return [].slice.call(el.children);
+          }
+          // ==== end kit:fit ====
+          
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+          
+          var dark = kTone(root) === "dark";
+          var grain = null;
+          if (String(v.backdrop) === "off") { q(".pt-bg").style.display = "none"; q(".pt-grain").style.display = "none"; }
+          else grain = kGrain(q(".pt-grain"), { opacity: dark ? 0.09 : 0.05 });
+
+          // title: each source line is split into units by kSplit ("|" cuts phrases, a typed space cuts words), then
+          // kFit shrinks the font until every line fits its rows (never below 72px, then it wraps), then the rows freeze
+          var box = q(".pt-box"), title = q(".pt-title"), BW = box.clientWidth || FW * (P ? 0.78 : 0.78);
+          var trim = function (s) { return String(s == null ? "" : s).replace(/\s+/g, " ").trim(); };
+          var lines = [trim(v.line1), trim(v.line2)].filter(Boolean), key = trim(v.key);
+          title.innerHTML = "";
+          var lineEls = lines.map(function (s) {
+            var el = document.createElement("div");
+            el.className = "pt-line";
+            title.appendChild(el);
+            kSplit(el, "word", false, s);
+            return el;
+          });
+          if (!lines.length) title.style.display = "none";
+          // all-Latin copy keeps upstream's tighter leading and tracking, and its key word is italic
+          var latin = !kCJK.test(lines.join(""));
+          if (latin) title.setAttribute("data-lat", "");
+          else title.removeAttribute("data-lat");
+          if (lines.length) kFit(title, { lines: lines.length * L.rows, min: 72, width: BW });
+          lineEls.forEach(function (el) { kRows(el, "pt-row"); });
+          var units = [].slice.call(title.querySelectorAll(".pt-u"));
+          if (key) for (var i = 0; i < units.length; i++) if (units[i].textContent.indexOf(key) >= 0) {
+            units[i].classList.add("pt-key");
+            if (!kCJK.test(key)) units[i].setAttribute("data-lat", "");
+            break;
+          }
+          // blur per unit from its own font size (upstream 7px at 116px)
+          var fs = parseFloat(getComputedStyle(title).fontSize) || 116;
+
+          // sub line: the digits roll like an odometer (hidden digits are ::before text, not DOM text); the words are plain text
+          var sub = q(".pt-sub"), digits = trim(v.digits), subText = trim(v.sub), cols = [];
+          sub.innerHTML = "";
+          if (digits) {
+            var num = document.createElement("span");
+            num.className = "pt-num";
+            Array.from(digits).forEach(function (ch, i) {
+              if (ch < "0" || ch > "9") { num.appendChild(document.createTextNode(ch)); return; }
+              var col = document.createElement("span"), stack = document.createElement("span");
+              col.className = "pt-col"; stack.className = "pt-stack";
+              col.setAttribute("data-layout-allow-overflow", ""); // the roll strip is meant to be taller than its window
+              for (var n = 0; n < 20; n++) { var d = document.createElement("i"); d.className = "pt-d"; d.setAttribute("data-d", n % 10); stack.appendChild(d); }
+              col.appendChild(stack); num.appendChild(col);
+              cols.push({ stack: stack, col: col, to: +ch, at: CFG.roll + i * CFG.rollEach });
+            });
+            sub.appendChild(num);
+          }
+          if (subText) {
+            var st = document.createElement("span");
+            st.className = "pt-st"; st.textContent = subText;
+            sub.appendChild(st);
+            kFit(sub, { lines: 1, min: 40, width: BW });
+          }
+          if (!digits && !subText) sub.style.display = "none";
+          cols.forEach(function (c) { c.h = c.col.offsetHeight; });
+
+          var rule = q(".pt-rule"), stay = String(v.exit) === "stay";
+          var tl = MT.scene(CFG.dur, function (t) {
+            // each word stamps down from 1.28x: opacity, scale and blur ride one progress p
+            units.forEach(function (u, i) {
+              var p = MT.ramp(t, CFG.word + i * CFG.each, CFG.wordDur, STAMP);
+              u.style.opacity = p;
+              u.style.transform = "scale(" + (1 + AMP.scale * (1 - p)).toFixed(4) + ")";
+              u.style.filter = p >= 0.999 ? "" : "blur(" + ((1 - p) * AMP.blur * fs).toFixed(2) + "px)";
+            });
+            rule.style.transform = "scaleX(" + MT.ramp(t, CFG.rule, CFG.ruleDur, RULE).toFixed(4) + ")";
+            sub.style.opacity = MT.ramp(t, CFG.sub, CFG.subDur, "linear");
+            cols.forEach(function (c) {
+              // the stack holds 0-9 twice, so every target digit has a full turn to roll through
+              c.stack.style.transform = "translateY(" + (-(10 + c.to) * c.h * MT.ramp(t, c.at, CFG.rollDur, ROLL)).toFixed(2) + "px)";
+            });
+            root.style.opacity = stay ? 1 : (1 - MT.ramp(t, CFG.fade, CFG.fadeDur, "linear")).toFixed(4);
+            if (grain) grain(t);
+          });
+          window.__timelines["paper-title-card"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

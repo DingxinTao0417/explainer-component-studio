@@ -1,0 +1,498 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"line1","type":"string","label":"标题第一行（可用 | 切成逐词升起的词组）","default":"一份设置"},
+    {"id":"line2","type":"string","label":"标题第二行（最后一个词组用强调色）","default":"同时出|八份"},
+    {"id":"name","type":"string","label":"主卡名称","default":"示例任务"},
+    {"id":"value","type":"string","label":"主卡大读数","default":"30"},
+    {"id":"unit","type":"string","label":"读数单位","default":"秒"},
+    {"id":"label1","type":"string","label":"计数器说明（只有一份时）","default":"先做出一份"},
+    {"id":"label","type":"string","label":"计数器说明（排开之后）","default":"同一份设置，一次全部完成"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>cloner-depth-echo · 克隆纵队</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="cloner-depth-echo-template">
+<!-- Ported from video-shotcraft demos/ui-entrance/cloner-depth-echo/ClonerDepthEcho.tsx
+ (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+ Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+ Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+ neutral --k-* palette, white-first (backdrop, vignette, grain) instead of the dark lime stage, system fonts, generic copy,
+ upstream mark and render card replaced by a generic task card; English headline replaced by two Chinese lines, counter
+ caption split into two states; clone text in pseudo-elements; counter glow on dark skins only; dust kept, stage breathing
+ dropped; portrait re-flows the same timeline (own vanishing point, clone offsets, stacked layout). Timing, springs,
+ 7 clones x 250px, opacity fall-off, blur, 1.06 pulse and rim flash kept. -->
+<style>
+  @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+  @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+  @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+  #root {
+    --k-bg: var(--mc-bg, #ffffff);
+    --k-panel: var(--mc-panel, #f4f5f7);
+    --k-ink: var(--mc-ink, #15171c);
+    --k-muted: var(--mc-muted, #6b7280);
+    --k-accent: var(--mc-accent, #e8590c);
+    --k-accent-2: var(--mc-accent-2, #2563eb);
+    --k-on-accent: var(--mc-on-accent, #ffffff);
+    --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    font-family: var(--k-font);
+    color: var(--k-ink);
+  }
+/* ==== kit:grain@1 ==== */
+.cd-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+
+/* ==== kit:text@2 ==== */
+.cd-u { display: inline-block; white-space: pre; }
+.cd-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+/* ==== end kit:text ==== */
+
+/* ==== kit:fit@1 ==== */
+/* ==== end kit:fit ==== */
+
+
+/* ==== kit:fonts@2 ==== */
+@font-face { font-family: "Consolas"; src: local("Consolas"); }
+#root {
+  --k-mono: var(--mc-mono, Consolas, monospace);
+}
+/* ==== end kit:fonts ==== */
+
+/* ==== kit:derived@1 ==== */
+.cd {
+  --cd-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+  --cd-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+  --cd-hi: color-mix(in srgb, white 80%, transparent);
+}
+.cd[data-tone="dark"] {
+  --cd-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+  --cd-hi: color-mix(in srgb, white 6%, transparent);
+}
+/* ==== end kit:derived ==== */
+
+/* ==== kit:backdrop@1 ==== */
+.cd-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+.cd-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+/* ==== end kit:backdrop ==== */
+
+/* ==== kit:vignette@1 ==== */
+.cd-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--cd-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.cd[data-tone="dark"] .cd-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+
+/* ==== kit:light@1 ==== */
+.cd-light { mix-blend-mode: multiply; }
+.cd[data-tone="dark"] .cd-light { mix-blend-mode: screen; }
+/* ==== end kit:light ==== */
+  .cd { position: absolute; inset: 0; container-type: size; --cd-card: var(--k-bg); --cd-c1: var(--k-bg); --cd-c3: color-mix(in srgb, var(--k-bg), var(--k-ink) 5%); }
+  .cd[data-tone="dark"] { --cd-card: var(--k-panel); --cd-c1: color-mix(in srgb, var(--k-panel), white 5%); --cd-c3: color-mix(in srgb, var(--k-panel), black 30%); }
+  /* sizes and positions live in .cd-box variables: landscape here, portrait in the @container block; --u scales the card's insides (drawn at 660x420) */
+  .cd-box { position: absolute; inset: 0; --u: 1; --cx: 1130px; --cy: 352px; --cw: 660px; --ch: 420px; --tl: 140px; --tt: 168px; --tw: 900px; --tf: 112px; --ol: 128px; --ot: 622px; --os: 260px; --ll: 140px; --lt: 900px; --lw: 900px; }
+  .cd-dust, .cd-cam, .cd-persp, .cd-3d { position: absolute; inset: 0; }
+  .cd-dust { pointer-events: none; opacity: 0.35; }
+  .cd-mote { position: absolute; left: 0; top: 0; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--k-accent) 90%, transparent) 0%, transparent 70%); }
+  .cd-ground { position: absolute; left: calc(var(--cx) - 160px); top: calc(var(--cy) + var(--ch) - 40px); width: calc(var(--cw) + 320px); height: 220px; --gl: 26; background: radial-gradient(ellipse 50% 50% at 50% 40%, color-mix(in srgb, var(--k-accent) calc(var(--gl) * 1%), transparent) 0%, transparent 70%); }
+  .cd-persp { perspective: 1500px; }
+  .cd-3d { transform-style: preserve-3d; }
+  .cd-card { position: absolute; left: var(--cx); top: var(--cy); width: var(--cw); height: var(--ch); }
+  .cd-face { position: absolute; inset: 0; border-radius: calc(30px * var(--u)); overflow: hidden; --cf: 100%; box-sizing: border-box; border: 1.5px solid var(--cd-line);
+    background: linear-gradient(160deg, color-mix(in srgb, var(--cd-c1) var(--cf), transparent) 0%, color-mix(in srgb, var(--cd-card) var(--cf), transparent) 60%, color-mix(in srgb, var(--cd-c3) var(--cf), transparent) 100%);
+    box-shadow: inset 0 1px 0 var(--cd-hi), 0 12px 30px -8px color-mix(in srgb, var(--cd-shade) 30%, transparent); }
+  .cd-face::before { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 70% 50% at 30% 0%, color-mix(in srgb, var(--k-accent) 10%, transparent) 0%, transparent 70%); }
+  .cd-clone .cd-face::before { display: none; }
+  .cd-in { position: absolute; left: 0; top: 0; width: 660px; height: 420px; transform: scale(var(--u)); transform-origin: 0 0; }
+  .cd-top { position: absolute; left: 42px; right: 42px; top: 36px; display: flex; align-items: center; gap: 14px; }
+  .cd-top .cd-mark { width: 34px; height: 34px; }
+  .cd-nm { flex: 1; min-width: 0; font-size: 32px; font-weight: 600; line-height: 1.2; overflow-wrap: anywhere; }
+  .cd-tag { flex: none; height: 44px; padding: 0 16px; border-radius: 22px; display: flex; align-items: center; font: 700 28px var(--k-mono); background: var(--k-accent); color: var(--k-on-accent); }
+  .cd-clone .cd-nm::before, .cd-clone .cd-tag::before { content: attr(data-t); }
+  .cd-clone .cd-tag { background: color-mix(in srgb, var(--k-accent) 14%, transparent); color: var(--k-accent); border: 1.5px solid color-mix(in srgb, var(--k-accent) 60%, transparent); }
+  .cd-read { position: absolute; left: 40px; right: 40px; top: 104px; }
+  .cd-readrow { display: block; font-size: 132px; font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; white-space: nowrap; overflow-wrap: anywhere; }
+  .cd-unit { font-size: 0.545em; letter-spacing: 0; margin-left: 0.12em; }
+  .cd-area, .cd-spark { position: absolute; left: 42px; top: 246px; width: 576px; height: 130px; }
+  .cd-area { background: linear-gradient(180deg, color-mix(in srgb, var(--k-accent) 22%, transparent), transparent);
+    clip-path: polygon(0 100%, 0% 57.2%, 7.6% 53.5%, 15.3% 60.9%, 23.0% 48%, 30.7% 50.7%, 38.4% 40.6%, 46.1% 44.3%, 53.8% 33.2%, 61.5% 36.9%, 69.2% 27.6%, 76.9% 30.4%, 84.6% 24%, 92.3% 27.6%, 100% 20.3%, 100% 100%); }
+  .cd-spark { overflow: visible; fill: none; stroke: var(--k-accent); stroke-width: 4px; stroke-linejoin: round; stroke-linecap: round; }
+  .cd-clone .cd-spark { stroke-width: 2.5px; opacity: 0.8; }
+  .cd-slots { position: absolute; left: 42px; right: 42px; bottom: 30px; display: flex; gap: 8px; counter-reset: s; }
+  .cd-slot::before { counter-increment: s; content: counter(s, decimal-leading-zero); }
+  .cd-slot { flex: 1; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font: 600 28px var(--k-mono); box-sizing: border-box;
+    background: color-mix(in srgb, var(--k-accent) 90%, transparent); color: var(--k-on-accent); border: 1px solid color-mix(in srgb, var(--k-accent) 68%, transparent); }
+  .cd-rim { position: absolute; inset: 0; border-radius: calc(30px * var(--u)); pointer-events: none; border: 2px solid transparent; }
+  .cd-title { position: absolute; left: var(--tl); top: var(--tt); width: var(--tw); font-size: var(--tf); font-weight: 800; line-height: 1.2; }
+  .cd-l { display: block; white-space: nowrap; }
+  .cd-acc { color: var(--k-accent); }
+  .cd-count { position: absolute; left: var(--ol); top: var(--ot); }
+  .cd-punch { display: flex; align-items: flex-start; transform-origin: 0% 70%; }
+  .cd-x { font-size: calc(var(--os) * 0.62); font-weight: 500; color: var(--k-muted); margin: calc(var(--os) * 0.2) 8px 0 0; line-height: 1; }
+  .cd-digits { position: relative; height: calc(var(--os) * 1.02); width: calc(var(--os) * 0.62); }
+  .cd-d, .cd-dp { position: absolute; left: 0; top: 0; font-size: var(--os); font-weight: 800; letter-spacing: -0.04em; line-height: 1; color: var(--k-accent); }
+  .cd-dp { opacity: 0; }
+  .cd-dp::before { content: attr(data-p); }
+  .cd-cap { position: absolute; left: var(--ll); top: var(--lt); width: var(--lw); display: flex; align-items: center; gap: 16px; font-size: 40px; font-weight: 600; line-height: 1.2; color: var(--k-muted); }
+  .cd-cap i { flex: none; width: 40px; height: 2px; background: var(--k-accent); }
+  .cd-cap span { display: block; min-width: 0; }
+  @container (orientation: portrait) {
+    .cd-box { --u: 1.18; --cx: 150px; --cy: 540px; --cw: 780px; --ch: 496px; --tl: 150px; --tt: 240px; --tw: 780px; --tf: 88px; --ol: 150px; --ot: 1060px; --os: 170px; --ll: 150px; --lt: 1246px; --lw: 780px; }
+  }
+</style>
+
+<div id="root" data-composition-id="cloner-depth-echo">
+  <div class="cd">
+    <div class="cd-box">
+      <div class="cd-backdrop"></div>
+      <div class="cd-dust"></div>
+      <div class="cd-ground cd-light"></div>
+      <div class="cd-vig"></div>
+      <div class="cd-grain"></div>
+      <div class="cd-cam">
+        <div class="cd-persp"><div class="cd-3d">
+          <div class="cd-card cd-hero">
+            <div class="cd-face"><div class="cd-in">
+              <div class="cd-top">
+                <svg class="cd-mark" viewBox="0 0 128 128" aria-hidden="true"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg>
+                <div class="cd-nm">示例任务</div>
+                <div class="cd-tag">01</div>
+              </div>
+              <div class="cd-read"><div class="cd-readrow"><span class="cd-val">30</span><span class="cd-unit">秒</span></div></div>
+              <div class="cd-area"></div>
+              <svg class="cd-spark" viewBox="0 0 576 130" aria-hidden="true"><polyline points="0,74.4 44.3,69.6 88.6,79.2 132.9,62.4 177.2,66 221.5,52.8 265.8,57.6 310.2,43.2 354.5,48 398.8,36 443.1,39.6 487.4,31.2 531.7,36 576,26.4"/></svg>
+              <div class="cd-slots"><i class="cd-slot"></i><i class="cd-slot"></i><i class="cd-slot"></i><i class="cd-slot"></i><i class="cd-slot"></i><i class="cd-slot"></i><i class="cd-slot"></i><i class="cd-slot"></i></div>
+            </div></div>
+            <div class="cd-rim"></div>
+          </div>
+        </div></div>
+      </div>
+      <div class="cd-title"><div class="cd-l cd-l1">一份设置</div><div class="cd-l cd-l2">同时出<span class="cd-acc">八份</span></div></div>
+      <div class="cd-count"><div class="cd-punch"><span class="cd-x">×</span><div class="cd-digits"><div class="cd-dp" data-p=""></div><div class="cd-d" data-layout-allow-overlap>8</div></div></div></div>
+      <div class="cd-cap"><i></i><span>同一份设置，一次全部完成</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    // seconds, both orientations
+    var CFG = {
+      enterDur: 0.533, riseAt: 0.133, riseStep: 0.067, riseDur: 0.467, press: 0.533, pressDur: 0.267,
+      spread: 0.8, each: 0.073, spDamp: 15, spStiff: 150, spMass: 0.9, tickLag: 0.067, rollDur: 0.167,
+      merge: 2.533, mergeDur: 0.333, popDur: 0.533, rimDur: 0.467, litDur: 0.167, punchDur: 0.4,
+      dollyAt: 1.333, dollyDur: 1.333, dolly2At: 3.333, dolly2Dur: 1.267, labelAt: 0.2, labelDur: 0.533,
+      title: 3.067, title2: 3.267, word: 0.533, wordGap: 0.133, dur: 5
+    };
+    var N = 7, GAP_Z = 250;
+    // per orientation: vanishing point (frame share), clone offset per step, smallest headline
+    var LAND = { vp: [0.1875, 0.111], dx: -58, dy: -6, minTitle: 72 };
+    var PORT = { vp: [0.26, 0.13], dx: -34, dy: -20, minTitle: 72 };
+    var v = { line1: "一份设置", line2: "同时出|八份", name: "示例任务", value: "30", unit: "秒", label1: "先做出一份", label: "同一份设置，一次全部完成", backdrop: "on" };
+    try {
+      var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+      for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+    } catch (e) {}
+    var txt = function (k) { return String(v[k] == null ? "" : v[k]).trim(); };
+
+    var root = document.querySelector(".cd");
+    var q = function (s) { return root.querySelector(s); };
+    var FW = root.clientWidth, FH = root.clientHeight;
+    if (!FW || !FH) {
+      // not laid out yet: host clip size, then window
+      var hc = root.closest("[data-width][data-height]");
+      FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+      FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+    }
+    var P = FH > FW, L = P ? PORT : LAND, S = Math.min(FW, FH) / (9 * 120);
+    root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== end kit:tone ====
+
+// ==== kit:hash@1 ====
+function kHash(n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+// ==== end kit:hash ====
+
+// ==== kit:grain@1 ====
+function kGrain(layer) {
+  var dark = layer.closest("[data-tone]").getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='256' height='256'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+"<feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+"<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+"<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+"<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = dark ? "soft-light" : "overlay";
+  layer.style.backgroundSize = "256px 256px";
+  return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / 2), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * 256) + "px " + Math.floor(h(k * 7 + 2) * 256) + "px";
+  };
+}
+// ==== end kit:grain ====
+
+// ==== kit:shadow@1 ====
+function kShadow(e, strength) {
+  e = Math.max(0, e);
+  var s = strength == null ? 1 : strength, r = function (x) { return Math.round(x * 10) / 10; };
+  var c = function (a) { return "color-mix(in srgb, var(--cd-shade) " + r(Math.min(1, a) * 100) + "%, transparent)"; };
+  return "0 " + r(0.5 + e * 0.06) + "px " + r(1 + e * 0.18) + "px " + c((0.12 * s) / (1 + e / 24)) + ", " +
+    "0 " + r(e * 0.55) + "px " + r(e * 1.3) + "px " + r(-e * 0.22) + "px " + c((0.08 + (Math.min(e, 64) / 64) * 0.22) * s);
+}
+// ==== end kit:shadow ====
+
+
+// ==== kit:text@2 ====
+var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+function kWords(s, key) {
+  s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+  var cut = function (x) { return x.split(/( )/); };
+  var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+  var pre = "";
+  bits.forEach(function (x) {
+    var t = x.trim(), last = out[out.length - 1];
+    if (last && /^ /.test(x)) last.sp = true;
+    if (!t) return;
+    if (!/[\p{L}\p{N}]/u.test(t)) {
+if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+else { last.t += t; last.sp = / $/.test(x); }
+return;
+    }
+    out.push({ t: pre + t, sp: / $/.test(x) });
+    pre = "";
+  });
+  if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+  if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+  if (out.length) out[out.length - 1].sp = false;
+  return out;
+}
+function kSplit(el, by, rise, text) {
+  var units = [];
+  el.textContent = "";
+  kWords(text != null ? text : el.textContent).forEach(function (p) {
+    var u = document.createElement("span"), box = document.createElement("span");
+    u.className = "cd-u"; u.textContent = p.t;
+    box.className = "cd-cut"; box.appendChild(u);
+    el.appendChild(box);
+    if (p.sp) el.appendChild(document.createTextNode(" "));
+    units.push(u);
+  });
+  return units;
+}
+function kReveal(tl, units, variant, at, o) {
+  o = o || {};
+  var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+  units.forEach(function (u, i) {
+    var t0 = at + i * gap;
+    tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+    tl.fromTo(u, { y: u.offsetHeight * 1.05 + (parseFloat(getComputedStyle(u).fontSize) || 40) * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+  });
+  return tl;
+}
+// ==== end kit:text ====
+
+// ==== kit:fit@1 ====
+function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+
+    var dark = kTone(root) === "dark";
+    if (txt("backdrop") === "off") [".cd-backdrop", ".cd-vig", ".cd-grain", ".cd-dust"].forEach(function (s) { q(s).style.display = "none"; });
+    var hero = q(".cd-hero"), face = hero.querySelector(".cd-face"), rim = q(".cd-rim"), cam = q(".cd-cam");
+    var layer = q(".cd-3d"), ground = q(".cd-ground");
+    var hs = getComputedStyle(hero), CX = parseFloat(hs.left), CY = parseFloat(hs.top), CW = parseFloat(hs.width), CH = parseFloat(hs.height);
+    q(".cd-persp").style.perspectiveOrigin = L.vp[0] * FW + "px " + L.vp[1] * FH + "px";
+    cam.style.transformOrigin = CX + CW / 2 + "px " + (CY + CH / 2) + "px";
+    var clamp = MT.clamp, A = "var(--k-accent)", mixc = function (c, p) { return "color-mix(in srgb, " + c + " " + Math.round(clamp(p / 100) * 1000) / 10 + "%, transparent)"; };
+    face.style.boxShadow = "inset 0 1px 0 var(--cd-hi), " + kShadow(22, dark ? 2.6 : 1.15);
+
+    // text slots: empty hides, long shrinks then wraps
+    var nm = q(".cd-nm"), row = q(".cd-readrow"), cap = q(".cd-cap span"), capBox = q(".cd-cap");
+    nm.textContent = txt("name"); nm.style.display = txt("name") ? "" : "none";
+    q(".cd-val").textContent = txt("value"); q(".cd-unit").textContent = txt("unit"); q(".cd-unit").style.display = txt("unit") ? "" : "none";
+    q(".cd-read").style.display = txt("value") ? "" : "none";
+    if (txt("name")) kFit(nm, { lines: 1, min: 28, width: nm.clientWidth || 400 });
+    if (txt("value")) kFit(row, { lines: 1, min: 64, width: q(".cd-read").clientWidth || 580 });
+    var TW = q(".cd-title").clientWidth || 780, capW = capBox.clientWidth - 56;
+    var lines = [["line1", ".cd-l1"], ["line2", ".cd-l2"]].map(function (a) {
+      var el = q(a[1]), s = txt(a[0]);
+      if (!s) { el.style.display = "none"; return []; }
+      var us = kSplit(el, "word", true, s);
+      us.forEach(function (u) { u.setAttribute("data-layout-allow-occlusion", ""); });
+      if (a[0] === "line2") us[us.length - 1].style.color = A;
+      kFit(el, { lines: 1, min: L.minTitle, width: TW });
+      return us;
+    });
+    var capFit = function (s) { cap.textContent = s; cap.style.fontSize = ""; capBox.style.display = s ? "flex" : "none"; if (s) kFit(cap, { lines: 1, min: 40, width: capW }); };
+
+    // seven clones, far to near; their text sits in pseudo-elements
+    var SPARK = q(".cd-spark polyline").getAttribute("points"), MARK = q(".cd-mark").outerHTML, clones = [];
+    for (var idx = N; idx >= 1; idx--) {
+      var el = document.createElement("div"), c = idx / N;
+      el.className = "cd-card cd-clone";
+      el.innerHTML = '<div class="cd-face" style="--cf:' + MT.mix(55, 6, c).toFixed(1) + '%;border-color:' + mixc(A, MT.mix(55, 85, c)) + ';box-shadow:0 0 ' + (18 + 20 * c).toFixed(0) + "px " + mixc(A, 12 + 10 * c) + '">' +
+        '<div class="cd-in"><div class="cd-top">' + MARK + '<div class="cd-nm"></div><div class="cd-tag" data-t="0' + (idx + 1) + '"></div></div>' +
+        '<svg class="cd-spark" viewBox="0 0 576 130" aria-hidden="true"><polyline points="' + SPARK + '"/></svg></div></div>';
+      el.querySelector(".cd-nm").setAttribute("data-t", txt("name"));
+      layer.insertBefore(el, hero);
+      clones.push({ el: el, idx: idx });
+    }
+
+    var inner = [".cd-top", ".cd-read", ".cd-spark, .cd-area", ".cd-slots"].map(function (k) { return [].slice.call(hero.querySelectorAll(k)); });
+    var slots = [].slice.call(hero.querySelectorAll(".cd-slot"));
+    var count = q(".cd-count"), punchEl = q(".cd-punch"), dEl = q(".cd-d"), dpEl = q(".cd-dp");
+    var land = CFG.merge + CFG.mergeDur;
+    var spreadOf = function (t, i) { var s0 = CFG.spread + (i - 1) * CFG.each; return t < s0 ? 0 : MT.spring({ t: t, delay: s0, damping: CFG.spDamp, stiffness: CFG.spStiff, mass: CFG.spMass }); };
+    var mergeOf = function (t) { return MT.ramp(t, CFG.merge, CFG.mergeDur, "exit"); };
+    var depthOf = function (t, i) { return spreadOf(t, i) * (1 - mergeOf(t)); };
+
+    // dust motes (26, drift 0.18)
+    var dust = q(".cd-dust"), motes = [], DW = FW + 200, DH = FH + 100;
+    for (var m = 0; m < 26; m++) {
+      var z = kHash(155 + m * 7.1), md = document.createElement("div"), sz = 2 + z * z * 16;
+      md.className = "cd-mote"; md.style.width = md.style.height = sz.toFixed(1) + "px";
+      if (z > 0.7) md.style.filter = "blur(" + ((z - 0.7) * 10).toFixed(1) + "px)";
+      dust.appendChild(md);
+      motes.push({ el: md, z: z, x0: kHash(65 + m * 3.7) * DW, y0: kHash(85 + m * 5.3) * FH, m: m });
+    }
+    var grain = kGrain(q(".cd-grain"));
+
+    function render(t) {
+      var f = t * 30, mg = mergeOf(t); // f: frames at 30 fps, dust only
+      var enter = MT.ramp(t, 0, CFG.enterDur, "snappy");
+      var press = MT.ramp(t, CFG.press, CFG.pressDur, "swift") * (1 - MT.ramp(t, CFG.spread, 0.333, "overshoot"));
+      var popT = clamp((t - land) / CFG.popDur), pop = t >= land ? Math.sin(popT * Math.PI) * Math.pow(1 - popT, 0.6) : 0;
+      var rimF = t >= land ? Math.max(0, 1 - (t - land) / CFG.rimDur) : 0;
+      var lit = MT.ramp(t, land - 1 / 30, CFG.litDur, "snappy");
+      hero.style.transform = "translate3d(0px," + ((1 - enter) * 40 * S).toFixed(2) + "px,0px) scale(" + ((1 - 0.04 * press) * (1 + 0.06 * pop) * MT.mix(0.94, 1, enter)).toFixed(4) + ")";
+      hero.style.opacity = clamp(enter * 1.4).toFixed(3);
+      hero.style.filter = enter < 1 ? "blur(" + ((1 - enter) * 10).toFixed(2) + "px)" : "none";
+      rim.style.borderColor = mixc(A, 25 * press + 90 * rimF);
+      rim.style.boxShadow = rimF > 0 ? "0 0 " + (50 * rimF).toFixed(1) + "px " + mixc(A, 45 * rimF) + ", inset 0 0 " + (40 * rimF).toFixed(1) + "px " + mixc(A, 18 * rimF) : "none";
+      inner.forEach(function (g, k) {
+        var p = MT.ramp(t, CFG.riseAt + k * CFG.riseStep, CFG.riseDur, "snappy");
+        g.forEach(function (e) { e.style.opacity = p.toFixed(3); e.style.transform = "translateY(" + ((1 - p) * 16 * S).toFixed(2) + "px)"; });
+      });
+      slots.forEach(function (s, i) {
+        var on = i === 0 ? 1 : lit;
+        s.style.background = mixc(A, 6 + 84 * on);
+        s.style.color = on > 0.8 ? "var(--k-on-accent)" : on < 0.15 ? "var(--k-muted)" : "var(--k-ink)";
+        s.style.borderColor = mixc(A, 18 + 50 * on);
+      });
+      ground.style.opacity = enter.toFixed(3);
+      ground.style.setProperty("--gl", (14 + 12 * rimF).toFixed(1));
+
+      var dr = 14 * S * MT.ramp(t, CFG.dollyAt, CFG.dollyDur, "smooth") * (1 - mg);
+      clones.forEach(function (c) {
+        var i = c.idx, d = depthOf(t, i), sp = spreadOf(t, i), op = (1 - (i / N) * 0.72) * clamp(sp * 2.5) * (1 - mg * 0.4);
+        if (op <= 0.005 || d <= 0.002) { c.el.style.opacity = "0"; return; }
+        var dx = (L.dx * S * i - dr * i * 0.4) * d, dy = L.dy * S * i * d;
+        var vel = Math.abs(depthOf(t + 1 / 60, i) - depthOf(t - 1 / 60, i)) * GAP_Z * i;
+        var born = clamp(1 - (t - (CFG.spread + (i - 1) * CFG.each)) / (8 / 30));
+        c.el.style.opacity = op.toFixed(3);
+        c.el.style.transform = "translate3d(" + dx.toFixed(2) + "px," + dy.toFixed(2) + "px," + (-GAP_Z * i * d).toFixed(2) + "px)";
+        c.el.style.filter = "blur(" + (Math.min(10, vel * 0.06) + (i / N) * 1.6).toFixed(2) + "px)" + (born > 0 ? " drop-shadow(0 0 " + (14 * born).toFixed(1) + "px " + mixc(A, 70 * born) + ")" : "");
+      });
+
+      // counter: +1 per clone, digit rolls up
+      var n = 1, last = -99;
+      for (var j = 1; j <= N; j++) { var t0 = CFG.spread + (j - 1) * CFG.each + CFG.tickLag; if (t >= t0) { n++; last = t0; } }
+      var roll = MT.ramp(t - last, 0, CFG.rollDur, "snappy"), spd = roll < 1 ? 1 - roll : 0;
+      var punch = t >= land ? Math.sin(clamp((t - land) / CFG.punchDur) * Math.PI) : 0;
+      var cs = dEl.style, ps = dpEl.style, g = 0.35 + 0.5 * punch;
+      dEl.textContent = n; dpEl.setAttribute("data-p", n > 1 ? n - 1 : "");
+      cs.transform = "translateY(" + ((1 - roll) * 45).toFixed(2) + "%)";
+      cs.opacity = clamp(roll * 1.6).toFixed(3);
+      ps.transform = "translateY(" + (-roll * 45).toFixed(2) + "%)";
+      ps.opacity = n > 1 ? clamp(1 - roll * 1.6).toFixed(3) : "0";
+      cs.filter = ps.filter = spd > 0.05 ? "blur(" + (spd * 6).toFixed(2) + "px)" : "none";
+      cs.textShadow = dark ? "0 0 " + (24 * g).toFixed(1) + "px " + mixc(A, 45 * g) + ", 0 0 " + (70 * g).toFixed(1) + "px " + mixc(A, 30 * g) : "none";
+      punchEl.style.transform = "scale(" + (1 + 0.06 * punch).toFixed(4) + ")";
+      var lab = MT.ramp(t, CFG.labelAt, CFG.labelDur, "out");
+      count.style.opacity = capBox.style.opacity = lab.toFixed(3);
+      count.style.transform = capBox.style.transform = "translateY(" + ((1 - lab) * 20 * S).toFixed(2) + "px)";
+      var st = n === 1 ? "1" : "2";
+      if (cap.getAttribute("data-s") !== st) { cap.setAttribute("data-s", st); capFit(txt(n === 1 ? "label1" : "label")); }
+
+      motes.forEach(function (o) {
+        var x = ((((o.x0 + f * 0.18 * (0.4 + o.z)) % DW) + DW) % DW) - 100;
+        var y = ((((o.y0 - f * 0.054 * (0.5 + o.z)) % DH) + DH) % DH) - 50;
+        o.el.style.transform = "translate(" + x.toFixed(1) + "px," + y.toFixed(1) + "px)";
+        o.el.style.opacity = ((0.25 + 0.75 * (0.5 + 0.5 * Math.sin(f / (14 + o.z * 20) + o.m))) * (0.3 + o.z * 0.7)).toFixed(3);
+      });
+      // dolly
+      cam.style.transform = "scale(" + (1 + 0.02 * MT.ramp(t, CFG.dollyAt, CFG.dollyDur, "smooth") + 0.006 * MT.ramp(t, CFG.dolly2At, CFG.dolly2Dur, "smooth")).toFixed(5) + ")";
+      grain(t);
+    }
+
+    var tl = MT.scene(CFG.dur, render);
+    // headline after the merge
+    kReveal(tl, lines[0], "rise", CFG.title, { each: CFG.word, gap: CFG.wordGap });
+    kReveal(tl, lines[1], "rise", CFG.title2, { each: CFG.word, gap: CFG.wordGap });
+    window.__timelines["cloner-depth-echo"] = tl;
+  })();
+</script>
+    </template>
+  </body>
+</html>

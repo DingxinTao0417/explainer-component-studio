@@ -1,0 +1,446 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"before","type":"string","label":"“处理前”角标文字（留空不显示）","default":"处理前"},
+    {"id":"after","type":"string","label":"“处理后”角标文字（留空不显示）","default":"处理后"},
+    {"id":"srcs","type":"string","label":"图片地址（可空）：填两张用 | 分隔，先“处理前”后“处理后”；只填一张时当“处理后”，“处理前”自动做成低对比雾面版；留空画示意界面","default":""},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>before-after-slider-scrub · 前后对比先甩后扫</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="before-after-slider-scrub-template">
+      <!-- Ported from video-shotcraft demos/data/before-after-slider-scrub/BeforeAfterSliderScrub.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette, system fonts, generic copy, upstream mark removed; the full-bleed fake dashboard became
+           a floating panel (landscape 88% x 88%, portrait 80% x 56%) with an 84px caption strip that carries the two tags
+           at 32px, drawn by a text-free SVG fake UI (grid landscape, list portrait) or by optional images; bar, knob, grain
+           and the whole slider timeline kept as upstream (positions, 5:1 fling/scrub ratio, knob squish 1.18, press 0.94,
+           directional blur 0.12 up to 14), speeds normalised to the upstream frame width so both orientations blur alike. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* ==== kit:derived@1 ==== */
+        .bs {
+          --bs-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+          --bs-panel-2: color-mix(in srgb, var(--k-panel), var(--k-ink) 4%);
+          --bs-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+          --bs-hi: color-mix(in srgb, white 80%, transparent);
+        }
+        .bs[data-tone="dark"] {
+          --bs-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+          --bs-hi: color-mix(in srgb, white 6%, transparent);
+        }
+        /* ==== end kit:derived ==== */
+
+        /* ==== kit:backdrop@1 ==== */
+        .bs-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .bs-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        /* ==== end kit:backdrop ==== */
+
+        /* ==== kit:grain@1 ==== */
+        .bs-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+
+        /* ==== kit:text@2 ==== */
+        .bs-u { display: inline-block; white-space: pre; }
+        .bs-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+        /* ==== end kit:text ==== */
+        .bs { position: absolute; inset: 0; container-type: size; --bs-bar: var(--k-bg); --bs-edge: color-mix(in srgb, var(--k-ink) 18%, transparent); }
+        .bs[data-tone="dark"] { --bs-bar: var(--k-ink); }
+        .bs-panel { position: absolute; left: 6%; right: 6%; top: 6%; bottom: 6%; border-radius: 20px; overflow: hidden; box-sizing: border-box; background: var(--k-bg); border: 1px solid var(--bs-line); box-shadow: inset 0 1px 0 var(--bs-hi), 0 2px 5px color-mix(in srgb, var(--bs-shade) 10%, transparent), 0 16px 40px -8px color-mix(in srgb, var(--bs-shade) 20%, transparent); }
+        .bs[data-tone="dark"] .bs-panel { box-shadow: inset 0 1px 0 var(--bs-hi), 0 2px 6px color-mix(in srgb, var(--bs-shade) 26%, transparent), 0 16px 40px -8px color-mix(in srgb, var(--bs-shade) 52%, transparent); }
+        .bs-lay, .bs-sb { position: absolute; inset: 0; }
+        .bs-after { clip-path: inset(0 60% 0 0); }
+        /* the picture sits under an 84px caption strip; the static page shows two flat halves until the script draws the UI */
+        .bs-ui { position: absolute; left: 0; right: 0; top: 84px; bottom: 0; background: var(--k-bg) center / cover no-repeat; }
+        .bs-ui svg { display: block; }
+        .bs-before .bs-ui { background-color: var(--k-panel); }
+        .bs-soft { filter: blur(1.6px) saturate(0.18) contrast(0.72) brightness(1.04); }
+        .bs-fog { position: absolute; left: 0; right: 0; top: 84px; bottom: 0; background: linear-gradient(180deg, color-mix(in srgb, color-mix(in srgb, var(--k-ink) 16%, var(--k-bg)) 30%, transparent), color-mix(in srgb, color-mix(in srgb, var(--k-ink) 22%, var(--k-bg)) 38%, transparent)); }
+        .bs-strip { position: absolute; left: 0; right: 0; top: 0; height: 84px; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; background: var(--k-bg); border-bottom: 1px solid var(--bs-line); }
+        .bs-before .bs-strip { justify-content: flex-end; background: color-mix(in srgb, var(--k-bg) 90%, var(--k-ink)); }
+        .bs-tag { display: flex; align-items: center; gap: 10px; min-height: 52px; box-sizing: border-box; padding: 4px 20px 4px 16px; border-radius: 26px; font-size: 32px; font-weight: 600; line-height: 1.2; background: var(--k-bg); color: var(--k-muted); border: 1px solid var(--bs-edge); box-shadow: inset 0 1px 0 var(--bs-hi), 0 2px 5px color-mix(in srgb, var(--bs-shade) 10%, transparent); }
+        .bs-tag-a { background: var(--k-ink); color: var(--k-bg); border-color: color-mix(in srgb, var(--k-bg) 10%, transparent); }
+        .bs-dot { display: block; flex: none; width: 11px; height: 11px; border-radius: 50%; background: var(--k-muted); }
+        .bs-tag-a .bs-dot { background: var(--k-accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--k-accent) 24%, transparent); }
+        .bs-lb { display: block; max-width: 20cqw; }
+        .bs-edge { position: absolute; top: 0; bottom: 0; left: calc(40% - 24px); width: 24px; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--bs-shade) 7%, transparent)); }
+        .bs-bar { position: absolute; left: 40%; margin-left: -1px; top: 0; bottom: 0; width: 2px; background: var(--bs-bar); box-shadow: 0 0 0 1px color-mix(in srgb, var(--bs-shade) 10%, transparent), 0 0 22px color-mix(in srgb, var(--bs-shade) 22%, transparent); }
+        .bs-knob { position: absolute; left: 40%; margin-left: -38px; top: 50%; margin-top: -38px; width: 76px; height: 76px; box-sizing: border-box; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: linear-gradient(180deg, var(--bs-bar), color-mix(in srgb, var(--bs-bar), var(--k-ink) 6%)); border: 1px solid var(--bs-edge); box-shadow: inset 0 1px 0 var(--bs-hi), 0 3px 9px color-mix(in srgb, var(--bs-shade) 16%, transparent); }
+        .bs-chev { display: block; }
+        .bs-grain { position: absolute; inset: 0; }
+        /* portrait: the panel fills the 12%-68% band and sits 10% off each side */
+        @container (orientation: portrait) {
+          .bs-panel { left: 10%; right: 10%; top: 12%; bottom: 32%; border-radius: 22px; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="before-after-slider-scrub">
+        <div class="bs">
+          <div class="bs-backdrop"></div>
+          <div class="bs-panel">
+            <div class="bs-lay bs-before">
+              <div class="bs-ui bs-soft"></div>
+              <div class="bs-fog"></div>
+              <div class="bs-strip"><div class="bs-tag"><i class="bs-dot"></i><span class="bs-lb">处理前</span></div></div>
+            </div>
+            <div class="bs-lay bs-after">
+              <div class="bs-ui"></div>
+              <div class="bs-edge"></div>
+              <div class="bs-strip"><div class="bs-tag bs-tag-a"><i class="bs-dot"></i><span class="bs-lb">处理后</span></div></div>
+            </div>
+            <div class="bs-sb">
+              <div class="bs-bar"></div>
+              <div class="bs-knob"><svg class="bs-chev" width="36" height="20" viewBox="0 0 36 20" aria-hidden="true"><path d="M11 3 L4 10 L11 17" fill="none" style="stroke:color-mix(in srgb, var(--k-ink) 70%, var(--k-bg))" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M25 3 L32 10 L25 17" fill="none" style="stroke:color-mix(in srgb, var(--k-ink) 70%, var(--k-bg))" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            </div>
+            <div class="bs-grain"></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing in seconds (upstream frames / 30), shared by both orientations. Bar position is in % of the panel width:
+          // idle at 8, wind up to 6.5 (pre to t0), fling to 76 (out), settle to 70 (smooth), hold, scrub to 40 (smooth)
+          var CFG = { pre: 0.333, t0: 0.467, fling: 0.867, bounce: 1.267, hold: 1.867, scrub: 3.467, dur: 5, start: 8, back: 6.5, peak: 76, rest: 70, end: 40 };
+          // what differs per orientation: the fake UI kind (the panel itself is sized in the CSS)
+          var LAND = { kind: "grid", pw: 0.88, ph: 0.88 };
+          var PORT = { kind: "list", pw: 0.8, ph: 0.56 };
+          var TB = 84; // caption strip height, same number as in the CSS
+          var v = { before: "处理前", after: "处理后", srcs: "", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".bs");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+
+          // ==== kit:fakeui@1 ====
+          function kFakeUI(w, h, kind, seed) {
+            var rnd = MT.seeded(seed || 7), out = [], cards = [], u = Math.min(w / 1600, h / 900);
+            var ink = "color-mix(in srgb, var(--k-ink) 22%, var(--k-panel))", line = "color-mix(in srgb, var(--k-ink) 9%, var(--k-bg))";
+            var R = function (x, y, rw, rh, r, c) { out.push('<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + rw.toFixed(1) + '" height="' + rh.toFixed(1) + '" rx="' + (r * u).toFixed(1) + '" style="fill:' + c + '"/>'); };
+            var side = 190 * u, top = 64 * u, pad = 30 * u, gap = 22 * u;
+            R(0, 0, w, h, 0, "var(--k-bg)");
+            R(0, 0, side, h, 0, "var(--k-panel)");
+            for (var i = 0; i < 6; i++) { R(24 * u, (92 + i * 46) * u, 18 * u, 18 * u, 5, i === 1 ? "var(--k-accent)" : ink); R(54 * u, (96 + i * 46) * u, (60 + rnd() * 60) * u, 10 * u, 5, ink); }
+            R(side, top - u, w - side, Math.max(1, u), 0, line);
+            R(side + pad, 22 * u, 170 * u, 18 * u, 9, ink);
+            R(w - pad - 260 * u, 16 * u, 260 * u, 32 * u, 16, "var(--k-panel)");
+            var x0 = side + pad, y0 = top + pad, cw = w - x0 - pad, ch = h - y0 - pad;
+            if (kind === "list") {
+              var rh = (ch - gap * 4) / 5;
+              for (var r = 0; r < 5; r++) {
+                var y = y0 + r * (rh + gap), m = y + rh / 2;
+                cards.push({ x: x0, y: y, w: cw, h: rh });
+                R(x0, y, cw, rh, 12, "var(--k-panel)");
+                R(x0 + 24 * u, m - 18 * u, 36 * u, 36 * u, 10, r === 0 ? "var(--k-accent)" : ink);
+                R(x0 + 80 * u, m - 14 * u, (260 + rnd() * 260) * u, 12 * u, 6, ink);
+                R(x0 + 80 * u, m + 6 * u, (140 + rnd() * 160) * u, 9 * u, 4.5, line);
+                R(x0 + cw - 150 * u, m - 13 * u, 110 * u, 26 * u, 13, line);
+              }
+            } else {
+              var gw = (cw - gap * 2) / 3, gh = (ch - gap) / 2;
+              for (var k = 0; k < 6; k++) {
+                var cx = x0 + (k % 3) * (gw + gap), cy = y0 + Math.floor(k / 3) * (gh + gap), base = cy + gh - 24 * u;
+                cards.push({ x: cx, y: cy, w: gw, h: gh });
+                R(cx, cy, gw, gh, 14, "var(--k-panel)");
+                R(cx + 22 * u, cy + 24 * u, (90 + rnd() * 70) * u, 12 * u, 6, ink);
+                R(cx + 22 * u, cy + 52 * u, (110 + rnd() * 70) * u, 28 * u, 8, k === 0 ? "var(--k-accent)" : ink);
+                if (k % 2) {
+                  for (var j = 0; j < 7; j++) { var bh = (0.25 + rnd() * 0.75) * gh * 0.4; R(cx + 22 * u + j * (gw - 44 * u) / 7, base - bh, (gw - 44 * u) / 7 - 8 * u, bh, 4, j === 5 ? "var(--k-accent-2)" : ink); }
+                } else {
+                  var pts = [];
+                  for (var q = 0; q <= 12; q++) pts.push((cx + 22 * u + (q * (gw - 44 * u)) / 12).toFixed(1) + "," + (base - (0.2 + 0.6 * (0.5 + 0.5 * Math.sin(q * 0.7 + k)) * (0.6 + 0.4 * rnd())) * gh * 0.4).toFixed(1));
+                  out.push('<polyline points="' + pts.join(" ") + '" style="fill:none;stroke:var(--k-accent-2);stroke-width:' + (3 * u).toFixed(1) + ';stroke-linejoin:round;stroke-linecap:round"/>');
+                }
+              }
+            }
+            return { svg: '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + " " + h + '" aria-hidden="true">' + out.join("") + "</svg>", cards: cards };
+          }
+          // ==== end kit:fakeui ====
+
+          // ==== kit:speedblur@1 ====
+          function kSpeedBlur(box, prefix, o) {
+            o = o || {};
+            var amount = o.amount || 0.45, max = o.max || 36;
+            var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+            var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+            svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+            var outer = document.createElement("div"), inner = document.createElement("div");
+            outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+            while (box.firstChild) inner.appendChild(box.firstChild);
+            outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+            var fe = svg.firstChild.firstChild;
+            return function (vx, vy) {
+              vy = vy || 0;
+              var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+              if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+              var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+              fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+              outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+              inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+              outer.style.filter = "url(#" + id + ")";
+            };
+          }
+          // ==== end kit:speedblur ====
+
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+
+          // ==== kit:shadow@1 ====
+          function kShadow(e, strength) {
+            e = Math.max(0, e);
+            var s = strength == null ? 1 : strength, r = function (x) { return Math.round(x * 10) / 10; };
+            var c = function (a) { return "color-mix(in srgb, var(--bs-shade) " + r(Math.min(1, a) * 100) + "%, transparent)"; };
+            return "0 " + r(0.5 + e * 0.06) + "px " + r(1 + e * 0.18) + "px " + c((0.12 * s) / (1 + e / 24)) + ", " +
+              "0 " + r(e * 0.55) + "px " + r(e * 1.3) + "px " + r(-e * 0.22) + "px " + c((0.08 + (Math.min(e, 64) / 64) * 0.22) * s);
+          }
+          // ==== end kit:shadow ====
+
+          // ==== kit:text@2 ====
+          var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "bs-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "bs-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          function kReveal(tl, units, variant, at, o) {
+            o = o || {};
+            var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+            units.forEach(function (u, i) {
+              var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+              if (variant === "rise") {
+                tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+                tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+              } else if (variant === "blur") {
+                tl.fromTo(u, { opacity: 0, y: fs * 0.25, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: each, ease: ease }, t0);
+              } else if (variant === "drop") {
+                tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each / 3, ease: "none" }, t0);
+                tl.fromTo(u, { y: -fs * 0.6 }, { y: 0, duration: each, ease: "overshoot" }, t0);
+              } else if (variant === "scale") {
+                tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each * 0.1, ease: "power1.out" }, t0);
+                tl.fromTo(u, { scale: 1.6, filter: "blur(8px)" }, { scale: 1, filter: "blur(0px)", duration: each, ease: ease }, t0);
+              } else {
+                tl.fromTo(u, { opacity: 0, marginRight: "0.5em" }, { opacity: 1, marginRight: "0em", duration: each, ease: ease }, t0);
+              }
+            });
+            return tl;
+          }
+          // ==== end kit:text ====
+
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          function kRows(el, cls) {
+            if (!el.children.length) return [];
+            var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+            var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+            kids.forEach(function (c, i) {
+              if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+              if (tops[i] != null) last = tops[i];
+              row.appendChild(c);
+            });
+            return [].slice.call(el.children);
+          }
+          // ==== end kit:fit ====
+          var dark = kTone(root) === "dark";
+          if (String(v.backdrop) === "off") q(".bs-backdrop").style.display = "none";
+          var panel = q(".bs-panel");
+          var PW = panel.clientWidth || FW * L.pw, PH = panel.clientHeight || FH * L.ph;
+
+          // the two pictures: optional images, else the same text-free fake UI twice (before gets the foggy treatment in CSS)
+          var uiB = q(".bs-before .bs-ui"), uiA = q(".bs-after .bs-ui"), fog = q(".bs-fog");
+          var srcs = String(v.srcs).split("|").map(function (s) { return s.trim(); }).filter(Boolean);
+          if (srcs.length) {
+            var pic = function (el, s) { el.style.backgroundImage = 'url("' + s.replace(/"/g, "%22") + '")'; };
+            pic(uiA, srcs[srcs.length > 1 ? 1 : 0]);
+            pic(uiB, srcs[0]);
+            if (srcs.length > 1) { uiB.classList.remove("bs-soft"); fog.style.display = "none"; } // two real shots: no fake "before"
+          } else {
+            var ui = kFakeUI(PW, PH - TB, L.kind, 7);
+            uiA.innerHTML = uiB.innerHTML = ui.svg;
+          }
+
+          // tags: each label is a text slot (split, then fitted down to 28px, then it wraps); empty hides the pill
+          [["before", ".bs-before"], ["after", ".bs-after"]].forEach(function (p) {
+            var tag = q(p[1] + " .bs-tag"), s = String(v[p[0]]).trim();
+            if (!s) { tag.style.display = "none"; return; }
+            var lb = tag.querySelector(".bs-lb");
+            kSplit(lb, "word", false, s);
+            kFit(lb, { lines: 1, min: 28, width: FW * 0.2 });
+          });
+
+          var after = q(".bs-after"), edge = q(".bs-edge"), bar = q(".bs-bar"), knob = q(".bs-knob");
+          bar.style.left = knob.style.left = "0px"; // from here the script moves them with translateX
+          var blur = kSpeedBlur(q(".bs-sb"), "bs", { amount: 0.12, max: 14 });
+          var grain = kGrain(q(".bs-grain"), dark ? {} : { opacity: 0.04 });
+
+          // bar position in % of the panel width as a pure function of t
+          var pos = function (t) {
+            if (t < CFG.t0) return MT.mix(CFG.start, CFG.back, MT.ramp(t, CFG.pre, CFG.t0 - CFG.pre, "smooth"));
+            if (t < CFG.fling) return MT.mix(CFG.back, CFG.peak, MT.ramp(t, CFG.t0, CFG.fling - CFG.t0, "out"));
+            if (t < CFG.bounce) return MT.mix(CFG.peak, CFG.rest, MT.ramp(t, CFG.fling, CFG.bounce - CFG.fling, "smooth"));
+            if (t < CFG.hold) return CFG.rest;
+            return MT.mix(CFG.rest, CFG.end, MT.ramp(t, CFG.hold, CFG.scrub - CFG.hold, "smooth"));
+          };
+          // upstream measured speed in px per frame on a frame 1920 wide (19.2 px per percent): the same scale here keeps
+          // the knob squish and the blur identical in both orientations
+          var ref = function (s) { return pos(s) * 19.2; };
+
+          var tl = MT.scene(CFG.dur, function (t) {
+            var x = (pos(t) / 100) * PW, vx = MT.velocity(ref, t), speed = Math.abs(vx) / 30; // vx: px per second; speed: per frame
+            var squish = 1 + Math.min(speed / 110, 1) * 0.18; // peak 1.18
+            var press = 1 - 0.06 * Math.sin(Math.PI * MT.ramp(t, CFG.pre, CFG.fling - CFG.pre, "linear")); // pinched while it flies
+            after.style.clipPath = "inset(0px " + (PW - x).toFixed(2) + "px 0px 0px)";
+            edge.style.left = (x - 24).toFixed(2) + "px";
+            bar.style.transform = "translateX(" + x.toFixed(2) + "px)";
+            knob.style.transform = "translateX(" + x.toFixed(2) + "px) scale(" + (press * squish).toFixed(4) + "," + press.toFixed(4) + ")";
+            knob.style.boxShadow = "inset 0 1px 0 var(--bs-hi), " + kShadow(14 + Math.min(speed / 8, 18), dark ? 2.6 : 1);
+            blur(vx, 0);
+            grain(t);
+          });
+          window.__timelines["before-after-slider-scrub"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

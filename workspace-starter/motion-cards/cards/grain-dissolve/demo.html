@@ -1,0 +1,383 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"line","type":"string","label":"整句（先砂化的那一行；要折行时可用 | 标出折在哪）","default":"{ 示例应用 · 现已上线 }"},
+    {"id":"name","type":"string","label":"短标（凝聚成的那个词，2–8 个字）","default":"示例应用"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"有光的白底和四角括线"},{"value":"off","label":"透明（只留字、选区框和砂粒）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>grain-dissolve · 砂化凝聚</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="grain-dissolve-template">
+      <!-- Ported from video-shotcraft demos/outro/grain-dissolve/GrainDissolve.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds
+           (upstream 0-1 clock x 59 / 30); neutral --k-* palette, system fonts (name: YaHei Bold, weight 800 for 750),
+           generic copy, upstream brand name removed; white-first: lit white backdrop (key light 50% 47%), vignette 0.16
+           (0.6 on dark skins), grain 0.05 (0.07); HUD, box and sand greys mixed from --k-ink; bloom: dark skins keep the
+           cool white pair (white x accent-2) at upstream strength, light skins use the accent at 0.3 (tight) / 0.6 (wide)
+           of it, cut out under the grains; text is HTML under a CSS url() filter, not SVG text, so filter lengths scale
+           with the line / name size (upstream units x size / 26 or / 44) instead of the 640x360 viewBox; selection box,
+           sand ranges and streak width follow the measured text (upstream fixed 384 x 62 units, x 140-500, rx 250 / 230);
+           box outline 1px, HUD strokes 3px (3.3), dots 8px (7.8); slot 3 s (1.03 s hold after the 1.967 s settle); portrait layout. Burst, boil (new seed every
+           1/23.39 s), box open / fold, cross-fade, lock, glow envelope, 150 sand grains (seeds, blow, pull, fade), streak
+           and the 1.06 press kept as upstream. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        @font-face { font-family: "gd-heavy"; font-weight: 700 900; src: local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"), local("PingFangSC-Semibold"), local("NotoSansSC-Black"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* card colours mixed from the palette: HUD greys, box parts, bloom; data-tone (set by the script) swaps the bloom */
+        .gd {
+          position: absolute; inset: 0; container-type: size;
+          --gd-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+          --gd-g1: var(--k-accent); --gd-g2: var(--k-accent);
+          --gd-hud: color-mix(in srgb, var(--k-ink) 26%, transparent);
+          --gd-dot: color-mix(in srgb, var(--k-ink) 44%, transparent);
+          --gd-hatch: color-mix(in srgb, var(--k-ink) 14%, transparent);
+          --gd-edge: color-mix(in srgb, var(--k-ink) 40%, transparent);
+          --gd-handle: color-mix(in srgb, var(--k-ink) 80%, transparent);
+          --gd-fill: color-mix(in srgb, var(--k-accent-2) 4%, transparent);
+        }
+        .gd[data-tone="dark"] {
+          --gd-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+          --gd-g1: color-mix(in srgb, white 82%, var(--k-accent-2)); --gd-g2: color-mix(in srgb, white 45%, var(--k-accent-2));
+        }
+        .gd[data-backdrop="off"] .gd-bg, .gd[data-backdrop="off"] .gd-hud { display: none; }
+        .gd-bg, .gd-hud, .gd-fx { position: absolute; inset: 0; }
+        /* ==== kit:backdrop@1 ==== */
+        .gd-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .gd-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        /* ==== end kit:backdrop ==== */
+        /* key light centred on the text as upstream (50% 47%); a cool one on dark skins */
+        .gd-backdrop::after { background: radial-gradient(ellipse 62% 70% at 50% 47%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        .gd[data-tone="dark"] .gd-backdrop::after { background: radial-gradient(ellipse 62% 70% at 50% 47%, color-mix(in srgb, color-mix(in srgb, white 55%, var(--k-accent-2)) 16%, transparent) 0%, transparent 72%); }
+        /* ==== kit:vignette@1 ==== */
+        .gd-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--gd-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .gd[data-tone="dark"] .gd-vig { --vs: 0.55; }
+        /* ==== end kit:vignette ==== */
+        .gd[data-tone="dark"] .gd-vig { --vs: 0.6; }
+        /* ==== kit:grain@1 ==== */
+        .gd-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+        /* HUD: four corner brackets with a dot inside each, two dashed ticks on the middle line; always there */
+        .gd-hud { left: 13.75%; right: 13.75%; top: 26.67%; bottom: 26.67%; }
+        .gd-c { position: absolute; width: 42px; height: 42px; border: 0 solid var(--gd-hud); }
+        .gd-c1 { left: 0; top: 0; border-width: 3px 0 0 3px; } .gd-c2 { right: 0; top: 0; border-width: 3px 3px 0 0; }
+        .gd-c3 { left: 0; bottom: 0; border-width: 0 0 3px 3px; } .gd-c4 { right: 0; bottom: 0; border-width: 0 3px 3px 0; }
+        .gd-d { position: absolute; width: 8px; height: 8px; margin: -4px; border-radius: 50%; background: var(--gd-dot); }
+        .gd-d1 { left: 102px; top: 84px; } .gd-d2 { right: 102px; top: 84px; } .gd-d3 { left: 102px; bottom: 84px; } .gd-d4 { right: 102px; bottom: 84px; }
+        .gd-dash { position: absolute; top: 50%; width: 72px; height: 3px; margin-top: -1.5px; background: repeating-linear-gradient(90deg, var(--gd-hud) 0 12px, transparent 12px 21px); }
+        .gd-dl { left: -108px; } .gd-dr { right: -108px; }
+        /* the two text slots share one cell and one filter (url() swapped to a per-mount id by the script) */
+        .gd-txt { position: absolute; left: 21%; right: 21%; top: 50%; translate: 0 -50%; display: grid; place-items: center; filter: url(#gd-f); }
+        .gd-line, .gd-name { grid-area: 1 / 1; max-width: 100%; text-align: center; line-height: 1.2; word-break: keep-all; overflow-wrap: anywhere; text-wrap: balance; }
+        .gd-line { font-size: 78px; font-weight: 500; letter-spacing: 0.046em; color: color-mix(in srgb, var(--k-ink) 90%, var(--k-bg)); opacity: 0; }
+        .gd-name { font: 800 132px/1.2 var(--mc-font, "gd-heavy", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif); letter-spacing: 0.034em; color: var(--k-ink); }
+        .gd-g1 { flood-color: var(--gd-g1); } .gd-g2 { flood-color: var(--gd-g2); }
+        .gd-s1 { stop-color: var(--gd-g1); } .gd-s2 { stop-color: var(--gd-g2); }
+        @container (orientation: portrait) {
+          .gd-txt { left: 17%; right: 17%; top: 40%; }
+          .gd-line { font-size: 64px; }
+          .gd-name { font-size: 120px; }
+          .gd-hud { left: 14%; right: 14%; top: 25.4%; bottom: 45.4%; }
+          .gd-dash { width: 30px; } .gd-dl { left: -43px; } .gd-dr { right: -43px; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="grain-dissolve">
+        <div class="gd">
+          <div class="gd-bg"><div class="gd-backdrop"></div><div class="gd-vig"></div><div class="gd-grain"></div></div>
+          <div class="gd-hud">
+            <i class="gd-c gd-c1"></i><i class="gd-c gd-c2"></i><i class="gd-c gd-c3"></i><i class="gd-c gd-c4"></i>
+            <i class="gd-d gd-d1"></i><i class="gd-d gd-d2"></i><i class="gd-d gd-d3"></i><i class="gd-d gd-d4"></i>
+            <i class="gd-dash gd-dl"></i><i class="gd-dash gd-dr"></i>
+          </div>
+          <svg class="gd-fx" width="100%" height="100%" aria-hidden="true"></svg>
+          <!-- static values = the settled frame (lock done, glow 0.55, light skin) -->
+          <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+            <filter id="gd-f" x="-40%" y="-150%" width="180%" height="400%" color-interpolation-filters="sRGB">
+              <feTurbulence type="fractalNoise" baseFrequency="0.3" numOctaves="2" seed="0" result="n" />
+              <feDisplacementMap in="SourceGraphic" in2="n" scale="0" xChannelSelector="R" yChannelSelector="G" result="d" />
+              <feGaussianBlur in="d" stdDeviation="0" result="core" />
+              <feGaussianBlur in="core" stdDeviation="6.24" result="b1" />
+              <feColorMatrix in="b1" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .202 0" result="a1" />
+              <feFlood class="gd-g1" />
+              <feComposite in2="a1" operator="in" result="g1" />
+              <feGaussianBlur in="core" stdDeviation="24.9" result="b2" />
+              <feColorMatrix in="b2" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .248 0" result="a2" />
+              <feFlood class="gd-g2" />
+              <feComposite in2="a2" operator="in" result="g2" />
+              <feMerge result="glow"><feMergeNode in="g2" /><feMergeNode in="g1" /></feMerge>
+              <feComposite in="glow" in2="core" operator="out" result="halo" />
+              <feMerge><feMergeNode in="halo" /><feMergeNode in="core" /></feMerge>
+            </filter>
+          </svg>
+          <div class="gd-txt">
+            <div class="gd-line" data-layout-allow-overlap>{ 示例应用 · 现已上线 }</div>
+            <div class="gd-name" data-layout-allow-overlap>示例应用</div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing in seconds, shared by both orientations (upstream: 60 frames on a 0-1 clock, seconds = clock x 59 / 30)
+          var CFG = {
+            slot: 3, burst: [0.256, 0.551], boxOut: [1.082, 1.259], pull: [1.101, 1.396], lag: 0.098, fade: [1.298, 1.573],
+            cond: [1.18, 1.396], lock: [1.337, 1.77], streak: [1.455, 1.809], settle: [1.731, 1.967], boil: 23.39, sand: 150
+          };
+          // per orientation: the largest text sizes (px, as in the CSS); kFit only goes down from them
+          var LAND = { line: 78, name: 132 };
+          var PORT = { line: 64, name: 120 };
+          var v = { line: "{ 示例应用 · 现已上线 }", name: "示例应用", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && String(got[k]).trim() !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".gd");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          if (String(v.backdrop) === "off") root.setAttribute("data-backdrop", "off");
+
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+          // ==== kit:hash@1 ====
+          function kHash(n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+          // ==== end kit:hash ====
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          function kRows(el, cls) {
+            if (!el.children.length) return [];
+            var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+            var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+            kids.forEach(function (c, i) {
+              if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+              if (tops[i] != null) last = tops[i];
+              row.appendChild(c);
+            });
+            return [].slice.call(el.children);
+          }
+          // ==== end kit:fit ====
+
+          var dark = kTone(root) === "dark", G1 = dark ? 1 : 0.3, G2 = dark ? 1 : 0.6; // bloom strength (tight, wide): upstream on dark, less on light
+          var drawGrain = kGrain(q(".gd-grain"), { opacity: dark ? 0.07 : 0.05 });
+
+          // each slot is ONE text run (no word units: nothing animates per word), so every typed space stays as typed.
+          // The CSS breaks lines only at spaces and invisible breaks (keep-all): "|" marks one (a space next to Latin),
+          // and a line with neither gets one between every word, so long Chinese still wraps at words, balanced
+          var CJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+          var put = function (el, s) {
+            s = String(s).replace(/\s+/g, " ").trim();
+            if (!/[ |]/.test(s) && typeof Intl.Segmenter === "function") s = Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(s)).reduce(function (o, g) {
+              return o + (o && /[\p{L}\p{N}]/u.test(g.segment) && !/[\p{Ps}\p{Pi}]$/u.test(o) ? "|" : "") + g.segment; // never before closing or after opening marks
+            }, "");
+            el.textContent = s.replace(/( ?)\|( ?)/g, function (m, a, b, i) {
+              return a || b || !(CJK.test(s.charAt(i - 1)) || CJK.test(s.charAt(i + m.length))) ? " " : "\u200b";
+            }).trim();
+          };
+          var txt = q(".gd-txt"), lineEl = q(".gd-line"), nameEl = q(".gd-name");
+          put(lineEl, v.line);
+          put(nameEl, v.name);
+          var TW = txt.clientWidth;
+          // the line stays one line down to 52 px, then takes two balanced lines from full size again; the name stays one line
+          var lf = kFit(lineEl, { max: L.line, width: TW, min: 52 });
+          lf = (lf.fits ? lf : kFit(lineEl, { max: L.line, width: TW, min: 40, lines: 2 })).size;
+          var nf = kFit(nameEl, { max: L.name, width: TW, min: 72 }).size;
+          // upstream lengths are in its 640x360 units drawn at 26 px (line) and 44 px (name): scale them by our sizes
+          var u = lf / 26, um = nf / 44;
+
+          // per-mount filter id: the filter changes every frame and a card can be mounted twice
+          var N = (window.__gdN = (window.__gdN || 0) + 1), flt = q("#gd-f");
+          flt.id = "gd-f" + N;
+          txt.style.filter = "url(#gd-f" + N + ")";
+          var fe = flt.children, turb = fe[0], disp = fe[1], core = fe[2], b1 = fe[3], a1 = fe[4], b2 = fe[7], a2 = fe[8];
+          // light skins cut the accent bloom out under the grains (accent under grey grains reads brown); dark keeps it
+          if (dark) { fe[11].setAttribute("operator", "arithmetic"); fe[11].setAttribute("k2", "1"); }
+
+          // geometry in layout px (the preview scales the frame, so divide the client rects back)
+          var R0 = root.getBoundingClientRect(), sc = R0.width / FW || 1;
+          var rect = function (el) { var r = el.getBoundingClientRect(); return { x: (r.left - R0.left) / sc, y: (r.top - R0.top) / sc, w: r.width / sc, h: r.height / sc }; };
+          var lb = rect(lineEl), nb = rect(nameEl), lw = kLines(lineEl).w, nw = kLines(nameEl).w; // lw, nw: widest text line
+          var cx = lb.x + lb.w / 2, cy = lb.y + lb.h / 2, ncy = nb.y + nb.h / 2;
+          // selection box: the text plus half a line size each side, 1.2 line sizes taller (upstream 384 x 62 units)
+          var bw = lw + lf, bh = lb.h + 1.2 * lf, bx = cx - bw / 2, by = cy - bh / 2;
+          var S = "http://www.w3.org/2000/svg", fx = q(".gd-fx");
+          var R = function (x, y, w, h, st) { return '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + h.toFixed(1) + '" style="' + st + '"/>'; };
+          var hs = 5 * u, hatch = "", grip = "";
+          for (var hx = bx - bh; hx < bx + bw; hx += 34 * u) hatch += '<line x1="' + hx.toFixed(1) + '" y1="' + (by + bh).toFixed(1) + '" x2="' + (hx + bh).toFixed(1) + '" y2="' + by.toFixed(1) + '" style="stroke:var(--gd-hatch);stroke-width:' + (0.8 * u).toFixed(2) + '"/>';
+          [[bx, by], [bx + bw, by], [bx, by + bh], [bx + bw, by + bh]].forEach(function (p) {
+            grip += R(p[0] - hs, p[1] - hs, hs, hs, "fill:var(--gd-handle)") + R(p[0], p[1], hs, hs, "fill:var(--gd-handle)");
+          });
+          // streak: a 1.35x-line-wide soft band and a hairline core through the name's middle
+          var sw = Math.min(lw * 0.675, FW * 0.45);
+          fx.innerHTML = '<defs><clipPath id="gd-c' + N + '">' + R(bx, by, bw, bh, "") + '</clipPath><linearGradient id="gd-s' + N + '">' +
+            '<stop offset="0" class="gd-s2" stop-opacity="0"/><stop offset=".5" class="gd-s1"/><stop offset="1" class="gd-s2" stop-opacity="0"/></linearGradient></defs>' +
+            '<g class="gd-box">' + R(bx, by, bw, bh, "fill:var(--gd-fill)") + '<g clip-path="url(#gd-c' + N + ')">' + hatch + "</g>" +
+            R(bx, by, bw, bh, "fill:none;stroke:var(--gd-edge);stroke-width:1px") + grip + "</g>" +
+            '<g class="gd-streak"><ellipse cx="' + cx + '" cy="' + ncy + '" rx="' + sw + '" ry="' + 7 * u + '" fill="url(#gd-s' + N + ')" opacity=".12"/>' +
+            '<ellipse cx="' + cx + '" cy="' + ncy + '" rx="' + sw * 0.92 + '" ry="' + 0.7 * u + '" fill="url(#gd-s' + N + ')" opacity=".7"/></g><g class="gd-sand"></g>';
+          var boxG = q(".gd-box"), streakG = q(".gd-streak"), sandG = q(".gd-sand");
+
+          // sand: start spread over the line, end inside the name's face; upstream seeds, ranges in its units x u
+          var sand = [];
+          for (var i = 0; i < CFG.sand; i++) {
+            var r = function (k) { return kHash(i * 13.7 + k * 101.3); }, ang = r(3) * Math.PI * 2, c = document.createElementNS(S, "circle");
+            c.style.fill = "var(--k-ink)";
+            sandG.appendChild(c);
+            sand.push({
+              el: c, hx: cx + (r(1) - 0.5) * lw, hy: cy + (r(2) - 0.5) * (lb.h - 0.2 * lf),
+              dx: Math.cos(ang) * (8 + r(4) * 26) * u, dy: Math.sin(ang) * (5 + r(5) * 14) * u,
+              tx: cx + (r(6) - 0.5) * nw, ty: ncy + (r(7) - 0.5) * (nb.h - 0.56 * nf),
+              size: (0.35 + r(8) * 0.75) * u, alpha: 0.25 + r(9) * 0.6, lag: r(10) * CFG.lag, ph: r(11) * Math.PI * 2
+            });
+          }
+
+          var tl = MT.scene(CFG.slot, function (t) {
+            var seg = function (a, e) { return MT.ramp(t, a[0], a[1] - a[0], e); };
+            var burst = seg(CFG.burst, "power2.out"), cond = seg(CFG.cond, "power2.inOut"), lock = seg(CFG.lock, "power2.out");
+            var glow = Math.max(0, burst * 0.3 + cond * 0.7 - seg(CFG.settle, "power2.out") * 0.45);
+            var boxOut = seg(CFG.boxOut, "power2.in"), bop = Math.min(1, burst * 1.4) * (1 - boxOut);
+            var streak = cond * (1 - seg(CFG.streak, "power2.out")), boil = Math.floor(t * CFG.boil), live = burst * (1 - lock);
+            drawGrain(t);
+            // the filter chain: boiling noise displaces and softens the text, then a tight and a wide bloom
+            turb.setAttribute("baseFrequency", ((0.9 + 0.4 * burst) / u).toFixed(4));
+            if (live > 0) turb.setAttribute("seed", boil);
+            disp.setAttribute("scale", (52 * live * u).toFixed(2));
+            core.setAttribute("stdDeviation", (1.1 * live * u).toFixed(3));
+            b1.setAttribute("stdDeviation", ((1.2 + 1.6 * glow) * um).toFixed(2));
+            a1.setAttribute("values", "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 " + ((0.15 + 0.95 * glow) * G1).toFixed(3) + " 0");
+            b2.setAttribute("stdDeviation", ((5 + 6 * glow) * um).toFixed(2));
+            a2.setAttribute("values", "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 " + (0.75 * glow * G2).toFixed(3) + " 0");
+            // the line hands over to the name while the noise boils hardest; the name is pressed from 1.06 to 1
+            lineEl.style.opacity = (1 - cond).toFixed(3);
+            nameEl.style.opacity = cond.toFixed(3);
+            nameEl.style.transform = "scale(" + (1 + 0.06 * (1 - lock)).toFixed(4) + ")";
+            // the box opens from the middle with the burst, then folds in and fades before the name is whole
+            boxG.style.display = bop > 0.002 ? "" : "none";
+            boxG.setAttribute("opacity", bop.toFixed(3));
+            boxG.setAttribute("transform", "translate(" + cx + " 0) scale(" + (0.2 + 0.8 * burst * (1 - boxOut * 0.35)).toFixed(4) + " 1) translate(" + -cx + " 0)");
+            streakG.style.display = streak > 0.002 ? "" : "none";
+            streakG.setAttribute("opacity", streak.toFixed(3));
+            // sand: blown out by the burst, jittering with the boil, sucked into the name ever faster, then out
+            var fade = 1 - seg(CFG.fade, "power2.out");
+            sand.forEach(function (s) {
+              var pull = MT.ramp(t, CFG.pull[0] + s.lag, CFG.pull[1] - CFG.pull[0] - s.lag * 0.6, "power3.in");
+              var a = s.alpha * burst * fade * (0.55 + 0.45 * Math.abs(Math.sin(boil * 0.9 + s.ph)));
+              if (a < 0.01) { s.el.setAttribute("opacity", "0"); return; }
+              var x = s.hx + s.dx * burst, y = s.hy + s.dy * burst + Math.sin(boil * 1.7 + s.ph) * 1.2 * u * burst * (1 - pull);
+              s.el.setAttribute("cx", (x + (s.tx - x) * pull).toFixed(1));
+              s.el.setAttribute("cy", (y + (s.ty - y) * pull).toFixed(1));
+              s.el.setAttribute("r", (s.size * (1 - 0.4 * pull)).toFixed(2));
+              s.el.setAttribute("opacity", a.toFixed(3));
+            });
+          });
+          window.__timelines["grain-dissolve"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

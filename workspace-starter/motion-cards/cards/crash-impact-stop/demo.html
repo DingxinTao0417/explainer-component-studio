@@ -1,0 +1,435 @@
+<!doctype html>
+<html
+ lang="zh-CN"
+ data-composition-variables='[
+  {"id":"src","type":"string","label":"界面截图地址（从项目根写起；留空用内置的示意界面）","default":""},
+  {"id":"x","type":"number","label":"目标框左上角 x（截图按 1920×1080 的页面算）","default":813,"min":0,"max":1880,"step":1},
+  {"id":"y","type":"number","label":"目标框左上角 y","default":592,"min":0,"max":1040,"step":1},
+  {"id":"w","type":"number","label":"目标框宽","default":522,"min":40,"max":1920,"step":1},
+  {"id":"h","type":"number","label":"目标框高","default":452,"min":40,"max":1080,"step":1},
+  {"id":"tag","type":"string","label":"锁定时标签上的字（可以写目标的名字；留空不显示标签）","default":"锁定"},
+  {"id":"name","type":"string","label":"屏幕左上角的页面名（留空不显示）","default":"示例应用"},
+  {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（只去掉舞台底）"}]}
+ ]'
+>
+ <head>
+  <meta charset="UTF-8" />
+  <title>crash-impact-stop · 急推撞停</title>
+  <script src="../../lib/preview.js"></script>
+ </head>
+ <body>
+  <template id="crash-impact-stop-template">
+   <!-- Ported from video-shotcraft demos/camera/crash-zoom-punch/CrashImpactReal.tsx
+     (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+     Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+     Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+     neutral --k-* palette (light stage first, the post-hit crush in --k-stage), system fonts, generic Chinese HUD
+     copy, upstream mark removed; the product-page screenshot and its 4x card texture replaced by an inline
+     text-free fake UI (or the user's screenshot, src) and a target box from variables; the monitor shows the
+     whole 16:9 page (53% / 78% of the frame wide), not a 1130x1100 crop; landing zoom from the target box (68% of
+     the height or 72% of the width, 1.8-4.2x the pre-push zoom), not a fixed 2.35; decoy hops derived from the
+     target box; HUD labels 28px, tag counts 1/3-3/3 instead of card numbers; motion blur cut from up to 36 time
+     samples to 4 (blur on the earlier three); both HUD readout columns (target / owner / state, P0 and two lines) and
+     the wide-shot page dimming dropped; stage key-light breathing and accent-2 fill dropped (white stage = backdrop
+     + vignette); on light skins vignette x0.457, grain 0.05 overlay, grid accent 10%; a line-area fill added to the
+     target card; clip 4.2 s -> 3.5 s, the 1.2% tail push starts at 2.333 s, not 2.8 s. Kept as upstream: creep 2%,
+     wind-back 3%, the 6-frame exit push in log space (about 3x), dead stop, impact frame, two rings, the
+     14 px e^(-f/1.8) shake, scan beam and all timings up to 2.333 s. -->
+   <style>
+    @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+    @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+    @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+    @font-face { font-family: "Consolas"; src: local("Consolas"); }
+    #root {
+     --k-bg: var(--mc-bg, #ffffff);
+     --k-panel: var(--mc-panel, #f4f5f7);
+     --k-ink: var(--mc-ink, #15171c);
+     --k-muted: var(--mc-muted, #6b7280);
+     --k-accent: var(--mc-accent, #e8590c);
+     --k-accent-2: var(--mc-accent-2, #2563eb);
+     --k-on-accent: var(--mc-on-accent, #ffffff);
+     --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+     --k-mono: var(--mc-mono, Consolas, monospace);
+     --k-stage: var(--mc-stage, #0b0d12);
+     position: absolute;
+     inset: 0;
+     overflow: hidden;
+     font-family: var(--k-font);
+     color: var(--k-ink);
+    }
+    /* wrapper = size container; card colours mixed from the palette, [data-tone] comes from kTone() */
+    .cz {
+     position: absolute; inset: 0; container-type: size; overflow: hidden;
+     --cz-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+     --cz-grid: color-mix(in srgb, var(--k-accent) 10%, transparent);
+     --cz-drop: color-mix(in srgb, var(--cz-shade) 30%, transparent);
+    }
+    .cz[data-tone="dark"] { --cz-shade: color-mix(in srgb, var(--k-bg) 30%, black); --cz-grid: color-mix(in srgb, var(--k-accent) 7%, transparent); --cz-drop: rgba(0, 0, 0, 0.85); }
+    /* ==== kit:backdrop@1 ==== */
+    .cz-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+    .cz-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+    /* ==== end kit:backdrop ==== */
+    /* upstream stage: key light top centre */
+    .cz .cz-backdrop::after { background: radial-gradient(ellipse 62% 70% at 50% 0%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+    /* HUD floor grid, 64 px, faded at the edges; scaled by the script with 30% of the camera zoom */
+    .cz-grid {
+     position: absolute; inset: 0; opacity: 0.1;
+     background: linear-gradient(var(--cz-grid) 1.5px, transparent 1.5px) 50% 50% / 64px 64px, linear-gradient(90deg, var(--cz-grid) 1.5px, transparent 1.5px) 50% 50% / 64px 64px;
+     -webkit-mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, #000 30%, transparent 80%);
+     mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, #000 30%, transparent 80%);
+    }
+    /* camera: the shake box holds one camera per time sample; the world is the 1920 x 1080 page in page px.
+     Static transform = the last frame (target centred on the anchor, zoomed in); --zi = 1 / zoom keeps strokes
+     a constant width on screen */
+    .cz-shake, .cz-cam { position: absolute; inset: 0; }
+    .cz-world { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; transform: translate(-805.95px, -805.02px) scale(1.64428); --zi: 0.60817; }
+    .cz-world > *, .cz-mon > *, .cz-scan > * { position: absolute; display: block; }
+    .cz-mon { left: 0; top: 0; width: 100%; height: 100%; border-radius: 30px; overflow: hidden; background: var(--k-bg); box-shadow: 0 0 0 calc(1.5px * var(--zi)) color-mix(in srgb, var(--k-accent) 35%, transparent), 0 calc(40px * var(--zi)) calc(110px * var(--zi)) calc(-10px * var(--zi)) var(--cz-drop); }
+    .cz-page { left: 0; top: 0; width: 100%; height: 100%; }
+    .cz-page > svg, .cz-page > img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    .cz-a { fill: var(--k-bg); }
+    .cz-b { fill: var(--k-panel); }
+    .cz-c { fill: color-mix(in srgb, var(--k-ink) 22%, var(--k-panel)); }
+    .cz-d { fill: var(--k-accent); }
+    .cz-e { fill: color-mix(in srgb, var(--k-ink) 9%, var(--k-bg)); }
+    .cz-f { fill: none; stroke: var(--k-accent-2); stroke-width: 3.6; stroke-linejoin: round; stroke-linecap: round; }
+    .cz-g { fill: var(--k-accent-2); }
+    .cz-h { fill: color-mix(in srgb, var(--k-accent-2) 12%, transparent); }
+    /* scan lines through the reticle centre */
+    .cz-xh, .cz-xv { background: color-mix(in srgb, var(--k-ink) 35%, transparent); opacity: 0; }
+    .cz-xh { left: 0; width: 100%; height: calc(1.2px * var(--zi)); }
+    .cz-xv { top: 0; height: 100%; width: calc(1.2px * var(--zi)); }
+    /* after the hit: a plate past the page on every side with the target cut out (stage colour + a faint pool) */
+    .cz-scrim {
+     left: -3000px; top: -3000px; width: 7920px; height: 7080px;
+     background: radial-gradient(1096px 814px at 4074px 3753px, color-mix(in srgb, var(--k-stage), white 9%), var(--k-stage) 70%);
+     clip-path: path(evenodd, "M0 0H7920V7080H0ZM3830 3592H4318A17 17 0 0 1 4335 3609V4027A17 17 0 0 1 4318 4044H3830A17 17 0 0 1 3813 4027V3609A17 17 0 0 1 3830 3592Z");
+    }
+    .cz-scan { left: 813px; top: 592px; width: 522px; height: 452px; clip-path: inset(0 round 17px); display: none; }
+    .cz-tail { left: 0; width: 100%; background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--k-accent) 16%, transparent)); }
+    .cz-beam { left: 0; width: 100%; height: calc(3px * var(--zi)); background: color-mix(in srgb, var(--k-accent) 95%, transparent); box-shadow: 0 0 calc(14px * var(--zi)) color-mix(in srgb, var(--k-accent) 80%, transparent); }
+    .cz-ring { box-sizing: border-box; border: 0 solid var(--k-accent); box-shadow: 0 0 calc(20px * var(--zi)) color-mix(in srgb, var(--k-accent) 50%, transparent); display: none; }
+    .cz-rim { left: 813px; top: 592px; width: 522px; height: 452px; border-radius: 17px; box-shadow: 0 0 0 calc(2px * var(--zi)) color-mix(in srgb, var(--k-accent) 90%, transparent); }
+    .cz-ret { left: 0; top: 0; overflow: visible; fill: none; stroke: var(--k-accent); stroke-linecap: square; }
+    .cz-rc { stroke-width: calc(4px * var(--zi)); }
+    .cz-rx { stroke-width: calc(2px * var(--zi)); }
+    /* ==== kit:vignette@1 ==== */
+    .cz-vig {
+     position: absolute; inset: 0; pointer-events: none;
+     --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--cz-shade);
+     background:
+      radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+      radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+    }
+    .cz[data-tone="dark"] .cz-vig { --vs: 0.55; }
+    /* ==== end kit:vignette ==== */
+    /* upstream: clear centre 40%, centred; the script drives --vs (light skins at 0.457 of the dark values) */
+    .cz .cz-vig { --vin: 40%; --vy: 50%; --vs: 0.183; }
+    /* ==== kit:grain@1 ==== */
+    .cz-grain { position: absolute; inset: 0; pointer-events: none; }
+    /* ==== end kit:grain ==== */
+    /* HUD in screen space, gone by the hit (static page = the last frame) */
+    .cz-hud { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
+    .cz-hl, .cz-hr, .cz-tag { position: absolute; left: 0; top: 0; font-size: 28px; line-height: 1.3; font-weight: 600; letter-spacing: 0.12em; }
+    .cz-hl { display: flex; align-items: center; gap: 14px; color: var(--k-ink); max-width: 610px; }
+    .cz-hr { color: var(--k-muted); }
+    .cz-dot { display: block; flex: none; width: 12px; height: 12px; border-radius: 50%; background: var(--k-accent); box-shadow: 0 0 12px color-mix(in srgb, var(--k-accent) 80%, transparent); }
+    .cz-tag { padding: 4px 14px; border: 2px solid var(--k-accent); border-radius: 5px; font-weight: 700; color: var(--k-accent); background: color-mix(in srgb, var(--k-stage) 85%, transparent); transform-origin: 0 0; max-width: 576px; }
+    .cz-tag[data-on] { background: var(--k-accent); color: var(--k-on-accent); }
+    .cz-tag b { font-family: var(--k-mono); letter-spacing: 0.04em; }
+    @container (orientation: portrait) {
+     .cz-world { transform: translate(-1079.09px, -465.16px) scale(1.50753); --zi: 0.66334; }
+    }
+   </style>
+
+   <div id="root" data-composition-id="crash-impact-stop">
+    <div class="cz">
+     <div class="cz-backdrop"></div>
+     <div class="cz-grid" data-layout-allow-overflow></div>
+     <div class="cz-shake" data-layout-allow-overflow>
+      <div class="cz-cam">
+       <div class="cz-world">
+        <div class="cz-mon">
+         <div class="cz-page"><svg viewBox="0 0 1920 1080" preserveAspectRatio="none"><rect width="1920" height="1080" class="cz-a"/><rect x="813" y="592" width="522" height="452" rx="17" class="cz-b"/><rect x="839" y="620" width="162" height="14" rx="7" class="cz-c"/><rect x="839" y="654" width="136" height="34" rx="10" class="cz-c"/><rect x="1229" y="620" width="80" height="26" rx="13" class="cz-e"/><rect x="839" y="716" width="300" height="11" rx="5.5" class="cz-c"/><rect x="839" y="738" width="216" height="11" rx="5.5" class="cz-c"/><rect x="839" y="852" width="470" height="1.5" class="cz-e"/><rect x="839" y="918" width="470" height="1.5" class="cz-e"/><rect x="839" y="992" width="470" height="2" class="cz-e"/><polygon points="839,969 878,979 918,967 957,945 996,915 1035,901 1074,914 1113,906 1152,945 1191,968 1230,979 1270,968 1309,946 1309,992 839,992" class="cz-h"/><polyline points="839,969 878,979 918,967 957,945 996,915 1035,901 1074,914 1113,906 1152,945 1191,968 1230,979 1270,968 1309,946" class="cz-f"/></svg></div>
+         <i class="cz-xh"></i><i class="cz-xv"></i>
+        </div>
+        <div class="cz-scrim"></div>
+        <div class="cz-scan"><i class="cz-tail"></i><i class="cz-beam"></i></div>
+        <i class="cz-ring"></i><i class="cz-ring"></i>
+        <i class="cz-rim"></i>
+        <svg class="cz-ret" width="1920" height="1080" viewBox="0 0 1920 1080"><path class="cz-rc" d="M798.4 595.7V577.4H816.7M1331.3 577.4H1349.6V595.7M1349.6 1040.3V1058.6H1331.3M816.7 1058.6H798.4V1040.3" /><path class="cz-rx" d="" /></svg>
+       </div>
+      </div>
+     </div>
+     <div class="cz-vig"></div>
+     <div class="cz-grain"></div>
+     <div class="cz-hud">
+      <div class="cz-hl" data-layout-allow-overflow><i class="cz-dot"></i><span class="cz-name">示例应用</span></div>
+      <div class="cz-hr" data-layout-allow-overflow>扫描中</div>
+      <div class="cz-tag">锁定</div>
+     </div>
+    </div>
+   </div>
+
+   <script>
+    (function () {
+     // timing in seconds (upstream frames / 30), shared by both orientations: only LAND / PORT differ
+     var CFG = {
+      dur: 3.5,
+      creep: 1.067, creepK: 0.02, // 0-32f smooth: the wide shot creeps in 2%
+      wind: 1.067, windDur: 0.267, windK: 0.03, // 32-40f smooth: backs off 3% (and the corners breathe out)
+      push: 1.333, hit: 1.533, // 40-46f: exit ease in log space, then a dead stop, no bounce
+      show: 0.1, showDur: 0.2, // 3f + 6f: the reticle fades in on the first decoy
+      hops: [0.333, 0.667], hopDur: 0.267, // 10f, 20f: snappy hops, 8f each
+      tagIn: 0.133, tagDur: 0.133, labDur: 0.267,
+      lock: 0.933, lockDur: 0.267, popDur: 0.2, // 28f: corners close in 8f, the tag shrinks 1.25 -> 1 in 6f
+      breathOut: 0.167, // 40f + 5f exit: the breath is let go as the push starts
+      ring: [0, 0.1], ringDur: 0.533, ringLife: 0.667, // rings out of the card edge at 46f and 49f, 16f snappy
+      shake: 14, // px at the hit, e^(-frames / 1.8): gone in about 6 frames
+      scan: 1.733, scanDur: 0.533, scanEnd: 2.333, // 52f: one beam down the card, 16f swift
+      vigIn: 0.533,
+      tail: 2.333, tailK: 0.012, // the hold pushes in 1.2% (smooth) to the end
+      shutter: 0.0183 // 0.55 frame (about 200 degrees), 4 time samples
+     };
+     // per orientation: monitor width in the wide shot (share of the frame), landing anchor height, the most of the
+     // frame the target may fill (width, height), the tag's side margin and widest line
+     var LAND = { mon: 0.53, ay: 0.5, fw: 0.72, fh: 0.68, edge: 0.95, tagW: 0.3 };
+     var PORT = { mon: 0.78, ay: 0.4, fw: 0.72, fh: 0.36, edge: 0.9, tagW: 0.6 };
+     var v = { src: "", x: 813, y: 592, w: 522, h: 452, tag: "锁定", name: "示例应用", backdrop: "on" };
+     try {
+      var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+      for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+     } catch (e) {}
+
+     var root = document.querySelector(".cz");
+     var q = function (s, el) { return (el || root).querySelector(s); };
+     var FW = root.clientWidth, FH = root.clientHeight;
+     if (!FW || !FH) {
+      // not laid out yet: the host clip's declared size, then the window
+      var hc = root.closest("[data-width][data-height]");
+      FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+      FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+     }
+     var P = FH > FW, L = P ? PORT : LAND, U = Math.min(FW, FH) / 1.08e3;
+     root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+     // ==== kit:tone@1 ====
+     function kRGB(el, color) {
+      var p = document.createElement("i");
+      p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+      el.appendChild(p);
+      var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+      el.removeChild(p);
+      return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+     }
+     function kTone(wrap) {
+      var c = kRGB(wrap, "var(--k-bg)");
+      var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+      wrap.setAttribute("data-tone", tone);
+      return tone;
+     }
+     // ==== end kit:tone ====
+
+     // ==== kit:grain@1 ====
+     function kGrain(layer, o) {
+      o = o || {};
+      var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+      var dark = tones && tones.getAttribute("data-tone") === "dark";
+      var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+       var f = "type='linear' slope='2.4' intercept='-0.7'";
+       var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+        "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+        "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+        "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+        "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+       return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+      });
+      layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+      layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+      layer.style.backgroundSize = size + "px " + size + "px";
+      return function (t) {
+       var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+       layer.style.backgroundImage = tiles[k % 6];
+       layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+      };
+     }
+     // ==== end kit:grain ====
+
+     // ==== kit:shake@1 ====
+     function kShake(t, hit, amp) {
+      var f = (t - hit) * 30, env = f < 0 ? 0 : (amp || 14) * Math.exp(-f / 1.8);
+      if (env < 0.15) return { x: 0, y: 0, r: 0 };
+      return { x: env * 0.55 * Math.sin(f * 2.4 + 0.6), y: env * Math.cos(f * 2.9), r: env * 0.025 * Math.sin(f * 3.7 + 1.9) };
+     }
+     // ==== end kit:shake ====
+
+     var dark = kTone(root) === "dark", grain = null;
+     if (String(v.backdrop) === "off") [".cz-backdrop", ".cz-grid", ".cz-vig", ".cz-grain"].forEach(function (s) { q(s).style.display = "none"; });
+     else grain = kGrain(q(".cz-grain"), { opacity: dark ? 0.07 : 0.05 });
+     var src = String(v.src).trim();
+     if (src) {
+      var im = document.createElement("img");
+      im.alt = ""; im.src = src;
+      q(".cz-page").innerHTML = ""; q(".cz-page").appendChild(im);
+     }
+
+     // the target box in page px (the page is the world's own 16:9 box)
+     var c0 = q(".cz-cam"), W0 = q(".cz-world"), PW = W0.offsetWidth, PH = W0.offsetHeight;
+     // the rest of the built-in page, seen only in the wide shot (the hit covers it): sidebar, top bar, five cards
+     var ui = q(".cz-page svg");
+     if (ui) {
+      var o = "", rnd = MT.seeded(11), Rc = function (a, b, c, d, r, k) { o += '<rect x="' + a + '" y="' + b + '" width="' + c + '" height="' + d + '" rx="' + r + '" class="cz-' + k + '"/>'; };
+      Rc(0, 0, 228, PH, 0, "b"); Rc(228, 75, PW - 228, 1.2, 0, "e"); Rc(264, 26, 204, 22, 11, "c"); Rc(PW - 348, 19, 312, 38, 19, "b");
+      for (var i = 0; i < 6; i++) { Rc(29, 110 + 55 * i, 22, 22, 6, i - 1 ? "c" : "d"); Rc(65, 115 + 55 * i, (73 + rnd() * 72) | 0, 12, 6, "c"); }
+      for (var n = 0; n < 6; n++) if (n !== 4) {
+       var cx = 264 + 549 * (n % 3), cy = 113 + 479 * (n > 2), base = cy + 423, pts = [];
+       Rc(cx, cy, 522, 452, 17, "b"); Rc(cx + 26, cy + 29, (90 + rnd() * 84) | 0, 14, 7, "c"); Rc(cx + 26, cy + 62, (132 + rnd() * 84) | 0, 34, 10, n ? "c" : "d");
+       for (var j = 0; j < 13; j++) {
+        if (n % 2) { if (j < 7) { var bh = (45 + rnd() * 136) | 0; Rc(cx + 26 + 67 * j, base - bh, 58, bh, 5, j === 5 ? "g" : "c"); } }
+        else pts.push(cx + 26 + 39 * j + "," + ((base - (0.2 + 0.3 * (1 + Math.sin(0.7 * j + n))) * (0.6 + 0.4 * rnd()) * 181) | 0));
+       }
+       if (pts.length) o += '<polyline points="' + pts.join(" ") + '" class="cz-f"/>';
+      }
+      ui.firstElementChild.insertAdjacentHTML("afterend", o);
+     }
+     var num = function (a, d) { a = parseFloat(a); return isFinite(a) ? a : d; };
+     var w = MT.clamp(num(v.w, 522), 40, PW), h = MT.clamp(num(v.h, 452), 40, PH);
+     var x = MT.clamp(num(v.x, 813), 0, PW - w), y = MT.clamp(num(v.y, 592), 0, PH - h);
+     var TX = x + w / 2, TY = y + h / 2, R = Math.min(17, 0.1 * Math.min(w, h)), K = w / 357.3, E = 3000;
+     // the reticle first visits two decoys the target's size: its neighbour up-left (down / right when that is off
+     // the page), then the one to its right (left at the right edge), as upstream's card 1 -> card 5 -> card 4
+     var g = 26, sx = x - w - g >= 0 ? -1 : 1, sy = y - h - g >= 0 ? -1 : 1, sx2 = x + 2 * w + g <= PW ? 1 : -1;
+     var hop = function (a, b) { return { x: MT.clamp(a, 0, PW - w) + w / 2, y: MT.clamp(b, 0, PH - h) + h / 2 }; };
+     var HOPS = [hop(x + sx * (w + g), y + sy * (h + g)), hop(x + sx2 * (w + g), y), { x: TX, y: TY }];
+     // camera: zoom and the target centre's screen position. The wide shot centres the page on the anchor; the push
+     // runs in log space so the zoom speed keeps growing, and the target moves straight onto the anchor
+     var Z0 = (L.mon * FW) / PW, ZP = Z0 * (1 + CFG.creepK) * (1 - CFG.windK);
+     var ZH = MT.clamp(Math.min((L.fw * FW) / w, (L.fh * FH) / h), 1.8 * ZP, 4.2 * ZP), AX = FW / 2, AY = FH * L.ay;
+     var cam = function (s) {
+      var z = Z0 * (1 + CFG.creepK * MT.ramp(s, 0, CFG.creep, "smooth")) * (1 - CFG.windK * MT.ramp(s, CFG.wind, CFG.windDur, "smooth"));
+      var p = MT.ramp(s, CFG.push, CFG.hit - CFG.push, "exit");
+      return {
+       z: Math.exp(MT.mix(Math.log(z), Math.log(ZH), p)) * (1 + CFG.tailK * MT.ramp(s, CFG.tail, CFG.dur - CFG.tail, "smooth")),
+       x: MT.mix(AX + (TX - PW / 2) * z, AX, p), y: MT.mix(AY + (TY - PH / 2) * z, AY, p)
+      };
+     };
+     var ret = function (t) {
+      var r = HOPS[0];
+      for (var i = 1; i < 3; i++) { var u = MT.ramp(t, CFG.hops[i - 1], CFG.hopDur, "snappy"); r = { x: MT.mix(r.x, HOPS[i].x, u), y: MT.mix(r.y, HOPS[i].y, u) }; }
+      return r;
+     };
+
+     // geometry on the first camera, then three copies of it for the time samples (averaged: copy j at 1 / (j + 1))
+     var px = function (el, a, b, c, d) { el.style.left = a + "px"; el.style.top = b + "px"; el.style.width = c + "px"; el.style.height = d + "px"; };
+     var rr = function (a, b, c, d) {
+      var A = "A" + R + " " + R + " 0 0 1 ";
+      return "M" + (a + R) + " " + b + "H" + (a + c - R) + A + (a + c) + " " + (b + R) + "V" + (b + d - R) + A + (a + c - R) + " " + (b + d) + "H" + (a + R) + A + a + " " + (b + d - R) + "V" + (b + R) + A + (a + R) + " " + b + "Z";
+     };
+     var S = q(".cz-scrim", c0);
+     px(S, -E, -E, PW + 2 * E, PH + 2 * E);
+     S.style.clipPath = 'path(evenodd, "M0 0H' + (PW + 2 * E) + "V" + (PH + 2 * E) + "H0Z" + rr(x + E, y + E, w, h) + '")';
+     var POOL = "radial-gradient(" + 2.1 * w + "px " + 1.8 * h + "px at " + (TX + E) + "px " + (y + 0.356 * h + E) + "px, color-mix(in srgb, var(--k-stage), white 9%), var(--k-stage) 70%)";
+     var FLASH = ["color-mix(in srgb, var(--k-accent) 80%, var(--k-stage))", "color-mix(in srgb, var(--k-accent) 22%, var(--k-stage))"];
+     [".cz-rim", ".cz-scan"].forEach(function (s) { px(q(s, c0), x, y, w, h); });
+     q(".cz-rim", c0).style.borderRadius = R + "px";
+     q(".cz-scan", c0).style.clipPath = "inset(0 round " + R + "px)";
+     var cams = [c0];
+     for (var j = 1; j < 4; j++) { var cl = c0.cloneNode(true); cl.style.opacity = (1 / (j + 1)).toFixed(4); c0.parentNode.appendChild(cl); cams.push(cl); }
+     cams = cams.map(function (c) {
+      return { c: c, w: q(".cz-world", c), xh: q(".cz-xh", c), xv: q(".cz-xv", c), s: q(".cz-scrim", c), sc: q(".cz-scan", c), tl: q(".cz-tail", c), bm: q(".cz-beam", c), rg: c.querySelectorAll(".cz-ring"), rim: q(".cz-rim", c), ret: q(".cz-ret", c), rc: q(".cz-rc", c), rx: q(".cz-rx", c) };
+     });
+
+     // HUD: page name and status over the monitor's top corners, the tag under the reticle (measured once)
+     var hud = q(".cz-hud"), hl = q(".cz-hl"), hr = q(".cz-hr"), tg = q(".cz-tag");
+     var tag = String(v.tag).trim(), name = String(v.name).trim(), cjk = /[⺀-鿿豈-﫿]/.test(tag + name || "中");
+     q(".cz-name").textContent = name;
+     hl.style.maxWidth = 0.6 * PW * Z0 + "px";
+     hr.textContent = cjk ? "扫描中" : "SCANNING";
+     tg.style.maxWidth = L.tagW * FW + "px";
+     var word = cjk ? "扫描 " : "SCAN ", state = -1, TW = [];
+     var setTag = function (s) {
+      tg.textContent = s < 3 ? word : tag;
+      if (s < 3) tg.appendChild(document.createElement("b")).textContent = s + 1 + "/3";
+      tg.toggleAttribute("data-on", s === 3);
+     };
+     for (var s4 = 0; s4 < 4; s4++) { setTag(s4); TW.push(tg.offsetWidth); }
+     var HL = [hl.offsetHeight, hr.offsetWidth, hr.offsetHeight];
+     if (!name) hl.style.display = "none";
+     if (!tag) tg.style.display = "none";
+
+     var f1 = function (a) { return a.toFixed(1); }, f2 = function (a) { return a.toFixed(2); };
+     // one camera sample: s is the camera's time, t the card's (everything but the camera follows t, as upstream)
+     var paint = function (o, t, s) {
+      var c = cam(s), z = c.z, zi = U / z, r = ret(t);
+      var lock = MT.ramp(t, CFG.lock, CFG.lockDur, "snappy"), show = MT.ramp(t, CFG.show, CFG.showDur, "out");
+      var breath = MT.ramp(t, CFG.wind, CFG.windDur, "smooth") * (1 - MT.ramp(t, CFG.push, CFG.breathOut, "exit"));
+      o.w.style.transform = "translate(" + f2(c.x - TX * z) + "px," + f2(c.y - TY * z) + "px) scale(" + z.toFixed(5) + ")";
+      o.w.style.setProperty("--zi", zi.toFixed(5));
+      // corners 26 -> 10 page px out (upstream's 357 px card; scaled to this target), +16 while backing off;
+      // arms 30 px and the centre cross 14 px on screen
+      var pad = (MT.mix(26, 10, lock) + 16 * breath) * K, a = 30 * zi, cr = 14 * zi;
+      var bx = r.x - w / 2 - pad, by = r.y - h / 2 - pad, bw = w + 2 * pad, bh = h + 2 * pad;
+      o.rc.setAttribute("d", "M" + f1(bx) + " " + f1(by + a) + "V" + f1(by) + "H" + f1(bx + a) + "M" + f1(bx + bw - a) + " " + f1(by) + "H" + f1(bx + bw) + "V" + f1(by + a) + "M" + f1(bx + bw) + " " + f1(by + bh - a) + "V" + f1(by + bh) + "H" + f1(bx + bw - a) + "M" + f1(bx + a) + " " + f1(by + bh) + "H" + f1(bx) + "V" + f1(by + bh - a));
+      o.rx.setAttribute("d", "M" + f1(r.x - cr) + " " + f1(r.y) + "H" + f1(r.x + cr) + "M" + f1(r.x) + " " + f1(r.y - cr) + "V" + f1(r.y + cr));
+      o.rx.style.opacity = f2(1 - lock);
+      o.ret.style.opacity = f2(show);
+      o.xh.style.top = f1(r.y) + "px"; o.xv.style.left = f1(r.x) + "px";
+      o.xh.style.opacity = o.xv.style.opacity = f2(t < CFG.hit ? show * (1 - 0.6 * lock) : 0);
+      // the hit: one frame of accent, one of afterglow, then the stage colour; the target itself stays as it is
+      var fi = Math.floor((t - CFG.hit) * 30 + 1e-3);
+      o.s.style.display = o.rim.style.display = fi < 0 ? "none" : "";
+      o.s.style.background = fi < 2 ? FLASH[Math.max(0, fi)] : POOL;
+      // two shock rings out of the card edge: 258 and 141 px on screen, the second 3 frames later at 60%
+      for (var n = 0; n < 2; n++) {
+       var el = o.rg[n], t0 = CFG.hit + CFG.ring[n], u = MT.ramp(t, t0, CFG.ringDur, "snappy"), gr = ((n ? 141 : 258.5) * U * u) / ZH;
+       var on = t >= t0 && t < CFG.hit + CFG.ringLife;
+       el.style.display = on ? "block" : "none";
+       if (!on) continue;
+       px(el, x - gr, y - gr, w + 2 * gr, h + 2 * gr);
+       el.style.borderRadius = f1(R + gr / 2) + "px";
+       el.style.borderWidth = f2((n ? 2 : 4) * zi) + "px";
+       el.style.opacity = f2((1 - u) * (n ? 0.6 : 1));
+      }
+      // one beam down the card after the shake, clipped by its corners
+      var yy = MT.mix(-0.12, 1.08, MT.ramp(t, CFG.scan, CFG.scanDur, "swift")) * h, th = (141 * U) / ZH;
+      o.sc.style.display = t >= CFG.scan && t <= CFG.scanEnd ? "block" : "none";
+      o.tl.style.top = f1(yy - th) + "px"; o.tl.style.height = f1(th) + "px";
+      o.bm.style.top = f2(yy - 1.5 * zi) + "px";
+     };
+
+     var shk = q(".cz-shake"), grid = q(".cz-grid"), vig = q(".cz-vig");
+     var render = function (t) {
+      // motion blur only while the camera rushes: 3 earlier samples (0.55 frame apart in all), softened with the speed
+      var c = cam(t), b = cam(t - CFG.shutter);
+      var mv = ((FW / 2) * Math.abs(c.z - b.z)) / c.z + Math.hypot(c.x - b.x, c.y - b.y), moving = t > CFG.push && mv > 6 * U, sb = Math.min(10 * U, mv * 0.07);
+      cams.forEach(function (o, j) {
+       if (j) { o.c.style.display = moving ? "" : "none"; o.c.style.filter = sb > 0.3 ? "blur(" + f2(sb) + "px)" : ""; }
+       if (!j || moving) paint(o, t, t - (j * CFG.shutter) / 3);
+      });
+      // the hard shake moves everything in the camera together and stays sharp
+      var sh = kShake(t, CFG.hit, CFG.shake * U);
+      shk.style.transform = "translate(" + f2(sh.x) + "px," + f2(sh.y) + "px) rotate(" + sh.r.toFixed(4) + "deg)";
+      var pe = MT.ramp(t, CFG.push, CFG.hit - CFG.push, "exit"), wide = 1 - pe;
+      grid.style.opacity = f2(0.55 * wide + 0.1);
+      grid.style.transform = "scale(" + (1 + (c.z / Z0 - 1) * 0.3).toFixed(4) + ")";
+      vig.style.setProperty("--vs", ((t < CFG.hit ? 0.35 + 0.25 * pe : MT.mix(0.75, 0.4, MT.ramp(t, CFG.hit, CFG.vigIn, "out"))) * (dark ? 1 : 0.457)).toFixed(3));
+      hud.style.opacity = f2(wide);
+      var X0 = c.x - TX * c.z, Y0 = c.y - TY * c.z - 22 * U;
+      hl.style.opacity = hr.style.opacity = f2(MT.ramp(t, 0, CFG.labDur, "out"));
+      hl.style.transform = "translate(" + f1(X0) + "px," + f1(Y0 - HL[0]) + "px)";
+      hr.style.transform = "translate(" + f1(X0 + PW * c.z - HL[1]) + "px," + f1(Y0 - HL[2]) + "px)";
+      var r = ret(t), st = MT.ramp(t, CFG.lock, CFG.lockDur, "snappy") > 0.5 ? 3 : t < CFG.hops[0] ? 0 : t < CFG.hops[1] ? 1 : 2;
+      if (st !== state) setTag((state = st));
+      var sc = MT.mix(1.25, 1, MT.ramp(t, CFG.lock, CFG.popDur, "snappy"));
+      var tx = MT.clamp(c.x + (r.x - w / 2 - TX) * c.z - 12 * U, FW * (1 - L.edge), FW * L.edge - TW[st] * sc);
+      tg.style.opacity = f2(MT.ramp(t, CFG.tagIn, CFG.tagDur, "out"));
+      tg.style.transform = "translate(" + f1(tx) + "px," + f1(c.y + (r.y + h / 2 - TY) * c.z + 22 * U) + "px) scale(" + sc.toFixed(3) + ")";
+      if (grain) grain(t);
+     };
+     var tl = MT.scene(CFG.dur, render);
+     window.__timelines["crash-impact-stop"] = tl;
+    })();
+   </script>
+  </template>
+ </body>
+</html>

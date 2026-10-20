@@ -1,0 +1,452 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"line1","type":"string","label":"转写第一句（说的第一段，用 | 切意群，一个意群出现一次）","default":"帮我把|今天的会|整理成|一页|笔记，"},
+    {"id":"line2","type":"string","label":"转写第二句（停顿之后说的，可留空）","default":"重点|标出|明天|要做的事。"},
+    {"id":"hint","type":"string","label":"开口前的提示语（可留空）","default":"说出你的需求…"},
+    {"id":"label","type":"string","label":"胶囊上方的状态（可留空）","default":"正在听…"},
+    {"id":"sent","type":"string","label":"提交后的回执，后面自动接时长（可留空）","default":"已发送"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底（带光和地面暖光）"},{"value":"off","label":"透明（只留胶囊、转写和气泡）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>voice-waveform-live · 录音实时声纹</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="voice-waveform-live-template">
+<!-- Ported from video-shotcraft demos/interaction/voice-waveform-live/VoiceWaveformLive.tsx
+(github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT scene, frames to seconds; --k-* palette
+for the sand look (terracotta -> accent, bar tint #e8956a -> accent + 30% white, ink3 dots -> muted), system fonts,
+weights 760/600/550 -> 700/600; upstream name in the listening label and sent line, the prompt and the transcript
+-> variables with generic Chinese copy; sand stage -> light backdrop, accent-2 fill, vignette, grain (floor glow
+kept); label, timer, sent line 32 -> 40 px; Chinese line height 1.18 and no negative tracking unless all Latin;
+nowrap transcript -> fitted 92-72 px, bottom-anchored, sent line placed from its height; onsets spread when the
+unit count differs; bubble text flips ink -> on-accent in one step at 3:1 (upstream blended through grey); grey mic
+as a fading overlay; glow on the newest bar dropped (its weight is 0, never drawn); dark skin bars opaque;
+portrait added (restacked, 864 px capsule, 3 px gaps); hold 0.67 -> 1.07 s. Kept: 64 bars, 1.6 frames a sample,
+mulberry32 value noise, envelope, sin^0.8, jitter, 6 px floor, word onsets, all submit timings and eases. -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+#root {
+--k-bg: var(--mc-bg, #ffffff);
+--k-panel: var(--mc-panel, #f4f5f7);
+--k-ink: var(--mc-ink, #15171c);
+--k-muted: var(--mc-muted, #6b7280);
+--k-accent: var(--mc-accent, #e8590c);
+--k-accent-2: var(--mc-accent-2, #2563eb);
+--k-on-accent: var(--mc-on-accent, #ffffff);
+--k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+position: absolute;
+inset: 0;
+overflow: hidden;
+font-family: var(--k-font);
+color: var(--k-ink);
+}
+/* layout numbers live here (landscape) and in the portrait block; the static page is the settled frame */
+.vw { position: absolute; inset: 0; container-type: size;
+--cy: 760px; --cw: 1240px; --ch: 196px; --ty: 372px; --tw: 1460px; --fs: 92px; --px: 64px; --py: 44px; --br: 64px; --sy: 499px;
+--btn: 120px; --wh: 160px; --pad: 38px; --gap: 30px; --bgap: 5px; --tmw: 92px; --gx: 820px; --gy: 193px; --gd: 128px; --lift: 42px; --sink: 24px;
+--vw-a2: color-mix(in srgb, var(--k-accent), white 30%); }
+/* ==== kit:derived@1 ==== */
+.vw { --vw-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); --vw-hi: color-mix(in srgb, white 80%, transparent); }
+.vw[data-tone="dark"] { --vw-shade: color-mix(in srgb, var(--k-bg) 30%, black); --vw-hi: color-mix(in srgb, white 6%, transparent); }
+/* ==== end kit:derived ==== */
+/* ==== kit:backdrop@1 ==== */
+.vw-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+.vw-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+/* ==== end kit:backdrop ==== */
+/* ==== kit:vignette@1 ==== */
+.vw-vig { position: absolute; inset: 0; pointer-events: none; --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--vw-shade);
+background:
+radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%); }
+.vw[data-tone="dark"] .vw-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+/* ==== kit:grain@1 ==== */
+.vw-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+/* ==== kit:text@2 ==== */
+.vw-u { display: inline-block; white-space: pre; }
+/* ==== end kit:text ==== */
+.vw-bg, .vw-fill, .vw-glow { position: absolute; inset: 0; }
+.vw-bare .vw-bg { display: none; }
+.vw-fill { background: radial-gradient(ellipse 50% 46% at 78% 90%, color-mix(in srgb, var(--k-accent-2) 10%, transparent), transparent 72%); }
+/* warm floor light under the capsule; its opacity follows the loudness of the newest bars */
+.vw-glow { opacity: 0.27; background: radial-gradient(var(--gx) var(--gy) at 50% calc(var(--cy) + var(--gd)), color-mix(in srgb, var(--k-accent) 30%, transparent), transparent 70%); }
+/* transcript: the block's centre sits on --ty; the static page shows it shrunk into the sent bubble */
+.vw-tx, .vw-hw { position: absolute; left: 0; right: 0; top: var(--ty); height: 0; display: flex; justify-content: center; align-items: flex-start; }
+.vw-tb { position: relative; flex: none; transform: translateY(calc(-1 * var(--lift))) translateY(-50%) scale(0.72); }
+.vw-bub { position: absolute; left: calc(-1 * var(--px)); right: calc(-1 * var(--px)); top: calc(-1 * var(--py)); bottom: calc(-1 * var(--py)); border-radius: var(--br); border-bottom-right-radius: calc(var(--br) * 0.28);
+background: var(--k-accent); box-shadow: 0 30px 70px -26px color-mix(in srgb, var(--vw-shade) 55%, transparent), 0 8px 20px -8px color-mix(in srgb, var(--vw-shade) 30%, transparent); }
+.vw-txt { position: relative; width: max-content; max-width: var(--tw); font-size: var(--fs); font-weight: 700; line-height: 1.18; color: var(--k-on-accent); }
+.vw-lat { letter-spacing: -0.035em; line-height: 1.08; }
+.vw-car { position: absolute; left: 0; top: 0; width: 6px; height: 0.8em; border-radius: 3px; background: var(--k-accent); opacity: 0; }
+.vw-hint { display: block; max-width: var(--tw); transform: translateY(-50%); font-size: var(--fs); font-weight: 700; line-height: 1.18; text-align: center; color: var(--k-muted); opacity: 0; }
+.vw-sent { position: absolute; left: 10%; right: 10%; top: var(--sy); text-align: center; font-size: 40px; font-weight: 600; line-height: 1.2; color: var(--k-muted); }
+.vw-ok { width: 0.9em; height: 0.9em; vertical-align: -0.12em; fill: none; stroke: var(--k-accent); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.vw-lab { position: absolute; left: calc(50% - var(--cw) / 2 + 24px); top: calc(var(--cy) - var(--ch) / 2 - 18px); display: flex; align-items: center; gap: 14px;
+font-size: 40px; font-weight: 600; line-height: 1.2; color: var(--k-muted); transform: translateY(-100%); opacity: 0; }
+.vw-dot { display: block; flex: none; width: 16px; height: 16px; border-radius: 50%; background: var(--k-accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--k-accent) 18%, transparent); }
+.vw-lt { display: block; max-width: calc(var(--cw) * 0.62); }
+/* the capsule: warm-white pill, lit top edge, two-layer drop; static = idle (sunk, scaled down, grey mic) */
+.vw-cap { position: absolute; left: calc(50% - var(--cw) / 2); top: calc(var(--cy) - var(--ch) / 2); width: var(--cw); height: var(--ch); box-sizing: border-box; border-radius: calc(var(--ch) / 2);
+display: flex; align-items: center; padding: 0 var(--pad); gap: var(--gap); transform: translateY(var(--sink)) scale(0.94);
+background: linear-gradient(180deg, color-mix(in srgb, var(--k-panel) 20%, var(--k-bg)), color-mix(in srgb, var(--k-panel) 70%, var(--k-bg)));
+box-shadow: inset 0 1.5px 0 var(--vw-hi), inset 0 0 0 1px color-mix(in srgb, var(--k-ink) 7%, transparent), 0 2px 4px color-mix(in srgb, var(--vw-shade) 8%, transparent),
+0 40px 80px -30px color-mix(in srgb, var(--vw-shade) 45%, transparent), 0 14px 30px -12px color-mix(in srgb, var(--vw-shade) 22%, transparent); }
+.vw-mic, .vw-btn { position: relative; flex: none; width: var(--btn); height: var(--btn); }
+.vw-ring { position: absolute; inset: -8px; border-radius: 50%; background: color-mix(in srgb, var(--k-accent) 14%, transparent); opacity: 0; }
+.vw-r2 { background: color-mix(in srgb, var(--k-accent) 8%, transparent); }
+.vw-md { position: absolute; inset: 0; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center;
+background: linear-gradient(160deg, color-mix(in srgb, var(--k-accent), white 12%), color-mix(in srgb, var(--k-accent), black 12%)); box-shadow: inset 0 1.5px 0 color-mix(in srgb, white 35%, transparent); }
+.vw-gray { position: absolute; inset: 0; background: color-mix(in srgb, var(--k-muted) 40%, var(--k-panel)); }
+.vw-md svg { position: relative; width: 46.7%; height: 46.7%; color: var(--k-on-accent); fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; }
+.vw-md rect { fill: currentColor; stroke: none; }
+/* static: a dotted line where the bars go (the script draws 64 bars over it and drops it) */
+.vw-wave { flex: 1; align-self: center; height: var(--wh); display: flex; align-items: center; gap: var(--bgap);
+-webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 14%); mask-image: linear-gradient(90deg, transparent 0%, #000 14%);
+background: radial-gradient(circle, color-mix(in srgb, var(--k-muted) 55%, transparent) 2.6px, transparent 3.2px) 0 50% / 11.7px 8px repeat-x; }
+.vw-b { flex: 1; height: 6px; border-radius: 99px;
+background: linear-gradient(180deg, color-mix(in srgb, var(--vw-a2) calc(60% + 40% * var(--g)), transparent), color-mix(in srgb, var(--k-accent) calc(65% + 35% * var(--g)), transparent), color-mix(in srgb, var(--vw-a2) calc(60% + 40% * var(--g)), transparent)); }
+.vw[data-tone="dark"] .vw-b:not(.q) { background: linear-gradient(180deg, var(--vw-a2), var(--k-accent), var(--vw-a2)); }
+.vw-b.q { background: color-mix(in srgb, var(--k-muted) 55%, transparent); }
+.vw-tm { flex: none; width: var(--tmw); text-align: right; font-size: 40px; font-weight: 600; line-height: 1.2; color: var(--k-muted); font-variant-numeric: tabular-nums; }
+.vw-btn { border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center;
+background: linear-gradient(180deg, color-mix(in srgb, var(--k-ink), white 12%), var(--k-ink));
+box-shadow: inset 0 1.5px 0 color-mix(in srgb, white 14%, transparent), 0 10px 24px -8px color-mix(in srgb, var(--vw-shade) 60%, transparent); }
+.vw-btn svg { position: absolute; width: 43%; height: 43%; fill: none; stroke: var(--k-bg); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.vw-up { opacity: 0; }
+/* portrait: the same stack, narrower; transcript centre at 610, capsule centre at 1010 */
+@container (orientation: portrait) {
+.vw > * { --cy: 1010px; --cw: 864px; --ch: 160px; --ty: 610px; --tw: 768px; --fs: 84px; --px: 48px; --py: 36px; --br: 52px; --sy: 789px;
+--btn: 100px; --wh: 130px; --pad: 28px; --gap: 20px; --bgap: 3px; --tmw: 84px; --gx: 460px; --gy: 160px; --gd: 104px; --lift: 40px; --sink: 20px; }
+.vw-wave { background-size: 7.3px 8px; }
+}
+</style>
+
+<div id="root" data-composition-id="voice-waveform-live">
+<div class="vw">
+<div class="vw-bg"><div class="vw-backdrop"></div><i class="vw-fill"></i><i class="vw-glow"></i><div class="vw-vig"></div><div class="vw-grain"></div></div>
+<div class="vw-hw"><div class="vw-hint">说出你的需求…</div></div>
+<div class="vw-tx">
+<div class="vw-tb">
+<i class="vw-bub"></i>
+<div class="vw-txt"><div class="vw-l"><span class="vw-u">帮我把</span><span class="vw-u">今天的会</span><span class="vw-u">整理成</span><span class="vw-u">一页</span><span class="vw-u">笔记，</span></div><div class="vw-l"><span class="vw-u">重点</span><span class="vw-u">标出</span><span class="vw-u">明天</span><span class="vw-u">要做的事。</span></div><i class="vw-car"></i></div>
+</div>
+</div>
+<div class="vw-sent"><svg class="vw-ok" viewBox="0 0 24 24"><path d="M5.5 12.5l4.2 4.2L18.5 7.8" /></svg> <span class="vw-st">已发送</span> · <span class="vw-tm2">0:03</span></div>
+<div class="vw-lab"><i class="vw-dot"></i><span class="vw-lt">正在听…</span></div>
+<div class="vw-cap">
+<div class="vw-mic">
+<i class="vw-ring"></i><i class="vw-ring vw-r2"></i>
+<div class="vw-md"><i class="vw-gray"></i><svg viewBox="0 0 24 24"><rect x="8.5" y="3" width="7" height="12" rx="3.5" /><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6" /></svg></div>
+</div>
+<div class="vw-wave"></div>
+<b class="vw-tm">0:03</b>
+<div class="vw-btn">
+<svg class="vw-up" viewBox="0 0 24 24"><path d="M12 20V5M12 5l-6.5 6.5M12 5l6.5 6.5" /></svg>
+<svg class="vw-ck" viewBox="0 0 24 24"><path d="M5.5 12.5l4.2 4.2L18.5 7.8" /></svg>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+(function () {
+// timing in seconds (upstream frames / 30), shared by both orientations. talk: the two spoken stretches;
+// words: each unit's onset per stretch; the submit beats are offsets from `submit`
+var CFG = {
+slot: 6.2, inDur: 0.467, label: 0.2, labelDur: 0.4, hintIn: 0.133, hintDur: 0.333, hintOut: 0.5, hintOutDur: 0.133,
+talk: [[0.5, 1.9], [2.667, 4.133]], rise: 0.167, fall: 0.233,
+words: [[0.567, 0.733, 0.833, 1.067, 1.333, 1.5], [2.733, 2.933, 3.067, 3.4, 3.733]], wordDur: 0.267, freshAt: 0.1, freshDur: 0.2,
+submit: 4.2, pressIn: 0.1, pressOut: 0.3, collapse: 0.4, upAt: 0.033, upDur: 0.2, checkAt: 0.133, checkDur: 0.267,
+bubAt: 0.067, bubDur: 0.733, fillAt: 0.2, fillDur: 0.333, sentAt: 0.467, sentDur: 0.4, idleAt: 0.467, idleDur: 0.467
+};
+// per orientation: yb = bottom of the transcript block, lift = its rise into the bubble, gap = bubble to sent
+// line, maxH = tallest bar, per = lines per spoken stretch, k = scale of ring and icon travel, sink = idle drop
+var LAND = { yb: 480, lift: 42, gap: 59, maxH: 150, per: 1, k: 1, sink: 24 };
+var PORT = { yb: 808, lift: 40, gap: 50, maxH: 120, per: 2, k: 0.833, sink: 20 };
+var N = 64, SCROLL = 1.6, DOT = 6; // bars, frames per sample (newest bar on the right), silent dot height
+var v = { line1: "帮我把|今天的会|整理成|一页|笔记，", line2: "重点|标出|明天|要做的事。", hint: "说出你的需求…", label: "正在听…", sent: "已发送", backdrop: "on" };
+try {
+var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k]; // "" must get through: optional slots
+} catch (e) {}
+
+var root = document.querySelector(".vw");
+var q = function (s) { return root.querySelector(s); };
+var FW = root.clientWidth, FH = root.clientHeight;
+if (!FW || !FH) {
+// not laid out yet: the host clip's declared size, then the window
+var hc = root.closest("[data-width][data-height]");
+FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+}
+var P = FH > FW, L = P ? PORT : LAND;
+root.setAttribute("data-orient", P ? "portrait" : "landscape");
+if (String(v.backdrop) === "off") root.classList.add("vw-bare");
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+var p = document.createElement("i");
+p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+el.appendChild(p);
+var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+el.removeChild(p);
+return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+var c = kRGB(wrap, "var(--k-bg)");
+var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+wrap.setAttribute("data-tone", tone);
+return tone;
+}
+// ==== end kit:tone ====
+// ==== kit:text@2 ==== (kWords and kSplit; kReveal not used)
+var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+function kWords(s, key) {
+s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+var cut = function (x) {
+if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+};
+var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+var pre = "";
+bits.forEach(function (x) {
+var t = x.trim(), last = out[out.length - 1];
+if (last && /^ /.test(x)) last.sp = true;
+if (!t) return;
+if (!/[\p{L}\p{N}]/u.test(t)) {
+if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+else { last.t += t; last.sp = / $/.test(x); }
+return;
+}
+out.push({ t: pre + t, sp: / $/.test(x) });
+pre = "";
+});
+if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+if (out.length) out[out.length - 1].sp = false;
+return out;
+}
+function kSplit(el, by, rise, text) {
+var s = text != null ? String(text) : el.textContent, units = [];
+var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+el.textContent = "";
+parts.forEach(function (p) {
+var u = document.createElement("span"), box = u;
+u.className = "vw-u"; u.textContent = p.t;
+if (by === "line") u.style.display = "block";
+if (!p.t.trim()) { el.appendChild(u); return; }
+if (rise) { box = document.createElement("span"); box.className = "vw-cut"; box.style.display = u.style.display; box.appendChild(u); }
+el.appendChild(box);
+if (p.sp) el.appendChild(document.createTextNode(" "));
+units.push(u);
+});
+return units;
+}
+// ==== end kit:text ====
+// ==== kit:fit@1 ====
+function kFit(el, o) {
+o = o || {};
+var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+for (;;) {
+el.style.fontSize = f + "px";
+m = kLines(el);
+if ((m.w <= W && m.n <= n) || f <= min) break;
+f = Math.max(min, f - 2);
+}
+if (m.w > W) {
+[].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+m = kLines(el);
+}
+return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+while ((t = it.nextNode())) {
+if (!t.data.trim()) continue;
+r.selectNodeContents(t);
+[].forEach.call(r.getClientRects(), function (b) {
+var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+});
+}
+return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+o = o || {};
+var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+var dark = tones && tones.getAttribute("data-tone") === "dark";
+var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+var f = "type='linear' slope='2.4' intercept='-0.7'";
+var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+"<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+"<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+"<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+"<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+});
+layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+layer.style.backgroundSize = size + "px " + size + "px";
+return function (t) {
+var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+layer.style.backgroundImage = tiles[k % 6];
+layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+};
+}
+// ==== end kit:grain ====
+
+kTone(root);
+var grain = kGrain(q(".vw-grain"));
+
+// the signal: value noise from mulberry32 seeds (upstream formula, so the bars match the reference), a
+// trapezoid talk/pause envelope times a syllable layer. Arguments in frames at 30 fps
+var m32 = function (a) { var t = (a += 0x6d2b79f5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+var noise = function (x) { var i = Math.floor(x), fr = x - i, a = m32(i * 7919 + 13), s = fr * fr * (3 - 2 * fr); return a + (m32((i + 1) * 7919 + 13) - a) * s; };
+var seg = function (s, a) { return MT.interpolate(s, [a[0], a[0] + CFG.rise, a[1] - CFG.fall, a[1]], [0, 1, 1, 0], { extrapolate: "clamp" }); };
+var env = function (fr) { var s = fr / 30; return Math.max(seg(s, CFG.talk[0]), seg(s, CFG.talk[1])) * (0.55 + 0.45 * noise(fr / 4.5 + 200)); };
+
+// bars: index 0 is the oldest sample; --g fades the older ones; centre weight sin^0.8
+var wave = q(".vw-wave"), bars = [], CEN = [];
+wave.style.background = "none";
+for (var i = 0; i < N; i++) {
+var b = wave.appendChild(document.createElement("i"));
+b.className = "vw-b"; b.style.setProperty("--g", (i / (N - 1)).toFixed(3));
+bars.push(b); CEN.push(Math.pow(Math.sin((i / (N - 1)) * Math.PI), 0.8));
+}
+
+// transcript: each unit of a stretch gets an onset; a different unit count spreads over the upstream onsets
+var txt = q(".vw-txt"), car = q(".vw-car"), W = [], used = 0;
+[].forEach.call(txt.querySelectorAll(".vw-l"), function (el, li) {
+var s = String(li ? v.line2 : v.line1);
+if (!s.trim()) { el.style.display = "none"; return; }
+used++;
+var units = kSplit(el, "word", 0, s), ons = CFG.words[li], m = ons.length, n = units.length;
+units.forEach(function (u, j) {
+var x = n > 1 ? (j * (m - 1)) / (n - 1) : 0, a = Math.min(m - 2, Math.floor(x));
+W.push({ el: u, at: ons[a] + (ons[a + 1] - ons[a]) * (x - a) });
+});
+});
+if (!kCJK.test(v.line1 + v.line2)) txt.classList.add("vw-lat");
+var TW = parseFloat(getComputedStyle(txt).maxWidth);
+kFit(txt, { width: TW, lines: Math.max(1, used) * L.per, min: 72 });
+var FS = parseFloat(getComputedStyle(txt).fontSize), H = txt.offsetHeight, TY = L.yb - H / 2;
+var bub = q(".vw-bub"), cs = getComputedStyle(bub), PY = parseFloat(cs.getPropertyValue("--py")), BR = parseFloat(cs.getPropertyValue("--br"));
+q(".vw-tx").style.top = q(".vw-hw").style.top = TY + "px";
+if (!used) q(".vw-tx").style.display = "none";
+// the caret sits after the newest word: measured once, the words never reflow (only transforms move them)
+W.forEach(function (w) { var u = w.el; w.cx = u.offsetLeft + u.offsetWidth + 0.06 * FS; w.cy = u.offsetTop + (u.offsetHeight - 0.8 * FS) / 2 + 0.04 * FS; });
+
+var hint = q(".vw-hint"), lab = q(".vw-lab"), sentEl = q(".vw-sent"), tm = q(".vw-tm"), tm2 = q(".vw-tm2");
+hint.textContent = v.hint;
+if (!kCJK.test(v.hint)) hint.classList.add("vw-lat");
+kFit(hint, { width: TW, lines: L.per, min: 72 });
+if (!String(v.hint).trim()) hint.style.display = "none";
+q(".vw-lt").textContent = v.label;
+kFit(q(".vw-lt"), { width: parseFloat(getComputedStyle(q(".vw-lt")).maxWidth) });
+if (!String(v.label).trim()) lab.style.display = "none";
+q(".vw-st").textContent = v.sent;
+if (!String(v.sent).trim()) sentEl.style.display = "none";
+sentEl.style.top = TY - L.lift + (H / 2 + PY) * 0.72 + L.gap + "px";
+kFit(sentEl);
+
+// the bubble text flips to --k-on-accent once the filling bubble gives it 3:1 (or beats the ink), so no frame
+// has grey on orange; light skin flips at about 90% fill, the dark skin near 40%
+var lum = function (c) { return c.reduce(function (s, x, j) { x /= 255; return s + [0.2126, 0.7152, 0.0722][j] * (x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4)); }, 0); };
+var con = function (a, b) { a = lum(a); b = lum(b); return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05); };
+var BG = kRGB(root, "var(--k-bg)"), AC = kRGB(root, "var(--k-accent)"), INK = kRGB(root, "var(--k-ink)"), ON = kRGB(root, "var(--k-on-accent)"), FLIP = 1;
+for (var a = 0; a <= 1; a += 0.05) {
+var mixd = BG.map(function (x, j) { return x + (AC[j] - x) * a; });
+if (con(ON, mixd) >= Math.min(3, con(INK, mixd))) { FLIP = a; break; }
+}
+
+var tb = q(".vw-tb"), cap = q(".vw-cap"), glow = q(".vw-glow"), dot = q(".vw-dot"), rings = root.querySelectorAll(".vw-ring");
+var gray = q(".vw-gray"), md = q(".vw-md"), btn = q(".vw-btn"), up = q(".vw-up"), ck = q(".vw-ck");
+var R = MT.ramp, mix = MT.mix, last = "";
+
+var tl = MT.scene(CFG.slot, function (t) {
+var f = t * 30, S = CFG.submit, sub = t >= S; // f: frames at 30 fps (sample spacing and noise rates are per frame)
+var inT = R(t, 0, CFG.inDur), labelT = R(t, CFG.label, CFG.labelDur, "out");
+var press = MT.interpolate(t, [S, S + CFG.pressIn, S + CFG.pressOut], [1, 0.82, 1], { extrapolate: "clamp" });
+var col = mix(1, 0.06, R(t, S, CFG.collapse, "exit"));
+var upT = R(t, S + CFG.upAt, CFG.upDur, "exit"), ckT = R(t, S + CFG.checkAt, CFG.checkDur, "overshoot");
+var toB = R(t, S + CFG.bubAt, CFG.bubDur, "swift"), fill = R(t, S + CFG.fillAt, CFG.fillDur, "out");
+var sentT = R(t, S + CFG.sentAt, CFG.sentDur, "out"), idle = R(t, S + CFG.idleAt, CFG.idleDur, "swift");
+
+// waveform: bar i reads the signal (63 - i) * 1.6 frames ago, so history scrolls left; collapse on submit
+var sum = 0, h, i;
+for (i = 0; i < N; i++) {
+var st = f - (N - 1 - i) * SCROLL;
+h = Math.max(DOT, (st < 0 ? 0 : env(st)) * CEN[i] * (0.35 + 0.65 * noise(st * 1.7 + i * 0.13)) * L.maxH * col);
+if (i >= N - 12) sum += h;
+bars[i].style.height = h.toFixed(1) + "px";
+bars[i].className = h <= DOT + 1 || col < 0.25 ? "vw-b q" : "vw-b";
+}
+var now = sub ? 0 : env(f), level = (sum / 12 / L.maxH) * col;
+glow.style.opacity = (inT * (0.08 + 0.22 * level)) / 0.3;
+
+// transcript: each unit rises out of a blur on its onset, accent first, sinking to ink 0.1-0.3 s later
+var lastAt = -99, ink = fill >= FLIP;
+W.forEach(function (w) {
+var p = R(t, w.at, CFG.wordDur), fresh = 1 - R(t, w.at + CFG.freshAt, CFG.freshDur, "linear"), s = w.el.style;
+if (t >= w.at && w.at >= lastAt) { lastAt = w.at; car.style.left = w.cx + "px"; car.style.top = w.cy + "px"; }
+s.opacity = p;
+s.filter = p < 1 ? "blur(" + ((1 - p) * 10).toFixed(2) + "px)" : "none";
+s.transform = "translateY(" + ((1 - p) * 0.22 * FS).toFixed(2) + "px)";
+s.color = ink ? "var(--k-on-accent)" : "color-mix(in srgb, var(--k-accent) " + (fresh * 100).toFixed(1) + "%, var(--k-ink))";
+});
+// caret: steady while talking, blinking every 8 frames in the pause, gone on submit
+car.style.opacity = !sub && t > CFG.inDur && lastAt > -99 && (now > 0.05 || Math.floor(((t - lastAt) * 30) / 8) % 2 === 0) ? 1 : 0;
+tb.style.transform = "translateY(" + (-L.lift * toB).toFixed(2) + "px) translateY(-50%) scale(" + mix(1, 0.72, toB).toFixed(4) + ")";
+bub.style.opacity = fill;
+bub.style.borderBottomRightRadius = mix(BR, BR * 0.28, fill).toFixed(1) + "px";
+var hO = R(t, CFG.hintIn, CFG.hintDur, "out") * (1 - R(t, CFG.hintOut, CFG.hintOutDur, "linear"));
+hint.style.opacity = hO > 0.01 ? hO : 0;
+hint.style.filter = "blur(" + ((1 - hO) * 6).toFixed(2) + "px)";
+sentEl.style.opacity = sentT;
+sentEl.style.transform = "translateY(" + ((1 - sentT) * 16).toFixed(2) + "px)";
+lab.style.opacity = labelT * (1 - idle);
+lab.style.transform = "translateY(-100%) translateY(" + ((1 - labelT) * 10).toFixed(2) + "px)";
+dot.style.boxShadow = "0 0 0 " + (4 + 6 * now).toFixed(1) + "px color-mix(in srgb, var(--k-accent) 18%, transparent)";
+
+// capsule: focus-in entrance, then on submit it sinks, shrinks and the mic greys out
+cap.style.opacity = inT;
+cap.style.transform = "translateY(" + (L.sink * idle).toFixed(2) + "px) scale(" + (mix(1.04, 1, inT) * mix(1, 0.94, idle)).toFixed(4) + ")";
+cap.style.filter = inT < 1 ? "blur(" + ((1 - inT) * 6).toFixed(2) + "px)" : "none";
+for (i = 0; i < 2; i++) {
+rings[i].style.inset = (-(8 + (14 + 14 * i) * now) * L.k).toFixed(1) + "px";
+rings[i].style.opacity = Math.min(1, now * 1.6);
+}
+gray.style.opacity = idle;
+md.style.boxShadow = "inset 0 1.5px 0 color-mix(in srgb, white 35%, transparent), 0 8px 20px -8px color-mix(in srgb, var(--k-accent) " + (60 * (1 - idle)).toFixed(1) + "%, transparent)";
+btn.style.transform = "scale(" + press.toFixed(4) + ")";
+up.style.opacity = 1 - upT;
+up.style.transform = "translateY(" + (-30 * L.k * upT).toFixed(2) + "px)";
+ck.style.opacity = Math.min(1, ckT * 1.4);
+ck.style.transform = "translateY(" + (16 * L.k * (1 - ckT)).toFixed(2) + "px) scale(" + (0.7 + 0.3 * ckT).toFixed(3) + ")";
+// timer: seconds spoken, frozen at submit
+var tt = "0:" + ("0" + Math.floor(Math.max(0, Math.min(t, S) - 0.4))).slice(-2);
+if (tt !== last) tm.textContent = tm2.textContent = last = tt;
+grain(t);
+});
+window.__timelines["voice-waveform-live"] = tl;
+})();
+</script>
+</template>
+  </body>
+</html>

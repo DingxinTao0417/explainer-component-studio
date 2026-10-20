@@ -18,7 +18,7 @@
     },
     {
       "path": "science-video-director/SKILL.md",
-      "source_sha256": "ef518fe97644169b12d94984e7793d4d6e5ed586c721d6d3158532de1fe5d8ec"
+      "source_sha256": "89a9838540167f43fdfe17733bea7c6d7edf67d76081f235e124185dc7697db9"
     },
     {
       "path": "science-video-director/agents/openai.yaml",
@@ -38,7 +38,7 @@
     },
     {
       "path": "science-video-director/guide/motion-vocabulary.md",
-      "source_sha256": "9599218b98ef0907f641323e759549e7e5885f5a6868d4461ebb1afa343633db"
+      "source_sha256": "6e2ecece1429ed15a6757b412fb8e782f7a48231562291ba0f298f7da5c44a3a"
     },
     {
       "path": "science-video-director/guide/production.md",
@@ -50,7 +50,7 @@
     },
     {
       "path": "science-video-director/guide/style-profile.md",
-      "source_sha256": "9cad2b1237c6038ef08df4b8356abefb18ebd7323b5af0f8ba00bdef9bd5d12d"
+      "source_sha256": "5048a5b6beef52d21f3327698d53853cccde73319f8a107397adae18afa4b6e4"
     },
     {
       "path": "science-video-director/guide/visual-grammar.md",

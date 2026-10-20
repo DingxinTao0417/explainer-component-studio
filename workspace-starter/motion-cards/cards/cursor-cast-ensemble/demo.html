@@ -1,0 +1,461 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"打出来的标题（| 切意群）","default":"把第 3 课讲义|在周五前定稿"},
+    {"id":"names","type":"string","label":"五人名牌（| 分隔，第 5 个打字）","default":"设计|剪辑|助教|编辑|讲师"},
+    {"id":"notes","type":"string","label":"便签（| 分隔，最多 6 张，留空不放）","default":"开场先提问|结尾留练习|补三张截图|换真实例子|画流程图|录一遍旁白"},
+    {"id":"board","type":"string","label":"白板名（留空只留标志）","default":"第 3 课备课"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"白板"},{"value":"off","label":"透明（留简报卡、光标、头像）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>cursor-cast-ensemble · 协作光标群演</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="cursor-cast-ensemble-template">
+      <!-- Ported from video-shotcraft demos/interaction/collab-cursor-moves/CursorCastEnsemble.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette, system fonts, generic copy, upstream mark, wordmark and names removed; five identity
+           colours mixed from the two accents; text 24-36 px raised to 28-40; note gloss on the lit-edge token;
+           toolbar dropped (byte cap); title typed in place, ending on f104 as the upstream comment says (its run
+           ends on f108, after Ready); portrait layout.
+           Kept: lit board, vignette, grain, dot grid, blurred far notes, push-in, entries f2-22 and springs, tag and
+           avatar lags, two-frequency drift, typist on the caret, gather f98-126 keeping 25 % drift, Ready f106. -->
+      <style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  position: absolute; inset: 0; overflow: hidden; font-family: var(--k-font); color: var(--k-ink);
+}
+/* ==== kit:backdrop@1 ==== */
+.ce-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+.ce-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+/* ==== end kit:backdrop ==== */
+/* ==== kit:vignette@1 ==== */
+.ce-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--ce-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.ce[data-tone="dark"] .ce-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+/* ==== kit:derived@1 ==== */
+.ce {
+  --ce-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+  --ce-panel-2: color-mix(in srgb, var(--k-panel), var(--k-ink) 4%);
+  --ce-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+  --ce-hi: color-mix(in srgb, white 80%, transparent);
+}
+.ce[data-tone="dark"] {
+  --ce-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+  --ce-hi: color-mix(in srgb, white 6%, transparent);
+}
+/* ==== end kit:derived ==== */
+/* ==== kit:text@2 ==== */
+.ce-u { display: inline-block; white-space: pre; }
+/* ==== end kit:text ==== */
+/* ==== kit:grain@1 ==== */
+.ce-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+/* one colour per person, mixed from the two accents */
+.ce { position: absolute; inset: 0; container-type: size; --ce-c0: var(--k-accent-2); --ce-c1: color-mix(in oklch longer hue, var(--k-accent), var(--k-accent-2)); --ce-c2: var(--k-accent);
+  --ce-c3: color-mix(in oklch, var(--k-accent) 25%, var(--k-accent-2)); --ce-c4: color-mix(in oklch, var(--k-accent), var(--k-accent-2)); --ce-tint: var(--k-bg);
+  --ce-card: linear-gradient(var(--k-bg), color-mix(in srgb, var(--k-bg), var(--k-accent-2) 1.5%)); }
+.ce[data-tone="dark"] { --ce-card: color-mix(in srgb, var(--k-panel), white 4%); --ce-tint: var(--k-panel); }
+/* lit board: key light, accent-2 fill */
+.ce-bg::after { background: radial-gradient(ellipse 58% 62% at 50% 36%, color-mix(in srgb, var(--k-bg) 90%, transparent), transparent 70%), radial-gradient(ellipse 50% 46% at 90% 95%, color-mix(in srgb, var(--k-accent-2) 10%, transparent), transparent 72%); }
+.ce-vig { --vs: 0.2; --vin: 42%; }
+.ce-dots { inset: -60px; transform: scale(1.02); background: radial-gradient(color-mix(in srgb, var(--k-ink) 13%, transparent) 1.6px, transparent 1.9px) 0 0 / 40px 40px;
+  mask-image: radial-gradient(ellipse 75% 75% at 50% 50%, #000 45%, transparent 100%); }
+/* canvas (static = last frame) */
+.ce-dots, .ce-cv, .ce-nt, .ce-card, .ce-ca, .ce-cur, .ce-bd, .ce-tl, .ce-tr { position: absolute; }
+.ce * { box-sizing: border-box; }
+.ce-cv { inset: 0; transform-origin: 50% 48%; transform: scale(1.045); }
+.ce-nt { width: 288px; height: 232px; padding: 26px 26px 22px; display: flex; flex-direction: column; border-radius: 10px; transform: rotate(var(--r)) scale(var(--s, 1));
+  background: linear-gradient(var(--ce-hi), transparent 18%), color-mix(in oklch, var(--c) 14%, var(--ce-tint));
+  box-shadow: inset 0 1px 0 var(--ce-hi), 0 1px 2px color-mix(in srgb, var(--ce-shade) 8%, transparent), 0 18px 34px -16px color-mix(in srgb, var(--ce-shade) 30%, transparent); }
+.ce-far { --s: 0.94; filter: blur(1.4px) saturate(0.85); opacity: 0.78; }
+.ce-nh { font-size: 40px; line-height: 1.2; color: color-mix(in srgb, var(--k-ink) 86%, transparent); }
+.ce-nm { display: flex; align-items: center; gap: 10px; margin-top: auto; font: 28px/1.3 var(--k-font); color: var(--k-muted); }
+.ce-nm s { flex: none; width: 14px; height: 14px; border-radius: 7px; background: var(--c); }
+.ce-nt:nth-child(1) { left: 96px; top: 156px; --r: -3.2deg; }
+.ce-nt:nth-child(2) { left: 1540px; top: 150px; --r: 2.6deg; }
+.ce-nt:nth-child(3) { left: 60px; top: 560px; --r: 2.2deg; }
+.ce-nt:nth-child(4) { left: 1580px; top: 560px; --r: -2.4deg; }
+.ce-nt:nth-child(5) { left: 560px; top: 812px; --r: -1.6deg; }
+.ce-nt:nth-child(6) { left: 1090px; top: 820px; --r: 1.8deg; }
+.ce-card { left: 432px; top: 318px; width: 1056px; min-height: 432px; padding: 56px; display: flex; flex-direction: column; border-radius: 28px; background: var(--ce-card);
+  border: 1px solid var(--ce-line); box-shadow: inset 0 1px 0 var(--ce-hi), 0 2px 4px color-mix(in srgb, var(--ce-shade) 6%, transparent), 0 40px 80px -30px color-mix(in srgb, var(--ce-shade) 35%, transparent); }
+.ce-hd { display: flex; align-items: center; gap: 16px; height: 40px; font-size: 28px; color: var(--k-muted); }
+.ce-lb { font-weight: 700; letter-spacing: 0.16em; }
+.ce-hd i { width: 5px; height: 5px; border-radius: 3px; background: currentColor; }
+.ce-st { margin-left: auto; display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 18px; border-radius: 22px; font-weight: 600; background: var(--ce-panel-2); border: 1px solid var(--ce-line); }
+.ce-hd .ce-st i { width: 12px; height: 12px; border-radius: 6px; }
+.ce-st[data-on] { color: var(--k-ink); background: color-mix(in srgb, var(--k-accent-2) 10%, transparent); border-color: color-mix(in srgb, var(--k-accent-2) 30%, transparent); }
+.ce-hd [data-on] i { background: var(--k-accent-2); }
+.ce-tw { position: relative; margin-top: 26px; }
+.ce-tt { display: block; min-height: 2.3em; font-size: 88px; line-height: 1.15; }
+.ce-ca { left: 0; top: 0; width: 6px; border-radius: 3px; background: var(--ce-c4); opacity: 0; }
+.ce-ft { display: flex; align-items: center; gap: 28px; margin-top: auto; padding-top: 56px; font-size: 32px; color: var(--k-muted); }
+.ce-ft > b { width: 80px; text-align: right; color: var(--k-ink); }
+.ce-pb { flex: none; width: 260px; height: 10px; margin-left: auto; border-radius: 5px; overflow: hidden; background: var(--ce-panel-2); border: 1px solid var(--ce-line); }
+.ce-pb i { display: block; width: 72%; height: 100%; background: var(--k-accent); }
+/* tag text and avatar initials are ::before decoration */
+.ce-av { display: flex; flex: none; }
+.ce-av i, .ce-sl i { position: relative; display: block; width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--k-bg); background: var(--c); }
+.ce-av i + i { margin-left: -12px; }
+.ce-bd::before { content: attr(data-n); }
+.ce-av i::before, .ce-sl i::before { content: attr(data-i); position: absolute; inset: 0; display: grid; place-items: center; font: 700 20px var(--k-font); color: var(--k-on-accent); }
+/* cursor: arrow tip at the top-left corner */
+.ce-cur { left: 0; top: 0; width: 59px; height: 88px; z-index: 10; }
+.ce-tw .ce-cur { z-index: 5; }
+.ce-ar { display: block; width: 58.8px; height: 88.2px; overflow: visible; filter: drop-shadow(0 3px 4px color-mix(in srgb, var(--ce-shade) 28%, transparent)); fill: var(--c); stroke: white; stroke-width: 1.1; stroke-linejoin: round; }
+.ce-bd { left: 39.5px; top: 73.9px; width: max-content; max-width: 240px; padding: 7px 16px 8px; border-radius: 6px 18px 18px; font-size: 28px; color: var(--k-on-accent);
+  background: linear-gradient(color-mix(in srgb, white 18%, transparent), transparent 50%), var(--c);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 30%, transparent), 0 2px 4px color-mix(in srgb, var(--ce-shade) 14%, transparent), 0 8px 22px -6px color-mix(in srgb, var(--c) 55%, transparent); }
+.ce-k0 { --c: var(--ce-c0); transform: translate(325px, 372px); }
+.ce-k1 { --c: var(--ce-c1); transform: translate(1507px, 320px); }
+.ce-k2 { --c: var(--ce-c2); transform: translate(892px, 841px); }
+.ce-k3 { --c: var(--ce-c3); transform: translate(1471px, 861px); }
+.ce-k4 { --c: var(--ce-c4); transform: translate(529px, 107px); }
+/* chrome, not pushed in */
+.ce-tl, .ce-tr { top: 48px; display: flex; align-items: center; gap: 18px; }
+.ce-tl { left: 64px; }
+.ce-tr { right: 64px; }
+.ce-bn { max-width: 520px; font-size: 32px; }
+.ce-sl { position: relative; width: 42px; height: 56px; }
+.ce-sl:first-child { width: 56px; }
+.ce-sl i { position: absolute; right: 0; width: 56px; height: 56px; box-shadow: 0 4px 12px -4px color-mix(in srgb, var(--c) 60%, transparent); }
+.ce-sl i::before { font-size: 24px; }
+.ce-sh { display: grid; place-items: center; height: 52px; padding: 0 22px; border-radius: 26px; font-size: 28px; color: var(--k-on-accent); background: var(--k-accent); box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--k-accent) 70%, transparent); }
+.ce[data-bd="off"] :is(.ce-bg, .ce-dots, .ce-vig, .ce-grain, .ce-nt, .ce-tl, .ce-sh) { display: none; }
+:where(.ce) b { display: block; font-weight: 700; line-height: 1.25; }
+.ce-avs { display: flex; }
+/* portrait: full-width card, two notes on a diagonal, the cast in the free corners */
+@container (orientation: portrait) {
+  .ce-cv { transform-origin: 50% 42%; }
+  .ce-nt:nth-child(1) { left: 118px; top: 326px; }
+  .ce-nt:nth-child(2) { left: 668px; top: 1066px; }
+  .ce-nt:nth-child(n + 3) { display: none; }
+  .ce-card { left: 108px; top: 560px; width: 864px; min-height: 0; padding: 44px; }
+  .ce-ft { gap: 22px; }
+  .ce-pb { width: 150px; }
+  .ce-tl, .ce-tr { top: 246px; }
+  .ce-tl { left: 108px; }
+  .ce-tr { right: 108px; }
+  .ce-bn { max-width: 300px; }
+  .ce-k0 { transform: translate(415px, 430px); }
+  .ce-k1 { transform: translate(663px, 446px); }
+  .ce-k2 { transform: translate(140px, 1045px); }
+  .ce-k3 { transform: translate(439px, 1085px); }
+}
+      </style>
+
+      <div id="root" data-composition-id="cursor-cast-ensemble">
+        <div class="ce">
+          <div class="ce-backdrop ce-bg"></div>
+          <div class="ce-dots"></div>
+          <div class="ce-vig"></div>
+          <div class="ce-grain"></div>
+          <div class="ce-cv">
+            <div>
+              <div class="ce-nt ce-far" style="--c:var(--ce-c0)"><b class="ce-nh">开场先提问</b><i class="ce-nm"><s></s><span>设计 · 4 票</span></i></div>
+              <div class="ce-nt ce-far" style="--c:var(--ce-c1)"><b class="ce-nh">结尾留练习</b><i class="ce-nm"><s></s><span>剪辑 · 待审</span></i></div>
+              <div class="ce-nt" style="--c:var(--ce-c2)"><b class="ce-nh">补三张截图</b><i class="ce-nm"><s></s><span>助教 · 2 条评论</span></i></div>
+              <div class="ce-nt" style="--c:var(--ce-c3)"><b class="ce-nh">换真实例子</b><i class="ce-nm"><s></s><span>编辑 · 周三截止</span></i></div>
+              <div class="ce-nt ce-far" style="--c:var(--ce-c4)"><b class="ce-nh">画流程图</b><i class="ce-nm"><s></s><span>讲师 · 进行中</span></i></div>
+              <div class="ce-nt ce-far" style="--c:var(--ce-c0)"><b class="ce-nh">录一遍旁白</b><i class="ce-nm"><s></s><span>设计 · 待混音</span></i></div>
+            </div>
+            <div class="ce-card">
+              <div class="ce-hd"><span class="ce-lb">任务简报</span><i></i><span>周四截止</span><span class="ce-st" data-on><i></i><span>就绪</span></span></div>
+              <div class="ce-tw">
+                <b class="ce-tt"><span class="ce-u">把第 3 课讲义</span><span class="ce-u">在周五前定稿</span></b>
+                <i class="ce-ca"></i>
+                <div class="ce-cur ce-k4" data-layout-allow-overflow><svg class="ce-ar" viewBox="0 0 14 21"><path d="M.5.5v16.7l4.2-3.8 2.6 6.1 2.7-1.2-2.6-6H13Z" /></svg><b class="ce-bd" data-n="讲师"></b></div>
+              </div>
+              <div class="ce-ft"><span class="ce-av"><i data-i="讲" style="--c:var(--ce-c4)"></i><i data-i="设" style="--c:var(--ce-c0)"></i><i data-i="剪" style="--c:var(--ce-c1)"></i></span><span>3 人负责 · 12 页</span><span class="ce-pb"><i></i></span><b>72%</b></div>
+            </div>
+            <div class="ce-cur ce-k0" data-layout-allow-overflow><svg class="ce-ar" viewBox="0 0 14 21"><path d="M.5.5v16.7l4.2-3.8 2.6 6.1 2.7-1.2-2.6-6H13Z" /></svg><b class="ce-bd" data-n="设计"></b></div>
+            <div class="ce-cur ce-k1" data-layout-allow-overflow><svg class="ce-ar" viewBox="0 0 14 21"><path d="M.5.5v16.7l4.2-3.8 2.6 6.1 2.7-1.2-2.6-6H13Z" /></svg><b class="ce-bd" data-n="剪辑"></b></div>
+            <div class="ce-cur ce-k2" data-layout-allow-overflow><svg class="ce-ar" viewBox="0 0 14 21"><path d="M.5.5v16.7l4.2-3.8 2.6 6.1 2.7-1.2-2.6-6H13Z" /></svg><b class="ce-bd" data-n="助教"></b></div>
+            <div class="ce-cur ce-k3" data-layout-allow-overflow><svg class="ce-ar" viewBox="0 0 14 21"><path d="M.5.5v16.7l4.2-3.8 2.6 6.1 2.7-1.2-2.6-6H13Z" /></svg><b class="ce-bd" data-n="编辑"></b></div>
+          </div>
+          <div class="ce-tl"><svg width="48" height="48" viewBox="0 0 128 128"><!-- kit:mark@1 --><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)" /><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)" /><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)" /></svg><b class="ce-bn">第 3 课备课</b></div>
+          <div class="ce-tr"><span class="ce-avs"><span class="ce-sl"><i data-i="设" style="--c:var(--ce-c0)"></i></span><span class="ce-sl"><i data-i="剪" style="--c:var(--ce-c1)"></i></span><span class="ce-sl"><i data-i="助" style="--c:var(--ce-c2)"></i></span><span class="ce-sl"><i data-i="编" style="--c:var(--ce-c3)"></i></span><span class="ce-sl"><i data-i="讲" style="--c:var(--ce-c4)"></i></span></span><b class="ce-sh">分享</b></div>
+        </div>
+      </div>
+
+      <script>
+(function () {
+  // seconds (upstream frames at 30 fps in brackets), shared by both orientations
+  var CFG = {
+    end: 5.2, cam: [5.2, 1.045, 1.02],          // scene [156]; push-in over [0-156] (far layer 1.02)
+    delay: [0.067, 0.233, 0.367, 0.533, 0.733], // entries [2 7 11 16 22]; the 5th types
+    tag: [0.333, 0.4, 0.4], av: 0.267,          // tags [+10] (typist [+12]) over [12]; avatars [+8]
+    settle: [0.667, 0.4], hold: [1.333, 0.267], // drift grows [+20] over [12]; typist steadies [40-48]
+    caret: 1.4, type0: 1.6, typeEnd: 3.467,     // caret [42]; typing [48-104]
+    back: [0.2, 0.467], gather: [3.267, 0.933], ready: [3.533, 0.267] // typist drifts [+6] over [14]; gather [98-126]; Ready [106]
+  };
+  // canvas px: start, home, gather (card edge 0 left/top or 1 right/bottom, + offset); typist's start
+  var LAND = { from: [[-160, 260], [2080, 220], [-160, 980], [2080, 1000]], home: [[330, 470], [1600, 470], [380, 860], [1540, 880]], ty: [980, -200],
+    gather: [[0, -114, 0, 54], [1, 24, 0, 12], [0, 468, 1, 34], [1, -18, 1, 50]], notes: 6 };
+  var PORT = { from: [[-160, 380], [1240, 440], [-160, 1140], [1240, 1180]], home: [[470, 380], [760, 440], [180, 1110], [450, 1140]], ty: [544, -200],
+    gather: [[0, 300, 0, -130], [0, 560, 0, -104], [0, 40, 1, 20], [0, 330, 1, 56]], notes: 2 };
+  var v = { title: "把第 3 课讲义|在周五前定稿", names: "设计|剪辑|助教|编辑|讲师", notes: "开场先提问|结尾留练习|补三张截图|换真实例子|画流程图|录一遍旁白", board: "第 3 课备课", backdrop: "on" };
+  try {
+    var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+  } catch (e) {}
+
+  var root = document.querySelector(".ce");
+  var q = function (s) { return root.querySelector(s); }, qa = function (s) { return [].slice.call(root.querySelectorAll(s)); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+    // not laid out yet: the host clip's declared size, then the window
+    var hc = root.closest("[data-width][data-height]");
+    FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+    FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND;
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+  if (String(v.backdrop) === "off") root.setAttribute("data-bd", "off");
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== end kit:tone ====
+// ==== kit:text@2 (kWords, kSplit) ====
+var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+function kWords(s, key) {
+  s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+  var cut = function (x) {
+    if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+    return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+  };
+  var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+  var pre = "";
+  bits.forEach(function (x) {
+    var t = x.trim(), last = out[out.length - 1];
+    if (last && /^ /.test(x)) last.sp = true;
+    if (!t) return;
+    if (!/[\p{L}\p{N}]/u.test(t)) {
+      if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+      else { last.t += t; last.sp = / $/.test(x); }
+      return;
+    }
+    out.push({ t: pre + t, sp: / $/.test(x) });
+    pre = "";
+  });
+  if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+  if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+  if (out.length) out[out.length - 1].sp = false;
+  return out;
+}
+function kSplit(el, by, rise, text) {
+  var s = text != null ? String(text) : el.textContent, units = [];
+  var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+  el.textContent = "";
+  parts.forEach(function (p) {
+    var u = document.createElement("span"), box = u;
+    u.className = "ce-u"; u.textContent = p.t;
+    if (by === "line") u.style.display = "block";
+    if (!p.t.trim()) { el.appendChild(u); return; }
+    if (rise) { box = document.createElement("span"); box.className = "ce-cut"; box.style.display = u.style.display; box.appendChild(u); }
+    el.appendChild(box);
+    if (p.sp) el.appendChild(document.createTextNode(" "));
+    units.push(u);
+  });
+  return units;
+}
+// ==== end kit:text ====
+// ==== kit:fit@1 (kFit, kLines) ====
+function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+      var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+      if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+      row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+      "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+      "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+      "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+      "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+}
+// ==== end kit:grain ====
+
+  kTone(root);
+  var grain = kGrain(q(".ce-grain")), set = function (e, a, x) { e.setAttribute(a, x); }, bar = function (s) { return String(s).split("|"); };
+  // tags in entry order; the 5th types (its cursor is first in the DOM)
+  var NM = bar(v.names), ini = function (i) { return Array.from(NM[i])[0].toUpperCase(); };
+  NM = bar("设计|剪辑|助教|编辑|讲师").map(function (d, i) { return (NM[i] || "").trim() || d; });
+  qa(".ce-bd").forEach(function (e, i) { set(e, "data-n", NM[(i + 4) % 5]); });
+  qa(".ce-sl i").forEach(function (e, i) { set(e, "data-i", ini(i)); });
+  qa(".ce-av i").forEach(function (e, i) { set(e, "data-i", ini([4, 0, 1][i])); });
+  // notes: owners 0-4, 0; cursors drift over them by design
+  var META = bar("4 票|待审|2 条评论|周三截止|进行中|待混音"), NT = bar(v.notes).map(function (s) { return s.trim(); }).filter(Boolean);
+  qa(".ce-nt").forEach(function (n, i) {
+    if (i >= NT.length || i >= L.notes) return (n.style.display = "none");
+    var h = n.firstChild, m = n.lastChild.lastChild, u = kSplit(h, "word", 0, NT[i]);
+    kFit(h, { lines: 2, min: 32 });
+    m.textContent = NM[i % 5] + " · " + META[i];
+    u.concat(m).forEach(function (e) { set(e, "data-layout-allow-occlusion", ""); set(e, "data-layout-allow-overlap", ""); });
+  });
+  var bn = q(".ce-bn");
+  bn.textContent = String(v.board).trim();
+  bn.textContent ? kFit(bn, { min: 28, width: parseFloat(getComputedStyle(bn).maxWidth) }) : (bn.style.display = "none");
+
+  // title: units, fitted, then a span per character
+  var tt = q(".ce-tt"), tw = q(".ce-tw"), CH = [], i;
+  kSplit(tt, "word", 0, String(v.title).trim() || "把第 3 课讲义|在周五前定稿");
+  kFit(tt, { lines: 2, min: 72 });
+  [].slice.call(tt.childNodes).forEach(function (n) {
+    var s = document.createElement("span");
+    if (n.nodeType === 3) return tt.replaceChild(s, n), (s.textContent = n.data), CH.push({ el: s, sp: 1 });
+    Array.from(n.textContent, function (c, i) { if (!i) n.textContent = ""; var e = n.appendChild(document.createElement("span")); e.textContent = c; CH.push({ el: e, sp: c === " " }); });
+  });
+  // upstream mulberry32(41) rhythm, scaled to end on typeEnd (at most 3x: short titles start later)
+  var a = 41, rnd = function () { var t = (a += 0x6d2b79f5); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  var U = CH.map(function (c) { return 1.6 + rnd() * 0.8 + (c.sp ? 0.9 : 0); }), sum = 0;
+  for (i = 0; i < CH.length - 1; i++) sum += U[i];
+  var kk = MT.clamp(((CFG.typeEnd - CFG.type0) * 30) / Math.max(sum, 1e-6), 0.5, 3), AT = [Math.max(CFG.type0, CFG.typeEnd - (kk * sum) / 30)];
+  for (i = 1; i < CH.length; i++) AT.push(AT[i - 1] + (kk * U[i - 1]) / 30);
+  var TE = AT[i - 1];
+
+  // canvas px (unscaled): card, title box, insertion points
+  var cv = q(".ce-cv"), dots = q(".ce-dots"), card = q(".ce-card"), K = cv.getBoundingClientRect().width / cv.offsetWidth;
+  var twR = tw.getBoundingClientRect(), fs = parseFloat(getComputedStyle(tt).fontSize), CX = card.offsetLeft, CY = card.offsetTop;
+  var RX = L.ty[0] - CX - tw.offsetLeft, RY = L.ty[1] - CY - tw.offsetTop;
+  // anchor n: after n characters, 0.42 em above the line middle
+  var AX = [], AY = [];
+  CH.forEach(function (c, i) {
+    var r = c.el.getBoundingClientRect(), y = (r.top + r.height / 2 - twR.top) / K - fs * 0.42;
+    if (!i) AX.push((r.left - twR.left) / K), AY.push(y);
+    AX.push((r.right - twR.left) / K), AY.push(y);
+  });
+  var ca = q(".ce-ca"), ty = q(".ce-tw .ce-cur"), slots = qa(".ce-sl"), pill = q(".ce-st"), pb = q(".ce-pb i"), pc = q(".ce-ft > b"), lastN = -1;
+  ca.style.height = fs * 0.92 + "px";
+  // the four; gather spots hang off the card
+  var cast = qa(".ce-cv > .ce-cur").map(function (el, i) {
+    var g = L.gather[i];
+    return { el: el, gx: CX + g[0] * card.offsetWidth + g[1], gy: CY + g[2] * card.offsetHeight + g[3], ph: [0, 1.7, 3.1, 4.4][i] };
+  });
+  var tr = function (el, x, y) { el.style.transform = "translate(" + x.toFixed(2) + "px," + y.toFixed(2) + "px)"; };
+  var tag = function (el, t0, t) { var b = MT.ramp(t, t0, CFG.tag[2], "out"); el.style.opacity = b; el.style.transform = "translateY(" + ((1 - b) * 12).toFixed(2) + "px)"; };
+  var sc = function (el, k) { el.style.transform = "scale(" + k.toFixed(5) + ")"; };
+
+  var tl = MT.scene(CFG.end, function (t) {
+    var f = t * 30; // frames at 30 fps: the drift sines keep upstream's per-frame constants
+    var cam = MT.ramp(t, 0, CFG.cam[0], "swift"), g = MT.ramp(t, CFG.gather[0], CFG.gather[1], "smooth");
+    sc(cv, MT.mix(1, CFG.cam[1], cam));
+    sc(dots, MT.mix(1, CFG.cam[2], cam));
+    grain(t);
+    cast.forEach(function (c, i) {
+      var d = CFG.delay[i], s = MT.spring({ t: t, delay: d, damping: 15, stiffness: 80, mass: 0.9 }), fr = L.from[i], hm = L.home[i], ph = c.ph;
+      var st = MT.clamp((t - d - CFG.settle[0]) / CFG.settle[1], 0, 1) * (1 - g);
+      var dx = Math.sin(f * 0.055 + ph) * 40 + Math.sin(f * 0.021 + ph * 2) * 26, dy = Math.cos(f * 0.047 + ph * 1.3) * 32 + Math.cos(f * 0.017 + ph) * 20;
+      tr(c.el, MT.mix(MT.mix(fr[0], hm[0], s) + dx * st, c.gx + dx * 0.25, g), MT.mix(MT.mix(fr[1], hm[1], s) + dy * st, c.gy + dy * 0.25, g));
+      tag(c.el.lastChild, d + CFG.tag[0], t);
+    });
+    // avatars pop on arrival; slots widen with the pop
+    slots.forEach(function (sl, i) {
+      var p = MT.spring({ t: t, delay: CFG.delay[i] + CFG.av, damping: 15, stiffness: 190 });
+      sl.style.width = (i ? 42 : 56) * MT.clamp(p, 0, 1) + "px";
+      sc(sl.firstChild, p);
+      sl.firstChild.style.opacity = MT.clamp(p * 3, 0, 1);
+    });
+    // typing; caret and typist ride the insertion point
+    var n = 0;
+    while (n < CH.length && t >= AT[n]) n++;
+    if (n !== lastN) CH.forEach(function (c, i) { c.el.style.opacity = +(i < n); });
+    lastN = n;
+    tr(ca, AX[n] + 3, AY[n] - fs * 0.04);
+    ca.style.opacity = +(t >= CFG.caret && (n < CH.length || Math.floor(f / 9) % 2 === 0));
+    var rs = 1 - MT.spring({ t: t, delay: CFG.delay[4], damping: 16, stiffness: 70, mass: 1 }), hold = MT.clamp((t - CFG.hold[0]) / CFG.hold[1], 0, 1);
+    var rd = 1 - hold * (1 - MT.clamp((t - TE - CFG.back[0]) / CFG.back[1], 0, 1) * 0.75);
+    tr(ty, AX[n] + (RX - AX[0]) * rs + 12 + Math.sin(f * 0.06 + 1) * 18 * rd, AY[n] + (RY - AY[0]) * rs - 8 + Math.cos(f * 0.05) * 14 * rd);
+    tag(ty.lastChild, CFG.delay[4] + CFG.tag[1], t);
+    // Draft -> Ready, progress 38 -> 72 %
+    var r = MT.ramp(t, CFG.ready[0], CFG.ready[1], "out");
+    pill.toggleAttribute("data-on", r > 0.5);
+    pill.lastChild.textContent = r > 0.5 ? "就绪" : "草稿";
+    sc(pill, 1 + 0.06 * Math.sin(Math.PI * r));
+    pb.style.width = MT.mix(38, 72, r) + "%";
+    pc.textContent = Math.round(MT.mix(38, 72, r)) + "%";
+  });
+  window.__timelines["cursor-cast-ensemble"] = tl;
+})();
+      </script>
+    </template>
+  </body>
+</html>

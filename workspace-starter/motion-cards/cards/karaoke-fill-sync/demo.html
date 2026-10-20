@@ -1,0 +1,322 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"line1","type":"string","label":"第一行（| 切词，每个词一个填色单位）","default":"先看懂|核心原理"},
+    {"id":"line2","type":"string","label":"第二行（可留空）","default":"再动手|做一遍"},
+    {"id":"times","type":"string","label":"每个词读的起止秒数，逗号分隔，如 0.67-1.27（少写的词按字数自动往后排）","default":"0.67-1.27, 1.40-2.50, 2.83-3.43, 3.57-4.33"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>karaoke-fill-sync · 卡拉OK填色</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="karaoke-fill-sync-template">
+      <!-- Ported from video-shotcraft demos/typography/type-rhythm-sync/KaraokeFillSync.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette (indigo accent -> --k-accent, ink -> --k-ink), upstream Backdrop rebuilt from the kit
+           backdrop (vignette 0.14 -> 0.16, grain 0.05 kept, accent bounce light 7% kept; on a dark skin the bounce is
+           accent-2 at 9% and the vignette 0.55); SF Pro 800 -> system bold face
+           (Microsoft YaHei Bold, weight 700); upstream four-word English slogan replaced by two Chinese line variables
+           (line1, line2, words cut with |), the word timetable became a "times" variable (words without a time are timed
+           by length: 0.3 s + 0.12 s per CJK char, 0.133 s apart); word gap 56 px -> 0.37em (0.1em when a space was typed);
+           underline sizes in em (8 px at 150 px = 0.053em) and sitting 0.04em under the text box inside a padded word
+           box; portrait: 108 px, centre line at 40%, waveform at 54% (landscape waveform 860 px -> 79.6%); every line
+           shrinks to fit by measured layout (min 96 / 72 px) and both lines share the smaller size; the card holds
+           1.37 s after the last word ends (upstream 0.67 s) and the waveform window follows the timetable
+           (first start - 0.2 s to last end + 0.2 s, upstream fixed 14-136 f). Kept: 150 px, 13% unread ink, linear fill
+           with a +-4% soft edge, accent while read and a 10 f out-ease to ink, underline that follows the edge and
+           retracts left to right in 6 f (swift), the default timetable 20-38 / 42-75 / 85-103 / 107-130 f,
+           48 bars of 4 px in a 560 x 56 px box with the same envelope and hash. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        @font-face { font-family: "kf-heavy"; font-weight: 700 900; src: local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"), local("PingFangSC-Semibold"), local("NotoSansSC-Black"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .kf { position: absolute; inset: 0; container-type: size; --kf-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); }
+        .kf[data-tone="dark"] { --kf-shade: color-mix(in srgb, var(--k-bg) 30%, black); }
+        /* ==== kit:backdrop@1 ==== */
+        .kf-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .kf-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        /* ==== end kit:backdrop ==== */
+        /* upstream key light sits top centre, with a faint accent bounce from below */
+        .kf-backdrop::after { background: radial-gradient(ellipse 55% 60% at 50% 91%, color-mix(in srgb, var(--k-accent) 7%, transparent) 0%, transparent 70%), radial-gradient(ellipse 62% 70% at 50% 22%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        .kf[data-tone="dark"] .kf-backdrop::after { background: radial-gradient(ellipse 55% 60% at 50% 91%, color-mix(in srgb, var(--k-accent-2) 9%, transparent) 0%, transparent 70%); }
+        /* ==== kit:vignette@1 ==== */
+        .kf-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--kf-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .kf[data-tone="dark"] .kf-vig { --vs: 0.55; }
+        /* ==== end kit:vignette ==== */
+        /* ==== kit:grain@1 ==== */
+        .kf-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+        /* landscape: two centred lines, their middle at 47% (upstream: centred above a 60 px foot); portrait: middle at 40% */
+        .kf-box { position: absolute; left: 10%; right: 10%; top: 47.2%; transform: translateY(-50%); text-align: center; font-family: var(--mc-font, "kf-heavy", var(--k-font)); font-weight: 700; letter-spacing: -0.01em; line-height: 1.18; }
+        .kf-l { display: block; font-size: 150px; }
+        /* one word: ::before is the unread copy (13% ink, decoration), .kf-f the read text revealed by a soft mask */
+        /* padding-bottom (undone by the negative margin) lets the underline sit inside its word box, 0.04em under the text box */
+        .kf-w { position: relative; display: inline-block; white-space: pre; padding-bottom: 0.06em; margin-bottom: -0.06em; }
+        /* upstream: 56 px flex gap between words at 150 px = 0.37em; a typed space already is a gap (0.1em on top) */
+        .kf-w + .kf-w { margin-left: 0.37em; }
+        .kf-sp + .kf-w { margin-left: 0.1em; }
+        .kf-w::before { content: attr(data-t); color: color-mix(in srgb, var(--k-ink) 13%, transparent); }
+        .kf-f { position: absolute; left: 0; top: 0; right: 0; color: var(--k-ink); }
+        .kf-ul { position: absolute; left: 0; bottom: 0.02em; height: 0.053em; width: 0; border-radius: 0.027em; background: var(--k-accent); box-shadow: 0 0.013em 0.067em color-mix(in srgb, var(--k-accent) 35%, transparent); }
+        .kf-wave { position: absolute; left: 50%; top: 79.6%; width: 560px; height: 56px; margin-left: -280px; display: flex; align-items: center; justify-content: space-between; }
+        .kf-b { display: block; width: 4px; border-radius: 2px; background: color-mix(in srgb, var(--k-ink) 16%, transparent); }
+        @container (orientation: portrait) {
+          .kf-box { left: 11%; right: 11%; top: 40%; }
+          .kf-l { font-size: 108px; }
+          .kf-wave { top: 54%; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="karaoke-fill-sync">
+        <div class="kf">
+          <div class="kf-backdrop"></div>
+          <div class="kf-vig"></div>
+          <div class="kf-grain"></div>
+          <div class="kf-wave"></div>
+          <div class="kf-box">
+            <div class="kf-l"><span class="kf-w" data-t="先看懂"><span class="kf-f">先看懂</span><i class="kf-ul"></i></span><span class="kf-w" data-t="核心原理"><span class="kf-f">核心原理</span><i class="kf-ul"></i></span></div>
+            <div class="kf-l"><span class="kf-w" data-t="再动手"><span class="kf-f">再动手</span><i class="kf-ul"></i></span><span class="kf-w" data-t="做一遍"><span class="kf-f">做一遍</span><i class="kf-ul"></i></span></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing in seconds (upstream frames / 30), shared by both orientations
+          var CFG = {
+            feather: 4,          // soft edge of the fill, % of the word width on each side
+            settle: 0.333,       // 10 f: a read word fades from accent to ink (out)
+            retract: 0.2,        // 6 f: the underline pulls away left to right once the word is read (swift)
+            hold: 1.367,         // still time after the last word ends (its settle included)
+            minDur: 5,           // upstream 150 f
+            gap: 0.133, perChar: 0.12, base: 0.3, // auto timing for words without a time: 4 f pause, 0.3 s + 0.12 s per char
+            bars: 48, lead: 0.2  // waveform: 48 bars spanning first start - 0.2 s .. last end + 0.2 s
+          };
+          var LAND = { min: 96 };
+          var PORT = { min: 72 };
+          var v = { line1: "先看懂|核心原理", line2: "再动手|做一遍", times: "0.67-1.27, 1.40-2.50, 2.83-3.43, 3.57-4.33", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".kf");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          if (String(v.backdrop) === "off") [".kf-backdrop", ".kf-vig", ".kf-grain"].forEach(function (s) { q(s).style.display = "none"; });
+
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+          // ==== kit:text@2 ====
+          var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          // ==== end kit:text ====
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          // ==== end kit:fit ====
+
+          kTone(root);
+          var grain = kGrain(q(".kf-grain"));
+
+          // ---- words: every line through kWords, one .kf-w per unit; both lines share the smaller fitted size ----
+          var box = q(".kf-box"), ls = [].slice.call(box.children), esc = function (c) { return c.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;"); };
+          var texts = [String(v.line1).trim() || "先看懂|核心原理", String(v.line2).trim()];
+          ls.forEach(function (el, i) {
+            if (!texts[i]) { el.style.display = "none"; return; }
+            el.innerHTML = kWords(texts[i]).map(function (u) {
+              return '<span class="kf-w" data-t="' + esc(u.t) + '"><span class="kf-f">' + esc(u.t) + '</span><i class="kf-ul"></i></span>' + (u.sp ? " " : "");
+            }).join("");
+          });
+          [].forEach.call(box.querySelectorAll(".kf-w"), function (w) { if (w.nextSibling && w.nextSibling.nodeType === 3) w.classList.add("kf-sp"); });
+          var shown = ls.filter(function (el, i) { return texts[i]; });
+          var fs = Math.min.apply(null, shown.map(function (el) { return kFit(el, { min: L.min }).size; }));
+          shown.forEach(function (el) { el.style.fontSize = fs + "px"; });
+
+          // ---- timetable: given "a-b" pairs first, the rest follow at a reading pace by length ----
+          var W = [].slice.call(box.querySelectorAll(".kf-w")), given = String(v.times).split(/[,，;；\s]+/).map(function (s) { return s.split(/[-–~]/).map(Number); });
+          var end = 0.667 - CFG.gap;
+          var T = W.map(function (w, i) {
+            var g = given[i], s, e;
+            if (g && g.length === 2 && g[1] > g[0] && g[0] >= 0) { s = g[0]; e = g[1]; }
+            else { var len = Array.from(w.getAttribute("data-t")).reduce(function (a, c) { return a + (kCJK.test(c) ? 1 : 0.5); }, 0); s = end + CFG.gap; e = s + CFG.base + CFG.perChar * len; }
+            end = e;
+            return { s: s, e: e, f: w.firstChild, u: w.lastChild };
+          });
+          var first = Math.min.apply(null, T.map(function (x) { return x.s; })), last = Math.max.apply(null, T.map(function (x) { return x.e; }));
+          var DUR = Math.max(CFG.minDur, last + CFG.hold);
+
+          // ---- waveform: one bar per slice of the narration window; bars over spoken words rise, pauses fall back ----
+          var wave = q(".kf-wave"), T0 = first - CFG.lead, T1 = last + CFG.lead;
+          var hsh = function (n) { var s = Math.sin(n * 91.7 + 13.1) * 43758.5453; return s - Math.floor(s); };
+          var speech = function (at) {
+            var e = 0.06;
+            T.forEach(function (x) { e = Math.max(e, MT.ramp(at, x.s - 0.067, 0.1, "out") * (1 - MT.ramp(at, x.e - 0.067, 0.133, "out"))); });
+            return e;
+          };
+          var bars = [];
+          for (var i = 0; i < CFG.bars; i++) {
+            var b = document.createElement("i"), u = i / (CFG.bars - 1);
+            b.className = "kf-b";
+            b.style.height = (100 * (0.12 + speech(T0 + u * (T1 - T0)) * (0.35 + 0.65 * hsh(i * 3 + 1)))).toFixed(1) + "%";
+            wave.appendChild(b);
+            bars.push(u);
+          }
+          var bel = [].slice.call(wave.children), played = -1;
+
+          function render(t) {
+            T.forEach(function (x) {
+              var p = MT.clamp((t - x.s) / (x.e - x.s), 0, 1); // linear: the fill follows the voice, no easing
+              var edge = p * (100 + CFG.feather * 2) - CFG.feather;
+              var m = "linear-gradient(90deg, #000 " + (edge - CFG.feather).toFixed(2) + "%, transparent " + (edge + CFG.feather).toFixed(2) + "%)";
+              x.f.style.opacity = p > 0 ? 1 : 0;
+              x.f.style.webkitMaskImage = x.f.style.maskImage = m;
+              x.f.style.color = "color-mix(in srgb, var(--k-accent), var(--k-ink) " + (100 * MT.ramp(t, x.e, CFG.settle, "out")).toFixed(1) + "%)";
+              var r = MT.ramp(t, x.e, CFG.retract, "swift"), on = t >= x.s && r < 1;
+              x.u.style.opacity = on ? 1 : 0;
+              x.u.style.left = (r * p * 100).toFixed(2) + "%";
+              x.u.style.width = (Math.max(0, p - r * p) * 100).toFixed(2) + "%";
+            });
+            var ph = (t - T0) / (T1 - T0), n = bars.filter(function (u) { return u <= ph; }).length;
+            if (n !== played) {
+              played = n;
+              bel.forEach(function (b, i) { b.style.background = i < n ? "var(--k-accent)" : ""; b.style.opacity = i < n ? 0.9 : 1; });
+            }
+            grain(t);
+          }
+
+          var tl = MT.scene(DUR, render);
+          window.__timelines["karaoke-fill-sync"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

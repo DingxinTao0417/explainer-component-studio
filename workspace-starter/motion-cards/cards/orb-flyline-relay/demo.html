@@ -1,0 +1,426 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"steps","type":"string","label":"三站名称（| 分隔，固定 3 站）","default":"提需求|出草稿|交成品"},
+    {"id":"notes","type":"string","label":"三站说明（| 分隔，可留空）","default":"一句话说清|三版对比|直接能用"},
+    {"id":"title","type":"string","label":"收尾标题（| 标出意群，可留空）","default":"一次说清，|后面每一步|自动接力"},
+    {"id":"key","type":"string","label":"标题里高亮的词（可留空）","default":"自动接力"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"暗场"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>orb-flyline-relay · 光斑飞线接力</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="orb-flyline-relay-template">
+<!-- Ported from video-shotcraft demos/effects/glow-flyline-moves/OrbFlylineRelay.tsx
+     (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+     Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+     Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+     neutral --k-* palette with --k-stage (midnight look: blue / teal / violet orbs -> accent-2, accent-2 turned
+     60deg toward teal, accent; key light from accent-2), system fonts; upstream step names, sub-lines and the
+     closing line with its product name replaced by steps / notes / title / key variables, sub-lines 32 -> 40 px,
+     unlit labels mixed from the stage colour instead of ink3; portrait: nodes R 88 at 240 / 540 / 840 px, orbs,
+     drift and lift x0.75, title under the labels. Kept: all frame timings (lit 10 / 48 / 82, lines 26f and 24f
+     on bezier .45,0,.2,1, surge 5f up 15f down at 1 + 1.6x and +12%), node pulse and ring, 4f-then-14f line fade
+     into 23 dots, drift 110-140f out-sine, camera 1 -> 1.04 with the focus drifting A -> C, vignette 0.55, grain 0.09. -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  --k-stage: var(--mc-stage, #0b0d12);
+  --k-on-stage: var(--mc-on-stage, #f3f5f8);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--k-font);
+  color: var(--k-ink);
+}
+/* ==== kit:stage@1 (base and vignette lines; the key light below is the card's own) ==== */
+.ofr-stage { position: absolute; inset: 0; background: linear-gradient(180deg, color-mix(in srgb, var(--k-stage), white 5%) 0%, var(--k-stage) 52%, color-mix(in srgb, var(--k-stage), black 35%) 100%); }
+.ofr-stage ~ .ofr-vig, .ofr-stage ~ * .ofr-vig { --vs: 0.55; --vc: color-mix(in srgb, var(--k-stage) 40%, black); }
+/* ==== end kit:stage ==== */
+/* ==== kit:vignette@1 ==== */
+.ofr-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--ofr-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+/* ==== end kit:vignette ==== */
+/* ==== kit:grain@1 ==== */
+.ofr-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+/* ==== kit:text@2 ==== */
+.ofr-u { display: inline-block; white-space: pre; }
+.ofr-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+/* ==== end kit:text ==== */
+
+/* node colours: A accent-2, B accent-2 turned toward teal (lighter accent-2 without relative colour), C accent;
+   teal is also the inner line glow */
+.ofr { position: absolute; inset: 0; container-type: size;
+  --ofr-c1: var(--k-accent-2); --ofr-c2: color-mix(in oklch, var(--k-accent-2), white 25%); --ofr-c3: var(--k-accent);
+  --ofr-dim: color-mix(in srgb, var(--k-on-stage) 50%, var(--k-stage)); --ofr-ink2: color-mix(in srgb, var(--k-on-stage) 72%, var(--k-stage)); }
+@supports (color: oklch(from red l c h)) { .ofr { --ofr-c2: oklch(from var(--k-accent-2) calc(l + 0.12) c calc(h - 60)); } }
+/* key light from the top centre (upstream: 0.8 x 0.55 = 0.44, no fill light) */
+.ofr-key { position: absolute; inset: 0; mix-blend-mode: screen; background: radial-gradient(ellipse 58% 62% at 50% -5%, color-mix(in srgb, var(--k-accent-2) 44%, transparent) 0%, transparent 70%); }
+.ofr-cam { position: absolute; inset: 0; transform-origin: 1200px 470px; transform: scale(1.04); }
+.ofr-orb { position: absolute; left: 0; top: 0; border-radius: 50%; mix-blend-mode: screen; --a: 0.5;
+  background: radial-gradient(circle closest-side, color-mix(in srgb, var(--c) calc(min(1, var(--a)) * 100%), transparent) 0%, color-mix(in srgb, var(--c) calc(min(1, var(--a) * 0.55) * 100%), transparent) 25%, color-mix(in srgb, var(--c) calc(var(--a) * 22%), transparent) 52%, color-mix(in srgb, var(--c) calc(var(--a) * 6%), transparent) 76%, transparent 100%); }
+.ofr-o1 { --c: var(--ofr-c1); width: 820px; height: 820px; transform: translate(-130px, 52px); }
+.ofr-o2 { --c: var(--ofr-c2); width: 760px; height: 760px; transform: translate(605px, -74px); }
+.ofr-o3 { --c: var(--ofr-c3); width: 720px; height: 720px; transform: translate(1040px, 199px); }
+.ofr-fx { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; }
+/* a node: the glass ball on top, its label under it; --r = ball radius, --w = label width */
+.ofr-node { position: absolute; width: var(--w); margin: calc(var(--r) * -1) 0 0 calc(var(--w) / -2); display: flex; flex-direction: column; align-items: center; --r: 120px; --w: 440px; }
+.ofr-n1 { left: 374px; top: 468px; --c: var(--ofr-c1); }
+.ofr-n2 { left: 966px; top: 364px; --c: var(--ofr-c2); }
+.ofr-n3 { left: 1494px; top: 490px; --c: var(--ofr-c3); }
+.ofr-ball { position: relative; flex: none; width: calc(var(--r) * 2); height: calc(var(--r) * 2); border-radius: 50%;
+  background: radial-gradient(circle at 50% 28%, color-mix(in srgb, color-mix(in srgb, var(--k-stage), var(--k-accent-2) 30%), white 6%) 0%, color-mix(in srgb, var(--k-stage), var(--k-accent-2) 12%) 62%, color-mix(in srgb, var(--k-stage), var(--k-accent-2) 6%) 100%);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--c) 45%, transparent), inset 0 2px 0 color-mix(in srgb, white 12%, transparent), inset 0 0 50px color-mix(in srgb, var(--c) 28%, transparent), 0 40px 80px -30px color-mix(in srgb, black 90%, transparent); }
+.ofr-ball svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.ofr-ic { fill: none; stroke: white; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+.ofr-lab { width: 100%; margin-top: 34px; text-align: center; line-height: 1.25; }
+.ofr-l { font-size: 52px; font-weight: 700; color: var(--k-on-stage); }
+.ofr-s { margin-top: 10px; font-size: 40px; color: var(--ofr-ink2); }
+.ofr-title { position: absolute; left: 10%; right: 10%; top: 79.8%; text-align: center; font-size: 72px; font-weight: 700; line-height: 1.2; color: var(--k-on-stage); }
+.ofr-key-w { color: var(--ofr-c3); }
+.ofr-ph { display: inline-block; }
+/* backdrop off: a soft stage-coloured shadow keeps the labels readable on a bright host */
+.ofr[data-off] .ofr-lab, .ofr[data-off] .ofr-title { text-shadow: 0 2px 14px color-mix(in srgb, var(--k-stage) 75%, transparent); }
+@container (orientation: portrait) {
+  .ofr-cam { transform-origin: 675px 700px; }
+  .ofr-o1 { width: 615px; height: 615px; transform: translate(-118px, 387px); }
+  .ofr-o2 { width: 570px; height: 570px; transform: translate(274px, 269px); }
+  .ofr-o3 { width: 540px; height: 540px; transform: translate(440px, 496px); }
+  .ofr-node { --r: 88px; --w: 232px; }
+  .ofr-n1 { left: 260px; top: 699px; }
+  .ofr-n2 { left: 544px; top: 598px; }
+  .ofr-n3 { left: 780px; top: 715px; }
+  .ofr-lab { margin-top: 26px; }
+  .ofr-l { font-size: 48px; }
+  .ofr-title { top: 52%; }
+}
+</style>
+
+<div id="root" data-composition-id="orb-flyline-relay">
+  <div class="ofr">
+    <div class="ofr-stage"></div>
+    <div class="ofr-key"></div>
+    <div class="ofr-vig"></div>
+    <div class="ofr-grain"></div>
+    <div class="ofr-cam">
+      <div class="ofr-orb ofr-o1"></div>
+      <div class="ofr-orb ofr-o2"></div>
+      <div class="ofr-orb ofr-o3"></div>
+      <svg class="ofr-fx" aria-hidden="true"></svg>
+      <div class="ofr-node ofr-n1">
+        <div class="ofr-ball"><svg viewBox="-120 -120 240 240"><g class="ofr-ic"><rect x="-18" y="-44" width="36" height="60" rx="18"/><path d="M-34 0 C -34 22 -18 34 0 34 C 18 34 34 22 34 0 M0 34 V48"/></g></svg></div>
+        <div class="ofr-lab"><div class="ofr-l">提需求</div><div class="ofr-s">一句话说清</div></div>
+      </div>
+      <div class="ofr-node ofr-n2">
+        <div class="ofr-ball"><svg viewBox="-120 -120 240 240"><g class="ofr-ic"><path d="M0 -44 C 4 -14 14 -4 44 0 C 14 4 4 14 0 44 C -4 14 -14 4 -44 0 C -14 -4 -4 -14 0 -44 Z"/><path d="M30 -38 v14 M23 -31 h14"/></g></svg></div>
+        <div class="ofr-lab"><div class="ofr-l">出草稿</div><div class="ofr-s">三版对比</div></div>
+      </div>
+      <div class="ofr-node ofr-n3">
+        <div class="ofr-ball"><svg viewBox="-120 -120 240 240"><g class="ofr-ic"><path d="M-40 4 L 38 -34 L 14 40 L 2 12 Z M2 12 L 38 -34"/></g></svg></div>
+        <div class="ofr-lab"><div class="ofr-l">交成品</div><div class="ofr-s">直接能用</div></div>
+      </div>
+    </div>
+    <div class="ofr-title"><span class="ofr-ph">一次说清，</span><span class="ofr-ph">后面每一步</span><span class="ofr-ph ofr-key-w">自动接力</span></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // seconds = upstream frames / 30; the node, orb and line curves run on frames (f = t * 30), as upstream
+  var CFG = { dur: 5.7, lit: [10, 48, 82], enter: [0, 4, 8], lines: [[22, 26], [58, 24]], title: 3.067, tEach: 0.6, tGap: 0.117, drift0: 110, driftLen: 30, cam: 140, N: 80, dots: 23 };
+  // node centres as frame fractions, ball radius, label width, orb scale, line lift, label size; camera focus x from -> to, y
+  var LAND = { n: [[0.2083, 0.4352], [0.5, 0.3519], [0.7917, 0.4352]], r: 120, w: 440, k: 1, lift: 170, lab: 52, fx: [0.3646, 0.625], fy: 0.4352 };
+  var PORT = { n: [[0.2593, 0.3646], [0.5, 0.3177], [0.7407, 0.3646]], r: 88, w: 232, k: 0.75, lift: 130, lab: 48, fx: [0.3889, 0.625], fy: 0.3646 };
+  var ORB = [820, 760, 720], GROW = MT.bezier(0.45, 0, 0.2, 1);
+  var v = { steps: "提需求|出草稿|交成品", notes: "一句话说清|三版对比|直接能用", title: "一次说清，|后面每一步|自动接力", key: "自动接力", backdrop: "on" };
+  try {
+    var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k]; // "" clears notes / title / key
+  } catch (e) {}
+
+  var root = document.querySelector(".ofr");
+  var q = function (s) { return root.querySelector(s); }, qa = function (s) { return [].slice.call(root.querySelectorAll(s)); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+    // not laid out yet: the host clip's declared size, then the window
+    var hc = root.closest("[data-width][data-height]");
+    FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+    FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND, S = Math.min(FW, FH) / 1.08e3;
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+  var off = String(v.backdrop) === "off";
+  if (off) { root.setAttribute("data-off", ""); ["stage", "key", "vig", "grain"].forEach(function (n) { q(".ofr-" + n).style.display = "none"; }); }
+
+  // ==== kit:text@2 (kWords, kSplit; kReveal with its rise variant only) ====
+  var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+  function kWords(s, key) {
+    s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+    var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+    var cut = function (x) {
+      if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+      return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+    };
+    var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+    var pre = "";
+    bits.forEach(function (x) {
+      var t = x.trim(), last = out[out.length - 1];
+      if (last && /^ /.test(x)) last.sp = true;
+      if (!t) return;
+      if (!/[\p{L}\p{N}]/u.test(t)) {
+        if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+        else { last.t += t; last.sp = / $/.test(x); }
+        return;
+      }
+      out.push({ t: pre + t, sp: / $/.test(x) });
+      pre = "";
+    });
+    if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+    if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+    if (out.length) out[out.length - 1].sp = false;
+    return out;
+  }
+  function kSplit(el, by, rise, text) {
+    var s = text != null ? String(text) : el.textContent, units = [];
+    var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+    el.textContent = "";
+    parts.forEach(function (p) {
+      var u = document.createElement("span"), box = u;
+      u.className = "ofr-u"; u.textContent = p.t;
+      if (by === "line") u.style.display = "block";
+      if (!p.t.trim()) { el.appendChild(u); return; }
+      if (rise) { box = document.createElement("span"); box.className = "ofr-cut"; box.style.display = u.style.display; box.appendChild(u); }
+      el.appendChild(box);
+      if (p.sp) el.appendChild(document.createTextNode(" "));
+      units.push(u);
+    });
+    return units;
+  }
+  function kReveal(tl, units, variant, at, o) {
+    o = o || {};
+    var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+    units.forEach(function (u, i) {
+      var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+      if (variant === "rise") {
+        tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+        tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+      }
+    });
+    return tl;
+  }
+  // ==== end kit:text ====
+  // ==== kit:fit@1 (kFit, kLines) ====
+  function kFit(el, o) {
+    o = o || {};
+    var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+    var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+    for (;;) {
+      el.style.fontSize = f + "px";
+      m = kLines(el);
+      if ((m.w <= W && m.n <= n) || f <= min) break;
+      f = Math.max(min, f - 2);
+    }
+    if (m.w > W) {
+      [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+      m = kLines(el);
+    }
+    return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+  }
+  function kLines(el) {
+    var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+    var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+    while ((t = it.nextNode())) {
+      if (!t.data.trim()) continue;
+      r.selectNodeContents(t);
+      [].forEach.call(r.getClientRects(), function (b) {
+        var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+        if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+        row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+      });
+    }
+    return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+  }
+  // ==== end kit:fit ====
+  // ==== kit:grain@1 ====
+  function kGrain(layer, o) {
+    o = o || {};
+    var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+    var dark = tones && tones.getAttribute("data-tone") === "dark";
+    var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+      var f = "type='linear' slope='2.4' intercept='-0.7'";
+      var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+        "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+        "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+        "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+        "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+      return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+    });
+    layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+    layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+    layer.style.backgroundSize = size + "px " + size + "px";
+    return function (t) {
+      var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+      layer.style.backgroundImage = tiles[k % 6];
+      layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+    };
+  }
+  // ==== end kit:grain ====
+
+  // labels: three steps (| separates the items, the item text keeps its spaces); an empty name or note is hidden
+  var list = function (s, n) { var a = String(s).split("|").map(function (x) { return x.trim(); }); while (a.length < n) a.push(""); return a.slice(0, n); };
+  var steps = list(v.steps, 3), notes = list(v.notes, 3);
+  var nodes = qa(".ofr-node").map(function (el, i) {
+    el.style.setProperty("--r", L.r * S + "px"); el.style.setProperty("--w", L.w * S + "px");
+    var l = el.querySelector(".ofr-l"), s = el.querySelector(".ofr-s");
+    l.style.fontSize = L.lab * S + "px";
+    if (steps[i]) { kSplit(l, "word", false, steps[i]); kFit(l, { lines: 1, min: 40 }); } else l.style.display = "none";
+    if (notes[i]) { kSplit(s, "word", false, notes[i]); kFit(s, { lines: 2, min: 40 }); } else s.style.display = "none";
+    return { el: el, ball: el.querySelector(".ofr-ball"), ic: el.querySelector(".ofr-ic"), l: l, s: s,
+      x: L.n[i][0] * FW, y: L.n[i][1] * FH, lit: CFG.lit[i], inAt: CFG.enter[i], c: "var(--ofr-c" + (i + 1) + ")", seed: i + 1 };
+  });
+  // closing title: rises word by word out of its own line; units holding the key word take the C colour
+  var title = q(".ofr-title"), words = [], key = String(v.key).trim();
+  // the title sits under the lowest label as it ends up after the 1.04 push and the drift (long notes push it down)
+  var fy = L.fy * FH, low = Math.max.apply(null, nodes.map(function (n) { return n.y - L.r * S + n.el.offsetHeight; }));
+  title.style.top = Math.max(title.offsetTop, fy + (low - fy) * 1.04 + 22 * L.k * S + 36 * S) + "px";
+  if (String(v.title).trim()) {
+    words = kSplit(title, "word", true, v.title);
+    kFit(title, { lines: P ? 2 : 1, min: P ? 56 : 48 });
+    // a rising unit is clipped by its cut box, which the checker reads as occlusion: exempt on the unit itself
+    words.forEach(function (u) { u.setAttribute("data-layout-allow-occlusion", ""); if (key && u.textContent.indexOf(key) >= 0) u.classList.add("ofr-key-w"); });
+  } else title.style.display = "none";
+
+  var cam = q(".ofr-cam"), orbs = qa(".ofr-orb"), TAU = Math.PI * 2, R = L.r * S;
+  orbs.forEach(function (o, i) { o.style.width = o.style.height = ORB[i] * L.k * S + "px"; });
+  var h = function (n) { var s = Math.sin(n * 127.3) * 43758.5453; return s - Math.floor(s); }; // upstream's phase hash
+  var drift = function (f) { return f <= CFG.drift0 ? f : CFG.drift0 + ((2 * CFG.driftLen) / Math.PI) * Math.sin((Math.PI / 2) * Math.min(1, (f - CFG.drift0) / CFG.driftLen)); };
+  var ramp = MT.ramp, mix = MT.mix;
+  // surge: the landing frame lifts the orb behind the node, 5f up (out), 15f back (swift)
+  var surge = function (f, at) { return f < at ? 0 : f <= at + 5 ? ramp(f, at, 5, "out") : 1 - ramp(f, at + 5, 15, "swift"); };
+  var cm = function (c, p) { return "color-mix(in srgb, " + c + " " + (p * 100).toFixed(1) + "%, transparent)"; };
+
+  // lines: from node edge to node edge, lifted above both ends; drawn into one SVG in frame pixels
+  var NS = "http://www.w3.org/2000/svg", fx = q(".ofr-fx"), id = "ofr" + (window.__ofrMount = (window.__ofrMount || 0) + 1);
+  fx.setAttribute("viewBox", "0 0 " + FW + " " + FH);
+  fx.innerHTML = '<defs><radialGradient id="' + id + 'h"><stop offset="0" style="stop-color:white;stop-opacity:.75"/><stop offset=".3" style="stop-color:var(--ofr-c2);stop-opacity:.35"/><stop offset="1" style="stop-color:var(--ofr-c1);stop-opacity:0"/></radialGradient></defs>';
+  var el = function (tag, parent, a) { var e = document.createElementNS(NS, tag); for (var n in a) e.setAttribute(n, a[n]); return (parent || fx).appendChild(e); };
+  var A = function (e, a) { for (var n in a) e.setAttribute(n, a[n]); };
+  var vis = function (e, on) { e.style.display = on ? "" : "none"; };
+  var edge = function (n, deg) { return { x: n.x + R * Math.cos((deg * Math.PI) / 180), y: n.y + R * Math.sin((deg * Math.PI) / 180) }; };
+  var bez = function (p, s) {
+    var u = 1 - s;
+    return { x: u * u * u * p[0].x + 3 * u * u * s * p[1].x + 3 * u * s * s * p[2].x + s * s * s * p[3].x, y: u * u * u * p[0].y + 3 * u * u * s * p[1].y + 3 * u * s * s * p[2].y + s * s * s * p[3].y };
+  };
+  var lines = [[0, -48, 200], [1, -20, 228]].map(function (d, i) {
+    var a = edge(nodes[d[0]], d[1]), b = edge(nodes[d[0] + 1], d[2]), dx = b.x - a.x, top = Math.min(a.y, b.y) - L.lift * S, g = el("g"), segs = [];
+    var o = { start: CFG.lines[i][0], dur: CFG.lines[i][1], from: d[0], p: [a, { x: a.x + dx * 0.22, y: top }, { x: a.x + dx * 0.78, y: top }, b], g: g, segs: segs, dots: [] };
+    for (var j = 0; j < CFG.dots; j++) o.dots.push(el("circle", g, { r: 2.6 * S, style: "fill:var(--ofr-c1)" }));
+    o.wide = el("polyline", g, { fill: "none", "stroke-width": 20 * S, "stroke-linecap": "round", "stroke-linejoin": "round", style: "stroke:var(--ofr-c1)" });
+    o.mid = el("polyline", g, { fill: "none", "stroke-width": 7 * S, "stroke-linecap": "round", "stroke-linejoin": "round", style: "stroke:var(--ofr-c2)" });
+    var sg = el("g", g, { "stroke-width": 3.2 * S, "stroke-linecap": "butt", style: "stroke:color-mix(in srgb, var(--ofr-c1) 5%, white)" });
+    for (j = 0; j < CFG.N; j++) segs.push(el("line", sg));
+    o.comet = el("polyline", g, { fill: "none", stroke: "white", "stroke-width": 7 * S, "stroke-linecap": "round", "stroke-linejoin": "round", "stroke-opacity": 0.6 });
+    o.halo = el("circle", g, { r: 44 * S, fill: "url(#" + id + "h)" });
+    o.head = el("circle", g, { r: 7.5 * S, fill: "white" });
+    return o;
+  });
+  nodes.forEach(function (n) { n.ring = el("circle", null, { fill: "none", style: "stroke:color-mix(in srgb, var(--k-on-stage), var(--k-accent-2) 8%)" }); });
+  var str = function (a) { return a.map(function (p) { return p.x.toFixed(1) + "," + p.y.toFixed(1); }).join(" "); };
+
+  function drawLine(o, f, offs) {
+    vis(o.g, f >= o.start);
+    if (f < o.start) return;
+    // the line rides with its two nodes: ends move with them, inner points with a 25 / 75 blend
+    var a = offs[o.from], b = offs[o.from + 1], w = [0, 0.25, 0.75, 1];
+    var p = o.p.map(function (q, i) { return { x: q.x + mix(a.x, b.x, w[i]), y: q.y + mix(a.y, b.y, w[i]) }; });
+    var e = GROW(Math.min(1, (f - o.start) / o.dur)), growing = f < o.start + o.dur;
+    var fade = 1 - ramp(f, o.start + o.dur + 4, 14, "swift"), dots = ramp(f, o.start + o.dur + 6, 14, "out");
+    var n = Math.max(2, Math.ceil(e * CFG.N) + 1), pts = [];
+    for (var i = 0; i < n; i++) pts.push(bez(p, Math.min(i / CFG.N, e)));
+    pts[n - 1] = bez(p, e);
+    o.dots.forEach(function (d, j) { vis(d, dots > 0); if (dots > 0) { var c = bez(p, (j + 1) / (CFG.dots + 1)); A(d, { cx: c.x.toFixed(1), cy: c.y.toFixed(1), opacity: (dots * 0.55).toFixed(3) }); } });
+    [o.wide, o.mid].forEach(function (x) { vis(x, fade > 0); });
+    A(o.wide, { points: str(pts), "stroke-opacity": 0.12 * fade }); A(o.mid, { points: str(pts), "stroke-opacity": 0.3 * fade });
+    o.segs.forEach(function (s, i) {
+      var on = fade > 0 && i < n - 1;
+      vis(s, on);
+      if (!on) return;
+      var k = Math.min(i / CFG.N, e) / Math.max(e, 0.001);
+      A(s, { x1: pts[i].x.toFixed(1), y1: pts[i].y.toFixed(1), x2: pts[i + 1].x.toFixed(1), y2: pts[i + 1].y.toFixed(1), "stroke-opacity": ((0.12 + 0.88 * k * k) * fade).toFixed(3) });
+    });
+    [o.comet, o.halo, o.head].forEach(function (x) { vis(x, growing); });
+    if (growing) {
+      var hd = pts[n - 1];
+      A(o.comet, { points: str(pts.slice(Math.max(0, n - 9))) }); A(o.halo, { cx: hd.x, cy: hd.y }); A(o.head, { cx: hd.x, cy: hd.y });
+    }
+  }
+
+  function render(t) {
+    var f = t * 30, d = drift(f), grain = this;
+    var c = 1 + 0.04 * ramp(f, 0, CFG.cam, "smooth"), fxp = mix(L.fx[0], L.fx[1], ramp(f, 10, 100, "smooth")) * FW;
+    cam.style.transformOrigin = fxp.toFixed(1) + "px " + (L.fy * FH).toFixed(1) + "px";
+    cam.style.transform = "scale(" + c.toFixed(5) + ")";
+    var orbIn = 0.3 + 0.7 * ramp(f, 0, 20, "out"), offs = [];
+    nodes.forEach(function (n, i) {
+      // orbs drift on their own slow sines; the node rides 22 % of it (parallax: the orb sits behind)
+      var a = h(n.seed * 7 + 1) * TAU, b = h(n.seed * 7 + 2) * TAU;
+      var ox = 120 * L.k * S * Math.sin((TAU * d) / (118 + n.seed * 9) + a), oy = 90 * L.k * S * Math.sin((TAU * d) / (134 - n.seed * 11) + b);
+      offs.push({ x: ox * 0.22, y: oy * 0.22 });
+      var s = surge(f, n.lit), base = n.lit <= 10 ? 0.4 + 0.6 * ramp(f, n.lit, 10, "out") : 0.35 + 0.65 * ramp(f, n.lit, 8, "out");
+      var sz = ORB[i] * L.k * S, o = orbs[i];
+      o.style.setProperty("--a", (0.5 * base * (1 + 1.6 * s)).toFixed(4));
+      o.style.opacity = orbIn.toFixed(3);
+      o.style.transform = "translate(" + (n.x + ox - sz / 2).toFixed(1) + "px, " + (n.y + oy - sz / 2).toFixed(1) + "px) scale(" + (1 + 0.12 * s).toFixed(4) + ")";
+      // node: rises 40 px into place, lights 8f, outline pulse 6f up then 16f down to 0.35, ring 20f
+      var enter = ramp(f, n.inAt, 22, "snappy"), lit = ramp(f, n.lit, 8, "out"), on = lit > 0.5;
+      var pulse = f < n.lit ? 0 : f <= n.lit + 6 ? ramp(f, n.lit, 6, "out") : mix(1, 0.35, ramp(f, n.lit + 6, 16, "out"));
+      var ring = n.lit > 20 ? ramp(f, n.lit, 20, "linear") : 0;
+      n.el.style.left = n.x + ox * 0.22 + "px";
+      n.el.style.top = n.y + oy * 0.22 + (1 - enter) * 40 * S + "px";
+      n.el.style.opacity = enter.toFixed(3);
+      n.ball.style.boxShadow = "inset 0 0 0 1.5px " + cm(lit > 0 ? n.c : "color-mix(in srgb, var(--k-accent-2), white 55%)", 0.14 + 0.66 * pulse) + ", inset 0 2px 0 " + cm("white", 0.12) +
+        ", inset 0 0 " + (50 * lit * S).toFixed(1) + "px " + cm(n.c, 0.28 * lit) + ", 0 0 " + (70 * pulse * S).toFixed(1) + "px " + cm(n.c, 0.5 * pulse) + ", 0 " + 40 * S + "px " + 80 * S + "px " + -30 * S + "px " + cm("black", 0.9);
+      n.ic.style.stroke = on ? "white" : "var(--ofr-dim)";
+      n.ic.style.filter = on ? "drop-shadow(0 0 " + 10 * S + "px " + cm(n.c, 0.8) + ")" : "none";
+      n.l.style.color = on ? "var(--k-on-stage)" : "var(--ofr-dim)";
+      n.s.style.color = on ? "var(--ofr-ink2)" : "var(--ofr-dim)";
+      // impact ring: an outline that grows from the ball edge to 2.3 R and thins 4 -> 1 px (border inside the box)
+      vis(n.ring, ring > 0 && ring < 1);
+      var sw = mix(4, 1, ring) * S;
+      A(n.ring, { cx: (n.x + ox * 0.22).toFixed(1), cy: (n.y + oy * 0.22).toFixed(1), r: (R * mix(1, 2.3, MT.EASE.snappy(ring)) - sw / 2).toFixed(1), "stroke-width": sw.toFixed(2), "stroke-opacity": (0.8 * (1 - ring)).toFixed(3) });
+    });
+    lines.forEach(function (o) { drawLine(o, f, offs); });
+    grain(t);
+  }
+
+  var grain = off ? function () {} : kGrain(q(".ofr-grain"), { opacity: 0.09, blend: "soft-light" });
+  var tl = MT.scene(CFG.dur, function (t) { render.call(grain, t); });
+  // closing title: word by word out of its line, 0.6 s each, 0.117 s apart (upstream 18f each, 3.5f gap)
+  kReveal(tl, words, "rise", CFG.title, { each: CFG.tEach, gap: CFG.tGap });
+  window.__timelines["orb-flyline-relay"] = tl;
+})();
+</script>
+    </template>
+  </body>
+</html>

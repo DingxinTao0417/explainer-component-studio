@@ -1,0 +1,479 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"tag","type":"string","label":"角标（2–6 字，留空不要）","default":"第 3 节"},
+    {"id":"title","type":"string","label":"卡上标题（| 切意群）","default":"三分钟|看懂"},
+    {"id":"sub","type":"string","label":"副题（留空不要）","default":"把复杂的事讲清楚"},
+    {"id":"button","type":"string","label":"按钮（2–5 字，留空不要）","default":"开始学习"},
+    {"id":"caption","type":"string","label":"字幕（| 切意群，末段强调；留空不要）","default":"本周五上线 · |跟着做一遍"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"有光的白底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>kanada-perspective-snap · 透视甩入急停</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="kanada-perspective-snap-template">
+      <!-- Ported from video-shotcraft demos/effects/slam-entrance-moves/KanadaPerspectiveSnap.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette on a lit white stage (was dark aurora), light card (was dark), system fonts, generic
+           copy, neutral mark; card text 40px+, meta row dropped, card text no longer fades in from 40% (fails contrast
+           in flight); dusk art redrawn from the palette; focus/speed lines ink + accent (were white + pink); shadow
+           alphas x0.45 on light skins; caption key word accent + 22% ink; portrait layout (fling from -1.0 frame width,
+           focus ring 0.8 in x). Fling, twist, overshoot spring, shake, focus lines, speed lines and blur, follow,
+           caption and push timing kept. -->
+      <style>
+  @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+  @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+  @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+  #root {
+    --k-bg: var(--mc-bg, #ffffff);
+    --k-panel: var(--mc-panel, #f4f5f7);
+    --k-ink: var(--mc-ink, #15171c);
+    --k-muted: var(--mc-muted, #6b7280);
+    --k-accent: var(--mc-accent, #e8590c);
+    --k-accent-2: var(--mc-accent-2, #2563eb);
+    --k-on-accent: var(--mc-on-accent, #ffffff);
+    --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+    position: absolute; inset: 0; overflow: hidden;
+    font-family: var(--k-font); color: var(--k-ink);
+  }
+/* ==== kit:derived@1 ==== */
+.kp {
+  --kp-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+  --kp-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+  --kp-hi: color-mix(in srgb, white 80%, transparent);
+}
+.kp[data-tone="dark"] {
+  --kp-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+  --kp-hi: color-mix(in srgb, white 6%, transparent);
+}
+/* ==== end kit:derived ==== */
+/* ==== kit:vignette@1 ==== */
+.kp-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--kp-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.kp[data-tone="dark"] .kp-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+/* ==== kit:backdrop@1 ==== */
+.kp-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+.kp-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+/* ==== end kit:backdrop ==== */
+/* ==== kit:grain@1 ==== */
+.kp-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+/* ==== kit:text@2 ==== */
+.kp-u { display: inline-block; white-space: pre; }
+.kp-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+/* ==== end kit:text ==== */
+  .kp {
+    position: absolute; inset: 0; container-type: size;
+    --kp-card: color-mix(in srgb, var(--k-panel) 35%, var(--k-bg));
+    --kp-sky0: color-mix(in srgb, var(--k-accent-2) 38%, black);
+    --kp-sky1: color-mix(in oklch, var(--k-accent-2) 55%, var(--k-accent));
+    --kp-sky2: color-mix(in srgb, var(--k-accent), white 30%);
+    --kp-sun: color-mix(in srgb, var(--k-accent), white 82%);
+    --kp-town: color-mix(in srgb, var(--k-accent-2) 20%, black);
+  }
+  .kp[data-backdrop="off"] .kp-deco { display: none; }
+  .kp-cam, .kp-fly, .kp-lines, .kp-card, .kp-face, .kp-art svg { position: absolute; inset: 0; }
+  .kp-band { position: absolute; left: -400px; top: 28px; display: flex; gap: 0.3em; font-size: 168px; font-weight: 900; line-height: 1; white-space: nowrap; color: color-mix(in srgb, var(--k-ink) 7%, transparent); }
+  .kp-band span::before { content: attr(data-t); }
+  .kp-band i::before { content: "\2726"; font-style: normal; color: color-mix(in srgb, var(--k-accent) 24%, transparent); }
+  .kp-focus { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+  .kp-lines div { position: absolute; border-radius: 4px; }
+  .kp-persp { position: absolute; left: 460px; top: 236px; width: 1000px; height: 580px; perspective-origin: 30% 50%; }
+  .kp-card { transform-origin: 20% 50%; }
+  .kp-face { border-radius: 30px; overflow: hidden; background: var(--kp-card); }
+  .kp-art { position: absolute; left: 0; top: 0; width: 568px; height: 100%; pointer-events: none; background: linear-gradient(180deg, var(--kp-sky0), var(--kp-sky1) 38%, var(--k-accent) 60%, var(--kp-sky2) 70%, var(--kp-town) 71%); }
+  .kp-art svg { width: 100%; height: 100%; }
+  .kp-art::after { content: ""; position: absolute; right: 0; top: 0; width: 98px; height: 100%; background: linear-gradient(90deg, transparent, var(--kp-card)); }
+  .kp-info { position: absolute; left: 600px; top: 0; bottom: 0; width: 360px; display: flex; flex-direction: column; justify-content: center; }
+  .kp-head, .kp-btns, .kp-btn { display: flex; align-items: center; }
+  .kp-head { justify-content: space-between; gap: 16px; }
+  .kp-tag { height: 48px; line-height: 48px; padding: 0 16px; border-radius: 10px; background: var(--k-accent); color: color-mix(in srgb, var(--k-accent) 18%, black); font-size: 28px; font-weight: 700; letter-spacing: 0.08em; white-space: nowrap; }
+  .kp-head svg { flex: none; margin-left: auto; }
+  .kp-title { margin-top: 26px; font-size: 92px; font-weight: 800; line-height: 1.15; transform-origin: 0 100%; }
+  .kp-sub { margin-top: 18px; font-size: 40px; line-height: 1.3; color: var(--k-muted); }
+  .kp-btns { gap: 14px; margin-top: 34px; }
+  .kp-btn { gap: 12px; height: 72px; padding: 0 28px; border-radius: 36px; background: var(--k-ink); color: var(--k-bg); font-size: 40px; font-weight: 700; white-space: nowrap; }
+  .kp-btn svg { flex: none; fill: currentColor; }
+  .kp-plus { position: relative; flex: none; width: 72px; height: 72px; border-radius: 50%; box-sizing: border-box; border: 2px solid color-mix(in srgb, var(--k-ink) 30%, transparent); }
+  .kp-plus::before, .kp-plus::after { content: ""; position: absolute; left: 22px; top: 33px; width: 24px; height: 2px; background: var(--k-ink); }
+  .kp-plus::after { transform: rotate(90deg); }
+  .kp-cap { position: absolute; left: 10%; right: 10%; top: 880px; text-align: center; font-size: 44px; font-weight: 700; line-height: 1.3; }
+  .kp-key { color: color-mix(in srgb, var(--k-accent) 78%, var(--k-ink)); }
+  @container (orientation: portrait) {
+    .kp-band { top: 60px; }
+    .kp-persp { left: 120px; top: 240px; width: 840px; height: 860px; }
+    .kp-face { display: flex; flex-direction: column; }
+    .kp-art { position: relative; flex: 1 1 auto; width: 100%; min-height: 260px; }
+    .kp-art::after { top: auto; bottom: 0; width: 100%; height: 82px; background: linear-gradient(180deg, transparent, var(--kp-card)); }
+    .kp-info { position: relative; flex: none; left: 0; width: auto; padding: 12px 56px 52px; }
+    .kp-title { font-size: 104px; margin-top: 22px; }
+    .kp-btns { margin-top: 30px; }
+    .kp-cap { top: 1150px; }
+  }
+      </style>
+
+      <div id="root" data-composition-id="kanada-perspective-snap">
+      <div class="kp">
+        <div class="kp-backdrop kp-deco"></div>
+        <div class="kp-vig kp-deco"></div>
+        <div class="kp-grain kp-deco"></div>
+        <div class="kp-cam">
+          <div class="kp-band kp-deco" data-layout-allow-overflow><span data-t="三分钟看懂"></span><i></i><span data-t="三分钟看懂"></span><i></i><span data-t="三分钟看懂"></span></div>
+          <svg class="kp-focus" data-layout-allow-overflow></svg>
+          <div class="kp-lines" data-layout-allow-overflow></div>
+          <div class="kp-fly" data-layout-allow-overflow>
+            <div class="kp-persp"><div class="kp-card"><div class="kp-face">
+              <div class="kp-art"><svg></svg></div>
+              <div class="kp-info">
+                <div class="kp-head">
+                  <div class="kp-tag">第 3 节</div>
+                  <svg width="48" height="48" viewBox="0 0 128 128"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg>
+                </div>
+                <div class="kp-title">三分钟看懂</div>
+                <div class="kp-sub">把复杂的事讲清楚</div>
+                <div class="kp-btns"><div class="kp-btn"><svg width="20" height="22" viewBox="0 0 20 22"><path d="M2 2 L18 11 L2 20 Z"/></svg><span>开始学习</span></div><div class="kp-plus"></div></div>
+              </div>
+            </div></div></div>
+          </div>
+          <div class="kp-cap">本周五上线 · <span class="kp-key">跟着做一遍</span></div>
+        </div>
+      </div>
+      </div>
+
+      <script>
+(function () {
+  // seconds = upstream frames / 30, shared by both orientations
+  var CFG = {
+    dur: 4, t0: 0.067, snap: 0.667, twistDur: 0.533, // fling 2-20f; pose lands 2f earlier
+    persp0: 260, persp1: 1800, ang: 62, scale0: 1.8, arc: 120, // lens px, rotate3d(0.5,1,0.1) deg
+    over: 0.5, overDur: 0.167, overDeg: 6, // rotateY +6 deg at 15-20f, then spring back
+    shake: 8, shakeFr: 3, focus: 0.3, // px over 3 frames; focus lines 9f
+    follow: 0.767, followDur: 0.433, skew: -10, slide: -36, // card text lands 3f late
+    cap: 1.133, capGap: 0.2, capEach: 0.533, // caption from 34f, 6f apart, 16f each
+    push: 0.025, pushDur: 3.333, band: -40, bandKick: -60, bandKickDur: 0.867,
+    blur: 0.2, blurMax: 26 // directional blur per px-per-frame of speed
+  };
+  // fling start (x frame width), focus ring x squash, title floor, line counts
+  var LAND = { tx: -0.703, fx: 1, tmin: 72, capLines: 1, subLines: 1 };
+  var PORT = { tx: -1.0, fx: 0.8, tmin: 72, capLines: 2, subLines: 2 };
+  var v = { tag: "第 3 节", title: "三分钟|看懂", sub: "把复杂的事讲清楚", button: "开始学习", caption: "本周五上线 · |跟着做一遍", backdrop: "on" };
+  try {
+    var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k]; // "" hides an optional slot
+  } catch (e) {}
+
+  var root = document.querySelector(".kp");
+  var q = function (s) { return root.querySelector(s); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+    // not laid out yet: the host clip's declared size, then the window
+    var hc = root.closest("[data-width][data-height]");
+    FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+    FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND;
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+  root.setAttribute("data-backdrop", String(v.backdrop) === "off" ? "off" : "on");
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== end kit:tone ====
+// ==== kit:hash@1 ====
+function kHash(n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+// ==== end kit:hash ====
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+      "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+      "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+      "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+      "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+}
+// ==== end kit:grain ====
+// ==== kit:speedblur@1 ====
+function kSpeedBlur(box, prefix, o) {
+  o = o || {};
+  var amount = o.amount || 0.45, max = o.max || 36;
+  var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+  var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+  svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+  var outer = document.createElement("div"), inner = document.createElement("div");
+  outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+  while (box.firstChild) inner.appendChild(box.firstChild);
+  outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+  var fe = svg.firstChild.firstChild;
+  return function (vx, vy) {
+    vy = vy || 0;
+    var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+    if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+    var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+    fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+    outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+    inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+    outer.style.filter = "url(#" + id + ")";
+  };
+}
+// ==== end kit:speedblur ====
+// ==== kit:text@2 ====
+var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+function kWords(s, key) {
+  s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+  var cut = function (x) {
+    if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+    return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+  };
+  var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+  var pre = "";
+  bits.forEach(function (x) {
+    var t = x.trim(), last = out[out.length - 1];
+    if (last && /^ /.test(x)) last.sp = true;
+    if (!t) return;
+    if (!/[\p{L}\p{N}]/u.test(t)) {
+      if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+      else { last.t += t; last.sp = / $/.test(x); }
+      return;
+    }
+    out.push({ t: pre + t, sp: / $/.test(x) });
+    pre = "";
+  });
+  if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+  if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+  if (out.length) out[out.length - 1].sp = false;
+  return out;
+}
+function kSplit(el, by, rise, text) {
+  var s = text != null ? String(text) : el.textContent, units = [];
+  var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+  el.textContent = "";
+  parts.forEach(function (p) {
+    var u = document.createElement("span"), box = u;
+    u.className = "kp-u"; u.textContent = p.t;
+    if (by === "line") u.style.display = "block";
+    if (!p.t.trim()) { el.appendChild(u); return; }
+    if (rise) { box = document.createElement("span"); box.className = "kp-cut"; box.style.display = u.style.display; box.appendChild(u); }
+    el.appendChild(box);
+    if (p.sp) el.appendChild(document.createTextNode(" "));
+    units.push(u);
+  });
+  return units;
+}
+function kReveal(tl, units, variant, at, o) {
+  o = o || {};
+  var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+  units.forEach(function (u, i) {
+    var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+    if (variant === "rise") {
+      tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+      tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+    } else if (variant === "blur") {
+      tl.fromTo(u, { opacity: 0, y: fs * 0.25, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: each, ease: ease }, t0);
+    } else if (variant === "drop") {
+      tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each / 3, ease: "none" }, t0);
+      tl.fromTo(u, { y: -fs * 0.6 }, { y: 0, duration: each, ease: "overshoot" }, t0);
+    } else if (variant === "scale") {
+      tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each * 0.1, ease: "power1.out" }, t0);
+      tl.fromTo(u, { scale: 1.6, filter: "blur(8px)" }, { scale: 1, filter: "blur(0px)", duration: each, ease: ease }, t0);
+    } else {
+      tl.fromTo(u, { opacity: 0, marginRight: "0.5em" }, { opacity: 1, marginRight: "0em", duration: each, ease: ease }, t0);
+    }
+  });
+  return tl;
+}
+// ==== end kit:text ====
+// ==== kit:fit@1 ====
+function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+      var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+      if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+      row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+function kRows(el, cls) {
+  if (!el.children.length) return [];
+  var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+  var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+  kids.forEach(function (c, i) {
+    if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+    if (tops[i] != null) last = tops[i];
+    row.appendChild(c);
+  });
+  return [].slice.call(el.children);
+}
+// ==== end kit:fit ====
+
+  var dark = kTone(root) === "dark", grain = kGrain(q(".kp-grain"));
+  var str = function (x) { return String(x == null ? "" : x).trim(); };
+  // text slots fitted by measuring; an empty optional slot disappears. One-line labels keep the typed text as is
+  // (kWords glues a lone " · " to the next word and drops its space); multi-line slots are split at "|"
+  var tag = q(".kp-tag"), title = q(".kp-title"), sub = q(".kp-sub"), cap = q(".kp-cap"), info = q(".kp-info"), IW = title.clientWidth;
+  var lab = function (el, x, o) { el.textContent = str(x); kFit(el, o); };
+  if (str(v.tag)) lab(tag, v.tag, { lines: 1, min: 28, width: IW - 64 }); else tag.style.display = "none";
+  kSplit(title, "word", false, v.title);
+  kFit(title, { lines: 2, min: L.tmin });
+  if (str(v.sub)) { kSplit(sub, "word", false, v.sub); kFit(sub, { lines: L.subLines, min: 40 }); } else sub.style.display = "none";
+  var bl = q(".kp-btn span");
+  if (str(v.button)) lab(bl, v.button, { lines: 1, min: 40, width: IW - 186 }); else q(".kp-btns").style.display = "none";
+  var cu = [];
+  if (str(v.caption)) { cu = kSplit(cap, "word", true, v.caption); cu[cu.length - 1].classList.add("kp-key"); kFit(cap, { lines: L.capLines, min: 40 }); } else cap.style.display = "none";
+  // in flight the art's 3D-projected box contains the card text, which the checker reads as occlusion
+  [].forEach.call(info.querySelectorAll("span, .kp-tag"), function (e) { e.setAttribute("data-layout-allow-occlusion", ""); });
+  var bt = kWords(v.title).map(function (u) { return u.t + (u.sp ? " " : ""); }).join("");
+  [].forEach.call(root.querySelectorAll(".kp-band span"), function (s) { s.setAttribute("data-t", bt); });
+
+  // dusk art for the art box (sky is CSS): stars, striped sun, towers, water
+  var art = q(".kp-art"), AW = art.clientWidth, AH = art.clientHeight, n = "kp" + (window.__kpN = (window.__kpN || 0) + 1);
+  var hz = AH * 0.707, sr = Math.min(AW, AH) * 0.26, sx = AW / 2, sy = hz - sr * 0.53, kk = sr / 150, ky = AH / 580, g = [], i, w;
+  var R = function (tag, a) { var s = "<" + tag; for (var key in a) s += " " + key + '="' + (typeof a[key] === "number" ? +a[key].toFixed(2) : a[key]) + '"'; g.push(s + "/>"); };
+  var stop = function (o, c, a) { return '<stop offset="' + o + '" style="stop-color:' + c + (a ? ";stop-opacity:" + a : "") + '"/>'; };
+  g.push('<defs><linearGradient id="' + n + 's" x2="0" y2="1">' + stop(0, "var(--kp-sun)") + stop(0.55, "var(--kp-sky2)") + stop(1, "var(--k-accent)") + '</linearGradient><linearGradient id="' + n + 'w" x2="0" y2="1">' + stop(0, "var(--kp-sky2)", 0.55) + stop(1, "var(--kp-town)") + '</linearGradient><mask id="' + n + 'm">');
+  R("rect", { width: AW, height: AH, fill: "#fff" });
+  for (i = 0; i < 6; i++) R("rect", { y: sy - sr * 0.2 + (i * 18 + i * i * 1.2) * kk, width: AW, height: (3 + i * 2.2) * kk });
+  g.push("</mask></defs>");
+  for (i = 0; i < 30; i++) R("circle", { cx: kHash(i * 9.1) * AW, cy: kHash(i * 3.7 + 1) * hz * 0.44, r: 0.8 + kHash(i * 1.3) * 1.6, fill: "#fff", opacity: 0.4 + kHash(i * 6.2) * 0.5 });
+  R("circle", { cx: sx, cy: sy, r: sr, fill: "url(#" + n + "s)", mask: "url(#" + n + "m)" });
+  R("circle", { cx: sx, cy: sy, r: sr * 1.27, fill: "none", style: "stroke:var(--kp-sun)", "stroke-opacity": 0.18, "stroke-width": 30 * kk });
+  for (i = 0; i * 36 * ky - 6 < AW; i++) {
+    var th = (50 + Math.pow(kHash(i * 4.7), 1.4) * 150) * ky, x = i * 36 * ky - 6;
+    R("rect", { x: x, y: hz - th, width: (30 + kHash(i * 2.1) * 18) * ky, height: th, style: "fill:var(--kp-town)", opacity: i % 3 ? 1 : 0.8 });
+    for (w = 0; w < Math.floor(th / 26); w++) if (kHash(i * 13 + w * 3.1) > 0.62) R("rect", { x: x + 6 + (w % 2) * 10, y: hz - th + 10 + w * 24, width: 5, height: 8, style: "fill:var(--kp-" + (kHash(i + w) > 0.5 ? "sky2)" : "sun)"), opacity: 0.85 });
+  }
+  R("rect", { y: hz, width: AW, height: AH - hz, fill: "url(#" + n + "w)" });
+  for (i = 0; i < 9; i++) R("rect", { x: sx - 110 * kk + kHash(i * 2.7) * 40 * kk - i * 4, y: hz + (14 + i * 15) * ky, width: (220 - i * 18 + kHash(i) * 30) * kk, height: 3, rx: 1.5, style: "fill:var(--kp-sun)", opacity: 0.55 - i * 0.05 });
+  var as = q(".kp-art svg");
+  as.setAttribute("viewBox", "0 0 " + AW + " " + AH);
+  as.innerHTML = g.join("");
+
+  // focus lines aim at the card centre, scaled by its half diagonal (578px upstream)
+  var persp = q(".kp-persp"), card = q(".kp-card"), face = q(".kp-face"), band = q(".kp-band"), cam = q(".kp-cam");
+  var CX = persp.offsetLeft, CW = persp.offsetWidth, CH = persp.offsetHeight, MX = CX + CW / 2, MY = persp.offsetTop + CH / 2;
+  var KD = Math.sqrt(CW * CW + CH * CH) / 2 / 578, focus = q(".kp-focus"), lines = q(".kp-lines"), FOC = [], STR = [];
+  focus.setAttribute("viewBox", "0 0 " + FW + " " + FH);
+  for (i = 0; i < 48; i++) {
+    var pg = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    pg.style.cssText = "fill:var(--k-" + (i % 4 ? "ink);opacity:0.5" : "accent);opacity:0.75");
+    focus.appendChild(pg);
+    FOC.push({ el: pg, a: (i / 48) * Math.PI * 2 + (kHash(i * 3.3) - 0.5) * 0.09, w: 0.006 + kHash(i * 5.1) * 0.014, r0: (560 + kHash(i * 7.7) * 220) * KD });
+  }
+  [-250, -170, -90, -20, 60, 140, 230].forEach(function (y, i) {
+    var d = document.createElement("div"), h = 2 + kHash(i + 11) * 3;
+    d.style.cssText = "height:" + h.toFixed(1) + "px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--k-" + (i % 3 ? "ink) 35%" : "accent) 70%") + ",transparent))";
+    lines.appendChild(d);
+    STR.push({ el: d, y: (y * CH) / 580 - h / 2, len: 0.7 + kHash(i + 3) * 0.6 });
+  });
+  var blur = kSpeedBlur(q(".kp-fly"), "kp", { amount: CFG.blur, max: CFG.blurMax });
+
+  // position on snappy, pose on a late in-out curve: the card arrives twisted and flattens last
+  var TW = MT.bezier(0.62, 0, 0.3, 1), TX0 = L.tx * FW, SF = Math.round(CFG.snap * 30);
+  var prog = function (t) { return MT.ramp(t, CFG.t0, CFG.snap - CFG.t0, "snappy"); };
+  var txAt = function (t) { return MT.mix(TX0, 0, prog(t)); };
+  var sh = function (a) { return "color-mix(in srgb,var(--kp-shade) " + Math.round(Math.min(1, a * (dark ? 1 : 0.45)) * 100) + "%,transparent)"; };
+  var px = function (x) { return x.toFixed(1) + "px"; };
+
+  var tl = MT.scene(CFG.dur, function (t) {
+    var fr = Math.floor(t * 30 + 1e-4), p = prog(t), tw = MT.ramp(t, CFG.t0, CFG.twistDur, TW);
+    var tx = txAt(t), ty = CFG.arc * Math.sin((1 - p) * Math.PI * 0.5) * (1 - p);
+    var vx = t < CFG.snap + 0.067 ? MT.velocity(txAt, t) : 0, vf = Math.abs(vx) / 30; // px per second, per frame
+    var rotY = CFG.overDeg * (t < CFG.snap ? MT.ramp(t, CFG.over, CFG.overDur, "swift") : 1 - MT.spring({ t: t, delay: CFG.snap, damping: 16, stiffness: 260 }));
+    persp.style.perspective = px(MT.mix(CFG.persp0, CFG.persp1, tw));
+    card.style.transform = "translate(" + px(tx) + "," + px(ty) + ") scale(" + MT.mix(CFG.scale0, 1, MT.mix(p, tw, 0.5)).toFixed(4) + ") rotate3d(0.5,1,0.1," + MT.mix(CFG.ang, 0, tw).toFixed(3) + "deg) rotateY(" + rotY.toFixed(3) + "deg)";
+    blur(vx, 0);
+    // long slanted shadow in flight, tucked under on landing
+    var air = 1 - MT.ramp(t, CFG.t0, CFG.snap - CFG.t0 + 0.133, "out");
+    face.style.boxShadow = "0 " + px(2 + air * 8) + " " + px(6 + air * 14) + " " + sh(0.5 - air * 0.2) + "," + px(air * 90) + " " + px(40 + air * 50) + " " + px(90 + air * 40) + " -20px " + sh(0.75) + ",0 0 0 1px var(--kp-line),inset 0 1px 0 var(--kp-hi)";
+    // speed lines: length follows speed, gone below 5px a frame
+    var sa = MT.ramp(vf, 5, 40, "linear");
+    STR.forEach(function (s) {
+      var len = Math.min(1400, vf * 9 * s.len), st = s.el.style;
+      st.opacity = sa.toFixed(3); st.width = px(len); st.left = px(CX + tx + 120 - len); st.top = px(MY + ty + s.y * MT.mix(1.5, 1, p));
+    });
+    // the snap: 3 frames of shake; 48 wedges retreat outwards
+    var amp = fr >= SF && fr < SF + CFG.shakeFr ? CFG.shake * (1 - (fr - SF) / CFG.shakeFr) : 0;
+    var fT = (t - CFG.snap) / CFG.focus, on = fT >= 0 && fT < 1;
+    focus.style.opacity = on ? ((1 - fT) * 0.9).toFixed(3) : 0;
+    if (on) FOC.forEach(function (l) {
+      var r0 = l.r0 + MT.EASE.out(fT) * 420 * KD, pt = function (a, r, k) { return (MX + Math.cos(a) * r * k).toFixed(1) + "," + (MY + Math.sin(a) * r).toFixed(1); };
+      l.el.setAttribute("points", pt(l.a - l.w, 1500, 1) + " " + pt(l.a, r0, L.fx) + " " + pt(l.a + l.w, 1500, 1));
+    });
+    cam.style.transform = "translate(" + px(amp * (kHash(fr * 7 + 1) * 2 - 1)) + "," + px(amp * (kHash(fr * 13 + 2) * 2 - 1)) + ") scale(" + (1 + CFG.push * MT.ramp(t, CFG.snap, CFG.pushDur, "swift")).toFixed(5) + ")";
+    // follow-through: card text lands 3 frames late, title unskews
+    var fo = MT.ramp(t, CFG.follow, CFG.followDur, "snappy");
+    info.style.transform = "translateX(" + px(MT.mix(CFG.slide, 0, fo)) + ")";
+    title.style.transform = "skewX(" + MT.mix(CFG.skew, 0, fo).toFixed(2) + "deg)";
+    // poster band: slow drift, dragged by the fling
+    band.style.transform = "translateX(" + px(CFG.band * MT.ramp(t, 0, CFG.dur, "linear") + CFG.bandKick * (1 - MT.ramp(t, 0, CFG.bandKickDur, "out"))) + ")";
+    band.style.opacity = MT.ramp(t, 0, 0.333, "out").toFixed(3);
+    grain(t);
+  });
+  kReveal(tl, cu, "rise", CFG.cap, { gap: CFG.capGap, each: CFG.capEach });
+  window.__timelines["kanada-perspective-snap"] = tl;
+})();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,441 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"kicker","type":"string","label":"眉题（留空不要）","default":"上百个常用功能"},
+    {"id":"title","type":"string","label":"标题第一行（留空不要）","default":"所有|功能，"},
+    {"id":"title2","type":"string","label":"标题第二行，强调色（留空不要）","default":"一处|搞定。"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（只留图标场和字）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>icon-field-colorize · 图标原野点亮</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="icon-field-colorize-template">
+      <!-- Ported from video-shotcraft demos/opening/icon-field-colorize/IconFieldColorize.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette on a white backdrop with kit backdrop and vignette (the ember stage look returns under a
+           dark skin), system fonts, generic copy, upstream wordmark and "Every shot, / one place." replaced by a 40px
+           kicker and two title slots (CJK line-height 1.2, both lines at the smaller fitted size); unlit keycaps
+           panel-grey; the four sunrise wave colours derived from --k-accent in oklch; the 16 upstream glyph paths reused
+           as CSS masks (camera lens and gift ribbon as even-odd holes); one element per keycap: the top-down fill is a
+           hard-stop background layer instead of a clipped copy, the screen-white flash a mix towards white, the growing
+           glow blur two fixed-radius glows whose alphas move; stage light and row spill multiply on light skins; the
+           veil is mixed from --k-bg and grows with the text; portrait is a 9x17 grid with row/column steps rescaled to
+           end on the same frame; landscape cell 107px (was 108) so the push-in stays in frame; 6.1 s with a 1.07 s hold
+           (was 5.67 s). Kept: seed 20260718, 10 centre-out batches, 0.6-1.026 overshoot, 10px lift, 12% inhale, waves
+           at 66/72/78/84 f, 1.4 f per row, 0.25 f per column, 1.5 f jitter, 4 f fill with 1.22x pop, 5 f flash, 12 f
+           glow overshoot, 4% push-in, title timing. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* wrapper = size container; whatever changes with orientation lives inside it */
+        .ifc {
+          position: absolute; inset: 0; container-type: size;
+          /* four waves, top band to bottom: one hue family (light: gold, amber, accent, coral; dark: from the accent down) */
+          --ifc-w0: oklch(from var(--k-accent) calc(l + 0.17) calc(c - 0.04) calc(h + 40));
+          --ifc-w1: oklch(from var(--k-accent) calc(l + 0.08) calc(c - 0.02) calc(h + 18));
+          --ifc-w2: var(--k-accent);
+          --ifc-w3: oklch(from var(--k-accent) calc(l - 0.04) c calc(h - 24));
+          /* three unlit glyph greys */
+          --ifc-y0: color-mix(in srgb, var(--k-muted) 70%, var(--k-panel));
+          --ifc-y1: color-mix(in srgb, var(--k-muted) 85%, var(--k-panel));
+          --ifc-y2: color-mix(in srgb, var(--k-muted) 55%, var(--k-panel));
+          --ifc-veil: var(--k-bg);
+          --ifc-key: 18%; --ifc-fill: 8%; --ifc-spill: 22%;
+          --se: 46% 44%; --sp: 50% 50%;
+        }
+        .ifc[data-tone="dark"] {
+          --ifc-w0: var(--k-accent);
+          --ifc-w1: oklch(from var(--k-accent) calc(l - 0.04) c calc(h - 14));
+          --ifc-w2: oklch(from var(--k-accent) calc(l - 0.08) c calc(h - 28));
+          --ifc-w3: oklch(from var(--k-accent) calc(l - 0.12) c calc(h - 50));
+          --ifc-veil: color-mix(in srgb, var(--k-bg), black 45%);
+          --ifc-key: 55%; --ifc-fill: 22%; --ifc-spill: 16%;
+        }
+        /* ==== kit:derived@1 ==== */
+        .ifc {
+          --ifc-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+          --ifc-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+          --ifc-hi: color-mix(in srgb, white 80%, transparent);
+        }
+        .ifc[data-tone="dark"] {
+          --ifc-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+          --ifc-hi: color-mix(in srgb, white 6%, transparent);
+        }
+        /* ==== kit:backdrop@1 ==== */
+        .ifc-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .ifc-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        /* dark skin: upstream's stage runs from a lifted top to a deeper bottom */
+        .ifc[data-tone="dark"] .ifc-backdrop { background: linear-gradient(180deg, color-mix(in srgb, var(--k-bg), white 5%) 0%, var(--k-bg) 52%, color-mix(in srgb, var(--k-bg), black 45%) 100%); }
+        /* ==== kit:vignette@1 ==== */
+        .ifc-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--ifc-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .ifc[data-tone="dark"] .ifc-vig { --vs: 0.62; }
+        /* ==== kit:light@1 ==== */
+        .ifc-light { mix-blend-mode: multiply; }
+        .ifc[data-tone="dark"] .ifc-light { mix-blend-mode: screen; }
+        /* stage light: key from the top centre, fill from below; the script raises its opacity as the field lights */
+        .ifc-key {
+          position: absolute; inset: 0; opacity: 0.45;
+          background:
+            radial-gradient(ellipse 58% 62% at 50% 0%, color-mix(in srgb, var(--k-accent) var(--ifc-key), transparent) 0%, transparent 70%),
+            radial-gradient(ellipse 50% 46% at 50% 110%, color-mix(in srgb, var(--ifc-w0) var(--ifc-fill), transparent) 0%, transparent 72%);
+        }
+        /* light spill: one vertical gradient with a stop per lit row (written by the script) */
+        .ifc-spill { position: absolute; inset: 0; }
+        .ifc-field { position: absolute; inset: 0; }
+        /* one element per keycap (check time grows with nodes): background = next colour filling from the top (data-n,
+           --fp) over the bevel; box-shadow = edges + glow; ::after = glyph. data-w = lit by wave 0-3; --fl = white flash */
+        .ifc-i {
+          position: absolute; width: var(--ts); height: var(--ts); border-radius: var(--tr); opacity: 0;
+          --b1: color-mix(in srgb, var(--k-panel), white 6%); --b2: var(--k-panel); --b3: color-mix(in srgb, var(--k-panel), black 4%);
+          --gc: var(--gy); --nc: transparent; --ng: transparent;
+          background: linear-gradient(180deg, color-mix(in srgb, var(--nc), white 8%) 0%, var(--nc) var(--fp, 0%), transparent var(--fp, 0%)), linear-gradient(180deg, var(--b1), var(--b2) 55%, var(--b3));
+          box-shadow: inset 0 1px 0 var(--ifc-hi), inset 0 0 0 1px var(--ifc-line), 0 4px 10px -5px color-mix(in srgb, var(--ifc-shade) 40%, transparent);
+        }
+        .ifc-i::after { content: ""; position: absolute; inset: 0; margin: auto; width: var(--gs); height: var(--gs); background: linear-gradient(180deg, var(--ng) 0 var(--gf, 0%), var(--gc) var(--gf, 0%)); mask: var(--g) center / 100% 100% no-repeat; }
+        .ifc-i[data-w] {
+          --c: color-mix(in srgb, color-mix(in srgb, var(--wc), var(--jx) var(--jp)), white var(--fl, 0%));
+          --b1: color-mix(in srgb, var(--c), white 8%); --b2: var(--c); --b3: color-mix(in srgb, var(--c), black 8%);
+          --gc: color-mix(in srgb, color-mix(in srgb, var(--k-on-accent) 86%, var(--c)), white var(--fl, 0%));
+          /* fixed glow radii (a changing blur is not cached); the overshoot moves the alphas */
+          box-shadow: inset 0 1px 0 color-mix(in srgb, white 45%, transparent), inset 0 -2px 0 color-mix(in srgb, var(--c) 40%, color-mix(in srgb, black 50%, transparent)),
+            0 0 26px color-mix(in srgb, var(--c) calc(42% * var(--gk, 1)), transparent), var(--gx, 0 0 0 transparent),
+            0 10px 22px -8px color-mix(in srgb, var(--c) 42%, color-mix(in srgb, black 60%, transparent));
+        }
+        .ifc-i[data-w="0"] { --wc: var(--ifc-w0); }
+        .ifc-i[data-w="1"] { --wc: var(--ifc-w1); }
+        .ifc-i[data-w="2"] { --wc: var(--ifc-w2); }
+        .ifc-i[data-w="3"] { --wc: var(--ifc-w3); }
+        .ifc-i[data-n] { --nc: color-mix(in srgb, var(--nw), var(--jx) var(--jp)); --ng: color-mix(in srgb, var(--k-on-accent) 86%, var(--nc)); }
+        .ifc-i[data-n="0"] { --nw: var(--ifc-w0); }
+        .ifc-i[data-n="1"] { --nw: var(--ifc-w1); }
+        .ifc-i[data-n="2"] { --nw: var(--ifc-w2); }
+        .ifc-i[data-n="3"] { --nw: var(--ifc-w3); }
+        /* centre veil under the title (upstream: a near-black radial; here mixed from --k-bg) */
+        .ifc-scrim { position: absolute; inset: 0; opacity: 0; background: radial-gradient(ellipse var(--se) at var(--sp), color-mix(in srgb, var(--ifc-veil) 90%, transparent) 0%, color-mix(in srgb, var(--ifc-veil) 78%, transparent) 45%, transparent 100%); }
+        .ifc-box { position: absolute; top: 0; bottom: 0; left: 22%; right: 22%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .ifc-kick { display: block; width: 100%; margin-bottom: 30px; font-size: 40px; font-weight: 600; line-height: 1.3; letter-spacing: 0.08em; }
+        .ifc-t1, .ifc-t2 { display: block; width: 100%; font-size: 132px; font-weight: 800; line-height: 1.2; }
+        .ifc-t2 { margin-top: 6px; color: var(--k-accent); }
+        /* ==== kit:text@2 ==== */
+        .ifc-u { display: inline-block; white-space: pre; }
+        .ifc-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+        /* portrait: the title block sits in the 12%-68% band, its middle on the 40% line, 11% off each side */
+        @container (orientation: portrait) {
+          .ifc-box { top: 12%; bottom: 32%; left: 11%; right: 11%; }
+          .ifc-t1, .ifc-t2 { font-size: 120px; }
+          .ifc-scrim { --se: 70% 30%; --sp: 50% 40%; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="icon-field-colorize">
+        <div class="ifc">
+          <div class="ifc-backdrop"></div>
+          <div class="ifc-key ifc-light"></div>
+          <div class="ifc-spill ifc-light"></div>
+          <div class="ifc-vig"></div>
+          <div class="ifc-field"></div>
+          <div class="ifc-scrim"></div>
+          <div class="ifc-box">
+            <div class="ifc-kick">上百个常用功能</div>
+            <div class="ifc-t1">所有功能，</div>
+            <div class="ifc-t2">一处搞定。</div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing in seconds (upstream frames / 30), shared by both orientations: only LAND / PORT differ
+          var CFG = {
+            in0: 0.067, batch: 0.147, inJit: 0.1, fade: 0.233, grow: 0.433, lift: 10,       // 10 batches, centre out
+            inhale: 1.867, inhaleDur: 0.333, release: 2.2, releaseDur: 0.267, dim: 0.12,   // the field holds its breath
+            waves: [2.2, 2.4, 2.6, 2.8], bands: [0, 3 / 9, 5 / 9, 8 / 9],                  // start time, first row (0-1)
+            sweep: 0.42, tilt: 0.133, jit: 0.05,                                          // top-to-bottom, left-to-right
+            flip: 0.133, pop: 0.22, flash: 0.167, glow: 0.4, lit: 1.133, push: 0.04, pushEnd: 5.667,
+            scrim: 3.933, scrimDur: 0.733, kick: 4, kickDur: 0.467, kickRise: 0.6,
+            title: 4.133, title2: 4.4, word: 0.667, gap: 0.167, end: 6.1
+          };
+          // grid per orientation (px at 1080 on the short side; tile 66, glyph 32, radius 18 as upstream) and the veil radii
+          var LAND = { cols: 17, rows: 10, cx: 107, cy: 106, se: [0.46, 0.44] };
+          var PORT = { cols: 9, rows: 17, cx: 108, cy: 106, se: [0.7, 0.3] };
+          var v = { kicker: "上百个常用功能", title: "所有|功能，", title2: "一处|搞定。", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".ifc");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+          // ==== kit:text@2 ====
+          var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "ifc-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "ifc-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          function kReveal(tl, units, variant, at, o) {
+            o = o || {};
+            var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+            units.forEach(function (u, i) {
+              var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+              tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+              tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+            });
+            return tl;
+          }
+          // ==== end kit:text (rise only) ====
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          // ==== end kit:fit (kRows not needed) ====
+
+          kTone(root);
+          if (String(v.backdrop) === "off") [".ifc-backdrop", ".ifc-key", ".ifc-vig"].forEach(function (s) { q(s).style.display = "none"; });
+
+          // the 16 upstream glyphs (24x24, solid fill) as CSS masks; two-colour ones keep their cut-outs as holes
+          var SHAPES = [
+            '<path transform="scale(.92) translate(1 0)" d="M12 21s-7.5-4.7-9.6-9C.9 8.7 2.7 5 6.2 5c2 0 3.3 1 4 2.1h3.6C14.5 6 15.8 5 17.8 5c3.5 0 5.3 3.7 3.8 7-2.1 4.3-9.6 9-9.6 9z"/>',
+            '<path d="M12 2l2.7 6.3 6.8.5-5.2 4.4 1.6 6.6L12 16.2 6.1 19.8l1.6-6.6L2.5 8.8l6.8-.5z"/>',
+            '<path d="M13 2L4 14h6l-1 8 9-12h-6z"/>',
+            '<circle cx="12" cy="12" r="9"/>',
+            '<path transform="scale(.85) translate(1.5 1.5)" d="M9 3v12.3A3.5 3.5 0 1 0 11 18V7h7v6.3A3.5 3.5 0 1 0 20 16V3z"/>',
+            '<path transform="scale(.85) translate(2 2)" d="M4 4h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-5 4V6a2 2 0 0 1 2-2z"/>',
+            '<path fill-rule="evenodd" d="M5.5 6h13A2.5 2.5 0 0 1 21 8.5v8a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 16.5v-8A2.5 2.5 0 0 1 5.5 6zM12 8.9a3.6 3.6 0 1 0 0 7.2 3.6 3.6 0 1 0 0-7.2z"/><rect x="8" y="3.5" width="8" height="4" rx="1.5"/>',
+            '<path d="M6.5 19a4.5 4.5 0 0 1-.4-9A6 6 0 0 1 17.8 8.7 4.2 4.2 0 0 1 17.5 19z"/>',
+            '<path transform="scale(.9) translate(1.2 .5)" d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z"/>',
+            '<path d="M3.5 10L12 3l8.5 7V21h-6v-6h-5v6h-6z"/>',
+            '<path fill-rule="evenodd" d="M3 8h18v4H3zM5 12h14v9H5zM10.9 8h2.2v13h-2.2z"/>',
+            '<path transform="scale(.9) translate(1 1)" d="M9.4 20.6l-1 1.9 7.2-.1 4.9-8.5-2.2.1-2 3.4L13 4.5h-2.1L7.6 17.3z"/>',
+            '<path d="M20.3 6.7L9.6 17.4l-5.9-5.9 2.1-2.1 3.8 3.8 8.6-8.6z"/>',
+            '<path transform="scale(.85) translate(1.8 1.8)" d="M21.5 15.5L14 12V5.5a2 2 0 1 0-4 0V12l-7.5 3.5v2l7.5-2v4l-2.5 2v1.5l4.5-1 4.5 1V21.5l-2.5-2v-4l7.5 2z"/>',
+            '<circle cx="12" cy="12" r="4"/><path d="M12 1.5l1.4 3.6h-2.8zM12 22.5l-1.4-3.6h2.8zM1.5 12l3.6-1.4v2.8zM22.5 12l-3.6 1.4v-2.8zM4.6 4.6l3.5 1.5-2 2zM19.4 19.4l-3.5-1.5 2-2zM19.4 4.6l-1.5 3.5-2-2zM4.6 19.4l1.5-3.5 2 2z"/>',
+            '<path d="M20 4C10 4 4.5 9 4 15.7 3.9 17.5 4 20 4 20s2.7-.2 4.4-.3C15 19.2 20 13.5 20 4zM6.8 17.2C10 11 15 8 15 8s-5.5 1.5-8.8 8z"/>'
+          ];
+          SHAPES.forEach(function (s, i) {
+            root.style.setProperty("--ifc-g" + i, 'url("data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' + s + "</svg>") + '")');
+          });
+
+          // the field: upstream's seeded layout (mulberry32, 3 draws per icon in row order) on this orientation's grid
+          var S = Math.min(FW, FH) / 1.08e3, T = 66 * S, G = 32 * S, CX = L.cx * S, CY = L.cy * S, TR = 18 * S;
+          var X0 = (FW - ((L.cols - 1) * CX + CX / 2 + T)) / 2, Y0 = (FH - ((L.rows - 1) * CY + T)) / 2;
+          var from = CFG.bands.map(function (b) { return Math.round(b * (L.rows - 1)); });
+          var rowStep = CFG.sweep / (L.rows - 1), colStep = CFG.tilt / (L.cols - 1);
+          var field = q(".ifc-field"), rnd = MT.seeded(20260718), R = Math.hypot(FW / 2, FH / 2), icons = [], html = "";
+          field.style.cssText = "--ts:" + T + "px;--gs:" + G + "px;--tr:" + TR + "px";
+          for (var r = 0; r < L.rows; r++) {
+            for (var c = 0; c < L.cols; c++) {
+              var r1 = rnd(), r2 = rnd(), r3 = rnd(), x = X0 + c * CX + (r % 2) * (CX / 2), y = Y0 + r * CY;
+              var d = Math.hypot(x + T / 2 - FW / 2, y + T / 2 - FH / 2) / R, jit = (r1 - 0.5) * 0.08, arr = [];
+              for (var w = 0; w < 4; w++) if (r >= from[w]) arr.push({ k: w, at: CFG.waves[w] + (r - from[w]) * rowStep + c * colStep + r3 * CFG.jit });
+              icons.push({ r: r, t0: CFG.in0 + Math.min(9, Math.floor((d * 0.75 + r1 * 0.35) * 10)) * CFG.batch + r2 * CFG.inJit, arr: arr });
+              html += '<div class="ifc-i" style="left:' + x.toFixed(1) + "px;top:" + y.toFixed(1) + "px;--g:var(--ifc-g" + (Math.floor(r3 * 16) % 16) +
+                ");--gy:var(--ifc-y" + Math.floor(r2 * 3) + ");--jx:" + (jit < 0 ? "black" : "white") + ";--jp:" + Math.abs(jit * 100).toFixed(1) +
+                '%"></div>';
+            }
+          }
+          field.innerHTML = html;
+          icons.forEach(function (ic, i) { ic.e = field.children[i]; });
+
+          // text: every slot through kSplit -> kFit; an empty slot hides, all three empty also drops the veil.
+          // Both title lines end at the smaller fitted size, so a long first line does not sit under a huge second one
+          var units = {}, shown = [], fs = [];
+          [["kick", "kicker"], ["t1", "title"], ["t2", "title2"]].forEach(function (p) {
+            var el = q(".ifc-" + p[0]), s = String(v[p[1]] == null ? "" : v[p[1]]).trim();
+            units[p[0]] = [];
+            if (!s) { el.style.display = "none"; return; }
+            shown.push(el);
+            if (p[0] === "kick") { el.textContent = s; units.kick = [el]; kFit(el, { lines: 1 }); return; }
+            units[p[0]] = kSplit(el, "word", true, s);
+            fs.push([el, kFit(el, { lines: 1, min: 72 }).size]);
+          });
+          fs.forEach(function (e) { e[0].style.fontSize = Math.min.apply(null, fs.map(function (x) { return x[1]; })) + "px"; });
+          var scrim = q(".ifc-scrim"), key = q(".ifc-key"), spill = q(".ifc-spill");
+          if (!shown.length) scrim.style.display = "none";
+          else {
+            // the veil's solid part (78% at 45% of its radius) covers the text block plus 40px, never smaller than upstream's
+            var bw = Math.max.apply(null, shown.map(function (el) { return kLines(el).w; }));
+            var bh = shown[shown.length - 1].getBoundingClientRect().bottom - shown[0].getBoundingClientRect().top;
+            scrim.style.setProperty("--se", Math.max(FW * L.se[0], (bw / 2 + 40 * S) / 0.45).toFixed(0) + "px " + Math.max(FH * L.se[1], (bh / 2 + 40 * S) / 0.45).toFixed(0) + "px");
+          }
+
+          var EO = MT.ease("out"), EOV = MT.ease("overshoot"), ESN = MT.ease("snappy"), ESM = MT.ease("smooth");
+          // write only what changed: "w" / "n" = a data- attribute ("" removes it), "--x" = a custom property, else a style
+          var put = function (el, k, val) {
+            var c = el._c || (el._c = {});
+            if (c[k] === val) return;
+            c[k] = val;
+            if (k.length === 1) val === "" ? el.removeAttribute("data-" + k) : el.setAttribute("data-" + k, val);
+            else if (k.charAt(0) === "-") el.style.setProperty(k, val);
+            else el.style[k] = val;
+          };
+          var last = { spill: "" };
+          var tl = MT.scene(CFG.end, function (t) {
+            var inh = MT.ramp(t, CFG.inhale, CFG.inhaleDur, ESM) * (1 - MT.ramp(t, CFG.release, CFG.releaseDur, EO));
+            var push = 1 + CFG.push * MT.ramp(t, 0, CFG.pushEnd, ESM), lit = [], col = [];
+            field.style.transform = "scale(" + push.toFixed(5) + ")";
+            field.style.opacity = (1 - CFG.dim * inh).toFixed(4);
+            key.style.opacity = (0.45 + 0.35 * MT.ramp(t, CFG.waves[0], CFG.lit, EO)).toFixed(4);
+            scrim.style.opacity = MT.ramp(t, CFG.scrim, CFG.scrimDur, EO).toFixed(4);
+            icons.forEach(function (ic) {
+              var op = MT.ramp(t, ic.t0, CFG.fade, EO);
+              put(ic.e, "opacity", op.toFixed(3));
+              if (op <= 0) return;
+              var s = MT.mix(0.6, 1, MT.ramp(t, ic.t0, CFG.grow, EOV)), lift = (1 - MT.ramp(t, ic.t0, CFG.grow, ESN)) * CFG.lift * S;
+              var prev = -1, cur = -1, p = 0, since = -1;
+              ic.arr.forEach(function (a) { var qq = MT.clamp((t - a.at) / CFG.flip, 0, 1); if (qq > 0) { prev = cur; cur = a.k; p = qq; since = t - a.at; } });
+              if (cur >= 0) { lit[ic.r] = (lit[ic.r] || 0) + 1 / L.cols; col[ic.r] = cur; }
+              var flip = p > 0 && p < 1, pop = flip ? 1 + CFG.pop * Math.sin(p * Math.PI) : 1;
+              var flash = since >= CFG.flip ? Math.max(0, 1 - (since - CFG.flip) / CFG.flash) : 0;
+              var gk = since >= 0 ? 1 + 1.2 * Math.max(0, 1 - since / CFG.glow) : 1;
+              put(ic.e, "transform", "translate(0px," + lift.toFixed(2) + "px) scale(" + (s * pop).toFixed(4) + ")");
+              put(ic.e, "--gk", gk.toFixed(3));
+              put(ic.e, "--gx", gk > 1 ? "0 0 56px color-mix(in srgb, var(--c) " + (50 * (gk - 1) / 1.2).toFixed(1) + "%, transparent)" : "0 0 0 transparent");
+              // the new colour fills the cap from the top edge down (a hard stop, never a cross-fade) over the old one
+              var fp = flip ? EO(p) : 0;
+              put(ic.e, "w", String(flip ? prev : cur).replace("-1", ""));
+              put(ic.e, "n", flip ? String(cur) : "");
+              put(ic.e, "--fp", (fp * 100).toFixed(2) + "%");
+              put(ic.e, "--gf", (MT.clamp((fp * T - (T - G) / 2) / G, 0, 1) * 100).toFixed(2) + "%");
+              // a short white flash once the cap is full (screen with white = a mix towards white)
+              put(ic.e, "--fl", (45 * flash).toFixed(1) + "%");
+            });
+            // each lit row tints the stage behind it (strength = share of the row already lit)
+            var stops = [], y0 = FH / 2 + (Y0 + T / 2 - 1.1 * CY - FH / 2) * push, y1 = FH / 2 + (Y0 + (L.rows - 1) * CY + T / 2 + 1.1 * CY - FH / 2) * push;
+            for (var r = 0; r < L.rows; r++) {
+              var yy = FH / 2 + (Y0 + r * CY + T / 2 - FH / 2) * push, a = lit[r] || 0;
+              stops.push((a > 0 ? "color-mix(in srgb, var(--ifc-w" + col[r] + ") calc(var(--ifc-spill) * " + a.toFixed(3) + "), transparent)" : "transparent") + " " + yy.toFixed(1) + "px");
+            }
+            var bg = lit.length ? "linear-gradient(180deg, transparent " + y0.toFixed(1) + "px, " + stops.join(", ") + ", transparent " + y1.toFixed(1) + "px)" : "none";
+            if (bg !== last.spill) { last.spill = bg; spill.style.background = bg; }
+          });
+          // title: veil, eyebrow, then the two lines rise word by word out of their own line
+          tl.fromTo(units.kick, { opacity: 0 }, { opacity: 1, duration: CFG.kickDur, ease: "out" }, CFG.kick);
+          tl.fromTo(units.kick, { y: 12 * S }, { y: 0, duration: CFG.kickRise, ease: "snappy" }, CFG.kick);
+          kReveal(tl, units.t1, "rise", CFG.title, { each: CFG.word, gap: CFG.gap });
+          kReveal(tl, units.t2, "rise", CFG.title2, { each: CFG.word, gap: CFG.gap });
+          window.__timelines["icon-field-colorize"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

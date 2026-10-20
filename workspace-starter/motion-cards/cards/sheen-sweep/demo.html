@@ -1,0 +1,392 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"name","type":"string","label":"卡面名称（标志右边，一行 2–8 个字）","default":"示例应用"},
+    {"id":"role","type":"string","label":"左下小标签（可以留空）","default":"会员编号"},
+    {"id":"holder","type":"string","label":"左下编号或名字（可以留空）","default":"0042 7310"},
+    {"id":"tier","type":"string","label":"右下等级（可以留空，2–4 个字）","default":"专业版"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"展台"},{"value":"off","label":"透明（只留卡片）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>sheen-sweep · 单点扫光</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="sheen-sweep-template">
+      <!-- Ported from video-shotcraft demos/effects/light-play-moves/SheenSweepRetry.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette (white-first sand stage from --k-bg, metal card from --k-stage, chip from the accent),
+           system fonts, generic copy, upstream mark and wordmark replaced by a neutral engraved mark and variables, no
+           person's name; the left editorial column (eyebrow, two-line title, body, CTA pill) dropped: the card is
+           centred and scaled to 60% of the frame width (portrait 76%), every face size, the lift, the shadows and the
+           perspective scale with it; face text at least 40px (labels 28px) and engraving lifted for contrast (40% of
+           on-stage, was #57534d), the small label no longer at 80% opacity, the tier tracked 0.3em (was 0.34em); the lit
+           brushing keeps only its bright lines (the dark ones do nothing in screen).
+           Entrance spring, turn, drift, 115-degree band (two widths, 0.14 / 0.5), sweep timing and the 8-layer edge
+           kept frame for frame. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        /* ==== kit:fonts@2 (mono only) ==== */
+        @font-face { font-family: "Consolas"; src: local("Consolas"); }
+        /* ==== end kit:fonts ==== */
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          --k-mono: var(--mc-mono, Consolas, monospace);
+          --k-stage: var(--mc-stage, #0b0d12);
+          --k-on-stage: var(--mc-on-stage, #f3f5f8);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* ==== kit:text@2 (word units only) ==== */
+        .sw-u { display: inline-block; white-space: pre; }
+        /* ==== end kit:text ==== */
+        /* ==== kit:grain@1 ==== */
+        .sw-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+        /* ==== kit:derived@1 (shade only) ==== */
+        .sw { --sw-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); }
+        .sw[data-tone="dark"] { --sw-shade: color-mix(in srgb, var(--k-bg) 30%, black); }
+        /* ==== end kit:derived ==== */
+        /* ==== kit:vignette@1 ==== */
+        .sw-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--sw-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .sw[data-tone="dark"] .sw-vig { --vs: 0.55; }
+        /* ==== end kit:vignette ==== */
+        /* --u is one upstream pixel at this card size (the card is 900 upstream px wide), --cy the card's centre line,
+           --dk the desk top, --hz the soft horizon glow. --bx / --tx / --on are the sweep, written by the script */
+        .sw { position: absolute; inset: 0; container-type: size; }
+        .sw-in {
+          position: absolute; inset: 0;
+          --u: calc(60cqw / 900); --cy: 47%; --dk: 76%; --hz: 86%;
+          --sw-warm: color-mix(in srgb, var(--k-on-stage), var(--k-accent) 8%);
+          --sw-eng: color-mix(in srgb, var(--k-stage), var(--k-on-stage) 40%);
+          --sw-mid: color-mix(in srgb, var(--k-stage), white 7%);
+        }
+        .sw[data-backdrop="off"] .sw-bd { display: none; }
+        .sw-l { position: absolute; inset: 0; pointer-events: none; }
+        /* white-first stage (upstream Look.Stage, light): key light top left, accent-2 fill bottom right */
+        .sw-stage {
+          background:
+            radial-gradient(ellipse 58% 62% at 30% 8%, color-mix(in srgb, var(--k-bg) 90%, transparent), transparent 70%),
+            radial-gradient(ellipse 50% 46% at 90% 95%, color-mix(in srgb, var(--k-accent-2) 10%, transparent), transparent 72%),
+            linear-gradient(180deg, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%), color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 52%, color-mix(in srgb, var(--k-bg), var(--k-ink) 12%));
+        }
+        .sw[data-tone="dark"] .sw-stage {
+          background:
+            radial-gradient(ellipse 58% 62% at 30% 8%, color-mix(in srgb, white 9%, transparent), transparent 70%),
+            radial-gradient(ellipse 50% 46% at 90% 95%, color-mix(in srgb, var(--k-accent-2) 22%, transparent), transparent 72%),
+            linear-gradient(180deg, color-mix(in srgb, var(--k-bg), white 4%), var(--k-bg) 52%, color-mix(in srgb, var(--k-bg), black 35%));
+        }
+        .sw-hz { top: calc(var(--hz) - 9%); bottom: auto; height: 18%; filter: blur(10px); background: radial-gradient(ellipse 60% 50%, color-mix(in srgb, var(--k-bg) 50%, transparent), transparent 70%); }
+        .sw-desk { top: var(--dk); background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--sw-shade) 8%, transparent)); }
+        .sw-in .sw-vig { --vin: 42%; }
+        /* two soft shadows under the card (contact + far), outside the 3D layer; they tighten as the card lands */
+        .sw-sh { position: absolute; border-radius: 50%; background: var(--sw-shade); }
+        .sw-sh1 { left: calc(50% - var(--u) * 338); top: calc(var(--cy) + var(--u) * 249.5); width: calc(var(--u) * 756); height: calc(var(--u) * 70); filter: blur(calc(var(--u) * 26)); opacity: 0.34; }
+        .sw-sh2 { left: calc(50% - var(--u) * 360); top: calc(var(--cy) + var(--u) * 170); width: calc(var(--u) * 900); height: calc(var(--u) * 220); filter: blur(calc(var(--u) * 70)); opacity: 0.2; }
+        .sw-p { perspective: calc(var(--u) * 2400); perspective-origin: 50% calc(var(--cy) - var(--u) * 120); }
+        .sw-card { position: absolute; left: calc(50% - var(--u) * 450); top: calc(var(--cy) - var(--u) * 283.5); width: calc(var(--u) * 900); height: calc(var(--u) * 567); transform-style: preserve-3d; transform: translateY(calc(var(--u) * -6)) rotateX(7.5deg) rotateY(12.5deg); }
+        /* metal edge: 8 layers 0.8 upstream px apart, darker towards the back */
+        .sw-e { position: absolute; inset: 0; border-radius: calc(var(--u) * 38); transform: translateZ(calc(var(--u) * var(--z) * -0.8)); background: color-mix(in srgb, var(--k-stage), var(--k-on-stage) 12%); }
+        .sw-e.a { background: color-mix(in srgb, var(--k-stage), var(--k-on-stage) 52%); }
+        .sw-e.b { background: color-mix(in srgb, var(--k-stage), var(--k-on-stage) 30%); }
+        .sw-face {
+          position: absolute; inset: 0; border-radius: calc(var(--u) * 38); overflow: hidden; --bx: -200%; --tx: -50%; --on: 0;
+          background: linear-gradient(140deg, color-mix(in srgb, var(--k-stage), white 13%), var(--sw-mid) 42%, color-mix(in srgb, var(--k-stage), white 3%) 72%, color-mix(in srgb, var(--k-stage), white 8%));
+          box-shadow: inset 0 0 0 1px color-mix(in srgb, white 8%, transparent), inset 0 1.5px 0 color-mix(in srgb, white 16%, transparent);
+        }
+        /* brushed titanium: two hairline periods; the lit copy (screen, under the band) only needs the bright lines */
+        .sw-brush { opacity: 0.6; background: repeating-linear-gradient(180deg, color-mix(in srgb, white 5%, transparent) 0 1px, transparent 1px 3px), repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.25) 0 1px, transparent 1px 7px); }
+        .sw-litb { mix-blend-mode: screen; background: repeating-linear-gradient(180deg, color-mix(in srgb, white 22%, transparent) 0 1px, transparent 1px 3px); }
+        .sw-key { background: radial-gradient(ellipse 70% 90% at 12% 0%, color-mix(in srgb, var(--sw-warm) 9%, transparent), transparent 62%); }
+        .sw-chip {
+          position: absolute; left: calc(var(--u) * 60); top: calc(var(--u) * 212); width: calc(var(--u) * 116); height: calc(var(--u) * 88); border-radius: calc(var(--u) * 16); overflow: hidden;
+          background: linear-gradient(135deg, color-mix(in srgb, var(--k-accent) 35%, var(--k-on-stage)), color-mix(in srgb, var(--k-accent) 70%, var(--k-on-stage)) 42%, color-mix(in srgb, var(--k-accent) 70%, var(--k-stage)) 70%, color-mix(in srgb, var(--k-accent) 50%, var(--k-on-stage)));
+          box-shadow: inset 0 1px 0 color-mix(in srgb, white 50%, transparent), inset 0 -1px 0 rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        .sw-chip svg { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: color-mix(in srgb, var(--k-stage) 55%, transparent); stroke-width: 1.4; }
+        /* the sweep: shown only while the band crosses (--on), the band and its mask share one 115-degree geometry,
+           2x the face wide, moved by --bx */
+        .sw-sweep { opacity: var(--on); }
+        .sw-bm { mask-image: linear-gradient(115deg, transparent 38%, #000 50%, transparent 62%); mask-size: 200% 100%; mask-position: var(--bx) 0; mask-repeat: no-repeat; }
+        .sw-band {
+          mix-blend-mode: screen;
+          background: linear-gradient(115deg, transparent 36%, color-mix(in srgb, var(--sw-warm) 6%, transparent) 43%, color-mix(in srgb, var(--sw-warm) 14%, transparent) 47.5%, color-mix(in srgb, var(--sw-warm) 50%, transparent) 50%, color-mix(in srgb, var(--sw-warm) 14%, transparent) 52.5%, color-mix(in srgb, var(--sw-warm) 6%, transparent) 57%, transparent 64%) var(--bx) 0 / 200% 100% no-repeat;
+        }
+        .sw-top { bottom: auto; height: 2px; background: linear-gradient(90deg, transparent calc(var(--tx) - var(--u) * 170), color-mix(in srgb, var(--sw-warm) 85%, transparent) var(--tx), transparent calc(var(--tx) + var(--u) * 170)); }
+        /* face: engraved (a groove: lit lower lip, dark upper lip); the lit copy glows instead */
+        .sw-fc { z-index: 1; display: flex; flex-direction: column; padding: calc(var(--u) * 52) calc(var(--u) * 60) calc(var(--u) * 50); color: var(--sw-eng); }
+        .sw-lit { color: var(--sw-warm); }
+        .sw-t { line-height: 1.25; text-shadow: 0 1px 0 color-mix(in srgb, white 10%, transparent), 0 -1px 0 rgba(0, 0, 0, 0.6); }
+        .sw-lit .sw-t { text-shadow: 0 0 14px color-mix(in srgb, var(--sw-warm) 50%, transparent); }
+        .sw-lit [data-t]::before { content: attr(data-t); }
+        .sw-lit .sw-nfc { filter: drop-shadow(0 0 8px color-mix(in srgb, var(--sw-warm) 50%, transparent)); }
+        .sw-r1 { display: flex; align-items: center; gap: calc(var(--u) * 16); }
+        .sw-mark { flex: none; width: calc(var(--u) * 66); height: calc(var(--u) * 66); fill: currentColor; }
+        .sw-cut { fill: var(--sw-mid); }
+        .sw-name { flex: 1; min-width: 0; font-size: max(40px, calc(var(--u) * 42)); font-weight: 700; letter-spacing: 0.01em; }
+        .sw-nfc { flex: none; width: calc(var(--u) * 46); height: calc(var(--u) * 46); fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+        .sw-gap { flex: 1; }
+        .sw-bot { display: flex; align-items: flex-end; gap: calc(var(--u) * 24); }
+        .sw-who { flex: 1; min-width: 0; }
+        .sw-role { font-size: max(28px, calc(var(--u) * 22)); font-weight: 700; letter-spacing: 0.3em; }
+        .sw-holder { margin-top: calc(var(--u) * 12); font-family: var(--k-mono), var(--k-font); font-size: max(40px, calc(var(--u) * 36)); letter-spacing: 0.16em; }
+        .sw-tier { flex: none; max-width: 45%; font-size: max(40px, calc(var(--u) * 30)); font-weight: 700; letter-spacing: 0.3em; text-align: right; }
+        /* portrait: a bigger card higher up (76% of the width, so its near edge in perspective stays inside x 108-972;
+           centre at 40%), desk and horizon move up with it */
+        @container (orientation: portrait) {
+          .sw-in { --u: calc(76cqw / 900); --cy: 40%; --dk: 60%; --hz: 68%; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="sheen-sweep">
+        <div class="sw">
+          <div class="sw-in">
+            <div class="sw-l sw-bd sw-stage"></div>
+            <div class="sw-l sw-bd sw-hz"></div>
+            <div class="sw-l sw-bd sw-desk"></div>
+            <div class="sw-l sw-bd sw-vig"></div>
+            <div class="sw-l sw-bd sw-grain"></div>
+            <div class="sw-bd sw-sh sw-sh1"></div>
+            <div class="sw-bd sw-sh sw-sh2"></div>
+            <div class="sw-l sw-p">
+              <div class="sw-card">
+                <i class="sw-e" style="--z: 8"></i><i class="sw-e" style="--z: 7"></i><i class="sw-e" style="--z: 6"></i><i class="sw-e" style="--z: 5"></i>
+                <i class="sw-e b" style="--z: 4"></i><i class="sw-e b" style="--z: 3"></i><i class="sw-e a" style="--z: 2"></i><i class="sw-e a" style="--z: 1"></i>
+                <div class="sw-face">
+                  <div class="sw-l sw-brush"></div>
+                  <div class="sw-l sw-key"></div>
+                  <div class="sw-chip"><svg viewBox="0 0 116 88"><path d="M0 30H38M0 58H38M78 30H116M78 58H116M38 0V88M78 0V88"></path><rect x="38" y="22" width="40" height="44" rx="9"></rect></svg></div>
+                  <div class="sw-l sw-sweep sw-litb sw-bm"></div>
+                  <div class="sw-l sw-sweep sw-band"></div>
+                  <div class="sw-l sw-fc">
+                    <div class="sw-r1">
+                      <svg class="sw-mark" viewBox="0 0 128 128"><rect x="8" y="8" width="112" height="112" rx="30"></rect><circle class="sw-cut" cx="46" cy="46" r="16"></circle><rect class="sw-cut" x="30" y="78" width="68" height="16" rx="8"></rect></svg>
+                      <div class="sw-t sw-name">示例应用</div>
+                      <svg class="sw-nfc" viewBox="0 0 24 24"><path d="M6 8.85a4.5 4.5 0 0 1 0 6.3M9.2 6.4a8 8 0 0 1 0 11.2M12.4 3.95a11.5 11.5 0 0 1 0 16.1"></path></svg>
+                    </div>
+                    <div class="sw-gap"></div>
+                    <div class="sw-bot">
+                      <div class="sw-who"><div class="sw-t sw-role">会员编号</div><div class="sw-t sw-holder">0042 7310</div></div>
+                      <div class="sw-t sw-tier">专业版</div>
+                    </div>
+                  </div>
+                  <div class="sw-l sw-sweep sw-top"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing in seconds (upstream frames / 30), shared by both orientations: the card lands on a slow spring
+          // (shadow 4f behind), holds, then turns 7 degrees towards the light (54-96f) while the band sweeps once
+          // (58-90f); afterwards it drifts 1.5 degrees more until 150f
+          var CFG = { dur: 5, appear: 0.267, lag: 0.133, sw0: 1.933, sw1: 3, turn0: 1.8, turn1: 3.2 };
+          // spring of the landing (upstream: heavy, no bounce); the layout per orientation lives in the CSS (--u, --cy)
+          var SPR = { damping: 24, stiffness: 70, mass: 1.1 };
+          var v = { name: "示例应用", role: "会员编号", holder: "0042 7310", tier: "专业版", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k]; // "" hides role / holder / tier
+          } catch (e) {}
+
+          var root = document.querySelector(".sw");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          root.setAttribute("data-orient", FH > FW ? "portrait" : "landscape");
+          root.setAttribute("data-backdrop", String(v.backdrop) === "off" ? "off" : "on");
+
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+
+          // ==== kit:text@2 ====
+          var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "sw-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "sw-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          // ==== end kit:text ====
+
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          // ==== end kit:fit ====
+
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+
+          kTone(root);
+          // face text: each slot split into units and fitted to its own box; empty optional slots are removed. The
+          // short label slots go per character: word units lose the space after a lone "·" ("成员 A · 示例用户")
+          [["name", 40, "word"], ["role", 28, "char"], ["holder", 40, "char"], ["tier", 40, "char"]].forEach(function (s) {
+            var el = q(".sw-" + s[0]);
+            if (!String(v[s[0]]).trim()) { el.style.display = "none"; return; }
+            kSplit(el, s[2], false, v[s[0]]);
+            kFit(el, { lines: 1, min: s[1] });
+          });
+          // the lit engraving: the same face as ::before copies (decoration), revealed by the band's mask
+          var face = q(".sw-face"), lit = q(".sw-fc").cloneNode(true);
+          lit.className += " sw-lit sw-sweep sw-bm";
+          [].forEach.call(lit.querySelectorAll(".sw-t"), function (el) { el.setAttribute("data-t", el.textContent); el.textContent = ""; });
+          face.insertBefore(lit, q(".sw-top"));
+
+          var card = q(".sw-card"), sh1 = q(".sw-sh1"), sh2 = q(".sw-sh2"), W = card.offsetWidth, H = card.offsetHeight, u = W / 900;
+          var grain = kGrain(q(".sw-grain"));
+          var tl = MT.scene(CFG.dur, function (t) {
+            var en = MT.spring({ t: t, damping: SPR.damping, stiffness: SPR.stiffness, mass: SPR.mass });
+            var si = MT.spring({ t: t, delay: CFG.lag, damping: SPR.damping, stiffness: SPR.stiffness, mass: SPR.mass });
+            var turn = MT.ramp(t, CFG.turn0, CFG.turn1 - CFG.turn0, "smooth"), drift = MT.ramp(t, CFG.turn1, CFG.dur - CFG.turn1, "out");
+            var ap = MT.ramp(t, 0, CFG.appear, "out");
+            card.style.opacity = ap;
+            card.style.transform = "translateY(" + ((MT.mix(120, 0, en) - 6 * drift) * u).toFixed(2) + "px) rotateX(" + (MT.mix(16, 9, en) - 1.5 * turn).toFixed(3) +
+              "deg) rotateY(" + (MT.mix(36, 21, en) - 7 * turn - 1.5 * drift).toFixed(3) + "deg) scale(" + MT.mix(0.94, 1, en).toFixed(4) + ")";
+            sh1.style.opacity = (ap * MT.mix(0.08, 0.34, si)).toFixed(3);
+            sh1.style.transform = "translateY(" + (MT.mix(60, 0, si) * u).toFixed(1) + "px)";
+            sh2.style.opacity = (ap * MT.mix(0.05, 0.2, si)).toFixed(3);
+            // the band centre runs from 0.45W left of the card to 0.45W right of it; the top hairline lights where
+            // the band meets the top edge (half the height along the 115-degree slant)
+            var c = MT.mix(-0.45 * W, 1.45 * W, MT.ramp(t, CFG.sw0, CFG.sw1 - CFG.sw0, "swift"));
+            face.style.setProperty("--on", t >= CFG.sw0 && t <= CFG.sw1 ? 1 : 0);
+            face.style.setProperty("--bx", (c - W).toFixed(1) + "px");
+            face.style.setProperty("--tx", (c + 0.2332 * H).toFixed(1) + "px");
+            grain(t);
+          });
+          window.__timelines["sheen-sweep"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

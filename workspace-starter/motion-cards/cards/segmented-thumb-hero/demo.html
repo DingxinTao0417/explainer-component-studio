@@ -1,0 +1,353 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"a","type":"string","label":"第一段文字（起始选中，一行放得下的短词）","default":"对话"},
+    {"id":"b","type":"string","label":"第二段文字（滑过去后选中，带图标弹出）","default":"自动"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>segmented-thumb-hero · 分段滑块特写</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="segmented-thumb-hero-template">
+      <!-- Ported from video-shotcraft demos/interaction/segmented-thumb-hero/SegmentedThumbHero.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition (MT.scene), frames to seconds;
+           neutral --k-* palette, system fonts, generic copy (two labels as variables, upstream Prompt/Film and its clapper icon
+           replaced by a chat bubble and a smiling robot face); landscape control 1200x240 (upstream 1080x220) and a portrait
+           layout 864x200 on the 40% line; the old icon's slot closes continuously with its scale (upstream snaps the width
+           to 0 at scale 0.05) and the new icon's slot opens with min(1, scale); label weight 700 and tracking 0 for CJK.
+           Timing, easings, spring values, 8-frame slide with lead/trail stretch, 1.5% settle, 6% speed blur, press and ripple
+           are as upstream. Backdrop, vignette, grain, contact light pool and the two-layer shadows are kept (palette-derived). -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* ==== kit:grain@1 ==== */
+        .st-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+        /* the wrapper is the size container (portrait rules in @container only reach its children).
+           Geometry vars below are the static defaults (landscape); the script writes the same vars from LAND / PORT */
+        .st { position: absolute; inset: 0; container-type: size; --cw: 1200px; --ch: 240px; --pad: 18px; --icw: 88px; --gap: 24px; --fs: 80px; --cyn: 0.5;
+          --cy: calc(var(--cn, var(--cyn)) * 100%); --segw: calc((var(--cw) - 2px - 2 * var(--pad)) / 2); --th: calc(var(--ch) - 2px - 2 * var(--pad));
+          --st-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+          --st-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+          --st-hi: color-mix(in srgb, white 80%, transparent);
+          --st-track: color-mix(in srgb, var(--k-panel), var(--k-ink) 6%);
+          --st-track-2: color-mix(in srgb, var(--k-panel), var(--k-ink) 3%);
+          --st-thumb: var(--k-bg); --st-thumb-2: color-mix(in srgb, var(--k-bg), var(--k-ink) 2%); --st-lit: white;
+          --st-ring: color-mix(in srgb, var(--k-ink) 6%, transparent); --st-k: 1; }
+        .st[data-tone="dark"] { --st-shade: color-mix(in srgb, var(--k-bg) 30%, black); --st-hi: color-mix(in srgb, white 6%, transparent);
+          --st-track: color-mix(in srgb, var(--k-bg), black 28%); --st-track-2: color-mix(in srgb, var(--k-bg), black 18%);
+          --st-thumb: color-mix(in srgb, var(--k-panel), white 12%); --st-thumb-2: color-mix(in srgb, var(--k-panel), white 6%);
+          --st-lit: color-mix(in srgb, white 14%, transparent); --st-ring: color-mix(in srgb, white 10%, transparent); --st-k: 2.6; }
+        .st-bg, .st-pool { pointer-events: none; }
+        /* paper-like light: vertical gradient, soft main light at 50% 30%, an accent trace at the bottom centre (upstream 7%) */
+        .st-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .st-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 55% 60% at 50% 88%, color-mix(in srgb, var(--k-accent) 7%, transparent), transparent 70%), radial-gradient(ellipse 62% 70% at 50% 30%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        .st-vig { position: absolute; inset: 0; pointer-events: none; --vs: 0.14; --vc: var(--st-shade);
+          background: radial-gradient(ellipse 72% 72% at 50% 46%, transparent 45%, color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) 75%, color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+                      radial-gradient(ellipse 100% 100% at 50% 46%, transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%); }
+        .st[data-tone="dark"] .st-vig { --vs: 0.4; }
+        /* contact light pool under the control: lands the control on the surface once it has floated in */
+        .st-pool { position: absolute; width: calc(var(--cw) * 1.1667); height: calc(var(--ch) * 1.18); left: calc(50% - var(--cw) * 0.5833); top: calc(var(--cy) + 40px);
+          background: radial-gradient(ellipse 50% 50% at 50% 50%, color-mix(in srgb, white 75%, transparent) 0%, transparent 70%); }
+        .st[data-tone="dark"] .st-pool { background: radial-gradient(ellipse 50% 50% at 50% 50%, color-mix(in srgb, white 6%, transparent) 0%, transparent 70%); }
+        /* the control: a recessed track (inner shadow + hairline), thumb is the lit raised part */
+        .st-ctl { position: absolute; box-sizing: border-box; left: calc(50% - var(--cw) / 2); top: calc(var(--cy) - var(--ch) / 2); width: var(--cw); height: var(--ch); padding: var(--pad);
+          display: flex; align-items: center; border-radius: calc(var(--ch) / 2); border: 1px solid color-mix(in srgb, var(--k-ink) 9%, transparent);
+          background: linear-gradient(180deg, var(--st-track) 0%, var(--st-track-2) 100%);
+          box-shadow: inset 0 2px 5px color-mix(in srgb, var(--st-shade) 8%, transparent), inset 0 -1px 0 var(--st-hi), 0 1px 0 var(--st-hi), 0 14px 44px -18px color-mix(in srgb, var(--st-shade) 20%, transparent); }
+        .st-tb { position: absolute; inset: 0; z-index: 1; }
+        .st-thumb { position: absolute; top: var(--pad); left: calc(var(--pad) + var(--segw)); width: var(--segw); height: var(--th); border-radius: calc(var(--th) / 2);
+          background: linear-gradient(180deg, var(--st-thumb) 0%, var(--st-thumb-2) 100%);
+          box-shadow: inset 0 1.5px 0 var(--st-lit), 0 0 0 1px var(--st-ring), 0 2px 4px color-mix(in srgb, var(--st-shade) calc(8% * var(--st-k)), transparent), 0 12px 28px -8px color-mix(in srgb, var(--st-shade) calc(20% * var(--st-k)), transparent); }
+        .st-seg { position: relative; z-index: 2; flex: none; width: var(--segw); height: var(--th); display: flex; align-items: center; justify-content: center; font-size: var(--fs); font-weight: 700; line-height: 1.15; color: var(--k-muted); }
+        .st-seg.st-on { color: var(--k-ink); }
+        .st-lb { display: block; text-align: center; min-width: 0; }
+        .st-ic { position: relative; flex: none; width: var(--icw); height: var(--icw); margin-right: var(--gap); }
+        .st-seg:nth-child(2) .st-ic { width: 0; margin-right: 0; }
+        .st-ii { position: absolute; left: 50%; top: 0; width: var(--icw); height: var(--icw); margin-left: calc(var(--icw) / -2); }
+        .st-seg:nth-child(2) .st-ii { transform: scale(0); }
+        .st-ii svg { display: block; width: 100%; height: 100%; }
+        .st-k { fill: none; stroke: var(--k-ink); stroke-linecap: round; stroke-linejoin: round; }
+        .st-ac { fill: var(--k-accent); }
+        .st-as { fill: none; stroke: var(--k-accent); stroke-linecap: round; }
+        .st-ring { position: absolute; z-index: 3; box-sizing: border-box; border-radius: 50%; border: 3px solid var(--k-accent); opacity: 0; width: 0; height: 0;
+          background: radial-gradient(circle, transparent 50%, color-mix(in srgb, var(--k-accent) 12%, transparent) 100%); }
+        .st-cur { position: absolute; z-index: 4; width: 130px; height: 150px; transform-origin: 15% 10%; left: calc(50% - var(--cw) / 2 + var(--cw) * 0.75 - 20px); top: calc(var(--cy) - var(--ch) / 2 + var(--ch) * 0.7727 - 10px);
+          filter: drop-shadow(0 2px 3px color-mix(in srgb, var(--st-shade) 22%, transparent)) drop-shadow(0 12px 18px color-mix(in srgb, var(--st-shade) 20%, transparent)); }
+        .st-cur path { fill: var(--k-bg); stroke: var(--k-ink); stroke-width: 1.6; stroke-linejoin: round; }
+        /* portrait: 864 wide (80%) on the 40% line, labels 72px; same timing */
+        @container (orientation: portrait) {
+          .st { --cw: 864px; --ch: 200px; --pad: 14px; --icw: 72px; --gap: 18px; --fs: 72px; --cyn: 0.4; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="segmented-thumb-hero">
+        <div class="st">
+          <div class="st-bg"><div class="st-backdrop"></div></div>
+          <div class="st-vig"></div>
+          <div class="st-grain"></div>
+          <div class="st-pool"></div>
+          <div class="st-ctl">
+            <div class="st-tb"><div class="st-thumb"></div></div>
+            <div class="st-seg"><span class="st-ic"><span class="st-ii"><svg viewBox="0 0 40 40"><path class="st-k" style="stroke-width:2.8" d="M9 8.5 H31 a3.5 3.5 0 0 1 3.5 3.5 V24 a3.5 3.5 0 0 1 -3.5 3.5 H19 L12 33 V27.5 H9 a3.5 3.5 0 0 1 -3.5 -3.5 V12 a3.5 3.5 0 0 1 3.5 -3.5 Z"/><path class="st-k" style="stroke-width:2.6" d="M12 15 H28 M12 21 H22"/></svg></span></span><span class="st-lb">对话</span></div>
+            <div class="st-seg st-on"><span class="st-ic"><span class="st-ii"><svg viewBox="0 0 40 40"><rect class="st-k" style="stroke-width:2.8" x="6" y="14" width="28" height="20" rx="6"/><path class="st-k" style="stroke-width:2.6" d="M20 14 V8.5"/><circle class="st-ac" cx="20" cy="6.5" r="2.4"/><circle class="st-ac" cx="14.5" cy="22" r="1.9"/><circle class="st-ac" cx="25.5" cy="22" r="1.9"/><path class="st-as" style="stroke-width:2.5" d="M14.8 27 Q20 31.2 25.2 27"/></svg></span></span><span class="st-lb">自动</span></div>
+          </div>
+          <div class="st-ring"></div>
+          <svg class="st-cur" viewBox="0 0 26 30" data-layout-allow-overflow><path d="M4 2 L4 24 L9.5 18.5 L13 27 L16.8 25.4 L13.3 17 L21 17 Z"/></svg>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing in seconds (upstream frames / 30), shared by both orientations
+          var CFG = {
+            dur: 3.667,                    // scene length (110 frames)
+            float: 0, floatSpring: { damping: 14, stiffness: 120, mass: 0.9 }, // control floats in from below
+            cursor: 0.667, cursorDur: 0.8, // cursor glides in from outside the frame (20f, 24f, power3.out)
+            click: 1.6, pressDur: [0.1, 0.233], // press 48f: scale 1 -> 0.86 in 3f, back by 7f
+            slide: 1.733, slideEnd: 2.0,   // thumb slide 52f -> 60f (8f), power3.out
+            ripple: 1.6, rippleDur: 0.4,   // ring from the click point (12f, power2.out)
+            oldOut: 0.2,                   // old icon closes over 6f, power3.in
+            iconSpring: { damping: 10, stiffness: 220, mass: 0.6 }, // new icon pops at slideEnd
+            settle: 0.015, settleDur: 0.2  // 1.5% overshoot of the thumb after it lands, 6f
+          };
+          // layout per orientation (px). The same numbers sit in the CSS as static defaults; the script writes them as vars
+          var LAND = { cw: 1200, ch: 240, pad: 18, icw: 88, gap: 24, fs: 80, cyn: 0.5, rise: 200, from: [100, 120], tip: [0.75, 0.7727] };
+          var PORT = { cw: 864, ch: 200, pad: 14, icw: 72, gap: 18, fs: 72, cyn: 0.4, rise: 200, from: [100, 120], tip: [0.75, 0.7727] };
+          var v = { a: "对话", b: "自动", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".st");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          var S = Math.min(FW, FH) / (18 * 60); // fixed-pixel amounts (float, cursor offsets, ripple) scale with the short side
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== end kit:tone ====
+
+// ==== kit:fit@1 ====
+function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+      var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+      if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+      row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+function kRows(el, cls) {
+  if (!el.children.length) return [];
+  var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+  var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+  kids.forEach(function (c, i) {
+    if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+    if (tops[i] != null) last = tops[i];
+    row.appendChild(c);
+  });
+  return [].slice.call(el.children);
+}
+// ==== end kit:fit ====
+
+// ==== kit:speedblur@1 ====
+function kSpeedBlur(box, prefix, o) {
+  o = o || {};
+  var amount = o.amount || 0.45, max = o.max || 36;
+  var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+  var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+  svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+  var outer = document.createElement("div"), inner = document.createElement("div");
+  outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+  while (box.firstChild) inner.appendChild(box.firstChild);
+  outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+  var fe = svg.firstChild.firstChild;
+  return function (vx, vy) {
+    vy = vy || 0;
+    var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+    if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+    var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+    fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+    outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+    inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+    outer.style.filter = "url(#" + id + ")";
+  };
+}
+// ==== end kit:speedblur ====
+
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+      "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+      "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+      "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+      "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+}
+// ==== end kit:grain ====
+
+          var tone = kTone(root);
+          var DK = tone === "dark";
+          ["cw", "ch", "pad", "icw", "gap", "fs"].forEach(function (n) { root.style.setProperty("--" + n, L[n] + "px"); });
+          root.style.setProperty("--cn", L.cyn);
+          if (String(v.backdrop) === "off") ["bg", "vig", "grain", "pool"].forEach(function (n) { q(".st-" + n).style.display = "none"; });
+          var draw = kGrain(q(".st-grain"));
+
+          var ctl = q(".st-ctl"), thumb = q(".st-thumb"), ring = q(".st-ring"), cur = q(".st-cur"), pool = q(".st-pool");
+          var segs = [].slice.call(root.querySelectorAll(".st-seg"));
+          var lbs = segs.map(function (s) { return s.querySelector(".st-lb"); });
+          var ics = segs.map(function (s) { return s.querySelector(".st-ic"); });
+          var iis = segs.map(function (s) { return s.querySelector(".st-ii"); });
+          // geometry from the same numbers as the CSS (the control has a 1px border: the padding box is cw - 2)
+          var CW = L.cw, CH = L.ch, PAD = L.pad, SEGW = (CW - 2 - 2 * PAD) / 2, TH = CH - 2 - 2 * PAD, IW = L.icw, GAP = L.gap;
+          var ctlL = FW / 2 - CW / 2, ctlT = FH * L.cyn - CH / 2;
+          var tipX = ctlL + CW * L.tip[0], tipY = ctlT + CH * L.tip[1]; // click point = cursor tip
+
+          // labels: variable text, fitted with the icon's slot reserved (both icons are open while measuring)
+          var txt = [String(v.a).trim() || "对话", String(v.b).trim() || "自动"];
+          ics.forEach(function (ic) { ic.style.width = IW + "px"; ic.style.marginRight = GAP + "px"; });
+          var LW = SEGW * 0.9 - IW - GAP;
+          var fs = lbs.map(function (lb, i) {
+            lb.textContent = txt[i]; lb.style.maxWidth = LW + "px";
+            return kFit(lb, { lines: 1, min: 40, width: LW }).size;
+          });
+          // both labels share the smaller size (a segmented control has one type size); re-check the wrap at that size
+          lbs.forEach(function (lb) { kFit(lb, { lines: 1, min: 40, max: Math.min(fs[0], fs[1]), width: LW }); });
+          ics.forEach(function (ic) { ic.style.width = ""; ic.style.marginRight = ""; });
+          var blur = kSpeedBlur(q(".st-tb"), "st", { amount: 0.06, max: 6 });
+          var cMuted = kRGB(root, "var(--k-muted)"), cInk = kRGB(root, "var(--k-ink)");
+          var tint = function (p) { return "rgb(" + [0, 1, 2].map(function (i) { return Math.round(cMuted[i] + (cInk[i] - cMuted[i]) * p); }).join(",") + ")"; };
+          var shade = function (a) { return "color-mix(in srgb, var(--st-shade) " + Math.min(100, a * 100).toFixed(1) + "%, transparent)"; };
+          var K = DK ? 2.6 : 1;
+
+          var slideAt = function (t, ease) { return MT.ramp(t, CFG.slide, CFG.slideEnd - CFG.slide, ease); };
+          var settle = function (t) { var f = Math.min(1, (t - CFG.slideEnd) / CFG.settleDur); return t < CFG.slideEnd ? 0 : CFG.settle * Math.sin(f * Math.PI) * (1 - f); };
+
+          var tl = MT.scene(CFG.dur, function (t) {
+            var fl = MT.spring({ t: t, delay: CFG.float, damping: CFG.floatSpring.damping, stiffness: CFG.floatSpring.stiffness, mass: CFG.floatSpring.mass });
+            ctl.style.transform = "translateY(" + (MT.mix(L.rise * S, 0, fl)).toFixed(2) + "px)";
+            ctl.style.opacity = Math.min(1, fl * 1.5).toFixed(3);
+            pool.style.opacity = Math.min(1, fl).toFixed(3);
+            // track shadow settles as the control lands: offset 30 -> 14, blur 80 -> 44, strength .32 -> .20
+            ctl.style.boxShadow = "inset 0 2px 5px " + shade(0.08 * K) + ", inset 0 -1px 0 var(--st-hi), 0 1px 0 var(--st-hi), 0 " +
+              MT.mix(30, 14, fl).toFixed(1) + "px " + MT.mix(80, 44, fl).toFixed(1) + "px -18px " + shade(MT.mix(0.32, 0.2, fl) * K);
+            draw(t);
+
+            // thumb: ease-out body, leading edge a touch quicker (power4), trailing edge slower (power2) -> stretches ~10% mid-slide
+            var thumbT = slideAt(t, "power3.out"), st = settle(t);
+            var l = PAD + (slideAt(t, "power2.out") + st) * SEGW, r = PAD + SEGW + (slideAt(t, "power4.out") + st) * SEGW;
+            thumb.style.left = l.toFixed(2) + "px"; thumb.style.width = (r - l).toFixed(2) + "px";
+            blur(MT.velocity(function (u) { return PAD + slideAt(u, "power3.out") * SEGW; }, t));
+
+            // labels follow the thumb continuously (no hard colour flip at the midpoint)
+            var amt = MT.clamp((thumbT - 0.2) / 0.6, 0, 1);
+            segs[0].style.color = tint(1 - amt); segs[1].style.color = tint(amt);
+            // icons: new one pops with an overshoot, old one closes; each slot width follows min(1, scale) so the text re-centres smoothly
+            var inS = t >= CFG.slideEnd ? MT.spring({ t: t, delay: CFG.slideEnd, damping: CFG.iconSpring.damping, stiffness: CFG.iconSpring.stiffness, mass: CFG.iconSpring.mass }) : 0;
+            var outS = 1 - MT.ramp(t, CFG.slide, CFG.oldOut, "power3.in");
+            [outS, inS].forEach(function (s, i) {
+              var w = Math.min(1, Math.max(0, s));
+              ics[i].style.width = (IW * w).toFixed(2) + "px"; ics[i].style.marginRight = (GAP * w).toFixed(2) + "px";
+              iis[i].style.transform = "scale(" + Math.max(0, s).toFixed(4) + ")";
+            });
+
+            // cursor: from outside the bottom-right corner to the tip target, then press
+            var ct = MT.ramp(t, CFG.cursor, CFG.cursorDur, "power3.out");
+            var cx = MT.mix(FW + L.from[0] * S, tipX - 20, ct), cy = MT.mix(FH + L.from[1] * S, tipY - 10, ct);
+            var pr = t < CFG.click ? 0 : t < CFG.click + CFG.pressDur[0] ? (t - CFG.click) / CFG.pressDur[0] : MT.clamp(1 - (t - CFG.click - CFG.pressDur[0]) / (CFG.pressDur[1] - CFG.pressDur[0]), 0, 1);
+            cur.style.left = cx.toFixed(2) + "px"; cur.style.top = cy.toFixed(2) + "px";
+            cur.style.transform = "scale(" + (1 - pr * 0.14).toFixed(4) + ")";
+            cur.style.filter = "drop-shadow(0 " + (2 - pr).toFixed(2) + "px " + (3 - pr).toFixed(2) + "px " + shade(0.22) + ") drop-shadow(0 " + (12 - pr * 6).toFixed(2) + "px " + (18 - pr * 6).toFixed(2) + "px " + shade(0.2) + ")";
+            // ring: centred on the click point, above the thumb, never follows it
+            var rp = MT.ramp(t, CFG.ripple, CFG.rippleDur, "power2.out"), on = t > CFG.ripple && rp < 1;
+            ring.style.width = ring.style.height = (260 * S * rp).toFixed(2) + "px";
+            ring.style.left = (tipX - 130 * S * rp).toFixed(2) + "px"; ring.style.top = (tipY - 130 * S * rp).toFixed(2) + "px";
+            ring.style.opacity = on ? ((1 - rp) * 0.9).toFixed(3) : "0";
+          });
+          window.__timelines["segmented-thumb-hero"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

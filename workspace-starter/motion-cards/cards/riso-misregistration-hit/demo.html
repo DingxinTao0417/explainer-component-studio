@@ -1,0 +1,346 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"标题（用 | 分成两行，每行 2–5 个字）","default":"这一步|最关键"},
+    {"id":"label","type":"string","label":"版记（左上角小字）","default":"第 3 节 · 本周任务"},
+    {"id":"info","type":"string","label":"底栏（用 | 分隔，最多 3 条，每条 2–6 个字）","default":"自动整理|一键导出|多人协作"},
+    {"id":"stamp","type":"string","label":"圆章上的字（2–4 个字）","default":"已核对"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"纸面海报"},{"value":"off","label":"透明（只留标题和圆章）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>riso-misregistration-hit · 套印错位冲击</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="riso-misregistration-hit-template">
+      <!-- Ported from video-shotcraft demos/effects/riso-print-hits/RisoMisregistrationHit.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette (plates accent x accent-2), system fonts, generic copy, upstream mark removed; portrait
+           layout. Poster: the short CJK title (810px wide, was ~1200px) no longer overprints the sun; stamp moved off
+           the sun; vignette under the text, not on top; one 40px line per info cell (was bold head + 32px line); fly
+           starts at the frame edge (1800 / 960px, was 1700px); split scales with the title size (20px at 270px).
+           Fly, hit, split, snap, pulse, kick, stamp and push timing kept frame for frame. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* paper and ink, mixed from the palette: a faintly warm sheet; plates multiply into it (screen on dark skins) */
+        .rp {
+          position: absolute; inset: 0; container-type: size;
+          --rp-paper: color-mix(in srgb, color-mix(in srgb, var(--k-bg), var(--k-accent) 4%), var(--k-ink) 3%);
+          --rp-paper-hi: color-mix(in srgb, var(--k-bg), var(--k-accent) 2%);
+          --rp-paper-lo: color-mix(in srgb, var(--rp-paper), var(--rp-shade) 6%);
+          --rp-shade: color-mix(in srgb, var(--k-ink) 70%, var(--k-accent));
+          --rp-blend: multiply;
+        }
+        .rp[data-tone="dark"] { --rp-blend: screen; --rp-shade: color-mix(in srgb, var(--k-bg) 30%, black); }
+        .rp[data-backdrop="off"] .rp-deco { display: none; }
+        .rp-cam { position: absolute; inset: 0; transform-origin: 40% 50%; }
+        .rp-paper { position: absolute; inset: 0; background: radial-gradient(ellipse 72% 70% at 42% 44%, var(--rp-paper-hi) 0%, var(--rp-paper) 58%, var(--rp-paper-lo) 100%); }
+        /* ==== kit:grain@1 — the layer kGrain() draws on ==== */
+        .rp-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+        /* ==== kit:vignette@1 — edges pressed down with a palette-tinted shade (upstream Polish.Vignette) ====
+           --vs strength, --vin clear centre, --vx / --vy light centre; here it sits under every text layer */
+        .rp-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.13; --vin: 55%; --vx: 50%; --vy: 46%; --vc: var(--rp-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .rp[data-tone="dark"] .rp-vig { --vs: 0.4; }
+        /* ==== end kit:vignette ==== */
+        .rp-ink { position: absolute; mix-blend-mode: var(--rp-blend); }
+        .rp-sun { fill: var(--k-accent); }
+        .rp-reg { width: 40px; height: 40px; fill: none; stroke: var(--k-accent-2); stroke-width: 1.6; opacity: 0.75; }
+        .rp-r1 { left: 44px; top: 44px; } .rp-r2 { right: 44px; top: 44px; } .rp-r3 { left: 44px; bottom: 44px; } .rp-r4 { right: 44px; bottom: 44px; }
+        .rp-head { left: 120px; right: 120px; top: 100px; display: flex; justify-content: space-between; font-size: 28px; font-weight: 700; line-height: 1.2; letter-spacing: 0.12em; white-space: nowrap; color: var(--k-accent-2); }
+        .rp-rule { left: 120px; right: 120px; height: 4px; background: var(--k-accent-2); transform-origin: 0 50%; }
+        .rp-rule1 { top: 150px; } .rp-rule2 { top: 878px; }
+        .rp-info { left: 120px; right: 120px; top: 904px; display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 48px; color: var(--k-accent-2); }
+        .rp-info span { display: block; font-size: 40px; font-weight: 700; line-height: 1.3; white-space: nowrap; }
+        .rp-fly, .rp-slide { position: absolute; inset: 0; }
+        .rp-plate { position: absolute; left: 120px; top: 196px; font-size: 270px; font-weight: 900; line-height: 1.15; white-space: nowrap; transform-origin: 30% 60%; mix-blend-mode: var(--rp-blend); }
+        .rp-plate span { display: block; }
+        .rp-a { color: var(--k-accent); }
+        .rp-b { color: var(--k-accent-2); }
+        .rp-stamp { left: 980px; top: 580px; width: 300px; height: 300px; transform: rotate(-14deg); overflow: visible; }
+        .rp-stamp circle, .rp-stamp path { fill: none; stroke: var(--k-accent-2); }
+        .rp-stamp text { fill: var(--k-accent-2); font-family: var(--k-font); font-size: 32px; font-weight: 700; }
+        /* portrait: everything readable stays in the 12%-68% band and 120px off each side; the sun peeks in from the right */
+        @container (orientation: portrait) {
+          .rp-head { left: 120px; right: 120px; top: 244px; }
+          .rp-rule { left: 120px; right: 120px; }
+          .rp-rule1 { top: 300px; } .rp-rule2 { top: 1206px; }
+          .rp-plate { left: 120px; top: 340px; font-size: 220px; }
+          .rp-stamp { left: 680px; top: 916px; width: 240px; height: 240px; }
+          .rp-info { left: 120px; right: 120px; top: 1226px; grid-template-columns: 1fr 1fr 1fr; gap: 32px; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="riso-misregistration-hit">
+        <div class="rp">
+          <div class="rp-cam">
+            <div class="rp-paper rp-deco"></div>
+            <div class="rp-grain rp-deco"></div>
+            <svg class="rp-ink rp-sun rp-deco"><path></path></svg>
+            <div class="rp-vig rp-deco"></div>
+            <svg class="rp-ink rp-reg rp-r1 rp-deco" viewBox="0 0 40 40"><circle cx="20" cy="20" r="9"></circle><path d="M20 1V39M1 20H39"></path></svg>
+            <svg class="rp-ink rp-reg rp-r2 rp-deco" viewBox="0 0 40 40"><circle cx="20" cy="20" r="9"></circle><path d="M20 1V39M1 20H39"></path></svg>
+            <svg class="rp-ink rp-reg rp-r3 rp-deco" viewBox="0 0 40 40"><circle cx="20" cy="20" r="9"></circle><path d="M20 1V39M1 20H39"></path></svg>
+            <svg class="rp-ink rp-reg rp-r4 rp-deco" viewBox="0 0 40 40"><circle cx="20" cy="20" r="9"></circle><path d="M20 1V39M1 20H39"></path></svg>
+            <div class="rp-ink rp-head rp-deco"><span class="rp-label">第 3 节 · 本周任务</span><span>双色套印 · Nº 07</span></div>
+            <div class="rp-ink rp-rule rp-rule1 rp-deco"></div>
+            <div class="rp-ink rp-rule rp-rule2 rp-deco"></div>
+            <div class="rp-ink rp-info rp-deco"><span>自动整理</span><span>一键导出</span><span>多人协作</span></div>
+            <div class="rp-fly" data-layout-allow-overflow>
+              <div class="rp-slide">
+                <div class="rp-plate rp-a"><span>这一步</span><span>最关键</span></div>
+                <div class="rp-plate rp-b"><span>这一步</span><span>最关键</span></div>
+              </div>
+            </div>
+            <svg class="rp-ink rp-stamp" viewBox="-130 -130 260 260">
+              <defs><path id="rp-ring" d="M -84 0 A 84 84 0 1 1 84 0 A 84 84 0 1 1 -84 0"></path></defs>
+              <circle r="122" stroke-width="5"></circle>
+              <circle r="66" stroke-width="3"></circle>
+              <text><textPath href="#rp-ring" textLength="510" lengthAdjust="spacing">已核对 ★ 已核对 ★ 已核对 ★</textPath></text>
+              <path d="M -30 2 L -8 24 L 32 -22" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" transform="rotate(14)"></path>
+            </svg>
+          </div>
+          <div class="rp-grain rp-speck rp-deco"></div>
+        </div>
+      </div>
+
+      <script>
+    (function () {
+      // timing in seconds = upstream frames / 30, shared by both orientations
+      var CFG = {
+        dur: 4, fly: 0.667, hit: 0.933, snap: 2.4, // title flies 20-28f, hits at 28f, snaps into register at 72f
+        period: 0.6, tau: 2, ax: 20, ay: 8, // split: A * cos(2 pi t / 18f) * exp(-t / 60f), per plate, plates opposite; A at CSS size
+        pulse: 0.03, pulseDur: 0.133, // snap pulse 1.03 -> 1 over 4f (linear)
+        kick: 0.012, kickTau: 0.083, kickWin: 0.333, // whole page 1.2% at the hit, e^(-t / 2.5f), gone after 10f
+        push: 0.012, pushDur: 3.667, // camera 1 -> 1.012 over 110f, smooth
+        stampFrom: 1.5, stampDur: 0.133, // stamp presses 1.5 -> 1 over 4f, out
+        sun: 0.533, head: 0.333, rule: 0.6, rule2: 0.067, info: 0.133, infoEach: 0.133, infoDur: 0.467, infoRise: 26,
+        blur: 0.09, blurMax: 34 // directional blur per px-per-frame of speed, capped
+      };
+      // layout per orientation: how far right the title may reach (fraction of the frame width, clear of the stamp);
+      // the halftone sun's centre x / y and radius as fractions of FW / FH / FH
+      var LAND = { maxR: 0.485, sun: [0.797, 0.435, 0.32] };
+      var PORT = { maxR: 0.722, sun: [1.028, 0.333, 0.172] };
+      var v = { title: "这一步|最关键", label: "第 3 节 · 本周任务", info: "自动整理|一键导出|多人协作", stamp: "已核对", backdrop: "on" };
+      try {
+        var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+        for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+      } catch (e) {}
+
+      var root = document.querySelector(".rp");
+      var q = function (s) { return root.querySelector(s); };
+      var qa = function (s) { return Array.prototype.slice.call(root.querySelectorAll(s)); };
+      var FW = root.clientWidth, FH = root.clientHeight;
+      if (!FW || !FH) {
+        // not laid out yet: the host clip's declared size, then the window
+        var hc = root.closest("[data-width][data-height]");
+        FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+        FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+      }
+      var P = FH > FW, L = P ? PORT : LAND;
+      root.setAttribute("data-orient", P ? "portrait" : "landscape");
+      root.setAttribute("data-backdrop", String(v.backdrop) === "off" ? "off" : "on");
+
+      // ==== kit:tone@1 — light or dark skin, read from --k-bg; sets data-tone on the wrapper ====
+      function kRGB(el, color) {
+        var p = document.createElement("i");
+        p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+        el.appendChild(p);
+        var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+        el.removeChild(p);
+        return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+      }
+      function kTone(wrap) {
+        var c = kRGB(wrap, "var(--k-bg)");
+        var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+        wrap.setAttribute("data-tone", tone);
+        return tone;
+      }
+      // ==== end kit:tone ====
+
+      // ==== kit:speedblur@1 — directional motion blur along the velocity; set(vx, vy) in px per second ====
+      function kSpeedBlur(box, prefix, o) {
+        o = o || {};
+        var amount = o.amount || 0.45, max = o.max || 36;
+        var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+        var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+        svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+        var outer = document.createElement("div"), inner = document.createElement("div");
+        outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+        while (box.firstChild) inner.appendChild(box.firstChild);
+        outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+        var fe = svg.firstChild.firstChild;
+        return function (vx, vy) {
+          vy = vy || 0;
+          var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+          if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+          var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+          fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+          outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+          inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+          outer.style.filter = "url(#" + id + ")";
+        };
+      }
+      // ==== end kit:speedblur ====
+
+      // ==== kit:grain@1 — film grain on a full-size layer (kit:tone first); returns draw(t) ====
+      function kGrain(layer, o) {
+        o = o || {};
+        var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+        var dark = tones && tones.getAttribute("data-tone") === "dark";
+        var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+          var f = "type='linear' slope='2.4' intercept='-0.7'";
+          var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+            "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+            "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+            "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+            "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+          return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+        });
+        layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+        layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+        layer.style.backgroundSize = size + "px " + size + "px";
+        return function (t) {
+          var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+          layer.style.backgroundImage = tiles[k % 6];
+          layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+        };
+      }
+      // ==== end kit:grain ====
+
+      var dark = kTone(root) === "dark";
+      // static grain as upstream (step 100000): paper fibre, multiply 0.11, tile 256 drawn 2.4x; ink specks, screen 0.2
+      var gr = qa(".rp-grain");
+      kGrain(gr[0], { opacity: dark ? 0.09 : 0.11, blend: dark ? "soft-light" : "multiply", freq: 0.55, step: 1e6 })(0);
+      gr[0].style.backgroundSize = "614px 614px";
+      kGrain(gr[1], { opacity: dark ? 0.06 : 0.2, blend: "screen", freq: 1.25, step: 1e6 })(0);
+
+      // halftone sun: a 45-degree dot grid whose dot radius shrinks with the distance from the centre (real halftone)
+      var R = 372, ST = 22, n = Math.ceil(R / ST), d = [];
+      for (var iy = -n; iy <= n; iy++) {
+        for (var ix = -n; ix <= n; ix++) {
+          var x = ix * ST + (iy % 2 ? ST / 2 : 0), y = iy * ST * 0.866, dd = Math.sqrt(x * x + y * y) / R;
+          if (dd > 1) continue;
+          var r = (ST / 2) * 1.1 * Math.sqrt(1 - Math.pow(dd, 2.4));
+          if (r > 0.9) d.push("M" + (x - r).toFixed(1) + " " + y.toFixed(1) + "a" + r.toFixed(2) + " " + r.toFixed(2) + " 0 1 0 " + (2 * r).toFixed(2) + " 0a" + r.toFixed(2) + " " + r.toFixed(2) + " 0 1 0 " + (-2 * r).toFixed(2) + " 0z");
+        }
+      }
+      var sun = q(".rp-sun"), sc = R / (L.sun[2] * FH), cx = L.sun[0] * FW, cy = L.sun[1] * FH, rr = (R + 20) / sc;
+      var b = [Math.max(0, cx - rr), Math.max(0, cy - rr), Math.min(FW, cx + rr), Math.min(FH, cy + rr)];
+      sun.setAttribute("viewBox", [(b[0] - cx) * sc, (b[1] - cy) * sc, (b[2] - b[0]) * sc, (b[3] - b[1]) * sc].map(function (z) { return z.toFixed(1); }).join(" "));
+      sun.style.cssText = "left:" + b[0] + "px;top:" + b[1] + "px;width:" + (b[2] - b[0]) + "px;height:" + (b[3] - b[1]) + "px";
+      sun.firstChild.setAttribute("d", d.join(""));
+
+      // text: the static HTML already shows the defaults; variables replace them
+      var em = function (s) { var w = 0; for (var c = 0; c < s.length; c++) w += s.charCodeAt(c) > 255 ? 1 : 0.6; return w; };
+      var lines = String(v.title).split("|").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 2);
+      var plates = qa(".rp-plate");
+      var c0 = plates[0].offsetTop + plates[0].offsetHeight / 2; // keep the block centred where the CSS put it
+      var fs0 = parseFloat(getComputedStyle(plates[0]).fontSize) || 200;
+      var fs = Math.min(fs0, Math.floor((FW * L.maxR - plates[0].offsetLeft) / Math.max(1, Math.max.apply(null, lines.map(em)))));
+      plates.forEach(function (pl) {
+        pl.innerHTML = "";
+        lines.forEach(function (s) {
+          var sp = document.createElement("span");
+          sp.setAttribute("data-layout-allow-overlap", "");
+          sp.setAttribute("data-layout-allow-occlusion", "");
+          sp.textContent = s;
+          pl.appendChild(sp);
+        });
+        pl.style.fontSize = fs + "px";
+      });
+      // the split follows the type size (CFG.ax / ay are for the CSS size), never under 60% so it still reads
+      var ks = Math.max(0.6, fs / fs0), AX = CFG.ax * ks, AY = CFG.ay * ks;
+      var top = c0 - plates[0].offsetHeight / 2;
+      plates.forEach(function (pl) { pl.style.top = top.toFixed(1) + "px"; });
+      q(".rp-label").textContent = String(v.label);
+      var info = q(".rp-info");
+      info.innerHTML = "";
+      var infos = String(v.info).split("|").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 3).map(function (s) {
+        var sp = document.createElement("span");
+        sp.textContent = s;
+        info.appendChild(sp);
+        return sp;
+      });
+      // stamp: the word repeats round the ring; the ring path id gets a per-mount number (two mounts, one document)
+      var sw = String(v.stamp).trim(), reps = sw.length <= 2 ? 4 : sw.length <= 4 ? 3 : 2, ring = "";
+      for (var i = 0; i < reps; i++) ring += sw + " ★ ";
+      var rid = "rp-ring-" + (window.__rpN = (window.__rpN || 0) + 1);
+      q(".rp-stamp defs path").id = rid;
+      var tp = q(".rp-stamp textPath");
+      tp.setAttribute("href", "#" + rid);
+      tp.textContent = ring.trim();
+
+      var cam = q(".rp-cam"), head = q(".rp-head"), rule1 = q(".rp-rule1"), rule2 = q(".rp-rule2");
+      var slideEl = q(".rp-slide"), stamp = q(".rp-stamp");
+      var blur = kSpeedBlur(q(".rp-fly"), "rp", { amount: CFG.blur, max: CFG.blurMax });
+      // the title starts with its left edge on the right frame edge and accelerates in (upstream in-cubic bezier)
+      var dist = FW - plates[0].offsetLeft, inCubic = MT.bezier(0.55, 0.055, 0.675, 0.19);
+      var slide = function (t) { return MT.mix(dist, 0, MT.ramp(t, CFG.fly, CFG.hit - CFG.fly, inCubic)); };
+
+      var tl = MT.scene(CFG.dur, function (t) {
+        // camera: slow push over the whole shot plus a 1.2% kick at the hit
+        var th = t - CFG.hit;
+        var kick = th >= 0 && th < CFG.kickWin ? 1 + CFG.kick * Math.exp(-th / CFG.kickTau) : 1;
+        cam.style.transform = "scale(" + ((1 + CFG.push * MT.ramp(t, 0, CFG.pushDur, "smooth")) * kick).toFixed(5) + ")";
+        // the poster prints in first: sun rolled on top-down, rules drawn, info rows rise in turn
+        sun.style.clipPath = "inset(0 0 " + ((1 - MT.ramp(t, 0, CFG.sun, "swift")) * 100).toFixed(2) + "% 0)";
+        head.style.opacity = MT.ramp(t, 0, CFG.head, "out").toFixed(3);
+        rule1.style.transform = "scaleX(" + MT.ramp(t, 0, CFG.rule, "snappy").toFixed(4) + ")";
+        rule2.style.transform = "scaleX(" + MT.ramp(t, CFG.rule2, CFG.rule, "snappy").toFixed(4) + ")";
+        infos.forEach(function (el, i) {
+          var p = MT.ramp(t, CFG.info + i * CFG.infoEach, CFG.infoDur, "snappy");
+          el.style.opacity = p.toFixed(3);
+          el.style.transform = "translateY(" + ((1 - p) * CFG.infoRise).toFixed(2) + "px)";
+        });
+        // the title flies in registered, blurred along its speed
+        var flying = t >= CFG.fly && t < CFG.hit;
+        slideEl.style.opacity = t < CFG.fly ? "0" : "1";
+        slideEl.style.transform = "translateX(" + (flying ? slide(t) : 0).toFixed(1) + "px)";
+        blur(flying ? MT.velocity(slide, t) : 0, 0);
+        // hit: the plates split opposite ways and ring down; at the snap they jump back into register (no easing)
+        var m = th >= 0 && t < CFG.snap ? Math.cos((2 * Math.PI * th) / CFG.period) * Math.exp(-th / CFG.tau) : 0;
+        var ps = t >= CFG.snap && t < CFG.snap + CFG.pulseDur ? 1 + CFG.pulse * (1 - (t - CFG.snap) / CFG.pulseDur) : 1;
+        plates[0].style.transform = "translate(" + (-AX * m).toFixed(2) + "px, " + (AY * m).toFixed(2) + "px) scale(" + ps.toFixed(4) + ")";
+        plates[1].style.transform = "translate(" + (AX * m).toFixed(2) + "px, " + (-AY * m).toFixed(2) + "px) scale(" + ps.toFixed(4) + ")";
+        // stamp presses down on the snap frame; stepped on the 30 fps grid like upstream, so between frames 72 and 73
+        // it never shows at 1.5x (the 1.5x frame is fully transparent)
+        var sp = MT.ramp(Math.floor(t * 30 + 0.02) / 30, CFG.snap, CFG.stampDur, "out");
+        stamp.style.opacity = t < CFG.snap ? "0" : Math.min(1, sp * 2.5).toFixed(3);
+        stamp.style.transform = "rotate(-14deg) scale(" + (t < CFG.snap ? CFG.stampFrom : MT.mix(CFG.stampFrom, 1, sp)).toFixed(4) + ")";
+      });
+      window.__timelines["riso-misregistration-hit"] = tl;
+    })();
+      </script>
+    </template>
+  </body>
+</html>

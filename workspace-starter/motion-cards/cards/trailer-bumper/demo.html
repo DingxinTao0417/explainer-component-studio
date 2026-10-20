@@ -1,0 +1,400 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"kicker","type":"string","label":"眉题（留空不要）","default":"本期预告"},
+    {"id":"title","type":"string","label":"标题（用 | 切意群）","default":"三分钟看懂"},
+    {"id":"sub","type":"string","label":"副题（留空不要）","default":"把复杂的事讲清楚"},
+    {"id":"backdrop","type":"enum","label":"标题的底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（标题落在下面的画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>trailer-bumper · 预告速剪开场</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="trailer-bumper-template">
+      <!-- Ported from video-shotcraft demos/rhythm/trailer-grammar-moves/TrailerBumper.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette, system fonts, generic copy; the upstream product dashboard is replaced by a label-free
+           fake UI drawn from the palette (cut 1 grid, cut 2 list, cut 3 the same grid zoomed on its middle top card,
+           2.2x in landscape as upstream, 2.9x in portrait); upstream wordmark and tagline replaced by kicker / title /
+           sub variables; title tracking runs 0.062em to 0em for CJK (upstream 0.05em to -0.012em, kept for Latin
+           titles); title size follows the frame (176px landscape, 150px portrait, shrinks to fit); the cut timing
+           (9f, 9f, 9f, 6f black, 16f fade, 30f tracking) and the 1 to 1.04 push-in are unchanged. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* the wrapper is the size container (see the skeleton): layout that differs by orientation lives inside it */
+        .tb { position: absolute; inset: 0; container-type: size; }
+        /* tints for the fake UI and the vignette shade, all mixed from the palette */
+        .tb {
+          --tb-canvas: color-mix(in srgb, var(--k-bg), var(--k-ink) 9%);
+          --tb-side: color-mix(in srgb, var(--k-ink) 78%, var(--k-bg));
+          --tb-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+        }
+        .tb[data-tone="dark"] {
+          --tb-canvas: color-mix(in srgb, var(--k-bg), white 7%);
+          --tb-side: color-mix(in srgb, var(--k-bg), black 45%);
+          --tb-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+        }
+        /* bottom to top: pure black (never skinned) / title backdrop / title / the three cuts */
+        .tb-black { position: absolute; inset: 0; background: #000000; opacity: 0; }
+        .tb-bgl { position: absolute; inset: 0; }
+        .tb-bgl .tb-vig { --vs: 0.2; --vin: 45%; }
+        .tb-box { position: absolute; top: 0; bottom: 0; left: 10%; right: 10%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .tb-col { display: flex; flex-direction: column; align-items: stretch; width: 100%; text-align: center; }
+        .tb-kick { display: block; margin-bottom: 30px; font-size: 36px; font-weight: 600; line-height: 1.3; letter-spacing: 0.18em; color: var(--k-accent); }
+        .tb-name { display: block; font-size: 176px; font-weight: 800; line-height: 1.2; color: var(--k-ink); }
+        .tb-sub { display: block; margin-top: 38px; font-size: 40px; font-weight: 500; line-height: 1.3; color: var(--k-muted); }
+        .tb-shots { position: absolute; inset: 0; display: none; background: var(--tb-canvas); overflow: hidden; }
+        .tb-cut-layer { position: absolute; inset: 0; display: none; transform-origin: 50% 50%; }
+        .tb-zoomer { position: absolute; top: 0; left: 0; }
+        .tb-zoomer > * { display: block; }
+        .tb-shots .tb-vig { --vs: 0.18; --vin: 50%; }
+        @container (orientation: portrait) {
+          .tb-box { top: 12%; bottom: 32%; }
+          .tb-name { font-size: 150px; }
+        }
+        /* ==== kit:grain@1 ==== */
+        .tb-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+        
+        /* ==== kit:fit@1 ==== */
+        .tb-row { display: block; white-space: nowrap; }
+        /* ==== end kit:fit ==== */
+        
+        /* ==== kit:text@2 ==== */
+        .tb-u { display: inline-block; white-space: pre; }
+        .tb-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+        /* ==== end kit:text ==== */
+        
+        /* ==== kit:vignette@1 ==== */
+        .tb-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--tb-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .tb[data-tone="dark"] .tb-vig { --vs: 0.55; }
+        /* ==== end kit:vignette ==== */
+        
+        /* ==== kit:backdrop@1 ==== */
+        .tb-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .tb-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 50% 36%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        /* ==== end kit:backdrop ==== */
+      </style>
+
+      <div id="root" data-composition-id="trailer-bumper">
+        <div class="tb">
+          <div class="tb-black"></div>
+          <div class="tb-bgl"><div class="tb-backdrop"></div><div class="tb-vig"></div></div>
+          <div class="tb-box">
+            <div class="tb-col">
+              <div class="tb-kick">本期预告</div>
+              <div class="tb-name">三分钟看懂</div>
+              <div class="tb-sub">把复杂的事讲清楚</div>
+            </div>
+          </div>
+          <div class="tb-shots">
+            <div class="tb-cut-layer" data-layout-allow-overflow></div>
+            <div class="tb-cut-layer" data-layout-allow-overflow></div>
+            <div class="tb-cut-layer" data-layout-allow-overflow><div class="tb-zoomer" data-layout-allow-overflow><div></div></div></div>
+            <div class="tb-vig"></div>
+            <div class="tb-grain"></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // seconds = frames / 30. cut2, cut3: hard cuts 9f apart; black: 6f of pure black; title: the opener fades in
+          // over titleIn (16f) and its tracking closes until settle (30f later); everything is still after settle.
+          var CFG = { cut2: 0.3, cut3: 0.6, black: 0.9, title: 1.1, titleIn: 0.533, settle: 2.1, push: 0.3, pushTo: 1.04,
+            lightUp: 0.4, kick: 0.067, kickDur: 0.533, sub: 0.2, subDur: 0.6, rise: 44, track0: 0.062, total: 4.667 };
+          // close: zoom on the middle top card of the grid, aimed focus (0-1) down its height (landscape 2.2x as upstream;
+          // the narrow, tall portrait cards need more zoom and a lower aim to show the bars)
+          var LAND = { close: 2.2, focus: 0.5, titleLines: 1 };
+          var PORT = { close: 2.9, focus: 0.62, titleLines: 2 };
+          var v = { kicker: "本期预告", title: "三分钟看懂", sub: "把复杂的事讲清楚", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".tb");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+          
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+          
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          function kRows(el, cls) {
+            if (!el.children.length) return [];
+            var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+            var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+            kids.forEach(function (c, i) {
+              if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+              if (tops[i] != null) last = tops[i];
+              row.appendChild(c);
+            });
+            return [].slice.call(el.children);
+          }
+          // ==== end kit:fit ====
+          
+          // ==== kit:text@2 ====
+          var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "tb-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "tb-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          // ==== end kit:text ====
+          
+          // ==== kit:fakeui@1 ====
+          function kFakeUI(w, h, kind, seed) {
+            var rnd = MT.seeded(seed || 7), out = [], cards = [], u = Math.min(w / 1600, h / 900);
+            var ink = "color-mix(in srgb, var(--k-ink) 22%, var(--k-panel))", line = "color-mix(in srgb, var(--k-ink) 9%, var(--k-bg))";
+            var R = function (x, y, rw, rh, r, c) { out.push('<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + rw.toFixed(1) + '" height="' + rh.toFixed(1) + '" rx="' + (r * u).toFixed(1) + '" style="fill:' + c + '"/>'); };
+            var side = 190 * u, top = 64 * u, pad = 30 * u, gap = 22 * u;
+            R(0, 0, w, h, 0, "var(--k-bg)");
+            R(0, 0, side, h, 0, "var(--k-panel)");
+            for (var i = 0; i < 6; i++) { R(24 * u, (92 + i * 46) * u, 18 * u, 18 * u, 5, i === 1 ? "var(--k-accent)" : ink); R(54 * u, (96 + i * 46) * u, (60 + rnd() * 60) * u, 10 * u, 5, ink); }
+            R(side, top - u, w - side, Math.max(1, u), 0, line);
+            R(side + pad, 22 * u, 170 * u, 18 * u, 9, ink);
+            R(w - pad - 260 * u, 16 * u, 260 * u, 32 * u, 16, "var(--k-panel)");
+            var x0 = side + pad, y0 = top + pad, cw = w - x0 - pad, ch = h - y0 - pad;
+            if (kind === "list") {
+              var rh = (ch - gap * 4) / 5;
+              for (var r = 0; r < 5; r++) {
+                var y = y0 + r * (rh + gap), m = y + rh / 2;
+                cards.push({ x: x0, y: y, w: cw, h: rh });
+                R(x0, y, cw, rh, 12, "var(--k-panel)");
+                R(x0 + 24 * u, m - 18 * u, 36 * u, 36 * u, 10, r === 0 ? "var(--k-accent)" : ink);
+                R(x0 + 80 * u, m - 14 * u, (260 + rnd() * 260) * u, 12 * u, 6, ink);
+                R(x0 + 80 * u, m + 6 * u, (140 + rnd() * 160) * u, 9 * u, 4.5, line);
+                R(x0 + cw - 150 * u, m - 13 * u, 110 * u, 26 * u, 13, line);
+              }
+            } else {
+              var gw = (cw - gap * 2) / 3, gh = (ch - gap) / 2;
+              for (var k = 0; k < 6; k++) {
+                var cx = x0 + (k % 3) * (gw + gap), cy = y0 + Math.floor(k / 3) * (gh + gap), base = cy + gh - 24 * u;
+                cards.push({ x: cx, y: cy, w: gw, h: gh });
+                R(cx, cy, gw, gh, 14, "var(--k-panel)");
+                R(cx + 22 * u, cy + 24 * u, (90 + rnd() * 70) * u, 12 * u, 6, ink);
+                R(cx + 22 * u, cy + 52 * u, (110 + rnd() * 70) * u, 28 * u, 8, k === 0 ? "var(--k-accent)" : ink);
+                if (k % 2) {
+                  for (var j = 0; j < 7; j++) { var bh = (0.25 + rnd() * 0.75) * gh * 0.4; R(cx + 22 * u + j * (gw - 44 * u) / 7, base - bh, (gw - 44 * u) / 7 - 8 * u, bh, 4, j === 5 ? "var(--k-accent-2)" : ink); }
+                } else {
+                  var pts = [];
+                  for (var q = 0; q <= 12; q++) pts.push((cx + 22 * u + (q * (gw - 44 * u)) / 12).toFixed(1) + "," + (base - (0.2 + 0.6 * (0.5 + 0.5 * Math.sin(q * 0.7 + k)) * (0.6 + 0.4 * rnd())) * gh * 0.4).toFixed(1));
+                  out.push('<polyline points="' + pts.join(" ") + '" style="fill:none;stroke:var(--k-accent-2);stroke-width:' + (3 * u).toFixed(1) + ';stroke-linejoin:round;stroke-linecap:round"/>');
+                }
+              }
+            }
+            return { svg: '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + " " + h + '" aria-hidden="true">' + out.join("") + "</svg>", cards: cards };
+          }
+          // ==== end kit:fakeui ====
+
+          kTone(root);
+          var S = Math.min(FW, FH) / (3 * 360); // 1 on a 1080p short side
+
+          // title slots: text goes through kSplit, then is measured; name is measured at its widest tracking
+          var latin = !kCJK.test(String(v.title));
+          var track1 = latin ? -0.012 : 0, track0 = track1 + CFG.track0;
+          var kick = q(".tb-kick"), name = q(".tb-name"), sub = q(".tb-sub"), col = q(".tb-col");
+          var slot = function (el, text, o) {
+            if (!String(text).trim()) { el.style.display = "none"; return false; }
+            kSplit(el, "word", false, String(text).trim());
+            kFit(el, o);
+            return true;
+          };
+          slot(kick, v.kicker, { min: 28, lines: 2 });
+          name.style.letterSpacing = track0 + "em";
+          if (slot(name, v.title, { min: P ? 72 : 96, lines: L.titleLines })) kRows(name, "tb-row");
+          slot(sub, v.sub, { min: 40, lines: 2 });
+          var off = String(v.backdrop) === "off";
+          if (off) q(".tb-bgl").style.display = "none";
+
+          // the three cuts: grid, list, and the grid again with a zoom on its middle top card
+          var gridUI = kFakeUI(FW, FH, "grid", 7), listUI = kFakeUI(FW, FH, "list", 11);
+          // recolour: grey canvas, dark sidebar, white cards (the kit draws bg, then panel for sidebar and cards)
+          var tint = function (svg) {
+            var n = 0;
+            return svg.replace("fill:var(--k-bg)", "fill:var(--tb-canvas)")
+              .replace(/fill:var\(--k-panel\)/g, function () { return n++ ? "fill:var(--k-bg)" : "fill:var(--tb-side)"; });
+          };
+          var layers = [].slice.call(root.querySelectorAll(".tb-cut-layer"));
+          layers[0].innerHTML = tint(gridUI.svg);
+          layers[1].innerHTML = tint(listUI.svg);
+          var zoomer = q(".tb-zoomer"), card = gridUI.cards[1], Z = L.close;
+          zoomer.firstChild.innerHTML = tint(gridUI.svg);
+          zoomer.style.zoom = Z;
+          zoomer.style.left = (FW / 2 / Z - (card.x + card.w / 2)) + "px";
+          zoomer.style.top = (FH / 2 / Z - (card.y + card.h * L.focus)) + "px";
+          var grain = kGrain(q(".tb-grain"));
+          var shots = q(".tb-shots"), black = q(".tb-black"), bgl = q(".tb-bgl");
+
+          var tl = MT.scene(CFG.total, function (t) {
+            var T = t + 1e-6; // frame-exact cut times
+            var inShots = T < CFG.black;
+            shots.style.display = inShots ? "block" : "none";
+            if (inShots) {
+              var k = T < CFG.cut2 ? 0 : T < CFG.cut3 ? 1 : 2, start = [0, CFG.cut2, CFG.cut3][k];
+              layers.forEach(function (el, i) { el.style.display = i === k ? "block" : "none"; });
+              // slow linear push-in inside every cut, so three cuts never read as three stills
+              layers[k].style.transform = "scale(" + MT.interpolate(t, [start, start + CFG.push], [1, CFG.pushTo], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }).toFixed(4) + ")";
+              grain(t);
+            }
+            // title: black stays under the backdrop, which lights up from it (with no backdrop the black fades away)
+            var up = MT.ramp(t, CFG.title, CFG.lightUp, "out");
+            black.style.opacity = off && T >= CFG.title ? 1 - up : 1;
+            bgl.style.opacity = up;
+            var fade = MT.interpolate(t, [CFG.title, CFG.title + CFG.titleIn], [0, 1], { easing: "power2.out", extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+            var rise = MT.interpolate(t, [CFG.title, CFG.title + CFG.titleIn], [CFG.rise * S, 0], { easing: "power3.out", extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+            col.style.transform = "translate(0px," + rise.toFixed(2) + "px)";
+            name.style.opacity = fade;
+            kick.style.opacity = MT.ramp(t, CFG.title + CFG.kick, CFG.kickDur, "out");
+            sub.style.opacity = MT.ramp(t, CFG.title + CFG.sub, CFG.subDur, "out");
+            name.style.letterSpacing = MT.mix(track0, track1, MT.ramp(t, CFG.title, CFG.settle - CFG.title, "out")).toFixed(4) + "em";
+          });
+          window.__timelines["trailer-bumper"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

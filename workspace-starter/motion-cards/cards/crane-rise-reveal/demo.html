@@ -1,0 +1,515 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"item","type":"string","label":"开场特写的那一行","default":"第 10 课：动效与转场"},
+    {"id":"title","type":"string","label":"页面标题（留空不要）","default":"任务队列"},
+    {"id":"num","type":"number","label":"页头大数字（从 0 数上去）","default":12480},
+    {"id":"label","type":"string","label":"大数字的说明（留空不要）","default":"本周完成任务"},
+    {"id":"done","type":"string","label":"那一行最后翻成的状态","default":"已完成"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>crane-rise-reveal · 升臂拉出全表</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="crane-rise-reveal-template">
+<!-- Ported from video-shotcraft demos/opening/crane-rise-reveal/CraneRiseReveal.tsx
+  (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+  Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+  Changes (2026-10): Remotion/React re-implemented as a HyperFrames MT sub-composition, frames to seconds; --k-*
+  palette, system fonts; the upstream render-queue product (mark, name, nav, ids, recipe names, English copy) is a
+  neutral task list: the tracked row, title, count and caption are variables, other labels are bars; delta chip
+  dropped; count 12,480 (was 48,210); CameraMotionBlur (10 samples) -> one directional blur, 0.12 x px/frame in the
+  same 26f-63f window, sweeps inside it (no multi-sample stripes); slot 6 s (was 5.5); portrait: a narrower, taller window, 13 rows of 70 px. Kept: 3.0x
+  close-up and 1.5% breath, one bezier(0.2,0,0.25,1) progress for zoom and aim (24f-126f), 38% focus, sweeps fired
+  as the view's top edge crosses a row, count-up, shadow 6 -> 34, 0.35 parallax dots, framing vignette, flip. -->
+<style>
+ @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+ @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+ @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+ @font-face { font-family: "Consolas"; src: local("Consolas"); }
+ #root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  --k-mono: var(--mc-mono, Consolas, monospace);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--k-font);
+  color: var(--k-ink);
+ }
+ /* palette mixes; [data-tone] comes from kTone() */
+ .cr {
+  position:absolute;inset:0;container-type:size;
+  --cr-line:color-mix(in srgb,var(--k-ink) 10%, #0000);
+  --cr-shade:color-mix(in srgb,var(--k-ink) 85%, var(--k-accent-2));
+  --cr-win:var(--k-bg);
+  --cr-b1:color-mix(in srgb,var(--k-ink) 34%, var(--cr-win));
+  --cr-b2:color-mix(in srgb,var(--k-ink) 15%, var(--cr-win));
+  --cr-lit:var(--k-accent); /* band + sweeps; paler on dark skins, where yellow goes olive */
+  --cr-ai:color-mix(in srgb,var(--k-accent) 72%, var(--k-ink));
+  --cr-bi:color-mix(in srgb,var(--k-accent-2) 75%, var(--k-ink));
+  --cr-g:linear-gradient(var(--cr-b2), var(--cr-b2));
+}
+ .cr[data-tone="dark"]{--cr-lit:color-mix(in srgb,var(--k-accent) 35%,#fff);--cr-shade:color-mix(in srgb,var(--k-bg) 30%, black);--cr-win:color-mix(in srgb,var(--k-panel) 55%, var(--k-bg))}
+ /* stage (upstream Look.Stage, light): gradient, key light top centre, accent-2 fill bottom right, no grain */
+ .cr-bk{position:absolute;inset:0;background:linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb,var(--k-bg), var(--k-ink) 4%) 52%, color-mix(in srgb,var(--k-bg), var(--k-ink) 9%) 100%)}
+ .cr-bk::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 58% 62% at 50% 2%, color-mix(in srgb,var(--k-bg) 90%, #0000) 0%, #0000 70%), radial-gradient(ellipse 50% 46% at 85% 100%, color-mix(in srgb,var(--k-accent-2) 10%, #0000) 0%, #0000 72%)}
+ .cr-dots{position:absolute;inset:0;background:radial-gradient(circle closest-side, color-mix(in srgb,var(--k-ink) 13%, #0000) 5.8%, #0000 7.6%) -12px 0/48px 48px}
+ /* ==== kit:vignette@1 ==== */
+ .cr-vig {
+  position:absolute;inset:0;pointer-events:none;
+  --vs:0.14;--vin:42%;--vx:50%;--vy:46%;--vc:var(--cr-shade);
+  background:
+   radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), #0000 var(--vin), color-mix(in srgb,var(--vc) calc(var(--vs) * 32%), #0000) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb,var(--vc) calc(var(--vs) * 100%), #0000) 100%),
+   radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), #0000 60%, color-mix(in srgb,var(--vc) calc(var(--vs) * 60%), #0000) 100%);
+}
+ .cr[data-tone="dark"] .cr-vig{--vs:0.55}
+ /* ==== end kit:vignette ==== */
+ /* ==== kit:text@2 ==== */
+ .cr-u{display:inline-block;white-space:pre}
+ /* ==== end kit:text ==== */
+ /* ==== kit:mark@1 ==== */
+ .cr-mark{display:block;flex:none}
+ /* ==== end kit:mark ==== */
+ /* light layers (kit:light): multiply on light skins, screen on dark ones */
+ .cr-lt{mix-blend-mode:multiply}
+ .cr[data-tone="dark"] .cr-lt{mix-blend-mode:screen}
+
+ /* camera: the world is the landed frame at 1:1 (1920 x 1080 page px); the script zooms it from 3x */
+ .cr-blur, .cr-fv{position:absolute;inset:0;pointer-events:none}
+ .cr-cam{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0}
+ .cr-cam > *, .cr-hd > *{position:absolute}
+ .cr-win{left:120px;top:90px;width:1680px;height:900px;border-radius:28px;background:var(--cr-win);
+  box-shadow:inset 0 0 0 1px var(--cr-line), 0 2.5px 7.1px color-mix(in srgb,var(--cr-shade) 5.7%, #0000), 0 18.7px 44.2px -7.5px color-mix(in srgb,var(--cr-shade) 22.6%, #0000), 0 68px 136px -34px color-mix(in srgb,var(--cr-shade) 14%, #0000)}
+ .cr-top{left:120px;top:90px;width:1680px;height:72px;box-sizing:border-box;border-bottom:1px solid var(--cr-line)}
+ .cr-cam > .cr-mark{left:165px;top:110px}
+ .cr-wm{left:206px;top:120px;width:104px;height:12px;border-radius:6px;background:color-mix(in srgb,var(--k-ink) 62%, var(--cr-win))}
+ .cr-nav{left:418px;top:90px;height:72px;display:flex;align-items:center;gap:40px}
+ .cr-nav i{position:relative;height:10px;border-radius:5px;background:var(--cr-b2)}
+ .cr-nav i:nth-child(2){background:var(--cr-b1)}
+ .cr-nav i:nth-child(2)::after{content:"";position:absolute;left:-2px;right:-2px;top:38px;height:2px;background:var(--k-ink)}
+ .cr-srch{left:1422px;top:108px;width:270px;height:36px;border-radius:10px;background:color-mix(in srgb,var(--k-panel), var(--k-ink) 4%);box-shadow:inset 0 0 0 1px var(--cr-line)}
+ .cr-srch::after, .c1::after, .c6::after{content:"";position:absolute;height:10px;border-radius:5px;background:var(--cr-b2)}
+ .cr-srch::after{left:16px;top:13px;width:118px}
+ .cr-av{left:1712px;top:108px;width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg, color-mix(in srgb,var(--k-accent-2) 45%, #fff), var(--k-accent-2))}
+ .cr-hd{left:0;top:0;width:100%;height:100%}
+ .cr-kk{left:168px;top:206px;width:190px;height:12px;border-radius:6px;background:color-mix(in srgb,var(--k-accent) 75%, var(--cr-win))}
+ .cr-tt{left:165px;top:230px;width:1020px;font-size:64px;font-weight:700;line-height:1.2}
+ .cr-sb{left:168px;top:318px;width:440px;height:12px;border-radius:6px;background:var(--cr-b2)}
+ .cr-kp{left:1232px;top:196px;width:520px;text-align:right}
+ .cr-num{font-size:104px;font-weight:700;line-height:1.15;letter-spacing:-0.02em;font-variant-numeric:tabular-nums}
+ .cr-lb{font-size:28px;line-height:1.2;color:var(--k-muted)}
+ .cr-th{left:168px;top:366px;width:1584px;height:8px;background:var(--cr-g) 0 0/44px 8px, var(--cr-g) 172px 0/34px 8px, var(--cr-g) 560px 0/110px 8px, var(--cr-g) 790px 0/30px 8px, var(--cr-g) 930px 0/66px 8px, var(--cr-g) 1150px 0/86px 8px, var(--cr-g) 1500px 0/64px 8px;background-repeat:no-repeat}
+ .cr-hl{left:168px;top:391px;width:1584px;height:1px;background:var(--cr-line)}
+ /* the table: 12 bar rows and the tracked row (10th); portrait shows a 13th; bar widths vary by position */
+ .cr-rows{left:168px;top:392px;width:1584px;display:flex;flex-direction:column}
+ .cr-rows > :nth-child(n+13){display:none}
+ .cr-r{position:relative;flex:none;height:48px;box-sizing:border-box;border-bottom:1px solid var(--cr-line)}
+ .cr-r:not(.cr-t){opacity:var(--fo, 1)}
+ .cr-r > *, .cr-r::before, .cr-r::after{position:absolute;top:50%}
+ .cr-r i, .cr-r::before, .cr-r::after{display:block;height:10px;margin-top:-5px;border-radius:5px;background:var(--cr-b2)}
+ .cr-r::before{content:"";left:0;width:76px}
+ .cr-r::after{content:"";left:790px;width:52px}
+ .c1{left:172px;display:flex;gap:38px;height:10px;margin-top:-5px}
+ .c1 i{position:relative;width:64px;margin:0;background:var(--cr-b1)}
+ .c1 i + i{width:56px}
+ .c1 i + i::before{content:"";position:absolute;left:-28px;top:4px;width:18px;height:2px;background:var(--cr-b2)}
+ .cr-r:nth-child(3n+1) .c1 i{width:96px}
+ .cr-r:nth-child(4n+2) .c1 i{width:50px}
+ .cr-r:nth-child(2n) .c1 i + i{width:72px}
+ .cr-r:nth-child(3n+2) .c1 i + i{width:46px}
+ /* carrier bar = .c1::after (the tracked row has a real .c3), frames bar = .c6::after */
+ .c3{left:560px;width:130px}
+ .c1::after{left:388px;top:0;width:150px}
+ .cr-r:nth-child(2n) .c1::after{width:118px}
+ .cr-r:nth-child(3n) .c1::after{width:188px}
+ .c6::after{right:-154px;top:-2px;width:36px}
+ .cr-r:nth-child(4n+1) .c6::after{width:26px}
+ /* status --s: A in progress, B in review, C done, D queued; pill = tint + dot + label bar */
+ .sA{--s:var(--k-accent)}
+ .sB{--s:var(--k-muted)}
+ .sC{--s:var(--k-accent-2)}
+ .sD{--s:var(--cr-b1)}
+ .cr[data-tone="dark"] .c5{--s2:color-mix(in srgb,var(--s) 60%,#fff)}
+ .c5{left:930px;display:flex;align-items:center;gap:7px;height:28px;margin-top:-14px;padding:0 13px 0 10px;border-radius:14px;transform-origin:0 50%;background:color-mix(in srgb,var(--s2,var(--s)) 12%, #0000)}
+ .c5 i, .c5::before, .c5::after{content:"";margin:0;width:7px;height:7px;border-radius:4px;background:var(--s)}
+ .c5::after{width:50px;height:8px;opacity:0.5}
+ .cr-pill::before, .cr-pill::after{display:none}
+ .c6{left:1150px;width:260px;height:6px;margin-top:-3px;border-radius:3px;background:color-mix(in srgb,var(--k-ink) 7%, #0000)}
+ .c6::before{content:"";display:block;width:var(--p);height:100%;border-radius:3px;background:color-mix(in srgb,var(--k-ink) 32%, var(--cr-win))}
+ .sC .c6::before{background:var(--k-accent-2)}
+ /* the tracked row: accent band, breathing dot, real text, a pill that flips */
+ .cr-t{border-bottom:0}
+ .cr-t::before{display:none}
+ .cr-t .cr-band{left:-38px;top:3px;width:1660px;height:42px;border-radius:12px;background:linear-gradient(90deg, color-mix(in srgb,var(--cr-lit) 11%, #0000), color-mix(in srgb,var(--cr-lit) 5%, #0000) 60%, color-mix(in srgb,var(--cr-lit) 3%, #0000));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--cr-lit) 22%, #0000)}
+ .cr-t .cr-dot{left:-26px;width:10px;background:var(--k-accent)}
+ .cr-t .cr-ring{left:-21px;border-radius:50%;background:none;border:1.5px solid #0000;box-sizing:border-box}
+ .cr-t > span{top:0;line-height:48px}
+ .cr-code{left:0;font-family:var(--k-mono);font-size:20px;font-weight:700;color:var(--cr-ai);white-space:nowrap}
+ .cr-item{left:172px;width:370px;font-size:22px;font-weight:700}
+ .cr-st, .cr-st0{font-size:18px;font-weight:700;line-height:1;white-space:nowrap}
+ .sA .cr-st0{color:var(--cr-ai)}
+ .sC .cr-st{color:var(--cr-bi)}
+ .sA .cr-st, .sA .cr-ck, .sC .cr-st0, .cr-pill:not(.ck) .cr-ck, .cr-pill.ck .cr-pd{display:none}
+ .cr-ck{display:block;width:14px;height:14px;fill:none;stroke:var(--cr-bi);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1}
+ .cr-t .c6::before{background:var(--k-accent)}
+ .cr-t .sC ~ .c6::before{background:var(--k-accent-2)}
+ /* row sweeps ride the camera above the rows; the close-up's framing vignette is in screen space */
+ .cr-wash{border-radius:12px;opacity:0;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--cr-lit) 18%, #0000)}
+ .cr-fv{opacity:0;background:radial-gradient(ellipse 75% 70% at 45% 58%, #0000 55%, color-mix(in srgb,var(--cr-shade) 16%, #0000) 100%)}
+ /* portrait: a narrower, taller window with 13 taller rows; text stays in the 12%-68% band */
+ @container (orientation:portrait) {
+  .cr-cam{width:1080px;height:1920px}
+  .cr-win, .cr-top{left:108px;top:170px;width:864px}
+  .cr-win{height:1230px}
+  .cr-top{height:64px}
+  .cr-cam > .cr-mark{left:149px;top:186px}
+  .cr-wm{left:190px;top:196px}
+  .cr-nav{left:336px;top:170px;height:64px}
+  .cr-nav i:nth-child(2)::after{top:34px}
+  .cr-nav i:nth-child(n+4), .cr-srch{display:none}
+  .cr-av{left:892px;top:184px}
+  .cr-kk{left:152px;top:262px;width:150px}
+  .cr-tt{left:150px;top:284px;width:392px;font-size:56px}
+  .cr-sb{left:152px;top:362px;width:300px}
+  .cr-kp{left:568px;top:258px;width:360px}
+  .cr-num{font-size:84px}
+  .cr-th{left:152px;top:432px;width:776px;background:var(--cr-g) 0 0/44px 8px, var(--cr-g) 84px 0/34px 8px, var(--cr-g) 440px 0/66px 8px, var(--cr-g) 600px 0/86px 8px;background-repeat:no-repeat}
+  .cr-hl{left:152px;top:455px;width:776px}
+  .cr-rows{left:152px;top:456px;width:776px}
+  .cr-rows > :nth-child(n+13){display:block}
+  .cr-r{height:70px}
+  .c1{left:84px;gap:30px}
+  .c1 i + i::before{left:-23px;width:16px}
+  .cr-r .c3, .c1::after, .c6::after, .cr-r::after{display:none}
+  .c5{left:440px}
+  .c6{left:600px;width:176px}
+  .cr-t .cr-band{left:-34px;width:844px;height:64px}
+  .cr-t > span{line-height:70px}
+  .cr-code{font-size:22px}
+  .cr-item{left:84px;width:340px;font-size:22px}
+  .cr-fv{background:radial-gradient(ellipse 80% 62% at 50% 54%, #0000 55%, color-mix(in srgb,var(--cr-shade) 16%, #0000) 100%)}
+}
+</style>
+
+<div id="root" data-composition-id="crane-rise-reveal">
+ <div class="cr">
+  <div class="cr-bk"></div>
+  <div class="cr-dots"></div>
+  <div class="cr-vig"></div>
+  <div class="cr-blur" data-layout-allow-overflow>
+   <div class="cr-cam">
+    <i class="cr-win"></i>
+    <i class="cr-top"></i>
+    <!-- kit:mark@1 -->
+    <svg class="cr-mark" width="32" height="32" viewBox="0 0 128 128"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg>
+    <i class="cr-wm"></i>
+    <div class="cr-nav"><i style="width:48px"></i><i style="width:120px"></i><i style="width:72px"></i><i style="width:92px"></i><i style="width:62px"></i></div>
+    <i class="cr-srch"></i>
+    <i class="cr-av"></i>
+    <div class="cr-hd">
+     <i class="cr-kk"></i>
+     <div class="cr-tt">任务队列</div>
+     <i class="cr-sb"></i>
+     <div class="cr-kp"><div class="cr-num">12,480</div><div class="cr-lb">本周完成任务</div></div>
+    </div>
+    <i class="cr-th"></i>
+    <i class="cr-hl"></i>
+    <div class="cr-rows">
+     <div class="cr-r sC"><b class=c1><i></i><i></i></b><b class=c5></b><b class=c6 style="--p:100%"></b></div>
+     <div class="cr-r sA"><b class=c1><i></i><i></i></b><b class=c5></b><b class=c6 style="--p:72%"></b></div>
+     <div class="cr-r sB"><b class=c1><i></i><i></i></b><b class=c5></b><b class=c6 style="--p:48%"></b></div>
+     <div class="cr-r sA"><b class=c1><i></i><i></i></b><b class=c5></b><b class=c6 style="--p:61%"></b></div>
+     <div class="cr-r sD"><b class=c1><i></i><i></i></b><b class=c5></b><b class=c6 style="--p:12%"></b></div>
+     <div class="cr-r sA"><b class=c1><i></i><i></i></b><b class=c5></b><b class=c6 style="--p:83%"></b></div>
+     <div class="cr-r sC"><b class=c1><i></i><i></i></b><b class=c5></b><b class=c6 style="--p:100%"></b></div>
+     <div class="cr-r sA"><b class=c1><i></i><i></i></b><b class=c5></b><b class=c6 style="--p:54%"></b></div>
+     <div class="cr-r sB"><b class=c1><i></i><i></i></b><b class=c5></b><b class=c6 style="--p:40%"></b></div>
+     <div class="cr-r cr-t">
+      <b class="cr-band cr-lt"></b><i class="cr-dot"></i><i class="cr-ring"></i>
+      <span class="cr-code" data-layout-allow-occlusion>#0410</span>
+      <span class="cr-item">第 10 课：动效与转场</span>
+      <i class=c3></i>
+      <b class="c5 cr-pill sC ck"><svg class="cr-ck" viewBox="0 0 14 14"><path d="M2.5 7.4 L5.6 10.2 L11.5 3.8" pathLength="1"/></svg><i class="cr-pd"></i><span class="cr-st0">进行中</span><span class="cr-st">已完成</span></b>
+      <b class="c6 cr-pf" style="--p:100%"></b>
+     </div>
+     <div class="cr-r sD"><b class=c1><i></i><i></i></b><b class=c5></b><b class=c6 style="--p:20%"></b></div>
+     <div class="cr-r sA"><b class=c1><i></i><i></i></b><b class=c5></b><b class=c6 style="--p:66%"></b></div>
+     <div class="cr-r sC"><b class=c1><i></i><i></i></b><b class=c5></b><b class=c6 style="--p:100%"></b></div>
+    </div>
+   </div>
+  </div>
+  <div class="cr-fv"></div>
+ </div>
+</div>
+
+<script>
+ (function () {
+  // timing in seconds (upstream frames / 30), shared by both orientations
+  var CFG = {
+   dur: 6,
+   hold: 0.8, end: 4.2, s0: 3, breath: 0.015, // 0-24f close-up (1.5% push-in), 24-126f crane move
+   focus: 0.733, focusDur: 0.933, // 22f +28f: the other rows 38% -> 100%
+   head: 0.267, headDur: 0.667, // header: from 8f before the view reaches it, 20f
+   wash: 0.667, washIn: 0.1, washOff: 0.2, washOut: 0.6, // sweep 20f, in 3f, out +6f over 18f
+   kpi: 1, kpiDur: 3.533, // 30f +106f count-up
+   elev: 1.8, elevDur: 2.733, // 54f +82f window shadow 6 -> 34
+   vig: 2, // framing vignette off over 24f-84f
+   prog: 4.333, progDur: 0.533, // 130f +16f the tracked bar fills
+   flip: 4.467, swap: 4.533, check: 4.6, checkDur: 0.333, // 134f spring, 136f status, 138f +10f tick
+   blur0: 0.833, blur1: 2.133, blur: 0.12 // motion blur in the fast part only (26f-63f)
+  };
+  // per orientation: smallest sizes of the text slots (layout lives in the CSS)
+  var LAND = { num: 56, pill: 150 };
+  var PORT = { num: 48, pill: 96 };
+  var v = { item: "第 10 课：动效与转场", title: "任务队列", num: 12480, label: "本周完成任务", done: "已完成", backdrop: "on" };
+  try {
+   var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+   for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+  } catch (e) {}
+
+  var root = document.querySelector(".cr");
+  var q = function (s) { return root.querySelector(s); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+   // not laid out yet: the host clip's declared size, then the window
+   var hc = root.closest("[data-width][data-height]");
+   FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+   FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND;
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+  // ==== kit:tone@1 ====
+  function kRGB(el, color) {
+   var p = document.createElement("i");
+   p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+   el.appendChild(p);
+   var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+   el.removeChild(p);
+   return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+  }
+  function kTone(wrap) {
+   var c = kRGB(wrap, "var(--k-bg)");
+   var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+   wrap.setAttribute("data-tone", tone);
+   return tone;
+  }
+  // ==== end kit:tone ====
+  // ==== kit:text@2 (kReveal not used) ====
+  var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+  function kWords(s, key) {
+   s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+   var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+   var cut = function (x) {
+    if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+    return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+   };
+   var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+   var pre = "";
+   bits.forEach(function (x) {
+    var t = x.trim(), last = out[out.length - 1];
+    if (last && /^ /.test(x)) last.sp = true;
+    if (!t) return;
+    if (!/[\p{L}\p{N}]/u.test(t)) {
+     if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+     else { last.t += t; last.sp = / $/.test(x); }
+     return;
+    }
+    out.push({ t: pre + t, sp: / $/.test(x) });
+    pre = "";
+   });
+   if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+   if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+   if (out.length) out[out.length - 1].sp = false;
+   return out;
+  }
+  function kSplit(el, by, rise, text) {
+   var s = text != null ? String(text) : el.textContent, units = [];
+   var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+   el.textContent = "";
+   parts.forEach(function (p) {
+    var u = document.createElement("span"), box = u;
+    u.className = "cr-u"; u.textContent = p.t;
+    if (by === "line") u.style.display = "block";
+    if (!p.t.trim()) { el.appendChild(u); return; }
+    if (rise) { box = document.createElement("span"); box.className = "cr-cut"; box.style.display = u.style.display; box.appendChild(u); }
+    el.appendChild(box);
+    if (p.sp) el.appendChild(document.createTextNode(" "));
+    units.push(u);
+   });
+   return units;
+  }
+  // ==== end kit:text ====
+  // ==== kit:fit@1 (kRows not used) ====
+  function kFit(el, o) {
+   o = o || {};
+   var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+   var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+   for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+   }
+   if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+   }
+   return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+  }
+  function kLines(el) {
+   var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+   var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+   while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+     var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+     if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+     row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+   }
+   return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+  }
+  // ==== end kit:fit ====
+  // ==== kit:shadow@1 ====
+  function kShadow(e, strength) {
+   e = Math.max(0, e);
+   var s = strength == null ? 1 : strength, r = function (x) { return Math.round(x * 10) / 10; };
+   var c = function (a) { return "color-mix(in srgb, var(--cr-shade) " + r(Math.min(1, a) * 100) + "%, transparent)"; };
+   return "0 " + r(0.5 + e * 0.06) + "px " + r(1 + e * 0.18) + "px " + c((0.12 * s) / (1 + e / 24)) + ", " +
+    "0 " + r(e * 0.55) + "px " + r(e * 1.3) + "px " + r(-e * 0.22) + "px " + c((0.08 + (Math.min(e, 64) / 64) * 0.22) * s);
+  }
+  // ==== end kit:shadow ====
+  // ==== kit:speedblur@1 ====
+  function kSpeedBlur(box, prefix, o) {
+   o = o || {};
+   var amount = o.amount || 0.45, max = o.max || 36;
+   var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+   var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+   svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+   svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+   var outer = document.createElement("div"), inner = document.createElement("div");
+   outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+   while (box.firstChild) inner.appendChild(box.firstChild);
+   outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+   var fe = svg.firstChild.firstChild;
+   return function (vx, vy) {
+    vy = vy || 0;
+    var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+    if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+    var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+    fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+    outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+    inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+    outer.style.filter = "url(#" + id + ")";
+   };
+  }
+  // ==== end kit:speedblur ====
+
+  var dark = kTone(root) === "dark";
+  if (String(v.backdrop) === "off") [".cr-bk", ".cr-dots", ".cr-vig"].forEach(function (s) { q(s).style.display = "none"; });
+  // text slots: an empty optional one hides; veil: lies under the framing vignette on purpose
+  var slot = function (sel, s, o) {
+   var el = q(sel);
+   s = String(s == null ? "" : s).trim();
+   if (!s) return void (el.style.display = "none");
+   kSplit(el, "word", false, s).forEach(function (u) { if (o.veil) u.setAttribute("data-layout-allow-occlusion", ""); });
+   kFit(el, o);
+  };
+  slot(".cr-tt", v.title, { lines: 1, min: 40 });
+  var tt = q(".cr-tt");
+  if (tt.offsetHeight) q(".cr-sb").style.top = tt.offsetTop + tt.offsetHeight + 11 + "px"; // under a wrapped title too
+  slot(".cr-lb", v.label, { lines: 1, min: 28 });
+  slot(".cr-item", v.item, { lines: 1, min: 14, veil: 1 });
+  slot(".cr-st", String(v.done).trim() || "已完成", { lines: 1, min: 14, width: L.pill });
+  var numEl = q(".cr-num"), N = Math.round(parseFloat(String(v.num).replace(/,/g, "")) || 0);
+  var fmt = function (x) { return Math.round(x).toLocaleString("en-US"); };
+  numEl.textContent = fmt(N);
+  kFit(numEl, { lines: 1, min: L.num });
+
+  // world geometry from the laid-out page (page px); U converts page px to frame px
+  var cam = q(".cr-cam"), DW = cam.offsetWidth, DH = cam.offsetHeight, U = FW / DW;
+  var win = q(".cr-win"), WX = win.offsetLeft, WY = win.offsetTop, WW = win.offsetWidth, WH = win.offsetHeight;
+  var bar = q(".cr-top"), box = q(".cr-rows"), T = q(".cr-t"), RH = T.offsetHeight;
+  // close-up aim: the window's left edge 3px outside the frame, the view's lower edge 30px above the window's
+  var F0X = WX + (DW / 2 + 3) / CFG.s0, crane = MT.bezier(0.2, 0, 0.25, 1);
+  var camAt = function (t) {
+   var s0 = CFG.s0 * (1 + CFG.breath * MT.ramp(t, 0, CFG.hold, "smooth"));
+   var e = MT.ramp(t, CFG.hold, CFG.end - CFG.hold, crane), s = MT.mix(s0, 1, e);
+   var fx = MT.mix(F0X, DW / 2, e), fy = MT.mix(WY + WH - 30 - DH / 2 / s0, DH / 2, e);
+   return { s: s, fx: fx, fy: fy, top: fy - DH / 2 / s };
+  };
+  // first frame (30 fps grid) at which the view's top edge reaches page y
+  var reach = function (y) { for (var f = Math.round(CFG.hold * 30); f <= Math.round(CFG.end * 30); f++) if (camAt(f / 30).top <= y) return f / 30; return CFG.end; };
+  var top0 = camAt(CFG.hold).top, headT = reach(bar.offsetTop + bar.offsetHeight + 60), washes = [];
+  [].forEach.call(box.children, function (r) {
+   var y = box.offsetTop + r.offsetTop;
+   if (r === T || !r.offsetHeight || top0 <= y) return;
+   var d = document.createElement("i");
+   d.className = "cr-wash cr-lt";
+   d.style.cssText = "left:" + (WX + 10) + "px;top:" + (y + 3) + "px;width:" + (WW - 20) + "px;height:" + (RH - 6) + "px";
+   cam.appendChild(d);
+   washes.push({ el: d, t: reach(y + 2) });
+  });
+
+  var blur = kSpeedBlur(q(".cr-blur"), "cr", { amount: CFG.blur });
+  var hd = q(".cr-hd"), fv = q(".cr-fv"), dots = q(".cr-dots"), ring = q(".cr-ring"), pill = q(".cr-pill"), pf = q(".cr-pf"), ck = q(".cr-ck path");
+  var fxAt = function (t) { return camAt(t).fx; }, fyAt = function (t) { return camAt(t).fy; };
+  var acc = function (a, c) { return "color-mix(in srgb, var(--" + (c || "cr-lit") + ") " + (a * 100).toFixed(1) + "%, #0000)"; };
+  var f2 = function (x) { return x.toFixed(2); };
+
+  var render = function (t) {
+   var c = camAt(t), f = t * 30;
+   cam.style.transform = "translate(" + f2((DW / 2 - c.fx * c.s) * U) + "px," + f2((DH / 2 - c.fy * c.s) * U) + "px) scale(" + (c.s * U).toFixed(5) + ")";
+   // stage dots: a farther layer moving 0.35 of the camera's zoom and travel, concentric with it
+   var sp = 1 + (c.s - 1) * 0.35, g = 48 * sp * U;
+   dots.style.backgroundSize = f2(g) + "px " + f2(g) + "px";
+   dots.style.backgroundPosition = f2((DW / 2 + 0.35 * c.s * (DW / 2 - c.fx) - (DW / 2) * sp + 12 * sp) * U - g / 2) + "px " + f2((DH / 2 + 0.35 * c.s * (DH / 2 - c.fy) - (DH / 2) * sp + 24 * sp) * U - g / 2) + "px";
+   // motion blur along the frame centre's screen velocity, fast part only
+   if (t > CFG.blur0 && t < CFG.blur1) blur(-c.s * MT.velocity(fxAt, t) * U, -c.s * MT.velocity(fyAt, t) * U); else blur(0, 0);
+   box.style.setProperty("--fo", f2(MT.mix(0.38, 1, MT.ramp(t, CFG.focus, CFG.focusDur, "out"))));
+   hd.style.opacity = f2(0.35 + 0.65 * MT.ramp(t, headT - CFG.head, CFG.headDur, "out"));
+   fv.style.opacity = f2(1 - MT.ramp(t, CFG.hold, CFG.vig, "swift"));
+   var e = MT.mix(6, 34, MT.ramp(t, CFG.elev, CFG.elevDur, "swift"));
+   win.style.boxShadow = "inset 0 0 0 1px var(--cr-line), " + kShadow(e, dark ? 2.6 : 1.15) + ", 0 " + f2(e * 2) + "px " + f2(e * 4) + "px " + f2(-e) + "px color-mix(in srgb, var(--cr-shade) 14%, #0000)";
+   numEl.textContent = fmt(N * MT.ramp(t, CFG.kpi, CFG.kpiDur, "snappy"));
+   // sweeps: an accent band runs head to tail along each row the view's top edge crosses
+   washes.forEach(function (w) {
+    var p = MT.ramp(t, w.t, CFG.wash, "out"), op = MT.ramp(t, w.t, CFG.washIn, "linear") * (1 - MT.ramp(t, w.t + CFG.washOff, CFG.washOut, "out")), h = MT.mix(-0.2, 1.1, p) * 100;
+    w.el.style.opacity = op > 0.002 ? f2(op) : 0;
+    if (op > 0.002) w.el.style.background = "linear-gradient(90deg, " + acc(0.03) + " 0%, " + acc(0.14) + " " + h.toFixed(1) + "%, " + acc(0) + " " + (h + 22).toFixed(1) + "%)";
+   });
+   // the tracking ring breathes (frames at 30 fps, as upstream)
+   var beat = 0.5 + 0.5 * Math.sin(f / 5.5), d = 10 + 12 * beat;
+   ring.style.width = ring.style.height = f2(d) + "px";
+   ring.style.margin = f2(-d / 2) + "px 0 0 " + f2(-d / 2) + "px";
+   ring.style.borderColor = acc(0.5 * (1 - beat), "k-accent");
+   // aftermath: the bar fills, the pill dips and springs back with the new status, then the tick draws
+   var done = t >= CFG.swap, tick = MT.ramp(t, CFG.check, CFG.checkDur, "out");
+   pf.style.setProperty("--p", f2(MT.mix(0.91, 1, MT.ramp(t, CFG.prog, CFG.progDur, "out")) * 100) + "%");
+   pill.classList.toggle("sA", !done);
+   pill.classList.toggle("sC", done);
+   pill.classList.toggle("ck", done && tick > 0);
+   pill.style.transform = t >= CFG.flip ? "scale(" + (0.86 + 0.14 * MT.spring({ t: t, delay: CFG.flip, damping: 16, stiffness: 190 })).toFixed(4) + ")" : "";
+   ck.style.strokeDashoffset = f2(1 - tick);
+  };
+  var tl = MT.scene(CFG.dur, render);
+  window.__timelines["crane-rise-reveal"] = tl;
+ })();
+</script>
+</template>
+  </body>
+</html>

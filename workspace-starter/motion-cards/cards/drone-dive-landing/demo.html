@@ -1,0 +1,265 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"src","type":"string","label":"界面截图（16:9，按 1920×1080 铺；留空用内置的示意界面）","default":""},
+    {"id":"x","type":"number","label":"落点框左上角 x（截图里的像素，按 1920×1080）","default":264},
+    {"id":"y","type":"number","label":"落点框左上角 y","default":113},
+    {"id":"w","type":"number","label":"落点框宽","default":522},
+    {"id":"h","type":"number","label":"落点框高","default":452},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>drone-dive-landing · 俯冲降落</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="drone-dive-landing-template">
+<!-- Ported from video-shotcraft demos/camera/space-camera-moves/DroneDiveLanding.tsx
+  (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+  Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+  Changes (2026-10): Remotion/React re-implemented as a HyperFrames MT sub-composition, frames to seconds;
+  --k-* palette; upstream FakeDashboard (mark, product name, initials, project names) replaced by a text-free
+  palette UI (same 3 x 2 card grid), optional screenshot and landing box as variables; the 12-sample
+  CameraMotionBlur is 4 time samples (shutter 220 deg) averaged by opacity, only while the camera moves fast;
+  landing zoom fits the box (default 1.354, upstream 1.35); no CSS-zoom re-raster (vector UI);
+  portrait: the same move landing on the 40% line at zoom 1.655. Kept: one travel p driving rotateX 72 -> 0,
+  scale and translate about the box centre, perspective 1400, 2.5% pre-lift, 25f ease-in cubic for 82% and
+  20f ease-out quint for 18%, 150px hover lift, dot floor and its fade, contact shadow, focus vignette, grain. -->
+<style>
+ @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+ @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+ @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+ #root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--k-font);
+  color: var(--k-ink);
+ }
+ /* card colours mixed from the palette; [data-tone] comes from kTone() */
+ .dd {
+  position: absolute; inset: 0; container-type: size;
+  --dd-line: color-mix(in srgb, var(--k-ink) 10%, transparent);
+  --dd-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+  --dd-dot: color-mix(in srgb, var(--k-ink) 34%, transparent);
+ }
+ .dd[data-tone="dark"] { --dd-shade: color-mix(in srgb, var(--k-bg) 30%, black); --dd-dot: color-mix(in srgb, var(--k-ink) 22%, transparent); }
+ /* ==== kit:backdrop@1 ==== */
+ .dd-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+ .dd-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+ /* ==== end kit:backdrop ==== */
+ /* ==== kit:vignette@1 ==== */
+ .dd-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--dd-shade);
+  background:
+   radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+   radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+ }
+ .dd[data-tone="dark"] .dd-vig { --vs: 0.55; }
+ /* ==== end kit:vignette ==== */
+ /* ==== kit:grain@1 ==== */
+ .dd-grain { position: absolute; inset: 0; pointer-events: none; }
+ /* ==== end kit:grain ==== */
+ /* upstream Backdrop: key light top centre (50%, 12%) */
+ .dd .dd-backdrop::after { background: radial-gradient(ellipse 62% 70% at 50% 12%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+
+ /* camera: one perspective box per time sample; the world (floor, shadow, page) is 1920 x 1080 page px.
+    Static transform = the landing (box centre on the anchor, zoomed in) */
+ .dd-cams { position: absolute; inset: 0; }
+ .dd-cam { position: absolute; inset: 0; perspective: 1400px; }
+ .dd-world { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-style: preserve-3d; transform-origin: 525px 339px; transform: translate(435px, 201px) scale(1.354); }
+ .dd-world > * { position: absolute; display: block; }
+ /* dot floor around the page, fading out radially (no hard edge) */
+ .dd-floor { left: -2400px; top: -1500px; width: 6720px; height: 3300px; opacity: 0.55;
+  background: radial-gradient(circle at 3px 3px, var(--dd-dot) 2.2px, transparent 3.2px) 0 12px / 48px 48px;
+  -webkit-mask-image: radial-gradient(2419px 1386px at 3360px 2100px, black 30%, transparent 100%); mask-image: radial-gradient(2419px 1386px at 3360px 2100px, black 30%, transparent 100%); }
+ .dd-sh { left: 0; top: 0; width: 100%; height: 100%; border-radius: 18px; background: var(--dd-shade); opacity: 0; }
+ .dd-page { left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; border-radius: 16px; background: var(--k-bg); box-shadow: 0 0 0 1px var(--dd-line); }
+ .dd-ui, .dd-img { display: block; width: 100%; height: 100%; object-fit: cover; }
+ .dd-a { fill: var(--k-bg); }
+ .dd-b { fill: var(--k-panel); }
+ .dd-c { fill: color-mix(in srgb, var(--k-ink) 22%, var(--k-panel)); }
+ .dd-d { fill: var(--k-accent); }
+ .dd-e { fill: color-mix(in srgb, var(--k-ink) 9%, var(--k-bg)); }
+ .dd-f { fill: none; stroke: var(--k-accent-2); stroke-width: 3.6; stroke-linejoin: round; stroke-linecap: round; }
+ .dd-g { fill: var(--k-accent-2); }
+ /* after landing: a light press-down around the box, in screen space */
+ .dd-focus { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(747px 658px at 50% 50%, transparent 48%, color-mix(in srgb, var(--dd-shade) 13%, transparent) 100%); }
+ @container (orientation: portrait) {
+  .dd-world { transform: translate(15px, 429px) scale(1.655); }
+  .dd-focus { background: radial-gradient(897px 787px at 50% 40%, transparent 48%, color-mix(in srgb, var(--dd-shade) 13%, transparent) 100%); }
+ }
+</style>
+
+<div id="root" data-composition-id="drone-dive-landing">
+ <div class="dd">
+  <div class="dd-backdrop"></div>
+  <div class="dd-vig"></div>
+  <div class="dd-cams" data-layout-allow-overflow>
+   <div class="dd-cam">
+    <div class="dd-world">
+     <i class="dd-floor"></i>
+     <i class="dd-sh"></i>
+     <div class="dd-page"><svg class="dd-ui" viewBox="0 0 1920 1080" preserveAspectRatio="none"><rect width="1920" height="1080" class="dd-a"/><rect width="228" height="1080" class="dd-b"/><rect x="29" y="110" width="21.6" height="21.6" rx="6" class="dd-c"/><rect x="65" y="115" width="73" height="12" rx="6" class="dd-c"/><rect x="29" y="166" width="21.6" height="21.6" rx="6" class="dd-d"/><rect x="65" y="170" width="76" height="12" rx="6" class="dd-c"/><rect x="29" y="221" width="21.6" height="21.6" rx="6" class="dd-c"/><rect x="65" y="226" width="142" height="12" rx="6" class="dd-c"/><rect x="29" y="276" width="21.6" height="21.6" rx="6" class="dd-c"/><rect x="65" y="281" width="122" height="12" rx="6" class="dd-c"/><rect x="29" y="331" width="21.6" height="21.6" rx="6" class="dd-c"/><rect x="65" y="336" width="110" height="12" rx="6" class="dd-c"/><rect x="29" y="386" width="21.6" height="21.6" rx="6" class="dd-c"/><rect x="65" y="391" width="101" height="12" rx="6" class="dd-c"/><rect x="228" y="76" width="1692" height="1" class="dd-e"/><rect x="264" y="26.4" width="204" height="21.6" rx="11" class="dd-c"/><rect x="1572" y="19" width="312" height="38.4" rx="19" class="dd-b"/><rect x="264" y="113" width="522" height="452" rx="17" class="dd-b"/><rect x="290" y="142" width="147" height="14.4" rx="7" class="dd-c"/><rect x="290" y="175" width="152" height="33.6" rx="9.6" class="dd-d"/><polyline points="290,456 330,421 369,424 408,433 447,435 486,472 525,496 564,500 604,486 643,455 682,436 721,393 760,430" class="dd-f"/><rect x="813" y="113" width="522" height="452" rx="17" class="dd-b"/><rect x="839" y="142" width="182" height="14.4" rx="7" class="dd-c"/><rect x="839" y="175" width="148" height="33.6" rx="9.6" class="dd-c"/><rect x="839" y="472" width="58" height="65" rx="5" class="dd-c"/><rect x="906" y="470" width="58" height="66" rx="5" class="dd-c"/><rect x="973" y="452" width="58" height="85" rx="5" class="dd-c"/><rect x="1040" y="417" width="58" height="120" rx="5" class="dd-c"/><rect x="1108" y="388" width="58" height="149" rx="5" class="dd-c"/><rect x="1175" y="481" width="58" height="55" rx="5" class="dd-g"/><rect x="1242" y="367" width="58" height="169" rx="5" class="dd-c"/><rect x="1362" y="113" width="522" height="452" rx="17" class="dd-b"/><rect x="1388" y="142" width="154" height="14.4" rx="7" class="dd-c"/><rect x="1388" y="175" width="184" height="33.6" rx="9.6" class="dd-c"/><polyline points="1388,410 1427,424 1466,466 1505,491 1544,500 1584,490 1623,467 1662,437 1701,418 1740,437 1779,452 1818,464 1858,493" class="dd-f"/><rect x="264" y="592" width="522" height="452" rx="17" class="dd-b"/><rect x="290" y="620" width="144" height="14.4" rx="7" class="dd-c"/><rect x="290" y="654" width="171" height="33.6" rx="9.6" class="dd-c"/><rect x="290" y="842" width="58" height="174" rx="5" class="dd-c"/><rect x="358" y="874" width="58" height="141" rx="5" class="dd-c"/><rect x="425" y="876" width="58" height="139" rx="5" class="dd-c"/><rect x="492" y="925" width="58" height="90" rx="5" class="dd-c"/><rect x="559" y="922" width="58" height="94" rx="5" class="dd-c"/><rect x="626" y="951" width="58" height="64" rx="5" class="dd-g"/><rect x="693" y="952" width="58" height="63" rx="5" class="dd-c"/><rect x="813" y="592" width="522" height="452" rx="17" class="dd-b"/><rect x="839" y="620" width="185" height="14.4" rx="7" class="dd-c"/><rect x="839" y="654" width="159" height="33.6" rx="9.6" class="dd-c"/><polyline points="839,970 878,979 918,970 957,952 996,908 1035,877 1074,893 1113,903 1152,940 1191,967 1230,979 1270,968 1309,940" class="dd-f"/><rect x="1362" y="592" width="522" height="452" rx="17" class="dd-b"/><rect x="1388" y="620" width="183" height="14.4" rx="7" class="dd-c"/><rect x="1388" y="654" width="213" height="33.6" rx="9.6" class="dd-c"/><rect x="1388" y="856" width="58" height="159" rx="5" class="dd-c"/><rect x="1455" y="889" width="58" height="126" rx="5" class="dd-c"/><rect x="1522" y="839" width="58" height="176" rx="5" class="dd-c"/><rect x="1589" y="839" width="58" height="176" rx="5" class="dd-c"/><rect x="1656" y="896" width="58" height="120" rx="5" class="dd-c"/><rect x="1723" y="859" width="58" height="156" rx="5" class="dd-g"/><rect x="1790" y="969" width="58" height="46" rx="5" class="dd-c"/></svg></div>
+    </div>
+   </div>
+  </div>
+  <div class="dd-focus"></div>
+  <div class="dd-grain"></div>
+ </div>
+</div>
+
+<script>
+ (function () {
+  // timing (s = upstream frames / 30), one travel p for the whole move
+  var CFG = {
+   dur: 3.5,                                  // 105f: landed at 69f, 36f hold
+   pre: 0.133, preDur: 0.667, preLift: 0.025, // 4f-24f smooth: the camera backs up 2.5% (anticipation)
+   dive: 0.8, cushion: 1.633, land: 2.3,      // 24f-49f ease-in cubic, then 49f-69f ease-out quint
+   share: 0.82,                               // the dive covers 82% of the travel, the cushion 18%
+   lift: 150, rx: 72, s0: 0.42, persp: 1400,  // page hovers 150 page px over the floor; start tilt and scale
+   focus: 2.1, focusDur: 0.733,               // 63f-85f: press-down around the box
+   shutter: 0.0204                            // 220 deg at 30 fps: 4 samples over the last 0.61 frame
+  };
+  // landing anchor (fraction of the frame) and how much of the frame the box fills at the end
+  var LAND = { ax: 0.5, ay: 0.5, fw: 0.368, fh: 0.567, dy: -8 };
+  var PORT = { ax: 0.5, ay: 0.4, fw: 0.8, fh: 0.4, dy: 0 };
+  var v = { src: "", x: 264, y: 113, w: 522, h: 452, backdrop: "on" };
+  try {
+   var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+   for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+  } catch (e) {}
+
+  var root = document.querySelector(".dd");
+  var q = function (s) { return root.querySelector(s); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+   // not laid out yet: the host clip's declared size, then the window
+   var hc = root.closest("[data-width][data-height]");
+   FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+   FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND, U = Math.min(FW, FH) / 1.08e3;
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+  // ==== kit:tone@1 ====
+  function kRGB(el, color) {
+   var p = document.createElement("i");
+   p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+   el.appendChild(p);
+   var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+   el.removeChild(p);
+   return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+  }
+  function kTone(wrap) {
+   var c = kRGB(wrap, "var(--k-bg)");
+   var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+   wrap.setAttribute("data-tone", tone);
+   return tone;
+  }
+  // ==== end kit:tone ====
+  // ==== kit:grain@1 ====
+  function kGrain(layer, o) {
+   o = o || {};
+   var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+   var dark = tones && tones.getAttribute("data-tone") === "dark";
+   var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+     "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+     "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+     "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+     "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+   });
+   layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+   layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+   layer.style.backgroundSize = size + "px " + size + "px";
+   return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+   };
+  }
+  // ==== end kit:grain ====
+
+  var off = String(v.backdrop) === "off", grain = null;
+  kTone(root);
+  if (off) [".dd-backdrop", ".dd-vig", ".dd-grain", ".dd-floor"].forEach(function (s) { q(s).style.display = "none"; });
+  else grain = kGrain(q(".dd-grain"), { opacity: 0.06 });
+  if (String(v.src).trim()) {
+   var img = document.createElement("img");
+   img.className = "dd-img"; img.alt = ""; img.src = String(v.src).trim();
+   q(".dd-page").innerHTML = ""; q(".dd-page").appendChild(img);
+  }
+
+  // the landing box on the page (page px): its centre is the camera's pivot; the end zoom makes it fill fw x fh
+  var world = q(".dd-world"), PW = world.offsetWidth, PH = world.offsetHeight;
+  var bw = Math.max(40, +v.w || 0), bh = Math.max(40, +v.h || 0), hx = (+v.x || 0) + bw / 2, hy = (+v.y || 0) + bh / 2;
+  var Z1 = MT.clamp(Math.min((L.fw * FW) / bw, (L.fh * FH) / bh) / U, 0.6, 2.4) * U, S0 = CFG.s0 * U;
+  var AX = FW * L.ax, AY = FH * L.ay;
+  // start: the whole page lies centred on the anchor; end: the box centre sits on it
+  var T0 = [AX - hx - (PW / 2 - hx) * S0, AY - hy - (PH / 2 - hy) * S0 * Math.cos((CFG.rx * Math.PI) / 180) + L.dy * U], T1 = [AX - hx, AY - hy];
+  world.style.transformOrigin = hx + "px " + hy + "px";
+  [].forEach.call(root.querySelectorAll(".dd-cam"), function (c) { c.style.perspective = CFG.persp * U + "px"; c.style.perspectiveOrigin = AX + "px " + AY + "px"; });
+  var hw = (bw * Z1) / 2 + 40 * U, hh = (bh * Z1) / 2 + 40 * U;
+  q(".dd-focus").style.background = "radial-gradient(" + hw * 1.9 + "px " + hh * 1.9 + "px at " + AX + "px " + AY + "px, transparent 48%, color-mix(in srgb, var(--dd-shade) 13%, transparent) 100%)";
+
+  // time samples for the motion blur: the live camera plus three copies a little earlier, averaged by opacity
+  var cams = [q(".dd-cam")];
+  for (var j = 1; j < 4; j++) {
+   var c = cams[0].cloneNode(true);
+   c.style.opacity = 1 / (j + 1);
+   cams[0].parentNode.appendChild(c);
+   cams.push(c);
+  }
+  cams = cams.map(function (c) { return { c: c, w: c.firstElementChild, f: c.querySelector(".dd-floor"), s: c.querySelector(".dd-sh"), p: c.querySelector(".dd-page") }; });
+
+  // travel p: pre-lift to -2.5%, dive (ease-in cubic) to 82%, cushion (ease-out quint) to 100%
+  var travel = function (t) {
+   var pre = -CFG.preLift * MT.ramp(t, CFG.pre, CFG.preDur, "smooth");
+   if (t < CFG.dive) return pre;
+   if (t < CFG.cushion) return MT.interpolate(t, [CFG.dive, CFG.cushion], [-CFG.preLift, CFG.share], { easing: "power2.in", extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+   return CFG.share + MT.interpolate(t, [CFG.cushion, CFG.land], [0, 1 - CFG.share], { easing: "power4.out", extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  };
+  var f2 = function (x) { return x.toFixed(2); };
+  var draw = function (o, p) {
+   var pc = MT.clamp(p, 0, 1), lift = CFG.lift * Math.pow(1 - pc, 1.4), sh = lift * 0.22;
+   o.w.style.transform = "translate(" + f2(MT.mix(T0[0], T1[0], p)) + "px," + f2(MT.mix(T0[1], T1[1], p)) + "px) rotateX(" + f2(MT.mix(CFG.rx, 0, p)) + "deg) scale(" + MT.mix(S0, Z1, p).toFixed(4) + ")";
+   o.f.style.opacity = f2(1 - 0.45 * pc);
+   // contact shadow: big and soft while high, offset to the lower right, gone at touchdown
+   o.s.style.opacity = f2(MT.interpolate(p, [0, 0.9, 1], [0.16, 0.12, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }));
+   o.s.style.filter = "blur(" + f2(22 + lift * 0.42) + "px)";
+   o.s.style.transform = "translate3d(" + f2(sh * 0.5) + "px," + f2(sh) + "px,1px) scale(" + (1 + lift * 0.0004).toFixed(4) + ")";
+   o.p.style.transform = "translateZ(" + f2(lift * U) + "px)";
+  };
+
+  var render = function (t) {
+   // the earlier samples only while the camera covers more than 0.4% of the travel per shutter, softened with it
+   var p = travel(t), dp = Math.abs(p - travel(t - CFG.shutter)), moving = dp > 0.004, gb = Math.min(6, 70 * dp) * U;
+   cams.forEach(function (o, j) {
+    if (j) { o.c.style.display = moving ? "" : "none"; o.c.style.filter = gb > 0.3 ? "blur(" + f2(gb) + "px)" : ""; }
+    if (!j || moving) draw(o, j ? travel(t - (j * CFG.shutter) / 3) : p);
+   });
+   q(".dd-focus").style.opacity = f2(MT.ramp(t, CFG.focus, CFG.focusDur, "out"));
+   if (grain) grain(t);
+  };
+  var tl = MT.scene(CFG.dur, render);
+  window.__timelines["drone-dive-landing"] = tl;
+ })();
+</script>
+</template>
+  </body>
+</html>

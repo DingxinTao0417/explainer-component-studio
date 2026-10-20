@@ -1,0 +1,404 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"kicker","type":"string","label":"眉题（可以留空）","default":"第 3 节 · 核心概念"},
+    {"id":"title","type":"string","label":"标题（用 | 切意群；横屏一行约 8 个字，竖屏两行各约 5 个字）","default":"把复杂的事|讲清楚"},
+    {"id":"sub","type":"string","label":"副标题（可以留空）","default":"三分钟，|看懂一个概念"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"暗场舞台"},{"value":"off","label":"透明（只留光和字）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>spotlight-title-sweep · 追光扫字</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="spotlight-title-sweep-template">
+      <!-- Ported from video-shotcraft demos/effects/light-play-moves/SpotlightSweepReveal.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette with --k-stage (velvet mixed from accent-2, tungsten light = on-stage + 14% accent,
+           kicker in the accent), system serif, generic copy, upstream wordmark row removed; Latin roman/italic mix
+           dropped; title 200px (portrait 158px, two lines) fitted to its box; the iris end radius grows with the title
+           (1.6 x its half width, never under 1080px) so a long line is lit as fully as upstream's; vignette and grain
+           sit under the lit title; motes on a canvas, cone as a blurred clip-path; hold after the subtitle 1 s (slot
+           6.2 s, was 5.67 s). Pendulum (50f period, 2.25 swings, damping envelope), flicker table, iris, cone fade,
+           breathing and follow-up timing kept frame for frame. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        /* ==== kit:fonts@2 (serif only) ==== */
+        @font-face { font-family: "Noto Serif SC"; src: local("Noto Serif SC"), local("Noto Serif CJK SC"), local("Source Han Serif SC"); }
+        @font-face { font-family: "Songti SC"; src: local("Songti SC"), local("STSong"), local("SimSun"); }
+        /* ==== end kit:fonts ==== */
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          --k-serif: var(--mc-serif, "Noto Serif SC", "Songti SC", serif);
+          --k-stage: var(--mc-stage, #0b0d12);
+          --k-on-stage: var(--mc-on-stage, #f3f5f8);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* ==== kit:text@2 (word units only) ==== */
+        .sp-u { display: inline-block; white-space: pre; }
+        /* ==== end kit:text ==== */
+        /* ==== kit:fit@1 ==== */
+        .sp-row { display: block; white-space: nowrap; }
+        /* ==== end kit:fit ==== */
+        /* ==== kit:grain@1 ==== */
+        .sp-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+        /* ==== kit:vignette@1 ==== */
+        .sp-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--sp-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        /* ==== end kit:vignette ==== */
+        /* the light state lives in custom properties on .sp-in; the script writes them every frame, the values here
+           are the settled frame (iris open on the title), so the page without its script is the final picture.
+           --cy title centre line, --fy stage lip, --sx/--sy spot centre, --sr/--sry spot radii, --ph cone half
+           width at the pool, --cb cone bottom */
+        .sp { position: absolute; inset: 0; container-type: size; }
+        .sp-in {
+          position: absolute; inset: 0;
+          --sp-warm: color-mix(in srgb, var(--k-on-stage), var(--k-accent) 14%);
+          --sp-vel: color-mix(in srgb, var(--k-stage) 80%, var(--k-accent-2));
+          --sp-stops: #000, rgba(0, 0, 0, 0.92) 42%, rgba(0, 0, 0, 0.35) 72%, transparent;
+          --cy: 43.5%; --th: 240px; --fy: 80.4%; --sx: 50%; --sy: calc(var(--cy) + 26px); --sr: 1300px; --sry: 578px; --ph: 1565px; --cb: calc(var(--cy) + 446px);
+        }
+        .sp[data-backdrop="off"] .sp-bd { display: none; }
+        .sp-l { position: absolute; inset: 0; pointer-events: none; }
+        .sp-stage { background: linear-gradient(180deg, color-mix(in srgb, var(--k-stage), white 4%), var(--k-stage) 60%, color-mix(in srgb, var(--k-stage), black 45%)); }
+        /* velvet: uneven vertical folds (three periods) over a hanging-dark, hem-light fill */
+        .sp-curt {
+          bottom: calc(100% - var(--fy));
+          background:
+            repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.55) 0px, transparent 46px, color-mix(in srgb, var(--sp-warm) 10%, transparent) 70px, transparent 96px, rgba(0, 0, 0, 0.55) 132px),
+            repeating-linear-gradient(90deg, transparent 0px, rgba(0, 0, 0, 0.3) 210px, transparent 330px),
+            linear-gradient(180deg, color-mix(in srgb, var(--sp-vel), black 60%), var(--sp-vel) 55%, color-mix(in srgb, var(--sp-vel), black 25%));
+        }
+        .sp-dim { opacity: 0.16; }
+        .sp-leak { background: radial-gradient(ellipse 30% 22% at 50% 0%, color-mix(in srgb, var(--sp-warm) 10%, transparent), transparent); }
+        .sp-m { mask-image: radial-gradient(ellipse var(--sr) var(--sry) at var(--sx) var(--sy), var(--sp-stops)); }
+        .sp-litc .sp-curt { opacity: 0.95; }
+        .sp-litc::after { content: ""; position: absolute; inset: 0; background: color-mix(in srgb, var(--k-accent) 8%, transparent); mix-blend-mode: screen; }
+        .sp-floor { top: var(--fy); background: linear-gradient(180deg, color-mix(in srgb, var(--k-stage), white 5%), color-mix(in srgb, var(--k-stage), black 45%)); }
+        .sp-floor::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--sp-warm) 14%, transparent), transparent); }
+        .sp-pool { opacity: 0.27; background: radial-gradient(ellipse calc(var(--ph) * 0.9) 70px at var(--sx) calc(var(--fy) + 60px), color-mix(in srgb, var(--sp-warm) 22%, transparent), color-mix(in srgb, var(--sp-warm) 6%, transparent) 55%, transparent); }
+        .sp-cone { filter: blur(18px); opacity: 0.3; }
+        .sp-beam {
+          clip-path: polygon(calc(50% - 40px) -160px, calc(50% + 40px) -160px, calc(var(--sx) + var(--ph)) var(--cb), calc(var(--sx) - var(--ph)) var(--cb));
+          background: linear-gradient(180deg, color-mix(in srgb, var(--sp-warm) 26%, transparent) -160px, color-mix(in srgb, var(--sp-warm) 7%, transparent) calc(var(--cb) * 0.6 - 64px), transparent var(--cb));
+        }
+        .sp-motes { opacity: 0.3; }
+        .sp-spot { opacity: 0.55; mix-blend-mode: screen; background: radial-gradient(ellipse calc(var(--sr) * 1.2) calc(var(--sry) * 1.1) at var(--sx) var(--sy), color-mix(in srgb, var(--sp-warm) 16%, transparent), color-mix(in srgb, var(--sp-warm) 7%, transparent) 48%, transparent); }
+        .sp-in .sp-vig { --vs: 0.62; --vin: 36%; --vc: color-mix(in srgb, var(--k-stage) 40%, black); }
+        /* the title block: its middle sits on --cy; kicker above and subtitle below sit off its edges (--th = title
+           height, measured by the script), placed in the frame rather than inside the title block */
+        .sp-tw, .sp-kick, .sp-sub { position: absolute; left: 6%; right: 6%; }
+        .sp-tw { top: var(--cy); transform: translateY(-50%); }
+        .sp-t { font-family: var(--k-serif); font-size: 200px; font-weight: 600; line-height: 1.2; letter-spacing: 0.02em; text-align: center; color: var(--k-on-stage); }
+        .sp-latin { letter-spacing: -0.03em; }
+        /* ghost and glow are copies of the measured title rows drawn by ::before (decoration, never read as text); the lit
+           block reaches 60px past the title above and below so its mask does not cut the glow's blur */
+        .sp-copy .sp-row { white-space: normal; }
+        .sp-copy .sp-row::before { content: attr(data-t); }
+        .sp-ghost { opacity: 0.07; }
+        .sp-lit { position: relative; margin: -60px 0; padding: 60px 0; mask-image: radial-gradient(ellipse var(--sr) var(--sry) at var(--mx, 50%) var(--my, calc(50% + 26px)), var(--sp-stops)); }
+        .sp-glow { position: absolute; inset: 60px 0; color: var(--sp-warm); filter: blur(16px); opacity: 0.5; }
+        .sp-kick { bottom: calc(100% - var(--cy) + var(--th) / 2 + 30px); display: flex; justify-content: center; align-items: center; gap: 22px; color: var(--k-accent); font-size: 40px; font-weight: 700; line-height: 1.3; }
+        .sp-kl { display: block; flex: none; width: 70px; height: 2px; background: color-mix(in srgb, var(--k-accent) 60%, transparent); }
+        .sp-kt { display: block; min-width: 0; letter-spacing: 0.36em; text-align: center; }
+        .sp-sub { top: calc(var(--cy) + var(--th) / 2 + 40px); font-size: 44px; line-height: 1.35; text-align: center; color: color-mix(in srgb, var(--k-on-stage) 74%, var(--k-stage)); }
+        /* portrait: the title takes two lines and its middle moves up to 38%, so kicker to subtitle spans y 455-1082 */
+        @container (orientation: portrait) {
+          .sp-in { --cy: 38%; --th: 379px; --fy: 70%; --sr: 1080px; --sry: 480px; --ph: 1300px; }
+          .sp-tw, .sp-kick, .sp-sub { left: 11%; right: 11%; }
+          .sp-t { font-size: 158px; }
+          .sp-kick { bottom: calc(100% - var(--cy) + var(--th) / 2 + 26px); }
+        }
+      </style>
+
+      <div id="root" data-composition-id="spotlight-title-sweep">
+        <div class="sp">
+          <div class="sp-in">
+            <div class="sp-l sp-bd sp-stage"></div>
+            <div class="sp-l sp-bd sp-curt sp-dim"></div>
+            <div class="sp-l sp-bd sp-leak"></div>
+            <div class="sp-l sp-bd sp-litc sp-m"><div class="sp-l sp-curt"></div></div>
+            <div class="sp-l sp-bd sp-floor"></div>
+            <div class="sp-l sp-bd sp-pool"></div>
+            <div class="sp-tw"><div class="sp-t sp-copy sp-ghost"><div class="sp-row" data-t="把复杂的事讲清楚"></div></div></div>
+            <div class="sp-l sp-cone"><div class="sp-l sp-beam"></div></div>
+            <canvas class="sp-l sp-motes" data-layout-allow-overflow></canvas>
+            <div class="sp-l sp-spot"></div>
+            <div class="sp-l sp-bd sp-vig"></div>
+            <div class="sp-l sp-bd sp-grain"></div>
+            <div class="sp-kick"><i class="sp-kl"></i><span class="sp-kt">第 3 节 · 核心概念</span><i class="sp-kl"></i></div>
+            <div class="sp-tw sp-main">
+              <div class="sp-lit">
+                <div class="sp-t sp-copy sp-glow"><div class="sp-row" data-t="把复杂的事讲清楚"></div></div>
+                <div class="sp-t sp-title">把复杂的事讲清楚</div>
+              </div>
+            </div>
+            <div class="sp-sub">三分钟，看懂一个概念</div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing in seconds (upstream frames / 30), shared by both orientations: lamp swing starts at 8f, one
+          // period 50f, stops dead centre at 121f; iris opens over 20f; kicker at 128f and subtitle at 134f, 22f each
+          var CFG = { dur: 6.2, sw0: 0.267, per: 1.667, sw1: 4.033, iris: 0.667, kick: 4.267, sub: 4.467, fol: 0.733 };
+          // layout per orientation: title lines and the smallest title size (sizes live in the CSS)
+          var LAND = { tl: 1, tmin: 120 };
+          var PORT = { tl: 2, tmin: 72 };
+          // light, upstream px: spot radius, lamp height, cone mouth half width, arc depth, spot drop; flicker per frame 4-9
+          var R0 = 360, LAMP = -160, MOUTH = 40, ARC = 44, DROP = 26, FL = [0, 0.55, 0.15, 0.8, 0.45, 1];
+          var v = { kicker: "第 3 节 · 核心概念", title: "把复杂的事|讲清楚", sub: "三分钟，|看懂一个概念", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k]; // "" hides kicker / sub
+          } catch (e) {}
+
+          var root = document.querySelector(".sp");
+          var q = function (s) { return root.querySelector(s); };
+          var qa = function (s) { return [].slice.call(root.querySelectorAll(s)); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          root.setAttribute("data-backdrop", String(v.backdrop) === "off" ? "off" : "on");
+
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          // ==== end kit:tone ====
+
+          // ==== kit:text@2 ====
+          var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "sp-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "sp-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          // ==== end kit:text ====
+
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          function kRows(el, cls) {
+            if (!el.children.length) return [];
+            var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+            var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+            kids.forEach(function (c, i) {
+              if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+              if (tops[i] != null) last = tops[i];
+              row.appendChild(c);
+            });
+            return [].slice.call(el.children);
+          }
+          // ==== end kit:fit ====
+
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+
+          // title: phrases -> fitted -> frozen rows; the ghost and the glow get the same rows as ::before copies
+          var inn = q(".sp-in"), tw = q(".sp-main"), lit = q(".sp-lit"), ttl = q(".sp-title"), sub = q(".sp-sub"), kick = q(".sp-kick"), kt = q(".sp-kt");
+          var latin = !kCJK.test(v.title);
+          kSplit(ttl, "word", false, v.title);
+          var ft = kFit(ttl, { lines: L.tl, min: L.tmin });
+          var rows = kRows(ttl, "sp-row");
+          inn.style.setProperty("--th", ttl.offsetHeight + "px");
+          qa(".sp-copy").concat(ttl).forEach(function (c) {
+            c.style.fontSize = ft.size + "px";
+            if (latin) c.classList.add("sp-latin");
+            if (c === ttl) return;
+            c.textContent = "";
+            rows.forEach(function (r) { var d = c.appendChild(document.createElement("div")); d.className = "sp-row"; d.setAttribute("data-t", r.textContent); });
+          });
+          // kicker: per character (word units lose the space after a lone "·"), fitted at its widest tracking (it
+          // closes from 0.62em to 0.36em); an empty kicker or subtitle is removed
+          if (String(v.kicker).trim()) {
+            kSplit(kt, "char", false, v.kicker);
+            kt.style.letterSpacing = "0.62em";
+            kFit(kt, { lines: 1, min: 40, width: tw.clientWidth - 184 });
+          } else kick.style.display = "none";
+          if (String(v.sub).trim()) { kSplit(sub, "word", false, v.sub); kFit(sub, { lines: 2, min: 40 }); } else sub.style.display = "none";
+
+          // geometry: lamp over the frame centre, pendulum centred on the title; the iris opens to 1.6x the title's
+          // half width (upstream: 1080px over its ~675px half width, an estimate for the 220px serif Latin line), never
+          // smaller than upstream's 1080px
+          var CX = FW / 2, CY = tw.offsetTop, AMP = 0.3125 * FW, ox = tw.offsetLeft, oy = CY - tw.offsetHeight / 2;
+          var R1 = Math.max(R0 * 3, kLines(ttl).w * 0.8), K = R1 / (R0 * 3);
+          var spot = function (t) {
+            // theta from -pi/2 (far left); after the first full swing the envelope eases to 0, so x and speed reach 0 together
+            var s = MT.clamp(t, CFG.sw0, CFG.sw1), th = -Math.PI / 2 + (2 * Math.PI * (s - CFG.sw0)) / CFG.per;
+            var u = Math.sin(th) * (1 - MT.ramp(s, CFG.sw0 + 0.75 * CFG.per, CFG.sw1 - CFG.sw0 - 0.75 * CFG.per, "smooth"));
+            return [CX + AMP * u, CY + DROP - ARC * u * u];
+          };
+          var outCubic = MT.bezier(0.215, 0.61, 0.355, 1);
+          var litc = q(".sp-litc"), pool = q(".sp-pool"), cone = q(".sp-cone"), spotEl = q(".sp-spot"), kls = qa(".sp-kl");
+          var cv = q(".sp-motes"), g = cv.getContext("2d"), wc = kRGB(root, "var(--sp-warm)").join(",");
+          cv.width = FW; cv.height = FH;
+          var rnd = function (i) { var s = Math.sin(i * 91.7 + 13.1) * 43758.5453; return s - Math.floor(s); };
+          var grain = kGrain(q(".sp-grain"), { opacity: 0.09, blend: "soft-light" });
+          var px = function (n, x) { inn.style.setProperty(n, x.toFixed(1) + "px"); };
+
+          var tl = MT.scene(CFG.dur, function (t) {
+            var f = t * 30, fi = Math.floor(f + 1e-3) - 4; // frames at 30 fps
+            var on = fi < 0 ? 0 : fi > 5 ? 1 : FL[fi];
+            var p = spot(t), x = p[0], y = p[1];
+            var iris = MT.ramp(t, CFG.sw1, CFG.iris, outCubic), fade = 1 - 0.7 * MT.ramp(t, CFG.sw1, CFG.iris, "linear");
+            var br = 1 + 0.04 * Math.sin(f / 17) * MT.ramp(t, CFG.sw1 + CFG.iris, CFG.iris, "smooth");
+            var ph = MT.mix(R0 * 1.05, 1300 * K, iris), cb = y + MT.mix(R0 * 0.8, 420, iris);
+            px("--sx", x); px("--sy", y); px("--mx", x - ox); px("--my", y - oy + 60); px("--ph", ph); px("--cb", cb);
+            px("--sr", MT.mix(R0, R1, iris)); px("--sry", MT.mix(R0 * 0.92, 480 * K, iris));
+            litc.style.opacity = on * br;
+            spotEl.style.opacity = on * MT.mix(1, 0.55, iris) * br;
+            pool.style.opacity = on * fade * 0.9;
+            cone.style.opacity = cv.style.opacity = on * fade;
+            lit.style.opacity = on;
+            // dust in the beam: drifts up the cone, sways and twinkles (upstream hash, 56 motes), clipped to the cone
+            g.clearRect(0, 0, FW, FH);
+            g.save();
+            g.beginPath(); g.moveTo(CX - MOUTH, LAMP); g.lineTo(CX + MOUTH, LAMP); g.lineTo(x + ph, cb); g.lineTo(x - ph, cb); g.closePath(); g.clip();
+            for (var i = 0; i < 56; i++) {
+              var uu = (rnd(i) + 1 - (((f * (0.35 + rnd(i + 200) * 0.5)) % 160) / 160) * 0.4) % 1;
+              var yy = MT.mix(LAMP + 120, cb - 40, uu), kk = (yy - LAMP) / (cb - LAMP);
+              var xx = MT.mix(CX, x, kk) + (rnd(i + 100) - 0.5) * MT.mix(MOUTH, ph, kk) * 1.6 + Math.sin(f / 23 + i) * 7;
+              var a = (0.16 + rnd(i + 500) * 0.4) * (0.35 + 0.65 * Math.abs(Math.sin(f / (11 + rnd(i + 400) * 9) + i)));
+              g.fillStyle = "rgba(" + wc + "," + a.toFixed(3) + ")";
+              g.beginPath(); g.arc(xx, yy, 0.9 + rnd(i + 300) * 1.8, 0, 2 * Math.PI); g.fill();
+            }
+            g.restore();
+            // follow-up: kicker tracking closes while its rules grow, subtitle rises 18px
+            var kp = MT.ramp(t, CFG.kick, CFG.fol, "snappy"), sp = MT.ramp(t, CFG.sub, CFG.fol, "snappy");
+            kick.style.opacity = kp;
+            kt.style.letterSpacing = MT.mix(0.62, 0.36, kp).toFixed(3) + "em";
+            kls.forEach(function (l) { l.style.width = MT.mix(0, 70, kp).toFixed(1) + "px"; });
+            sub.style.opacity = sp;
+            sub.style.transform = "translateY(" + MT.mix(18, 0, sp).toFixed(1) + "px)";
+            grain(t);
+          });
+          window.__timelines["spotlight-title-sweep"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,477 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"kicker","type":"string","label":"眉题（留空不要）","default":"示例应用 · 学习方式"},
+    {"id":"title","type":"string","label":"页标题（| 切意群）","default":"选一种|适合你的学法"},
+    {"id":"names","type":"string","label":"三张卡名（| 分隔，中间是主角）","default":"图文|视频课|直播"},
+    {"id":"nums","type":"string","label":"三张卡的数字（| 分隔）","default":"15|60|90"},
+    {"id":"unit","type":"string","label":"数字后的单位","default":"分钟"},
+    {"id":"feats","type":"string","label":"主角卡要点（| 分隔，1–3 条）","default":"自动整理|一键导出|多人协作"},
+    {"id":"cta","type":"string","label":"主角卡按钮（2–5 字）","default":"开始学习"},
+    {"id":"badge","type":"string","label":"落定后弹出的签（留空不要）","default":"推荐"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"有光的白底"},{"value":"off","label":"透明"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>impact-burst-kit · 砸入震开邻卡</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="impact-burst-kit-template">
+      <!-- Ported from video-shotcraft demos/effects/slam-entrance-moves/ImpactBurstKit.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette (cobalt -> accent, navy hero -> ink hero), system fonts, generic copy, mark and brand
+           line removed; text 40px+, blurbs dropped, neighbour features drawn as bars; cards 620px tall (were 600);
+           badge pops by scale only (was scale + fade); dark skins: shadows x1.6 / x2.6; portrait stacks the cards
+           (neighbours pushed up / down, tilt x0.6).
+           Hover, slam, squash, pressure disk, ring, chips, shake, neighbour push envelope and blur, badge and push
+           timing kept. -->
+      <style>
+  @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+  @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+  @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+  #root {
+    --k-bg: var(--mc-bg, #ffffff);
+    --k-panel: var(--mc-panel, #f4f5f7);
+    --k-ink: var(--mc-ink, #15171c);
+    --k-muted: var(--mc-muted, #6b7280);
+    --k-accent: var(--mc-accent, #e8590c);
+    --k-accent-2: var(--mc-accent-2, #2563eb);
+    --k-on-accent: var(--mc-on-accent, #ffffff);
+    --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+    position: absolute; inset: 0; overflow: hidden;
+    font-family: var(--k-font); color: var(--k-ink);
+  }
+/* ==== kit:derived@1 ==== */
+.ib {
+  --ib-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+  --ib-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+  --ib-hi: color-mix(in srgb, white 80%, transparent);
+}
+.ib[data-tone="dark"] {
+  --ib-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+  --ib-hi: color-mix(in srgb, white 6%, transparent);
+}
+/* ==== end kit:derived ==== */
+/* ==== kit:vignette@1 ==== */
+.ib-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--ib-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.ib[data-tone="dark"] .ib-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+/* ==== kit:backdrop@1 ==== */
+.ib-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+.ib-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+/* ==== end kit:backdrop ==== */
+/* ==== kit:grain@1 ==== */
+.ib-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+  .ib {
+    position:absolute;inset:0;container-type:size;
+    --ib-card:color-mix(in srgb,var(--k-panel) 30%,var(--k-bg));
+    --ib-acc:color-mix(in srgb,var(--k-accent) 78%,var(--k-ink));
+    --ib-dk:color-mix(in srgb,var(--k-accent) 18%,black);
+    --ib-bar:color-mix(in srgb,var(--k-ink) 13%,transparent);
+    --ib-a:color-mix(in srgb,var(--k-accent) 18%,transparent);
+  }
+  .ib[data-backdrop="off"] .ib-deco { display:none;}
+  .ib-cam,.ib-nb,.ib-fx,.ib-bits,.ib-in,.ib-bits b { position:absolute;inset:0;}
+  .ib-head { position:absolute;left:211px;right:211px;bottom:814px;}
+  .ib-kick,.ib-pr,.ib-row,.ib-cta { display:flex;align-items:center;gap:14px;}
+  .ib-kick { font-size:40px;font-weight:700;line-height:1.3;color:var(--ib-acc);}
+  .ib-title { margin-top:10px;font-size:76px;font-weight:800;line-height:1.15;}
+  .ib-slot,.ib-plan { position:absolute;left:725px;top:300px;width:470px;height:620px;border-radius:30px;box-sizing:border-box;}
+  .ib-slot { border:2px dashed color-mix(in srgb,var(--k-accent) 30%,transparent);background:color-mix(in srgb,var(--k-accent) 3.5%,transparent);}
+  .ib-contact { position:absolute;left:695px;top:860px;width:530px;height:120px;background:radial-gradient(closest-side,color-mix(in srgb,var(--ib-shade) 22%,transparent),transparent 70%);}
+  .ib-plan { background:var(--ib-card);transform-origin:50% 100%;}
+  .ib-n0 { left:211px;} .ib-n2 { left:1239px;}
+  .ib-hero { background:radial-gradient(315px 210px at 50% -50px,color-mix(in srgb,var(--k-accent) 40%,transparent),transparent 70%),linear-gradient(170deg,color-mix(in srgb,var(--k-ink) 88%,var(--k-accent-2)),var(--k-ink) 55%,color-mix(in srgb,var(--k-ink) 85%,black));color:var(--k-bg);--ib-sub:color-mix(in srgb,var(--k-bg) 68%,var(--k-ink));}
+  .ib-in { padding:44px 44px 40px;display:flex;flex-direction:column;}
+  .ib-nm,.ib-row,.ib-cta,.ib-pr span { font-size:40px;line-height:1.3;}
+  .ib-nm,.ib-cta { font-weight:700;}
+  .ib-pr { align-items:baseline;margin-top:26px;white-space:nowrap;}
+  .ib-pr b { font-size:100px;font-weight:800;line-height:0.9;font-variant-numeric:tabular-nums;}
+  .ib-hero .ib-pr b { font-size:112px;}
+  .ib-pr span { color:var(--ib-sub,var(--k-muted));}
+  .ib-ft { display:flex;flex-direction:column;gap:18px;margin-top:28px;border-top:1px solid var(--ib-line);padding-top:26px;}
+  .ib-hero .ib-ft { border-color:color-mix(in srgb,var(--k-bg) 18%,transparent);}
+  .ib-row i { position:relative;flex:none;width:30px;height:30px;border-radius:50%;background:var(--ib-a);}
+  .ib-row i::after { content:"";position:absolute;left:10px;top:6px;width:7px;height:12px;border:solid var(--k-accent);border-width:0 2.6px 2.6px 0;transform:rotate(40deg);}
+  .ib-row s,.ib-cta s { height:14px;border-radius:7px;background:var(--ib-bar);}
+  .ib-cta { margin-top:auto;height:72px;border-radius:18px;justify-content:center;box-sizing:border-box;border:2px solid var(--ib-bar);}
+  .ib-cta s { width:38%;}
+  .ib-hero .ib-cta { display:flex;border:0;background:linear-gradient(180deg,color-mix(in srgb,var(--k-accent),white 22%),var(--k-accent));color:var(--ib-dk);}
+  .ib-badge { position:absolute;left:0;right:0;top:-24px;text-align:center;}
+  .ib-badge div { display:inline-block;height:48px;line-height:48px;padding:0 22px;border-radius:24px;background:var(--k-accent);color:var(--ib-dk);font-size:28px;font-weight:700;letter-spacing:0.12em;white-space:nowrap;}
+  .ib-disk,.ib-ring,.ib-bits i,.ib-contact { position:absolute;border-radius:50%;box-sizing:border-box;}
+  .ib-ring { border:solid color-mix(in srgb,var(--k-accent) 90%,transparent);}
+  .ib-bits b { border-radius:2px;background:var(--k-accent);box-shadow:0 0 8px color-mix(in srgb,var(--k-accent) 45%,transparent);}
+  .ib-bits i:nth-child(3n) b { background:var(--k-bg);box-shadow:0 0 0 1px var(--ib-line),0 3px 8px var(--ib-a);}
+  @container (orientation: portrait) {
+    .ib-head { left:120px;right:120px;bottom:1514px;}
+    .ib-slot,.ib-plan { left:120px;top:646px;width:840px;height:404px;}
+    .ib-n0 { top:420px;height:200px;} .ib-n2 { top:1076px;height:200px;}
+    .ib-contact { left:90px;top:990px;width:900px;}
+    .ib-in { padding:34px 44px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto 1fr;column-gap:36px;}
+    .ib-nb .ib-in { padding:30px 44px;}
+    .ib-pr { margin-top:10px;}
+    .ib-nb .ib-pr b { font-size:80px;}
+    .ib-ft { grid-column:2;grid-row:1 / 4;margin:0;padding:0;border:0;align-self:center;}
+    .ib-cta { grid-column:1;grid-row:3;align-self:end;}
+    .ib-nb .ib-cta { display:none;}
+  }
+      </style>
+
+      <div id="root" data-composition-id="impact-burst-kit">
+      <div class="ib">
+      <div class="ib-backdrop ib-deco"></div>
+      <div class="ib-vig ib-deco"></div>
+      <div class="ib-grain ib-deco"></div>
+      <div class="ib-cam">
+        <div class="ib-head">
+          <div class="ib-kick"><svg width="40" height="40" viewBox="0 0 128 128"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg><span>示例应用 · 学习方式</span></div>
+          <div class="ib-title">选一种适合你的学法</div>
+        </div>
+        <div class="ib-slot"></div>
+        <div class="ib-contact"></div>
+        <div class="ib-nb"><div class="ib-plan ib-n0"><div class="ib-in"><div class="ib-nm">图文</div><div class="ib-pr"><b>15</b><span>分钟</span></div><div class="ib-ft"><div class="ib-row"><i></i><s style="width:70%"></s></div><div class="ib-row"><i></i><s style="width:84%"></s></div><div class="ib-row"><i></i><s style="width:58%"></s></div></div><div class="ib-cta"><s></s></div></div></div></div>
+        <div class="ib-nb"><div class="ib-plan ib-n2"><div class="ib-in"><div class="ib-nm">直播</div><div class="ib-pr"><b>90</b><span>分钟</span></div><div class="ib-ft"><div class="ib-row"><i></i><s style="width:62%"></s></div><div class="ib-row"><i></i><s style="width:80%"></s></div><div class="ib-row"><i></i><s style="width:73%"></s></div></div><div class="ib-cta"><s></s></div></div></div></div>
+        <div class="ib-fx" data-layout-allow-overflow><div class="ib-disk"></div></div>
+        <div class="ib-plan ib-hero" data-layout-allow-overflow>
+          <div class="ib-in"><div class="ib-nm">视频课</div><div class="ib-pr"><b>60</b><span>分钟</span></div>
+            <div class="ib-ft"><div class="ib-row"><i></i><span>自动整理</span></div><div class="ib-row"><i></i><span>一键导出</span></div><div class="ib-row"><i></i><span>多人协作</span></div></div>
+            <div class="ib-cta"><span>开始学习</span></div></div>
+          <div class="ib-badge"><div>推荐</div></div>
+        </div>
+        <div class="ib-bits" data-layout-allow-overflow></div>
+        <div class="ib-fx" data-layout-allow-overflow><div class="ib-ring"></div></div>
+      </div>
+      </div>
+      </div>
+
+      <script>
+(function () {
+  // seconds = upstream frames / 30, shared by both orientations
+  var CFG = {
+    dur: 4.667, drop: 0.533, hit: 0.733, wave: 0.833, // slam 16-22f, impact 22f, neighbours hit 25f
+    s0: 1.55, s1: 1.6, dy0: -110, dy1: -20, dof: 7, // hover scale, lift px, blur px
+    sqX: 0.06, sqY: 0.085, sqIn: 0.1, // squash 3f, then spring back
+    ring: 0.533, r0: 100, r1: 1100, w0: 10, w1: 1.5, bits: 0.733, // ring radius over 16f; chips 22f
+    pushX: 34, pushRot: 3.5, pushEnd: 1.333, // cos(f/2) e^(-f/8), cut after 40f
+    shake: 8, shakeFr: 4, badge: 0.933, push: 0.02, pushDur: 3.933,
+    nbBlur: 0.22, nbBlurMax: 8
+  };
+  // push axis, tilt scale, title lines
+  var LAND = { ax: "x", rk: 1, tl: 2 };
+  var PORT = { ax: "y", rk: 0.6, tl: 1 };
+  var v = { kicker: "示例应用 · 学习方式", title: "选一种|适合你的学法", names: "图文|视频课|直播", nums: "15|60|90", unit: "分钟", feats: "自动整理|一键导出|多人协作", cta: "开始学习", badge: "推荐", backdrop: "on" };
+  try {
+    var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k]; // "" hides kicker or badge
+  } catch (e) {}
+
+  var root = document.querySelector(".ib");
+  var q = function (s) { return root.querySelector(s); };
+  var qa = function (s) { return [].slice.call(root.querySelectorAll(s)); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+    // not laid out yet: the host clip's declared size, then the window
+    var hc = root.closest("[data-width][data-height]");
+    FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+    FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND;
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+  root.setAttribute("data-backdrop", String(v.backdrop) === "off" ? "off" : "on");
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== end kit:tone ====
+// ==== kit:hash@1 ====
+function kHash(n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+// ==== end kit:hash ====
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+      "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+      "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+      "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+      "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+}
+// ==== end kit:grain ====
+// ==== kit:shadow@1 ====
+function kShadow(e, strength) {
+  e = Math.max(0, e);
+  var s = strength == null ? 1 : strength, r = function (x) { return Math.round(x * 10) / 10; };
+  var c = function (a) { return "color-mix(in srgb, var(--ib-shade) " + r(Math.min(1, a) * 100) + "%, transparent)"; };
+  return "0 " + r(0.5 + e * 0.06) + "px " + r(1 + e * 0.18) + "px " + c((0.12 * s) / (1 + e / 24)) + ", " +
+    "0 " + r(e * 0.55) + "px " + r(e * 1.3) + "px " + r(-e * 0.22) + "px " + c((0.08 + (Math.min(e, 64) / 64) * 0.22) * s);
+}
+// ==== end kit:shadow ====
+// ==== kit:speedblur@1 ====
+function kSpeedBlur(box, prefix, o) {
+  o = o || {};
+  var amount = o.amount || 0.45, max = o.max || 36;
+  var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+  var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+  svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+  var outer = document.createElement("div"), inner = document.createElement("div");
+  outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+  while (box.firstChild) inner.appendChild(box.firstChild);
+  outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+  var fe = svg.firstChild.firstChild;
+  return function (vx, vy) {
+    vy = vy || 0;
+    var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+    if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+    var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+    fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+    outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+    inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+    outer.style.filter = "url(#" + id + ")";
+  };
+}
+// ==== end kit:speedblur ====
+// ==== kit:text@2 ====
+var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+function kWords(s, key) {
+  s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+  var cut = function (x) {
+    if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+    return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+  };
+  var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+  var pre = "";
+  bits.forEach(function (x) {
+    var t = x.trim(), last = out[out.length - 1];
+    if (last && /^ /.test(x)) last.sp = true;
+    if (!t) return;
+    if (!/[\p{L}\p{N}]/u.test(t)) {
+      if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+      else { last.t += t; last.sp = / $/.test(x); }
+      return;
+    }
+    out.push({ t: pre + t, sp: / $/.test(x) });
+    pre = "";
+  });
+  if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+  if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+  if (out.length) out[out.length - 1].sp = false;
+  return out;
+}
+function kSplit(el, by, rise, text) {
+  var s = text != null ? String(text) : el.textContent, units = [];
+  var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+  el.textContent = "";
+  parts.forEach(function (p) {
+    var u = document.createElement("span"), box = u;
+    u.className = "ib-u"; u.textContent = p.t;
+    if (by === "line") u.style.display = "block";
+    if (!p.t.trim()) { el.appendChild(u); return; }
+    if (rise) { box = document.createElement("span"); box.className = "ib-cut"; box.style.display = u.style.display; box.appendChild(u); }
+    el.appendChild(box);
+    if (p.sp) el.appendChild(document.createTextNode(" "));
+    units.push(u);
+  });
+  return units;
+}
+function kReveal(tl, units, variant, at, o) {
+  o = o || {};
+  var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+  units.forEach(function (u, i) {
+    var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+    if (variant === "rise") {
+      tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+      tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+    } else if (variant === "blur") {
+      tl.fromTo(u, { opacity: 0, y: fs * 0.25, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: each, ease: ease }, t0);
+    } else if (variant === "drop") {
+      tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each / 3, ease: "none" }, t0);
+      tl.fromTo(u, { y: -fs * 0.6 }, { y: 0, duration: each, ease: "overshoot" }, t0);
+    } else if (variant === "scale") {
+      tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each * 0.1, ease: "power1.out" }, t0);
+      tl.fromTo(u, { scale: 1.6, filter: "blur(8px)" }, { scale: 1, filter: "blur(0px)", duration: each, ease: ease }, t0);
+    } else {
+      tl.fromTo(u, { opacity: 0, marginRight: "0.5em" }, { opacity: 1, marginRight: "0em", duration: each, ease: ease }, t0);
+    }
+  });
+  return tl;
+}
+// ==== end kit:text ====
+// ==== kit:fit@1 ====
+function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+      var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+      if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+      row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+function kRows(el, cls) {
+  if (!el.children.length) return [];
+  var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+  var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+  kids.forEach(function (c, i) {
+    if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+    if (tops[i] != null) last = tops[i];
+    row.appendChild(c);
+  });
+  return [].slice.call(el.children);
+}
+// ==== end kit:fit ====
+
+  var dark = kTone(root) === "dark", grain = kGrain(q(".ib-grain"));
+  var str = function (x) { return String(x == null ? "" : x).trim(); };
+  var list = function (x) { return String(x).split("|").map(function (s) { return s.trim(); }); };
+  // one-line labels keep the typed text as is (kWords drops the space after a lone " · "); the title is split at "|"
+  var fit = function (el, txt, o) { el.textContent = str(txt); return kFit(el, o); };
+
+  // text slots. The hovering hero covers the head and the neighbours, and chips fly across the hero's own text,
+  // by design: every text node here is exempt from occlusion and overlap
+  var kick = q(".ib-kick span"), title = q(".ib-title");
+  if (str(v.kicker)) fit(kick, v.kicker, { lines: 1, min: 40, width: q(".ib-head").clientWidth - 54 }); else q(".ib-kick").style.display = "none";
+  kSplit(title, "word", false, v.title);
+  kFit(title, { lines: L.tl, min: 72 });
+  var names = list(v.names), nums = list(v.nums), plans = [q(".ib-n0"), q(".ib-hero"), q(".ib-n2")];
+  var ft = q(".ib-hero .ib-ft"), rows = qa(".ib-hero .ib-row");
+  plans.forEach(function (pl, i) {
+    var w = pl.querySelector(".ib-in").clientWidth - 88, pr = pl.querySelector(".ib-pr");
+    fit(pl.querySelector(".ib-nm"), names[i] || "", { lines: 1, min: 40, width: P ? w / 2 : w });
+    pr.querySelector("span").textContent = str(v.unit);
+    var b = pr.querySelector("b");
+    b.textContent = nums[i] || "";
+    kFit(b, { lines: 1, min: 56, width: (P ? w / 2 : w) - pr.querySelector("span").offsetWidth - 12 });
+  });
+  var fs = list(v.feats).filter(Boolean);
+  rows.forEach(function (rw, r) { if (fs[r]) fit(rw.lastChild, fs[r], { lines: 1, min: 40, width: ft.clientWidth - 46 }); else rw.style.display = "none"; });
+  fit(q(".ib-hero .ib-cta span"), v.cta, { lines: 1, min: 40, width: ft.clientWidth - 40 });
+  qa(".ib-nm, .ib-cam span, .ib-pr b, .ib-badge div").forEach(function (e) { e.setAttribute("data-layout-allow-occlusion", ""); e.setAttribute("data-layout-allow-overlap", ""); });
+  var badge = q(".ib-badge div");
+  if (str(v.badge)) fit(badge, v.badge, { lines: 1, min: 28, width: ft.clientWidth }); else badge.style.display = "none";
+
+  var hero = plans[1], CX = hero.offsetLeft + hero.offsetWidth / 2, CY = hero.offsetTop + hero.offsetHeight / 2;
+  var slot = q(".ib-slot"), contact = q(".ib-contact"), disk = q(".ib-disk"), ring = q(".ib-ring"), cam = q(".ib-cam");
+  var NB = qa(".ib-nb").map(function (box, k) {
+    var pl = box.firstChild, dir = k ? 1 : -1;
+    pl.style.transformOrigin = L.ax === "x" ? "50% 100%" : k ? "50% 0%" : "50% 100%";
+    return { pl: pl, dir: dir, blur: kSpeedBlur(box, "ib", { amount: CFG.nbBlur, max: CFG.nbBlurMax }) };
+  });
+  var BITS = [];
+  for (var i = 0; i < 18; i++) {
+    var o = q(".ib-bits").appendChild(document.createElement("i")), c = o.appendChild(document.createElement("b"));
+    BITS.push({ el: o, c: c, a: -Math.PI / 2 + (kHash(i + 1) - 0.5) * Math.PI * 1.75, dist: 260 + kHash(i + 40) * 300, size: 12 + kHash(i + 80) * 16, spin: (kHash(i + 120) - 0.5) * 720, ratio: 0.35 + kHash(i + 9) * 0.5 });
+  }
+
+  var inCubic = MT.bezier(0.55, 0.055, 0.675, 0.19), HF = Math.round(CFG.hit * 30), WF = Math.round(CFG.wave * 30);
+  var env = function (f) { var t = f - WF; return t < 0 || t >= CFG.pushEnd * 30 ? 0 : Math.cos(t * 0.5) * Math.exp(-t / 8); }; // f in frames
+  var px = function (x) { return x.toFixed(1) + "px"; };
+  var box = function (e, r, o) { e.style.cssText = "left:" + px(CX - r) + ";top:" + px(CY - r) + ";width:" + px(2 * r) + ";height:" + px(2 * r) + ";opacity:" + o; return e.style; };
+  var sh = function (a) { return "color-mix(in srgb,var(--ib-shade) " + Math.round(Math.min(1, a) * 100) + "%,transparent)"; };
+
+  var tl = MT.scene(CFG.dur, function (t) {
+    var f = t * 30, fr = Math.floor(f + 1e-4), th = t - CFG.hit;
+    // hero hovers in front of the lens, slams on ease-in, squashes, springs back
+    var wind = MT.ramp(t, 0, CFG.drop, "smooth"), drop = MT.ramp(t, CFG.drop, CFG.hit - CFG.drop, inCubic);
+    var ms = MT.mix(MT.mix(CFG.s0, CFG.s1, wind), 1, drop), dy = MT.mix(CFG.dy0 + CFG.dy1 * wind, 0, drop);
+    var lift = MT.clamp((ms - 1) / 0.6, 0, 1), dof = lift * CFG.dof;
+    var sq = th < 0 ? 0 : th < CFG.sqIn ? MT.ramp(t, CFG.hit, CFG.sqIn, "out") : 1 - MT.spring({ t: t, delay: CFG.hit + CFG.sqIn, damping: 12, stiffness: 320 });
+    hero.style.transform = "translateY(" + px(dy) + ") scale(" + (ms * (1 + CFG.sqX * sq)).toFixed(4) + "," + (ms * (1 - CFG.sqY * sq)).toFixed(4) + ")";
+    hero.style.opacity = MT.ramp(t, 0, 0.167, "out").toFixed(3);
+    hero.style.filter = dof > 0.4 ? "blur(" + px(dof) + ")" : "";
+    hero.style.boxShadow = "0 " + px(18 + lift * 60) + " " + px(50 + lift * 90) + " -18px " + sh((0.55 - lift * 0.15) * (dark ? 1.6 : 1)) + ",0 0 0 1px var(--ib-line),inset 0 1px 0 color-mix(in srgb,white 14%,transparent)";
+    slot.style.opacity = (1 - MT.ramp(t, CFG.hit, 0.1, "out")).toFixed(3);
+    contact.style.opacity = (th < 0 ? MT.mix(0.25, 1, drop) : 1 - MT.ramp(t, CFG.hit, 0.133, "out")).toFixed(3);
+    contact.style.transform = "scale(" + MT.mix(1.5, 1, drop).toFixed(3) + ")";
+    // ring spreads on snappy, fades linearly, over a white pressure disk
+    var rP = MT.ramp(t, CFG.hit, CFG.ring, "snappy"), rL = MT.ramp(t, CFG.hit, CFG.ring, "linear"), on = th >= 0 && rL < 1, R = MT.mix(CFG.r0, CFG.r1, rP);
+    var rs = box(ring, R, on ? MT.mix(0.95, 0, rL).toFixed(3) : 0), gl = (18 + rP * 30).toFixed(0) + "px color-mix(in srgb,var(--k-accent) ";
+    rs.borderWidth = MT.mix(CFG.w0, CFG.w1, rP).toFixed(2) + "px";
+    rs.boxShadow = "0 0 " + gl + "35%,transparent),inset 0 0 " + gl + "20%,transparent)";
+    box(disk, R * 0.9, on ? 1 : 0).background = "radial-gradient(circle,transparent 40%,color-mix(in srgb,var(--k-bg) " + Math.round(55 * (1 - rL)) + "%,transparent) 68%,transparent 72%)";
+    var pT = MT.ramp(t, CFG.hit, CFG.bits, "out"), pL = MT.ramp(t, CFG.hit, CFG.bits, "linear");
+    BITS.forEach(function (b) {
+      var s = b.size * (1 - 0.6 * pL), d = 140 + b.dist * pT, st = 1 + Math.min(1.6, Math.pow(1 - pT, 2 / 3) * 1.6);
+      b.el.style.cssText = "left:" + px(CX + Math.cos(b.a) * d - s / 2) + ";top:" + px(CY - 40 + Math.sin(b.a) * d * 0.85 + 120 * pL * pL - (s * b.ratio) / 2) + ";width:" + px(s) + ";height:" + px(s * b.ratio) +
+        ";transform:rotate(" + ((b.a * 180) / Math.PI).toFixed(1) + "deg) scaleX(" + st.toFixed(3) + ");opacity:" + (th >= 0 && pL < 1 ? (pL < 0.65 ? 1 : 1 - (pL - 0.65) / 0.35) : 0).toFixed(3);
+      b.c.style.transform = "rotate(" + (b.spin * pT).toFixed(1) + "deg)";
+    });
+    // neighbours pushed out when the ring front reaches them, damped back
+    var e = env(f), ev = (env(f + 0.5) - env(f - 0.5)) * CFG.pushX * 30;
+    NB.forEach(function (n) {
+      n.pl.style.transform = "translate" + L.ax.toUpperCase() + "(" + px(n.dir * CFG.pushX * e) + ") rotate(" + (n.dir * CFG.pushRot * L.rk * e).toFixed(3) + "deg)";
+      n.pl.style.boxShadow = kShadow(6 + Math.abs(e) * 26, dark ? 2.6 : 1) + ",inset 0 0 0 1px var(--ib-line),inset 0 1px 0 var(--ib-hi)";
+      n.blur(L.ax === "x" ? n.dir * ev : 0, L.ax === "y" ? n.dir * ev : 0);
+    });
+    var amp = fr >= HF && fr < HF + CFG.shakeFr ? CFG.shake * (1 - (fr - HF) / CFG.shakeFr) : 0;
+    cam.style.transform = "translate(" + px((kHash(fr * 3.7) - 0.5) * 2 * amp) + "," + px((fr === HF ? 1 : (kHash(fr * 7.1 + 13) - 0.5) * 2) * amp) + ") scale(" + (1 + CFG.push * MT.ramp(t, CFG.hit, CFG.pushDur, "swift")).toFixed(5) + ")";
+    var bd = t < CFG.badge ? 0 : MT.spring({ t: t, delay: CFG.badge, damping: 13, stiffness: 240 });
+    badge.style.transform = "scale(" + bd.toFixed(4) + ")";
+    badge.style.opacity = t < CFG.badge ? 0 : 1; // scale only: a fade fails contrast
+    grain(t);
+  });
+  window.__timelines["impact-burst-kit"] = tl;
+})();
+      </script>
+    </template>
+  </body>
+</html>

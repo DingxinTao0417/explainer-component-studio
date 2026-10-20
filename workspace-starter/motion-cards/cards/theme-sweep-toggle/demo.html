@@ -1,0 +1,418 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"界面里的大标题","default":"本周安排"},
+    {"id":"name","type":"string","label":"应用名（顶栏左上）","default":"示例应用"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底（窗外有天色）"},{"value":"off","label":"透明（只留窗口和晨昏线）"}]}
+  ]'
+>
+<head>
+<meta charset="UTF-8" />
+<title>theme-sweep-toggle · 开关斜扫换肤</title>
+<script src="../../lib/preview.js"></script>
+</head>
+<body>
+<template id="theme-sweep-toggle-template">
+<!-- Ported from video-shotcraft demos/interaction/theme-switch-moves/ThemeSweepToggle.tsx
+     (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+     Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+     Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+     --k-* palette (old theme = host skin, new = the skin inside out: dark skins swap to light, icon moon to sun),
+     system fonts, generic Chinese copy, upstream mark and schedule copy removed; one UI cloned for the second theme;
+     70 hashed stars -> three star tiles; four calendar colours -> three; labels 28-34 px, event times as bars; one
+     radial layer per vignette; portrait added (three days, own close-up and sweep start). Kept: click, knob spring,
+     sun-to-moon icon, 15 degree terminator, speed-widened dusk band, sweep curve and timing, camera pull-out and
+     hold push, lights-on order, vignettes split along the line, grain. -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  position:absolute;
+  inset:0;
+  overflow:hidden;
+  font-family:var(--k-font);
+  color:var(--k-ink);
+}
+.ts {position:absolute;inset:0;container-type:size;overflow:hidden}
+.ts-cam,.ts-w,.ts-vig,.ts-grain,.ts-dusk {position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:0 0}
+/* A = the host skin, B = the skin inside out */
+.ts-A {--ts-bg:var(--k-bg);--ts-pan:var(--k-panel);--ts-ink:var(--k-ink);--ts-mut:var(--k-muted)}
+.ts-B {--ts-bg:color-mix(in srgb,var(--k-ink) 92%,var(--k-accent-2));--ts-pan:color-mix(in srgb,var(--ts-bg),var(--k-bg) 7%);--ts-ink:var(--k-bg);--ts-mut:color-mix(in srgb,var(--k-muted),var(--k-bg) 35%)}
+/* lighting: daylight, or night sky and glows */
+.ts-w {--ts-line:color-mix(in srgb,var(--ts-ink) 10%,transparent);--ts-star:color-mix(in srgb,var(--ts-ink) 88%,var(--k-accent-2));--ts-trk:color-mix(in srgb,var(--k-ink) 85%,var(--k-accent-2));
+  --wx:120px;--wy:84px;--ww:1680px;--wh:912px;--gut:104px;--cw:308px;--hr:86.29px;--d0: 0;--l1: 1;--l2: 1;--l3: 1}
+.ts-lite {--ts-ew:0%;--ts-ef:13%;--ts-eb:12%;--ts-win:var(--ts-bg);--ts-on:var(--ts-bg);--ts-st1: color-mix(in srgb,var(--ts-pan) 70%,var(--ts-bg));--ts-st2: color-mix(in srgb,var(--ts-pan),black 9%);--ts-shade:color-mix(in srgb,black 80%,var(--k-accent-2))}
+.ts-dark {--ts-ew:40%;--ts-ef:15%;--ts-eb:18%;--ts-win:color-mix(in srgb,var(--ts-bg),var(--ts-pan) 40%);--ts-on:color-mix(in srgb,var(--ts-pan),white 6%);--ts-st1: color-mix(in srgb,var(--ts-bg),var(--k-accent-2) 12%);--ts-st2: color-mix(in srgb,var(--ts-bg),black 55%);--ts-shade:color-mix(in srgb,var(--ts-bg),black 80%)}
+.ts-st,.ts-beams,.ts-stars,.ts-stars i {position:absolute;inset:-260px}
+.ts-stars i {inset:0}
+.ts-st {background:linear-gradient(180deg,var(--ts-st1),color-mix(in srgb,var(--ts-st1),var(--ts-st2)) 55%,var(--ts-st2))}
+.ts-st::after {content:"";position:absolute;inset:0;background:radial-gradient(ellipse 60% 64% at 18% 0%,color-mix(in srgb,var(--ts-bg) 95%,transparent),transparent 72%)}
+.ts-dark .ts-st::after {mix-blend-mode:screen;background:radial-gradient(ellipse 60% 64% at 86% 2%,color-mix(in srgb,var(--k-accent-2) 40%,transparent),transparent 72%)}
+.ts-beams {overflow:hidden}
+.ts-beams i {position:absolute;top:-300px;width:150px;height:2200px;transform:rotate(-32deg);transform-origin:0 0;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--ts-bg) 55%,transparent),transparent)}
+.ts-stars,.ts-dark .ts-beams {display:none}
+.ts-dark .ts-stars {display:block}
+.ts-s1 {background:radial-gradient(circle at 40px 30px,var(--ts-star) 1.2px,transparent 1.8px),radial-gradient(circle at 190px 80px,var(--ts-star) 1px,transparent 1.6px),radial-gradient(circle at 262px 204px,var(--ts-star) 1.3px,transparent 1.9px);background-size:310px 250px}
+.ts-s2 {background:radial-gradient(circle at 70px 60px,var(--ts-star) 1.8px,transparent 2.4px),radial-gradient(circle at 300px 150px,var(--ts-star) 1.6px,transparent 2.2px),radial-gradient(circle at 452px 38px,var(--ts-star) 2px,transparent 2.6px),radial-gradient(circle at 180px 330px,var(--ts-star) 1.7px,transparent 2.3px);background-size:530px 410px}
+.ts-s3 {background:radial-gradient(circle at 120px 90px,var(--ts-star) 2.4px,transparent 6px),radial-gradient(circle at 610px 240px,var(--ts-star) 2.2px,transparent 6px),radial-gradient(circle at 380px 560px,var(--ts-star) 2.6px,transparent 6px);background-size:870px 690px}
+.ts-desk {position:absolute;left:calc(var(--wx) + 80px);top:calc(var(--wy) + var(--wh) - 40px);width:calc(var(--ww) - 160px);height:140px;filter:blur(14px);background:radial-gradient(ellipse 50% 50% at 50% 30%,color-mix(in srgb,var(--ts-shade) 16%,transparent),transparent 70%)}
+.ts-dark .ts-desk {background:radial-gradient(ellipse 50% 50% at 50% 30%,color-mix(in srgb,var(--k-accent-2) 20%,transparent),transparent 70%)}
+/* events: --d day, --s / --e hours after 9:00 */
+.ts-win {position:absolute;left:var(--wx);top:var(--wy);width:var(--ww);height:var(--wh);border-radius:28px;overflow:hidden;background:var(--ts-win);color:var(--ts-ink);
+  box-shadow:inset 0 1px 0 color-mix(in srgb,white 90%,transparent),0 0 0 1px var(--ts-line),0 40px 90px -24px color-mix(in srgb,var(--ts-shade) 32%,transparent),0 10px 26px -6px color-mix(in srgb,var(--ts-shade) 16%,transparent)}
+.ts-dark .ts-win {box-shadow:inset 0 1px 0 color-mix(in srgb,white 7%,transparent),0 0 0 1px color-mix(in srgb,var(--k-accent-2) calc(10% + 18% * var(--l3)),transparent),0 0 calc(60px * var(--l3)) color-mix(in srgb,var(--k-accent-2) calc(22% * var(--l3)),transparent),0 40px 90px -20px color-mix(in srgb,var(--ts-shade) 90%,transparent),0 12px 30px color-mix(in srgb,var(--ts-shade) 60%,transparent)}
+.ts-top {position:absolute;left:0;top:0;right:0;height:92px;box-sizing:border-box;padding:0 40px;display:flex;align-items:center;border-bottom:1px solid var(--ts-line)}
+.ts-mark {display:block;flex:none;margin-right:14px}
+.ts-name {display:block;max-width:360px;font-size:32px;font-weight:700;line-height:1.2;letter-spacing:0.03em}
+.ts-seg {display:flex;gap:4px;margin-left:72px;padding:5px;border-radius:14px;background:var(--ts-pan)}
+.ts-seg i {padding:6px 22px;border-radius:10px;font-size:28px;font-style:normal;line-height:1.3;color:var(--ts-mut)}
+.ts-seg .on {color:var(--ts-ink);font-weight:700;background:var(--ts-on)}
+.ts-today {margin:0 160px 0 auto;font-size:28px;color:var(--ts-mut)}
+.ts-tog {position:absolute;right:40px;top:13px;width:132px;height:66px;border-radius:33px;overflow:hidden;background:color-mix(in srgb,var(--ts-pan),var(--ts-ink) 6%);box-shadow:inset 0 2px 4px color-mix(in srgb,var(--ts-shade) 18%,transparent),inset 0 0 0 1px var(--ts-line)}
+.ts-A .ts-tog {background:linear-gradient(90deg,var(--ts-trk) calc(var(--kn,1) * 100%),color-mix(in srgb,var(--ts-pan),var(--ts-ink) 6%) 0)}
+.ts-tog s {position:absolute;width:4px;height:4px;border-radius:2px;opacity:calc(clamp(0,var(--kn,1) * 1.4 - 0.3,1) * var(--o));background:color-mix(in srgb,var(--k-bg) 90%,var(--k-accent-2))}
+.ts-knob {position:absolute;left:6px;top:6px;width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;transform:translateX(calc(var(--kn,1) * 66px));
+  background:linear-gradient(180deg,white,color-mix(in srgb,white 93%,var(--k-accent)));box-shadow:0 3px 8px -1px color-mix(in srgb,black 30%,transparent)}
+.ts-ic {display:block;overflow:visible}
+.ts-ic line {stroke-width:3;stroke-linecap:round}
+.ts-head {position:absolute;left:40px;right:40px;top:92px;height:112px;display:flex;align-items:center}
+.ts-title {display:block;max-width:1000px;font-size:64px;font-weight:800;line-height:1.2}
+.ts-wk {margin:8px 0 0 26px;font-size:28px;font-weight:600;letter-spacing:0.08em;color:var(--ts-mut);white-space:nowrap}
+.ts-note {margin-left:auto;font-size:28px;color:var(--ts-mut);white-space:nowrap}
+.ts-days {position:absolute;left:var(--gut);top:204px;height:80px;display:flex}
+.ts-day {width:var(--cw);box-sizing:border-box;padding-left:14px;display:flex;align-items:center;gap:14px}
+.ts-day i {font-size:28px;font-weight:600;font-style:normal;color:var(--ts-mut)}
+.ts-day b {font-size:40px;font-weight:800;line-height:1.2}
+.ts-day.on i {color:var(--ts-ink)}
+.ts-day.on b {padding:0 16px;border-radius:30px;background:var(--k-accent);color:var(--k-on-accent);box-shadow:0 4px 12px -4px color-mix(in srgb,var(--k-accent) 50%,transparent)}
+.ts-dark .ts-day.on b {box-shadow:0 0 calc(26px * var(--l1)) color-mix(in srgb,var(--k-accent) calc(60% * var(--l1)),transparent),0 0 calc(70px * var(--l1)) color-mix(in srgb,var(--k-accent) calc(30% * var(--l1)),transparent)}
+.ts-grid {position:absolute;left:0;right:0;top:284px;bottom:0;border-top:1px solid var(--ts-line)}
+.ts-lines {position:absolute;left:var(--gut);right:36px;top:0;height:calc(7 * var(--hr) + 1px);background:repeating-linear-gradient(180deg,var(--ts-line) 0 1px,transparent 1px var(--hr)),repeating-linear-gradient(90deg,var(--ts-line) 0 1px,transparent 1px var(--cw))}
+.ts-tc {position:absolute;top:0;bottom:0;left:calc(var(--gut) + (2 - var(--d0)) * var(--cw));width:var(--cw);background:color-mix(in srgb,var(--k-accent) 4%,transparent)}
+.ts-hl {position:absolute;left:22px;top:-17px}
+.ts-hl i {display:block;height:34px;margin-bottom:calc(var(--hr) - 34px);font-size:28px;font-style:normal;line-height:1.2;color:var(--ts-mut)}
+.ts-grid p {position:absolute;margin:0;left:calc(var(--gut) + (var(--d) - var(--d0)) * var(--cw) + 8px);top:calc(var(--s) * var(--hr) + 4px);width:calc(var(--cw) - 16px);height:calc((var(--e) - var(--s)) * var(--hr) - 8px);
+  box-sizing:border-box;padding:9px 14px 0 22px;border-radius:12px;background:color-mix(in srgb,color-mix(in srgb,var(--h),white var(--ts-ew)) var(--ts-ef),var(--ts-win));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--h) var(--ts-eb),transparent)}
+.ts-grid p::before {content:"";position:absolute;left:0;top:0;bottom:0;width:6px;border-radius:12px 0 0 12px;background:var(--h)}
+.ts-grid p b {display:block;font-size:34px;font-weight:700;line-height:1.15;white-space:nowrap}
+.ts-grid p::after {content:"";display:block;width:58%;height:10px;margin-top:9px;border-radius:5px;background:color-mix(in srgb,var(--h) 40%,transparent)}
+.ts-dark .ts-grid p::before {box-shadow:0 0 12px color-mix(in srgb,var(--h) 60%,transparent)}
+.ts-h1 {--h:var(--k-accent)}
+.ts-h2 {--h:var(--k-accent-2)}
+.ts-h3 {--h:color-mix(in srgb,var(--ts-ink) 50%,var(--ts-win))}
+.ts-now {position:absolute;left:var(--gut);right:36px;top:calc(4.667 * var(--hr))}
+.ts-now * {position:absolute;display:block}
+.ts-now s {left:0;right:0;top:-1px;height:2px;background:color-mix(in srgb,var(--k-accent) 35%,transparent)}
+.ts-now u {left:calc((2 - var(--d0)) * var(--cw));width:var(--cw);top:-1.5px;height:3px;background:var(--k-accent)}
+.ts-now b {left:calc((2 - var(--d0)) * var(--cw) - 9px);top:-9px;width:18px;height:18px;border-radius:9px;background:var(--k-accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--k-accent) 16%,transparent)}
+.ts-dark .ts-now u {box-shadow:0 0 calc(14px * var(--l2)) color-mix(in srgb,var(--k-accent) calc(90% * var(--l2)),transparent),0 0 calc(40px * var(--l2)) color-mix(in srgb,var(--k-accent) calc(40% * var(--l2)),transparent)}
+.ts-dark .ts-now b {box-shadow:0 0 0 calc(5px * var(--l2)) color-mix(in srgb,var(--k-accent) 22%,transparent),0 0 calc(24px * var(--l2)) color-mix(in srgb,var(--k-accent) calc(80% * var(--l2)),transparent)}
+/* terminator: the core is a border, never a backdrop over text */
+.ts-dusk {opacity:0}
+.ts-dusk i {position:absolute;transform:rotate(-15deg)}
+.ts-d1 {transform-origin:100% 50%}
+.ts-d2 {transform-origin:0 50%}
+.ts-d3 {width:0;border-left:3px solid color-mix(in srgb,white 94%,var(--k-accent));box-shadow:0 0 8px 1px color-mix(in srgb,white 90%,var(--k-accent)),0 0 26px 4px color-mix(in srgb,var(--k-accent) 50%,transparent)}
+.ts-ptr {position:absolute;left:0;top:0;opacity:0;overflow:visible;transform-origin:2px 1px;filter:drop-shadow(0 2px 3px color-mix(in srgb,black 35%,transparent))}
+.ts-bare .ts-st,.ts-bare .ts-beams,.ts-bare .ts-stars,.ts-bare .ts-desk,.ts-bare .ts-vig,.ts-bare .ts-grain {display:none}
+/* static frame: dark-side vignette */
+.ts-vB {background:radial-gradient(ellipse 72% 72% at 50% 46%,transparent 45%,color-mix(in srgb,color-mix(in srgb,black 94%,var(--k-accent-2)) 55%,transparent))}
+/* portrait: narrower window, middle three days */
+@container (orientation:portrait) {
+  .ts-w {--wx:108px;--wy:236px;--ww:864px;--wh:1040px;--gut:96px;--cw:248px;--hr:104.57px;--d0: 1}
+  .ts-x,.ts-today,.ts-note {display:none}
+  .ts-name {max-width:210px}
+  .ts-seg {margin-left:36px}
+  .ts-title {max-width:520px;font-size:72px}
+  .ts-hl {left:16px}
+}
+</style>
+
+<div id="root" data-composition-id="theme-sweep-toggle">
+<div class="ts" data-layout-allow-overflow>
+<div class="ts-cam">
+<div class="ts-w ts-B ts-dark">
+<div class="ts-st"></div>
+<div class="ts-beams"><i style="left:120px;opacity:0.55"></i><i style="left:420px;opacity:0.43"></i><i style="left:720px;opacity:0.31"></i></div>
+<div class="ts-stars"><i class="ts-s1"></i><i class="ts-s2"></i><i class="ts-s3"></i></div>
+<div class="ts-desk"></div>
+<div class="ts-win">
+<div class="ts-top">
+<!-- kit:mark@1: kMark(44), inlined so the static page is complete -->
+<svg class="ts-mark" width="44" height="44" viewBox="0 0 128 128"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg>
+<b class="ts-name">示例应用</b>
+<span class="ts-seg"><i>日</i><i class="on">周</i><i>月</i></span>
+<span class="ts-today">今天</span>
+</div>
+<div class="ts-tog">
+<s style="left:18px;top:18px;--o:0.5"></s><s style="left:31px;top:36px;--o:0.7"></s><s style="left:44px;top:18px;--o:0.9"></s>
+<div class="ts-knob"><svg class="ts-ic" width="34" height="34" viewBox="0 0 40 40"><defs><mask id="ts-m"><rect x="-10" y="-10" width="60" height="60" fill="#fff"/><circle class="ts-cut" cx="27" cy="13" r="10.5" fill="#000"/></mask></defs><g class="ts-rays"></g><circle class="ts-orb" cx="20" cy="20" r="11" mask="url(#ts-m)" style="fill:color-mix(in srgb, black 70%, var(--k-accent-2))"/></svg></div>
+</div>
+<div class="ts-head"><b class="ts-title">本周安排</b><span class="ts-wk">第 42 周</span><span class="ts-note">周五交付</span></div>
+<div class="ts-days">
+<div class="ts-day ts-x"><i>周一</i><b>14</b></div><div class="ts-day"><i>周二</i><b>15</b></div><div class="ts-day on"><i>周三</i><b>16</b></div><div class="ts-day"><i>周四</i><b>17</b></div><div class="ts-day ts-x"><i>周五</i><b>18</b></div>
+</div>
+<div class="ts-grid">
+<div class="ts-tc"></div>
+<div class="ts-lines"></div>
+<div class="ts-hl"><i>9:00</i><i>10:00</i><i>11:00</i><i>12:00</i><i>13:00</i><i>14:00</i><i>15:00</i><i>16:00</i></div>
+<p class="ts-h1 ts-x" style="--d:0;--s:0.5;--e:1.75"><b>选题会</b></p>
+<p class="ts-h2 ts-x" style="--d:0;--s:3.5;--e:5.5"><b>写大纲</b></p>
+<p class="ts-h1" style="--d:1;--s:0;--e:1"><b>站会</b></p>
+<p class="ts-h3" style="--d:1;--s:1.75;--e:3.5"><b>录屏</b></p>
+<p class="ts-h1" style="--d:1;--s:5;--e:6.25"><b>配音</b></p>
+<p class="ts-h2" style="--d:2;--s:0.25;--e:1.5"><b>同步会</b></p>
+<p class="ts-h3" style="--d:2;--s:2;--e:3.75"><b>剪辑</b></p>
+<p class="ts-h1" style="--d:2;--s:5.25;--e:6.75"><b>加字幕</b></p>
+<p class="ts-h1" style="--d:3;--s:0.5;--e:2.25"><b>做封面</b></p>
+<p class="ts-h3" style="--d:3;--s:3.5;--e:4.5"><b>午间分享</b></p>
+<p class="ts-h2" style="--d:3;--s:5.75;--e:7"><b>审片</b></p>
+<p class="ts-h3 ts-x" style="--d:4;--s:1;--e:3.5"><b>导出成片</b></p>
+<p class="ts-h1 ts-x" style="--d:4;--s:4.5;--e:5.75"><b>发布</b></p>
+<div class="ts-now"><s></s><u></u><b></b></div>
+</div>
+</div>
+</div>
+<div class="ts-dusk"><i class="ts-d1"></i><i class="ts-d2"></i><i class="ts-d3"></i></div>
+<svg class="ts-ptr" width="30" height="30" viewBox="0 0 28 28"><path d="M2 1 L2 23 L8 17.5 L11.5 25 L15.5 23.2 L12 15.8 L20 15 Z" style="fill:var(--k-ink);stroke:var(--k-bg);stroke-width:1.6;stroke-linejoin:round"/></svg>
+</div>
+<div class="ts-vig ts-vA"></div>
+<div class="ts-vig ts-vB"></div>
+<div class="ts-grain"></div>
+</div>
+</div>
+
+<script>
+(function () {
+ // seconds = upstream frames / 30 (140 frames); the sweep starts while the knob still overshoots
+ var CFG = {
+  slot: 4.667,
+  click: 0.267, ptrIn: 0.267,          // pointer presses at 8f; knob spring 16 / 210
+  icon: 0.3, iconDur: 0.4,             // sun -> moon (out)
+  away: 0.467, awayDur: 0.533, ptrOut: 0.733, ptrOutDur: 0.333,
+  sweep0: 0.467, sweep1: 2.6,          // terminator, cubic-bezier(.3,0,.35,1)
+  cam0: 0.333, cam1: 1.333, zoom: 2, creep: 0.04, push: 0.02, // close-up -> full frame (smooth) -> push (swift)
+  lights: 2.533, lightsDur: 0.667      // night lights: today pill, now line, window rim
+ };
+ // p0: sweep start from the right edge (portrait inside: the line still crosses the toggle at 25f); cam: close-up
+ // offset from the toggle; ay: push anchor; tw / nw: the CSS max-widths
+ var LAND = { p0: 40, cam: [-300, 150], ay: 0.5, tw: 1000, nw: 360 };
+ var PORT = { p0: -80, cam: [-162, 269], ay: 0.4, tw: 520, nw: 210 };
+ var v = { title: "本周安排", name: "示例应用", backdrop: "on" };
+ try {
+  var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+  for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+ } catch (e) {}
+
+ var root = document.querySelector(".ts");
+ var q = function (s, el) { return (el || root).querySelector(s); };
+ var FW = root.clientWidth, FH = root.clientHeight;
+ if (!FW || !FH) {
+  var hc = root.closest("[data-width][data-height]");
+  FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+  FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+ }
+ var P = FH > FW, L = P ? PORT : LAND;
+ root.setAttribute("data-orient", P ? "portrait" : "landscape");
+ if (String(v.backdrop) === "off") root.classList.add("ts-bare");
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+ var p = document.createElement("i");
+ p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+ el.appendChild(p);
+ var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+ el.removeChild(p);
+ return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+ var c = kRGB(wrap, "var(--k-bg)");
+ var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+ wrap.setAttribute("data-tone", tone);
+ return tone;
+}
+// ==== end kit:tone ====
+// ==== kit:fit@1 (kFit, kLines) ====
+function kFit(el, o) {
+ o = o || {};
+ var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+ var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+ for (;;) {
+  el.style.fontSize = f + "px";
+  m = kLines(el);
+  if ((m.w <= W && m.n <= n) || f <= min) break;
+  f = Math.max(min, f - 2);
+ }
+ if (m.w > W) {
+  [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+  m = kLines(el);
+ }
+ return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+ var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+ var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+ while ((t = it.nextNode())) {
+  if (!t.data.trim()) continue;
+  r.selectNodeContents(t);
+  [].forEach.call(r.getClientRects(), function (b) {
+   var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+   if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+   row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+  });
+ }
+ return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+ o = o || {};
+ var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+ var dark = tones && tones.getAttribute("data-tone") === "dark";
+ var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+  var f = "type='linear' slope='2.4' intercept='-0.7'";
+  var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+   "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+   "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+   "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+   "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+  return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+ });
+ layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+ layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+ layer.style.backgroundSize = size + "px " + size + "px";
+ return function (t) {
+  var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+  layer.style.backgroundImage = tiles[k % 6];
+  layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+ };
+}
+// ==== end kit:grain ====
+
+ // new theme = the skin inside out, so it is lit the opposite way
+ var darkSkin = kTone(root) === "dark";
+ var B = q(".ts-B"), cam = q(".ts-cam"), vA = q(".ts-vA"), vB = q(".ts-vB");
+ B.classList.toggle("ts-dark", !darkSkin);
+ B.classList.toggle("ts-lite", darkSkin);
+
+ // one-line UI labels as typed (no per-word motion, no unit split), fitted before the copy is made
+ q(".ts-title").textContent = String(v.title).trim();
+ kFit(q(".ts-title"), { lines: 1, min: 40, width: Math.min(L.tw, q(".ts-head").clientWidth - q(".ts-wk").offsetWidth - q(".ts-note").offsetWidth - 70) });
+ q(".ts-name").textContent = String(v.name).trim();
+ kFit(q(".ts-name"), { lines: 1, min: 28, width: L.nw });
+ q(".ts-rays").innerHTML = [0, 1, 2, 3, 4, 5, 6, 7].map(function (i) { return '<line x1="20" x2="20" transform="rotate(' + i * 45 + ' 20 20)"/>'; }).join("");
+
+ // old theme: the same DOM cloned under the new one
+ var A = B.cloneNode(true), mount = (window.__tsN = (window.__tsN || 0) + 1);
+ A.className = "ts-w ts-A " + (darkSkin ? "ts-dark" : "ts-lite");
+ cam.insertBefore(A, B);
+ // paired text nodes with world boxes: off-screen text, or text wholly past the line, is unseen and set to opacity 0
+ var tx = function (w) { return [].filter.call(w.querySelectorAll("*"), function (e) { for (var c = e.firstChild; c; c = c.nextSibling) if (c.nodeType === 3 && c.data.trim()) return 1; }); };
+ var br = B.getBoundingClientRect(), kk = br.width / FW, ta = tx(A);
+ var TX = tx(B).map(function (e, i) { var r = e.getBoundingClientRect(), a = ta[i]; a.setAttribute("data-layout-allow-occlusion", ""); a.setAttribute("data-layout-allow-overlap", ""); return { a: a, b: e, l: (r.left - br.left) / kk, r: (r.right - br.left) / kk, t: (r.top - br.top) / kk, d: (r.bottom - br.top) / kk }; });
+ [A, B].forEach(function (w, i) { q("mask", w).id = "ts-m" + mount + i; q(".ts-orb", w).setAttribute("mask", "url(#ts-m" + mount + i + ")"); });
+ var two = function (s) { return [q(s, A), q(s, B)]; };
+ var rays = two(".ts-rays"), orbs = two(".ts-orb"), cuts = two(".ts-cut"), togs = two(".ts-tog");
+ A.style.cssText = "--l1:0;--l2:0;--l3:0";
+ var starsB = [].slice.call(B.querySelectorAll(".ts-stars i"));
+ var dusk = q(".ts-dusk"), d1 = q(".ts-d1"), d2 = q(".ts-d2"), d3 = q(".ts-d3"), ptr = q(".ts-ptr");
+ var grain = kGrain(q(".ts-grain"), { opacity: 0.06, blend: "overlay" });
+
+ // overlays above text use rgba(): the layout check reads color-mix() gradients as opaque
+ var rgba = function (c, a) { return "rgba(" + c.map(Math.round).join(",") + "," + a.toFixed(3) + ")"; };
+ var WARM = kRGB(root, "color-mix(in srgb, var(--k-accent), white 30%)"), COOL = kRGB(root, "color-mix(in srgb, var(--k-accent-2), white 45%)");
+ var C2 = kRGB(root, "var(--k-accent-2)"), SHL = kRGB(root, "color-mix(in srgb, black 80%, var(--k-accent-2))"), SHD = kRGB(root, "color-mix(in srgb, black 94%, var(--k-accent-2))");
+ var vig = function (el, dark) { el.style.background = "radial-gradient(ellipse 72% 72% at 50% 46%, transparent " + (dark ? 45 : 55) + "%, " + rgba(dark ? SHD : SHL, dark ? 0.55 : 0.16) + ")"; };
+ vig(vA, darkSkin); vig(vB, !darkSkin);
+
+ // toggle centre in world px (camera still identity) and the terminator travel
+ var tog = q(".ts-tog", B), win = q(".ts-win", B);
+ var T = { x: win.offsetLeft + tog.offsetLeft + tog.offsetWidth / 2, y: win.offsetTop + tog.offsetTop + tog.offsetHeight / 2 };
+ var T15 = Math.tan(Math.PI / 12), TOP = -400, BOT = FH + 420, LH = (FH + 1120) / 2;
+ var P0 = FW + L.p0, P1 = -FH * T15 - 191, VS = 2440 / (P0 - P1), AY = L.ay * FH;
+ var SWEEP = MT.bezier(0.3, 0, 0.35, 1), R = MT.ramp, mix = MT.mix, out = MT.ease("out"), snappy = MT.ease("snappy");
+ var pAt = function (s) { return mix(P0, P1, R(s, CFG.sweep0, CFG.sweep1 - CFG.sweep0, SWEEP)); };
+ var px = function (n) { return n.toFixed(2) + "px"; };
+ var SUN = "var(--k-accent)", MOON = "color-mix(in srgb, black 70%, var(--k-accent-2))";
+ [d1, d2, d3].forEach(function (d) { d.style.height = px(LH * 2); d.style.top = px(FH / 2 - LH); });
+ var poly = function (x0, x1, y0, y1, x2, y3) { return "polygon(" + px(x0) + " " + px(y0) + ", " + px(x1) + " " + px(y0) + ", " + px(x2) + " " + px(y1) + ", " + px(y3) + " " + px(y1) + ")"; };
+
+ var render = function (t) {
+  var f = t * 30; // frames at 30 fps (twinkle)
+  // camera: toggle close-up -> full frame -> slow push
+  var camT = R(t, CFG.cam0, CFG.cam1 - CFG.cam0, "smooth"), hold = R(t, CFG.cam1, CFG.slot - CFG.cam1, "swift");
+  var z = mix(CFG.zoom + CFG.creep * R(t, 0, CFG.cam0, "linear"), 1, camT) + CFG.push * hold;
+  var cx = mix(T.x + L.cam[0], FW / 2, camT), cy = mix(T.y + L.cam[1], AY + (FH / 2 - AY) / (1 + CFG.push * hold), camT);
+  cam.style.transform = "translate(" + px(FW / 2 - cx * z) + "," + px(FH / 2 - cy * z) + ") scale(" + z.toFixed(4) + ")";
+
+  // knob springs right (one overshoot); sun folds its rays into a crescent (reversed on a dark skin)
+  var kn = t < CFG.click ? 0 : MT.spring({ t: t, delay: CFG.click, damping: 16, stiffness: 210 });
+  var ic = R(t, CFG.icon, CFG.iconDur, "out"), p = darkSkin ? 1 - ic : ic;
+  var ray = 1 - out(Math.min(1, p * 1.6)), col = p > 0.5 ? MOON : SUN;
+  togs.forEach(function (e) { e.style.setProperty("--kn", kn.toFixed(4)); }); // toggles only: cheaper restyle
+  rays.forEach(function (g) {
+   g.setAttribute("transform", "rotate(" + (p * 90).toFixed(2) + " 20 20)");
+   g.style.opacity = ray.toFixed(3);
+   g.style.stroke = col;
+   [].forEach.call(g.children, function (l) { l.setAttribute("y1", (4.5 - (1 - ray) * 4).toFixed(2)); l.setAttribute("y2", (8.5 - (1 - ray) * 6).toFixed(2)); });
+  });
+  orbs.forEach(function (c) { c.setAttribute("r", mix(7.5, 11, out(p)).toFixed(2)); c.style.fill = col; });
+  cuts.forEach(function (c) { c.setAttribute("cx", mix(44, 27, snappy(p)).toFixed(2)); c.setAttribute("cy", mix(-4, 13, snappy(p)).toFixed(2)); });
+
+  // pointer: glides in, presses, steps aside, fades
+  var pt = R(t, 0, CFG.ptrIn, "out"), aw = R(t, CFG.away, CFG.awayDur, "swift");
+  var press = t < CFG.click - 1 / 30 ? 1 : mix(0.86, 1, R(t, CFG.click + 1 / 30, 0.2, "out"));
+  ptr.style.left = px(mix(T.x + 150, T.x + 20, pt) + 60 * aw - 2);
+  ptr.style.top = px(mix(T.y + 120, T.y + 8, pt) + Math.sin(pt * Math.PI) * 10 + 70 * aw - 1);
+  ptr.style.transform = "scale(" + (1.15 * press).toFixed(3) + ")";
+  ptr.style.opacity = (1 - R(t, CFG.ptrOut, CFG.ptrOutDur, "exit")).toFixed(3);
+
+  // terminator x(y) = p + y tan15, new theme on its right, overscanned 400 px
+  var pp = pAt(t), sp = Math.min(1, ((Math.abs(MT.velocity(pAt, t)) / 30) * VS) / 110);
+  var night = t >= CFG.sweep0, gone = t >= CFG.sweep1;
+  B.style.display = night ? "" : "none"; // out of layout while unseen
+  A.style.display = gone ? "none" : "";
+  B.style.clipPath = gone ? "none" : poly(pp + TOP * T15, FW + 480, TOP, BOT, FW + 480, pp + BOT * T15);
+  var hx = FW / 2 / z, hy = FH / 2 / z;
+  TX.forEach(function (o) { var off = o.r < cx - hx || o.l > cx + hx || o.d < cy - hy || o.t > cy + hy; o.b.style.opacity = off || o.r <= pp + o.t * T15 ? 0 : ""; o.a.style.opacity = off || o.l >= pp + o.d * T15 ? 0 : ""; });
+  var xc = pp + (FH / 2) * T15, dw = 70 + 170 * sp, cw = 60 + 140 * sp;
+  dusk.style.opacity = night && !gone ? (R(t, CFG.sweep0, 0.1, "linear") * (1 - R(t, CFG.sweep1 - 0.267, 0.267, "linear"))).toFixed(3) : 0;
+  d1.style.left = px(xc - dw); d1.style.width = px(dw);
+  d1.style.background = "linear-gradient(90deg, " + rgba(WARM, 0) + ", " + rgba(WARM, 0.06 + 0.08 * sp) + " 60%, " + rgba(WARM, 0.22 + 0.12 * sp) + " 94%, " + rgba(SHL, 0.22) + ")";
+  d2.style.left = px(xc); d2.style.width = px(cw);
+  d2.style.background = "linear-gradient(90deg, " + rgba(COOL, 0.26 + 0.1 * sp) + ", " + rgba(C2, 0.1) + " 30%, " + rgba(C2, 0) + ")";
+  d3.style.left = px(xc - 1.5);
+
+  // screen-space vignettes, split along the same line
+  var sx = function (x) { return (x - cx) * z + FW / 2; }, sy = function (y) { return (y - cy) * z + FH / 2; };
+  var ax = sx(pp + TOP * T15), ay = sy(TOP), bx = sx(pp + BOT * T15), by = sy(BOT);
+  vA.style.opacity = gone ? 0 : 1;
+  vB.style.opacity = night ? 1 : 0;
+  vA.style.clipPath = night ? poly(-2000, ax, ay, by, bx, -2000) : "none";
+  vB.style.clipPath = gone ? "none" : poly(ax, 4000, ay, by, 4000, bx);
+
+  // lights on in turn (CSS reads --l1..--l3)
+  var lt = R(t, CFG.lights, CFG.lightsDur, "linear");
+  [0, 0.5, 1].forEach(function (o, i) { var n = "--l" + (i + 1), x = out(Math.min(1, Math.max(0, lt * 2.2 - o))).toFixed(4); if (B.style.getPropertyValue(n) !== x) B.style.setProperty(n, x); });
+
+  // stars twinkle
+  starsB.forEach(function (s, i) { s.style.opacity = ((0.4 + 0.22 * i) * (0.55 + 0.45 * Math.sin(f / (9 + 7 * i) + i * 1.7))).toFixed(3); });
+  grain(t);
+ };
+ var tl = MT.scene(CFG.slot, render);
+ window.__timelines["theme-sweep-toggle"] = tl;
+})();
+</script>
+</template>
+</body>
+</html>

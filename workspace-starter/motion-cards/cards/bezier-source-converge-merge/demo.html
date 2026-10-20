@@ -1,0 +1,447 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"caption","type":"string","label":"结尾一句话（用 | 切意群，逐段加深；留空不要）","default":"四路来源|汇成一个入口"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>bezier-source-converge-merge · 曲线汇流吞并</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="bezier-source-converge-merge-template">
+      <!-- Ported from video-shotcraft demos/ui-entrance/bezier-source-converge-merge/BezierSourceConvergeMerge.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition (one MT.scene),
+           frames to seconds (normalised 0-1 progress x 167/30 s); neutral --k-* palette, system fonts, generic Chinese
+           caption, upstream mark replaced by a neutral converge glyph; the comet tail is 4 dots (was 9) and the packet's
+           own drop shadow is dropped; the caption's tracking animation is dropped (no negative tracking for CJK);
+           landscape and portrait layouts (portrait turns the flow top to bottom, sources spread 1.3x); the clip is
+           padded to 6.4 s for the 1 s hold. Path geometry, the 0.045 draw stagger, convergence window and 44-15-0
+           three-stage shrink, packet phases, erase direction, pulse and ripple timing are as upstream. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* ==== kit:derived@1 ==== */
+        .bc {
+          --bc-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+          --bc-panel-2: color-mix(in srgb, var(--k-panel), var(--k-ink) 4%);
+          --bc-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+          --bc-hi: color-mix(in srgb, white 80%, transparent);
+        }
+        .bc[data-tone="dark"] {
+          --bc-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+          --bc-hi: color-mix(in srgb, white 6%, transparent);
+        }
+        /* ==== end kit:derived ==== */
+
+        /* ==== kit:backdrop@1 ==== */
+        .bc-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .bc-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        /* ==== end kit:backdrop ==== */
+
+        /* ==== kit:vignette@1 ==== */
+        .bc-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--bc-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .bc[data-tone="dark"] .bc-vig { --vs: 0.55; }
+        /* ==== end kit:vignette ==== */
+
+        /* ==== kit:grain@1 ==== */
+        .bc-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+
+        /* ==== kit:text@2 ==== */
+        .bc-u { display: inline-block; white-space: pre; }
+        .bc-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+        /* ==== end kit:text ==== */
+
+        /* ==== kit:fit@1 ==== */
+        .bc-row { display: block; white-space: nowrap; }
+        /* ==== end kit:fit ==== */
+
+
+        /* the wrapper is the size container; --bc-u is one design unit (upstream design grid is 480 wide): the static
+           layout is the final picture (badge and caption centred), the script moves everything from the same numbers */
+        .bc { position: absolute; inset: 0; container-type: size; }
+        .bc-st { position: absolute; inset: 0; --bc-u: 0.20833cqw; --bc-cw: 68cqw; transform: translate(calc(-112 * var(--bc-u)), 0); }
+        .bc-svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; }
+        .bc-node { position: absolute; left: 0; top: 0; box-sizing: border-box; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0;
+          background: linear-gradient(180deg, var(--bc-d1), var(--bc-d2)); border: calc(0.5 * var(--bc-u)) solid var(--bc-line);
+          box-shadow: inset 0 calc(0.5 * var(--bc-u)) 0 var(--bc-hi), 0 calc(0.86 * var(--bc-u)) calc(2.08 * var(--bc-u)) color-mix(in srgb, var(--bc-shade) calc(7.7% * var(--bc-ss)), transparent), 0 calc(3.3 * var(--bc-u)) calc(7.8 * var(--bc-u)) calc(-1.32 * var(--bc-u)) color-mix(in srgb, var(--bc-shade) calc(8% * var(--bc-ss)), transparent); }
+        .bc-anchor { position: absolute; left: calc(50% + 112 * var(--bc-u)); top: 50%; width: 0; height: 0; }
+        .bc-ring { position: absolute; left: calc(-23 * var(--bc-u)); top: calc(-23 * var(--bc-u)); width: calc(46 * var(--bc-u)); height: calc(46 * var(--bc-u)); box-sizing: border-box; border-radius: 50%; border: calc(0.75 * var(--bc-u)) solid var(--k-accent); opacity: 0; }
+        .bc-badge { position: absolute; left: calc(-23 * var(--bc-u)); top: calc(-23 * var(--bc-u)); width: calc(46 * var(--bc-u)); height: calc(46 * var(--bc-u)); box-sizing: border-box; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--k-ink);
+          background: linear-gradient(180deg, var(--bc-d1), var(--bc-d2)); border: calc(0.5 * var(--bc-u)) solid var(--bc-line);
+          box-shadow: inset 0 calc(0.5 * var(--bc-u)) 0 var(--bc-hi), 0 calc(0.98 * var(--bc-u)) calc(2.44 * var(--bc-u)) color-mix(in srgb, var(--bc-shade) calc(9% * var(--bc-ss)), transparent), 0 calc(4.4 * var(--bc-u)) calc(10.4 * var(--bc-u)) calc(-1.76 * var(--bc-u)) color-mix(in srgb, var(--bc-shade) calc(10.8% * var(--bc-ss)), transparent); }
+        .bc-badge svg { display: block; width: calc(30 * var(--bc-u)); height: calc(30 * var(--bc-u)); fill: none; stroke: currentColor; stroke-width: 2.1; stroke-linecap: round; }
+        .bc-badge circle { fill: currentColor; stroke: none; }
+        .bc-cap { position: absolute; left: calc(var(--bc-cw) / -2); width: var(--bc-cw); top: calc(36 * var(--bc-u)); text-align: center; font-size: calc(13 * var(--bc-u)); font-weight: 600; line-height: 1.3; color: var(--k-ink); }
+        .bc { --bc-d1: color-mix(in srgb, var(--k-panel), white 70%); --bc-d2: color-mix(in srgb, var(--k-panel), var(--k-ink) 2%); --bc-ss: 1; }
+        .bc[data-tone="dark"] { --bc-d1: color-mix(in srgb, var(--k-panel), white 10%); --bc-d2: var(--k-panel); --bc-ss: 2.6; }
+        /* portrait: the flow runs top to bottom, ends 12% down + 354 units, then the badge settles on the 37.5% line */
+        @container (orientation: portrait) {
+          .bc-st { --bc-u: 0.2593cqw; --bc-cw: 76cqw; transform: translate(0, calc(25.5% - 354 * var(--bc-u))); }
+          .bc-anchor { left: 50%; top: calc(12% + 354 * var(--bc-u)); }
+          .bc-cap { font-size: 44px; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="bezier-source-converge-merge">
+        <div class="bc">
+          <div class="bc-bg bc-backdrop"></div>
+          <div class="bc-bg bc-vig"></div>
+          <div class="bc-bg bc-grain"></div>
+          <div class="bc-st">
+            <svg class="bc-svg" aria-hidden="true"></svg>
+            <div class="bc-anchor">
+              <div class="bc-ring"></div>
+              <div class="bc-badge"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M3 5.5c8 0 10 10.5 18 10.5M3 11.8c6 0 9 4.2 18 4.2M3 20.2c6 0 9-4.2 18-4.2M3 26.5c8 0 10-10.5 18-10.5"/><circle cx="25.5" cy="16" r="3.4"/></svg></div>
+              <div class="bc-cap"><span class="bc-u">四路来源</span><span class="bc-u">汇成一个入口</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing (seconds): upstream normalised progress x 167/30 s; both orientations share it
+          var CFG = {
+            drawAt: 0.223, drawGap: 0.251, drawDur: 0.946,     // curves draw on, staggered
+            appAt: 0.111, appGap: 0.223, appDur: 0.557, appOp: 0.334, // sources pop in
+            conv0: 1.893, conv1: 4.119,                        // sources slide along their curves (inOutCubic)
+            pk0: 0.557, pkIn: 0.334, pkOut: 3.897,             // packets: fade in, two linear laps until conv1, fade out
+            er0: 4.342, er1: 5.010,                            // curves wipe away from the left / top end
+            pan0: 4.231, pan1: 5.177,                          // the whole flow glides so the badge ends centred
+            bd0: 0.891, bd1: 1.447,                            // badge fades in
+            up0: 3.897, up1: 4.342, dn1: 4.787,                // receive pulse: +12% then back
+            rp0: 4.008, rp1: 4.787,                            // one ripple ring
+            cap0: 4.676, capShow: 5.010, cap1: 5.288,          // caption: fade up, then word by word darker
+            dur: 6.4
+          };
+          // layout per orientation: u = one design unit as a share of frame width (upstream grid is 480 wide)
+          var LAND = { u: 1 / 480, spread: 1, capLines: 1, rest: 0.5 };
+          var PORT = { u: 0.002593, spread: 1.3, capLines: 2, rest: 0.375, top: 0.12 };
+          var v = { caption: "四路来源|汇成一个入口", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".bc");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+
+          // ==== kit:text@2 ====
+          var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "bc-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "bc-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          function kReveal(tl, units, variant, at, o) {
+            o = o || {};
+            var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+            units.forEach(function (u, i) {
+              var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+              if (variant === "rise") {
+                tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+                tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+              } else if (variant === "blur") {
+                tl.fromTo(u, { opacity: 0, y: fs * 0.25, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: each, ease: ease }, t0);
+              } else if (variant === "drop") {
+                tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each / 3, ease: "none" }, t0);
+                tl.fromTo(u, { y: -fs * 0.6 }, { y: 0, duration: each, ease: "overshoot" }, t0);
+              } else if (variant === "scale") {
+                tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each * 0.1, ease: "power1.out" }, t0);
+                tl.fromTo(u, { scale: 1.6, filter: "blur(8px)" }, { scale: 1, filter: "blur(0px)", duration: each, ease: ease }, t0);
+              } else {
+                tl.fromTo(u, { opacity: 0, marginRight: "0.5em" }, { opacity: 1, marginRight: "0em", duration: each, ease: ease }, t0);
+              }
+            });
+            return tl;
+          }
+          // ==== end kit:text ====
+
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          function kRows(el, cls) {
+            if (!el.children.length) return [];
+            var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+            var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+            kids.forEach(function (c, i) {
+              if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+              if (tops[i] != null) last = tops[i];
+              row.appendChild(c);
+            });
+            return [].slice.call(el.children);
+          }
+          // ==== end kit:fit ====
+
+
+          kTone(root);
+          var grain = kGrain(q(".bc-grain"));
+          if (String(v.backdrop) === "off") [].forEach.call(root.querySelectorAll(".bc-bg"), function (n) { n.style.display = "none"; });
+
+          // caption: words darken one after another; a long line shrinks to the slot, then wraps (min 40 px)
+          var cap = q(".bc-cap"), text = String(v.caption).trim(), units = [];
+          if (!text) cap.style.display = "none";
+          else { units = kSplit(cap, "word", false, text); kFit(cap, { lines: L.capLines, min: 40 }); }
+
+          // ---- geometry, in upstream design units: sources rest at x = 74, everything merges at (XC, YC) ----
+          var XC = 332, YC = 120, STUB = 96, SAMPLES = 400, TAIL = 4, TAIL_GAP = 0.012;
+          var SRC = [{ y: 36, ic: "shot", k: 100 }, { y: 92, ic: "card", k: 80 }, { y: 148, ic: "code", k: 62 }, { y: 204, ic: "wave", k: 48 }];
+          var ICON = {
+            shot: '<rect x="3.5" y="5" width="17" height="14" rx="2.4"/><path d="M3.5 9h17M6.2 7h.01M8.4 7h.01"/>',
+            card: '<rect x="6.5" y="7.5" width="12" height="13" rx="2.2"/><path d="M9.5 4.5h7.8c1.2 0 2.2 1 2.2 2.2v9.8M9.3 12h6.4M9.3 15.5h4"/>',
+            code: '<path d="M8.5 7 3.8 12l4.7 5M15.5 7l4.7 5-4.7 5M13.2 5.5 10.8 18.5"/>',
+            wave: '<path d="M4 12h.01M7.4 9.2v5.6M10.6 5.8v12.4M13.8 8.4v7.2M17 10.4v3.2M20 12h.01"/>'
+          };
+          var S = FW * L.u;                                         // px per design unit
+          var oy = P ? FH * L.top : FH / 2 - YC * S;
+          var M = function (x, y) { return P ? [FW / 2 + (y - YC) * S, oy + (x + 22) * S] : [FW / 2 + (x - 220) * S, oy + y * S]; };
+          var B0 = M(XC, YC), B1 = [FW / 2, FH * L.rest], PAN = [B1[0] - B0[0], B1[1] - B0[1]];
+          var cubic = function (y0, u) {
+            var w = 1 - u;
+            return [w * w * w * 74 + 3 * w * w * u * 186 + 3 * w * u * u * 214 + u * u * u * XC,
+                    w * w * w * y0 + 3 * w * w * u * y0 + 3 * w * u * u * YC + u * u * u * YC];
+          };
+          // path = stub (x -22 to 74) + cubic; an arc-length table gives the position at distance s (no DOM needed)
+          var mkGeo = function (y0) {
+            var cum = [0], px = 74, py = y0, acc = 0, k, p;
+            for (k = 1; k <= SAMPLES; k++) { p = cubic(y0, k / SAMPLES); acc += Math.hypot(p[0] - px, p[1] - py); cum.push(acc); px = p[0]; py = p[1]; }
+            var len = STUB + acc;
+            return {
+              y0: y0, len: len, f0: STUB / len,
+              at: function (s) {
+                s = Math.max(0, Math.min(len, s));
+                if (s <= STUB) return [-22 + s, y0];
+                var tg = s - STUB, lo = 0, hi = SAMPLES, i, a, b;
+                while (lo < hi) { var mid = (lo + hi) >> 1; if (cum[mid] < tg) lo = mid + 1; else hi = mid; }
+                i = Math.max(1, lo); a = cum[i - 1]; b = cum[i];
+                return cubic(y0, (i - 1 + (b > a ? (tg - a) / (b - a) : 0)) / SAMPLES);
+              }
+            };
+          };
+          var NS = "http://www.w3.org/2000/svg", uid = "bc" + (window.__bcN = (window.__bcN || 0) + 1);
+          var mk = function (tag, at, par) { var e = document.createElementNS(NS, tag); for (var a in at) e.setAttribute(a, at[a]); if (par) par.appendChild(e); return e; };
+          var svg = q(".bc-svg"), defs = mk("defs", {}, svg), f = function (n) { return n.toFixed(2); };
+          var g0 = M(-22, YC), g1 = M(XC, YC);
+          var grad = mk("linearGradient", { id: uid + "s", gradientUnits: "userSpaceOnUse", x1: f(g0[0]), y1: f(g0[1]), x2: f(g1[0]), y2: f(g1[1]) }, defs);
+          [[0, 45], [0.45, 70], [1, 100]].forEach(function (s) { mk("stop", { offset: s[0], style: "stop-color:color-mix(in srgb, var(--k-ink) " + s[1] + "%, transparent)" }, grad); });
+          var hg = mk("radialGradient", { id: uid + "h", cx: 0.35, cy: 0.35, r: 0.65 }, defs);
+          mk("stop", { offset: 0, style: "stop-color:color-mix(in srgb, var(--k-accent), white 28%)" }, hg);
+          mk("stop", { offset: 1, style: "stop-color:var(--k-accent)" }, hg);
+          var pkG = mk("g", {}, svg), nodeBox = document.createElement("div");
+          nodeBox.style.cssText = "position:absolute;left:0;top:0;width:0;height:0";
+          q(".bc-st").insertBefore(nodeBox, q(".bc-anchor"));
+          var ND = SRC.map(function (s) {
+            var g = mkGeo(YC + (s.y - YC) * L.spread), a = M(-22, g.y0), b = M(74, g.y0), c1 = M(186, g.y0), c2 = M(214, YC), e = M(XC, YC);
+            var d = "M" + f(a[0]) + "," + f(a[1]) + " L" + f(b[0]) + "," + f(b[1]) + " C" + f(c1[0]) + "," + f(c1[1]) + " " + f(c2[0]) + "," + f(c2[1]) + " " + f(e[0]) + "," + f(e[1]);
+            var path = mk("path", { d: d, fill: "none", stroke: "url(#" + uid + "s)", "stroke-width": f(0.9 * S), "stroke-linecap": "round", "stroke-dasharray": f(g.len * S) }, svg);
+            var tail = [], j;
+            for (j = 1; j <= TAIL; j++) tail.push(mk("circle", { style: "fill:var(--k-accent)" }, pkG));
+            var halo = mk("circle", { r: f(4.5 * S), style: "fill:var(--k-accent)" }, pkG);
+            var head = mk("circle", { r: f(3 * S), fill: "url(#" + uid + "h)" }, pkG);
+            var node = document.createElement("div");
+            node.className = "bc-node";
+            node.style.width = node.style.height = f(44 * S) + "px";
+            node.style.color = "color-mix(in srgb, var(--k-ink) " + s.k + "%, var(--k-panel))";
+            node.innerHTML = '<svg viewBox="0 0 24 24" width="' + f(20.2 * S) + '" height="' + f(20.2 * S) + '" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + ICON[s.ic] + "</svg>";
+            nodeBox.appendChild(node);
+            return { g: g, path: path, tail: tail, halo: halo, head: head, node: node };
+          });
+          var st = q(".bc-st"), badge = q(".bc-badge"), ring = q(".bc-ring");
+
+          var R = function (t, at, dur, ease) { return MT.ramp(t, at, dur, ease); };
+          var clamp = function (x) { return x < 0 ? 0 : x > 1 ? 1 : x; };
+          var tl = MT.scene(CFG.dur, function (t) {
+            var conv = R(t, CFG.conv0, CFG.conv1 - CFG.conv0, "power3.inOut");
+            var er = R(t, CFG.er0, CFG.er1 - CFG.er0, "power2.out");
+            var pan = R(t, CFG.pan0, CFG.pan1 - CFG.pan0, "smooth");
+            var cyc = (R(t, CFG.pk0, CFG.conv1 - CFG.pk0, "none") * 2) % 1;           // two whole laps
+            var pkOn = R(t, CFG.pk0, CFG.pkIn, "none") * (1 - R(t, CFG.pkOut, CFG.pkIn, "none"));
+            st.style.transform = "translate(" + f(PAN[0] * pan) + "px," + f(PAN[1] * pan) + "px)";
+            ND.forEach(function (n, i) {
+              var g = n.g, draw = R(t, CFG.drawAt + i * CFG.drawGap, CFG.drawDur, "power2.out");
+              n.path.style.strokeDashoffset = f((er > 0 ? -er * g.len : g.len * (1 - draw)) * S);
+              n.path.style.opacity = f(draw * (1 - clamp((er - 0.85) / 0.15)));
+              // source: along its own curve, size 44 -> 15 over the first 75% of the run, then 15 -> 0 (sucked in)
+              var fr = g.f0 + (1 - g.f0) * conv, p = M.apply(null, g.at(g.len * fr));
+              var size = conv < 0.75 ? MT.mix(44, 15, conv / 0.75) : MT.mix(15, 0, (conv - 0.75) / 0.25);
+              var a0 = CFG.appAt + i * CFG.appGap, pop = R(t, a0, CFG.appDur, "overshoot");
+              n.node.style.transform = "translate(" + f(p[0] - 22 * S) + "px," + f(p[1] - 22 * S) + "px) scale(" + Math.max(0, size / 44 * pop).toFixed(4) + ")";
+              n.node.style.opacity = f(R(t, a0, CFG.appOp, "out") * (conv > 0.92 ? clamp((1 - conv) / 0.08) : 1));
+              // packet: phase offset per route, brightest mid-route, a 4-dot tail behind it
+              var ph = (cyc + i * 0.13) % 1, op = pkOn * (1 - Math.abs(ph - 0.5) * 0.6), j, pj, c;
+              for (j = 1; j <= TAIL; j++) {
+                pj = ph - j * TAIL_GAP;
+                c = M.apply(null, g.at(g.len * (g.f0 + (1 - g.f0) * Math.max(0, pj))));
+                n.tail[j - 1].setAttribute("cx", f(c[0])); n.tail[j - 1].setAttribute("cy", f(c[1]));
+                n.tail[j - 1].setAttribute("r", f(2.6 * (1 - j / 5) * S));
+                n.tail[j - 1].style.opacity = op > 0.01 && pj >= 0 ? f(op * 0.38 * (1 - j / 5)) : 0;
+              }
+              c = M.apply(null, g.at(g.len * (g.f0 + (1 - g.f0) * ph)));
+              [n.halo, n.head].forEach(function (e) { e.setAttribute("cx", f(c[0])); e.setAttribute("cy", f(c[1])); });
+              n.head.style.opacity = op > 0.01 ? f(op) : 0;
+              n.halo.style.opacity = op > 0.01 ? f(op * 0.16) : 0;
+            });
+            // badge: fades in, then a receive pulse (outBack +12%, back down); one ripple ring
+            var bp = R(t, CFG.bd0, CFG.bd1 - CFG.bd0, "power3.out");
+            var sc = MT.mix(0.7, 1, bp) * (1 + R(t, CFG.up0, CFG.up1 - CFG.up0, "back.out(1.70158)") * 0.12 - R(t, CFG.up1, CFG.dn1 - CFG.up1, "power2.out") * 0.12);
+            badge.style.opacity = f(bp); badge.style.transform = "scale(" + sc.toFixed(4) + ")";
+            var rp = R(t, CFG.rp0, CFG.rp1 - CFG.rp0, "out");
+            ring.style.transform = "scale(" + MT.mix(1, 2.1, rp).toFixed(4) + ")";
+            ring.style.opacity = rp > 0 && rp < 1 ? f((1 - rp) * 0.55) : 0;
+            // caption: fades up, words go from muted to ink one after another
+            var cs = R(t, CFG.cap0, CFG.capShow - CFG.cap0, "out"), ci = R(t, CFG.cap0, CFG.cap1 - CFG.cap0, "none");
+            var stp = 0.78 / Math.max(1, units.length), win = stp * 1.5;
+            cap.style.opacity = f(cs); cap.style.transform = "translateY(" + f((1 - cs) * 4 * S) + "px)";
+            units.forEach(function (u, i) { u.style.color = "color-mix(in srgb, var(--k-ink) " + (clamp((ci - i * stp) / win) * 100).toFixed(1) + "%, var(--k-muted))"; });
+            grain(t);
+          });
+          window.__timelines["bezier-source-converge-merge"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,471 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"目标卡上的字（用 | 切意群，最多两行，留空不要）","default":"效率提升 3 倍"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"示例界面（急推加打击帧）"},{"value":"off","label":"透明（只把打击帧压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>anime-impact · 打击帧</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="anime-impact-template">
+<!-- Ported from video-shotcraft demos/effects/impact-feedback/AnimeImpact.tsx
+   (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+   Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+   Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+   neutral --k-* palette, system fonts, generic copy; FakeDashboard replaced by a text-free SVG dashboard (light
+   sidebar, rounded, soft shadow) and Card by a DOM target card with a title variable; negative + split done by
+   one SVG filter instead of two scene copies, fringes in the accent and its complement (was red / cyan); motion
+   blur with up to 4 time-sampled copies, blur capped at 12 px (was up to 12 copies, 6 px); vignette drawn at
+   half opacity and double strength (same look); portrait layout (dashboard at 0.75, push to 76% of the width);
+   backdrop off = the impact frames alone over the host (backdrop-filter, difference-blended lines). Wind-up,
+   crash zoom (6 f, ease-in cubic, 2.25x), 3-frame impact, speed-line counts and shapes, 8 px split, shake
+   (6 px, tau 2.2 f), dimming 0.22 -> 0.10 and vignette 0.42 -> 0.16 over 22 f kept. -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--k-font);
+  color: var(--k-ink);
+}
+/* ==== kit:derived@1 ==== */
+.ai {
+  --ai-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+  --ai-panel-2: color-mix(in srgb, var(--k-panel), var(--k-ink) 4%);
+  --ai-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+  --ai-hi: color-mix(in srgb, white 80%, transparent);
+}
+.ai[data-tone="dark"] {
+  --ai-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+  --ai-hi: color-mix(in srgb, white 6%, transparent);
+}
+/* ==== end kit:derived ==== */
+
+/* ==== kit:vignette@1 ==== */
+.ai-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--ai-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.ai[data-tone="dark"] .ai-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+
+/* ==== kit:text@2 ==== */
+.ai-u { display: inline-block; white-space: pre; }
+.ai-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+/* ==== end kit:text ==== */
+
+/* ==== kit:fit@1 ==== */
+.ai-row { display: block; white-space: nowrap; }
+/* ==== end kit:fit ==== */
+
+.ai { position: absolute; inset: 0; container-type: size; }
+.ai-shake, .ai-neg, .ai-trail, .ai-sharp, .ai-tr, .ai-bdf { position: absolute; inset: 0; }
+.ai-bg { position: absolute; inset: 0; background: color-mix(in srgb, var(--k-bg), var(--k-ink) 7%); }
+/* the camera: a 1600 x 900 design page at 0,0, scaled from its corner; static = the settled close-up */
+.ai-cam { position: absolute; left: 0; top: 0; width: 1600px; height: 900px; transform-origin: 0 0; transform: translate(-1456.5px, -222.75px) scale(2.7); }
+.ai-cam > svg { position: absolute; left: 0; top: 0; border-radius: 12px; box-shadow: 0 24px 70px -18px color-mix(in srgb, var(--ai-shade) 30%, transparent); }
+.ai-card { position: absolute; left: 677.33px; top: 94px; width: 435.33px; height: 377px; box-sizing: border-box; padding: 28px 30px 26px; border-radius: 14px; background: var(--k-panel); display: flex; flex-direction: column; box-shadow: 0 0 0 1.5px var(--k-accent), 0 0 0 6px color-mix(in srgb, var(--k-accent) 14%, transparent), inset 0 1px 0 var(--ai-hi), 0 22px 48px -10px color-mix(in srgb, var(--ai-shade) 22%, transparent); }
+.ai-card i { display: block; height: 9px; border-radius: 5px; margin-top: 12px; background: color-mix(in srgb, var(--k-ink) 12%, var(--k-panel)); }
+.ai-card i:first-child { width: 55%; height: 14px; margin: 0; background: color-mix(in srgb, var(--k-ink) 24%, var(--k-panel)); }
+.ai-card i:nth-child(3) { width: 62%; }
+.ai-title { margin-top: auto; font-size: 56px; font-weight: 700; line-height: 1.15; }
+.ai-foot { display: flex; align-items: center; gap: 12px; margin-top: 18px; }
+.ai-foot b { width: 22px; height: 22px; border-radius: 50%; background: color-mix(in srgb, var(--k-ink) 24%, var(--k-panel)); }
+.ai-foot i { width: 90px; margin: 0; }
+.ai-ghost::before { content: attr(data-t); }
+.ai-dim { position: absolute; border-radius: 14px; opacity: 0; }
+.ai-lines { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; }
+.ai-bdf { opacity: 0; -webkit-backdrop-filter: invert(1) grayscale(1) contrast(1.45); backdrop-filter: invert(1) grayscale(1) contrast(1.45); }
+/* half opacity with doubled strength: the same shading, and the layout check reads it as a scrim over the text */
+.ai-vig { --vin: 50%; opacity: 0.5; }
+.ai[data-backdrop="off"] .ai-neg { display: none; }
+/* over a host the negative can be light or dark anywhere: difference keeps every line against it */
+.ai[data-backdrop="off"] .ai-lines { mix-blend-mode: difference; }
+@container (orientation: portrait) {
+  .ai-cam { transform: translate(-1147.5px, 235.4px) scale(1.8855); }
+}
+</style>
+
+<div id="root" data-composition-id="anime-impact">
+<div class="ai">
+  <div class="ai-shake">
+    <div class="ai-neg">
+      <div class="ai-bg"></div>
+      <div class="ai-trail"></div>
+      <div class="ai-sharp">
+        <div class="ai-cam" data-layout-allow-overflow>
+          <div class="ai-card"><i></i><i></i><i></i><div class="ai-title">效率提升 3 倍</div><div class="ai-foot"><b></b><i></i></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="ai-bdf"></div>
+    <svg class="ai-lines" aria-hidden="true" data-layout-allow-overflow></svg>
+  </div>
+  <div class="ai-vig"></div>
+</div>
+</div>
+
+<script>
+(function () {
+  // seconds = upstream frames / 30, shared by both orientations
+  var CFG = {
+    dur: 3,
+    lock: 0.2, lockDur: 0.467,          // target outline lights up 6-20 f
+    wind: 22 / 30, zoom: 28 / 30, hit: 34 / 30, recover: 37 / 30, // wind-up 22 f, crash zoom 28-34 f, impact 34-36 f
+    creep: 1.012, back: 0.985, end: 2.25, // panorama creep, wind-up scale, crash-zoom scale (landscape)
+    shutter: 0.6,                       // motion-blur shutter, frames
+    shake: 6, shakeTau: 2.2,            // px at the first clean frame, decay in frames
+    settle: 0.733,                      // vignette / dimming fall back over 22 f
+    split: 8                            // fringe offset px (the other axis flips 4 px every frame)
+  };
+  var R6 = function (x) { return Math.round(x * 1e6) / 1e6; };
+  for (var c in CFG) CFG[c] = R6(CFG[c]);
+  // per orientation: dashboard scale on top of fit-to-width, where the panorama sits (fraction of the height),
+  // and the close-up: landscape uses CFG.end, portrait fills a share of the width
+  var LAND = { pan: 1, oy: 0.5, endW: 0 };
+  var PORT = { pan: 1.111, oy: 0.4, endW: 0.76 };
+  var v = { title: "效率提升 3 倍", backdrop: "on" };
+  try {
+    var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k]; // "" hides the title
+  } catch (e) {}
+
+  var root = document.querySelector(".ai");
+  var q = function (s) { return root.querySelector(s); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+    // not laid out yet: the host clip's declared size, then the window
+    var hc = root.closest("[data-width][data-height]");
+    FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+    FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND, U = Math.min(FW, FH) / 1000;
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+  // ==== kit:tone@1 ====
+  function kRGB(el, color) {
+    var p = document.createElement("i");
+    p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+    el.appendChild(p);
+    var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+    el.removeChild(p);
+    return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+  }
+  function kTone(wrap) {
+    var c = kRGB(wrap, "var(--k-bg)");
+    var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+    wrap.setAttribute("data-tone", tone);
+    return tone;
+  }
+  // ==== end kit:tone ====
+
+  // ==== kit:text@2 ====
+  var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+  function kWords(s, key) {
+    s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+    var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+    var cut = function (x) {
+      if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+      return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+    };
+    var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+    var pre = "";
+    bits.forEach(function (x) {
+      var t = x.trim(), last = out[out.length - 1];
+      if (last && /^ /.test(x)) last.sp = true;
+      if (!t) return;
+      if (!/[\p{L}\p{N}]/u.test(t)) {
+        if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+        else { last.t += t; last.sp = / $/.test(x); }
+        return;
+      }
+      out.push({ t: pre + t, sp: / $/.test(x) });
+      pre = "";
+    });
+    if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+    if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+    if (out.length) out[out.length - 1].sp = false;
+    return out;
+  }
+  function kSplit(el, by, rise, text) {
+    var s = text != null ? String(text) : el.textContent, units = [];
+    var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+    el.textContent = "";
+    parts.forEach(function (p) {
+      var u = document.createElement("span"), box = u;
+      u.className = "ai-u"; u.textContent = p.t;
+      if (by === "line") u.style.display = "block";
+      if (!p.t.trim()) { el.appendChild(u); return; }
+      if (rise) { box = document.createElement("span"); box.className = "ai-cut"; box.style.display = u.style.display; box.appendChild(u); }
+      el.appendChild(box);
+      if (p.sp) el.appendChild(document.createTextNode(" "));
+      units.push(u);
+    });
+    return units;
+  }
+  function kReveal(tl, units, variant, at, o) {
+    o = o || {};
+    var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+    units.forEach(function (u, i) {
+      var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+      if (variant === "rise") {
+        tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+        tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+      } else if (variant === "blur") {
+        tl.fromTo(u, { opacity: 0, y: fs * 0.25, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: each, ease: ease }, t0);
+      } else if (variant === "drop") {
+        tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each / 3, ease: "none" }, t0);
+        tl.fromTo(u, { y: -fs * 0.6 }, { y: 0, duration: each, ease: "overshoot" }, t0);
+      } else if (variant === "scale") {
+        tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each * 0.1, ease: "power1.out" }, t0);
+        tl.fromTo(u, { scale: 1.6, filter: "blur(8px)" }, { scale: 1, filter: "blur(0px)", duration: each, ease: ease }, t0);
+      } else {
+        tl.fromTo(u, { opacity: 0, marginRight: "0.5em" }, { opacity: 1, marginRight: "0em", duration: each, ease: ease }, t0);
+      }
+    });
+    return tl;
+  }
+  // ==== end kit:text ====
+
+  // ==== kit:fit@1 ====
+  function kFit(el, o) {
+    o = o || {};
+    var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+    var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+    for (;;) {
+      el.style.fontSize = f + "px";
+      m = kLines(el);
+      if ((m.w <= W && m.n <= n) || f <= min) break;
+      f = Math.max(min, f - 2);
+    }
+    if (m.w > W) {
+      [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+      m = kLines(el);
+    }
+    return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+  }
+  function kLines(el) {
+    var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+    var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+    while ((t = it.nextNode())) {
+      if (!t.data.trim()) continue;
+      r.selectNodeContents(t);
+      [].forEach.call(r.getClientRects(), function (b) {
+        var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+        if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+        row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+      });
+    }
+    return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+  }
+  function kRows(el, cls) {
+    if (!el.children.length) return [];
+    var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+    var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+    kids.forEach(function (c, i) {
+      if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+      if (tops[i] != null) last = tops[i];
+      row.appendChild(c);
+    });
+    return [].slice.call(el.children);
+  }
+  // ==== end kit:fit ====
+
+  // ==== kit:fakeui@1 ====
+  function kFakeUI(w, h, kind, seed) {
+    var rnd = MT.seeded(seed || 7), out = [], cards = [], u = Math.min(w / 1600, h / 900);
+    var ink = "color-mix(in srgb, var(--k-ink) 22%, var(--k-panel))", line = "color-mix(in srgb, var(--k-ink) 9%, var(--k-bg))";
+    var R = function (x, y, rw, rh, r, c) { out.push('<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + rw.toFixed(1) + '" height="' + rh.toFixed(1) + '" rx="' + (r * u).toFixed(1) + '" style="fill:' + c + '"/>'); };
+    var side = 190 * u, top = 64 * u, pad = 30 * u, gap = 22 * u;
+    R(0, 0, w, h, 0, "var(--k-bg)");
+    R(0, 0, side, h, 0, "var(--k-panel)");
+    for (var i = 0; i < 6; i++) { R(24 * u, (92 + i * 46) * u, 18 * u, 18 * u, 5, i === 1 ? "var(--k-accent)" : ink); R(54 * u, (96 + i * 46) * u, (60 + rnd() * 60) * u, 10 * u, 5, ink); }
+    R(side, top - u, w - side, Math.max(1, u), 0, line);
+    R(side + pad, 22 * u, 170 * u, 18 * u, 9, ink);
+    R(w - pad - 260 * u, 16 * u, 260 * u, 32 * u, 16, "var(--k-panel)");
+    var x0 = side + pad, y0 = top + pad, cw = w - x0 - pad, ch = h - y0 - pad;
+    if (kind === "list") {
+      var rh = (ch - gap * 4) / 5;
+      for (var r = 0; r < 5; r++) {
+        var y = y0 + r * (rh + gap), m = y + rh / 2;
+        cards.push({ x: x0, y: y, w: cw, h: rh });
+        R(x0, y, cw, rh, 12, "var(--k-panel)");
+        R(x0 + 24 * u, m - 18 * u, 36 * u, 36 * u, 10, r === 0 ? "var(--k-accent)" : ink);
+        R(x0 + 80 * u, m - 14 * u, (260 + rnd() * 260) * u, 12 * u, 6, ink);
+        R(x0 + 80 * u, m + 6 * u, (140 + rnd() * 160) * u, 9 * u, 4.5, line);
+        R(x0 + cw - 150 * u, m - 13 * u, 110 * u, 26 * u, 13, line);
+      }
+    } else {
+      var gw = (cw - gap * 2) / 3, gh = (ch - gap) / 2;
+      for (var k = 0; k < 6; k++) {
+        var cx = x0 + (k % 3) * (gw + gap), cy = y0 + Math.floor(k / 3) * (gh + gap), base = cy + gh - 24 * u;
+        cards.push({ x: cx, y: cy, w: gw, h: gh });
+        R(cx, cy, gw, gh, 14, "var(--k-panel)");
+        R(cx + 22 * u, cy + 24 * u, (90 + rnd() * 70) * u, 12 * u, 6, ink);
+        R(cx + 22 * u, cy + 52 * u, (110 + rnd() * 70) * u, 28 * u, 8, k === 0 ? "var(--k-accent)" : ink);
+        if (k % 2) {
+          for (var j = 0; j < 7; j++) { var bh = (0.25 + rnd() * 0.75) * gh * 0.4; R(cx + 22 * u + j * (gw - 44 * u) / 7, base - bh, (gw - 44 * u) / 7 - 8 * u, bh, 4, j === 5 ? "var(--k-accent-2)" : ink); }
+        } else {
+          var pts = [];
+          for (var q = 0; q <= 12; q++) pts.push((cx + 22 * u + (q * (gw - 44 * u)) / 12).toFixed(1) + "," + (base - (0.2 + 0.6 * (0.5 + 0.5 * Math.sin(q * 0.7 + k)) * (0.6 + 0.4 * rnd())) * gh * 0.4).toFixed(1));
+          out.push('<polyline points="' + pts.join(" ") + '" style="fill:none;stroke:var(--k-accent-2);stroke-width:' + (3 * u).toFixed(1) + ';stroke-linejoin:round;stroke-linecap:round"/>');
+        }
+      }
+    }
+    return { svg: '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + " " + h + '" aria-hidden="true">' + out.join("") + "</svg>", cards: cards };
+  }
+  // ==== end kit:fakeui ====
+
+  kTone(root);
+  var off = String(v.backdrop) === "off";
+  root.setAttribute("data-backdrop", off ? "off" : "on");
+  var N = (window.__aiN = (window.__aiN || 0) + 1), NS = "http://www.w3.org/2000/svg";
+
+  // scene: a text-free dashboard 1600 x 900 (design px) and the target card over its top-middle tile
+  var DW = 1600, DH = 900, ui = kFakeUI(DW, DH, "grid", 7), C = ui.cards[1], cam = q(".ai-cam"), card = q(".ai-card");
+  cam.insertAdjacentHTML("afterbegin", ui.svg);
+  card.style.left = C.x + "px"; card.style.top = C.y + "px"; card.style.width = C.w + "px"; card.style.height = C.h + "px";
+  var title = q(".ai-title");
+  if (String(v.title).trim()) { kSplit(title, "word", false, v.title); kFit(title, { lines: 2, min: 54 }); } else title.style.display = "none";
+
+  // camera: dashboard scaled s0 around its centre at O; the card centre converges on O while the scale runs
+  // creep 1 -> 1.012, wind-up -> 0.985, then the ease-in crash zoom to END (all relative to s0)
+  var s0 = (FW / DW) * L.pan, O = { x: FW / 2, y: FH * L.oy }, CC = { x: C.x + C.w / 2, y: C.y + C.h / 2 };
+  var C0 = { x: O.x + (CC.x - DW / 2) * s0, y: O.y + (CC.y - DH / 2) * s0 };
+  var END = L.endW ? (L.endW * FW) / (C.w * s0) : CFG.end, inCubic = MT.bezier(0.55, 0.055, 0.675, 0.19), mix = MT.mix, ramp = MT.ramp;
+  function camAt(t) {
+    var creep = mix(1, CFG.creep, ramp(t, 0, CFG.wind, "smooth"));
+    var wind = mix(creep, CFG.back, ramp(t, CFG.wind, CFG.zoom - CFG.wind, "smooth"));
+    var p = ramp(t, CFG.zoom, CFG.hit - CFG.zoom, inCubic), s = s0 * (t < CFG.zoom ? wind : mix(CFG.back, END, p));
+    var x = mix(C0.x, O.x, p), y = mix(C0.y, O.y, p);
+    return { s: s, p: p, x: x, y: y, tf: "translate(" + (x - CC.x * s).toFixed(2) + "px," + (y - CC.y * s).toFixed(2) + "px) scale(" + s.toFixed(5) + ")" };
+  }
+
+  // motion blur in the crash zoom: up to 4 time-sampled copies (text drawn by ::before, so the checker sees
+  // one title), each blurred; the sharp camera on top keeps only the centre through a radial mask
+  var trail = q(".ai-trail"), sharp = q(".ai-sharp"), ghosts = [];
+  for (var g = 0; g < 4; g++) {
+    var tr = document.createElement("div"), cl = cam.cloneNode(true);
+    tr.className = "ai-tr";
+    [].forEach.call(cl.querySelectorAll(".ai-u"), function (u) { u.setAttribute("data-t", u.textContent); u.textContent = ""; u.classList.add("ai-ghost"); });
+    tr.appendChild(cl); trail.appendChild(tr); ghosts.push(tr);
+  }
+  var dim = document.createElement("div");
+  dim.className = "ai-dim";
+  dim.style.cssText = "left:" + C.x + "px;top:" + C.y + "px;width:" + C.w + "px;height:" + C.h + "px";
+  cam.appendChild(dim);
+  var HD = 0.5 * Math.sqrt(FW * FW + FH * FH);
+  function blurAt(t) {
+    if (t <= CFG.zoom || t * 30 + 1e-3 >= CFG.hit * 30) return { n: 1, sd: 0 }; // the stop frame is sharp
+    var a = camAt(t), b = camAt(t - CFG.shutter / 30);
+    var edge = (Math.abs(a.s - b.s) / s0) * 0.82 * HD + Math.abs(a.p - b.p) * 160 * U; // px moved at the frame edge
+    var n = Math.max(1, Math.min(4, Math.ceil(edge / 10)));
+    return { n: n, sd: n > 1 ? Math.min(12, (edge / (n - 1)) * 0.45) : 0 };
+  }
+
+  // impact frame: one SVG filter = negative (invert, grayscale, contrast 1.45) + two copies offset +-8 px, tinted
+  // with the accent and its complement (upstream: red and cyan, also a complementary pair, so flat greys stay
+  // neutral) and screened back on. Dark skins give a light negative: the same steps run on its inverse.
+  var dark = root.getAttribute("data-tone") === "dark", T = kRGB(root, "var(--k-accent)").map(function (x) { return x / 255; });
+  var tint = function (c) { return [c[0], 0, 0, 0, 0, c[1], 0, 0, 0, 0, c[2], 0, 0, 0, 0, 0, 0, 0, 1, 0].join(" "); };
+  var Tc = T.map(function (x) { return 1 - x; }), G = dark ? "0.30827 1.03704 0.10469 0 -0.225 " : "-0.30827 -1.03704 -0.10469 0 1.225 ", FID = "ai-neg-" + N;
+  var fsvg = document.createElementNS(NS, "svg");
+  fsvg.setAttribute("width", "0"); fsvg.setAttribute("height", "0"); fsvg.style.position = "absolute";
+  fsvg.innerHTML = '<filter id="' + FID + '" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">' +
+    '<feColorMatrix type="matrix" values="' + G + G + G + '0 0 0 1 0" result="n"/>' +
+    '<feOffset in="n" result="o1"/><feColorMatrix in="o1" type="matrix" values="' + tint(dark ? Tc : T) + '" result="r"/>' +
+    '<feOffset in="n" result="o2"/><feColorMatrix in="o2" type="matrix" values="' + tint(dark ? T : Tc) + '" result="c"/>' +
+    '<feBlend in="r" in2="n" mode="screen" result="m"/><feBlend in="c" in2="m" mode="screen"/>' +
+    (dark ? '<feColorMatrix type="matrix" values="-1 0 0 0 1 0 -1 0 0 1 0 0 -1 0 1 0 0 0 1 0"/>' : "") + "</filter>";
+  root.appendChild(fsvg);
+  var offs = fsvg.querySelectorAll("feOffset"), neg = q(".ai-neg"), bdf = q(".ai-bdf");
+  bdf.style.backdropFilter = "url(#" + FID + ")"; // backdrop off: the same filter on the host picture
+
+  // speed lines: 34 thick wedges + 22 needles from beyond the frame towards the card, inner ends eaten by a
+  // radial fade; a new shape every impact frame (upstream sine hash, so the shapes match the reference)
+  var lines = q(".ai-lines"), rnd = function (i) { var s = Math.sin(i * 127.3) * 43758.5453; return s - Math.floor(s); };
+  var hEnd = C.h * s0 * END, ROUT = 1.2 * HD, MID = "ai-lm" + N;
+  lines.setAttribute("viewBox", "0 0 " + FW + " " + FH);
+  lines.innerHTML = '<defs><radialGradient id="' + MID + 'g" cx="' + O.x + '" cy="' + O.y + '" r="' + (0.688 * hEnd).toFixed(1) + '" gradientUnits="userSpaceOnUse"><stop offset="0.38" stop-color="#fff" stop-opacity="0"/><stop offset="0.6" stop-color="#fff"/></radialGradient>' +
+    '<mask id="' + MID + '"><rect width="' + FW + '" height="' + FH + '" fill="url(#' + MID + 'g)"/></mask></defs><g mask="url(#' + MID + ')"></g>';
+  var lg = lines.querySelector("g"), polys = [];
+  for (var i = 0; i < 56; i++) {
+    var pg = document.createElementNS(NS, "polygon");
+    pg.style.fill = i < 34 && i % 5 === 0 ? "var(--k-ink)" : "var(--k-bg)";
+    if (i >= 34) pg.style.opacity = 0.85;
+    lg.appendChild(pg); polys.push(pg);
+  }
+  var wedge = function (i, n, k, r0, rv, w0, wv) {
+    var ang = ((i + 0.5) / n) * Math.PI * 2 + (rnd(k) - 0.5) * 0.24, r = (r0 + rnd(k + 1) * rv) * hEnd, hw = ((w0 + rnd(k + 2) * wv) * U) / ROUT;
+    var pt = function (a, d, sx) { return (O.x + Math.cos(a) * d * sx).toFixed(1) + "," + (O.y + Math.sin(a) * d).toFixed(1); };
+    return pt(ang, r, 1.18) + " " + pt(ang - hw, ROUT, 1) + " " + pt(ang + hw, ROUT, 1);
+  };
+  // radii as shares of the close-up card height (upstream 330 + 230 / 420 + 260 px and a 700 px fade at 1018 px)
+  var SHAPES = [0, 1, 2].map(function (ph) {
+    return polys.map(function (p, i) { return i < 34 ? wedge(i, 34, i * 13 + ph * 101, 0.324, 0.226, 9, 22) : wedge(i - 34 + 0.37, 22, (i - 34) * 29 + ph * 57 + 7, 0.413, 0.255, 2, 4); });
+  });
+
+  var vig = q(".ai-vig"), lastPh = -1;
+  function render(t) {
+    t = R6(t); // a seek exactly on a frame lands on it (CFG is snapped the same way)
+    var f = Math.floor(t * 30 + 1e-3); // frames at 30 fps: the impact is three whole frames
+    var impact = f >= CFG.hit * 30 - 1e-3 && f < CFG.recover * 30 - 1e-3, ph = impact ? Math.round(f - CFG.hit * 30) : -1;
+    var lock = ramp(t, CFG.lock, CFG.lockDur, "out"), c = camAt(t), B = blurAt(t);
+    // shake after the impact: 6 px, e^(-frames / 2.2), neighbouring frames swing to opposite sides
+    var since = (t - CFG.recover) * 30, env = since >= 0 ? CFG.shake * U * Math.exp(-since / CFG.shakeTau) : 0, live = env > 0.12 * U;
+    q(".ai-shake").style.transform = live ? "translate(" + (env * 0.7 * Math.sin(since * 2.5 + 0.6)).toFixed(2) + "px," + (env * Math.cos(since * 2.9)).toFixed(2) + "px) rotate(" + ((env / U) * 0.04 * Math.sin(since * 3.3 + 1.7)).toFixed(3) + "deg)" : "none";
+    var hitK = t >= CFG.recover ? 1 - ramp(t, CFG.recover, CFG.settle, "out") : 0;
+    cam.style.transform = c.tf;
+    card.style.boxShadow = "0 0 0 " + (1.5 * lock).toFixed(2) + "px var(--k-accent), 0 0 0 " + (6 * lock).toFixed(2) + "px color-mix(in srgb, var(--k-accent) " + (14 * lock).toFixed(1) + "%, transparent), inset 0 1px 0 var(--ai-hi), 0 " + mix(6, 22, lock).toFixed(1) + "px " + mix(18, 48, lock).toFixed(1) + "px -10px color-mix(in srgb, var(--ai-shade) " + mix(10, 22, lock).toFixed(1) + "%, transparent)";
+    ghosts.forEach(function (gh, k) {
+      gh.style.display = k < B.n && B.n > 1 ? "block" : "none";
+      if (k >= B.n || B.n < 2) return;
+      gh.firstChild.style.transform = camAt(t - (CFG.shutter * k) / (B.n - 1) / 30).tf;
+      gh.style.opacity = k === 0 ? 1 : 1 / (k + 1);
+      gh.style.filter = B.sd > 0.3 ? "blur(" + B.sd.toFixed(2) + "px)" : "none";
+    });
+    var m = B.n > 1 ? "radial-gradient(ellipse 30% 34% at " + ((c.x / FW) * 100).toFixed(1) + "% " + ((c.y / FH) * 100).toFixed(1) + "%, #000 0%, rgba(0,0,0,0.85) 45%, transparent 100%)" : "none";
+    sharp.style.webkitMaskImage = sharp.style.maskImage = m;
+    neg.style.filter = impact ? "url(#" + FID + ")" : "none";
+    bdf.style.opacity = impact && off ? 1 : 0;
+    lines.style.opacity = impact ? 1 : 0;
+    if (impact) {
+      var dy = ph % 2 === 0 ? 4 * U : -4 * U;
+      offs[0].setAttribute("dx", -CFG.split * U); offs[0].setAttribute("dy", dy);
+      offs[1].setAttribute("dx", CFG.split * U); offs[1].setAttribute("dy", -dy);
+      if (ph !== lastPh) polys.forEach(function (p, i) { p.setAttribute("points", SHAPES[ph][i]); });
+      lastPh = ph;
+    }
+    // after the hit: the page outside the card dims a beat, the vignette presses in and lets go
+    dim.style.opacity = t >= CFG.recover ? 1 : 0;
+    dim.style.boxShadow = "0 0 0 3000px color-mix(in srgb, var(--ai-shade) " + (mix(0.1, 0.22, hitK) * 100).toFixed(1) + "%, transparent)";
+    vig.style.display = impact ? "none" : "";
+    vig.style.setProperty("--vs", (2 * (off ? 0.42 * hitK : t >= CFG.recover ? mix(0.16, 0.42, hitK) : 0.12)).toFixed(3));
+  }
+
+  var tl = MT.scene(CFG.dur, render);
+  window.__timelines["anime-impact"] = tl;
+})();
+</script>
+</template>
+  </body>
+</html>

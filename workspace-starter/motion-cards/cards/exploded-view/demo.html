@@ -1,0 +1,483 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"parts","type":"string","label":"各层名称（| 分隔，从下到上 5 层，空的不标）","default":"侧边导航|数据图表|助手面板|指标卡片|搜索栏"},
+    {"id":"notes","type":"string","label":"各层说明（| 分隔，只横屏显示，可空）","default":"一键切换页面|每天的变化趋势|帮你起草下一步|关键数字实时刷新|一句话找到功能"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>exploded-view · 爆炸分解图</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="exploded-view-template">
+<!-- Ported from video-shotcraft demos/camera/space-camera-moves/ExplodedView.tsx
+  (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+  Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+  Changes (2026-10): Remotion/React re-implemented as a HyperFrames MT sub-composition, card s = (frame - 12) / 30;
+  --k-* palette, system fonts, generic Chinese part names; upstream mark, wordmark, UI copy, closing title and the
+  camera's outro shift for it removed; layer UIs redrawn as text-free bars on the same boxes; callout note 30 -> 40px,
+  number 26 -> 28px mixed 25% to ink; sheen a plain white band; key light at the kit's 32%/18% (upstream 36%/5%);
+  portrait: numbered pins and a 2-column legend, no leaders, scale 0.42/0.40, heights x0.9. Kept: perspective 2400,
+  rotateX 54->50, rotateZ -34->-22, scale 0.56->0.47 and 1.04 push, spring 15/120 at 5f, heights 150-640, reverse
+  ease-in 14f/3f, 8px thud, shadow formulas, slots, fill light, vignette, grain, callout timing and columns. -->
+<style>
+ @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+ @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+ @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+ @font-face { font-family: "Consolas"; src: local("Consolas"); }
+ #root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  --k-mono: var(--mc-mono, Consolas, monospace);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--k-font);
+  color: var(--k-ink);
+ }
+ /* card colours mixed from the palette; [data-tone] comes from kTone() */
+ .ev {
+  position: absolute; inset: 0; container-type: size;
+ }
+ .ev * { box-sizing: border-box; }
+ .ev {
+  --ev-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+  --ev-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+  --ev-card: var(--k-bg);
+  --ev-side: color-mix(in srgb, var(--k-bg), var(--k-ink) 2.5%);
+  --ev-p2: color-mix(in srgb, var(--k-panel), var(--k-ink) 3%);
+  --ev-bar: color-mix(in srgb, var(--k-ink) 15%, var(--ev-card));
+  --ev-ink: color-mix(in srgb, var(--k-ink) 78%, var(--ev-card));
+  --ev-plA: color-mix(in srgb, var(--k-bg), var(--ev-shade) 4%);
+  --ev-plB: color-mix(in srgb, var(--k-bg), var(--ev-shade) 11%);
+  --ev-thick: color-mix(in srgb, var(--k-bg), var(--ev-shade) 21%);
+  --ev-edge: color-mix(in srgb, var(--k-bg), var(--ev-shade) 27%);
+  --ev-glint: color-mix(in srgb, white 60%, transparent);
+ }
+ .ev[data-tone="dark"] {
+  --ev-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+  --ev-card: var(--k-panel);
+  --ev-side: color-mix(in srgb, var(--k-panel), var(--k-bg) 35%);
+  --ev-plA: color-mix(in srgb, var(--k-bg), var(--k-panel) 30%);
+  --ev-plB: var(--k-bg);
+  --ev-thick: color-mix(in srgb, var(--k-bg), black 45%);
+  --ev-edge: color-mix(in srgb, var(--k-panel), black 45%);
+  --ev-glint: color-mix(in srgb, white 16%, transparent);
+ }
+ /* ==== kit:backdrop@1 ==== */
+ .ev-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+ .ev-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+ /* ==== end kit:backdrop ==== */
+ /* ==== kit:vignette@1 ==== */
+ .ev-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--ev-shade);
+  background:
+   radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+   radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+ }
+ .ev[data-tone="dark"] .ev-vig { --vs: 0.55; }
+ /* ==== end kit:vignette ==== */
+ /* ==== kit:grain@1 ==== */
+ .ev-grain { position: absolute; inset: 0; pointer-events: none; }
+ /* ==== end kit:grain ==== */
+ /* upstream stage fill light: accent-2 at (85%, 90%) */
+ .ev-fill { position: absolute; inset: 0; background: radial-gradient(ellipse 50% 46% at 85% 90%, color-mix(in srgb, var(--k-accent-2) 10%, transparent), transparent 72%); }
+
+ /* the page: 1600 x 1000 page px, centred; static transform = the last frame (assembled) */
+ .ev-scene{position:absolute;inset:0;perspective:2400px;}
+ .ev-plate{position:absolute;left:calc(50% - 800px);top:calc(50% - 500px);width:1600px;height:1000px;transform-style:preserve-3d;transform:translate(-20px, 40px) scale(0.5824) rotateX(50deg) rotateZ(-22deg);}
+ .ev-plate > *{position:absolute;display:block;}
+ .ev-cs{left:-20px;top:10px;width:1640px;height:1040px;border-radius:46px;background:var(--ev-shade);opacity:0.28;filter:blur(40px);transform:translateZ(-30px) translate(30px, 40px);}
+ .ev-thick{inset:0;border-radius:26px;background:var(--ev-thick);transform:translateZ(-14px);}
+ .ev-base{inset:0;border-radius:26px;overflow:hidden;background:linear-gradient(160deg, var(--ev-plA), var(--ev-plB));box-shadow:inset 0 0 0 2px var(--ev-line);}
+ .ev-slot{position:absolute;border:3px dashed color-mix(in srgb, var(--k-accent) 28%, transparent);background:color-mix(in srgb, var(--k-accent) 3%, transparent);opacity:0;}
+ .ev-sheen{position:absolute;inset:0;opacity:0;--sp:-18%;background:linear-gradient(108deg, transparent calc(var(--sp) - 18%), var(--ev-glint) var(--sp), transparent calc(var(--sp) + 18%));}
+ .ev-plate > .ev-ls{display:none;background:color-mix(in srgb, var(--ev-shade) 30%, transparent);}
+ .ev-plate > .ev-edge{display:none;background:var(--ev-edge);}
+ .ev-plate > .ev-on{display:block;}
+ /* layers: text-free UI on the upstream geometry; every i is a bar unless a rule says otherwise */
+ .ev-ly{overflow:hidden;border-radius:22px;background:var(--ev-card);transform:translateZ(2px);}
+ :where(.ev-ly) i{display:block;height:14px;border-radius:8px;background:var(--ev-bar);}
+ :where(.ev-ly) .ev-a{background:var(--k-accent);}
+ :where(.ev-ly) .ev-k{background:var(--ev-ink);}
+ .ev-side{padding:120px 20px;border-radius:26px;background:var(--ev-side);box-shadow:inset -2px 0 0 var(--ev-line);}
+ .ev-mk{position:absolute;left:34px;top:32px;width:44px;height:44px;border-radius:11px;background:var(--k-accent);}
+ .ev-mk::before, .ev-mk::after{content:"";position:absolute;left:10px;top:10px;width:11px;height:11px;border-radius:6px;background:var(--k-on-accent);}
+ .ev-mk::after{top:27px;width:23px;height:6px;}
+ .ev-nav{display:flex;align-items:center;gap:16px;height:56px;margin-bottom:14px;padding:0 16px 0 18px;border-radius:14px;}
+ .ev-nav .ev-box{width:22px;height:22px;border-radius:7px;border:3px solid var(--ev-bar);background:none;}
+ .ev-nav.ev-on{background:color-mix(in srgb, var(--k-accent) 10%, transparent);}
+ .ev-nav.ev-on i{background:var(--k-accent);border-color:var(--k-accent);}
+ .ev-nav.ev-on .ev-box{background:none;}
+ .ev-nav .ev-a{width:44px;height:26px;margin-left:auto;border-radius:13px;}
+ .ev-top{display:flex;align-items:center;gap:24px;padding:0 32px;border-radius:0 26px 0 0;box-shadow:inset 0 -2px 0 var(--ev-line);}
+ .ev-srch{flex:1;display:flex;align-items:center;gap:22px;height:58px;padding:0 14px 0 22px;border-radius:16px;background:var(--ev-p2);box-shadow:inset 0 0 0 2px var(--ev-line);}
+ .ev-srch .ev-box{width:20px;height:20px;border-radius:50%;border:3px solid var(--ev-bar);background:none;}
+ .ev-srch .ev-kb{width:56px;height:32px;margin-left:auto;background:none;box-shadow:inset 0 0 0 2px var(--ev-line);}
+ .ev-top .ev-av{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg, color-mix(in srgb, var(--k-accent-2) 50%, white), var(--k-accent-2));}
+ .ev-kpi{display:flex;gap:24px;background:none;}
+ .ev-kc{flex:1;padding:40px 36px;border-radius:22px;background:var(--ev-card);box-shadow:inset 0 0 0 2px var(--ev-line);}
+ .ev-kc i{height:18px;}
+ .ev-kc div{display:flex;align-items:flex-end;gap:16px;margin-top:36px;}
+ .ev-kc .ev-k{height:54px;border-radius:12px;}
+ .ev-kc .ev-a{width:68px;height:24px;border-radius:12px;}
+ .ev-kc:first-child .ev-a{background:var(--k-accent-2);}
+ .ev-chart{padding:34px 36px;box-shadow:inset 0 0 0 2px var(--ev-line);}
+ .ev-hd{display:flex;align-items:center;gap:18px;}
+ .ev-hd i{width:140px;height:16px;}
+ .ev-hd .ev-k{width:280px;height:26px;border-radius:13px;}
+ .ev-area{position:absolute;left:36px;top:150px;width:788px;height:330px;border-radius:0;background:linear-gradient(180deg, color-mix(in srgb, var(--k-accent) 22%, transparent), transparent);
+  clip-path: path("M0,231L56,218L113,228L169,191L225,172L281,182L338,145L394,129L450,158L507,112L563,92L619,102L675,66L732,79L788,40L788,330L0,330Z"); }
+ .ev-plot{position:absolute;left:36px;top:150px;overflow:visible;}
+ .ev-plot .ev-g{stroke:var(--ev-line);stroke-width:2;}
+ .ev-plot .ev-l{fill:none;stroke:var(--k-accent);stroke-width:6;stroke-linejoin:round;stroke-linecap:round;}
+ .ev-plot circle{fill:var(--ev-card);stroke:var(--k-accent);stroke-width:6;}
+ .ev-ai{padding:30px 28px;background:linear-gradient(180deg, var(--ev-card), color-mix(in srgb, var(--k-accent) 6%, var(--ev-card)));box-shadow:inset 0 0 0 2px color-mix(in srgb, var(--k-accent) 35%, transparent);}
+ .ev-hd .ev-ico{width:30px;height:30px;border-radius:10px;background:linear-gradient(135deg, var(--k-accent-2), var(--k-accent));}
+ .ev-bub{margin-top:26px;padding:22px 20px 10px;border-radius:18px;background:var(--ev-p2);}
+ .ev-bub i{height:13px;margin-bottom:13px;}
+ .ev-bub.ev-w{margin-top:16px;background:var(--ev-card);box-shadow:inset 0 0 0 2px var(--ev-line);}
+ .ev-btn{position:absolute;left:28px;right:28px;bottom:28px;display:flex;gap:12px;}
+ .ev-btn > i{flex:1;height:58px;padding-top:22px;border-radius:16px;background:none;box-shadow:inset 0 0 0 2px var(--ev-line);}
+ .ev-btn > .ev-a{background:var(--k-accent);box-shadow:none;}
+ .ev-btn i i{width:50%;margin:0 auto;}
+ .ev-btn .ev-a i{background:var(--k-on-accent);}
+
+ /* callouts: a pin on each named layer, a leader and a label in two columns (landscape) */
+ .ev-leads{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;}
+ .ev-ld{fill:none;stroke:var(--k-accent);stroke-width:2.5;stroke-linejoin:round;}
+ .ev-pins, .ev-cls{position:absolute;inset:0;pointer-events:none;}
+ .ev-pin{position:absolute;left:0;top:0;display:none;width:18px;height:18px;border-radius:50%;background:var(--k-accent);border:4px solid var(--k-bg);place-items:center;}
+ .ev-pin b{display:none;}
+ .ev-cl{position:absolute;top:0;}
+ .ev-ch{display:flex;align-items:baseline;gap:14px;}
+ .ev-lf{text-align:right;}
+ .ev-lf .ev-ch{justify-content:flex-end;}
+ .ev-n{display:block;flex:none;font:700 28px/1.25 var(--k-mono);color:color-mix(in srgb, var(--k-accent), var(--k-ink) 25%);}
+ .ev-t{display:block;min-width:0;font-size:44px;font-weight:700;line-height:1.25;}
+ .ev-d{display:block;margin-top:6px;font-size:40px;line-height:1.25;color:var(--k-muted);}
+ /* portrait: the pins carry the numbers; the labels become a two-column legend under the stack */
+ @container (orientation: portrait) {
+  .ev-leads, .ev-d{display:none;}
+  .ev-pin{width:48px;height:48px;}
+  .ev-pin b, .ev-n{display:grid;place-items:center;font:700 28px/1 var(--k-mono);color:var(--k-on-accent);}
+  .ev-n{width:48px;height:48px;border-radius:50%;background:var(--k-accent);}
+  .ev-cls{inset:49% 10% auto 10%;display:grid;grid-template-columns:1fr 1fr;gap:26px 36px;}
+  .ev-cl{position:relative;text-align:left;}
+  .ev-ch, .ev-lf .ev-ch{align-items:center;justify-content:flex-start;}
+ }
+</style>
+
+<div id="root" data-composition-id="exploded-view">
+ <div class="ev">
+  <div class="ev-backdrop"></div>
+  <div class="ev-fill"></div>
+  <div class="ev-vig"></div>
+  <div class="ev-grain"></div>
+  <div class="ev-scene" data-layout-allow-overflow>
+   <div class="ev-plate">
+    <i class="ev-cs"></i>
+    <i class="ev-thick"></i>
+    <div class="ev-base"><i class="ev-sheen"></i></div>
+    <div class="ev-ly ev-side" style="left:0;top:0;width:288px;height:1000px">
+     <i class="ev-mk"></i><i class="ev-k" style="position:absolute;left:94px;top:44px;width:118px;height:20px"></i>
+     <div class="ev-nav ev-on"><i class="ev-box"></i><i style="width:96px"></i><i class="ev-a"></i></div>
+     <div class="ev-nav"><i class="ev-box"></i><i style="width:132px"></i></div>
+     <div class="ev-nav"><i class="ev-box"></i><i style="width:110px"></i></div>
+     <div class="ev-nav"><i class="ev-box"></i><i style="width:84px"></i></div>
+     <div class="ev-nav"><i class="ev-box"></i><i style="width:118px"></i></div>
+     <div class="ev-nav"><i class="ev-box"></i><i style="width:102px"></i></div>
+    </div>
+    <div class="ev-ly ev-chart" style="left:320px;top:410px;width:860px;height:558px">
+     <div class="ev-hd"><i class="ev-k"></i><i></i></div>
+     <i class="ev-area"></i>
+     <svg class="ev-plot" width="788" height="340" viewBox="0 0 788 340"><path class="ev-g" d="M0,1H788M0,110H788M0,219H788M0,329H788" /><path class="ev-l" d="M0,231L56,218L113,228L169,191L225,172L281,182L338,145L394,129L450,158L507,112L563,92L619,102L675,66L732,79L788,40" /><circle cx="788" cy="40" r="11" /></svg>
+    </div>
+    <div class="ev-ly ev-ai" style="left:1204px;top:410px;width:364px;height:558px">
+     <div class="ev-hd"><i class="ev-ico"></i><i class="ev-k" style="width:150px;height:24px"></i></div>
+     <div class="ev-bub"><i></i><i></i><i style="width:60%"></i></div>
+     <div class="ev-bub ev-w"><i></i><i style="width:82%"></i><i style="width:46%"></i></div>
+     <div class="ev-btn"><i class="ev-a"><i></i></i><i><i></i></i></div>
+    </div>
+    <div class="ev-ly ev-kpi" style="left:320px;top:130px;width:1248px;height:250px">
+     <div class="ev-kc"><i style="width:58%"></i><div><i class="ev-k" style="width:52%"></i><i class="ev-a"></i></div></div>
+     <div class="ev-kc"><i style="width:48%"></i><div><i class="ev-k" style="width:44%"></i><i class="ev-a"></i></div></div>
+     <div class="ev-kc"><i style="width:64%"></i><div><i class="ev-k" style="width:48%"></i><i class="ev-a"></i></div></div>
+    </div>
+    <div class="ev-ly ev-top" style="left:288px;top:0;width:1312px;height:100px">
+     <div class="ev-srch"><i class="ev-box"></i><i style="width:330px"></i><i class="ev-kb"></i></div><i class="ev-av"></i>
+    </div>
+   </div>
+  </div>
+  <svg class="ev-leads"></svg>
+  <div class="ev-pins"></div>
+  <div class="ev-cls"></div>
+ </div>
+</div>
+
+<script>
+ (function () {
+  // card seconds = (upstream frame - 12) / 30: the card opens 0.4 s before the first layer lifts
+  var CFG = {
+   dur: 5.5, lead: 0.4,                      // upstream frames 0-11 run before the card (camera eases start there)
+   crouch: 0.2, lift: 0.4, each: 0.167,      // 18f press 6 px; 24f lift, 5f apart, spring 15 / 120
+   tall: 0.333, tallDur: 1.333, untall: 3.133, untallDur: 1, // 22f-62f camera back for the stack; 106f-136f in
+   orbit: 0.6, orbitDur: 2.467,              // 30f-104f: rotateZ +10 deg, rotateX 54 -> 50
+   call: 1.333, callEach: 0.2,               // 52f, 6f apart: leader 8f, label rises from +6f over 12f
+   out: 3.067, outEach: 0.067,               // 104f, 2f apart from the top layer, 8f ease-in
+   back: 3.2, backEach: 0.1, backDur: 0.467, // 108f, 3f apart from the top layer, 14f ease-in
+   sheen: 0.133, sheenDur: 0.8               // 4f after the last layer seats, 24f
+  };
+  // camera: scale assembled / exploded, offsets (px for a 1080 short side), height factor; landscape label
+  // columns end / start at col[0] / col[1] of the width, cw wide; rows from top, gap apart, ending by bot
+  var LAND = { s: [0.56, 0.47], cx: -20, cy: [40, 180], zk: 1, col: [0.245, 0.755], cw: 0.185, top: 0.139, bot: 0.95, gap: 140 };
+  var PORT = { s: [0.42, 0.4], cx: -10, cy: [-240, -250], zk: 0.9 };
+  var Z = [150, 270, 400, 520, 640], SIDE = "LLRRR", N = 5;
+  var v = { parts: "侧边导航|数据图表|助手面板|指标卡片|搜索栏", notes: "一键切换页面|每天的变化趋势|帮你起草下一步|关键数字实时刷新|一句话找到功能", backdrop: "on" };
+  try {
+   var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+   for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+  } catch (e) {}
+
+  var root = document.querySelector(".ev");
+  var q = function (s) { return root.querySelector(s); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+   // not laid out yet: the host clip's declared size, then the window
+   var hc = root.closest("[data-width][data-height]");
+   FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+   FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND, U = Math.min(FW, FH) / 1.08e3;
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+  // ==== kit:tone@1 ====
+  function kRGB(el, color) {
+   var p = document.createElement("i");
+   p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+   el.appendChild(p);
+   var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+   el.removeChild(p);
+   return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+  }
+  function kTone(wrap) {
+   var c = kRGB(wrap, "var(--k-bg)");
+   var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+   wrap.setAttribute("data-tone", tone);
+   return tone;
+  }
+  // ==== end kit:tone ====
+  // ==== kit:grain@1 ====
+  function kGrain(layer, o) {
+   o = o || {};
+   var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+   var dark = tones && tones.getAttribute("data-tone") === "dark";
+   var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+     "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+     "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+     "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+     "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+   });
+   layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+   layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+   layer.style.backgroundSize = size + "px " + size + "px";
+   return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+   };
+  }
+  // ==== end kit:grain ====
+  // ==== kit:fit@1 ====
+  function kFit(el, o) {
+   o = o || {};
+   var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+   var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+   for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+   }
+   if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+   }
+   return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+  }
+  function kLines(el) {
+   var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+   var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+   while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+     var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+     if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+     row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+   }
+   return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+  }
+  // ==== end kit:fit ====
+
+  var dark = kTone(root) === "dark", grain = null, RIM = dark ? 0.3 : 0.9;
+  if (String(v.backdrop) === "off") [".ev-backdrop", ".ev-fill", ".ev-vig", ".ev-grain"].forEach(function (s) { q(s).style.display = "none"; });
+  else grain = kGrain(q(".ev-grain"));
+
+  var plate = q(".ev-plate"), base = q(".ev-base"), cs = q(".ev-cs"), sheen = q(".ev-sheen"), first = q(".ev-ly");
+  // per layer: its page box, a dashed slot on the base, a floor shadow and a thickness edge
+  var lays = [].slice.call(plate.querySelectorAll(".ev-ly")).map(function (el, i) {
+   var g = { el: el, x: el.offsetLeft, y: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight, z: Z[i] * L.zk, side: SIDE[i] };
+   var r = getComputedStyle(el).borderRadius, mk = function (cls, at, before, n) {
+    var d = document.createElement("i");
+    d.className = cls;
+    d.style.cssText = "left:" + (g.x + n) + "px;top:" + (g.y + n) + "px;width:" + (g.w - 2 * n) + "px;height:" + (g.h - 2 * n) + "px;border-radius:" + (n ? Math.max(10, parseFloat(r) - 6) + "px" : r);
+    at.insertBefore(d, before);
+    return d;
+   };
+   g.slot = mk("ev-slot", base, sheen, 10);
+   g.sh = mk("ev-ls", plate, first, 0);
+   g.edge = mk("ev-edge", plate, el, 0);
+   return g;
+  });
+
+  // callouts for the named layers: pin, leader (landscape) and label
+  var parts = String(v.parts).split("|"), notes = String(v.notes).split("|"), leads = q(".ev-leads"), co = [];
+  lays.forEach(function (g, i) {
+   var name = String(parts[i] || "").trim(), note = String(notes[i] || "").trim();
+   if (!name) return;
+   var el = document.createElement("div"), pin = document.createElement("i"), path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+   el.className = "ev-cl" + (g.side === "L" ? " ev-lf" : "");
+   el.innerHTML = '<div class="ev-ch"><b class="ev-n"></b><span class="ev-t"></span></div><div class="ev-d"></div>';
+   pin.className = "ev-pin";
+   pin.innerHTML = "<b></b>";
+   var o = { g: g, i: i, el: el, pin: pin, path: path, n: el.querySelector(".ev-n"), txt: [el.querySelector(".ev-t"), el.querySelector(".ev-d")] };
+   pin.firstChild.textContent = o.n.textContent = "0" + (i + 1);
+   o.txt[0].textContent = name;
+   if (note) o.txt[1].textContent = note; else o.txt[1].style.display = "none";
+   path.setAttribute("class", "ev-ld");
+   q(".ev-cls").appendChild(el); q(".ev-pins").appendChild(pin); leads.appendChild(path);
+   co.push(o);
+  });
+  // label width: landscape column cw of the width; portrait legend cell half of the 80% band
+  var CW = P ? (FW * 0.8 - 36) / 2 : FW * L.cw;
+  co.forEach(function (o) {
+   if (!P) o.el.style.width = CW + "px";
+   var tw = CW - o.n.offsetWidth - 14;
+   o.txt[0].style.maxWidth = tw + "px";
+   kFit(o.txt[0], { min: 40, width: tw });
+   if (!P) kFit(o.txt[1], { min: 40, width: CW });
+   o.hh = o.txt[0].offsetHeight / 2;
+   o.lo = o.el.offsetHeight - o.hh;
+  });
+
+  var CLOSE = CFG.back + (N - 1) * CFG.backEach + CFG.backDur; // last layer seated, 4.067 s
+  // layer i's lift 0..1: spring up, then reverse-order ease-in back down
+  var lp = function (t, i) {
+   return MT.spring({ t: t, delay: CFG.lift + i * CFG.each, damping: 15, stiffness: 120 }) * (1 - MT.ramp(t, CFG.back + (N - 1 - i) * CFG.backEach, CFG.backDur, "exit"));
+  };
+  var cam = function (t) {
+   var orbit = MT.ramp(t, CFG.orbit, CFG.orbitDur, "smooth"), push = MT.ramp(t, -CFG.lead, 5.667, "smooth");
+   var tall = MT.ramp(t, CFG.tall, CFG.tallDur, "smooth") * (1 - MT.ramp(t, CFG.untall, CFG.untallDur, "smooth"));
+   return {
+    rx: MT.mix(54, 50, orbit), rz: MT.mix(-34, -32, MT.ramp(t, -CFG.lead, 1, "out")) + 10 * orbit,
+    s: MT.mix(L.s[0], L.s[1], tall) * MT.mix(1, 1.04, push) * U, cx: L.cx * U, cy: MT.mix(L.cy[0], L.cy[1], tall) * U
+   };
+  };
+  // page point (x, y, z) -> frame px: the plate's CSS transform, perspective 2400 at the centre
+  var project = function (c, px, py, pz) {
+   var X = px - 800, Y = py - 500, a = (c.rz * Math.PI) / 180, b = (c.rx * Math.PI) / 180;
+   var x1 = X * Math.cos(a) - Y * Math.sin(a), y1 = X * Math.sin(a) + Y * Math.cos(a);
+   var y2 = y1 * Math.cos(b) - pz * Math.sin(b), z2 = y1 * Math.sin(b) + pz * Math.cos(b), k = 2400 / (2400 - z2);
+   return { x: FW / 2 + (x1 * c.s + c.cx) * k, y: FH / 2 + (y2 * c.s + c.cy) * k };
+  };
+  var f2 = function (x) { return x.toFixed(2); };
+
+  var render = function (t) {
+   var c = cam(t), since = (t - CLOSE) * 30; // frames at 30 fps
+   var crouch = -6 * MT.ramp(t, CFG.crouch, 0.2, "out") * (1 - MT.ramp(t, CFG.lift, 0.2, "out"));
+   var thud = since >= 0 ? 8 * Math.exp(-since / 3) * Math.cos(since * 0.9) : 0, tk = Math.max(0, thud / 8);
+   var spread = MT.ramp(t, CFG.lift, 1, "out") * (1 - MT.ramp(t, CFG.back, CLOSE - CFG.back, "exit"));
+   var sp = MT.ramp(t, CLOSE + CFG.sheen, CFG.sheenDur, "swift");
+   plate.style.transform = "translate(" + f2(c.cx) + "px," + f2(c.cy + thud * U) + "px) scale(" + c.s.toFixed(4) + ") rotateX(" + f2(c.rx) + "deg) rotateZ(" + f2(c.rz) + "deg)";
+   cs.style.opacity = f2(0.28 - 0.08 * spread + 0.06 * tk);
+   cs.style.filter = "blur(" + f2(40 - 10 * tk) + "px)";
+   sheen.style.opacity = sp > 0 && sp < 1 ? 1 : 0;
+   sheen.style.setProperty("--sp", f2(-18 + 136 * sp) + "%");
+   lays.forEach(function (g, i) {
+    var p = lp(t, i), z = g.z * p + 2, up = MT.clamp(p * 4, 0, 1), h = g.z * Math.max(0, p);
+    g.slot.style.opacity = f2(Math.min(1, spread * 2));
+    g.edge.classList.toggle("ev-on", up > 0.02);
+    g.edge.style.transform = "translateZ(" + f2(Math.max(2.5, z - 8 + crouch)) + "px)";
+    g.el.style.transform = "translateZ(" + f2(z + crouch) + "px)";
+    g.el.style.boxShadow = up > 0.02 ? "0 0 0 2px color-mix(in srgb, white " + f2(RIM * up * 100) + "%, transparent)" : "";
+    // floor shadow: slides lower right, softens and fades as the layer climbs (key light top left)
+    g.sh.classList.toggle("ev-on", p >= 0.01);
+    g.sh.style.transform = "translate(" + f2(h * 0.18) + "px," + f2(h * 0.26) + "px) translateZ(1px)";
+    g.sh.style.filter = "blur(" + f2(10 + h * 0.09) + "px)";
+    g.sh.style.opacity = f2(Math.min(1, Math.max(0, p) * 1.5) * (0.8 - h / 1400));
+   });
+   // anchor: middle of the layer's outer edge (its two outermost corners), projected every frame
+   var A = co.map(function (o) {
+    var g = o.g, z = g.z * lp(t, o.i) + 2;
+    var cn = [[g.x, g.y], [g.x + g.w, g.y], [g.x, g.y + g.h], [g.x + g.w, g.y + g.h]].map(function (p) { return project(c, p[0], p[1], z); });
+    cn.sort(function (u, w) { return g.side === "L" ? u.x - w.x : w.x - u.x; });
+    return { x: (cn[0].x + cn[1].x) / 2, y: (cn[0].y + cn[1].y) / 2 };
+   });
+   // landscape rows: per column by anchor y, gap apart (more for a tall label) from top, the last ending by bot
+   var ys = [];
+   if (!P) ["L", "R"].forEach(function (sd) {
+    var col = [], y = 0;
+    co.forEach(function (o, k) { if (o.g.side === sd) col.push(k); });
+    col.sort(function (a, b) { return A[a].y - A[b].y; });
+    col.forEach(function (k, j) { y = ys[k] = j ? Math.max(y + Math.max(L.gap * U, co[col[j - 1]].lo + co[k].hh + 16 * U), A[k].y) : Math.max(FH * L.top, A[k].y); });
+    var over = col.length ? y + co[col[col.length - 1]].lo - FH * L.bot : 0;
+    if (over > 0) col.forEach(function (k) { ys[k] -= over; });
+   });
+   co.forEach(function (o, k) {
+    var s0 = CFG.call + o.i * CFG.callEach, a = A[k];
+    var draw = MT.ramp(t, s0, 0.267, "out"), rise = MT.ramp(t, s0 + 0.2, 0.4, "snappy");
+    var out = MT.ramp(t, CFG.out + (N - 1 - o.i) * CFG.outEach, 0.267, "exit"), on = draw > 0 && out < 1, vis = rise * (1 - out);
+    // pins and portrait badges pop by scale (light digits on the accent never fade)
+    o.pin.style.display = on ? "grid" : "none";
+    o.pin.style.transform = "translate(" + f2(a.x) + "px," + f2(a.y) + "px) translate(-50%,-50%) scale(" + f2(Math.min(1, draw * 3) * (1 - out)) + ")";
+    o.txt[0].style.opacity = o.txt[1].style.opacity = f2(vis);
+    if (P) o.n.style.transform = "scale(" + f2(vis) + ")";
+    else o.n.style.opacity = f2(vis);
+    o.el.style.transform = "translateY(" + f2(((1 - rise) * 22 - out * 10) * U) + "px)";
+    if (P) return;
+    var lf = o.g.side === "L", ly = ys[k], ex = lf ? FW * L.col[0] + 24 * U : FW * L.col[1] - 24 * U;
+    var kx = lf ? Math.min(a.x - 40 * U, ex + 70 * U) : Math.max(a.x + 40 * U, ex - 70 * U);
+    var len = Math.abs(kx - a.x) + Math.hypot(ex - kx, ly - a.y);
+    o.path.setAttribute("d", "M" + f2(a.x) + "," + f2(a.y) + "L" + f2(kx) + "," + f2(a.y) + "L" + f2(ex) + "," + f2(ly));
+    o.path.style.display = on ? "" : "none";
+    o.path.style.opacity = f2(1 - out);
+    o.path.style.strokeDasharray = f2(len) + " " + f2(len + 2);
+    o.path.style.strokeDashoffset = f2(len * (1 - draw));
+    o.el.style.left = (lf ? FW * L.col[0] - CW : FW * L.col[1]) + "px";
+    o.el.style.top = f2(ly - o.hh) + "px";
+   });
+   if (grain) grain(t);
+  };
+  var tl = MT.scene(CFG.dur, render);
+  window.__timelines["exploded-view"] = tl;
+ })();
+</script>
+</template>
+  </body>
+</html>

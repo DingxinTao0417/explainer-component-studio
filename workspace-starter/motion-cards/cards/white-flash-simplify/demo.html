@@ -1,0 +1,436 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"name","type":"string","label":"字标（同一个词：先是流光版，闪白后是扁平版）","default":"示例应用"},
+    {"id":"tagline","type":"string","label":"落定后的一句话（| 切意群；留空不要）","default":"把复杂的事|讲清楚"},
+    {"id":"logo","type":"string","label":"标志图片（从项目根目录写起；留空用示意标志，填 none 不要标志）","default":""},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底（暗场 → 纸面）"},{"value":"off","label":"透明（只留字、光和闪白）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>white-flash-simplify · 闪白降维</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="white-flash-simplify-template">
+      <!-- Ported from video-shotcraft demos/transition/white-flash-logo-simplify-cut/WhiteFlashLogoSimplifyCut.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette (aurora stage -> --k-stage, paper -> --k-bg, iridescent fill mixed from the two accents),
+           system fonts, generic copy, upstream wordmark / mark / motto replaced by the name variable, kMark() and a
+           generic tagline; mark draw simplified to a frame reveal + dot/bar pop; dust kept inside the frame; paper grain
+           moved under the lockup; portrait layout and slot 4.4 s (1 s hold) added; flash, charge, flare, recovery and
+           lockup timings kept frame for frame. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        @font-face { font-family: "wf-heavy"; font-weight: 700 900; src: local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"), local("PingFangSC-Semibold"), local("NotoSansSC-Black"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          --k-stage: var(--mc-stage, #0b0d12);
+          --k-on-stage: var(--mc-on-stage, #f3f5f8);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .wf {
+          position: absolute; inset: 0; container-type: size;
+          --wf-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+          /* the wordmark face: a real bold cut unless the host sets its own font */
+          --wf-font: var(--mc-font, "wf-heavy", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          /* iridescent fill mixed from the two accents (upstream: violet, lilac, pink, peach, ice blue) */
+          --wf-c1: color-mix(in srgb, var(--k-accent-2), white 20%);
+          --wf-c2: color-mix(in srgb, var(--k-accent-2), white 45%);
+          --wf-c4: color-mix(in srgb, var(--k-accent), white 45%);
+          --wf-c5: color-mix(in srgb, var(--k-accent-2), white 65%);
+          --wf-iris: linear-gradient(100deg, var(--wf-c1) 0%, var(--wf-c2) 16%, var(--k-accent) 32%, var(--wf-c4) 46%, var(--wf-c5) 62%, var(--wf-c1) 78%, var(--wf-c2) 90%, var(--wf-c1) 100%);
+          --wf-dk: color-mix(in srgb, var(--k-stage), var(--k-accent-2) 12%);
+          --wf-paper-lt: color-mix(in srgb, white 90%, transparent);
+        }
+        .wf[data-tone="dark"] { --wf-shade: color-mix(in srgb, var(--k-bg) 30%, black); --wf-paper-lt: color-mix(in srgb, white 5%, transparent); }
+        .wf-s, .wf-dark, .wf-flat, .wf-push, .wf-lock, .wf-flare, .wf-paper, .wf-flash, .wf-dust { position: absolute; inset: 0; }
+        /* word centre and half glyph height (font size x lines / 2); the script rewrites them after fitting */
+        .wf-s { --cy: 46.3%; --hh: 120px; --rf: 206px; }
+        .wf-dark { opacity: 0; }
+        .wf-flash { opacity: 0; pointer-events: none; }
+        .wf-push, .wf-lock { transform-origin: 50% var(--cy); }
+        /* ==== kit:stage@1 ==== */
+        .wf-stage { position: absolute; inset: 0; background: linear-gradient(180deg, color-mix(in srgb, var(--k-stage), white 5%) 0%, var(--k-stage) 52%, color-mix(in srgb, var(--k-stage), black 35%) 100%); }
+        .wf-key {
+          position: absolute; inset: 0; mix-blend-mode: screen; --kx: 50%; --ky: 8%; --kl: 0.55;
+          background:
+            radial-gradient(ellipse 58% 62% at var(--kx) var(--ky), color-mix(in srgb, var(--k-accent) calc(var(--kl) * 100%), transparent) 0%, transparent 70%),
+            radial-gradient(ellipse 50% 46% at 85% 90%, color-mix(in srgb, var(--k-accent-2) 22%, transparent) 0%, transparent 72%);
+        }
+        .wf-stage ~ .wf-vig, .wf-stage ~ * .wf-vig { --vs: 0.55; --vc: color-mix(in srgb, var(--k-stage) 40%, black); }
+        /* ==== end kit:stage ==== */
+        /* ==== kit:vignette@1 ==== */
+        .wf-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--wf-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .wf[data-tone="dark"] .wf-vig { --vs: 0.55; }
+        /* ==== end kit:vignette ==== */
+        .wf .wf-vig.wf-pv { --vs: 0.1; --vin: 50%; }
+        /* ==== kit:grain@1 ==== */
+        .wf-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+        /* ==== kit:text@2 ==== */
+        .wf-u { display: inline-block; white-space: pre; }
+        .wf-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+        /* ==== end kit:text ==== */
+        .wf-dot { position: absolute; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--k-accent-2), white 40%) 0%, transparent 70%); }
+        /* afterglow behind the word: --ga is its strength (0.28 resting, 0.53 fully charged) */
+        .wf-glow { position: absolute; left: 18.75%; right: 18.75%; top: calc(var(--cy) - 260px); height: 520px; --ga: 0.28;
+          background: radial-gradient(ellipse 50% 50% at 50% 50%, color-mix(in srgb, var(--wf-c2) calc(var(--ga) * 100%), transparent) 0%, color-mix(in srgb, var(--k-accent) 8%, transparent) 45%, transparent 72%); }
+        /* every copy of the word shares this box, so the liquid and the flat version sit on the same glyphs */
+        .wf-word { position: absolute; left: 10%; right: 10%; top: var(--cy); transform: translateY(-50%); text-align: center; font-family: var(--wf-font); font-size: 240px; font-weight: 700; line-height: 1.2; letter-spacing: 0.03em; padding: 0.08em 0; }
+        .wf-w { display: inline-block; }
+        .wf-liq, .wf-bl {
+          background-image: var(--wf-sh, linear-gradient(transparent, transparent)), linear-gradient(180deg, transparent 40%, color-mix(in srgb, white 34%, transparent) 49%, color-mix(in srgb, white 10%, transparent) 52%, color-mix(in srgb, var(--wf-dk) 28%, transparent) 56%, transparent 68%), linear-gradient(180deg, color-mix(in srgb, white 45%, transparent) 0%, transparent 38%, transparent 60%, color-mix(in srgb, var(--wf-dk) 45%, transparent) 100%), var(--wf-iris);
+          background-size: 100% 100%, 100% 100%, 100% 100%, 300% 100%;
+          -webkit-background-clip: text; background-clip: text; color: color-mix(in srgb, var(--k-on-stage) 6%, transparent);
+        }
+        .wf-bl { background-image: var(--wf-iris); background-size: 300% 100%; }
+        .wf-bloom { filter: blur(38px); }
+        .wf-refl .wf-word { top: calc(var(--cy) + var(--rf)); transform: translateY(-50%) scaleY(-1); opacity: 0.22;
+          -webkit-mask-image: linear-gradient(0deg, #000 0%, rgba(0, 0, 0, 0.4) 30%, transparent 62%); mask-image: linear-gradient(0deg, #000 0%, rgba(0, 0, 0, 0.4) 30%, transparent 62%); }
+        .wf-flare div { position: absolute; }
+        .wf-paper { background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 6%) 100%); }
+        .wf-paper::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 55% at 50% 40%, var(--wf-paper-lt) 0%, transparent 70%); }
+        .wf-flat .wf-word { color: var(--k-ink); }
+        .wf-mk { position: absolute; left: 50%; top: calc(var(--cy) - var(--hh) - 168px); width: 124px; height: 124px; margin-left: -62px; }
+        .wf-mk svg, .wf-mk img { display: block; width: 100%; height: 100%; object-fit: contain; }
+        .wf-mk circle { transform-box: fill-box; transform-origin: center; }
+        .wf-mk circle + rect { transform-box: fill-box; transform-origin: 0 50%; }
+        .wf-rule { position: absolute; left: 50%; top: calc(var(--cy) + var(--hh) + 62px); width: 96px; height: 5px; margin-left: -48px; border-radius: 3px; background: var(--k-accent); }
+        .wf-tag { position: absolute; left: 12%; right: 12%; top: calc(var(--cy) + var(--hh) + 106px); text-align: center; font-size: 46px; font-weight: 500; line-height: 1.3; color: var(--k-muted); }
+        .wf[data-bare] .wf-stage, .wf[data-bare] .wf-key, .wf[data-bare] .wf-dust, .wf[data-bare] .wf-glow, .wf[data-bare] .wf-vig,
+        .wf[data-bare] .wf-grain, .wf[data-bare] .wf-refl, .wf[data-bare] .wf-paper { display: none; }
+        /* portrait: the lockup centres on the 40% line, the word at 200px fills the 80% column */
+        @container (orientation: portrait) {
+          .wf-s { --cy: 40%; --hh: 100px; --rf: 172px; }
+          .wf-word { font-size: 200px; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="white-flash-simplify">
+        <div class="wf">
+          <div class="wf-s">
+            <div class="wf-dark">
+              <div class="wf-stage"></div>
+              <div class="wf-key"></div>
+              <div class="wf-dust"></div>
+              <div class="wf-glow"></div>
+              <div class="wf-vig"></div>
+              <div class="wf-grain wf-g1"></div>
+              <div class="wf-push">
+                <div class="wf-word wf-bloom"><span class="wf-w wf-bl" data-layout-allow-overlap data-layout-allow-occlusion>示例应用</span></div>
+                <div class="wf-refl"><div class="wf-word"><span class="wf-w wf-liq" data-layout-allow-overlap data-layout-allow-occlusion>示例应用</span></div></div>
+                <div class="wf-word wf-main"><span class="wf-w wf-liq" data-layout-allow-occlusion>示例应用</span></div>
+                <div class="wf-flare" data-layout-allow-overflow><div></div><div></div><div></div></div>
+              </div>
+            </div>
+            <div class="wf-flat">
+              <div class="wf-paper"></div>
+              <div class="wf-vig wf-pv"></div>
+              <div class="wf-grain wf-g2"></div>
+              <div class="wf-lock">
+                <div class="wf-word wf-fw"><span class="wf-w" data-layout-allow-occlusion>示例应用</span></div>
+                <!-- kit:mark@1: kMark(124), inlined so the static page is complete -->
+                <div class="wf-mk"><svg class="wf-mark" viewBox="0 0 128 128" aria-hidden="true"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg></div>
+                <div class="wf-rule"></div>
+                <div class="wf-tag">把复杂的事讲清楚</div>
+              </div>
+            </div>
+            <div class="wf-flash"></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // seconds = upstream frames / 30 (frame numbers in the comments)
+          var CFG = {
+            slot: 4.4,
+            pushDur: 1.467, pushTo: 0.035,               // 0-44: slow push-in on the liquid word
+            sheen: 0.2, sheenDur: 0.933,                 // 6-34: one diagonal highlight, clipped to the glyphs
+            charge: 1.133, chargeDur: 0.4, bright: 0.7, flareDur: 0.467, // 34-46 / 34-48: brighten, anamorphic flare
+            flash: 1.467, white: 1.667, recover: 1.8, recoverDur: 0.733, // 44-50 burst, 50-54 white, 54-76 recovery
+            focus: 1.733, focusDur: 0.867, focusFrom: 1.03, // 52-78: flat word settles 1.03 -> 1
+            rule: 2.4, ruleDur: 0.467, mark: 2.467, markDur: 0.467, cut: 2.8, cutDur: 0.4, // 72-86, 74-88, 84-96
+            tag: 2.6, tagEach: 0.6, tagGap: 0.133,       // 78: tagline rises word by word (18 f each, 4 f apart)
+            hold: 3.2, holdDur: 0.8, holdTo: 0.01        // 96-120: a last 1% push
+          };
+          var LAND = { cy: 0.463, min: 120 }, PORT = { cy: 0.4, min: 96 };
+          var v = { name: "示例应用", tagline: "把复杂的事|讲清楚", logo: "", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".wf");
+          var q = function (s) { return root.querySelector(s); }, qa = function (s) { return [].slice.call(root.querySelectorAll(s)); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+          // ==== kit:hash@1 ====
+          function kHash(n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+          // ==== end kit:hash ====
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+          // ==== kit:text@2 ====
+          var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "wf-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "wf-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          function kReveal(tl, units, variant, at, o) {
+            o = o || {};
+            var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+            units.forEach(function (u, i) {
+              var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+              tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+              tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+            });
+            return tl;
+          }
+          // ==== end kit:text ====
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          // ==== end kit:fit ====
+
+          kTone(root);
+          if (String(v.backdrop) === "off") root.setAttribute("data-bare", "");
+          var S = q(".wf-s"), CY = L.cy * FH, s1 = Math.min(FW, FH) / (3 * 360);
+
+          // the wordmark: one string (kWords keeps typed spaces) in four copies, fitted once on the flat copy
+          var name = kWords(v.name).map(function (u) { return u.t + (u.sp ? " " : ""); }).join("") || " ";
+          var fw = q(".wf-fw");
+          qa(".wf-w").forEach(function (w) { w.textContent = name; });
+          var fit = kFit(fw, { min: L.min });
+          qa(".wf-word").forEach(function (w) { w.style.fontSize = fit.size + "px"; });
+          var gh = fit.size * fit.lines;
+          S.style.setProperty("--cy", CY.toFixed(1) + "px");
+          S.style.setProperty("--hh", (gh / 2).toFixed(1) + "px");
+          S.style.setProperty("--rf", (gh * 0.86).toFixed(1) + "px");
+
+          // tagline: optional, rises word by word under the rule
+          var tag = q(".wf-tag"), units = [];
+          if (String(v.tagline).trim()) { units = kSplit(tag, "word", true, v.tagline); kFit(tag, { lines: 2, min: 40 }); }
+          else tag.style.display = "none";
+
+          // mark: the placeholder unless a logo image is given; "none" drops it
+          var mk = q(".wf-mk"), lg = String(v.logo).trim();
+          if (lg === "none") mk.style.display = "none";
+          else if (lg) { mk.innerHTML = '<img alt="" />'; mk.firstChild.setAttribute("src", lg); }
+          var dot = mk.querySelector("circle"), bar = mk.querySelector("circle + rect");
+
+          // dust: 36 motes on the stage, upstream hash positions, kept inside the frame
+          var dust = q(".wf-dust"), motes = [];
+          for (var i = 0; i < 36; i++) {
+            var z = kHash(4 * 31 + i * 7.1), d = document.createElement("div");
+            d.className = "wf-dot"; d.style.width = d.style.height = (2 + z * z * 16) * s1 + "px";
+            if (z > 0.7) d.style.filter = "blur(" + ((z - 0.7) * 10).toFixed(1) + "px)";
+            dust.appendChild(d); motes.push({ el: d, z: z, sz: (2 + z * z * 16) * s1, x: kHash(4 * 13 + i * 3.7), y: kHash(4 * 17 + i * 5.3) });
+          }
+          dust.style.opacity = 0.5;
+          var g1 = kGrain(q(".wf-g1"), { opacity: 0.09, blend: "soft-light" }), g2 = kGrain(q(".wf-g2"), { opacity: 0.04, blend: "overlay" });
+
+          var dark = q(".wf-dark"), flat = q(".wf-flat"), push = q(".wf-push"), lock = q(".wf-lock"), key = q(".wf-key"), glow = q(".wf-glow");
+          var liq = qa(".wf-liq"), bl = q(".wf-bl"), bloom = q(".wf-bloom"), flash = q(".wf-flash"), rule = q(".wf-rule");
+          var fl = qa(".wf-flare div"), R = MT.ramp, mod = function (a, b) { return ((a % b) + b) % b; };
+          // the burst must cover the farthest corner from the word centre (upstream 1580 px for 1121 px)
+          var reach = (Math.hypot(FW / 2, Math.max(CY, FH - CY)) / 1121) * 1500;
+
+          function render(t) {
+            var f = Math.round(t * 30 * 1000) / 1000, i; // frames at 30 fps, as upstream
+            var isDark = f < 50;
+            dark.style.opacity = isDark ? 1 : 0;
+            flat.style.opacity = isDark ? 0 : 1;
+            var charge = R(t, CFG.charge, CFG.chargeDur, "exit"), flare = R(t, CFG.charge, CFG.flareDur, "exit"), b = 1 + CFG.bright * charge;
+            if (isDark) {
+              push.style.transform = "scale(" + (1 + CFG.pushTo * R(t, 0, CFG.pushDur, "smooth")).toFixed(5) + ")";
+              key.style.setProperty("--ky", "20%");
+              key.style.setProperty("--kl", (0.55 * (1 + 0.6 * 0.12 * Math.sin(f / 38))).toFixed(4));
+              glow.style.setProperty("--ga", (0.28 + 0.25 * charge).toFixed(3));
+              var sh = R(t, CFG.sheen, CFG.sheenDur, "swift"), sx = MT.mix(-30, 130, sh), flow = ((f * 1.1) % 300).toFixed(2) + "% 0";
+              var shv = sh > 0 && sh < 1 ? "linear-gradient(105deg, transparent " + (sx - 10).toFixed(2) + "%, color-mix(in srgb, white 85%, transparent) " + sx.toFixed(2) + "%, transparent " + (sx + 10).toFixed(2) + "%)" : "";
+              for (i = 0; i < liq.length; i++) {
+                liq[i].style.setProperty("--wf-sh", shv || null);
+                liq[i].style.backgroundPosition = "0 0, 0 0, 0 0, " + flow;
+                liq[i].style.filter = b > 1.001 ? "brightness(" + b.toFixed(3) + ") saturate(" + (1 / Math.sqrt(b)).toFixed(3) + ")" : "";
+              }
+              bl.style.backgroundPosition = flow;
+              bloom.style.opacity = (0.42 + 0.4 * charge).toFixed(3);
+              // flare: soft halo, 4px core fading at both ends, wide glow; all open from the word centre
+              var spec = [[1.146, 48, 0.55], [1.042, 4, 0.95], [0.9375, 180, 0.45]];
+              for (i = 0; i < 3; i++) {
+                var w = spec[i][0] * FW * flare, h = spec[i][1] * s1, a = (spec[i][2] * flare * 100).toFixed(1);
+                fl[i].style.cssText = "left:" + (FW / 2 - w / 2).toFixed(1) + "px;width:" + w.toFixed(1) + "px;top:" + (CY - h / 2).toFixed(1) + "px;height:" + h.toFixed(1) + "px;opacity:" + (flare > 0 ? 1 : 0) + ";background:" +
+                  (i === 1 ? "linear-gradient(90deg, transparent 0%, color-mix(in srgb, white " + a + "%, transparent) 50%, transparent 100%)"
+                    : "radial-gradient(ellipse 50% 50% at 50% 50%, color-mix(in srgb, color-mix(in srgb, var(--k-accent-2), white " + (i ? 80 : 88) + "%) " + a + "%, transparent) 0%, transparent " + (i ? 70 : 100) + "%)");
+              }
+              for (i = 0; i < motes.length; i++) {
+                var m = motes[i], tw = 0.5 + 0.5 * Math.sin(f / (14 + m.z * 20) + i);
+                m.el.style.left = mod(m.x * FW + f * 0.2 * (0.4 + m.z) * s1, FW - m.sz).toFixed(1) + "px";
+                m.el.style.top = mod(m.y * FH - f * 0.06 * (0.5 + m.z) * s1, FH - m.sz).toFixed(1) + "px";
+                m.el.style.opacity = ((0.25 + 0.75 * tw) * (0.3 + m.z * 0.7)).toFixed(3);
+              }
+              g1(t);
+            } else {
+              var sc = MT.mix(CFG.focusFrom, 1, R(t, CFG.focus, CFG.focusDur, "snappy")) * (1 + CFG.holdTo * R(t, CFG.hold, CFG.holdDur, "smooth"));
+              lock.style.transform = "scale(" + sc.toFixed(5) + ")";
+              rule.style.transform = "scaleX(" + R(t, CFG.rule, CFG.ruleDur, "snappy").toFixed(4) + ")";
+              var mp = R(t, CFG.mark, CFG.markDur, "snappy"), cp = R(t, CFG.cut, CFG.cutDur, "snappy");
+              mk.style.clipPath = "inset(" + (50 * (1 - mp)).toFixed(2) + "%)"; // the frame opens from its centre
+              if (dot) { dot.style.transform = "scale(" + cp.toFixed(4) + ")"; bar.style.transform = "scaleX(" + cp.toFixed(4) + ")"; }
+              g2(t);
+            }
+            // the white: a burst from the word centre (t^2, faster and faster), pure white 50-54, then the exposure falls
+            var burst = Math.pow(MT.clamp((t - CFG.flash) / (CFG.white - CFG.flash), 0, 1), 2);
+            if (isDark) {
+              flash.style.background = "radial-gradient(circle " + ((80 * s1) + burst * reach).toFixed(1) + "px at 50% " + CY.toFixed(1) + "px, white 0%, color-mix(in srgb, white " + ((0.6 + 0.4 * burst) * 100).toFixed(1) + "%, transparent) 55%, transparent 100%)";
+              flash.style.opacity = t < CFG.flash ? 0 : Math.min(1, burst * 1.4).toFixed(3);
+            } else {
+              flash.style.background = "white";
+              flash.style.opacity = (f < 54 ? 1 : 1 - R(t, CFG.recover, CFG.recoverDur, "out")).toFixed(4);
+            }
+          }
+
+          var tl = MT.scene(CFG.slot, render);
+          kReveal(tl, units, "rise", CFG.tag, { each: CFG.tagEach, gap: CFG.tagGap });
+          window.__timelines["white-flash-simplify"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

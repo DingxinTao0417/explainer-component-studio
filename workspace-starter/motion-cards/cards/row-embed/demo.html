@@ -1,0 +1,435 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"页面标题","default":"本周任务清单"},
+    {"id":"desc","type":"string","label":"页面说明（留空不要）","default":"新增的事项会逐条落进清单"},
+    {"id":"rows","type":"string","label":"清单条目（用 | 分隔，横屏最多 5 条、竖屏最多 4 条）","default":"整理参考资料|写出第一版大纲|录一段操作演示|检查字幕与音效|导出并发布"},
+    {"id":"sub","type":"string","label":"每条的副行（留空不要）","default":"刚刚更新"},
+    {"id":"meta","type":"string","label":"负责人（只横屏显示，留空不要）","default":"成员 A"},
+    {"id":"status","type":"string","label":"状态标签（留空不要）","default":"已完成"},
+    {"id":"tabs","type":"string","label":"分页标签（用 | 分隔，最多 4 个，第一个高亮）","default":"全部|进行中|已完成"},
+    {"id":"cols","type":"string","label":"表头（用 | 分隔三项：条目|负责人|状态）","default":"事项|负责人|状态"},
+    {"id":"name","type":"string","label":"应用名（只横屏显示，留空只留标志）","default":"示例应用"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"带光的白底"},{"value":"off","label":"透明（只留页面内容）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>row-embed · 条目落进清单</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="row-embed-template">
+    <!-- Ported from video-shotcraft demos/ui-entrance/row-embed/RowEmbed.tsx
+         (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+         Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/. Recipe: ui-entrance/row-embed.
+         Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+         neutral --k-* palette (was warm paper #f9f6f1 and an amber seam), system fonts, generic copy in variables;
+         the product screenshot with its mark, names and wordmark -> a DOM page (nav, title, tabs, table head) whose
+         five rows are real elements instead of texture crops, so the empty-slot patch becomes a dashed slot box
+         (2 px at 22% ink instead of 1 px at 20%); row text 44/40 px, status pill 30 px; camera zoom 1.12 -> 1.25
+         becomes 1.0 -> 1.08 (landscape) and 1.0 -> 1.06 (portrait) over the same 68 frames, 240 px pan (portrait
+         150 px) with the page measured, not fixed; tagline caption dropped; portrait shows 4 rows in a 780 px column.
+         Kept: cues 12/22/31/39/46 f, 12 f flight on bezier(.5,0,.8,.75), perspective(900px) translateY(-120*air)
+         rotateX(16deg*air), scale 1.06 -> 0.995 then a 4 f press back to 1, slot contact shadow, vertical motion
+         blur (0.22 per px/frame, max 3.2), 2 px accent seam spreading over 5 f and fading by 8 f, vignette 0.1, grain 0.035. -->
+    <style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  position: absolute; inset: 0; overflow: hidden;
+  font-family: var(--k-font); color: var(--k-ink);
+}
+/* ==== kit:fit@1 ==== */
+.re-row { display: block; white-space: nowrap; }
+/* ==== end kit:fit ==== */
+
+/* ==== kit:grain@1 ==== */
+.re-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+
+/* ==== kit:backdrop@1 ==== */
+.re-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+.re-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+/* ==== end kit:backdrop ==== */
+
+/* ==== kit:vignette@1 ==== */
+.re-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--re-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.re[data-tone="dark"] .re-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+
+/* ==== kit:derived@1 ==== */
+.re {
+  --re-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+  --re-panel-2: color-mix(in srgb, var(--k-panel), var(--k-ink) 4%);
+  --re-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+  --re-hi: color-mix(in srgb, white 80%, transparent);
+}
+.re[data-tone="dark"] {
+  --re-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+  --re-hi: color-mix(in srgb, white 6%, transparent);
+}
+/* ==== end kit:derived ==== */
+.re { position: absolute; inset: 0; container-type: size; }
+.re-vig { --vs: 0.1; --vin: 55%; }
+.re[data-tone="dark"] .re-vig { --vs: 0.3; }
+.re[data-off] .re-deco { display: none; }
+.re-view { position: absolute; inset: 0; overflow: hidden; }
+/* static pose = the settled camera (zoom 1.08 on the last row), the script replaces it */
+.re-page { --cw: 1240px; position: absolute; left: 0; top: 0; width: 100cqw; transform-origin: 0 0; transform: translate(-76.8px, -327.2px) scale(1.08); }
+.re-nav { display: flex; align-items: center; gap: 22px; height: 96px; box-sizing: border-box; padding: 0 calc((100cqw - var(--cw)) / 2); border-bottom: 1px solid var(--re-line); }
+.re-nm { font-size: 40px; font-weight: 700; line-height: 1.2; white-space: nowrap; }
+.re-nb { flex: none; width: 76px; height: 14px; border-radius: 7px; background: color-mix(in srgb, var(--k-ink) 16%, transparent); }
+.re-nb:first-of-type { margin-left: auto; }
+.re-mark { display: block; flex: none; }
+.re-av { flex: none; width: 48px; height: 48px; border-radius: 50%; background: var(--k-accent-2); }
+.re-col { width: var(--cw); margin-left: auto; margin-right: auto; }
+.re-hd { margin-top: 36px; }
+.re-h1 { font-size: 76px; font-weight: 800; line-height: 1.2; }
+.re-ds { margin-top: 8px; font-size: 40px; line-height: 1.25; color: var(--k-muted); }
+.re-tabs { display: flex; gap: 44px; align-items: center; height: 64px; margin-top: 36px; border-bottom: 1px solid var(--re-line); font-size: 30px; color: var(--k-muted); white-space: nowrap; }
+.re-tab { position: relative; display: block; padding: 0 4px; line-height: 64px; }
+.re-tab:first-child { color: var(--k-ink); font-weight: 700; }
+.re-tab:first-child::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 4px; border-radius: 2px; background: var(--k-accent); }
+.re-th { display: flex; align-items: center; gap: 28px; height: 56px; box-sizing: border-box; margin-top: 20px; padding: 0 36px 0 32px; font-size: 28px; color: var(--k-muted); }
+.re-th span { display: block; flex: none; width: 220px; white-space: nowrap; }
+.re-th span:first-child { flex: 1 1 0; width: auto; padding-left: 92px; }
+.re-th span:last-child { width: 132px; text-align: center; }
+.re-list { position: relative; margin-top: 14px; }
+.re-slot { position: relative; margin-bottom: 16px; }
+.re-slot:last-child { margin-bottom: 0; }
+.re-dash { position: absolute; inset: 0; z-index: 1; box-sizing: border-box; border: 2px dashed color-mix(in srgb, var(--k-ink) 22%, transparent); border-radius: 12px; background: color-mix(in srgb, var(--k-ink) 2%, transparent); opacity: 0; }
+.re-ct { position: absolute; z-index: 2; left: 10px; right: 10px; top: 6px; bottom: 0; border-radius: 10px; opacity: 0; }
+.re-fly { position: relative; z-index: 3; }
+.re-ab { position: absolute; inset: 0; }
+.re-face { display: flex; align-items: center; gap: 28px; box-sizing: border-box; height: 100%; padding: 18px 36px 18px 32px; background: var(--k-panel); border: 1px solid var(--re-line); border-radius: 12px; box-shadow: inset 0 1px 0 var(--re-hi); }
+.re-no { flex: none; display: flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: 50%; background: color-mix(in srgb, var(--k-accent) 16%, var(--k-bg)); font-size: 32px; font-weight: 700; }
+.re-tx { flex: 1 1 0; min-width: 0; }
+.re-ti { display: block; font-size: 44px; font-weight: 700; line-height: 1.2; }
+.re-su { display: block; margin-top: 4px; font-size: 40px; line-height: 1.15; color: var(--k-muted); }
+.re-me { flex: none; width: 220px; font-size: 40px; color: var(--k-muted); white-space: nowrap; }
+.re-pill { flex: none; box-sizing: border-box; min-width: 132px; padding: 6px 20px; border-radius: 999px; background: var(--k-accent); color: var(--k-on-accent); font-size: 30px; font-weight: 700; line-height: 1.3; text-align: center; white-space: nowrap; }
+.re-seam { position: absolute; z-index: 4; left: 12px; right: 12px; bottom: 0; height: 2px; border-radius: 1px; opacity: 0; transform: scaleX(0);
+  background: linear-gradient(90deg, transparent 0%, var(--k-accent) 18%, color-mix(in oklch, var(--k-accent), white 20%) 50%, var(--k-accent) 82%, transparent 100%);
+  box-shadow: 0 0 7px color-mix(in srgb, var(--k-accent) 38%, transparent); }
+@container (orientation: portrait) {
+  .re-page { --cw: 780px; transform: translate(-32.4px, 100.3px) scale(1.06); }
+  .re-nm, .re-no, .re-me { display: none; }
+  .re-h1 { font-size: 80px; }
+  .re-th { padding: 0 28px; }
+  .re-th span:first-child { padding-left: 0; }
+  .re-th span:nth-child(2) { display: none; }
+  .re-face { gap: 22px; padding: 18px 28px; }
+  .re-slot:nth-child(n+5) { display: none; }
+}
+    </style>
+
+    <div id="root" data-composition-id="row-embed">
+      <div class="re">
+        <div class="re-deco re-backdrop"></div>
+        <div class="re-deco re-vig"></div>
+        <div class="re-deco re-grain"></div>
+        <div class="re-view" data-layout-allow-overflow>
+          <div class="re-page">
+            <div class="re-nav"><svg class="re-mark" width="56" height="56" viewBox="0 0 128 128" aria-hidden="true"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg><span class="re-nm">示例应用</span><i class="re-nb"></i><i class="re-nb"></i><i class="re-nb"></i><i class="re-av"></i></div>
+            <div class="re-col re-hd"><div class="re-h1">本周任务清单</div><div class="re-ds">新增的事项会逐条落进清单</div></div>
+            <div class="re-col re-tabs"><span class="re-tab">全部</span><span class="re-tab">进行中</span><span class="re-tab">已完成</span></div>
+            <div class="re-col re-th"><span>事项</span><span>负责人</span><span>状态</span></div>
+            <div class="re-col re-list">
+              <div class="re-slot"><i class="re-dash"></i><i class="re-ct"></i><div class="re-fly"><div class="re-face"><b class="re-no">1</b><div class="re-tx"><b class="re-ti">整理参考资料</b><span class="re-su">刚刚更新</span></div><span class="re-me">成员 A</span><span class="re-pill">已完成</span></div></div><i class="re-seam"></i></div>
+              <div class="re-slot"><i class="re-dash"></i><i class="re-ct"></i><div class="re-fly"><div class="re-face"><b class="re-no">2</b><div class="re-tx"><b class="re-ti">写出第一版大纲</b><span class="re-su">刚刚更新</span></div><span class="re-me">成员 A</span><span class="re-pill">已完成</span></div></div><i class="re-seam"></i></div>
+              <div class="re-slot"><i class="re-dash"></i><i class="re-ct"></i><div class="re-fly"><div class="re-face"><b class="re-no">3</b><div class="re-tx"><b class="re-ti">录一段操作演示</b><span class="re-su">刚刚更新</span></div><span class="re-me">成员 A</span><span class="re-pill">已完成</span></div></div><i class="re-seam"></i></div>
+              <div class="re-slot"><i class="re-dash"></i><i class="re-ct"></i><div class="re-fly"><div class="re-face"><b class="re-no">4</b><div class="re-tx"><b class="re-ti">检查字幕与音效</b><span class="re-su">刚刚更新</span></div><span class="re-me">成员 A</span><span class="re-pill">已完成</span></div></div><i class="re-seam"></i></div>
+              <div class="re-slot"><i class="re-dash"></i><i class="re-ct"></i><div class="re-fly"><div class="re-face"><b class="re-no">5</b><div class="re-tx"><b class="re-ti">导出并发布</b><span class="re-su">刚刚更新</span></div><span class="re-me">成员 A</span><span class="re-pill">已完成</span></div></div><i class="re-seam"></i></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing in seconds (frames at 30 fps in the comments), shared by both orientations
+          var CFG = {
+            cues: [0.4, 0.733, 1.033, 1.3, 1.533],      // 12 / 22 / 31 / 39 / 46 f: each row leaves the air
+            fly: 0.4,                                    // 12 f flight
+            appear: 0.1, press: 0.133,                   // 3 f fade-in, 4 f press back from 0.995 to 1
+            hintLead: 0.2, hintDur: 0.333, dashFade: 0.067, // slot box brightens from cue - 6 f over 10 f, gone 2 f after landing
+            seamSpread: 0.167, seamFade: 0.267,          // 5 f spread from the centre, 8 f total
+            cam: 2.267, dur: 3.5                         // 68 f camera, scene length
+          };
+          // camera: zoom range, the pan in page px, where the rows' bottom edge (landscape) or the page head (portrait) settles
+          var LAND = { rows: 5, z0: 1.0, z1: 1.08, pan: 240, rbY: 0.937, titleLines: 1, titleMin: 56, descLines: 1 };
+          var PORT = { rows: 4, z0: 1.0, z1: 1.06, pan: 150, hdY: 0.125, band: 0.5417, titleLines: 2, titleMin: 72, descLines: 2 };
+          var v = { title: "本周任务清单", desc: "新增的事项会逐条落进清单", rows: "整理参考资料|写出第一版大纲|录一段操作演示|检查字幕与音效|导出并发布", sub: "刚刚更新", meta: "成员 A", status: "已完成", tabs: "全部|进行中|已完成", cols: "事项|负责人|状态", name: "示例应用", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+          
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          function kRows(el, cls) {
+            if (!el.children.length) return [];
+            var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+            var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+            kids.forEach(function (c, i) {
+              if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+              if (tops[i] != null) last = tops[i];
+              row.appendChild(c);
+            });
+            return [].slice.call(el.children);
+          }
+          // ==== end kit:fit ====
+          
+          // ==== kit:pagecam@1 ====
+          function kPageCam(view, page, keys, ease) {
+            var E = MT.ease(ease || MT.bezier(0.33, 0, 0.15, 1));
+            var is3D = keys.some(function (k) { return k.rx != null || k.ry != null || k.rz != null || k.persp != null; });
+            return function (t) {
+              var W = view.clientWidth, H = view.clientHeight, a = keys[0], b = keys[keys.length - 1];
+              for (var i = 0; i < keys.length - 1; i++) if (t >= keys[i].t && t <= keys[i + 1].t) { a = keys[i]; b = keys[i + 1]; break; }
+              var p = a.t === b.t ? 1 : E(MT.clamp((t - a.t) / (b.t - a.t)));
+              var v = function (k, d) { var x = a[k] != null ? a[k] : d, y = b[k] != null ? b[k] : d; return x + (y - x) * p; };
+              var cx = v("cx", 0), cy = v("cy", 0), z = v("zoom", 1);
+              if (!is3D) {
+                page.style.transformOrigin = "0 0";
+                page.style.transform = "translate(" + (W / 2 - cx * z).toFixed(2) + "px," + (H / 2 - cy * z).toFixed(2) + "px) scale(" + z.toFixed(4) + ")";
+                return;
+              }
+              view.style.perspective = (v("persp", 1400) * z).toFixed(1) + "px";
+              view.style.perspectiveOrigin = W / 2 + "px " + H / 2 + "px";
+              page.style.zoom = z.toFixed(4);
+              page.style.transformOrigin = cx.toFixed(1) + "px " + cy.toFixed(1) + "px";
+              page.style.transformStyle = "preserve-3d";
+              page.style.transform = "translate(" + (W / 2 / z - cx).toFixed(2) + "px," + (H / 2 / z - cy).toFixed(2) + "px) rotateY(" + v("ry", 0).toFixed(2) + "deg) rotateX(" + v("rx", 0).toFixed(2) + "deg) rotateZ(" + v("rz", 0).toFixed(2) + "deg)";
+            };
+          }
+          // ==== end kit:pagecam ====
+          
+          // ==== kit:speedblur@1 ====
+          function kSpeedBlur(box, prefix, o) {
+            o = o || {};
+            var amount = o.amount || 0.45, max = o.max || 36;
+            var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+            var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+            svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+            var outer = document.createElement("div"), inner = document.createElement("div");
+            outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+            while (box.firstChild) inner.appendChild(box.firstChild);
+            outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+            var fe = svg.firstChild.firstChild;
+            return function (vx, vy) {
+              vy = vy || 0;
+              var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+              if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+              var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+              fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+              outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+              inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+              outer.style.filter = "url(#" + id + ")";
+            };
+          }
+          // ==== end kit:speedblur ====
+          
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+          var root = document.querySelector(".re");
+          var q = function (s, p) { return (p || root).querySelector(s); };
+          var qa = function (s, p) { return [].slice.call((p || root).querySelectorAll(s)); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          var tone = kTone(root), dark = tone === "dark";
+          if (String(v.backdrop) === "off") root.setAttribute("data-off", "");
+
+          // ---- text: variables replace the defaults; an empty optional field hides its whole block ----
+          var S = function (k) { return String(v[k]).trim(); };
+          var list = function (s, n) { return s.split("|").map(function (x) { return x.trim(); }).filter(Boolean).slice(0, n); };
+          var put = function (el, text) { el.textContent = text; el.style.display = text ? "" : "none"; };
+          var h1 = q(".re-h1"), ds = q(".re-ds"), view = q(".re-view"), page = q(".re-page");
+          put(h1, S("title")); put(ds, S("desc")); put(q(".re-nm"), S("name"));
+          var tabs = q(".re-tabs"), tl = list(S("tabs"), 4);
+          tabs.innerHTML = ""; tl.forEach(function (t) { var s = document.createElement("span"); s.className = "re-tab"; s.textContent = t; tabs.appendChild(s); });
+          tabs.style.display = tl.length ? "" : "none";
+          var cl = String(v.cols).split("|").map(function (x) { return x.trim(); });
+          qa(".re-th span").forEach(function (s, i) { s.textContent = cl[i] || ""; });
+          var items = list(S("rows"), L.rows); if (!items.length) items = ["整理参考资料"];
+          var lst = q(".re-list"), slots = qa(".re-slot");
+          while (slots.length > items.length) lst.removeChild(slots.pop());
+          while (slots.length < items.length) { var cn = slots[0].cloneNode(true); lst.appendChild(cn); slots.push(cn); }
+          // layout-check exemptions: a flying row passes over the rows and table head already on the page, on purpose
+          var allow = function (el) { el.setAttribute("data-layout-allow-occlusion", ""); el.setAttribute("data-layout-allow-overlap", ""); };
+          qa(".re-th span, .re-tab").forEach(allow);
+          slots.forEach(function (s, i) {
+            q(".re-no", s).textContent = i + 1; q(".re-ti", s).textContent = items[i];
+            put(q(".re-su", s), S("sub")); put(q(".re-me", s), S("meta")); put(q(".re-pill", s), S("status"));
+            qa(".re-no, .re-ti, .re-su, .re-me, .re-pill", s).forEach(allow);
+          });
+          // ---- fit the text slots, then freeze each slot at its row's height ----
+          kFit(h1, { lines: L.titleLines, min: L.titleMin }); kFit(ds, { lines: L.descLines, min: 40 });
+          slots.forEach(function (s) {
+            kFit(q(".re-ti", s), { lines: 1, min: 40 }); kFit(q(".re-su", s), { lines: 1, min: 40 });
+            s.style.height = q(".re-face", s).offsetHeight + "px";
+          });
+          // ---- the camera, measured from the page: the page is bigger than the frame by design ----
+          var last = slots[slots.length - 1], hdTop = q(".re-hd").offsetTop;
+          var rb = lst.offsetTop + last.offsetTop + last.offsetHeight;
+          var z1 = L.z1, z0 = L.z0, cyF;
+          if (P) {
+            z1 = Math.min(L.z1, (L.band * FH) / (rb - hdTop)); z0 = Math.min(L.z0, z1);
+            cyF = hdTop + (FH / 2 - L.hdY * FH) / z1;
+          } else {
+            cyF = rb - (L.rbY * FH - FH / 2) / z1;
+          }
+          var cam = kPageCam(view, page, [
+            { t: 0, cx: FW / 2, cy: cyF - L.pan, zoom: z0 },
+            { t: CFG.cam, cx: FW / 2, cy: cyF, zoom: z1 }
+          ]);
+          var grain = kGrain(q(".re-grain"), { opacity: 0.035 });
+          // ---- one set of parts per row; the speed blur wraps each row's face ----
+          var parts = slots.map(function (s) {
+            var fly = q(".re-fly", s); fly.className += " re-ab";
+            return { fly: fly, face: q(".re-face", s), dash: q(".re-dash", s), ct: q(".re-ct", s), seam: q(".re-seam", s), sb: kSpeedBlur(fly, "re", { amount: 0.22, max: 3.2 }) };
+          });
+          var sc = dark ? 2.6 : 1;
+          var C = function (a) { return "color-mix(in srgb, var(--re-shade) " + (Math.min(1, a * sc) * 100).toFixed(1) + "%, transparent)"; };
+          var X = function (n) { return n.toFixed(1) + "px"; };
+          var FLYE = "cubic-bezier(0.5,0,0.8,0.75)"; // downward flight keeps its speed into the slot
+          var clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" };
+          var airAt = function (t, cue) { return 1 - MT.interpolate(t, [cue, cue + CFG.fly], [0, 1], { easing: FLYE, extrapolateLeft: "clamp", extrapolateRight: "clamp" }); };
+
+          function render(t) {
+            cam(t); grain(t);
+            parts.forEach(function (r, i) {
+              var cue = CFG.cues[i], land = cue + CFG.fly, tail = land + CFG.press;
+              var inAir = t >= cue && t < tail;
+              if (inAir) {
+                var air = airAt(t, cue), p = 1 - air, f = r.fly.style;
+                var sc2 = t < land ? 1.06 - 0.065 * p : MT.interpolate(t, [land, tail], [0.995, 1], { easing: "power1.out", extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+                f.opacity = MT.interpolate(t, [cue, cue + CFG.appear], [0, 1], clamp);
+                f.transform = "perspective(900px) translateY(" + (-120 * air).toFixed(2) + "px) rotateX(" + (16 * air).toFixed(3) + "deg) scale(" + sc2.toFixed(4) + ")";
+                r.face.style.boxShadow =
+                  "inset 0 1px 0 color-mix(in srgb, white " + ((dark ? 30 : 90) * air).toFixed(1) + "%, transparent), 0 0 0 1px " + C(0.07 * air) +
+                  ", 0 " + X(34 * air) + " " + X(64 * air) + " -" + X(10 * air) + " " + C(0.24 * air) + ", 0 " + X(6 * air) + " " + X(14 * air) + " " + C(0.1 * air);
+                var vy = t < land ? 120 * (airAt(t - 1 / 60, cue) - airAt(t + 1 / 60, cue)) * 30 : 0;
+                r.sb(0, vy);
+                var near = MT.interpolate(air, [0, 0.5], [1, 0], clamp);
+                var cop = t < land ? near * 0.5 : MT.interpolate(t, [land, land + 0.1], [0.5, 0], clamp);
+                r.ct.style.opacity = 1;
+                r.ct.style.boxShadow = "0 " + X(2 + 6 * air) + " " + X(6 + 18 * air) + " " + C(0.22 * cop);
+              } else {
+                r.fly.style.opacity = t < cue ? 0 : "";
+                r.fly.style.transform = "";
+                r.face.style.boxShadow = "";
+                r.sb(0, 0);
+                r.ct.style.opacity = 0;
+              }
+              // the empty slot box, brightening as the row comes, gone 2 f after it lands
+              var hint = MT.interpolate(t, [cue - CFG.hintLead, cue - CFG.hintLead + CFG.hintDur], [0.55, 1], clamp);
+              r.dash.style.opacity = (MT.interpolate(t, [land, land + CFG.dashFade], [1, 0], clamp) * hint).toFixed(3);
+              // embed seam: accent line on the bottom edge spreads from the centre, then fades
+              if (t >= land && t < land + CFG.seamFade) {
+                r.seam.style.opacity = MT.interpolate(t, [land, land + 0.067, land + CFG.seamFade], [1, 1, 0], clamp).toFixed(3);
+                r.seam.style.transform = "scaleX(" + MT.interpolate(t, [land, land + CFG.seamSpread], [0, 1], { easing: "power3.out", extrapolateLeft: "clamp", extrapolateRight: "clamp" }).toFixed(4) + ")";
+              } else { r.seam.style.opacity = 0; r.seam.style.transform = "scaleX(0)"; }
+            });
+          }
+          var tl2 = MT.scene(CFG.dur, render);
+          window.__timelines["row-embed"] = tl2;
+        })();
+      </script>
+    </div>
+    </template>
+  </body>
+</html>

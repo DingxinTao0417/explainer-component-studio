@@ -1,0 +1,473 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"大字，镜头从它最粗的一笔穿过去（1–4 个汉字或 2–6 个字母）","default":"入门"},
+    {"id":"kicker","type":"string","label":"眉题（可空）","default":"第 1 章"},
+    {"id":"sub","type":"string","label":"副题（| 处换行，可空）","default":"三分钟看懂一个概念"},
+    {"id":"page","type":"string","label":"新页标题（| 处换行，可空）","default":"先跑通，|再优化"},
+    {"id":"to","type":"string","label":"新页换成一张图（从项目根目录写起；留空画新页）","default":""},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（字洞里和穿过去以后是宿主画面）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>letterform-zoom · 字腔穿越</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+  <template id="letterform-zoom-template">
+  <!-- Ported from video-shotcraft demos/transition/transition-travel/LetterformZoom.tsx
+       (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+       Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+       Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+       neutral --k-* palette: the plate follows the skin (a lit white card on light skins) instead of fixed ember
+       black, the page is a lit accent gradient; system fonts, generic copy; mark, nav, product page and the landing
+       count / bar fill / Done pop removed (heading + text-free card, or an image); door measured from the glyphs
+       instead of the hand-set I stem (973,515) and drawn to the centre during the push; end scale set per title so
+       the stroke fills at u 0.8467 as upstream (18.4x of 30x), plate fade at 0.76-1.41x that; the inline masks
+       scale, not the boxes, so glow, rim and blur are frame px; glow taken from the blurred holes; a cast shadow
+       into the holes added; eyebrow and subtitle fade at 1.5-2.3x; page grows about the title line; portrait, `to`
+       and backdrop off added. Kept: creep 1.03, 2% dip, 52-frame push on bezier(.6,0,.85,.5), four ghosts 3.2-0.8
+       frames at .12-.30, blur to 20 px, 18 px focus pull, +12% flash, page 1.08, 28 px drift. -->
+  <style>
+  @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+  @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+  @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+  @font-face { font-family: "lz-heavy"; font-weight: 700 900; src: local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"), local("PingFangSC-Semibold"), local("NotoSansSC-Black"); }
+  #root {
+    --k-bg: var(--mc-bg, #ffffff);
+    --k-panel: var(--mc-panel, #f4f5f7);
+    --k-ink: var(--mc-ink, #15171c);
+    --k-muted: var(--mc-muted, #6b7280);
+    --k-accent: var(--mc-accent, #e8590c);
+    --k-accent-2: var(--mc-accent-2, #2563eb);
+    --k-on-accent: var(--mc-on-accent, #ffffff);
+    --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    font-family: var(--k-font);
+    color: var(--k-ink);
+  }
+  /* plate = the title card, follows the skin; page = the lit page behind the letter holes, lit in every skin */
+  .lz {
+    position: absolute; inset: 0; container-type: size; overflow: hidden; text-wrap: balance;
+    --lz-sh: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+    --lz-a: var(--k-bg); --lz-b: color-mix(in srgb, var(--k-bg), var(--k-ink) 4%); --lz-c: color-mix(in srgb, var(--k-bg), var(--k-ink) 8%);
+    --lz-key: color-mix(in srgb, var(--k-bg) 90%, transparent); --vs: 0.16; --lz-go: 0.35; --lz-so: 0.28;
+    --lz-rim: color-mix(in srgb, var(--k-ink) 24%, transparent);
+    --lz-p0: color-mix(in oklch, var(--k-accent) 55%, white); --lz-p1: color-mix(in oklch, var(--k-accent) 82%, white);
+    --lz-p3: color-mix(in oklch, var(--k-accent) 78%, black); --lz-pi: color-mix(in oklch, var(--k-accent) 22%, black);
+    --lz-sun: color-mix(in srgb, var(--k-accent) 25%, white);
+  }
+  .lz[data-tone="dark"] {
+    --lz-sh: color-mix(in srgb, var(--k-bg) 30%, black);
+    --lz-a: color-mix(in srgb, var(--k-bg), white 6%); --lz-b: var(--k-bg); --lz-c: color-mix(in srgb, var(--k-bg), black 45%);
+    --lz-key: color-mix(in srgb, var(--k-accent) 14%, transparent); --vs: 0.55; --lz-go: 0.55; --lz-so: 0.5;
+    --lz-rim: color-mix(in srgb, var(--k-accent) 15%, color-mix(in srgb, white 35%, transparent));
+  }
+  .lz-pg, .lz-pb, .lz-ls, .lz-pc, .lz-plate, .lz-gh, .lz-plw, .lz-sf, .lz-tx { position: absolute; inset: 0; }
+  /* the page: warm gradient, a sun behind the card, a deep corner; it ends 8% pushed in (the static page is the last frame) */
+  .lz-pg { transform: scale(1.08); transform-origin: 50% 47.5%; }
+  .lz-pb {
+    background:
+      radial-gradient(circle 27cqw at var(--lz-sx, 71%) var(--lz-sy, 50%), color-mix(in srgb, var(--lz-sun) 75%, transparent), color-mix(in srgb, var(--lz-sun) 25%, transparent) 45%, transparent 72%),
+      radial-gradient(ellipse 70% 60% at 20% 100%, color-mix(in srgb, var(--lz-p3) 35%, transparent), transparent 70%),
+      linear-gradient(128deg, var(--lz-p0), var(--lz-p1) 34%, var(--k-accent) 62%, var(--lz-p3));
+  }
+  /* while the title holds, the holes show light only: a cream glow where the card is, a dark smear where the heading is */
+  .lz-ls {
+    opacity: 0;
+    background:
+      radial-gradient(ellipse 19.8% 31.5% at 70.5% 50%, color-mix(in srgb, white 55%, transparent), transparent),
+      radial-gradient(ellipse 27% 24% at 25% 47%, color-mix(in srgb, var(--lz-p3) 22%, transparent), transparent);
+  }
+  .lz-pbox { position: absolute; left: 13.5%; right: 13.5%; top: 0; bottom: 0; display: flex; align-items: center; gap: 4%; }
+  .lz-hd { flex: 1; min-width: 0; color: var(--lz-pi); }
+  .lz-pk { font-size: 40px; font-weight: 700; letter-spacing: 0.2em; line-height: 1.3; }
+  .lz-ph { margin-top: 30px; font-size: 120px; font-weight: 800; line-height: 1.2; }
+  .lz-cd {
+    flex: none; width: 32cqw; aspect-ratio: 16 / 15; border-radius: 32px;
+    background: linear-gradient(color-mix(in srgb, white 94%, var(--k-accent)), color-mix(in srgb, white 86%, var(--k-accent)));
+    border: 1px solid color-mix(in srgb, white 70%, transparent);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, white 90%, transparent), 0 6px 14px color-mix(in srgb, var(--lz-p3) 18%, transparent), 0 50px 100px -24px color-mix(in srgb, var(--lz-p3) 45%, transparent);
+  }
+  .lz-cd svg { display: block; width: 100%; height: 100%; }
+  .lz-img { position: absolute; left: -3%; top: -3%; width: 106%; height: 106%; object-fit: cover; display: none; }
+  .lz[data-bare] .lz-pg { display: none; }
+  /* the plate: lit surface (key light at 50% 30%, vignette), masked by the title from the script; hidden until then */
+  .lz-plate { opacity: 0; }
+  .lz-sf {
+    background:
+      radial-gradient(ellipse 72% 72% at 50% 46%, transparent 45%, color-mix(in srgb, var(--lz-sh) calc(var(--vs) * 32%), transparent) 75.25%, color-mix(in srgb, var(--lz-sh) calc(var(--vs) * 100%), transparent)),
+      radial-gradient(ellipse 100% 100% at 50% 46%, transparent 60%, color-mix(in srgb, var(--lz-sh) calc(var(--vs) * 60%), transparent)),
+      radial-gradient(ellipse 58% 62% at 50% 30%, var(--lz-key), transparent 70%),
+      linear-gradient(var(--lz-a), var(--lz-b) 55%, var(--lz-c));
+  }
+  .lz-k, .lz-s { position: absolute; left: 11%; right: 11%; top: 0; text-align: center; line-height: 1.3; }
+  .lz-k { color: var(--k-accent); font-size: 40px; font-weight: 700; letter-spacing: 0.42em; padding-left: 0.42em; }
+  .lz-s { color: var(--k-muted); font-size: 44px; font-weight: 500; }
+  /* ==== kit:grain@1 ==== */
+  .lz-grain { position: absolute; inset: 0; pointer-events: none; }
+  /* ==== end kit:grain ==== */
+  /* ==== kit:text@2 ==== */
+  .lz-u { display: inline-block; white-space: pre; }
+  .lz-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+  /* ==== end kit:text ==== */
+  /* ==== kit:fit@1 ==== */
+  .lz-row { display: block; white-space: nowrap; }
+  /* ==== end kit:fit ==== */
+  @container (orientation: portrait) {
+    .lz-pg { transform-origin: 50% 40%; }
+    .lz-pb { --lz-sx: 62%; --lz-sy: 52%; }
+    .lz-pbox { left: 14.8%; right: 14.8%; top: 15%; bottom: 35%; flex-direction: column; align-items: stretch; justify-content: center; gap: 50px; }
+    .lz-hd { flex: none; text-align: center; }
+    .lz-ph { font-size: 96px; }
+    .lz-cd { width: 55.5cqw; align-self: center; }
+    .lz-ls {
+      background:
+        radial-gradient(ellipse 30% 16% at 50% 49%, color-mix(in srgb, white 55%, transparent), transparent),
+        radial-gradient(ellipse 40% 8% at 50% 26%, color-mix(in srgb, var(--lz-p3) 22%, transparent), transparent);
+    }
+  }
+  </style>
+
+  <div id="root" data-composition-id="letterform-zoom">
+    <div class="lz">
+      <div class="lz-pg" data-layout-allow-overflow>
+        <div class="lz-pb"></div>
+        <div class="lz-grain lz-pgn"></div>
+        <div class="lz-ls"></div>
+        <div class="lz-pc">
+          <div class="lz-pbox">
+            <div class="lz-hd">
+              <div class="lz-pk" data-layout-allow-occlusion>第 1 章</div>
+              <div class="lz-ph"><span class="lz-u" style="display:block" data-layout-allow-occlusion>先跑通，</span><span class="lz-u" style="display:block" data-layout-allow-occlusion>再优化</span></div>
+            </div>
+            <div class="lz-cd">
+              <svg viewBox="0 0 640 600" aria-hidden="true">
+                <g fill="none" stroke-linecap="round" style="stroke:var(--lz-pi)">
+                  <path d="M59 57H257" stroke-width="22" stroke-opacity=".4"/>
+                  <path d="M324 196H496" stroke-width="24" stroke-opacity=".55"/>
+                  <path d="M59 277H267M59 355H317M59 433H247M59 511H287" stroke-width="22" stroke-opacity=".8"/>
+                  <path d="M531 277H581M531 355H581M531 433H581M531 511H581" stroke-width="22" stroke-opacity=".45"/>
+                  <path d="M52 310H588M52 388H588M52 466H588M52 544H588" stroke-width="8" stroke-opacity=".08"/>
+                  <path d="M52 310H418M52 388H554M52 466H486M52 544H401" stroke-width="8" style="stroke:var(--k-accent)"/>
+                </g>
+                <g style="fill:var(--lz-pi)"><rect x="448" y="36" width="144" height="44" rx="22"/><rect x="48" y="118" width="168" height="104" rx="18"/><rect x="232" y="170" width="64" height="44" rx="12" fill-opacity=".3"/></g>
+                <circle cx="476" cy="58" r="7" style="fill:var(--k-accent)"/>
+                <path d="M502 58H562" stroke-width="16" stroke-linecap="round" style="stroke:var(--lz-sun)"/>
+              </svg>
+            </div>
+          </div>
+          <img class="lz-img" alt="" />
+        </div>
+      </div>
+      <div class="lz-plate" data-layout-allow-overflow>
+        <div class="lz-gh"><i class="lz-sf"></i></div><div class="lz-gh"><i class="lz-sf"></i></div><div class="lz-gh"><i class="lz-sf"></i></div><div class="lz-gh"><i class="lz-sf"></i></div>
+        <div class="lz-plw">
+          <div class="lz-sf lz-pl"></div>
+          <div class="lz-grain lz-pn"></div>
+          <div class="lz-tx">
+            <div class="lz-k">第 1 章</div>
+            <div class="lz-s">三分钟看懂一个概念</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+  // seconds = upstream frames / 30 (150 frames); lengths in short-side units (short side = 1000)
+  var CFG = {
+    dur: 5, intro: 0.067, introDur: 0.533,          // eyebrow tracks in, subtitle rises (frames 2-18)
+    creepDur: 0.867, creep: 0.03,                    // plate creeps 1 -> 1.03 (0-26)
+    inhale: 0.867, inhaleDur: 0.267, dip: 0.02,      // 2% pull-back (26-34), released over 34-42
+    push: 1.133, pushDur: 1.733, cover: 0.8467,      // 34-86; the stroke fills the frame at u = 0.8467 (upstream 18.4x of 30x)
+    reveal: 2.133, revealDur: 0.867, defocus: 16.7,  // page content 18 px -> sharp (64-90)
+    flash: 2.533, flashDur: 0.267, flashOff: 2.867, flashOffDur: 0.467, expo: 0.12, // +12% exposure (76-84, back by 100)
+    land: 2.867, landDur: 1, page: 0.08,             // page 1 -> 1.08: 0.7 u during the push, the rest quint-out (86-116)
+    driftDur: 3.333, drift: 25.9, blur: 18.5, maxZ: 160 // page drifts 28 px left (0-100); trail blur up to 20 px
+  };
+  var GH = [[3.2, 0.12], [2.4, 0.16], [1.6, 0.22], [0.8, 0.3]]; // zoom trail: plates 3.2-0.8 frames behind, alpha
+  // title box (frame share), ink centre line, eyebrow / subtitle gaps (frame height share)
+  var LAND = { tw: 0.78, th: 0.37, ty: 0.475, kg: 0.075, sg: 0.072 };
+  var PORT = { tw: 0.8, th: 0.22, ty: 0.4, kg: 0.034, sg: 0.034 };
+  var v = { title: "入门", kicker: "第 1 章", sub: "三分钟看懂一个概念", page: "先跑通，|再优化", to: "", backdrop: "on" };
+  try {
+    var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k]; // "" clears kicker / sub / page
+  } catch (e) {}
+
+  var root = document.querySelector(".lz");
+  var q = function (s) { return root.querySelector(s); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+    // not laid out yet: the host clip's declared size, then the window
+    var hc = root.closest("[data-width][data-height]");
+    FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+    FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND, U = Math.min(FW, FH) / 1000;
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+  var N = (window.__lzN = (window.__lzN || 0) + 1); // svg ids per mount
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== end kit:tone ====
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+      "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+      "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+      "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+      "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+}
+// ==== end kit:grain ====
+// ==== kit:text@2 (kWords, kSplit; kReveal unused, not pasted) ====
+var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+function kWords(s, key) {
+  s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+  var cut = function (x) {
+    if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+    return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+  };
+  var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+  var pre = "";
+  bits.forEach(function (x) {
+    var t = x.trim(), last = out[out.length - 1];
+    if (last && /^ /.test(x)) last.sp = true;
+    if (!t) return;
+    if (!/[\p{L}\p{N}]/u.test(t)) {
+      if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+      else { last.t += t; last.sp = / $/.test(x); }
+      return;
+    }
+    out.push({ t: pre + t, sp: / $/.test(x) });
+    pre = "";
+  });
+  if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+  if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+  if (out.length) out[out.length - 1].sp = false;
+  return out;
+}
+function kSplit(el, by, rise, text) {
+  var s = text != null ? String(text) : el.textContent, units = [];
+  var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+  el.textContent = "";
+  parts.forEach(function (p) {
+    var u = document.createElement("span"), box = u;
+    u.className = "lz-u"; u.textContent = p.t;
+    if (by === "line") u.style.display = "block";
+    if (!p.t.trim()) { el.appendChild(u); return; }
+    if (rise) { box = document.createElement("span"); box.className = "lz-cut"; box.style.display = u.style.display; box.appendChild(u); }
+    el.appendChild(box);
+    if (p.sp) el.appendChild(document.createTextNode(" "));
+    units.push(u);
+  });
+  return units;
+}
+// ==== end kit:text ====
+// ==== kit:fit@1 (kFit, kLines; kRows unused, not pasted) ====
+function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+      var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+      if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+      row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+
+  var dark = kTone(root) === "dark", C = CFG, KT = 0.8, E = Math.round(64 * U), i, j, n;
+  if (String(v.backdrop) === "off") root.setAttribute("data-bare", "");
+  var str = function (x) { return String(x == null ? "" : x).trim(); };
+  var esc = function (s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;"); };
+
+  // text slots, one line unit per "|" (keeps every typed space); each shrinks to its box, then wraps
+  var kick = q(".lz-k"), sub = q(".lz-s"), pk = q(".lz-pk"), ph = q(".lz-ph");
+  [[kick, v.kicker, 40], [pk, v.kicker, 40, 1], [sub, v.sub, 40], [ph, v.page, P ? 72 : 56, 1]].forEach(function (p) {
+    var s = str(p[1]);
+    kSplit(p[0], "line", false, s).forEach(function (u) { if (p[3]) u.setAttribute("data-layout-allow-occlusion", ""); }); // page text sits under the holed plate by design
+    if (p[0] === kick) kick.style.letterSpacing = "0.8em"; // the eyebrow is fitted at its widest, before the tracking closes
+    if (kFit(p[0], { lines: s.split("|").length, min: p[2] }).lines > 1 && p[0] === kick) KT = 0.42; // too long to track in: starts closed
+    if (!s) p[0].style.display = "none";
+  });
+  if (str(v.to)) { var img = q(".lz-img"); img.setAttribute("src", str(v.to)); img.style.display = "block"; q(".lz-pbox").style.display = "none"; }
+
+  // the title, measured in a blank iframe (installed fonts at once: the @font-face aliases load late here)
+  var WORD = str(v.title).replace(/\|/g, "").replace(/\s+/g, " ") || "入门";
+  var cs = getComputedStyle(root), FAM = cs.getPropertyValue("--k-font").trim() || "sans-serif";
+  var LS = kCJK.test(WORD) ? 0.02 : -0.02; // em; upstream -0.02em on Latin, CJK never below 0
+  var fr = document.createElement("iframe");
+  fr.style.cssText = "position:absolute;width:0;height:0;border:0";
+  root.appendChild(fr);
+  var M = 640, cv = fr.contentDocument.createElement("canvas");
+  cv.width = cv.height = M;
+  var cx = cv.getContext("2d");
+  var font = function (px) { cx.font = "900 " + px.toFixed(2) + "px " + FAM; cx.letterSpacing = (LS * px).toFixed(2) + "px"; return cx.measureText(WORD); };
+  var m = font(100);
+  var F = 100 * Math.min((L.tw * FW) / (m.actualBoundingBoxLeft + m.actualBoundingBoxRight), (L.th * FH) / (m.actualBoundingBoxAscent + m.actualBoundingBoxDescent));
+  m = font(F);
+  var a = -m.actualBoundingBoxLeft, b = m.actualBoundingBoxRight, X = FW / 2 - (a + b) / 2, Y = L.ty * FH + (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2;
+  var TOP = Y - m.actualBoundingBoxAscent, BOT = Y + m.actualBoundingBoxDescent;
+  // the door: on a frame-scaled grid the chessboard distance to the nearest empty cell tells how far the frame can
+  // zoom into a point and still be all hole; take the deepest point, pulled a little toward the title's centre
+  cx.setTransform(M / FW, 0, 0, M / FH, 0, 0);
+  cx.fillStyle = "#fff";
+  cx.fillText(WORD, X, Y);
+  var x0 = Math.max(0, Math.floor(((X + a) * M) / FW) - 2), y0 = Math.max(0, Math.floor((TOP * M) / FH) - 2);
+  var w = Math.min(M, Math.ceil(((X + b) * M) / FW) + 2) - x0, h = Math.min(M, Math.ceil((BOT * M) / FH) + 2) - y0;
+  var px = cx.getImageData(x0, y0, w, h).data, D = new Float32Array(w * h);
+  root.removeChild(fr);
+  var at = function (x, y) { return x < 0 || y < 0 || x >= w || y >= h ? 0 : D[y * w + x]; };
+  for (i = 0; i < w * h; i++) D[i] = px[i * 4 + 3] > 127 ? 1e9 : 0;
+  for (j = 0; j < h; j++) for (i = 0; i < w; i++) if ((n = j * w + i), D[n]) D[n] = Math.min(D[n], at(i - 1, j) + 1, at(i - 1, j - 1) + 1, at(i, j - 1) + 1, at(i + 1, j - 1) + 1);
+  for (j = h - 1; j >= 0; j--) for (i = w - 1; i >= 0; i--) if ((n = j * w + i), D[n]) D[n] = Math.min(D[n], at(i + 1, j) + 1, at(i + 1, j + 1) + 1, at(i, j + 1) + 1, at(i - 1, j + 1) + 1);
+  var best = 1, top = -1e9, bi = w / 2, bj = h / 2;
+  for (j = 0; j < h; j++) for (i = 0; i < w; i++) {
+    var d = D[j * w + i], sc = Math.log(d) - 4 * Math.hypot((x0 + i) / M - 0.5, (y0 + j) / M - L.ty); // 10% off costs 1.5x depth
+    if (d && sc > top) { top = sc; best = d; bi = i; bj = j; }
+  }
+  var OX = ((x0 + bi + 0.5) * FW) / M, OY = ((y0 + bj + 0.5) * FH) / M;
+  // SF: plate scale at which the stroke fills the frame; ZM: end scale, chosen so that happens at u = cover as upstream
+  var ZM = Math.min(C.maxZ, Math.pow(M / (2 * best - 1) / (1 + C.creep), 1 / C.cover)), SF = (1 + C.creep) * Math.pow(ZM, C.cover);
+
+  // masks: the title cut out of the plate (main + four trail copies). Filter, all in frame pixels (the boxes never
+  // scale): the plate's shadow into the holes, accent light spilling onto the plate, the lit cut edge
+  var HV = cs.getPropertyValue("--mc-font").trim() ? "" : "lz-heavy, ";
+  var TX = '<g><text x="' + X.toFixed(2) + '" y="' + Y.toFixed(2) + '" fill="#000" style="font:900 ' + F.toFixed(2) + "px " + HV + esc(FAM) + ";letter-spacing:" + (LS * F).toFixed(2) + 'px;white-space:pre">' + esc(WORD) + "</text></g>";
+  var fl = function (c, o, r) { return '<feFlood style="flood-color:' + c + ";flood-opacity:" + o + '" result="' + r + '"/>'; };
+  var defs = "";
+  var BW = FW + 2 * E, BH = FH + 2 * E; // plate boxes reach E px past the frame: blur never thins the frame edges
+  for (k = 0; k < 5; k++) defs += '<mask id="lzm' + N + "-" + k + '" maskUnits="userSpaceOnUse" x="0" y="0" width="' + BW + '" height="' + BH + '"><rect width="' + BW + '" height="' + BH + '" fill="#fff"/>' + TX + "</mask>";
+  // region in user units: a bounding-box region grows with the zoomed text and rims the frame edges
+  defs += '<filter id="lzf' + N + '" filterUnits="userSpaceOnUse" x="0" y="0" width="' + BW + '" height="' + BH + '" color-interpolation-filters="sRGB">' +
+    '<feFlood result="f"/><feComposite in="f" in2="SourceAlpha" operator="out" result="h"/>' +
+    '<feOffset in="SourceAlpha" dy="' + (9.3 * U).toFixed(1) + '"/><feGaussianBlur stdDeviation="' + (7.4 * U).toFixed(1) + '"/>' +
+    '<feComposite in2="SourceAlpha" operator="out" result="os"/>' + fl("var(--lz-sh)", "var(--lz-so)", "sc") + '<feComposite in="sc" in2="os" operator="in" result="sh"/>' +
+    '<feGaussianBlur in="h" stdDeviation="' + (22 * U).toFixed(1) + '" result="hb"/>' + fl("var(--k-accent)", "var(--lz-go)", "gc") +
+    '<feComposite in="gc" in2="hb" operator="in"/><feComposite in2="SourceAlpha" operator="in" result="gl"/>' +
+    '<feMorphology in="h" operator="dilate" radius="' + (1.4 * U).toFixed(2) + '" result="hd"/>' + fl("var(--lz-rim)", 1, "rc") +
+    '<feComposite in="rc" in2="hd" operator="in"/><feComposite in2="SourceAlpha" operator="in" result="rm"/>' +
+    '<feMerge><feMergeNode in="sh"/><feMergeNode in="SourceGraphic"/><feMergeNode in="gl"/><feMergeNode in="rm"/></feMerge></filter>';
+  root.insertAdjacentHTML("beforeend", '<svg width="0" height="0" style="position:absolute" aria-hidden="true">' + defs + "</svg>");
+  var Z = [].slice.call(root.querySelectorAll("mask g")), MK = function (k) { return "url(#lzm" + N + "-" + k + ")"; };
+  var plate = q(".lz-plate"), plw = q(".lz-plw"), tx = q(".lz-tx"), gh = [].slice.call(root.querySelectorAll(".lz-gh"));
+  q(".lz-pl").style.maskImage = q(".lz-pn").style.maskImage = MK(0);
+  gh.forEach(function (g, k) { g.firstChild.style.maskImage = MK(k + 1); });
+  gh.concat(plw).forEach(function (g) { g.style.inset = -E + "px"; });
+  tx.style.inset = E + "px";
+  plate.style.opacity = 1;
+  kick.style.letterSpacing = KT + "em"; // measured at the spacing it starts with
+  kick.style.top = (TOP - L.kg * FH - kick.offsetHeight).toFixed(1) + "px";
+  sub.style.top = (BOT + L.sg * FH).toFixed(1) + "px";
+  tx.style.transformOrigin = OX.toFixed(1) + "px " + OY.toFixed(1) + "px";
+  var pg = q(".lz-pg"), pc = q(".lz-pc"), ls = q(".lz-ls");
+  var g1 = kGrain(q(".lz-pgn"), { opacity: 0.05, blend: "overlay" }), g2 = kGrain(q(".lz-pn"), { opacity: dark ? 0.08 : 0.05 });
+
+  var PUSH = MT.bezier(0.6, 0, 0.85, 0.5); // slow start, steep finish: time to see there is something in the holes
+  var uAt = function (t) { return MT.ramp(t, C.push, C.pushDur, PUSH); };
+  var sAt = function (t) {
+    return (1 + C.creep * MT.ramp(t, 0, C.creepDur, "smooth")) * (1 - C.dip * MT.ramp(t, C.inhale, C.inhaleDur, "smooth") * (1 - MT.ramp(t, C.push, C.inhaleDur, "out"))) * Math.pow(ZM, uAt(t));
+  };
+  // zoom about the door; the door is drawn to the frame centre as the plate grows, so the stroke fills it evenly
+  var place = function (g, s) {
+    var e = MT.clamp((s - 1) / (SF - 1), 0, 1), x = OX + (FW / 2 - OX) * e, y = OY + (FH / 2 - OY) * e;
+    g.setAttribute("transform", "translate(" + (x - s * OX + E).toFixed(2) + " " + (y - s * OY + E).toFixed(2) + ") scale(" + s.toFixed(5) + ")");
+    return [x - OX, y - OY];
+  };
+
+  function render(t) {
+    var u = uAt(t), s = sAt(t), op = u < 1 ? 1 - MT.clamp((s - 0.761 * SF) / (0.652 * SF), 0, 1) : 0; // 14x -> 26x upstream
+    var bl = C.blur * U * MT.ramp(u, 0.35, 0.65, "swift"), gk = MT.ramp(u, 0.5, 0.2, "out") * op, o = place(Z[0], s);
+    plate.style.display = op > 0 ? "" : "none";
+    plate.style.opacity = op.toFixed(4);
+    plw.style.filter = "url(#lzf" + N + ")" + (bl > 0.05 ? " blur(" + bl.toFixed(2) + "px)" : "");
+    gh.forEach(function (g, k) {
+      g.style.display = gk > 0.01 ? "" : "none";
+      if (gk <= 0.01) return;
+      place(Z[k + 1], sAt(t - GH[k][0] / 30));
+      g.style.opacity = (GH[k][1] * gk).toFixed(4);
+      g.style.filter = bl > 0.05 ? "blur(" + bl.toFixed(2) + "px)" : "";
+    });
+    // eyebrow tracks in, subtitle rises; both ride the plate and are gone by 2.3x
+    var it = MT.ramp(t, C.intro, C.introDur, "snappy"), tf = 1 - MT.clamp((s - 1.5) / 0.8, 0, 1);
+    tx.style.display = tf > 0 ? "" : "none";
+    tx.style.transform = "translate(" + o[0].toFixed(2) + "px," + o[1].toFixed(2) + "px) scale(" + s.toFixed(5) + ")";
+    kick.style.letterSpacing = kick.style.paddingLeft = MT.mix(KT, 0.42, it).toFixed(3) + "em";
+    kick.style.opacity = sub.style.opacity = (it * tf).toFixed(4);
+    sub.style.transform = "translateY(" + ((1 - it) * 22 * U).toFixed(2) + "px)";
+    // the page behind: parallax push 1 -> 1.08, a slow drift, the exposure flash at takeover, content focusing in
+    var ps = 1 + C.page * (t <= C.land ? 0.7 * u : 0.7 + 0.3 * MT.ramp(t, C.land, C.landDur, "out"));
+    pg.style.transform = "translateX(" + (C.drift * U * (1 - MT.ramp(t, 0, C.driftDur, "smooth"))).toFixed(2) + "px) scale(" + ps.toFixed(5) + ")";
+    var ex = 1 + C.expo * MT.ramp(t, C.flash, C.flashDur, "out") * (1 - MT.ramp(t, C.flashOff, C.flashOffDur, "smooth"));
+    pg.style.filter = ex > 1.002 ? "brightness(" + ex.toFixed(3) + ")" : "";
+    var rv = MT.ramp(t, C.reveal, C.revealDur, "out"), df = C.defocus * U * (1 - rv);
+    pc.style.opacity = rv.toFixed(4);
+    pc.style.filter = df > 0.05 ? "blur(" + df.toFixed(2) + "px)" : "";
+    ls.style.opacity = (1 - rv).toFixed(4);
+    g1(t); g2(t);
+  }
+
+  var tl = MT.scene(C.dur, render);
+  render(0);
+  window.__timelines["letterform-zoom"] = tl;
+  })();
+  </script>
+  </template>
+  </body>
+</html>

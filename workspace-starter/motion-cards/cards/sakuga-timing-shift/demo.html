@@ -1,0 +1,479 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"卡上大字","default":"3倍"},
+    {"id":"key","type":"string","label":"大字里用强调色的部分（留空不要）","default":"倍"},
+    {"id":"sub","type":"string","label":"卡上小字（留空不要）","default":"导出速度变快了"},
+    {"id":"name","type":"string","label":"卡头名称（留空不要）","default":"示例应用"},
+    {"id":"before","type":"string","label":"换拍前的角标","default":"一拍三"},
+    {"id":"after","type":"string","label":"换拍后的角标","default":"一拍一"},
+    {"id":"note1","type":"string","label":"换拍前的小注（留空不要）","default":"每秒 10 张"},
+    {"id":"note2","type":"string","label":"换拍后的小注（留空不要）","default":"每秒 30 张"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"作画纸"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>sakuga-timing-shift · 一拍三转一拍一</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="sakuga-timing-shift-template">
+<!-- Ported from video-shotcraft demos/rhythm/sakuga-timing-shift/SakugaTimingShift.tsx
+ (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+ Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+ Changes (2026-10): Remotion/React -> HyperFrames MT sub-composition, frames -> seconds; --k-* palette (paper =
+ --k-bg warmed 4% by the accent, pencil lines = accent-2), system fonts, generic copy as variables; upstream mark,
+ product name, "render 2048" and the "30fps / every frame, crafted" copy replaced by a neutral mark and
+ name / title / key / sub; "ON 3s" + "3コマ打ち" label -> before / after (CJK, 112 px) with an "ON 3s" serif tag;
+ "drawings per second" -> note1 / note2 at 40 px (was 36); exposure-sheet numbers (17 px) -> rings, "12 FLD" text
+ dropped, slate 26 -> 28 px, sheet caption 32 -> 40 px; Chinese line heights 1.15 (title was 0.94 / 0.9), label
+ top 120 -> 96 px, card padding 30 -> 26 / 28 px, card height grows with its text (min 360); dark skins invert the
+ label on the impact frames; backdrop off also hides slot, slate and sheet; portrait layout (walk +-330 px with the
+ card partly off-frame at both ends, card title 120 px, sheet in two rows of 15). On-threes walk, poses, hops,
+ switch frame, two impact frames, 64 focus wedges, dash, stretch, speed lines, overshoot, squash, label pop,
+ boil, playhead, 2% push-in, grain 0.06, vignette and all 150-frame timings kept. -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+/* ==== kit:fonts@2 ==== */
+@font-face { font-family: "Noto Serif SC"; src: local("Noto Serif SC"), local("Noto Serif CJK SC"), local("Source Han Serif SC"); }
+@font-face { font-family: "Songti SC"; src: local("Songti SC"), local("STSong"), local("SimSun"); }
+@font-face { font-family: "Consolas"; src: local("Consolas"); }
+@font-face { font-family: "sg-heavy"; font-weight: 700 900; src: local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"), local("PingFangSC-Semibold"), local("NotoSansSC-Black"); }
+#root {
+--k-bg: var(--mc-bg, #ffffff);
+--k-panel: var(--mc-panel, #f4f5f7);
+--k-ink: var(--mc-ink, #15171c);
+--k-muted: var(--mc-muted, #6b7280);
+--k-accent: var(--mc-accent, #e8590c);
+--k-accent-2: var(--mc-accent-2, #2563eb);
+--k-on-accent: var(--mc-on-accent, #ffffff);
+--k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+--k-serif: var(--mc-serif, "Noto Serif SC", "Songti SC", serif);
+--k-mono: var(--mc-mono, Consolas, monospace);
+position: absolute;
+inset: 0;
+overflow: hidden;
+font-family: var(--k-font);
+color: var(--k-ink);
+}
+/* ==== kit:derived@1 ==== */
+.sg { --sg-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); }
+.sg[data-tone="dark"] { --sg-shade: color-mix(in srgb, var(--k-bg) 30%, black); }
+/* ==== kit:vignette@1 ==== */
+.sg-vig {
+position: absolute; inset: 0; pointer-events: none;
+--vs: 0.16; --vin: 42%; --vx: 50%; --vy: 46%; --vc: var(--sg-shade);
+background:
+  radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+  radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.sg[data-tone="dark"] .sg-vig { --vs: 0.55; }
+/* ==== kit:grain@1 ==== */
+.sg-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== kit:text@2 ==== */
+.sg-u { display: inline-block; white-space: pre; }
+/* ==== kit:mark@1 ==== */
+.sg-mark { display: block; flex: none; }
+
+/* paper (accent-warmed --k-bg, darker towards the bottom), blue pencil (accent-2), hard cel shadow (ink) */
+.sg {
+position: absolute; inset: 0; container-type: size;
+--sg-hv: sg-heavy, var(--k-font);
+--sg-pp: color-mix(in srgb, var(--k-bg), var(--k-accent) 4%);
+--sg-dk: var(--k-ink);
+--sg-key: color-mix(in srgb, var(--k-bg) 90%, transparent);
+--sg-card: var(--k-bg);
+--sg-cel: color-mix(in srgb, var(--k-ink) 92%, transparent);
+--sg-pen: color-mix(in srgb, var(--k-accent-2) 22%, transparent);
+--sg-inv: color-mix(in srgb, var(--k-bg), var(--k-ink) 15%);
+}
+.sg[data-tone="dark"] { --sg-pp: var(--k-bg); --sg-dk: black; --sg-key: color-mix(in srgb, var(--k-ink) 6%, transparent); --sg-card: var(--k-panel); --sg-cel: color-mix(in srgb, var(--k-ink) 18%, var(--k-bg)); }
+.sg-cam, .sg-paper, .sg-bd, .sg-ink { position: absolute; inset: 0; }
+.sg-cam { transform-origin: 50% 46%; }
+.sg-bd { background: radial-gradient(ellipse 58% 62% at 45% 20%, var(--sg-key), transparent 70%), linear-gradient(180deg, var(--sg-pp), color-mix(in srgb, var(--sg-pp), var(--sg-dk) 4%) 52%, color-mix(in srgb, var(--sg-pp), var(--sg-dk) 8%)); }
+/* animation-paper field guide: outer frame with 17 ticks, dashed safe frame, centre cross; peg holes on top */
+.sg-fld { position: absolute; inset: 110px; border: 1.5px solid var(--sg-pen); border-radius: 4px; }
+.sg-fld::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 14px; background: repeating-linear-gradient(90deg, var(--sg-pen) 0 1.5px, transparent 1.5px 6.25%); }
+.sg-fi { position: absolute; inset: 80px 150px; border: 1.5px dashed var(--sg-pen); }
+.sg-x { position: absolute; left: calc(50% - 20px); top: calc(50% - 20px); width: 40px; height: 40px; background: linear-gradient(var(--sg-pen), var(--sg-pen)) 50% 50% / 100% 1.5px no-repeat, linear-gradient(var(--sg-pen), var(--sg-pen)) 50% 50% / 1.5px 100% no-repeat; }
+.sg-peg { position: absolute; top: 34px; width: 34px; height: 34px; border-radius: 17px; background: color-mix(in srgb, var(--sg-shade) 13%, transparent); box-shadow: inset 0 3px 5px color-mix(in srgb, var(--sg-shade) 22%, transparent); }
+/* impact frames: the page inverts to ink with focus lines in the paper colour */
+.sg-ink { background: var(--k-ink); opacity: 0; }
+.sg[data-hit] .sg-ink { opacity: 1; }
+.sg-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.sg-fl { fill: var(--k-bg); opacity: 0.9; }
+.sg-sl { fill: var(--k-ink); opacity: 0.85; }
+.sg-slot { position: absolute; left: calc(50% - 310px); top: 320px; width: 620px; height: 380px; box-sizing: border-box; border: 2px dashed color-mix(in srgb, var(--k-accent-2) 40%, transparent); border-radius: 36px; }
+.sg[data-hit] .sg-slot, .sg[data-hit] .sg-sheet { display: none; }
+/* the cel card: 5px ink line, flat fill, one hard shade; the rig pivots at the card's bottom centre */
+.sg-rig { position: absolute; left: calc(50% - 300px); top: 330px; width: 600px; transform-origin: 50% 100%; }
+.sg-sh { position: absolute; inset: 0; border-radius: 30px; background: var(--sg-cel); }
+.sg[data-hit] .sg-sh { background: var(--k-accent); }
+.sg-card { position: relative; box-sizing: border-box; min-height: 360px; padding: 26px 40px 28px; display: flex; flex-direction: column; justify-content: center; border: 5px solid var(--k-ink); border-radius: 30px; background: radial-gradient(180px 110px at calc(100% - 120px) calc(100% - 30px), color-mix(in srgb, var(--k-ink) 4.5%, transparent) 99%, transparent 100%), var(--sg-card); }
+.sg-hd { display: flex; align-items: center; gap: 14px; margin-bottom: auto; }
+.sg-name { flex: 1 1 auto; min-width: 0; font: 700 40px/1.2 var(--sg-hv); }
+.sg-title { font: 900 160px/1.15 var(--sg-hv); }
+.sg-key { color: var(--k-accent); font-size: 0.75em; }
+.sg-sub { margin-top: auto; font-size: 40px; font-weight: 600; line-height: 1.3; color: var(--k-muted); }
+/* corner label: big label + tag, a hand-drawn underline that boils, a note */
+.sg-lab { position: absolute; left: 150px; top: 96px; }
+.sg-pop { transform-origin: 0% 60%; }
+.sg-row { display: flex; align-items: baseline; gap: 26px; }
+.sg-big { max-width: 900px; font: 900 112px/1.15 var(--sg-hv); }
+.sg-tag { font: italic 600 40px/1.2 var(--k-serif); color: var(--k-accent); white-space: nowrap; }
+.sg-ul { display: block; width: 300px; height: 24px; margin-top: 2px; overflow: visible; fill: none; stroke: var(--k-ink); stroke-width: 8; stroke-linecap: round; }
+.sg-note { max-width: 900px; margin-top: 8px; font-size: 40px; line-height: 1.3; color: var(--k-muted); }
+.sg[data-ones] .sg-big { color: var(--k-accent); }
+.sg[data-ones] .sg-ul { stroke: var(--k-accent); }
+/* dark skins flash light on the impact frames: the accent (yellow) would vanish there, so the label inverts too */
+.sg[data-tone="dark"][data-hit] .sg-big, .sg[data-tone="dark"][data-hit] .sg-tag { color: var(--k-bg); }
+.sg[data-tone="dark"][data-hit] .sg-ul { stroke: var(--k-bg); }
+.sg[data-hit] .sg-note, .sg[data-hit] .sg-slate { color: var(--sg-inv); }
+.sg:not([data-ones]) .a, .sg[data-ones] .b { display: none; }
+/* slate: scene / cut and the drawing counter */
+.sg-slate { position: absolute; right: 150px; top: 120px; text-align: right; font: 600 28px/1.3 var(--k-mono); letter-spacing: 0.12em; color: var(--k-muted); }
+.sg-cnt { margin-top: 6px; }
+/* exposure sheet: 30 cells = 1 s. A ring is a drawing, a bar holds the previous one */
+.sg-sheet { position: absolute; left: calc(50% - 747px); top: 826px; width: 1494px; }
+.sg-cells { position: relative; display: grid; grid-template-columns: repeat(30, 44px); gap: 6px; }
+.sg-cells::before { content: ""; position: absolute; inset: -6px; border: 1.5px solid color-mix(in srgb, var(--k-ink) 25%, transparent); border-radius: 8px; }
+.sg-cells i { position: relative; height: 64px; border-radius: 4px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--k-ink) 10%, transparent); }
+.sg-cells i::before { content: ""; position: absolute; left: calc(50% - 15px); top: 17px; width: 30px; height: 30px; box-sizing: border-box; border-radius: 50%; border: 2.5px solid var(--sg-rc, var(--k-ink)); background: radial-gradient(circle, var(--sg-rc, var(--k-ink)) 4px, transparent 4.5px); }
+.sg-cells .n::before { left: calc(50% - 1.5px); top: 10px; width: 3px; height: 44px; border: 0; border-radius: 2px; background: color-mix(in srgb, var(--k-ink) 45%, transparent); }
+.sg[data-ones] .sg-cells { --sg-rc: var(--k-accent); }
+.sg-cells .h { background: color-mix(in srgb, var(--k-accent) 14%, transparent); box-shadow: inset 0 0 0 2.5px var(--k-accent); }
+.sg-cap { display: flex; justify-content: space-between; align-items: baseline; margin-top: 28px; font-size: 40px; line-height: 1.3; color: var(--k-muted); }
+.sg-sec { font: 600 28px/1.3 var(--k-mono); }
+/* portrait: label on the 12% line, card on the 40% anchor, the sheet as two rows of 15 */
+@container (orientation: portrait) {
+.sg-fi { inset: 150px 40px; }
+.sg-lab { left: 120px; top: 250px; }
+.sg-big { max-width: 600px; }
+.sg-note { max-width: 520px; }
+.sg-slate { right: 120px; top: 404px; }
+.sg-rig { top: 560px; }
+.sg-slot { top: 550px; }
+.sg-title { font-size: 120px; }
+.sg-sheet { left: calc(50% - 415.5px); top: 1030px; width: 831px; }
+.sg-cells { grid-template-columns: repeat(15, 47px); gap: 12px 9px; }
+}
+</style>
+
+<div id="root" data-composition-id="sakuga-timing-shift">
+<div class="sg" data-ones>
+<div class="sg-cam">
+<div class="sg-paper" data-layout-allow-overflow>
+<div class="sg-bd"></div>
+<div class="sg-fld"><div class="sg-fi"></div></div>
+<div class="sg-x"></div>
+<i class="sg-peg" style="left:calc(50% - 347px)"></i><i class="sg-peg" style="left:calc(50% - 50px);width:100px"></i><i class="sg-peg" style="left:calc(50% + 313px)"></i>
+<div class="sg-vig"></div>
+<div class="sg-grain"></div>
+</div>
+<div class="sg-ink"><svg class="sg-svg" preserveAspectRatio="none"><path class="sg-fl" data-layout-allow-overflow/></svg></div>
+<div class="sg-slot"></div>
+<svg class="sg-svg" preserveAspectRatio="none"><path class="sg-sl" data-layout-allow-overflow/></svg>
+<div class="sg-rig" data-layout-allow-overflow>
+<div class="sg-sh"></div>
+<div class="sg-card">
+<div class="sg-hd"><!-- kit:mark@1 --><svg class="sg-mark" width="44" height="44" viewBox="0 0 128 128" aria-hidden="true"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg><div class="sg-name">示例应用</div></div>
+<div class="sg-title"><span class="sg-u">3</span><span class="sg-u sg-key">倍</span></div>
+<div class="sg-sub">导出速度变快了</div>
+</div>
+</div>
+<div class="sg-lab">
+<div class="sg-pop">
+<div class="sg-row"><div class="sg-big b">一拍三</div><div class="sg-big a">一拍一</div><div class="sg-tag"><span class="b">ON 3s</span><span class="a">ON 1s</span></div></div>
+<svg class="sg-ul" viewBox="0 0 300 24"><path d="M4 12Q90 8 170 13T296 10"/></svg>
+</div>
+<div class="sg-note b">每秒 10 张</div><div class="sg-note a">每秒 30 张</div>
+</div>
+<div class="sg-slate"><div>SC 012 · CUT 04</div><div class="sg-cnt">B27 / 27</div></div>
+<div class="sg-sheet">
+<div class="sg-cells"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="h"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+<div class="sg-cap"><span>摄影表</span><span class="sg-sec">1 秒 · 30 格</span></div>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+(function () {
+// seconds (= frames / 30), shared by both orientations. The render works in frames, f = t * 30, so the upstream
+// frame constants stay readable; LAND / PORT only change distances and slot widths.
+var CFG = {
+  dur: 5,
+  step: 0.1,                          // on threes: a new drawing every 3 frames (10 a second), 16 drawings
+  sw: 1.6,                            // 48 f: the switch to ones, in one frame
+  hit: 2 / 30,                        // 48-49 f: two impact frames
+  arrive: 68 / 30,                    // 48 -> 68 f: dash on ones, power3.out (= out-poly(4)), 40 px past centre
+  settle: 74 / 30,                    // 68 -> 74 f: back to centre, power2.inOut
+  squash: [72 / 30, 75 / 30, 80 / 30], // landing squash 0.92 / 1.07, power2.out
+  pop: [1.6, 1.7, 58 / 30],           // label pop 1 -> 1.25 -> 1, power2.out
+  boil: 4 / 30, boilEnd: 3.6,         // underline boil: a new line every 4 frames, frozen at 108 f
+  labelIn: 14 / 30, sheetIn: [4 / 30, 16 / 30], head: 110 / 30,
+  push: 0.02, over: 40, speed: 60     // hold push-in; overshoot px; px per frame for full stretch
+};
+// reach: the card centre walks from -reach to +reach around the frame centre (16 drawings, 15 steps)
+var LAND = { reach: 520, lab: 900, note: 900 };
+var PORT = { reach: 330, lab: 600, note: 520 };
+var v = { title: "3倍", key: "倍", sub: "导出速度变快了", name: "示例应用", before: "一拍三", after: "一拍一", note1: "每秒 10 张", note2: "每秒 30 张", backdrop: "on" };
+try {
+  var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+  // "" hides the optional slots; title / before / after keep their defaults
+  for (var k in got) if (got[k] != null && (String(got[k]).trim() || !/^(title|before|after)$/.test(k))) v[k] = got[k];
+} catch (e) {}
+
+var root = document.querySelector(".sg");
+var q = function (s) { return root.querySelector(s); };
+var FW = root.clientWidth, FH = root.clientHeight;
+if (!FW || !FH) {
+  // not laid out yet: the host clip's declared size, then the window
+  var hc = root.closest("[data-width][data-height]");
+  FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+  FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+}
+var P = FH > FW, L = P ? PORT : LAND;
+root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== end kit:tone ====
+
+// ==== kit:text@2 ==== (kWords, kSplit)
+var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+function kWords(s, key) {
+  s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+  var cut = function (x) {
+    if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+    return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+  };
+  var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+  var pre = "";
+  bits.forEach(function (x) {
+    var t = x.trim(), last = out[out.length - 1];
+    if (last && /^ /.test(x)) last.sp = true;
+    if (!t) return;
+    if (!/[\p{L}\p{N}]/u.test(t)) {
+      if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+      else { last.t += t; last.sp = / $/.test(x); }
+      return;
+    }
+    out.push({ t: pre + t, sp: / $/.test(x) });
+    pre = "";
+  });
+  if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+  if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+  if (out.length) out[out.length - 1].sp = false;
+  return out;
+}
+function kSplit(el, by, rise, text) {
+  var s = text != null ? String(text) : el.textContent, units = [];
+  var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+  el.textContent = "";
+  parts.forEach(function (p) {
+    var u = document.createElement("span"), box = u;
+    u.className = "sg-u"; u.textContent = p.t;
+    if (by === "line") u.style.display = "block";
+    if (!p.t.trim()) { el.appendChild(u); return; }
+    if (rise) { box = document.createElement("span"); box.className = "sg-cut"; box.style.display = u.style.display; box.appendChild(u); }
+    el.appendChild(box);
+    if (p.sp) el.appendChild(document.createTextNode(" "));
+    units.push(u);
+  });
+  return units;
+}
+// ==== end kit:text ====
+
+// ==== kit:fit@1 ==== (kFit, kLines)
+function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+      var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+      if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+      row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+      "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+      "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+      "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+      "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+}
+// ==== end kit:grain ====
+
+var tone = kTone(root);
+if (getComputedStyle(root).getPropertyValue("--mc-font").trim()) root.style.setProperty("--sg-hv", "var(--k-font)"); // host font wins over the bold face
+// backdrop off: only the effect stays (label, card, speed and focus lines); paper, slot, slate and sheet go
+if (String(v.backdrop) === "off") ["paper", "slot", "slate", "sheet"].forEach(function (n) { q(".sg-" + n).style.display = "none"; });
+var grain = kGrain(q(".sg-grain"), tone === "dark" ? {} : { opacity: 0.06 });
+
+// text slots: units through kSplit / kWords, then fitted to the measured layout; empty optional slots disappear
+var slot = function (el, text, o) {
+  var s = String(text).trim();
+  if (!s) { el.style.display = "none"; return; }
+  kSplit(el, "word", false, s);
+  kFit(el, o);
+};
+root.removeAttribute("data-ones");
+slot(q(".sg-big.b"), v.before, { min: 72, width: L.lab });
+slot(q(".sg-note.b"), v.note1, { width: L.note });
+root.setAttribute("data-ones", "");
+slot(q(".sg-big.a"), v.after, { min: 72, width: L.lab });
+slot(q(".sg-note.a"), v.note2, { width: L.note });
+if (String(v.name).trim()) slot(q(".sg-name"), v.name, { lines: 1 }); else q(".sg-hd").style.display = "none";
+slot(q(".sg-sub"), v.sub, { lines: 2 });
+var te = q(".sg-title"), key = String(v.key).trim();
+te.textContent = "";
+kWords(v.title, key).forEach(function (u) {
+  var s = te.appendChild(document.createElement("span"));
+  s.className = "sg-u" + (key && u.t === key ? " sg-key" : "");
+  s.textContent = u.t;
+  if (u.sp) te.appendChild(document.createTextNode(" "));
+});
+if (!kCJK.test(v.title)) te.style.letterSpacing = "-0.04em"; // all-Latin numbers may run tight; Chinese never does
+kFit(te, { min: 72 });
+
+var rig = q(".sg-rig"), sh = q(".sg-sh"), lab = q(".sg-lab"), pop = q(".sg-pop"), ul = q(".sg-ul path");
+var slate = q(".sg-slate"), cnt = q(".sg-cnt"), sheet = q(".sg-sheet"), cam = q(".sg-cam");
+var cells = [].slice.call(root.querySelectorAll(".sg-cells i")), fl = q(".sg-fl"), sl = q(".sg-sl");
+var CW = rig.offsetWidth, CH = rig.offsetHeight, CY = rig.offsetTop, XC = rig.offsetLeft;
+var XL = XC - L.reach, XR = XC + L.reach;
+q(".sg-slot").style.height = CH + 20 + "px";
+[].forEach.call(root.querySelectorAll(".sg-svg"), function (s) { s.setAttribute("viewBox", "0 0 " + FW + " " + FH); });
+
+// frames at 30 fps from here on
+var S = CFG.sw * 30, A = CFG.arrive * 30, E = CFG.settle * 30, N = CFG.dur * 30, ST = CFG.step * 30, ND = Math.ceil(S / ST);
+var SQ = CFG.squash.map(function (x) { return x * 30; }), PP = CFG.pop.map(function (x) { return x * 30; });
+var C = { extrapolateLeft: "clamp", extrapolateRight: "clamp" };
+var I = function (f, a, b, e) { C.easing = e; return MT.interpolate(f, a, b, C); };
+var h = function (n) { var s = Math.sin(n * 127.3) * 43758.5453; return s - Math.floor(s); };
+var r = function (n) { return n.toFixed(1); };
+var p2 = function (n) { return (n < 10 ? "0" : "") + n; };
+// on ones: a 20-frame dash to 40 px past the slot, then 6 frames back
+var pos2 = function (f) { return f < A ? I(f, [S, A], [XR, XC - CFG.over], "power3.out") : I(f, [A, E], [XC - CFG.over, XC], "power2.inOut"); };
+var shown = "";
+
+function render(t) {
+  var f = t * 30 + 1e-6, F = Math.floor(f), three = f < S, hit = !three && f < S + CFG.hit * 30;
+  // on threes everything is read from the held frame qd: position (even steps), pose, hop
+  var qd = Math.floor(f / ST) * ST, dw = Math.round(qd / ST), ev = dw % 2 === 0;
+  var x = three ? I(qd, [0, (ND - 1) * ST], [XL, XR]) : pos2(f);
+  var rot = three ? Math.sin(qd * 0.7) * 5 : I(f, [S, S + 8], [-4, 0], "power2.out");
+  var hop = three ? (ev ? -18 : -2) : 0;
+  var sf = three ? 0 : Math.min(Math.abs(pos2(f) - pos2(f - 1)) / CFG.speed, 1); // stretch from the speed
+  var sx = (1 + 0.3 * sf) * I(f, SQ, [1, 0.92, 1], "power2.out") * (three ? (ev ? 0.97 : 1.035) : 1);
+  var sy = (1 - 0.1 * sf) * I(f, SQ, [1, 1.07, 1], "power2.out") * (three ? (ev ? 1.035 : 0.97) : 1);
+  var so = three ? (hop < -5 ? 18 : 10) : 10 + 10 * sf;
+  rig.style.transform = "translate(" + r(x - XC) + "px," + hop + "px) rotate(" + rot.toFixed(3) + "deg) scale(" + sx.toFixed(4) + "," + sy.toFixed(4) + ")";
+  sh.style.transform = "translate(" + r(so) + "px," + r(so + (three ? -hop * 0.6 : 0)) + "px)";
+  if (three) root.removeAttribute("data-ones"); else root.setAttribute("data-ones", "");
+  if (hit) root.setAttribute("data-hit", ""); else root.removeAttribute("data-hit");
+
+  // label: rises in, boils (a new hand-drawn pose every 4 frames until 108 f), pops at the switch
+  var li = MT.ramp(f, 0, CFG.labelIn * 30, "out"), qb = Math.min(Math.floor(f / (CFG.boil * 30)) * CFG.boil * 30, CFG.boilEnd * 30);
+  lab.style.opacity = slate.style.opacity = li;
+  lab.style.transform = "translateY(" + r(MT.mix(16, 0, li)) + "px)";
+  pop.style.transform = "translate(" + r((h(qb + 1) - 0.5) * 5) + "px," + r((h(qb + 2) - 0.5) * 5) + "px) rotate(" + ((h(qb + 3) - 0.5) * 2).toFixed(2) + "deg) scale(" + I(f, PP, [1, 1.25, 1], "power2.out").toFixed(4) + ")";
+  var w = function (i, b) { return r(b + (h(qb * 3 + i * 7 + 11) - 0.5) * 8); };
+  ul.setAttribute("d", "M4 " + w(0, 12) + "Q90 " + w(1, 8) + " 170 " + w(2, 13) + "T296 " + w(3, 10));
+  cnt.textContent = three ? "A" + p2(dw + 1) + " / " + ND : "B" + p2(Math.min(F - S, E - S) + 1) + " / " + (E - S + 1);
+
+  // exposure sheet: on threes a ring every 3rd cell, bars between; on ones a ring in every cell; playhead 1 cell a frame
+  var si = MT.ramp(f, CFG.sheetIn[0] * 30, CFG.sheetIn[1] * 30, "out"), hd = Math.min(F, CFG.head * 30) % 30, st = three + "/" + hd;
+  sheet.style.opacity = si;
+  sheet.style.transform = "translateY(" + r(MT.mix(14, 0, si)) + "px)";
+  if (st !== shown) {
+    shown = st;
+    cells.forEach(function (c, i) { c.className = (three && i % 3 ? "n" : "") + (i === hd ? " h" : ""); });
+  }
+
+  // speed lines behind the dashing card, length by speed, a new scatter every frame
+  var d = "";
+  if (!three && !hit && sf > 0.08) for (var i = 0; i < 9; i++) {
+    var yy = CY + 20 + h(i * 7.3 + F * 0.37) * (CH - 40), len = (160 + h(i * 3.1 + F) * 260) * sf;
+    var x0 = x + CW * (1 + 0.3 * sf) * 0.8 + h(i * 5.7 + F * 1.3) * 80, th = 3 + h(i * 2.9) * 6;
+    d += "M" + r(x0) + " " + r(yy - th / 2) + "L" + r(x0 + len) + " " + r(yy) + "L" + r(x0) + " " + r(yy + th / 2) + "Z";
+  }
+  sl.setAttribute("d", d);
+  // impact frames: 64 focus wedges aimed at the card centre
+  d = "";
+  if (hit) {
+    var cx = x + CW / 2, cy = CY + CH / 2, pt = function (rr, a) { return r(cx + Math.cos(a) * rr) + "," + r(cy + Math.sin(a) * rr); };
+    for (var j = 0; j < 64; j++) {
+      var a = (j / 64) * Math.PI * 2 + h(j + F) * 0.05, r0 = 300 + h(j * 1.7 + F) * 220, wd = 0.012 + h(j * 4.1) * 0.02;
+      d += "M" + pt(r0, a) + "L" + pt(1500, a - wd) + "L" + pt(1500, a + wd) + "Z";
+    }
+  }
+  fl.setAttribute("d", d);
+  // hold: a 2% push-in, eased out over the rest of the slot
+  cam.style.transform = "scale(" + MT.mix(1, 1 + CFG.push, MT.ramp(f, E, N - E, "out")).toFixed(5) + ")";
+  grain(t);
+}
+
+var tl = MT.scene(CFG.dur, render);
+window.__timelines["sakuga-timing-shift"] = tl;
+})();
+</script>
+</template>
+</body>
+</html>

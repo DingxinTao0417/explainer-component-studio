@@ -1,0 +1,328 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"line1","type":"string","label":"第一句说明（第一拍）","default":"高度和颜色，从左到右逐根变化"},
+    {"id":"line2","type":"string","label":"第二句说明（第二拍，留空则只显示第一句）","default":"跳动幅度，从中间向两边递减"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>value-stagger-gradient · 数值梯度柱</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="value-stagger-gradient-template">
+      <!-- Ported from video-shotcraft demos/ui-entrance/value-stagger-gradient/ValueStaggerGradient.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds
+           (t * 149 / 30, the TSX runs 150 frames); neutral --k-* palette, system fonts, upstream mark removed;
+           bar colours mixed from --k-accent-2 to --k-accent in oklch instead of fixed hues 200-320;
+           the syntax-coloured code strip is two plain caption lines with the same 6-frame cross-swap, travel 16 px instead of 48 so the text stays inside the pill;
+           pulse brightness 0.55 kept on dark skins, light skins use brightness 0.1 + saturate 0.9 and a stronger halo;
+           per-bar numbers (move 46-14, blur 8-2, amplitude 0.06-0.42, 0.02 time stagger) kept, design px x4;
+           portrait gets 16 narrower, taller bars (520-182 px) on the same timeline;
+           the small dots of the reference clip are not in the current TSX and are not drawn. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute; inset: 0; overflow: hidden; font-family: var(--k-font); color: var(--k-ink);
+        }
+        /* the wrapper is the size container (absolute + inset 0: a container-type: size box is not sized by content);
+           everything that changes with orientation lives inside it */
+        .vs { position: absolute; inset: 0; container-type: size; }
+
+        /* ==== kit:backdrop@1 ==== */
+        .vs-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .vs-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        /* ==== end kit:backdrop ==== */
+
+        /* ==== kit:vignette@1 ==== */
+        .vs-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--vs-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .vs[data-tone="dark"] .vs-vig { --vs: 0.55; }
+        /* ==== end kit:vignette ==== */
+
+        /* ==== kit:derived@1 ==== */
+        .vs {
+          --vs-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+          --vs-panel-2: color-mix(in srgb, var(--k-panel), var(--k-ink) 4%);
+          --vs-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+          --vs-hi: color-mix(in srgb, white 80%, transparent);
+        }
+        .vs[data-tone="dark"] {
+          --vs-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+          --vs-hi: color-mix(in srgb, white 6%, transparent);
+        }
+        /* ==== end kit:derived ==== */
+
+        /* ==== kit:grain@1 ==== */
+        .vs-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+
+        .vs-glow { position: absolute; inset: 0; --gy: 66%; background: radial-gradient(ellipse 46% 34% at 50% var(--gy), color-mix(in srgb, var(--k-accent-2) 16%, transparent), transparent 70%); }
+        /* plot geometry, landscape: 16 columns from x 8% with a 5.4% pitch, bar 3.4% wide, 368 px (first) to 128 px (last) tall */
+        .vs-plot { position: absolute; inset: 0; --x0: 8%; --pitch: 5.4%; --bw: 3.4%; --hhi: 368px; --hlo: 128px; --br: 16px; --base: 72.6%; }
+        .vs-floor { position: absolute; left: 7%; right: 7%; top: calc(var(--base) + 2px); height: 1.2px; background: var(--vs-line); }
+        .vs-c { position: absolute; left: calc(var(--x0) + var(--i) * var(--pitch)); width: var(--bw); top: var(--base); height: 0;
+          --k: calc(var(--i) / 15); --hh: calc(var(--hhi) + (var(--hlo) - var(--hhi)) * var(--k));
+          --c: color-mix(in oklch, var(--k-accent-2) calc((1 - var(--k)) * 100%), var(--k-accent)); }
+        .vs-b { position: absolute; left: 0; right: 0; bottom: 0; height: var(--hh); border-radius: var(--br); overflow: hidden;
+          background: linear-gradient(180deg, color-mix(in srgb, var(--c), white 32%) 0%, var(--c) 45%, color-mix(in srgb, var(--c), black 26%) 100%);
+          box-shadow: inset 0 2px 0 rgba(255,255,255,.45), inset 0 0 0 1px rgba(255,255,255,.1), 0 0 40px color-mix(in srgb, var(--c) calc(var(--ga, .2) * 100%), transparent); }
+        .vs-b::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 34%; background: linear-gradient(90deg, rgba(255,255,255,.16), rgba(255,255,255,0)); }
+        .vs-r { position: absolute; left: 0; right: 0; top: 6px; height: calc(var(--hh) * .45); border-radius: var(--br); opacity: .8; filter: blur(3.2px);
+          background: linear-gradient(180deg, color-mix(in srgb, var(--c) 32%, transparent), transparent); }
+        .vs-t { position: absolute; left: calc(50% - 1px); top: 12px; width: 2px; height: 10px; background: color-mix(in srgb, var(--k-ink) 18%, transparent); }
+        /* caption pill: both lines share one grid cell, so the pill is as tall as the taller line */
+        .vs-cap { position: absolute; left: 17%; right: 17%; top: 14.8%; display: grid; padding: 20px 32px; border-radius: 28px;
+          background: color-mix(in srgb, var(--k-ink) 4%, transparent); box-shadow: inset 0 0 0 1px var(--vs-line), inset 0 1px 0 var(--vs-hi); }
+        .vs-l1, .vs-l2 { grid-area: 1 / 1; display: block; text-align: center; font-size: 48px; font-weight: 600; line-height: 1.3; }
+        .vs-l1 { opacity: 0; }
+        /* portrait: 16 narrower, taller bars in x 118-962 (inside the 108-972 body), baseline at 53% so the stack centres near 40% */
+        @container (orientation: portrait) {
+          .vs-glow { --gy: 41%; background: radial-gradient(ellipse 62% 24% at 50% var(--gy), color-mix(in srgb, var(--k-accent-2) 16%, transparent), transparent 70%); }
+          .vs-plot { --x0: 10.93%; --pitch: 5%; --bw: 3.15%; --hhi: 520px; --hlo: 182px; --br: 12px; --base: 53.1%; }
+          .vs-floor { left: 10%; right: 10%; }
+          .vs-cap { left: 10%; right: 10%; top: 15.6%; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="value-stagger-gradient">
+        <div class="vs">
+          <div class="vs-backdrop"></div>
+          <div class="vs-glow"></div>
+          <div class="vs-plot">
+            <div class="vs-floor"></div>
+            <i class="vs-c" style="--i:0"><i class="vs-b"></i><i class="vs-r"></i><i class="vs-t"></i></i>
+            <i class="vs-c" style="--i:1"><i class="vs-b"></i><i class="vs-r"></i><i class="vs-t"></i></i>
+            <i class="vs-c" style="--i:2"><i class="vs-b"></i><i class="vs-r"></i><i class="vs-t"></i></i>
+            <i class="vs-c" style="--i:3"><i class="vs-b"></i><i class="vs-r"></i><i class="vs-t"></i></i>
+            <i class="vs-c" style="--i:4"><i class="vs-b"></i><i class="vs-r"></i><i class="vs-t"></i></i>
+            <i class="vs-c" style="--i:5"><i class="vs-b"></i><i class="vs-r"></i><i class="vs-t"></i></i>
+            <i class="vs-c" style="--i:6"><i class="vs-b"></i><i class="vs-r"></i><i class="vs-t"></i></i>
+            <i class="vs-c" style="--i:7"><i class="vs-b"></i><i class="vs-r"></i><i class="vs-t"></i></i>
+            <i class="vs-c" style="--i:8"><i class="vs-b"></i><i class="vs-r"></i><i class="vs-t"></i></i>
+            <i class="vs-c" style="--i:9"><i class="vs-b"></i><i class="vs-r"></i><i class="vs-t"></i></i>
+            <i class="vs-c" style="--i:10"><i class="vs-b"></i><i class="vs-r"></i><i class="vs-t"></i></i>
+            <i class="vs-c" style="--i:11"><i class="vs-b"></i><i class="vs-r"></i><i class="vs-t"></i></i>
+            <i class="vs-c" style="--i:12"><i class="vs-b"></i><i class="vs-r"></i><i class="vs-t"></i></i>
+            <i class="vs-c" style="--i:13"><i class="vs-b"></i><i class="vs-r"></i><i class="vs-t"></i></i>
+            <i class="vs-c" style="--i:14"><i class="vs-b"></i><i class="vs-r"></i><i class="vs-t"></i></i>
+            <i class="vs-c" style="--i:15"><i class="vs-b"></i><i class="vs-r"></i><i class="vs-t"></i></i>
+          </div>
+          <div class="vs-vig"></div>
+          <div class="vs-grain"></div>
+          <div class="vs-cap"><span class="vs-l1" data-layout-allow-overlap>高度和颜色，从左到右逐根变化</span><span class="vs-l2" data-layout-allow-overlap>跳动幅度，从中间向两边递减</span></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // seconds. The TSX runs 150 frames, its t is frame / 149, so one t unit is 149 / 30 = 4.967 s.
+          var CFG = {
+            dur: 5.5,
+            cap: 0.149, capDur: 0.447,          // caption pill rises in (t 0.03-0.12)
+            floor: 0.099, floorDur: 0.397,      // baseline and ticks fade in (t 0.02-0.10)
+            enter: 0.298, each: 0.099, enterDur: 1.093, // beat 1: bar i starts at enter + i * each (t 0.06 + i * 0.02, window 0.22)
+            wave: 2.781, reach: 0.646, waveDur: 0.894,  // beat 2: pulse starts at the centre, reaches the ends reach s later (t 0.56, 0.13, 0.18)
+            swap: 2.493, swapDur: 0.199,        // caption lines cross-swap between the beats (t 0.502-0.542)
+            glow: 0.298, glowDur: 2.185         // soft light under the bars grows with beat 1 (t 0.06-0.50)
+          };
+          // per-orientation numbers (the CSS has the same values for the static page): first / last bar height in px
+          var LAND = { hi: 368, lo: 128 };
+          var PORT = { hi: 520, lo: 182 };
+          var v = { line1: "高度和颜色，从左到右逐根变化", line2: "跳动幅度，从中间向两边递减", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          function kRows(el, cls) {
+            if (!el.children.length) return [];
+            var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+            var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+            kids.forEach(function (c, i) {
+              if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+              if (tops[i] != null) last = tops[i];
+              row.appendChild(c);
+            });
+            return [].slice.call(el.children);
+          }
+          // ==== end kit:fit ====
+
+          var root = document.querySelector(".vs");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          var tone = kTone(root), dark = tone === "dark";
+          var U = Math.min(FW, FH) / 270; // design px -> px: the TSX is drawn on a 480 x 270 stage, 4x here
+          var plot = q(".vs-plot");
+          plot.style.setProperty("--hhi", L.hi + "px");
+          plot.style.setProperty("--hlo", L.lo + "px");
+          if (String(v.backdrop) === "off") {
+            [".vs-backdrop", ".vs-glow", ".vs-vig", ".vs-grain"].forEach(function (s) { q(s).style.display = "none"; });
+          }
+
+          // caption: both lines, or just one without the swap
+          var pill = q(".vs-cap"), l1 = q(".vs-l1"), l2 = q(".vs-l2");
+          var a = String(v.line1).trim(), b = String(v.line2).trim(), swapOn = !!(a && b);
+          if (!a && !b) pill.style.display = "none";
+          else {
+            l1.textContent = a || b;
+            if (swapOn) l2.textContent = b; else l2.style.display = "none";
+            var W = pill.clientWidth - 64 || FW * 0.66 - 64;
+            kFit(l1, { lines: 1, min: 40, width: W });
+            if (swapOn) kFit(l2, { lines: 1, min: 40, width: W });
+            if (!swapOn) l1.style.opacity = 1;
+          }
+
+          // per-bar numbers: the value gradients are linear in the index (staggerVal in the TSX)
+          var N = 16, C = (N - 1) / 2;
+          var lerp = function (k, x, y) { return x + (y - x) * k; };
+          var bars = [].map.call(root.querySelectorAll(".vs-c"), function (col, i) {
+            var k = i / (N - 1), dc = Math.abs(i - C) / C;
+            return {
+              b: col.querySelector(".vs-b"), r: col.querySelector(".vs-r"), t: col.querySelector(".vs-t"),
+              i: i, hMax: lerp(k, L.hi, L.lo), y0: lerp(k, 46, 14) * U, b0: lerp(k, 8, 2) * U,
+              dc: dc, amp: lerp(1 - dc, 0.06, 0.42)
+            };
+          });
+          var floor = q(".vs-floor"), glow = q(".vs-glow");
+          var grain = kGrain(q(".vs-grain"), dark ? { opacity: 0.08 } : {});
+          var BR = dark ? 0.55 : 0.1, SAT = dark ? 0 : 0.9, GA = dark ? [0.18, 0.22] : [0.2, 0.34];
+
+          var tl = MT.scene(CFG.dur, function (t) {
+            var cap = MT.ramp(t, CFG.cap, CFG.capDur, "out");
+            pill.style.opacity = cap;
+            pill.style.transform = "translateY(" + ((1 - cap) * 4 * U).toFixed(2) + "px)";
+            if (swapOn) {
+              var sw = MT.ramp(t, CFG.swap, CFG.swapDur, "smooth");
+              l1.style.opacity = 1 - sw; l1.style.transform = "translateY(" + (-sw * 4 * U).toFixed(2) + "px)";
+              l2.style.opacity = sw; l2.style.transform = "translateY(" + ((1 - sw) * 4 * U).toFixed(2) + "px)";
+            }
+            var fl = MT.ramp(t, CFG.floor, CFG.floorDur, "linear");
+            floor.style.opacity = fl;
+            var pc = Math.sin(MT.ramp(t, CFG.wave, CFG.waveDur, "linear") * Math.PI);
+            glow.style.opacity = 0.35 + 0.65 * MT.ramp(t, CFG.glow, CFG.glowDur, "linear") + pc * 0.3;
+            bars.forEach(function (o) {
+              var e = MT.ramp(t, CFG.enter + o.i * CFG.each, CFG.enterDur, "power3.out");
+              var pulse = Math.sin(MT.ramp(t, CFG.wave + o.dc * CFG.reach, CFG.waveDur, "linear") * Math.PI);
+              var h = o.hMax * e * (1 + pulse * o.amp), blur = (1 - e) * o.b0;
+              var fx = "brightness(" + (1 + pulse * BR).toFixed(3) + ")" + (SAT ? " saturate(" + (1 + pulse * SAT).toFixed(3) + ")" : "");
+              o.b.style.height = h.toFixed(2) + "px";
+              o.b.style.opacity = e;
+              o.b.style.transform = "translateY(" + ((1 - e) * o.y0).toFixed(2) + "px)";
+              o.b.style.filter = (blur > 0.08 ? "blur(" + blur.toFixed(2) + "px) " : "") + fx;
+              o.b.style.setProperty("--ga", (GA[0] + pulse * GA[1]).toFixed(3));
+              o.r.style.height = (h * 0.45).toFixed(2) + "px";
+              o.r.style.opacity = (e * 0.8).toFixed(3);
+              o.r.style.transform = "translateY(" + ((1 - e) * o.y0 * 0.4).toFixed(2) + "px)";
+              o.r.style.filter = "blur(" + (0.8 * U + blur).toFixed(2) + "px) " + fx;
+              o.t.style.opacity = fl;
+            });
+            grain(t);
+          });
+          window.__timelines["value-stagger-gradient"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

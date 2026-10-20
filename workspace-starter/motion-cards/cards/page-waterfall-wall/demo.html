@@ -1,0 +1,290 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"srcs","type":"string","label":"墙上的图（可空，用 | 分隔；留空画十张示例页面卡）","default":""},
+    {"id":"speed","type":"number","label":"滚动快慢（1 = 原速）","default":1,"min":0.5,"max":2,"step":0.1},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>page-waterfall-wall · 页面瀑布墙</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="page-waterfall-wall-template">
+      <!-- Ported from video-shotcraft demos/ui-entrance/page-waterfall-wall/PageWaterfallWall.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette on a white-first floor (upstream dark navy stage dropped), system fonts, upstream
+           screenshot slices replaced by ten drawn page cards (bars, sparklines, sample photos) or the srcs images;
+           the ticker is rewritten from the recipe (the upstream helper component has no clear licence), three copies
+           per column instead of two so the top never runs empty; 3 columns, 12/9/14 s loops, centre column reversed,
+           rotateX 20 deg, perspective 1000, zoom 1.2 with a linear 6% push, grain, vignette and two-layer card shadows kept;
+           portrait uses narrower, taller cards, more of them per column, a longer perspective and faded top and caption bands. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .pw { position: absolute; inset: 0; container-type: size; --pw-card: var(--k-bg); }
+        .pw[data-tone="dark"] { --pw-card: var(--k-panel); }
+        /* the floor behind the wall: a mid grey-blue so the white cards read as lit objects, plus a faint cool glow behind the wall's centre */
+        .pw-backdrop {
+          position: absolute; inset: 0;
+          background:
+            radial-gradient(ellipse 60% 55% at 50% 42%, color-mix(in srgb, var(--k-accent-2) 9%, transparent) 0%, transparent 100%),
+            linear-gradient(180deg, color-mix(in srgb, var(--k-bg), var(--k-ink) 11%) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 17%) 100%);
+        }
+        /* ==== kit:grain@1 ==== */
+        .pw-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+
+        /* ==== kit:derived@1 ==== */
+        .pw {
+          --pw-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+          --pw-panel-2: color-mix(in srgb, var(--k-panel), var(--k-ink) 4%);
+          --pw-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+          --pw-hi: color-mix(in srgb, white 80%, transparent);
+        }
+        .pw[data-tone="dark"] {
+          --pw-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+          --pw-hi: color-mix(in srgb, white 6%, transparent);
+        }
+        /* ==== end kit:derived ==== */
+
+        /* ==== kit:vignette@1 ==== */
+        .pw-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--pw-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .pw[data-tone="dark"] .pw-vig { --vs: 0.55; }
+        /* ==== end kit:vignette ==== */
+        /* the faded box holds the wall; its alpha mask is the upstream top and bottom feather, done as a mask so a transparent backdrop still shows the host */
+        .pw-fade {
+          position: absolute; inset: 0;
+          -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.15) 10%, #000 30%, #000 78%, rgba(0,0,0,0.2) 92%, transparent 100%);
+          mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.15) 10%, #000 30%, #000 78%, rgba(0,0,0,0.2) 92%, transparent 100%);
+        }
+        .pw-zoom { position: absolute; left: 0; top: 0; }
+        .pw-wall { position: absolute; inset: 0; display: flex; justify-content: center; }
+        .pw-col { position: relative; flex: none; height: 100%; }
+        .pw-stack { position: absolute; left: 0; top: 0; width: 100%; }
+        .pw-c { position: relative; display: block; overflow: hidden; background: var(--pw-card); background-size: cover; background-position: 50% 50%; }
+        .pw-c svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+        .pw-th { position: absolute; left: 0; right: 0; top: 0; background-size: cover; background-position: 50% 50%; }
+        .pw-air { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to bottom, color-mix(in srgb, var(--pw-shade) 16%, transparent) 0%, transparent 50%); }
+        @container (orientation: portrait) {
+          .pw-fade {
+            -webkit-mask-image: linear-gradient(to bottom, transparent 3%, rgba(0,0,0,0.15) 8%, #000 22%, #000 58%, rgba(0,0,0,0.2) 70%, transparent 80%);
+            mask-image: linear-gradient(to bottom, transparent 3%, rgba(0,0,0,0.15) 8%, #000 22%, #000 58%, rgba(0,0,0,0.2) 70%, transparent 80%);
+          }
+        }
+      </style>
+
+      <div id="root" data-composition-id="page-waterfall-wall">
+        <div class="pw">
+          <div class="pw-backdrop"></div>
+          <div class="pw-fade" data-layout-allow-overflow>
+            <div class="pw-zoom"><div class="pw-wall"></div></div>
+            <div class="pw-air"></div>
+          </div>
+          <div class="pw-vig"></div>
+          <div class="pw-grain"></div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing and motion shared by both orientations (seconds; loops are seconds per full column cycle)
+          var CFG = { slot: 5, loops: [12, 9, 14], dirs: [-1, 1, -1], push: 0.06, tilt: 20 };
+          // layout per orientation: column width and gap in wall px, card height factor, extra cards per column, perspective, zoom
+          var LAND = { colW: 420, gap: 26, hk: 1, extra: 0, persp: 1000, zoom: 1.2 };
+          var PORT = { colW: 216, gap: 14, hk: 1.7, extra: 2, persp: 1800, zoom: 1.12 };
+          var v = { srcs: "", speed: 1, backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".pw");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+
+          // ==== kit:hash@1 ====
+          function kHash(n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+          // ==== end kit:hash ====
+
+          // ==== kit:shadow@1 ====
+          function kShadow(e, strength) {
+            e = Math.max(0, e);
+            var s = strength == null ? 1 : strength, r = function (x) { return Math.round(x * 10) / 10; };
+            var c = function (a) { return "color-mix(in srgb, var(--pw-shade) " + r(Math.min(1, a) * 100) + "%, transparent)"; };
+            return "0 " + r(0.5 + e * 0.06) + "px " + r(1 + e * 0.18) + "px " + c((0.12 * s) / (1 + e / 24)) + ", " +
+              "0 " + r(e * 0.55) + "px " + r(e * 1.3) + "px " + r(-e * 0.22) + "px " + c((0.08 + (Math.min(e, 64) / 64) * 0.22) * s);
+          }
+          // ==== end kit:shadow ====
+
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+
+          var tone = kTone(root);
+          var off = String(v.backdrop) === "off";
+          if (off) { q(".pw-backdrop").style.display = "none"; q(".pw-vig").style.display = "none"; q(".pw-grain").style.display = "none"; }
+          var grain = off ? function () {} : kGrain(q(".pw-grain"), { opacity: 0.08 });
+          var speed = Math.max(0.2, Math.min(3, +v.speed || 1));
+
+          // ---- cards: drawn in 420-wide design units so one description scales to any column width ----
+          var INK = "color-mix(in srgb, var(--k-ink) 20%, var(--k-panel))", INK2 = "color-mix(in srgb, var(--k-ink) 46%, var(--k-panel))";
+          var LINE = "color-mix(in srgb, var(--k-ink) 9%, var(--pw-card))", AC = "var(--k-accent)", A2 = "var(--k-accent-2)";
+          var ACS = "color-mix(in srgb, var(--k-accent) 16%, var(--pw-card))", A2S = "color-mix(in srgb, var(--k-accent-2) 16%, var(--pw-card))";
+          function drawCard(kind, H, n) {
+            var o = [], rn = function (i) { return kHash(n * 13 + i); };
+            var R = function (x, y, w, h, r, c) { o.push('<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + r + '" style="fill:' + c + '"/>'); };
+            var th = 0, y;
+            if (kind === 0) { // project card: chip, title, lines, tags, owner row
+              R(28, 30, 90, 28, 14, ACS); R(42, 40, 44, 8, 4, AC); R(318, 36, 74, 16, 8, LINE);
+              R(28, 88, 280 - rn(1) * 40, 24, 12, INK2); R(28, 130, 364, 13, 6.5, INK); R(28, 156, 330 - rn(2) * 50, 13, 6.5, INK); R(28, 182, 220 + rn(3) * 60, 13, 6.5, INK);
+              R(28, H - 124, 364, 2, 1, LINE);
+              for (var i = 0; i < 3; i++) R(28 + i * 88, H - 100, 76, 28, 14, i === 0 ? A2S : LINE);
+              R(28, H - 58, 34, 34, 17, A2S); R(74, H - 54, 110, 11, 5.5, INK2); R(74, H - 34, 70, 9, 4.5, INK); R(318, H - 52, 74, 26, 13, LINE);
+            } else if (kind === 1) { // photo card: sample photo on top, title and chips under it
+              th = Math.round(H * 0.54); y = th + 28;
+              R(28, y, 250 + rn(1) * 60, 22, 11, INK2); R(28, y + 38, 360, 12, 6, INK); R(28, y + 62, 230 + rn(2) * 80, 12, 6, INK);
+              R(28, H - 52, 70, 26, 13, ACS); R(108, H - 52, 90, 26, 13, LINE); R(330, H - 50, 62, 22, 11, A2S);
+            } else if (kind === 2) { // stat card: big number block and a sparkline
+              R(28, 30, 124, 16, 8, INK2); R(332, 30, 60, 16, 8, LINE);
+              R(28, 68, 190, 62, 16, AC); R(236, 84, 76, 28, 14, A2S); R(28, 150, 140, 12, 6, INK);
+              var base = H - 44, top = 190, pts = [];
+              for (var j = 0; j <= 12; j++) pts.push((28 + j * 364 / 12).toFixed(1) + "," + (base - (base - top) * (0.15 + 0.8 * (0.5 + 0.5 * Math.sin(j * 0.66 + n)) * (0.55 + 0.45 * rn(j)))).toFixed(1));
+              R(28, H - 30, 364, 2, 1, LINE);
+              o.push('<polyline points="' + pts.join(" ") + '" style="fill:none;stroke:' + A2 + ';stroke-width:5;stroke-linejoin:round;stroke-linecap:round"/>');
+            } else if (kind === 3) { // list card: header and rows with a dot, a text bar and a pill
+              R(28, 30, 150, 22, 11, INK2); R(318, 32, 74, 18, 9, LINE);
+              var rows = Math.max(2, Math.floor((H - 100) / 64));
+              for (var r = 0; r < rows; r++) { y = 84 + r * 64; R(28, y, 32, 32, 10, r === 1 ? AC : INK); R(76, y + 3, 170 + rn(r) * 90, 12, 6, INK2); R(76, y + 21, 110 + rn(r + 5) * 70, 9, 4.5, LINE); R(326, y + 3, 66, 26, 13, r === 1 ? ACS : LINE); }
+            } else { // bar-chart card: header and a column chart with one highlighted bar
+              R(28, 30, 130, 22, 11, INK2); R(28, 66, 90, 12, 6, INK); R(326, 32, 66, 18, 9, LINE);
+              var bw = 364 / 8, hi = 2 + Math.floor(rn(9) * 5);
+              for (var b = 0; b < 8; b++) { var bh = (H - 190) * (0.25 + 0.75 * rn(b + 20)); R(28 + b * bw, H - 44 - bh, bw - 12, bh, 6, b === hi ? A2 : INK); }
+              R(28, H - 34, 364, 2, 1, LINE);
+            }
+            return { svg: '<svg viewBox="0 0 420 ' + H + '" aria-hidden="true">' + o.join("") + "</svg>", th: th };
+          }
+          // [kind, design height] per card; columns hold 4 / 3 / 3 cards, portrait appends two more of its own to each
+          var ITEMS = [
+            [[1, 380], [0, 330], [3, 300], [2, 340], [4, 360], [0, 320]],
+            [[0, 400], [4, 340], [1, 420], [3, 340], [2, 360]],
+            [[3, 360], [2, 380], [0, 360], [1, 380], [4, 340]]
+          ];
+          var COUNT = [4, 3, 3];
+          var list = String(v.srcs || "").split("|").map(function (s) { return s.trim(); }).filter(Boolean);
+          var cu = L.colW / 420, wall = q(".pw-wall"), cols = [], base = 0;
+          wall.style.gap = L.gap + "px";
+          wall.style.transform = "perspective(" + L.persp + "px) rotateX(" + CFG.tilt + "deg)";
+          for (var c = 0; c < 3; c++) {
+            var col = document.createElement("div"), stack = document.createElement("div"), per = 0, html = "", cnt = COUNT[c] + L.extra;
+            col.className = "pw-col"; col.style.width = L.colW + "px"; stack.className = "pw-stack";
+            for (var cp = 0; cp < 3; cp++) { // three identical copies: the top never runs empty whichever way the column moves
+              for (var i = 0; i < cnt; i++) {
+                var it = ITEMS[c][i], H = Math.round(it[1] * L.hk), h = Math.round(H * cu), rad = Math.round(20 * cu);
+                var st = "height:" + h + "px;border-radius:" + rad + "px;margin-bottom:" + L.gap + "px;box-shadow:inset 0 0 0 1px var(--pw-line),inset 0 1px 0 var(--pw-hi)," + kShadow(16, tone === "dark" ? 2.6 : 1.7);
+                if (cp === 0) per += h + L.gap;
+                if (list.length) { html += '<div class="pw-c" style="' + st + ";background-image:url('" + list[((list.length >= 6 ? base : c) + i) % list.length] + "')\"></div>"; continue; }
+                var cd = drawCard(it[0], H, c * 7 + i), pic = "";
+                if (it[0] === 1) pic = '<div class="pw-th" style="height:' + (cd.th / H * 100).toFixed(2) + "%;background-image:url('motion-cards/lib/samples/p" + (1 + ((c * 3 + i * 2) % 8)) + ".jpg')\"></div>";
+                html += '<div class="pw-c" style="' + st + '">' + pic + cd.svg + "</div>";
+              }
+            }
+            base += cnt;
+            stack.innerHTML = html; col.appendChild(stack); wall.appendChild(col);
+            cols.push({ stack: stack, per: per });
+          }
+          var zoomBox = q(".pw-zoom");
+
+          // the whole picture is a function of t: each column scrolls one copy per loop, the camera zoom pushes in linearly
+          function render(t) {
+            var z = L.zoom * (1 + CFG.push * Math.min(1, t / CFG.slot));
+            zoomBox.style.zoom = z;
+            zoomBox.style.width = FW / z + "px"; zoomBox.style.height = FH / z + "px";
+            for (var c = 0; c < 3; c++) {
+              var lp = CFG.loops[c], ph = ((t * speed) % lp) / lp, p = cols[c].per;
+              // up: 0 -> -one copy; down: -one copy -> 0; the stack sits one copy higher so there is always content above
+              var y = (CFG.dirs[c] < 0 ? -ph * p : -p + ph * p) - p;
+              cols[c].stack.style.transform = "translateY(" + y.toFixed(2) + "px)";
+            }
+            grain(t);
+          }
+          var tl = MT.scene(CFG.slot, render);
+          window.__timelines["page-waterfall-wall"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

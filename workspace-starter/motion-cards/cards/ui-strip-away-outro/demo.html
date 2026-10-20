@@ -1,0 +1,482 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"button","type":"string","label":"按钮上的字：发布、完成这类收尾的词（6 字以内不缩小）","default":"发布"},
+    {"id":"name","type":"string","label":"收尾的名字：产品、频道或系列名（| 处可折行；留空只留标志）","default":"示例应用"},
+    {"id":"logo","type":"string","label":"标志图（从项目根目录写起；空：示意标志；none：不要标志）","default":""},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（界面散掉后露出宿主画面）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>ui-strip-away-outro · 界面散尽留按钮</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+<template id="ui-strip-away-outro-template">
+<!-- Ported from video-shotcraft demos/outro/ui-strip-away-outro/UiStripAwayOutro.tsx
+     (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+     Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+     Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+     neutral --k-* palette, system fonts, generic copy; upstream mark, breadcrumb, repo address, layer names and
+     avatars' initials removed: a text-free editor (bars, tiles, two charts) at about 1.6x the upstream UI scale,
+     button label and closing name as variables, placeholder mark or the user's logo; button 153x64 in the toolbar
+     (230x96 at centre, label 45 px), lockup mark 148 / name 92 px (upstream 132 / 68), cursor 42x54, the halo is
+     not motion-blurred with the button, grain overlay on light skins; white first: the ground
+     clears to the lit card background instead of near-black (dark skins go dark), halo multiply/screen by tone,
+     cool centre light on dark skins only; vignette and grain under the button and lockup; 9:16 layout (top bar,
+     canvas, bottom sheet, tab bar that leaves downwards); hold 0.2 s longer (5.0 s). Strip order and steps,
+     ease-in exits with their drift and 0-7 px blur, card scatter, press spring, migration x1.5 with glow,
+     hand-over and lockup springs kept. -->
+<style>
+  @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+  @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+  @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+  @font-face { font-family: "sa-heavy"; font-weight: 700 900; src: local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"), local("PingFangSC-Semibold"), local("NotoSansSC-Bold"); }
+  #root {
+    --k-bg: var(--mc-bg, #ffffff);
+    --k-panel: var(--mc-panel, #f4f5f7);
+    --k-ink: var(--mc-ink, #15171c);
+    --k-muted: var(--mc-muted, #6b7280);
+    --k-accent: var(--mc-accent, #e8590c);
+    --k-accent-2: var(--mc-accent-2, #2563eb);
+    --k-on-accent: var(--mc-on-accent, #ffffff);
+    --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+    position: absolute; inset: 0; overflow: hidden; font-family: var(--k-font); color: var(--k-ink);
+  }
+  /* palette mixes: ground, toolbar/panels, cards, dark layers column, text bars */
+  .sa {
+    position: absolute; inset: 0; container-type: size;
+    --sa-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+    --sa-p2: color-mix(in srgb, var(--k-panel), var(--k-ink) 4%);
+    --sa-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+    --sa-hi: color-mix(in srgb, white 80%, transparent);
+    --sa-sk: 1;
+    --sa-gd: color-mix(in srgb, var(--k-panel), var(--k-ink) 5%);
+    --sa-bar: color-mix(in srgb, var(--k-bg), var(--k-panel) 35%);
+    --sa-card: var(--k-bg);
+    --sa-side: color-mix(in srgb, var(--k-ink) 92%, var(--k-accent-2));
+    --sa-w: color-mix(in srgb, var(--k-bg) 50%, transparent);
+    --sa-ws: var(--k-bg);
+    --sa-t1: color-mix(in srgb, var(--k-ink) 72%, transparent);
+    --sa-t2: color-mix(in srgb, var(--k-ink) 42%, transparent);
+    --sa-t3: color-mix(in srgb, var(--k-ink) 14%, transparent);
+    --sa-bs: inset 0 1px 0 color-mix(in srgb, white 28%, transparent), inset 0 0 0 1px color-mix(in srgb, white 6%, transparent), 0 1px 2px color-mix(in srgb, var(--sa-shade) 35%, transparent);
+  }
+  .sa[data-tone="dark"] {
+    --sa-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+    --sa-hi: color-mix(in srgb, white 6%, transparent);
+    --sa-sk: 2.6;
+    --sa-gd: color-mix(in srgb, var(--k-bg), var(--k-ink) 3%);
+    --sa-bar: color-mix(in srgb, var(--k-panel), var(--k-bg) 40%);
+    --sa-card: var(--k-panel);
+    --sa-side: color-mix(in srgb, var(--k-bg), black 45%);
+    --sa-w: color-mix(in srgb, var(--k-ink) 42%, transparent);
+    --sa-ws: var(--k-ink);
+  }
+  .sa-bg, .sa-cl, .sa-ground, .sa-ed { position: absolute; inset: 0; }
+  /* ==== kit:backdrop@1 ==== */
+  .sa-bg { background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+  .sa-bg::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+  /* ==== end kit:backdrop ==== */
+  /* faint cool light mid-stage: dark skins only (on white it greys the centre) */
+  .sa-cl { background: radial-gradient(ellipse 50% 45% at 50% 50%, color-mix(in srgb, var(--k-accent-2) 10%, transparent), color-mix(in srgb, var(--k-accent-2) 3%, transparent) 50%, transparent 75%); }
+  .sa:not([data-tone="dark"]) .sa-cl { display: none; }
+  /* the editor's dotted ground: part of the editor, clears with the canvas */
+  .sa-ground { opacity: 0; background: radial-gradient(circle, var(--sa-t3) 1.5px, transparent 2px) 0 0 / 28px 28px, var(--sa-gd); }
+  /* editor layers (script-built, no DOM text) */
+  .sa-l { position: absolute; box-sizing: border-box; }
+  .sa-l > svg { display: block; }
+  .sa-tb { background: var(--sa-bar); box-shadow: inset 0 -1px 0 var(--sa-line); }
+  .sa-sd { background: linear-gradient(180deg, var(--sa-side), color-mix(in srgb, var(--sa-side), black 18%)); }
+  .sa-pn { background: var(--sa-bar); box-shadow: inset 1px 0 0 var(--sa-line); }
+  .sa-sh { border-radius: 28px 28px 0 0; box-shadow: inset 0 1px 0 var(--sa-line), 0 -8px 30px color-mix(in srgb, var(--sa-shade) 8%, transparent); }
+  .sa-cv, .sa-cd { background: var(--sa-card); border: 1px solid var(--sa-line); overflow: hidden; }
+  .sa-cv { border-radius: 24px; box-shadow: inset 0 1px 0 var(--sa-hi), 0 1.8px 5px color-mix(in srgb, var(--sa-shade) calc(6.3% * var(--sa-sk)), transparent), 0 12.1px 28.6px -4.8px color-mix(in srgb, var(--sa-shade) calc(15.6% * var(--sa-sk)), transparent); }
+  .sa-cd { border-radius: 18px; box-shadow: inset 0 1px 0 var(--sa-hi), 0 0.7px 1.7px color-mix(in srgb, var(--sa-shade) calc(10.3% * var(--sa-sk)), transparent), 0 2.2px 5.2px -0.9px color-mix(in srgb, var(--sa-shade) calc(9.4% * var(--sa-sk)), transparent); }
+  .sa-1, .sa-2, .sa-3, .sa-4, .sa-5, .sa-6 { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .sa-1 { stroke: var(--sa-t1); } .sa-2 { stroke: var(--sa-t2); } .sa-3 { stroke: var(--sa-t3); }
+  .sa-4 { stroke: var(--sa-w); } .sa-5 { stroke: var(--sa-ws); } .sa-6 { stroke: var(--k-accent-2); }
+  .sa-f1 { fill: var(--sa-p2); stroke: var(--sa-line); } .sa-f2 { fill: color-mix(in srgb, var(--k-accent-2) 13%, transparent); }
+  .sa-f3 { fill: var(--sa-t3); } .sa-f4 { fill: color-mix(in srgb, var(--k-accent-2) 26%, transparent); stroke: color-mix(in srgb, var(--k-accent-2) 45%, transparent); }
+  .sa-f5 { fill: var(--sa-w); } .sa-f6 { fill: var(--sa-card); stroke: var(--sa-line); } .sa-f7 { fill: var(--sa-bar); }
+  .sa-f8, .sa-f9 { stroke: var(--sa-bar); stroke-width: 3; fill: color-mix(in srgb, var(--k-ink) 16%, var(--sa-bar)); }
+  .sa-f9 { fill: color-mix(in srgb, var(--k-accent-2) 30%, var(--sa-bar)); }
+  /* ==== kit:vignette@1 ==== */
+  .sa-vig {
+    position: absolute; inset: 0; pointer-events: none;
+    --vs: 0.16; --vin: 42%; --vx: 50%; --vy: 46%; --vc: var(--sa-shade);
+    background:
+      radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+      radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+  }
+  .sa[data-tone="dark"] .sa-vig { --vs: 0.55; }
+  /* ==== end kit:vignette ==== */
+  /* ==== kit:grain@1 ==== */
+  .sa-grain { position: absolute; inset: 0; pointer-events: none; }
+  /* ==== end kit:grain ==== */
+  /* ==== kit:light@1 ==== */
+  .sa-light { mix-blend-mode: multiply; }
+  .sa[data-tone="dark"] .sa-light { mix-blend-mode: screen; }
+  /* ==== end kit:light ==== */
+  /* the button is laid out at its centre size (x1.5), scaled down in the toolbar */
+  .sa-halo { position: absolute; left: -300px; top: -190px; width: 600px; height: 380px; border-radius: 50%; opacity: 0; transform-origin: 300px 190px; background: radial-gradient(closest-side, color-mix(in srgb, var(--k-accent) 38%, transparent), color-mix(in srgb, var(--k-accent) 10%, transparent) 57%, transparent); }
+  .sa-bw { position: absolute; left: 0; top: 0; opacity: 0; }
+  .sa-btn {
+    position: absolute; left: 0; top: 0; translate: -50% -50%; display: flex; align-items: center; gap: 18px;
+    width: max-content; min-height: 96px; padding: 8px 40px; box-sizing: border-box; border-radius: 21px; white-space: nowrap;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--k-accent), white 7%), color-mix(in srgb, var(--k-accent), black 6%));
+    box-shadow: var(--sa-bs); color: var(--k-on-accent); font-weight: 700; font-size: 45px; line-height: 1.2;
+  }
+  .sa-up { display: block; flex: none; width: 42px; height: 42px; fill: none; stroke: var(--k-on-accent); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .sa-lbl { display: block; white-space: normal; }
+  /* ==== kit:text@2 ==== */
+  .sa-u { display: inline-block; white-space: pre; }
+  /* ==== end kit:text ==== */
+  /* ==== kit:mark@1 ==== */
+  .sa-mark { display: block; flex: none; }
+  /* ==== end kit:mark ==== */
+  /* lockup on the middle line (40% in portrait) */
+  .sa-lock { position: absolute; left: 10%; right: 10%; top: 50%; height: 0; display: flex; justify-content: center; align-items: center; }
+  .sa-lk { display: flex; align-items: center; gap: 34px; max-width: 100%; }
+  .sa-mk { flex: none; width: 148px; height: 148px; }
+  .sa-mk svg, .sa-mk img { display: block; width: 100%; height: 100%; object-fit: contain; }
+  .sa-nm { min-width: 0; padding-bottom: 4px; font: 700 92px/1.2 var(--mc-font, sa-heavy, var(--k-font)); letter-spacing: 0.03em; color: var(--k-ink); }
+  .sa-cur { position: absolute; left: 0; top: 0; width: 42px; height: 54px; opacity: 0; transform-origin: 3px 3px; filter: drop-shadow(0 4px 7px color-mix(in srgb, var(--sa-shade) 30%, transparent)); }
+  .sa-cur path { fill: var(--k-ink); stroke: var(--k-bg); stroke-width: 1.1; stroke-linejoin: round; }
+  @container (orientation: portrait) {
+    .sa-lock { top: 40%; left: 11%; right: 11%; }
+    .sa-lk { gap: 30px; }
+    .sa-mk { width: 136px; height: 136px; }
+    .sa-nm { font-size: 84px; }
+  }
+</style>
+
+<div id="root" data-composition-id="ui-strip-away-outro">
+  <div class="sa">
+    <div class="sa-bg"></div>
+    <div class="sa-cl sa-light"></div>
+    <div class="sa-ground"></div>
+    <div class="sa-ed"></div>
+    <div class="sa-vig"></div>
+    <div class="sa-grain"></div>
+    <div class="sa-halo sa-light" data-layout-allow-overflow></div>
+    <div class="sa-bw">
+      <div class="sa-btn"><svg class="sa-up" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7" /></svg><span class="sa-lbl" data-layout-allow-occlusion>发布</span></div>
+    </div>
+    <div class="sa-lock">
+      <div class="sa-lk">
+        <span class="sa-mk"><svg class="sa-mark" viewBox="0 0 128 128" aria-hidden="true"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)" /><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)" /><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)" /></svg></span>
+        <span class="sa-nm">示例应用</span>
+      </div>
+    </div>
+    <svg class="sa-cur" viewBox="0 0 14 18" aria-hidden="true"><path d="M1 1L1 15L4.6 11.6L7.2 17L9.4 16L6.9 10.7L12 10.7Z" /></svg>
+  </div>
+</div>
+
+<script>
+(function () {
+  // seconds (upstream frame / 30), shared by both orientations
+  var CFG = {
+    cur: 0.133, curDur: 0.933, click: 1.133, curOut: 1.333, curOutDur: 0.333,
+    side: 1.267, panel: 1.4, cards: 1.533, ends: 1.667, canvas: 1.8, shell: 1.933, cardGap: 0.1, strip: 0.467,
+    clear: 0.667, move: 0.6, fade: 2.867, fadeDur: 0.4, lockup: 3.2, wordLag: 0.1, slot: 5
+  };
+  // px at a 1080-px short side: button slot y and right gap, the line it moves to (share of height), cursor start,
+  // name size floor, the layers column's drift
+  var LAND = { btnY: 48, btnR: 24, to: 0.5, cur: [0.427, 0.593], min: 64, side: [-140, 0] };
+  var PORT = { btnY: 296, btnR: 108, to: 0.4, cur: [0.42, 0.45], min: 72, side: [0, 140] };
+  var MV = { panel: [-90, 20], tl: [-80, -60], tr: [80, -60], tm: [0, -50], cv: [0, 40] };
+  var v = { button: "发布", name: "示例应用", logo: "", backdrop: "on" };
+  try {
+    var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k]; // "" clears name and logo
+  } catch (e) {}
+
+  var root = document.querySelector(".sa");
+  var q = function (s) { return root.querySelector(s); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+    // not laid out yet: the host clip's declared size, then the window
+    var hc = root.closest("[data-width][data-height]");
+    FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+    FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND, C = CFG;
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+  var U = Math.min(FW, FH) / 1.08e3, A = FW / U, Z = FH / U;
+
+  // ==== kit:tone@1 ====
+  function kRGB(el, color) {
+    var p = document.createElement("i");
+    p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+    el.appendChild(p);
+    var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+    el.removeChild(p);
+    return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+  }
+  function kTone(wrap) {
+    var c = kRGB(wrap, "var(--k-bg)");
+    var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+    wrap.setAttribute("data-tone", tone);
+    return tone;
+  }
+  // ==== end kit:tone ====
+  // ==== kit:grain@1 ====
+  function kGrain(layer, o) {
+    o = o || {};
+    var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+    var dark = tones && tones.getAttribute("data-tone") === "dark";
+    var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+      var f = "type='linear' slope='2.4' intercept='-0.7'";
+      var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+        "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+        "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+        "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+        "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+      return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+    });
+    layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+    layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+    layer.style.backgroundSize = size + "px " + size + "px";
+    return function (t) {
+      var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+      layer.style.backgroundImage = tiles[k % 6];
+      layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+    };
+  }
+  // ==== end kit:grain ====
+  // ==== kit:fit@1 (kFit and kLines) ====
+  function kFit(el, o) {
+    o = o || {};
+    var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+    var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+    for (;;) {
+      el.style.fontSize = f + "px";
+      m = kLines(el);
+      if ((m.w <= W && m.n <= n) || f <= min) break;
+      f = Math.max(min, f - 2);
+    }
+    if (m.w > W) {
+      [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+      m = kLines(el);
+    }
+    return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+  }
+  function kLines(el) {
+    var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+    var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+    while ((t = it.nextNode())) {
+      if (!t.data.trim()) continue;
+      r.selectNodeContents(t);
+      [].forEach.call(r.getClientRects(), function (b) {
+        var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+        if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+        row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+      });
+    }
+    return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+  }
+  // ==== end kit:fit ====
+  // ==== kit:text@2 (kWords and kSplit, no rise) ====
+  var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+  function kWords(s, key) {
+    s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+    var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+    var cut = function (x) {
+      if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+      return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+    };
+    var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+    var pre = "";
+    bits.forEach(function (x) {
+      var t = x.trim(), last = out[out.length - 1];
+      if (last && /^ /.test(x)) last.sp = true;
+      if (!t) return;
+      if (!/[\p{L}\p{N}]/u.test(t)) {
+        if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+        else { last.t += t; last.sp = / $/.test(x); }
+        return;
+      }
+      out.push({ t: pre + t, sp: / $/.test(x) });
+      pre = "";
+    });
+    if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+    if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+    if (out.length) out[out.length - 1].sp = false;
+    return out;
+  }
+  function kSplit(el, by, rise, text) {
+    var s = text != null ? String(text) : el.textContent, units = [];
+    var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+    el.textContent = "";
+    parts.forEach(function (p) {
+      var u = document.createElement("span");
+      u.className = "sa-u"; u.textContent = p.t;
+      if (!p.t.trim()) { el.appendChild(u); return; }
+      el.appendChild(u);
+      if (p.sp) el.appendChild(document.createTextNode(" "));
+      units.push(u);
+    });
+    return units;
+  }
+  // ==== end kit:text ====
+
+  var dark = kTone(root) === "dark";
+  var gr = q(".sa-grain"), grain = kGrain(gr), ground = q(".sa-ground"), stage = q(".sa-cl"), vig = q(".sa-vig");
+  if (String(v.backdrop) === "off") [q(".sa-bg"), stage, vig, gr].forEach(function (e) { e.style.display = "none"; });
+
+  // text slots: the label at its centre size, the name beside the mark
+  var bw = q(".sa-bw"), btn = q(".sa-btn"), lbl = q(".sa-lbl"), halo = q(".sa-halo"), cur = q(".sa-cur");
+  kSplit(lbl, "word", false, String(v.button).trim() || "发布");
+  lbl.style.maxWidth = "330px"; // 10% slack over the fit width: the face can resolve after the fit
+  kFit(lbl, { width: 300, min: 40 });
+  var BW = btn.offsetWidth / 1.5, BH = btn.offsetHeight / 1.5; // its toolbar size
+  var lk = q(".sa-lk"), mk = q(".sa-mk"), nm = q(".sa-nm"), logo = String(v.logo).trim(), name = String(v.name).trim(), src = logo.replace(/"/g, "&quot;");
+  var MK = logo === "none" ? "" : logo ? '<image href="' + src + '" width="52" height="52"/>' : q(".sa-mark").outerHTML.replace("<svg", '<svg width="52" height="52"');
+  if (logo === "none") mk.style.display = "none";
+  else if (logo) mk.innerHTML = '<img src="' + src + '" alt="">';
+  if (name) {
+    kSplit(nm, "word", false, name);
+    kFit(nm, { width: q(".sa-lock").clientWidth - (logo === "none" ? 0 : mk.offsetWidth + parseFloat(getComputedStyle(lk).columnGap)), min: L.min });
+  } else nm.style.display = "none";
+
+  // the editor: text-free layers, each a box (U units) with an SVG in the same units
+  var ed = q(".sa-ed"), LY = { cards: [] };
+  var IC = ["M5 3l13 8-6 1.5L9 19z", "M7 3v18M17 3v18M3 7h18M3 17h18", "M5 6V4h14v2M12 4v16M9 20h6", "M12 19l7-7-3-3-7 7-1 4zM14 7l3 3", "M4 5h16v14H4zM4 16l5-5 4 4 3-3 4 4", "M12 3l4 4-4 4-4-4zM12 13l4 4-4 4-4-4z"];
+  var bar = function (c, w, d) { return '<path class="sa-' + c + '" stroke-width="' + w + '" d="' + d + '"/>'; };
+  var hb = function (x, y, l) { return "M" + x + " " + y + "h" + l; };
+  var rc = function (c, x, y, w, h, r) { return '<rect class="sa-' + c + '" x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + r + '"/>'; };
+  var ico = function (i, x, y, c) { return '<g transform="translate(' + x + " " + y + ') scale(1.15)">' + bar(c, 1.8, IC[i]) + "</g>"; };
+  var lay = function (cls, x, y, w, h, svg, par) {
+    var d = document.createElement("div");
+    d.className = "sa-l " + cls;
+    d.setAttribute("data-layout-allow-overflow", ""); // drifts past the frame edge as it leaves; no text inside
+    d.style.cssText = "left:" + x * U + "px;top:" + y * U + "px;width:" + w * U + "px;height:" + h * U + "px";
+    if (svg != null) d.innerHTML = '<svg width="100%" height="100%" viewBox="0 0 ' + w + " " + h + '">' + svg + "</svg>";
+    (par || ed).appendChild(d);
+    return d;
+  };
+  // properties: sections of a title bar and rows of fields (weights; 0 is a colour swatch)
+  var pane = function (w, pad, y, secs) {
+    var s = "";
+    secs.forEach(function (rows, k) {
+      s += bar(1, 9, hb(pad, y, 46 + 16 * k));
+      y += 26;
+      rows.forEach(function (row) {
+        var sum = 0, sw = 0, x = pad;
+        row.forEach(function (z) { sum += z; if (!z) sw++; });
+        var room = w - 2 * pad - (row.length - 1) * 12 - sw * 52;
+        row.forEach(function (z) {
+          if (!z) { s += rc("f6", x, y, 52, 52, 12); x += 64; return; }
+          var fw = (room * z) / sum;
+          s += rc("f1", x, y, fw, 52, 12) + bar(3, 8, hb(x + 16, y + 26, 14)) + bar(1, 8, hb(x + 44, y + 26, Math.max(10, fw * 0.42 - 20)));
+          x += fw + 12;
+        });
+        y += 64;
+      });
+      s += bar(3, 1.5, hb(0, y + 6, w));
+      y += 36;
+    });
+    return s;
+  };
+  // a dashboard card: header, a big number, then a line or a bar chart
+  var card = function (w, h, i) {
+    var r = MT.seeded(i + 2), top = 168, bot = h - 30, pts = [], k, d;
+    var s = rc("f1", 22, 22, 36, 36, 10) + bar(1, 12, hb(74, 40, 96 + 60 * r())) + rc("f2", w - 140, 25, 72, 30, 15) + bar(6, 7, hb(w - 124, 40, 40)) +
+      bar(2, 5, "M" + (w - 44) + " 40h0m10 0h0m10 0h0") + bar(1, 26, hb(35, 100, 90 + 70 * r())) + bar(3, 9, hb(26, 140, 120 + 60 * r()));
+    for (k = 0; k < 9; k++) pts.push([22 + (k * (w - 44)) / 8, top + (bot - top) * (0.12 + 0.76 * r())]);
+    if (i % 2) pts.forEach(function (p, k) { s += bar(k === 6 ? 6 : 3, 18, "M" + p[0] + " " + bot + "V" + p[1].toFixed(1)); });
+    else {
+      d = pts.map(function (p, k) { return (k ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1); }).join("");
+      s += '<path class="sa-f2" d="' + d + "L" + (w - 22) + " " + bot + "L22 " + bot + 'Z"/>' + bar(6, 3.5, d);
+    }
+    return s;
+  };
+  var t0 = P ? 232 : 0, tb = P ? 128 : 96, ty = L.btnY - t0, sL = P ? 389 : 720, sR = P ? 389 : 460, s = "", x;
+  // layers list: a dark left column (landscape) or bottom tab bar (portrait)
+  if (P) {
+    for (k = 0; k < 6; k++) { x = 90 + k * 180; s += (k === 2 ? rc("f4", x - 32, 36, 64, 64, 16) : "") + ico(k, x - 14, 54, k === 2 ? 5 : 4) + bar(k === 2 ? 5 : 4, 8, hb(x - 22, 136, 44)); }
+    LY.side = lay("sa-sd", 0, Z - 210, A, 210, s);
+  } else {
+    s = bar(4, 9, hb(28, 34, 64));
+    [0, 1, 1, 2, 2, 1, 2, 2, 2, 2, 1].forEach(function (d, i) {
+      var y = 64 + i * 54, x = 30 + d * 22;
+      s += (i === 5 ? rc("f4", 12, y, 256, 46, 10) : "") + rc("f5", x, y + 16, 14, 14, 4) + bar(i === 5 ? 5 : 4, 10, hb(x + 30, y + 23, [96, 72, 80, 84, 70, 112, 132, 128, 120, 118, 86][i]));
+    });
+    LY.side = lay("sa-sd", 0, tb, 280, Z - tb, s);
+  }
+  // properties: a right column (landscape) or bottom sheet (portrait)
+  LY.panel = P ? lay("sa-pn sa-sh", 0, Z - 620, A, 410, bar(3, 8, hb(A / 2 - 40, 22, 80)) + pane(A, 72, 52, [[[1, 1, 1, 1]], [[0, 3, 1, 1]], [[2, 1]]]))
+    : lay("sa-pn", A - 340, tb, 340, Z - tb, pane(340, 28, 40, [[[1, 1], [1, 1]], [[1, 1]], [[0, 3, 1]], [[1]]]));
+  // canvas: a browser-like frame and four cards
+  var cw = P ? A - 120 : 1160, cv = (LY.cv = lay("", P ? 60 : A / 2 - 610, P ? 400 : 160, cw, 860));
+  lay("sa-cv", 0, 0, cw, 860, rc("f7", 0, 0, cw, 56, 0) + bar(3, 1.5, hb(0, 56, cw)) + bar(3, 14, "M30 28h0m22 0h0m22 0h0") + rc("f1", 100, 13, P ? 360 : 420, 30, 9) + bar(2, 8, hb(122, 28, 180)), cv);
+  var cx = P ? [40, 495] : [60, 610], cdw = P ? 425 : 490, cdh = P ? 330 : 320;
+  for (k = 0; k < 4; k++) LY.cards.push(lay("sa-cd", cx[k % 2], k < 2 ? 110 : 480, cdw, cdh, card(cdw, cdh, k), cv));
+  // toolbar: mark and tools | title | avatars, invite (the button is the top layer)
+  s = '<g transform="translate(' + (P ? 96 : 24) + " " + (ty - 26) + ')">' + MK + "</g>" + (P ? bar(1, 5, "M60 " + (ty - 16) + "l-14 16 14 16") : "");
+  for (k = 0; k < (P ? 2 : 6); k++) { x = (P ? 172 : 100) + k * 58; s += (k ? "" : rc("f2", x, ty - 27, 54, 54, 12)) + ico(k, x + 13, ty - 14, k ? 2 : 6); }
+  LY.tl = lay("sa-tb", 0, t0, sL, tb, s);
+  var mw = A - sL - sR, m = mw / 2;
+  LY.tm = lay("sa-tb", sL, t0, mw, tb, (P ? "" : bar(3, 12, hb(m - 200, ty, 90)) + bar(3, 3, "M" + (m - 84) + " " + (ty + 11) + "l8-22")) + bar(1, 13, hb(m - (P ? 90 : 50), ty, 120)) + rc("f3", m + (P ? 48 : 90), ty - 18, 78, 36, 9) + bar(2, 8, hb(m + (P ? 66 : 108), ty, 42)));
+  x = sR - L.btnR - BW / U - 16;
+  s = P ? "" : rc("f6", (x -= 112), ty - 26, 112, 52, 12) + bar(1, 9, hb(x + 30, ty, 52));
+  if (!P) x -= 14;
+  LY.tr = lay("sa-tb", A - sR, t0, sR, tb, s + '<circle class="sa-f8" cx="' + (x - 52) + '" cy="' + ty + '" r="21"/><circle class="sa-f9" cx="' + (x - 22) + '" cy="' + ty + '" r="21"/>');
+  // strip order: layer, start, drift (px at U = 1)
+  var M = MV, ORDER = [[LY.side, C.side, L.side], [LY.panel, C.panel, M.panel]].concat(LY.cards.map(function (c, i) { return [c, C.cards + i * C.cardGap, [i % 2 ? 70 : -70, 50 + i * 10]]; }), [[LY.tl, C.ends, M.tl], [LY.tr, C.ends, M.tr], [LY.cv, C.canvas, M.cv], [LY.tm, C.shell, M.tm]]);
+
+  // button path: toolbar slot to the middle line
+  var F = [FW - L.btnR * U - BW / 2, L.btnY * U], T = [FW / 2, L.to * FH], D = Math.hypot(T[0] - F[0], T[1] - F[1]);
+  var S0 = [L.cur[0] * FW, L.cur[1] * FH], TG = [F[0] + 0.12 * BW, F[1] + 0.1 * BH];
+  var cl = function (t, a, d, e) { return MT.interpolate(t, [a, a + d], [0, 1], { easing: e, extrapolateLeft: "clamp", extrapolateRight: "clamp" }); };
+  var bl = function (x, lo) { return x > lo ? "blur(" + x.toFixed(2) + "px)" : ""; };
+
+  var tl = MT.scene(C.slot, function (t) {
+    var sp = function (d, k, s) { return MT.spring({ t: t, delay: d, damping: k, stiffness: s }); }, bg = cl(t, C.canvas, C.clear, "power1.inOut");
+    // each layer leaves: ease-in fade, drift and a blur growing to 7 px
+    ORDER.forEach(function (o) {
+      var p = cl(t, o[1], C.strip, "power1.in"), e = o[0].style;
+      e.opacity = 1 - p;
+      e.transform = "translate(" + (o[2][0] * p * U).toFixed(2) + "px," + (o[2][1] * p * U).toFixed(2) + "px)";
+      e.filter = bl(7 * p * U, 0.007);
+    });
+    ground.style.opacity = 1 - bg;
+    stage.style.opacity = bg;
+    vig.style.setProperty("--vs", (dark ? 0.12 + 0.45 * bg : 0.04 + 0.12 * bg).toFixed(3));
+    gr.style.opacity = 0.05 + 0.03 * bg;
+    grain(t);
+
+    // button: press, migrate x1.5 with a growing glow, hand over
+    var c = cl(t, C.shell, C.move, "power2.inOut"), c0 = cl(t - 1 / 30, C.shell, C.move, "power2.inOut");
+    var ps = t < C.click ? 1 : 1 - 0.12 * Math.sin(Math.min(1, sp(C.click, 12, 220)) * Math.PI);
+    var rel = MT.ramp(t, C.fade, C.fadeDur, "out"), op = 1 - MT.ramp(t, C.fade, C.fadeDur, "exit"), sc = (1 + 0.5 * c) / 1.5;
+    bw.style.transform = halo.style.transform = "translate(" + MT.mix(F[0], T[0], c).toFixed(2) + "px," + MT.mix(F[1], T[1], c).toFixed(2) + "px) scale(" + (ps * (1 + 0.06 * rel)).toFixed(4) + ")";
+    bw.style.opacity = op;
+    bw.style.filter = bl(Math.min(3 * U, D * Math.abs(c - c0) * 0.04), 0.2 * U);
+    halo.style.opacity = c * bg * op;
+    btn.style.transform = "scale(" + sc.toFixed(4) + ")";
+    btn.style.boxShadow = "var(--sa-bs), 0 0 " + ((30 + 40 * c) / sc).toFixed(1) + "px color-mix(in srgb, var(--k-accent) " + (18 + 40 * c * bg).toFixed(1) + "%, transparent)";
+
+    // lockup: the mark springs into focus, the name 3 frames later
+    var lp = sp(C.lockup, 14, 90), wp = sp(C.lockup + C.wordLag, 14, 90);
+    lk.style.transform = "scale(" + (0.86 + 0.14 * lp).toFixed(4) + ")";
+    mk.style.opacity = Math.min(1, lp * 1.4);
+    mk.style.filter = bl((1 - lp) * 9 * U, 0.045);
+    nm.style.opacity = Math.min(1, wp * 1.4);
+    nm.style.transform = "translateX(" + ((1 - wp) * -16 * U).toFixed(2) + "px)";
+    nm.style.filter = bl((1 - wp) * 9 * U, 0.045);
+
+    // cursor: x and y on different eases (an arc), the tip dips at the press
+    var px = MT.mix(S0[0], TG[0], cl(t, C.cur, C.curDur, "power1.inOut")), py = MT.mix(S0[1], TG[1], cl(t, C.cur, C.curDur, "cubic-bezier(0.3,0,0.15,1)"));
+    cur.style.opacity = 1 - MT.ramp(t, C.curOut, C.curOutDur, "out");
+    cur.style.transform = "translate(" + (px - 3).toFixed(2) + "px," + (py - 3).toFixed(2) + "px) scale(" + (t >= 1.1 && t < 1.233 ? 0.88 : 1) + ")";
+  });
+  window.__timelines["ui-strip-away-outro"] = tl;
+})();
+</script>
+</template>
+  </body>
+</html>

@@ -1,0 +1,199 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"lead","type":"string","label":"胶囊左边的字","default":"你的"},
+    {"id":"items","type":"string","label":"胶囊里轮换的词（用 | 分隔，2–4 个，长短错开最好）","default":"表格|会议纪要|周报|数据报告"},
+    {"id":"tail","type":"string","label":"胶囊右边的字","default":"已搞定"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>pill-chip-slot-cycle · 胶囊滚轮挤字</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="pill-chip-slot-cycle-template">
+      <!-- Ported from video-shotcraft demos/typography/pill-chip-slot-cycle-handled/PillChipSlotCycleHandled.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette (chip = --k-ink, word colour = --k-bg), system fonts, generic Chinese copy instead of
+           the upstream English sentence and product words; emoji replaced by neutral accent tiles with line icons;
+           480x270 design stage replaced by one scale factor fitted to the frame (landscape up to 4x as upstream,
+           portrait about 2.5x on the same single line); switch times, 0.12 window, inOutCubic, 48-unit rows, ghost
+           offsets -38/58, half-speed ghost parallax, 0.13 ghost opacity and the +74 chip padding are unchanged;
+           the chip clip is clip-path with an opacity gate on the rows instead of overflow:hidden; hold after the last
+           switch lengthened from 0.9s to 1.2s. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        .pc { position: absolute; inset: 0; container-type: size; --pc-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); --pc-sh: 22%; }
+        .pc[data-tone="dark"] { --pc-shade: color-mix(in srgb, var(--k-bg) 30%, black); --pc-sh: 57%; }
+        .pc-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        /* --pc-s is the upstream 480x270 design stage factor: every size below is a design-unit number times it */
+        .pc-box { --pc-s: 4; position: absolute; top: 0; bottom: 0; left: 10%; right: 10%; display: flex; align-items: center; justify-content: center; }
+        .pc-sent { display: flex; align-items: center; justify-content: center; flex-wrap: nowrap; }
+        .pc-side { display: block; flex: none; font-size: calc(30px * var(--pc-s)); font-weight: 800; line-height: 1.2; white-space: nowrap; color: var(--k-ink); }
+        .pc-slot { position: relative; flex: none; }
+        .pc-chip { position: relative; display: block; width: calc(162px * var(--pc-s)); height: calc(48px * var(--pc-s)); margin: 0 calc(14px * var(--pc-s)); border-radius: 99px; background: var(--k-ink);
+          box-shadow: 0 calc(8px * var(--pc-s)) calc(24px * var(--pc-s)) color-mix(in srgb, var(--pc-shade) var(--pc-sh), transparent); }
+        .pc-clip { position: absolute; inset: 0; clip-path: inset(0 round 999px); }
+        .pc-col { position: absolute; left: 0; right: 0; top: 0; transform: translateY(calc(-144px * var(--pc-s))); }
+        .pc-row { display: flex; align-items: center; height: calc(48px * var(--pc-s)); gap: calc(9px * var(--pc-s)); padding-left: calc(16px * var(--pc-s)); white-space: nowrap; }
+        .pc-tile { display: flex; align-items: center; justify-content: center; flex: none; width: calc(20px * var(--pc-s)); height: calc(20px * var(--pc-s)); border-radius: calc(6px * var(--pc-s)); background: var(--k-accent); }
+        .pc-tile svg { display: block; width: calc(14px * var(--pc-s)); height: calc(14px * var(--pc-s)); fill: none; stroke: var(--k-on-accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        .pc-w { display: block; font-size: calc(22px * var(--pc-s)); font-weight: 700; line-height: 1.2; color: var(--k-bg); }
+        .pc-gh { position: absolute; left: 50%; display: block; font-size: calc(22px * var(--pc-s)); font-weight: 700; line-height: 1.2; white-space: nowrap; color: var(--k-ink); opacity: 0.13; transform: translateX(-50%); }
+        .pc-ga { top: calc(-38px * var(--pc-s)); }
+        .pc-gb { top: calc(58px * var(--pc-s)); opacity: 0; }
+        .pc-br { display: none; }
+        /* too long for one line even at the smallest size: the right-hand text drops to a second line (decided once, not per frame) */
+        .pc-box[data-stack] .pc-sent { flex-wrap: wrap; }
+        .pc-box[data-stack] .pc-br { display: block; flex: none; width: 100%; height: calc(44px * var(--pc-s)); }
+        /* portrait: the sentence stays on one line and just gets a smaller factor; the block sits on the 40% line */
+        @container (orientation: portrait) {
+          .pc-box { --pc-s: 2.5; top: 12%; bottom: 32%; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="pill-chip-slot-cycle">
+        <div class="pc">
+          <div class="pc-bg"></div>
+          <div class="pc-box">
+            <div class="pc-sent">
+              <div class="pc-side pc-lead">你的</div>
+              <div class="pc-slot">
+                <div class="pc-chip"><div class="pc-clip"><div class="pc-col" data-layout-allow-overflow><div class="pc-row"><span class="pc-tile"><svg viewBox="0 0 20 20"><rect x="3" y="4" width="14" height="12" rx="2"/><path d="M3 10h14M10 4v12"/></svg></span><span class="pc-w">表格</span></div><div class="pc-row"><span class="pc-tile"><svg viewBox="0 0 20 20"><path d="M5 2.5h6.5L15 6v11.5H5z"/><path d="M8 11h4M8 14h4"/></svg></span><span class="pc-w">会议纪要</span></div><div class="pc-row"><span class="pc-tile"><svg viewBox="0 0 20 20"><rect x="3" y="4.5" width="14" height="12.5" rx="2"/><path d="M3 9h14M7 2.5v3M13 2.5v3"/></svg></span><span class="pc-w">周报</span></div><div class="pc-row"><span class="pc-tile"><svg viewBox="0 0 20 20"><path d="M5 16V10M10 16V4.5M15 16v-4.5"/></svg></span><span class="pc-w">数据报告</span></div></div></div></div>
+                <div class="pc-gh pc-ga">周报</div>
+                <div class="pc-gh pc-gb"></div>
+              </div>
+              <i class="pc-br"></i>
+              <div class="pc-side pc-tail">已搞定</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing (seconds): upstream switch points 0.25 / 0.47 / 0.69 of a 149-frame normalised clock, 0.12 window
+          var CFG = { sw: [1.242, 2.334, 3.427], win: 0.596, dim: 0.13, total: 5.2 };
+          // sizes per orientation: the scale factor is fitted between sMin and sMax; width = share of the frame the line may use
+          var LAND = { sMax: 4, sMin: 2.4, width: 0.8 };
+          var PORT = { sMax: 3.2, sMin: 2.4, width: 0.8 };
+          var v = { lead: "你的", items: "表格|会议纪要|周报|数据报告", tail: "已搞定", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".pc");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          if (String(v.backdrop) === "off") q(".pc-bg").style.display = "none";
+
+          // ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== end kit:tone ====
+          kTone(root);
+
+          var ICONS = [
+            '%<rect x="3" y="4" width="14" height="12" rx="2"/><path d="M3 10h14M10 4v12"/>%',
+            '%<path d="M5 2.5h6.5L15 6v11.5H5z"/><path d="M8 11h4M8 14h4"/>%',
+            '%<rect x="3" y="4.5" width="14" height="12.5" rx="2"/><path d="M3 9h14M7 2.5v3M13 2.5v3"/>%',
+            '%<path d="M5 16V10M10 16V4.5M15 16v-4.5"/>%'
+          ];
+          var words = String(v.items).split("|").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 4);
+          if (!words.length) words = ["表格"];
+          var n = words.length;
+          var box = q(".pc-box"), lead = q(".pc-lead"), tail = q(".pc-tail"), chip = q(".pc-chip"), col = q(".pc-col");
+          var ga = q(".pc-ga"), gb = q(".pc-gb");
+          // text slots: lead and tail take the text as typed (spaces kept); an empty one disappears
+          lead.textContent = String(v.lead).trim();
+          tail.textContent = String(v.tail).trim();
+          lead.style.display = lead.textContent ? "" : "none";
+          tail.style.display = tail.textContent ? "" : "none";
+          col.innerHTML = words.map(function (w, i) {
+            return '<div class="pc-row"><span class="pc-tile"><svg viewBox="0 0 20 20">' + ICONS[i % 4] + '</svg></span><span class="pc-w"></span></div>';
+          }).join("");
+          var rows = [].slice.call(col.children);
+          var ws = rows.map(function (r, i) { var s = r.querySelector(".pc-w"); s.textContent = words[i]; return s; });
+
+          // fit: measure at factor 1, pick the largest factor that keeps the widest line inside the frame
+          var setS = function (s) { box.style.setProperty("--pc-s", s); };
+          var chipW = function (s) { return ws.map(function (w) { return w.offsetWidth + 74 * s; }); };
+          var AW = FW * L.width, S0 = 1;
+          setS(S0);
+          var W1 = chipW(S0), M = Math.max.apply(null, W1), lw = lead.offsetWidth, tw = tail.offsetWidth;
+          var S = Math.min(L.sMax, AW / ((lw + tw + M + 28) * 1.03));
+          if (S < L.sMin) {
+            // stack: the right-hand text goes under the chip, the factor may drop to where chip words are still 40px
+            box.setAttribute("data-stack", "1");
+            S = Math.max(40 / 22, Math.min(L.sMax, AW / ((lw + M + 28) * 1.03), tw ? AW / (tw * 1.03) : L.sMax));
+          }
+          setS(S);
+          var W = chipW(S);
+
+          var cur = [null, null];
+          var tl = MT.scene(CFG.total, function (t) {
+            var pos = 0;
+            for (var i = 0; i < n - 1; i++) pos += MT.ramp(t, CFG.sw[i], CFG.win, "power3.inOut");
+            var ci = Math.min(n - 1, Math.floor(pos)), fr = pos - ci;
+            chip.style.width = MT.mix(W[ci], W[Math.min(ci + 1, n - 1)], fr) + "px";
+            col.style.transform = "translateY(" + (-pos * 48 * S) + "px)";
+            // a row fades out just after its centre leaves the chip (0.5 row), so no text box sits outside the clip
+            for (var r = 0; r < n; r++) rows[r].style.opacity = MT.clamp((0.56 - Math.abs(pos - r)) / 0.06, 0, 1);
+            var near = Math.round(pos), roll = (pos - near) * 48 * 0.5 * S;
+            var op = CFG.dim * (0.4 + (1 - Math.min(1, Math.abs(pos - near) * 3)) * 0.6);
+            var ta = near > 0 ? words[near - 1] : "", tb = near < n - 1 ? words[near + 1] : "";
+            if (cur[0] !== ta) { ga.textContent = ta; cur[0] = ta; }
+            if (cur[1] !== tb) { gb.textContent = tb; cur[1] = tb; }
+            ga.style.opacity = ta ? op : 0;
+            gb.style.opacity = tb ? op : 0;
+            ga.style.transform = gb.style.transform = "translate(-50%, " + (-roll) + "px)";
+          });
+          window.__timelines["pill-chip-slot-cycle"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

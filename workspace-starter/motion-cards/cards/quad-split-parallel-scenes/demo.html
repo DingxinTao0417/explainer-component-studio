@@ -1,0 +1,473 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"左上：网页大标题","default":"第 3 课"},
+    {"id":"done","type":"string","label":"右上：终端末行（急推放大）","default":"第3课.mp4 已导出"},
+    {"id":"words","type":"string","label":"左下：三个大词，| 分隔","default":"写稿。|录制。|发布。"},
+    {"id":"toast","type":"string","label":"右下：上线通知（数字从 0 数上去）","default":"已上线 · 3,214 次播放"},
+    {"id":"name","type":"string","label":"左上：应用名，留空只留标志","default":"示例应用"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"深色分格缝"},{"value":"off","label":"透明缝"}]}
+  ]'
+>
+<head>
+<meta charset="UTF-8" />
+<title>quad-split-parallel-scenes · 四宫格并行错拍</title>
+<script src="../../lib/preview.js"></script>
+</head>
+<body>
+<template id="quad-split-parallel-scenes-template">
+<!-- Ported from video-shotcraft demos/rhythm/quad-split-parallel-scenes/QuadSplitParallelScenes.tsx
+     (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+     Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+     Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+     neutral --k-* palette (ember mapped to a tone-aware checkerboard), system fonts, generic copy; upstream mark,
+     wordmark, tagline, tab names, avatar initials and the Remotion command removed, tabs drawn as bars; 30-36px text
+     raised to 40, corner labels 20 to 28, headline 96 to 88, words 132 to 120; Publish dims by a 50% colour mix, not
+     45% opacity; card and toast fade their surface and cut their text in; grain under each scene, not over all;
+     1 s hold added; portrait layout. Kept: event times, eases, 1.85 whip push, 5px sine blur, 8% ghost lines,
+     0.53 em drop and 1.12 shrink, cursor curves, 1.1 push, blink periods, 3,214 count. -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+@font-face { font-family: "Consolas"; src: local("Consolas"); }
+@font-face { font-family: "qs-heavy"; font-weight: 700 900; src: local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"), local("PingFangSC-Semibold"), local("NotoSansSC-Black"); }
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  --k-mono: var(--mc-mono, Consolas, monospace);
+  position: absolute; inset: 0; overflow: hidden; font-family: var(--k-font); color: var(--k-ink);
+}
+/* ==== kit:grain@1 ==== */
+.qs-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+/* ==== kit:text@2 ==== */
+.qs-u { display: inline-block; white-space: pre; }
+/* ==== end kit:text ==== */
+/* grain: drawn on a hidden layer, shown under each scene */
+.qs-grain{display:none}
+.qs-q::before{content:"";position:absolute;inset:0;opacity:0.06;mix-blend-mode:overlay;background:var(--qs-gi,none) var(--qs-gp,0 0) / 256px 256px}
+/* brightness checkerboard: TR and seams dark, TL light, BR mid, BL accent */
+.qs{position:absolute;inset:0;container-type:size;--qs-hv:qs-heavy,var(--k-font);--qs-dk:color-mix(in srgb,var(--k-ink) 92%,var(--k-accent));--qs-on-dk:var(--k-bg);--qs-q1:color-mix(in srgb,var(--k-panel),var(--k-accent) 4%);--qs-q4:color-mix(in srgb,color-mix(in srgb,var(--k-panel),var(--k-ink) 8%),var(--k-accent) 6%);--qs-lift:white;--qs-card:var(--k-bg);--qs-field:color-mix(in srgb,var(--k-panel),var(--k-ink) 2%);--qs-w:var(--k-ink);--qs-w3:var(--k-bg);--qs-line:color-mix(in srgb,var(--k-ink) 12%,transparent);--qs-shade:color-mix(in srgb,var(--k-ink) 85%,var(--k-accent-2));--qs-hi:color-mix(in srgb,white 80%,transparent);--qs-hi2:color-mix(in srgb,var(--k-accent-2) 55%,white)}
+.qs[data-tone="dark"]{--qs-dk:color-mix(in srgb,var(--k-bg),black 45%);--qs-on-dk:var(--k-ink);--qs-q1:color-mix(in srgb,var(--k-panel),white 7%);--qs-q4:color-mix(in srgb,var(--k-panel),white 13%);--qs-lift:color-mix(in srgb,var(--k-panel),white 24%);--qs-card:color-mix(in srgb,var(--k-panel),white 19%);--qs-field:color-mix(in srgb,var(--k-panel),white 12%);--qs-w:color-mix(in srgb,var(--k-on-accent) 72%,var(--k-accent));--qs-w3:var(--k-on-accent);--qs-shade:black;--qs-hi:color-mix(in srgb,white 7%,transparent)}
+.qs *{box-sizing:border-box}
+/* seams: dark stage, warm key light, darker edges */
+.qs-stage{position:absolute;inset:0;background:radial-gradient(ellipse 58% 62% at 50% 50%,color-mix(in srgb,var(--k-accent) 45%,transparent),transparent 70%),radial-gradient(ellipse 72% 72% at 50% 46%,transparent 42%,color-mix(in srgb,black 30%,transparent)),linear-gradient(180deg,color-mix(in srgb,var(--qs-dk),white 4%),var(--qs-dk) 52%,color-mix(in srgb,var(--qs-dk),black 35%))}
+/* 2x2 tiles, 8px seams; portrait rows split on the 40% line */
+.qs-q{position:absolute;left:8px;top:8px;width:calc(50% - 12px);height:calc(50% - 12px);border-radius:20px;overflow:hidden;box-shadow:inset 0 1px 0 color-mix(in srgb,white 35%,transparent)}
+.qs-q2,.qs-q4{left:calc(50% + 4px)}
+.qs-q3,.qs-q4{top:calc(50% + 4px)}
+.qs-q1{background:radial-gradient(ellipse 90% 90% at 30% 20%,color-mix(in srgb,var(--qs-q1),var(--qs-lift) 60%),var(--qs-q1) 55%,color-mix(in srgb,var(--qs-q1),var(--k-ink) 4%))}
+.qs-q2{background:radial-gradient(ellipse 80% 90% at 70% 10%,color-mix(in srgb,var(--qs-dk),var(--k-accent) 12%),var(--qs-dk) 60%,color-mix(in srgb,var(--qs-dk),black 40%));box-shadow:inset 0 1px 0 color-mix(in srgb,white 6%,transparent)}
+.qs-q3{background:linear-gradient(150deg,color-mix(in srgb,var(--k-accent),white 14%),var(--k-accent) 45%,color-mix(in srgb,var(--k-accent),black 8%))}
+.qs-q4{background:radial-gradient(ellipse 90% 90% at 70% 20%,color-mix(in srgb,var(--qs-q4),var(--qs-lift) 40%),var(--qs-q4) 60%,color-mix(in srgb,var(--qs-q4),var(--k-ink) 5%))}
+.qs-sc{position:absolute;inset:0}
+.qs-cn{position:absolute;left:34px;top:24px;font:700 28px/1.3 var(--k-font);letter-spacing:0.12em;white-space:nowrap;color:var(--k-muted)}
+/* TL: a browser opens the page */
+.qs-win{position:absolute;left:104px;top:112px;width:740px;min-height:390px;padding-bottom:20px;border-radius:20px;overflow:hidden;background:var(--qs-card);border:1px solid var(--qs-line);box-shadow:inset 0 1px 0 var(--qs-hi),0 2px 4px color-mix(in srgb,var(--qs-shade) 8%,transparent),0 30px 60px -24px color-mix(in srgb,var(--qs-shade) 35%,transparent);transform-origin:50% 90%;transform:scale(1.1)}
+.qs-tabs{display:flex;align-items:flex-end;gap:8px;height:52px;padding:0 18px;background:color-mix(in srgb,var(--qs-field),var(--k-ink) 3%)}
+.qs-dots{flex:none;align-self:center;width:13px;height:13px;margin-right:52px;border-radius:50%;background:var(--k-accent);box-shadow:21px 0 color-mix(in srgb,var(--k-accent) 50%,var(--qs-field)),42px 0 color-mix(in srgb,var(--k-ink) 22%,var(--qs-field))}
+.qs-tab{display:flex;align-items:center;justify-content:center;width:104px;height:40px;border-radius:12px 12px 0 0;background:color-mix(in srgb,var(--k-ink) 5%,transparent);transform-origin:50% 100%}
+.qs-tab i{width:52%;height:10px;border-radius:5px;background:color-mix(in srgb,var(--k-ink) 22%,transparent)}
+.qs-tab:last-child{background:var(--qs-card)}
+.qs-tab:last-child i{width:62%;background:color-mix(in srgb,var(--k-ink) 70%,transparent)}
+.qs-addr{display:flex;align-items:center;gap:14px;height:58px;margin:14px 22px;padding:0 24px;border-radius:29px;background:var(--qs-field)}
+.qs-addr svg{flex:none;width:22px;height:22px;fill:none;stroke:var(--k-muted);stroke-width:2.2}
+.qs-url{font-size:40px;line-height:1.2;white-space:pre}
+.qs-car{flex:none;width:3px;height:40px;margin-left:-10px;background:var(--k-accent);opacity:0}
+.qs-page{margin:26px 44px 0}
+.qs-bar{display:block;height:6px;margin-bottom:16px;border-radius:3px;background:var(--k-accent);transform-origin:0 50%;opacity:0}
+.qs-brand{display:flex;align-items:center;gap:10px;height:30px;font-size:28px;font-weight:700;white-space:nowrap}
+.qs-name:empty{display:none}
+.qs-tw{margin-top:6px;clip-path:inset(-0.2em -0.2em 0 -0.2em)}
+.qs-title{font:700 88px/1.15 var(--qs-hv)}
+.qs-tag{margin-top:8px;font-size:40px;line-height:1.3;white-space:nowrap;color:var(--k-muted)}
+/* TR: a terminal, then a whip push onto its last line */
+.qs-q2 .qs-cn{color:color-mix(in srgb,var(--qs-on-dk) 58%,var(--qs-dk))}
+.qs-term{position:absolute;left:80px;top:96px;width:800px;font:40px/1.3 var(--k-mono);color:var(--qs-on-dk);--oy:246px;--dy:-37px;transform-origin:0 var(--oy);transform:translateY(var(--dy)) scale(1.85)}
+.qs-term > div{white-space:pre}
+.qs-old{opacity:0.08}
+.qs-ps,.qs-led{color:var(--k-accent)}
+.qs-blk{display:inline-block;width:22px;height:42px;vertical-align:-7px;background:var(--qs-on-dk);opacity:0}
+.qs-o1{margin-top:24px}
+.qs-o2{margin-top:10px}
+.qs-o1,.qs-o2{color:color-mix(in srgb,var(--qs-on-dk) 78%,var(--qs-dk))}
+.qs-ok,.qs-hl{color:var(--qs-hi2)}
+.qs-term > .qs-fin{width:447px;margin-top:30px;font-weight:700;white-space:normal}
+.qs-led{text-shadow:0 0 18px color-mix(in srgb,var(--k-accent) 80%,transparent)}
+/* BL: three big words slam down */
+.qs-q3 .qs-cn{color:var(--qs-w)}
+.qs-words{position:absolute;left:64px;top:68px;width:820px;font:900 120px/1.2 var(--qs-hv);color:var(--qs-w)}
+.qs-wd{display:block;transform-origin:0 100%}
+.qs-wd:nth-child(3){color:var(--qs-w3)}
+/* BR: approve, publish, the live toast */
+.qs-card{position:absolute;left:120px;top:100px;width:620px;padding:30px 34px;border-radius:22px;--ca:100%;background:color-mix(in srgb,var(--qs-card) var(--ca),transparent);border:1px solid color-mix(in srgb,var(--qs-line) var(--ca),transparent);box-shadow:0 2px 4px color-mix(in srgb,var(--qs-shade) calc(var(--ca) * 0.08),transparent),0 26px 50px -22px color-mix(in srgb,var(--qs-shade) calc(var(--ca) * 0.4),transparent)}
+.qs-ch{display:flex;align-items:center;gap:14px}
+.qs-ct{font:700 40px/1.3 var(--qs-hv);white-space:nowrap}
+.qs-av{display:flex;margin-left:auto}
+.qs-av i{width:40px;height:40px;border-radius:20px;border:3px solid var(--qs-card);background:var(--k-accent-2)}
+.qs-av i + i{margin-left:-12px;background:var(--k-accent)}
+.qs-av i + i + i{background:color-mix(in srgb,var(--k-accent),var(--k-accent-2))}
+.qs-cs{margin-top:10px;font-size:40px;line-height:1.3;white-space:nowrap;color:var(--k-muted)}
+.qs-btns{display:flex;gap:16px;margin-top:30px}
+.qs-btns > b{display:flex;align-items:center;justify-content:center;gap:8px;width:260px;height:70px;border-radius:16px;font-size:40px;font-weight:400;white-space:nowrap}
+.qs-ap{border:2px solid color-mix(in srgb,var(--k-ink) 22%,transparent)}
+.qs-ap[data-on]{border-color:var(--k-accent-2);background:color-mix(in srgb,var(--k-accent-2) 12%,transparent);color:var(--k-accent-2)}
+.qs-btns > .qs-pb{width:280px;font:700 40px var(--qs-hv);--pa:100%;background:color-mix(in srgb,var(--qs-dk) var(--pa),var(--qs-card));color:var(--qs-on-dk)}
+.qs-btns > .qs-pb[data-on]{background:var(--k-accent);color:var(--k-on-accent)}
+.qs-toast{position:absolute;right:56px;bottom:44px;display:flex;align-items:center;gap:16px;max-width:772px;padding:20px 26px;border-radius:18px;--qa:100%;background:color-mix(in srgb,var(--qs-dk) var(--qa),transparent);box-shadow:0 24px 50px -18px color-mix(in srgb,var(--qs-shade) calc(var(--qa) * 0.7),transparent)}
+.qs-toast > i{flex:none;width:16px;height:16px;border-radius:8px;background:var(--k-accent);box-shadow:0 0 14px var(--k-accent)}
+.qs-tt{font:700 40px/1.3 var(--qs-hv);color:var(--qs-on-dk);font-variant-numeric:tabular-nums;word-break:keep-all;overflow-wrap:anywhere}
+.qs-cur{position:absolute;left:0;top:0;width:34px;height:46px;overflow:visible;transform-origin:0 0;opacity:0;filter:drop-shadow(0 3px 5px color-mix(in srgb,var(--qs-shade) 40%,transparent))}
+.qs-cur path{fill:var(--qs-dk);stroke:var(--qs-on-dk);stroke-width:1.6;stroke-linejoin:round}
+/* portrait: 408x504 scenes in the safe band, 20px off the seams */
+@container (orientation:portrait){
+.qs-q{height:calc(40% - 12px)}
+.qs-q3,.qs-q4{top:calc(40% + 4px);height:calc(60% - 12px)}
+.qs-sc{inset:auto;width:408px;height:504px}
+.qs-q1 .qs-sc,.qs-q3 .qs-sc{right:20px}
+.qs-q2 .qs-sc,.qs-q4 .qs-sc{left:20px}
+.qs-q1 .qs-sc,.qs-q2 .qs-sc{bottom:20px}
+.qs-q3 .qs-sc,.qs-q4 .qs-sc{top:20px}
+.qs-cn{left:0;top:0}
+.qs-win{left:24px;top:104px;width:360px;min-height:352px}
+.qs-tabs{gap:6px;height:46px;padding:0 14px}
+.qs-tab{width:60px;height:34px}
+.qs-addr{gap:8px;height:56px;margin:12px 8px;padding:0 12px}
+.qs-car{margin-left:-4px}
+.qs-page{margin:14px 18px 0}
+.qs-bar{margin-bottom:14px}
+.qs-title{font-size:72px}
+.qs-term{left:0;top:84px;width:408px;--oy:233.4px;--dy:-47.4px}
+.qs-o1{margin-top:20px}
+.qs-o2{margin-top:8px}
+.qs-term > .qs-fin{width:220px;margin-top:26px;font-size:36px}
+.qs-words{left:0;top:52px;width:408px}
+.qs-card{left:0;top:52px;width:408px;padding:22px 24px}
+.qs-ch{gap:12px}
+.qs-av i{width:34px;height:34px}
+.qs-av i + i{margin-left:-10px}
+.qs-cs{margin-top:8px}
+.qs-btns{gap:12px;margin-top:22px}
+.qs-btns > b,.qs-btns > .qs-pb{width:174px;height:64px}
+.qs-toast{right:0;bottom:auto;top:316px;max-width:408px;gap:14px;padding:18px 22px}
+}
+
+</style>
+
+<div id="root" data-composition-id="quad-split-parallel-scenes">
+<div class="qs">
+<div class="qs-stage"></div><i class="qs-grain"></i>
+<div class="qs-q qs-q1"><div class="qs-sc">
+<b class="qs-cn">01 网页</b>
+<div class="qs-win">
+<div class="qs-tabs"><i class="qs-dots"></i><span class="qs-tab"><i></i></span><span class="qs-tab"><i></i></span><span class="qs-tab"><i></i></span><span class="qs-tab"><i></i></span></div>
+<div class="qs-addr"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg><span class="qs-url">localhost:3000</span><i class="qs-car"></i></div>
+<div class="qs-page"><i class="qs-bar"></i>
+<div class="qs-brand"><svg width="30" height="30" viewBox="0 0 128 128"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)" /><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)" /><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)" /></svg><span class="qs-name">示例应用</span></div>
+<div class="qs-tw"><div class="qs-title">第 3 课</div></div>
+<div class="qs-tag">把复杂的事讲清楚</div>
+</div>
+</div>
+</div></div>
+<div class="qs-q qs-q2"><div class="qs-sc">
+<b class="qs-cn">02 导出</b>
+<div class="qs-term" data-layout-allow-overflow>
+<div class="qs-cmd qs-old" data-layout-allow-caption-zone data-layout-allow-overlap><span class="qs-ps">$ </span><span class="qs-ct2">npm run export</span><i class="qs-blk"></i></div>
+<div class="qs-o1 qs-old" data-layout-allow-caption-zone data-layout-allow-overlap><span class="qs-ok">✓</span> bundle   1.8s</div>
+<div class="qs-o2 qs-old" data-layout-allow-caption-zone data-layout-allow-overlap><span class="qs-ok">✓</span> frames 900/900</div>
+<div class="qs-fin"><span class="qs-led">●</span> <span class="qs-ft">第3课.mp4 <span class="qs-hl">已导出</span></span></div>
+</div>
+</div></div>
+<div class="qs-q qs-q3"><div class="qs-sc">
+<b class="qs-cn">03 口号</b>
+<div class="qs-words"><div class="qs-wd">写稿。</div><div class="qs-wd">录制。</div><div class="qs-wd">发布。</div></div>
+</div></div>
+<div class="qs-q qs-q4"><div class="qs-sc">
+<b class="qs-cn">04 审核</b>
+<div class="qs-card"><div class="qs-ci">
+<div class="qs-ch"><span class="qs-ct">第 3 课 · 成片</span><span class="qs-av"><i></i><i></i><i></i></span></div>
+<div class="qs-cs">12 个镜头 · 待审核</div>
+<div class="qs-btns"><b class="qs-ap" data-on>已通过 ✓</b><b class="qs-pb" data-on>已发布</b></div>
+</div></div>
+<div class="qs-toast"><i></i><span class="qs-tt">已上线 · 3,214 次播放</span></div>
+<svg class="qs-cur" viewBox="-1 -1 18 26"><path d="M0 0 L0 20.5 L4.9 15.9 L8.1 23.4 L11.4 22 L8.3 14.7 L14.8 14.7 Z" /></svg>
+</div></div>
+</div>
+</div>
+
+<script>
+(function () {
+// seconds = upstream frame / 30 (card.md lists the frames), shared by both orientations
+var CFG = {
+  slot: 4, tabs: [0.2, 0.367, 0.533, 0.7], tabDur: 0.3, urlDur: 1.333, caretOff: 1.467, load: 1.467, loadDur: 0.467,
+  bar: 1.867, barDur: 0.2, tag: 1.667, tagDur: 0.333, push: 3, pushTo: 1.1,
+  cmdDur: 0.8, blkOff: 0.9, out: [0.9, 1.1, 1.233], outDur: 0.167, zip: 1.233, zipDur: 0.333, zoom: 1.85, blur: 5, ghost: 0.08,
+  words: [0.467, 1, 1.633], wordDur: 0.267, drop: 0.53, pop: 1.12, // drop in em of the word size
+  slide: 0.133, slideDur: 0.333, curIn: 0.333, curInDur: 0.133, curOut: 2.267, curOutDur: 0.267, m1: 0.467, m1Dur: 0.367,
+  m2: 1.267, m2Dur: 0.4, clicks: [0.833, 1.733], press: 0.167, ok: 0.9, okDur: 0.2, pub: 1.8, toast: 1.867, toastDur: 0.333, countDur: 1
+};
+// per orientation: text limits, cursor path (scene px)
+var LAND = { tMax: 88, tMin: 48, t2: 48, doneW: 447, doneL: 1, doneY: 305, wordW: 820, toastW: 688, toastL: 1, start: [0.907, 0.89], c1: [-240, 50], c2: [55, -68] };
+var PORT = { tMax: 72, tMin: 56, t2: 56, doneW: 220, doneL: 2, doneY: 270, wordW: 408, toastW: 334, toastL: 2, start: [0.9, 0.93], c1: [-150, 40], c2: [30, -60] };
+var v = { title: "第 3 课", done: "第3课.mp4 已导出", words: "写稿。|录制。|发布。", toast: "已上线 · 3,214 次播放", name: "示例应用", backdrop: "on" };
+try {
+  var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+  for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+} catch (e) {}
+
+var root = document.querySelector(".qs");
+var q = function (s) { return root.querySelector(s); };
+var qa = function (s) { return [].slice.call(root.querySelectorAll(s)); };
+var FW = root.clientWidth, FH = root.clientHeight;
+if (!FW || !FH) {
+  // not laid out yet: the host clip's declared size, then the window
+  var hc = root.closest("[data-width][data-height]");
+  FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+  FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+}
+var P = FH > FW, L = P ? PORT : LAND, U = Math.min(FW, FH) / 1.08e3; // fixed px scale by the short side
+root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== end kit:tone ====
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+      "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+      "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+      "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+      "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+}
+// ==== end kit:grain ====
+// ==== kit:text@2 ====
+var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+function kWords(s, key) {
+  s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+  var cut = function (x) {
+    if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+    return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+  };
+  var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+  var pre = "";
+  bits.forEach(function (x) {
+    var t = x.trim(), last = out[out.length - 1];
+    if (last && /^ /.test(x)) last.sp = true;
+    if (!t) return;
+    if (!/[\p{L}\p{N}]/u.test(t)) {
+      if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+      else { last.t += t; last.sp = / $/.test(x); }
+      return;
+    }
+    out.push({ t: pre + t, sp: / $/.test(x) });
+    pre = "";
+  });
+  if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+  if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+  if (out.length) out[out.length - 1].sp = false;
+  return out;
+}
+// ==== end kit:text ====
+// ==== kit:fit@1 ====
+function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+      var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+      if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+      row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+kTone(root);
+if (getComputedStyle(root).getPropertyValue("--mc-font").trim()) root.style.setProperty("--qs-hv", "var(--k-font)");
+if (String(v.backdrop) === "off") q(".qs-stage").style.display = "none";
+
+// slot text as kWords units (typed spaces kept)
+var units = function (el, s) {
+  el.textContent = "";
+  return kWords(s).map(function (w) { var u = el.appendChild(document.createElement("span")); u.className = "qs-u"; u.textContent = w.t; if (w.sp) el.appendChild(document.createTextNode(" ")); return u; });
+};
+// TL text
+var tEl = q(".qs-title");
+q(".qs-name").textContent = String(v.name).trim();
+units(tEl, v.title);
+if (!kFit(tEl, { max: L.tMax, min: L.tMin }).fits) kFit(tEl, { max: L.t2, min: 48, lines: 2 }); // one line, else two small ones
+var URL = q(".qs-url").textContent, CMD = q(".qs-ct2").textContent;
+// TR last line: last unit highlighted, as upstream's "ready"
+var fin = q(".qs-fin"), du = units(q(".qs-ft"), v.done);
+if (du[0]) du[0].prepend(q(".qs-led"), " "); // the dot stays with the first unit
+else fin.style.display = "none"; // empty slots leave no shell
+if (du.length > 1) du[du.length - 1].className += " qs-hl";
+fin.style.width = L.doneW + "px";
+kFit(fin, { max: 40, min: 22, lines: L.doneL });
+// BL: one word per item, all at the size the longest fits
+var wBox = q(".qs-words");
+wBox.textContent = "";
+var wd = kWords(v.words).slice(0, 3).map(function (u) {
+  var d = wBox.appendChild(document.createElement("div"));
+  d.className = "qs-wd";
+  d.setAttribute("data-layout-allow-overlap", ""); // drops in over the corner label and the word above (2-3 frames)
+  d.textContent = u.t;
+  return d;
+});
+var wf = Math.min.apply(null, wd.map(function (d) { return kFit(d, { max: 120, min: 72, width: L.wordW }).size; }).concat([120]));
+wd.forEach(function (d) { d.style.fontSize = wf + "px"; });
+// BR toast: its first number counts up in the typed format (kept as typed text: kWords drops the space after a lone "·")
+var tt = q(".qs-tt"), ts = String(v.toast), m = /\d[\d,]*(\.\d+)?/.exec(ts), num = null, N = 0, dec = 0;
+tt.textContent = m ? ts.slice(0, m.index) : ts;
+if (m) {
+  num = tt.appendChild(document.createElement("span"));
+  num.className = "qs-u"; num.textContent = m[0];
+  tt.appendChild(document.createTextNode(ts.slice(m.index + m[0].length)));
+  dec = m[1] ? m[1].length - 1 : 0; N = parseFloat(m[0].replace(/,/g, ""));
+}
+kFit(tt, { lines: L.toastL, width: L.toastW });
+if (!ts.trim()) q(".qs-toast").style.display = "none";
+var fmt = function (x) {
+  var s = x.toFixed(dec).split(".");
+  if (m[0].indexOf(",") >= 0) s[0] = s[0].replace(/\B(?=(\d{3})+$)/g, ",");
+  return s.join(".");
+};
+if (num) { num.style.minWidth = num.offsetWidth + "px"; num.style.textAlign = "right"; }
+
+// TR push: scale about the last line's middle, landing it on L.doneY
+var term = q(".qs-term"), oy = fin.offsetTop + parseFloat(getComputedStyle(fin).lineHeight) / 2, dy = L.doneY - term.offsetTop - oy;
+term.style.transformOrigin = "0 " + oy.toFixed(1) + "px";
+// BR cursor: low right -> Approve -> arc over to Publish
+var card = q(".qs-card"), sc = card.parentNode, ap = q(".qs-ap"), pb = q(".qs-pb");
+var tip = function (b) { return [card.offsetLeft + b.offsetLeft + b.offsetWidth / 2 - 12 * U, card.offsetTop + b.offsetTop + b.offsetHeight / 2 + 2 * U]; };
+var A0 = [sc.clientWidth * L.start[0], sc.clientHeight * L.start[1]], A1 = tip(ap), A2 = tip(pb);
+var C1 = [A0[0] + L.c1[0] * U, A0[1] + L.c1[1] * U], C2 = [(A1[0] + A2[0]) / 2 + L.c2[0] * U, Math.min(A1[1], A2[1]) + L.c2[1] * U];
+var bez = function (a, b, c, s) { var w = 1 - s; return [0, 1].map(function (i) { return w * w * a[i] + 2 * w * s * b[i] + s * s * c[i]; }); };
+
+var tabs = qa(".qs-tab"), url = q(".qs-url"), car = q(".qs-car"), bar = q(".qs-bar"), brand = q(".qs-brand"), tag = q(".qs-tag"), win = q(".qs-win");
+var cmd = q(".qs-cmd"), cmdT = q(".qs-ct2"), blk = q(".qs-blk"), outs = qa(".qs-o1, .qs-o2"), ci = q(".qs-ci"), toast = q(".qs-toast"), cur = q(".qs-cur");
+var gr = q(".qs-grain"), grain = kGrain(gr, { opacity: 0.06, blend: "overlay" });
+var R = MT.ramp, ov = MT.ease("overshoot"), sn = MT.ease("snappy");
+var O = function (el, x) { el.style.opacity = x; }, T = function (el, x) { el.style.transform = x; }, n = function (x) { return x.toFixed(3); };
+var V = function (el, k, x) { el.style.setProperty(k, n(x) + "%"); };
+var blink = function (f, per, ph) { return Math.floor((f + ph) / (per / 2)) % 2 ? 0 : 1; }; // hard on/off, period in frames
+var typed = function (s, t, d) { return s.slice(0, Math.floor(MT.clamp(t / d, 0, 1) * s.length + 1e-6)); };
+var press = function (t, at) { return Math.sin(Math.PI * MT.clamp((t - at) / CFG.press, 0, 1)); };
+
+function render(t) {
+  var f = Math.round(t * 3e4) / 1e3; // frames at 30 fps
+  grain(t);
+  root.style.setProperty("--qs-gi", gr.style.backgroundImage);
+  root.style.setProperty("--qs-gp", gr.style.backgroundPosition);
+  // TL: tabs pop, address types, page loads, slow push
+  tabs.forEach(function (el, i) { var k = R(t, CFG.tabs[i], CFG.tabDur, "overshoot"); O(el, k > 0 ? 1 : 0); T(el, "scale(" + n(k) + ")"); });
+  url.textContent = typed(URL, t, CFG.urlDur);
+  O(car, t < CFG.caretOff ? blink(f, 16, 0) : 0);
+  var load = R(t, CFG.load, CFG.loadDur, "snappy");
+  T(bar, "scaleX(" + n(load) + ")");
+  O(bar, load > 0 ? 1 - R(t, CFG.bar, CFG.barDur, "linear") : 0);
+  O(brand, load);
+  O(tEl, load > 0 ? 1 : 0);
+  T(tEl, "translateY(" + n((1 - load) * 110) + "%)");
+  O(tag, R(t, CFG.tag, CFG.tagDur, "out"));
+  T(win, "scale(" + n(1 + (CFG.pushTo - 1) * Math.pow(Math.min(1, t / CFG.push), 2)) + ")");
+  // TR: command types, lines print, whip push onto the last
+  cmdT.textContent = typed(CMD, t, CFG.cmdDur);
+  O(blk, t < CFG.blkOff ? blink(f, 14, 5) : 0);
+  var zip = R(t, CFG.zip, CFG.zipDur, "smooth"), old = 1 - (1 - CFG.ghost) * zip, bl = CFG.blur * Math.sin(Math.PI * zip);
+  O(cmd, old);
+  outs.forEach(function (el, i) { var l = R(t, CFG.out[i], CFG.outDur, "out"); O(el, l * old); T(el, "translateX(" + n((l - 1) * 16 * U) + "px)"); });
+  O(fin, R(t, CFG.out[2], CFG.outDur, "out"));
+  T(term, "translateY(" + n(dy * zip) + "px) scale(" + n(MT.mix(1, CFG.zoom, zip)) + ")");
+  term.style.filter = bl > 0.2 ? "blur(" + n(bl) + "px)" : "none";
+  // BL: words drop with overshoot, shrinking from 1.12
+  wd.forEach(function (d, i) {
+    var s = MT.clamp((t - CFG.words[i]) / CFG.wordDur, 0, 1);
+    O(d, Math.min(1, s * 3));
+    T(d, "translateY(" + n((ov(s) - 1) * CFG.drop * wf) + "px) scale(" + n(MT.mix(CFG.pop, 1, sn(s))) + ")");
+  });
+  // BR: card, Approve click, Publish click, toast + count
+  var sl = R(t, CFG.slide, CFG.slideDur, "snappy"), p1 = press(t, CFG.clicks[0]), p2 = press(t, CFG.clicks[1]), ok = R(t, CFG.ok, CFG.okDur, "snappy"), up = t >= CFG.pub;
+  T(card, "translateX(" + n((sl - 1) * 60 * U) + "px)");
+  V(card, "--ca", sl * 100);
+  O(ci, sl >= 0.5 ? 1 : 0); // text cuts in at half opacity
+  ap.toggleAttribute("data-on", ok > 0.5);
+  ap.textContent = ok > 0.5 ? "已通过 ✓" : "通过";
+  T(ap, "scale(" + n(1 - 0.06 * p1) + ")");
+  pb.toggleAttribute("data-on", up);
+  pb.textContent = up ? "已发布" : "发布";
+  V(pb, "--pa", 50 + 50 * ok);
+  T(pb, "scale(" + n(1 - 0.06 * p2) + ")");
+  var tp = R(t, CFG.toast, CFG.toastDur, "overshoot"), a = Math.min(1, tp * 2);
+  O(toast, tp > 0 ? 1 : 0);
+  V(toast, "--qa", a * 100);
+  T(toast, "translateY(" + n((1 - tp) * 40 * U) + "px) scale(" + n(MT.mix(0.85, 1, tp)) + ")");
+  O(tt, a >= 0.5 ? 1 : 0);
+  O(toast.firstChild, a);
+  if (num) num.textContent = fmt(N * R(t, CFG.toast, CFG.countDur, "snappy"));
+  var m2 = R(t, CFG.m2, CFG.m2Dur, "swift"), pt = m2 > 0 ? bez(A1, C2, A2, m2) : bez(A0, C1, A1, R(t, CFG.m1, CFG.m1Dur, "swift"));
+  O(cur, f >= 10 && f < 76 ? R(t, CFG.curIn, CFG.curInDur, "out") * (1 - R(t, CFG.curOut, CFG.curOutDur, "exit")) : 0);
+  T(cur, "translate(" + n(pt[0]) + "px," + n(pt[1]) + "px) scale(" + n(1 - 0.18 * Math.max(p1, p2)) + ")");
+}
+var tl = MT.scene(CFG.slot, render);
+window.__timelines["quad-split-parallel-scenes"] = tl;
+})();
+</script>
+</template>
+</body>
+</html>

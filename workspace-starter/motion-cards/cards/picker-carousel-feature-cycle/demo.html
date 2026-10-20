@@ -1,0 +1,363 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"items","type":"string","label":"选项（用 | 分隔，6–8 条，每条一个短语）","default":"记录要点|截图取景|录制画面|节奏剪辑|添加音效|调整参数|导出成片"},
+    {"id":"icons","type":"enum","label":"行内小图标","default":"on","options":[{"value":"on","label":"显示（按位置配图标）"},{"value":"off","label":"不要"}]},
+    {"id":"badge","type":"enum","label":"左侧方形角标","default":"on","options":[{"value":"on","label":"显示"},{"value":"off","label":"不要"}]},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>picker-carousel-feature-cycle · 选择器逐项吸附</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="picker-carousel-feature-cycle-template">
+      <!-- Ported from video-shotcraft demos/interaction/picker-carousel-feature-cycle/PickerCarouselFeatureCycle.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette, system fonts, generic Chinese option names, upstream app mark replaced by a neutral glyph;
+           the 480x270 design grid becomes a scale factor (4 landscape, 3.2 portrait with a narrower window and a 40px text
+           floor); paper colours are mixed from --k-bg and --k-ink; the vignette sits under the text, not over it;
+           rows fade to opacity 0 between 2.0 and 2.2 rows from the centre (the window mask hides them anyway, and the checker
+           would otherwise find their boxes under the vignette).
+           Step count, HOLD, outQuint, the distance falloff, the icon fade, the 6% breath, the speed blur and grain are as upstream. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* ==== kit:vignette@1 ==== */
+        .pk-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--pk-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .pk[data-tone="dark"] .pk-vig { --vs: 0.55; }
+        /* ==== end kit:vignette ==== */
+
+        /* ==== kit:derived@1 ==== */
+        .pk {
+          --pk-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+          --pk-panel-2: color-mix(in srgb, var(--k-panel), var(--k-ink) 4%);
+          --pk-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+          --pk-hi: color-mix(in srgb, white 80%, transparent);
+        }
+        .pk[data-tone="dark"] {
+          --pk-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+          --pk-hi: color-mix(in srgb, white 6%, transparent);
+        }
+        /* ==== end kit:derived ==== */
+
+        /* ==== kit:grain@1 ==== */
+        .pk-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+        .pk { position: absolute; inset: 0; container-type: size; }
+        .pk .pk-vig { --vs: 0.12; --vin: 50%; }
+        .pk[data-tone="dark"] .pk-vig { --vs: 0.3; }
+        /* --s: pixels per upstream design pixel (the upstream shot was drawn on a 480x270 grid and enlarged 4x);
+           --vw: window width, --vy: the window's middle line. Portrait keeps the window and its badge inside x 108-972 and
+           puts the middle on the 40% line. The script sets the same numbers inline from LAND / PORT. */
+        .pk-in { position: absolute; inset: 0; --s: 4; --vw: 1200px; --vy: 50%; --rh: calc(var(--s) * 34px); }
+        @container (orientation: portrait) { .pk-in { --s: 3.2; --vw: 624px; --vy: 40%; } }
+        /* paper: upstream's radial highlight over a three-stop vertical gradient, mixed from the palette */
+        .pk-paper { position: absolute; inset: 0; background:
+          radial-gradient(ellipse 70% 80% at 46% 30%, color-mix(in srgb, var(--k-bg), var(--k-ink) 2.5%) 0%, transparent 70%),
+          linear-gradient(180deg, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 5%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7.5%) 100%); }
+        /* a soft pool of light under the focus row */
+        .pk-ground { position: absolute; left: 50%; top: var(--vy); width: calc(var(--s) * 380px); height: calc(var(--s) * 80px); margin: calc(var(--s) * -40px) 0 0 calc(var(--s) * -190px); background: radial-gradient(ellipse 50% 50% at 50% 50%, color-mix(in srgb, var(--k-bg) 90%, transparent) 0%, transparent 70%); }
+        /* the window: 5 rows, edges fade by alpha mask (it also clips what lies outside; no overflow: hidden, which the checker reads as overflowing text) */
+        .pk-view { position: absolute; left: 50%; top: var(--vy); width: var(--vw); height: calc(var(--rh) * 5); margin: calc(var(--rh) * -2.5) 0 0 calc(var(--vw) / -2);
+          -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 26%, #000 74%, transparent 100%); mask-image: linear-gradient(180deg, transparent 0%, #000 26%, #000 74%, transparent 100%); }
+        .pk-pill { position: absolute; left: 0; right: 0; top: calc(var(--rh) * 2); height: var(--rh); box-sizing: content-box; border-radius: 999px; border: calc(var(--s) * 1px) solid var(--pk-line);
+          background: linear-gradient(180deg, color-mix(in srgb, var(--k-bg), white), color-mix(in srgb, var(--k-bg) 97%, var(--k-ink)));
+          box-shadow: inset 0 calc(var(--s) * 1px) 0 var(--pk-hi), 0 calc(var(--s) * 0.5px) calc(var(--s) * 1px) color-mix(in srgb, var(--pk-shade) 7%, transparent), 0 calc(var(--s) * 3px) calc(var(--s) * 9px) calc(var(--s) * -2px) color-mix(in srgb, var(--pk-shade) 10%, transparent), 0 calc(var(--s) * 10px) calc(var(--s) * 22px) calc(var(--s) * -10px) color-mix(in srgb, var(--pk-shade) 13%, transparent); }
+        .pk[data-tone="dark"] .pk-pill { background: linear-gradient(180deg, color-mix(in srgb, var(--k-bg), white 11%), color-mix(in srgb, var(--k-bg), white 7%)); box-shadow: inset 0 calc(var(--s) * 1px) 0 var(--pk-hi), 0 calc(var(--s) * 3px) calc(var(--s) * 9px) calc(var(--s) * -2px) color-mix(in srgb, var(--pk-shade) 60%, transparent); }
+        .pk-box { position: absolute; inset: 0; }
+        .pk-list { position: absolute; left: 0; right: 0; top: 0; transform: translateY(calc(var(--rh) * -3)); }
+        .pk-r { height: var(--rh); display: flex; align-items: center; justify-content: center; gap: calc(var(--s) * 8px); font-weight: 600; line-height: 1.15; opacity: 0.18; font-size: calc(var(--s) * 14px); color: color-mix(in srgb, var(--k-ink) 28%, var(--k-bg)); }
+        .pk-r.c0 { opacity: 1; font-size: calc(var(--s) * 17px); color: var(--k-ink); }
+        .pk-r.c1 { opacity: 0.55; font-size: calc(var(--s) * 15.5px); color: var(--k-muted); }
+        .pk-t { display: block; white-space: nowrap; }
+        .pk-ic { display: block; flex: none; width: calc(var(--s) * 13px); height: calc(var(--s) * 13px); opacity: 0; margin-top: calc(var(--s) * 0.5px); }
+        .pk-r.c0 .pk-ic { opacity: 1; }
+        .pk-ic svg { display: block; width: 100%; height: 100%; }
+        .pk[data-icons="off"] .pk-ic { display: none; }
+        .pk[data-badge="off"] .pk-badge { display: none; }
+        .pk-badge { position: absolute; left: calc(50% - var(--vw) / 2 - var(--s) * 36px); top: var(--vy); width: calc(var(--s) * 24px); height: calc(var(--s) * 24px); margin-top: calc(var(--s) * -12px); border-radius: calc(var(--s) * 6px);
+          background: linear-gradient(160deg, color-mix(in srgb, var(--k-ink) 86%, var(--k-bg)) 0%, var(--k-ink) 100%);
+          box-shadow: inset 0 calc(var(--s) * 0.5px) 0 color-mix(in srgb, var(--k-bg) 22%, transparent), 0 0 0 calc(var(--s) * 0.5px) color-mix(in srgb, var(--pk-shade) 50%, transparent), 0 calc(var(--s) * 2px) calc(var(--s) * 5px) calc(var(--s) * -1px) color-mix(in srgb, var(--pk-shade) 25%, transparent); }
+        .pk-badge svg { position: absolute; left: 25%; top: 25%; width: 50%; height: 50%; }
+      </style>
+
+      <div id="root" data-composition-id="picker-carousel-feature-cycle">
+        <div class="pk" data-icons="on" data-badge="on">
+          <div class="pk-in">
+            <div class="pk-bg"><div class="pk-paper"></div><div class="pk-ground"></div></div>
+            <div class="pk-vig"></div>
+            <div class="pk-grain"></div>
+            <div class="pk-view">
+              <div class="pk-pill"></div>
+              <div class="pk-box"><div class="pk-list">
+                <div class="pk-r c2"><span class="pk-ic"></span><span class="pk-t">记录要点</span></div>
+                <div class="pk-r c2"><span class="pk-ic"></span><span class="pk-t">截图取景</span></div>
+                <div class="pk-r c2"><span class="pk-ic"></span><span class="pk-t">录制画面</span></div>
+                <div class="pk-r c2"><span class="pk-ic"></span><span class="pk-t">节奏剪辑</span></div>
+                <div class="pk-r c1"><span class="pk-ic"></span><span class="pk-t">添加音效</span></div>
+                <div class="pk-r c0"><span class="pk-ic"><svg viewBox="0 0 16 16" fill="none" stroke="var(--k-accent)" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 4.5h11M2.5 11.5h11M5.5 2.5v4M10.5 9.5v4"/></svg></span><span class="pk-t">调整参数</span></div>
+                <div class="pk-r c1"><span class="pk-ic"></span><span class="pk-t">导出成片</span></div>
+              </div></div>
+            </div>
+            <div class="pk-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8.5" cy="8.5" r="3.6" fill="var(--k-bg)"/><rect x="3" y="15" width="18" height="3.6" rx="1.8" fill="var(--k-bg)"/></svg></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing in seconds (upstream: 108 frames at 30 fps, progress t = frame / 107)
+          var CFG = {
+            dur: 4.4,          // scene length: the last snap lands at 3.16s and the breath ends at 3.30s, then 1.1s of stillness
+            fade: 0.178,       // window and light fade in over upstream's first 5% (5.35 frames)
+            badgeAt: 0.071, badgeEnd: 0.321, // badge fades in a little later (2% to 9%)
+            t0: 0.178,         // first step starts at 5% of the shot
+            step: 0.642,       // one step = 0.9 * 107 / 30 / 5 seconds
+            steps: 5,          // five snaps
+            hold: 5 / 14,      // tail of each step with no motion: the heart of the effect
+            breath: 0.06, breathLen: 0.6, // pill scaleY 1 -> 1.06 -> 1 within 0.6 of the hold
+            out: 2.2           // rows fade out between 2 rows and this distance from the centre (the mask has hidden them by then)
+          };
+          // s = pixels per upstream design pixel; the CSS has the same numbers for the static page
+          var LAND = { s: 4, vw: 1200, avail: 0.92 };
+          var PORT = { s: 3.2, vw: 624, avail: 0.92 };
+          var ICONS = [
+            ["M4 2.5h8c.55 0 1 .45 1 1v9c0 .55-.45 1-1 1H4c-.55 0-1-.45-1-1v-9c0-.55.45-1 1-1z", "M5.75 5.75h4.5", "M5.75 8h4.5", "M5.75 10.25h2.5"],
+            ["M2.5 5.5v-3h3", "M10.5 2.5h3v3", "M13.5 10.5v3h-3", "M5.5 13.5h-3v-3", "M5.5 6h5v4h-5z"],
+            ["M3.25 5h6c.4 0 .75.35.75.75v4.5c0 .4-.35.75-.75.75h-6c-.4 0-.75-.35-.75-.75v-4.5c0-.4.35-.75.75-.75z", "M10 7.25 13.5 5.5v5L10 8.75"],
+            ["M3 7v2", "M5.5 4.5v7", "M8 2.5v11", "M10.5 5.5v5", "M13 7v2"],
+            ["M2.5 6.25h2.25L8 3.5v9L4.75 9.75H2.5z", "M10.5 6a2.8 2.8 0 0 1 0 4", "M12.25 4.25a5.3 5.3 0 0 1 0 7.5"],
+            ["M2.5 4.5h11", "M2.5 11.5h11", "M5.5 2.5v4", "M10.5 9.5v4"],
+            ["M3.5 3h9c.55 0 1 .45 1 1v8c0 .55-.45 1-1 1h-9c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1z", "M6.75 6v4l3.25-2z"]
+          ];
+          var v = { items: "记录要点|截图取景|录制画面|节奏剪辑|添加音效|调整参数|导出成片", icons: "on", badge: "on", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".pk");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          var S = L.s, RH = S * 34;
+          var inner = q(".pk-in");
+          inner.style.setProperty("--s", String(S));
+          inner.style.setProperty("--vw", L.vw + "px");
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+
+          // ==== kit:speedblur@1 ====
+          function kSpeedBlur(box, prefix, o) {
+            o = o || {};
+            var amount = o.amount || 0.45, max = o.max || 36;
+            var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+            var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+            svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+            var outer = document.createElement("div"), inner = document.createElement("div");
+            outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+            while (box.firstChild) inner.appendChild(box.firstChild);
+            outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+            var fe = svg.firstChild.firstChild;
+            return function (vx, vy) {
+              vy = vy || 0;
+              var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+              if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+              var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+              fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+              outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+              inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+              outer.style.filter = "url(#" + id + ")";
+            };
+          }
+          // ==== end kit:speedblur ====
+
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          function kRows(el, cls) {
+            if (!el.children.length) return [];
+            var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+            var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+            kids.forEach(function (c, i) {
+              if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+              if (tops[i] != null) last = tops[i];
+              row.appendChild(c);
+            });
+            return [].slice.call(el.children);
+          }
+          // ==== end kit:fit ====
+          var dark = kTone(root) === "dark";
+          root.setAttribute("data-icons", String(v.icons) === "off" ? "off" : "on");
+          root.setAttribute("data-badge", String(v.badge) === "off" ? "off" : "on");
+          var grain = null;
+          if (String(v.backdrop) === "off") [".pk-bg", ".pk-vig", ".pk-grain"].forEach(function (s) { q(s).style.display = "none"; });
+          else grain = kGrain(q(".pk-grain"), { opacity: dark ? 0.09 : 0.045 });
+
+          // rows: one per option; the icon is picked by position
+          var items = String(v.items).split("|").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 10);
+          var list = q(".pk-list");
+          list.innerHTML = "";
+          var rows = items.map(function (txt, i) {
+            var el = document.createElement("div");
+            el.className = "pk-r c2";
+            var p = ICONS[i % ICONS.length].map(function (d) { return '<path d="' + d + '"/>'; }).join("");
+            el.innerHTML = '<span class="pk-ic"><svg viewBox="0 0 16 16" fill="none" stroke="var(--k-accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg></span><span class="pk-t"></span>';
+            el.lastChild.textContent = txt;
+            list.appendChild(el);
+            return { el: el, t: el.lastChild, ic: el.firstChild, c: 2, k: 1 };
+          });
+          // each option shrinks to fit the pill (never below 40px), measured once at the focus size; the same ratio
+          // then applies to its smaller sizes, so a long option keeps its depth cue
+          var avail = L.vw * L.avail - S * 21;
+          rows.forEach(function (r) {
+            r.t.style.whiteSpace = "normal";
+            var f = kFit(r.t, { max: 17 * S, min: 40, lines: 1, width: avail });
+            r.k = f.size / (17 * S);
+            r.t.style.whiteSpace = "";
+          });
+          var pill = q(".pk-pill"), view = q(".pk-view"), ground = q(".pk-ground"), badge = q(".pk-badge");
+          var blur = kSpeedBlur(q(".pk-box"), "pk", { amount: 0.06, max: 0.8 * S });
+          list = q(".pk-list");
+
+          // position in rows: 5 steps; inside a step the first (1 - hold) glides on outQuint, the rest stands still
+          var N = Math.max(1, Math.min(CFG.steps, rows.length - 1));
+          function stepAt(t) {
+            var g = Math.min(N, Math.max(0, (t - CFG.t0) / CFG.step)), st = Math.min(N - 1, Math.floor(g));
+            return { st: st, lo: Math.min(1, g - st) };
+          }
+          function posAt(t) {
+            var s = stepAt(t), x = Math.min(1, s.lo / (1 - CFG.hold));
+            return rows.length < 2 ? 0 : s.st + 1 - Math.pow(1 - x, 5);
+          }
+          var ramp = function (t, a, b) { return Math.min(1, Math.max(0, (t - a) / (b - a))); };
+          var tl = MT.scene(CFG.dur, function (t) {
+            var pos = posAt(t), s = stepAt(t);
+            var land = Math.max(0, (s.lo - (1 - CFG.hold)) / CFG.hold);
+            var br = land > 0 ? Math.sin(Math.min(1, land / CFG.breathLen) * Math.PI) * CFG.breath : 0;
+            var fade = ramp(t, 0, CFG.fade);
+            view.style.opacity = ground.style.opacity = fade;
+            badge.style.opacity = ramp(t, CFG.badgeAt, CFG.badgeEnd);
+            pill.style.transform = "scaleY(" + (1 + br).toFixed(4) + ")";
+            list.style.transform = "translateY(" + ((2 - pos) * RH).toFixed(2) + "px)";
+            rows.forEach(function (r, i) {
+              var d = Math.abs(i - pos), k2 = Math.min(2, d);
+              var c = d < 0.5 ? 0 : d < 1.5 ? 1 : 2;
+              if (c !== r.c) { r.c = c; r.el.className = "pk-r c" + c; }
+              r.el.style.opacity = ((k2 <= 1 ? 1 - 0.45 * k2 : 0.55 - 0.37 * (k2 - 1)) * Math.min(1, Math.max(0, (CFG.out - d) / (CFG.out - 2)))).toFixed(3);
+              r.t.style.fontSize = Math.max(40, (17 - 3 * Math.min(1, d / 2)) * S * r.k).toFixed(2) + "px";
+              r.ic.style.opacity = Math.max(0, 1 - d * 1.6).toFixed(3);
+            });
+            // list speed in px per second (upstream blurs by speed only while it glides; the hold gives zero)
+            blur(0, -MT.velocity(posAt, t) * RH);
+            if (grain) grain(t);
+          });
+          window.__timelines["picker-carousel-feature-cycle"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

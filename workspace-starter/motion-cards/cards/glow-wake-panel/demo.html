@@ -1,0 +1,248 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"src","type":"string","label":"界面截图（从项目根目录写起，铺满面板、左上对齐；留空用内置示意界面）","default":""},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"暗场"},{"value":"off","label":"透明（去掉面板外的暗场底）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>glow-wake-panel · 扫光醒睡面板</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="glow-wake-panel-template">
+<!-- Ported from video-shotcraft demos/effects/spotlight-sweep-moves/GlowWakeSleepPanel.tsx
+ (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+ Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+ Changes (2026-10): Remotion/React -> HyperFrames MT scene, frames to seconds; --k-* palette with --k-stage (#040308
+ -> stage, purple / pink light -> accent-2 and an accent-2 + accent mix, tail blue -> accent-2 + on-stage, grey UI ->
+ ink mixes on --k-panel, column rules -> accent / accent-2); upstream mark and wordmark -> the neutral mark and a bar;
+ the kanban panel redrawn as one inline SVG with the same boxes (sidebar 300, two columns, three task cards each); the
+ back "ghost" panel keeps the sidebar only (its main area is hidden behind the front panel); src fills both panels;
+ preserve-3d dropped (every layer is flat in the group plane); added: film grain against banding, and on dark skins a
+ screen-blended pool of on-stage light (16%) under the head; portrait: the 16:9 scene scaled 0.66 into the middle
+ band, the panel rolled -40 deg instead of -17 and the drift halved, so the sweep climbs the tall frame. Kept as upstream: panel 1250 x 860 r 26 at 400,150, scale 1.05, rotateY -13 / X 9 / Z -17, perspective
+ 1700 at 46% 40%, light 4f -> 120f linear -260 -> 1510 px, envelope 0/16/100/130f, tail 100/116/132f, drift
+ -150 -> 150 / -36 -> 36 over 132f unclamped, all glow sizes, blurs and overlay stops, 140f long. -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+#root {
+ --k-bg: var(--mc-bg, #ffffff);
+ --k-panel: var(--mc-panel, #f4f5f7);
+ --k-ink: var(--mc-ink, #15171c);
+ --k-muted: var(--mc-muted, #6b7280);
+ --k-accent: var(--mc-accent, #e8590c);
+ --k-accent-2: var(--mc-accent-2, #2563eb);
+ --k-on-accent: var(--mc-on-accent, #ffffff);
+ --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+ --k-stage: var(--mc-stage, #0b0d12);
+ --k-on-stage: var(--mc-on-stage, #f3f5f8);
+ position: absolute;
+ inset: 0;
+ overflow: hidden;
+ font-family: var(--k-font);
+ color: var(--k-ink);
+}
+.gwp { position: absolute; inset: 0; container-type: size;
+ --gwp-pg: var(--k-panel);
+ --gwp-l2: color-mix(in srgb, var(--k-accent-2) 70%, var(--k-on-stage));
+ --gwp-core: color-mix(in srgb, var(--k-on-stage) 82%, var(--k-accent-2));
+ --gwp-pink: color-mix(in srgb, var(--k-on-stage) 35%, color-mix(in srgb, var(--k-accent-2) 65%, var(--k-accent))); }
+.gwp-l, .gwp-fit, .gwp-grp, .gwp-grp div { position: absolute; }
+.gwp-l { inset: 0; }
+.gwp-stage { background: var(--k-stage); }
+/* the 16:9 scene in its own px; portrait scales it into the middle band */
+.gwp-fit { left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; perspective: 1700px; perspective-origin: 46% 40%; }
+/* the tilted panel group (static = the hero frame, 62f) */
+.gwp-grp { left: 400px; top: 150px; width: 1250px; height: 860px; transform: translate(-9.1px, -2.2px) scale(1.05) rotateY(-13deg) rotateX(9deg) rotateZ(-17deg); }
+.gwp-pn { left: 0; top: 0; width: 1250px; height: 860px; border-radius: 26px; overflow: hidden; background: var(--gwp-pg) 0 0 / cover no-repeat; }
+.gwp-pn svg { display: block; }
+.gwp-ghost { left: -46px; top: 34px; width: 1250px; height: 860px; filter: brightness(0.92); }
+.gwp-ov { inset: 0; border-radius: 26px; }
+/* unlit parts sink to the stage colour: front panel and ghost (static = the hero frame) */
+.gwp-dk { background: radial-gradient(circle 640px at 625px 150px, transparent, color-mix(in srgb, var(--k-stage) 28%, transparent) 58%, color-mix(in srgb, var(--k-stage) 98.5%, transparent) 92%); }
+.gwp-ghost .gwp-ov { background: radial-gradient(circle 680px at 579px 184px, color-mix(in srgb, var(--k-stage) 55%, transparent), color-mix(in srgb, var(--k-stage) 86%, transparent) 55%, color-mix(in srgb, var(--k-stage) 99%, transparent) 88%); }
+/* panel ink: the upstream greys as ink mixes on the panel colour */
+.gwp-pn .a { fill: color-mix(in srgb, var(--k-ink) 78%, var(--gwp-pg)); }
+.gwp-pn .b { fill: color-mix(in srgb, var(--k-ink) 40%, var(--gwp-pg)); }
+.gwp-pn .c { fill: color-mix(in srgb, var(--k-ink) 10%, var(--gwp-pg)); }
+.gwp-pn .d { fill: color-mix(in srgb, var(--k-ink) 22%, var(--gwp-pg)); }
+.gwp-pn .e { fill: color-mix(in srgb, var(--k-ink) 29%, var(--gwp-pg)); }
+.gwp-pn .f { fill: color-mix(in srgb, var(--k-ink) 60%, var(--gwp-pg)); }
+.gwp-pn .g { fill: color-mix(in srgb, var(--k-ink) 15%, var(--gwp-pg)); }
+.gwp-pn .r { fill: none; stroke: color-mix(in srgb, var(--k-ink) 10%, var(--gwp-pg)); stroke-width: 2; }
+/* the light: a fog behind the panels, then over them the edge streak (wide blur, mid blur, core, pink offset) and
+   the flare, all riding the light head (translateX = head x) */
+.gwp-fog, .gwp-head { left: 0; top: 0; transform: translateX(625px); }
+.gwp-fog i { position: absolute; display: block; left: -520px; top: -300px; width: 1040px; height: 700px; filter: blur(34px); background: radial-gradient(ellipse at 50% 55%, color-mix(in srgb, color-mix(in srgb, var(--k-accent-2) 70%, var(--k-stage)) 42%, transparent), transparent 65%); }
+.gwp-head i, .gwp-vs i { position: absolute; display: block; }
+.gwp-h1 { left: -490px; top: -36px; width: 980px; height: 68px; filter: blur(26px); background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--k-accent-2) 60%, transparent) 45% 55%, transparent); }
+.gwp-h2 { left: -490px; top: -14px; width: 980px; height: 24px; filter: blur(9px); background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--gwp-l2) 90%, transparent) 45% 55%, transparent); }
+.gwp-h3 { left: -392px; top: -5px; width: 784px; height: 6px; filter: blur(1.6px); background: linear-gradient(90deg, transparent, var(--gwp-core) 45% 55%, transparent); }
+.gwp-h4 { left: -294px; top: -9px; width: 588px; height: 12px; filter: blur(5px); background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--gwp-pink) 75%, transparent) 45% 55%, transparent); }
+.gwp-fl { left: -190px; top: -84px; width: 380px; height: 170px; opacity: 0.95; filter: blur(12px); background: radial-gradient(ellipse, color-mix(in srgb, var(--gwp-core) 95%, transparent), color-mix(in srgb, var(--k-accent-2) 35%, transparent) 45%, transparent 72%); }
+/* the right-edge streak (vertical), lit when the head nears the right edge, blue in the tail */
+.gwp-vs { left: 1252px; top: 260px; opacity: 0; }
+.gwp-v1 { left: -30px; top: -310px; width: 60px; height: 620px; filter: blur(26px); background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--k-accent-2) 55%, transparent) 45% 55%, transparent); }
+.gwp-v2 { left: -11px; top: -310px; width: 22px; height: 620px; filter: blur(9px); background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--gwp-l2) 85%, transparent) 45% 55%, transparent); }
+.gwp-v3 { left: -2.5px; top: -248px; width: 5px; height: 496px; filter: blur(1.4px); background: linear-gradient(180deg, transparent, var(--gwp-core) 45% 55%, transparent); }
+/* outline glow round the mark while the light passes it */
+.gwp-mk { left: 8px; top: 12px; width: 222px; height: 66px; border-radius: 16px; opacity: 0.049; box-shadow: 0 0 26px 8px color-mix(in srgb, var(--gwp-l2) 75%, transparent), 0 0 60px 22px color-mix(in srgb, var(--k-accent-2) 40%, transparent); }
+/* dark skins: the panel is dark too, so the lit disc also gets a faint screen-blended pool of light */
+.gwp-pool { display: none; mix-blend-mode: screen; }
+.gwp[data-tone="dark"] .gwp-pool { display: block; }
+.gwp-tail { opacity: 0; background: linear-gradient(260deg, color-mix(in srgb, color-mix(in srgb, var(--k-accent-2) 75%, var(--k-on-stage)) 30%, transparent), transparent 16%); }
+/* ==== kit:grain@1 ==== */
+.gwp-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+@container (orientation: portrait) {
+ .gwp-fit { transform: translate(-70px, 366px) scale(0.66); }
+ .gwp-grp { transform: translate(-4.6px, -1.1px) scale(1.05) rotateY(-13deg) rotateX(9deg) rotateZ(-40deg); }
+}
+</style>
+
+<div id="root" data-composition-id="glow-wake-panel">
+ <div class="gwp">
+  <div class="gwp-l gwp-stage"></div>
+  <div class="gwp-fit">
+   <div class="gwp-grp" data-layout-allow-overflow>
+    <div class="gwp-fog"><i></i></div>
+    <div class="gwp-ghost">
+     <div class="gwp-pn"><svg width="1250" height="860" viewBox="0 0 1250 860" aria-hidden="true"><rect class="r" x="299" y="-2" width="2" height="864"/><rect class="a" x="28" y="30" width="30" height="30" rx="7"/><rect class="a" x="70" y="39" width="120" height="12" rx="6"/><g class="b"><rect x="28" y="100" width="18" height="18" rx="5"/><rect x="28" y="144" width="18" height="18" rx="5"/><rect x="28" y="188" width="18" height="18" rx="5"/><rect x="28" y="281" width="18" height="18" rx="5"/><rect x="28" y="325" width="18" height="18" rx="5"/><rect x="28" y="369" width="18" height="18" rx="5"/><rect x="28" y="413" width="18" height="18" rx="5"/></g><g class="d"><rect x="58" y="103.5" width="72" height="11" rx="5.5"/><rect x="58" y="147.5" width="128" height="11" rx="5.5"/><rect x="58" y="191.5" width="64" height="11" rx="5.5"/><rect x="58" y="284.5" width="110" height="11" rx="5.5"/><rect x="58" y="328.5" width="140" height="11" rx="5.5"/><rect x="58" y="372.5" width="104" height="11" rx="5.5"/><rect x="58" y="416.5" width="126" height="11" rx="5.5"/></g></svg></div>
+     <div class="gwp-ov"></div>
+    </div>
+    <div class="gwp-pn"><svg width="1250" height="860" viewBox="0 0 1250 860" aria-hidden="true"><rect class="c" x="298" y="0" width="2" height="860"/><svg x="28" y="30" width="30" height="30" viewBox="0 0 128 128"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg><rect class="a" x="70" y="39" width="120" height="12" rx="6"/><g class="b"><rect x="28" y="100" width="18" height="18" rx="5"/><rect x="28" y="144" width="18" height="18" rx="5"/><rect x="28" y="188" width="18" height="18" rx="5"/><rect x="28" y="281" width="18" height="18" rx="5"/><rect x="28" y="325" width="18" height="18" rx="5"/><rect x="28" y="369" width="18" height="18" rx="5"/><rect x="28" y="413" width="18" height="18" rx="5"/><rect x="336" y="30" width="24" height="20" rx="4"/></g><g class="d"><rect x="58" y="103.5" width="72" height="11" rx="5.5"/><rect x="58" y="147.5" width="128" height="11" rx="5.5"/><rect x="58" y="191.5" width="64" height="11" rx="5.5"/><rect x="58" y="284.5" width="110" height="11" rx="5.5"/><rect x="58" y="328.5" width="140" height="11" rx="5.5"/><rect x="58" y="372.5" width="104" height="11" rx="5.5"/><rect x="58" y="416.5" width="126" height="11" rx="5.5"/></g><rect class="e" x="28" y="246" width="84" height="13" rx="6"/><rect class="f" x="374" y="31.5" width="250" height="17" rx="8"/><g class="c"><rect x="678" y="34" width="96" height="12" rx="6"/><rect x="788" y="34" width="76" height="12" rx="6"/><rect x="336" y="136" width="172" height="9" rx="4.5"/><rect x="336" y="214" width="194" height="9" rx="4.5"/><rect x="336" y="292" width="150" height="9" rx="4.5"/><rect x="797" y="136" width="172" height="9" rx="4.5"/><rect x="797" y="214" width="194" height="9" rx="4.5"/><rect x="797" y="292" width="150" height="9" rx="4.5"/></g><rect x="336" y="80" width="417" height="4" style="fill:var(--k-accent)"/><rect x="797" y="80" width="417" height="4" style="fill:var(--k-accent-2)"/><g class="f"><rect x="336" y="104" width="88" height="14" rx="7"/><rect x="797" y="104" width="88" height="14" rx="7"/></g><g class="r"><circle cx="445" cy="111" r="10"/><circle cx="906" cy="111" r="10"/></g><g class="e"><rect x="336" y="154" width="244" height="12" rx="6"/><rect x="336" y="232" width="226" height="12" rx="6"/><rect x="336" y="310" width="208" height="12" rx="6"/><rect x="797" y="154" width="190" height="12" rx="6"/><rect x="797" y="232" width="244" height="12" rx="6"/><rect x="797" y="310" width="226" height="12" rx="6"/></g><g class="g"><rect x="336" y="175" width="15" height="11" rx="2"/><rect x="336" y="253" width="15" height="11" rx="2"/><rect x="336" y="331" width="15" height="11" rx="2"/><rect x="797" y="175" width="15" height="11" rx="2"/><rect x="797" y="253" width="15" height="11" rx="2"/><rect x="797" y="331" width="15" height="11" rx="2"/></g></svg></div>
+    <div class="gwp-ov gwp-dk"></div>
+    <div class="gwp-ov gwp-tail"></div>
+    <div class="gwp-ov gwp-pool"></div>
+    <div class="gwp-head"><i class="gwp-h1"></i><i class="gwp-h2"></i><i class="gwp-h3"></i><i class="gwp-h4"></i></div>
+    <div class="gwp-vs"><i class="gwp-v1"></i><i class="gwp-v2"></i><i class="gwp-v3"></i></div>
+    <div class="gwp-mk"></div>
+    <div class="gwp-head gwp-flh"><i class="gwp-fl"></i></div>
+   </div>
+  </div>
+  <div class="gwp-l gwp-grain"></div>
+ </div>
+</div>
+
+<script>
+(function () {
+ // timing in seconds (upstream frames / 30), shared by both orientations: the light crosses 4f -> 120f, the panel
+ // wakes over 0-16f and sleeps over 100-130f, the right-edge tail swells 100-116f and settles at 132f; 140f long
+ var CFG = { dur: 4.667, run: [0.133, 4], env: [0, 0.533, 3.333, 4.333], tail: [3.333, 3.867, 4.4], drift: 4.4 };
+ // panel and light, upstream px in the panel's own plane: width, light row, light start / end, mark x, glow width
+ var W = 1250, SY = 150, X0 = -260, X1 = W + 260, MARK = 60, MW = 230;
+ // layout per orientation: the 16:9 scene's scale and offset, the panel's roll and the drift's size (portrait: a
+ // steeper roll and half the drift so the sweep climbs the tall frame from the mark at x ~180 to the far corner at
+ // x ~810, both inside the 10% margins)
+ var LAND = { k: 1, x: 0, y: 0, rz: -17, dr: 1 };
+ var PORT = { k: 0.66, x: -70, y: 366, rz: -40, dr: 0.5 };
+ var v = { src: "", backdrop: "on" };
+ try {
+  var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+  for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+ } catch (e) {}
+
+ var root = document.querySelector(".gwp");
+ var q = function (s) { return root.querySelector(s); };
+ var qa = function (s) { return [].slice.call(root.querySelectorAll(s)); };
+ var FW = root.clientWidth, FH = root.clientHeight;
+ if (!FW || !FH) {
+  // not laid out yet: the host clip's declared size, then the window
+  var hc = root.closest("[data-width][data-height]");
+  FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+  FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+ }
+ var P = FH > FW, L = P ? PORT : LAND;
+ root.setAttribute("data-orient", P ? "portrait" : "landscape");
+ if (String(v.backdrop) === "off") q(".gwp-stage").style.display = "none";
+ var src = String(v.src).trim();
+ if (src) qa(".gwp-pn").forEach(function (p) {
+  p.style.backgroundImage = 'url("' + src.replace(/"/g, "%22") + '")';
+  p.firstChild.style.display = "none";
+ });
+
+ // the scene keeps its own 16:9 px (the CSS box of .gwp-fit); the frame decides scale and offset
+ var fit = q(".gwp-fit"), DW = fit.offsetWidth, DH = fit.offsetHeight, u = P ? FW / DH : FW / DW;
+ fit.style.transform = "translate(" + (L.x * u).toFixed(1) + "px, " + (L.y * u).toFixed(1) + "px) scale(" + (L.k * u).toFixed(4) + ")";
+
+ // ==== kit:tone@1 ====
+ function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+ }
+ function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+ }
+ // ==== end kit:tone ====
+ var dark = kTone(root) === "dark", pool = q(".gwp-pool");
+
+ var grp = q(".gwp-grp"), fog = q(".gwp-fog"), heads = qa(".gwp-head"), vs = q(".gwp-vs"), mk = q(".gwp-mk");
+ var dk = q(".gwp-dk"), tail = q(".gwp-tail"), gov = q(".gwp-ghost .gwp-ov");
+ var a = function (x) { return "color-mix(in srgb, var(--k-stage) " + (x * 100).toFixed(1) + "%, transparent)"; };
+ var lin = function (t, xs, ys) { return MT.interpolate(t, xs, ys, { extrapolateLeft: "clamp", extrapolateRight: "clamp" }); };
+
+ // ==== kit:grain@1 ====
+ function kGrain(layer, o) {
+   o = o || {};
+   var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+   var dark = tones && tones.getAttribute("data-tone") === "dark";
+   var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+     var f = "type='linear' slope='2.4' intercept='-0.7'";
+     var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+       "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+       "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+       "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+       "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+     return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+   });
+   layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+   layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+   layer.style.backgroundSize = size + "px " + size + "px";
+   return function (t) {
+     var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+     layer.style.backgroundImage = tiles[k % 6];
+     layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+   };
+ }
+ // ==== end kit:grain ====
+
+ // film grain over the gradients (dark-stage strength); none when the card sits on a host picture
+ var grain = String(v.backdrop) === "off" ? null : kGrain(q(".gwp-grain"), { opacity: 0.09, blend: "soft-light" });
+
+ var tl = MT.scene(CFG.dur, function (t) {
+  if (grain) grain(t);
+  var sx = lin(t, CFG.run, [X0, X1]);                       // linear: a searchlight, not a hand
+  var env = lin(t, CFG.env, [0, 1, 1, 0]);
+  var tb = lin(t, CFG.tail, [0, 0.8, 0.25]);
+  var near = MT.clamp((sx - (W - 420)) / 420, 0, 1);
+  var dx = L.dr * MT.interpolate(t, [0, CFG.drift], [-150, 150]), dy = L.dr * MT.interpolate(t, [0, CFG.drift], [-36, 36]); // unclamped
+  grp.style.transform = "translate(" + dx.toFixed(1) + "px, " + dy.toFixed(1) + "px) scale(1.05) rotateY(-13deg) rotateX(9deg) rotateZ(" + L.rz + "deg)";
+  fog.style.transform = "translateX(" + sx.toFixed(1) + "px)";
+  fog.style.opacity = env;
+  heads.forEach(function (h) { h.style.transform = fog.style.transform; h.style.opacity = env; });
+  // what the light does not reach sinks to the stage colour (front panel, then the ghost behind it)
+  dk.style.background = "radial-gradient(circle 640px at " + sx.toFixed(1) + "px " + SY + "px, " + a(0.12 * (1 - env)) + ", " + a(1 - 0.72 * env) + " 58%, " + a(0.985) + " 92%)";
+  gov.style.background = "radial-gradient(circle 680px at " + (sx - 46).toFixed(1) + "px " + (SY + 34) + "px, " + a(1 - 0.45 * env) + ", " + a(1 - 0.14 * env) + " 55%, " + a(0.99) + " 88%)";
+  if (dark) { pool.style.background = "radial-gradient(circle 640px at " + sx.toFixed(1) + "px " + SY + "px, color-mix(in srgb, var(--k-on-stage) 16%, transparent), transparent 58%)"; pool.style.opacity = env; }
+  tail.style.opacity = tb;
+  vs.style.opacity = Math.max(near * env, tb * 0.9);
+  mk.style.opacity = Math.exp(-((sx - MARK) * (sx - MARK)) / (2 * MW * MW)) * env;
+ });
+ window.__timelines["glow-wake-panel"] = tl;
+})();
+</script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,139 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"title","type":"string","label":"标题","default":"写好提示词的三个习惯"},
+    {"id":"items","type":"string","label":"要点（用 | 分隔，2–4 条）","default":"先说清楚要什么|给一个完整的例子|规定输出的格式"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>card-skeleton · 新卡骨架</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="card-skeleton-template">
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* the wrapper is the size container: the static layout below switches with @container (orientation: portrait).
+           It stays absolute + inset:0 because a container-type: size box is not sized by its content (in normal flow it
+           collapses to 0px high), and it carries no layout of its own because @container rules only reach elements
+           inside the container, never the container itself: whatever changes with orientation lives in .sk-box */
+        .sk { position: absolute; inset: 0; container-type: size; }
+        .sk-bg { position: absolute; inset: 0; background: var(--k-bg); }
+        /* landscape: a left-aligned block 1400px wide, centred on the frame's middle line */
+        .sk-box { position: absolute; top: 0; bottom: 0; left: 260px; right: 260px; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; }
+        .sk-bar { display: block; flex: none; width: 160px; height: 12px; border-radius: 6px; background: var(--k-accent); }
+        .sk-title { display: block; max-width: 100%; margin: 36px 0 56px; font-size: 112px; font-weight: 800; line-height: 1.2; white-space: nowrap; }
+        .sk-list { display: flex; flex-direction: column; gap: 30px; }
+        .sk-row { display: flex; align-items: center; gap: 32px; font-size: 64px; font-weight: 600; line-height: 1.3; white-space: nowrap; }
+        .sk-dot { display: block; flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--k-accent); }
+        .sk-txt { display: block; }
+        /* portrait: the block fills the 12%-68% band (its middle is the 40% anchor line) and stays 11% off each side */
+        @container (orientation: portrait) {
+          .sk-box { top: 12%; bottom: 32%; left: 11%; right: 11%; }
+          .sk-bar { width: 128px; height: 10px; border-radius: 5px; }
+          .sk-title { margin: 28px 0 44px; font-size: 80px; white-space: normal; }
+          .sk-list { gap: 26px; }
+          .sk-row { gap: 26px; font-size: 52px; }
+          .sk-dot { width: 20px; height: 20px; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="card-skeleton">
+        <div class="sk">
+          <div class="sk-bg"></div>
+          <div class="sk-box">
+            <span class="sk-bar"></span>
+            <div class="sk-title">写好提示词的三个习惯</div>
+            <div class="sk-list">
+              <div class="sk-row"><span class="sk-dot"></span><span class="sk-txt">先说清楚要什么</span></div>
+              <div class="sk-row"><span class="sk-dot"></span><span class="sk-txt">给一个完整的例子</span></div>
+              <div class="sk-row"><span class="sk-dot"></span><span class="sk-txt">规定输出的格式</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing (seconds), shared by both orientations: only LAND / PORT differ
+          var CFG = { bar: 0.2, barDur: 0.4, title: 0.3, titleDur: 0.55, rows: 0.95, each: 0.22, rowDur: 0.5, dotLag: 0.12, dotDur: 0.36 };
+          // layout per orientation: motion distances in px and how many lines the title may take (sizes live in the CSS)
+          var LAND = { rise: 56, slide: 80, titleLines: 1, boxW: 0.73 };
+          var PORT = { rise: 48, slide: 48, titleLines: 2, boxW: 0.78 };
+          var v = { title: "写好提示词的三个习惯", items: "先说清楚要什么|给一个完整的例子|规定输出的格式", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".sk");
+          var q = function (s) { return root.querySelector(s); };
+          // orientation = the box the host clip gave this card (the root declares no size, so it fills the clip)
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          if (String(v.backdrop) === "off") q(".sk-bg").style.display = "none";
+
+          // text: the static HTML already shows the defaults; variables replace them. A long line shrinks to fit:
+          // the CSS font size is the largest it gets, CJK counts 1em and Latin 0.6em
+          var BW = q(".sk-box").clientWidth || FW * L.boxW;
+          var em = function (s) { var w = 0; for (var c = 0; c < s.length; c++) w += s.charCodeAt(c) > 255 ? 1 : 0.6; return w; };
+          var fit = function (el, text, lines, width) {
+            el.textContent = text;
+            var max = parseFloat(getComputedStyle(el).fontSize) || 60;
+            el.style.fontSize = Math.min(max, Math.floor((width * lines * 0.96) / Math.max(1, em(text)))) + "px";
+          };
+          fit(q(".sk-title"), String(v.title), L.titleLines, BW);
+          var items = String(v.items).split("|").map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 4);
+          var list = q(".sk-list");
+          list.innerHTML = "";
+          var rows = items.map(function (t) {
+            var row = document.createElement("div");
+            row.className = "sk-row";
+            row.innerHTML = '<span class="sk-dot"></span><span class="sk-txt"></span>';
+            list.appendChild(row);
+            fit(row.querySelector(".sk-txt"), t, 1, BW * 0.9);
+            return row;
+          });
+          var dots = rows.map(function (r) { return r.querySelector(".sk-dot"); });
+
+          var tl = MT.timeline();
+          // the accent bar draws from its left end, then the title rises into place under it
+          tl.fromTo(q(".sk-bar"), { scaleX: 0, transformOrigin: "0% 50%" }, { scaleX: 1, duration: CFG.barDur, ease: "snappy" }, CFG.bar);
+          tl.fromTo(q(".sk-title"), { opacity: 0, y: L.rise }, { opacity: 1, y: 0, duration: CFG.titleDur, ease: "out" }, CFG.title);
+          // the rows slide in one after another; each dot pops a beat after its row (same stagger, so they stay paired)
+          tl.addLabel("rows", CFG.rows);
+          tl.fromTo(rows, { opacity: 0, x: -L.slide }, { opacity: 1, x: 0, duration: CFG.rowDur, ease: "power3.out", stagger: CFG.each }, "rows");
+          tl.fromTo(dots, { scale: 0 }, { scale: 1, duration: CFG.dotDur, ease: "back.out(2.4)", stagger: CFG.each }, "rows+=" + CFG.dotLag);
+          window.__timelines["card-skeleton"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

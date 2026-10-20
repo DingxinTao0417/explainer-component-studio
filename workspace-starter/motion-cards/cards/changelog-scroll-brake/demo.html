@@ -1,0 +1,429 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"head","type":"string","label":"页眉","default":"更新日志"},
+    {"id":"name","type":"string","label":"页眉旁的应用名（可留空）","default":"示例应用"},
+    {"id":"title","type":"string","label":"停住的那一条：标题（可用 | 切词）","default":"一键导出"},
+    {"id":"desc","type":"string","label":"停住的那一条：说明（可留空）","default":"做好的视频直接存成文件"},
+    {"id":"kind","type":"string","label":"类型标签（可留空）","default":"发布"},
+    {"id":"ver","type":"string","label":"版本号，只在横屏显示（可留空）","default":"v1.24"},
+    {"id":"date","type":"string","label":"日期，只在横屏显示（可留空）","default":"今天"},
+    {"id":"badge","type":"string","label":"抬起后出现的角标（可留空）","default":"最新"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>changelog-scroll-brake · 长卷急刹</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="changelog-scroll-brake-template">
+<!-- Ported from video-shotcraft demos/data/scroll-brake-moves/ChangelogScrollBrake.tsx
+     (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+     Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+     Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+     neutral --k-* palette, system fonts, generic copy; upstream mark, wordmark and release titles replaced by a
+     neutral mark and variables; rows other than the stop row are text-free bars (one node each, SVG background);
+     list scaled 1.3x for 40px text (rows, gaps, blur cap 30 -> 39px, shadow heights); the stop row grows with its
+     text; NEW badge text cuts in at half fade; grain moved under the list; data-layout-ignore on the stop row while
+     it is blurred; portrait layout. Scroll curve and frames 14/64/68/82, blur gain 0.32, lift 1.03, dim to 0.38,
+     grain 0.05, vignette 0.16 and the list fades kept. -->
+<style>
+  @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+  @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+  @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+  #root {
+    --k-bg: var(--mc-bg, #ffffff);
+    --k-panel: var(--mc-panel, #f4f5f7);
+    --k-ink: var(--mc-ink, #15171c);
+    --k-muted: var(--mc-muted, #6b7280);
+    --k-accent: var(--mc-accent, #e8590c);
+    --k-accent-2: var(--mc-accent-2, #2563eb);
+    --k-on-accent: var(--mc-on-accent, #ffffff);
+    --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    font-family: var(--k-font);
+    color: var(--k-ink);
+  }
+  /* ==== kit:fonts@2 (mono only) ==== */
+  @font-face { font-family: "Consolas"; src: local("Consolas"); }
+  #root { --k-mono: var(--mc-mono, Consolas, monospace); }
+  /* ==== end kit:fonts ==== */
+  /* ==== kit:derived@1 ==== */
+  .csb {
+    --csb-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+    --csb-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+    --csb-hi: color-mix(in srgb, white 80%, transparent);
+  }
+  .csb[data-tone="dark"] {
+    --csb-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+    --csb-hi: color-mix(in srgb, white 6%, transparent);
+  }
+  /* ==== end kit:derived ==== */
+  /* ==== kit:backdrop@1 (key light moved to 50% 20%, as upstream) ==== */
+  .csb-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+  .csb-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 50% 20%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+  /* ==== end kit:backdrop ==== */
+  /* ==== kit:vignette@1 ==== */
+  .csb-vig {
+    position: absolute; inset: 0; pointer-events: none;
+    --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--csb-shade);
+    background:
+      radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+      radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+  }
+  .csb[data-tone="dark"] .csb-vig { --vs: 0.55; }
+  /* ==== end kit:vignette ==== */
+  /* ==== kit:grain@1 ==== */
+  .csb-grain { position: absolute; inset: 0; pointer-events: none; }
+  /* ==== end kit:grain ==== */
+  /* ==== kit:text@2 (units only, no rise mask) ==== */
+  .csb-u { display: inline-block; white-space: pre; }
+  /* ==== end kit:text ==== */
+
+  /* rows are white on the grey backdrop (panel-coloured on a dark skin); --cw column width, --cy stop-row centre,
+     --m0..--m3 the list fade under the header and at the bottom; the rest shadow is kShadow(2.6) */
+  .csb { position: absolute; inset: 0; container-type: size; --csb-row: var(--k-bg); --cw: 1300px; --cy: 50%;
+    --m0: 150px; --m1: 250px; --m2: 930px; --m3: 1060px;
+    --csb-b1: color-mix(in srgb, var(--k-ink) 20%, var(--csb-row)); --csb-b2: color-mix(in srgb, var(--k-ink) 10%, var(--csb-row));
+    --csb-sh: 0 0.7px 1.5px color-mix(in srgb, var(--csb-shade) 10.8%, transparent), 0 1.4px 3.4px -0.6px color-mix(in srgb, var(--csb-shade) 8.9%, transparent); }
+  .csb[data-tone="dark"] { --csb-row: var(--k-panel);
+    --csb-sh: 0 0.7px 1.5px color-mix(in srgb, var(--csb-shade) 28.2%, transparent), 0 1.4px 3.4px -0.6px color-mix(in srgb, var(--csb-shade) 23.1%, transparent); }
+  .csb-mask, .csb-blur, .csb-rows { position: absolute; inset: 0; }
+  .csb-mask { -webkit-mask-image: linear-gradient(180deg, transparent var(--m0), #000 var(--m1), #000 var(--m2), transparent var(--m3)); mask-image: linear-gradient(180deg, transparent var(--m0), #000 var(--m1), #000 var(--m2), transparent var(--m3)); }
+  .csb-col { position: absolute; left: calc(50% - var(--cw) / 2); width: var(--cw); top: calc(var(--cy) - 4200.5px); height: 5015px; }
+  .csb-r, .csb-hero { position: absolute; left: 0; right: 0; display: flex; align-items: center; gap: 28px; padding: 0 36px; box-sizing: border-box; border-radius: 18px;
+    background: var(--csb-row); border: 1px solid var(--csb-line); box-shadow: inset 0 1px 0 var(--csb-hi), var(--csb-sh); }
+  .csb-pl { background: color-mix(in srgb, var(--csb-row) 55%, transparent); border: 1px dashed color-mix(in srgb, var(--k-ink) 16%, transparent); box-shadow: none; }
+  /* placeholder rows carry their bars (version | kind pill | title + description | date) as one SVG background */
+  .csb-r { background-origin: border-box; background-repeat: no-repeat; }
+  /* the stop row: real text, shown lifted (the static page is the settled frame) */
+  .csb-hero { top: 4125px; height: 151px; transform: scale(1.03);
+    box-shadow: inset 0 1px 0 var(--csb-hi), 0 2.7px 7.6px color-mix(in srgb, var(--csb-shade) 7.6%, transparent), 0 20px 47.3px -8px color-mix(in srgb, var(--csb-shade) 32.8%, transparent), 0 0 0 2px color-mix(in srgb, var(--k-accent) 90%, transparent); }
+  .csb-ver, .csb-kind, .csb-new, .csb-date { display: block; flex: none; max-width: 220px; font-size: 40px; line-height: 1.3; }
+  .csb-ver { min-width: 120px; font-family: var(--k-mono); color: var(--k-muted); }
+  .csb-date { min-width: 100px; text-align: right; color: var(--k-muted); }
+  .csb-kind { padding: 0 20px; border-radius: 28px; background: var(--k-accent); color: var(--k-on-accent); font-weight: 700; }
+  .csb-new { position: relative; padding: 0 16px; font-weight: 700; color: color-mix(in srgb, var(--k-accent), var(--k-ink) 35%); }
+  .csb-new::before { content: ""; position: absolute; inset: 0; border-radius: 12px; background: color-mix(in srgb, var(--k-accent) 12%, transparent); opacity: var(--a, 1); }
+  .csb-main { flex: 1; min-width: 0; }
+  .csb-title { font-size: 48px; font-weight: 700; line-height: 1.2; }
+  .csb-desc { margin-top: 4px; font-size: 40px; line-height: 1.25; color: var(--k-muted); }
+  /* fixed header above the list */
+  .csb-head { position: absolute; left: calc(50% - var(--cw) / 2); width: var(--cw); top: 56px; display: flex; align-items: baseline; gap: 28px; }
+  .csb-mark { display: block; flex: none; align-self: center; }
+  .csb-h { min-width: 0; font-size: 68px; font-weight: 800; line-height: 1.2; }
+  .csb-n { flex: none; max-width: 320px; font-size: 40px; font-weight: 600; line-height: 1.2; color: var(--k-muted); }
+  /* portrait: a narrower column, stop row on the 40% line, header under the top 12%; version and date drop out.
+     The tokens go on the wrapper's children: @container rules never reach the container itself */
+  @container (orientation: portrait) {
+    .csb > * { --cw: 828px; --cy: 40%; --m0: 340px; --m1: 440px; --m2: 1190px; --m3: 1400px; }
+    .csb-head { top: 250px; }
+    .csb-h { font-size: 72px; }
+    .csb-r, .csb-hero { gap: 20px; padding: 0 28px; }
+    .csb-ver, .csb-date { display: none; }
+  }
+</style>
+
+<div id="root" data-composition-id="changelog-scroll-brake">
+  <div class="csb">
+    <div class="csb-backdrop"></div>
+    <div class="csb-vig"></div>
+    <div class="csb-grain"></div>
+    <div class="csb-mask">
+      <div class="csb-blur">
+        <div class="csb-col" data-layout-allow-overflow>
+          <div class="csb-rows"></div>
+          <div class="csb-hero">
+            <span class="csb-ver">v1.24</span>
+            <span class="csb-kind">发布</span>
+            <div class="csb-main"><div class="csb-title">一键导出</div><div class="csb-desc">做好的视频直接存成文件</div></div>
+            <span class="csb-new">最新</span>
+            <span class="csb-date">今天</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="csb-head">
+      <svg class="csb-mark" width="64" height="64" viewBox="0 0 128 128" aria-hidden="true"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg>
+      <span class="csb-h">更新日志</span>
+      <span class="csb-n">示例应用</span>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // timing (s) = upstream frames / 30, both orientations: hold at the top (14f), scroll 14-64f on
+  // cubic-bezier(.45,0,.06,1), the stop row lifts 68-82f ("out"), then everything holds.
+  // rows: 34, stop row 28; k: scale of every upstream length (rows, gaps, blur cap, shadow heights)
+  var CFG = { s0: 0.4667, s1: 2.1333, l0: 2.2667, l1: 2.7333, end: 4, rows: 34, at: 28, k: 1.3, blur: 0.32, max: 30, lift: 0.03, dim: 0.62 };
+  // per orientation: stop-row centre line (fraction of the height), list top before the scroll (px)
+  var LAND = { cy: 0.5, top: 200 };
+  var PORT = { cy: 0.4, top: 400 };
+  var v = { head: "更新日志", name: "示例应用", title: "一键导出", desc: "做好的视频直接存成文件", kind: "发布", ver: "v1.24", date: "今天", badge: "最新", backdrop: "on" };
+  try {
+    var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+  } catch (e) {}
+
+  // ==== kit:tone@1 ====
+  function kRGB(el, color) {
+    var p = document.createElement("i");
+    p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+    el.appendChild(p);
+    var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+    el.removeChild(p);
+    return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+  }
+  function kTone(wrap) {
+    var c = kRGB(wrap, "var(--k-bg)");
+    var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+    wrap.setAttribute("data-tone", tone);
+    return tone;
+  }
+  // ==== end kit:tone ====
+
+  // ==== kit:shadow@1 ====
+  function kShadow(e, strength) {
+    e = Math.max(0, e);
+    var s = strength == null ? 1 : strength, r = function (x) { return Math.round(x * 10) / 10; };
+    var c = function (a) { return "color-mix(in srgb, var(--csb-shade) " + r(Math.min(1, a) * 100) + "%, transparent)"; };
+    return "0 " + r(0.5 + e * 0.06) + "px " + r(1 + e * 0.18) + "px " + c((0.12 * s) / (1 + e / 24)) + ", " +
+      "0 " + r(e * 0.55) + "px " + r(e * 1.3) + "px " + r(-e * 0.22) + "px " + c((0.08 + (Math.min(e, 64) / 64) * 0.22) * s);
+  }
+  // ==== end kit:shadow ====
+
+  // ==== kit:speedblur@1 ====
+  function kSpeedBlur(box, prefix, o) {
+    o = o || {};
+    var amount = o.amount || 0.45, max = o.max || 36;
+    var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+    svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+    var outer = document.createElement("div"), inner = document.createElement("div");
+    outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+    while (box.firstChild) inner.appendChild(box.firstChild);
+    outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+    var fe = svg.firstChild.firstChild;
+    return function (vx, vy) {
+      vy = vy || 0;
+      var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+      if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+      var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+      fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+      outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+      inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+      outer.style.filter = "url(#" + id + ")";
+    };
+  }
+  // ==== end kit:speedblur ====
+
+  // ==== kit:grain@1 ====
+  function kGrain(layer, o) {
+    o = o || {};
+    var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+    var dark = tones && tones.getAttribute("data-tone") === "dark";
+    var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+      var f = "type='linear' slope='2.4' intercept='-0.7'";
+      var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+        "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+        "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+        "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+        "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+      return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+    });
+    layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+    layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+    layer.style.backgroundSize = size + "px " + size + "px";
+    return function (t) {
+      var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+      layer.style.backgroundImage = tiles[k % 6];
+      layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+    };
+  }
+  // ==== end kit:grain ====
+
+  // ==== kit:text@2 (kWords, kSplit; no kReveal) ====
+  var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+  function kWords(s, key) {
+    s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+    var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+    var cut = function (x) {
+      if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+      return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+    };
+    var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+    var pre = "";
+    bits.forEach(function (x) {
+      var t = x.trim(), last = out[out.length - 1];
+      if (last && /^ /.test(x)) last.sp = true;
+      if (!t) return;
+      if (!/[\p{L}\p{N}]/u.test(t)) {
+        if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+        else { last.t += t; last.sp = / $/.test(x); }
+        return;
+      }
+      out.push({ t: pre + t, sp: / $/.test(x) });
+      pre = "";
+    });
+    if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+    if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+    if (out.length) out[out.length - 1].sp = false;
+    return out;
+  }
+  function kSplit(el, by, rise, text) {
+    var s = text != null ? String(text) : el.textContent, units = [];
+    var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+    el.textContent = "";
+    parts.forEach(function (p) {
+      var u = document.createElement("span"), box = u;
+      u.className = "csb-u"; u.textContent = p.t;
+      if (by === "line") u.style.display = "block";
+      if (!p.t.trim()) { el.appendChild(u); return; }
+      if (rise) { box = document.createElement("span"); box.className = "csb-cut"; box.style.display = u.style.display; box.appendChild(u); }
+      el.appendChild(box);
+      if (p.sp) el.appendChild(document.createTextNode(" "));
+      units.push(u);
+    });
+    return units;
+  }
+  // ==== end kit:text ====
+
+  // ==== kit:fit@1 (kFit, kLines; no kRows) ====
+  function kFit(el, o) {
+    o = o || {};
+    var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+    var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+    for (;;) {
+      el.style.fontSize = f + "px";
+      m = kLines(el);
+      if ((m.w <= W && m.n <= n) || f <= min) break;
+      f = Math.max(min, f - 2);
+    }
+    if (m.w > W) {
+      [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+      m = kLines(el);
+    }
+    return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+  }
+  function kLines(el) {
+    var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+    var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+    while ((t = it.nextNode())) {
+      if (!t.data.trim()) continue;
+      r.selectNodeContents(t);
+      [].forEach.call(r.getClientRects(), function (b) {
+        var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+        if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+        row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+      });
+    }
+    return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+  }
+  // ==== end kit:fit ====
+
+  var root = document.querySelector(".csb");
+  var q = function (s) { return root.querySelector(s); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+    // not laid out yet: the host clip's declared size, then the window
+    var hc = root.closest("[data-width][data-height]");
+    FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+    FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND;
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+  var STR = kTone(root) === "dark" ? 2.6 : 1;
+  if (String(v.backdrop) === "off") [".csb-backdrop", ".csb-vig", ".csb-grain"].forEach(function (s) { q(s).style.display = "none"; });
+
+  // ---- text: every slot through kSplit (keeps typed spaces, | cuts phrases), then fitted to its box (before
+  // the rows: the stop row's height depends on it)
+  var put = function (s, val) {
+    var el = q(s), t = String(val).trim();
+    el.style.display = t ? "" : "none";
+    return t ? kSplit(el, "word", false, t) : [];
+  };
+  put(".csb-h", v.head);
+  put(".csb-n", v.name);
+  [".csb-kind", ".csb-ver", ".csb-date"].forEach(function (s) { put(s, v[s === ".csb-kind" ? "kind" : s.slice(5)]); });
+  var marks = put(".csb-new", v.badge);
+  put(".csb-title", v.title);
+  put(".csb-desc", v.desc);
+  [".csb-kind", ".csb-ver", ".csb-date", ".csb-new", ".csb-n"].forEach(function (s) { kFit(q(s), { width: s === ".csb-n" ? 320 : 220, min: 28 }); });
+  kFit(q(".csb-h"), { width: q(".csb-head").clientWidth - 120 - q(".csb-n").offsetWidth, min: 40 });
+  kFit(q(".csb-title"), { min: 40 });
+  kFit(q(".csb-desc"), { min: 40 });
+
+  // ---- rows: upstream heights 72 / 94 / 116 in its order, 20 apart (times k); the stop row is centred on L.cy and
+  // grows when its text wraps (the rows after it move down with it)
+  var K = CFG.k, base = function (i) { return 72 + ((i * 29) % 3) * 22; }, at = CFG.at, hero = q(".csb-hero");
+  var HH = Math.max(Math.round(K * base(at)), q(".csb-main").offsetHeight + 38);
+  var H = function (i) { return i === at ? HH : Math.round(K * base(i)); }, G = Math.round(20 * K), Y = [], y = 0, i;
+  for (i = 0; i < CFG.rows; i++) { Y.push(y); y += H(i) + G; }
+  var END = L.cy * FH - Y[at] - H(at) / 2, col = q(".csb-col"), list = q(".csb-rows");
+  col.style.top = END + "px";
+  col.style.height = y + "px";
+  hero.style.top = Y[at] + "px";
+  hero.style.height = H(at) + "px";
+  // the other rows are bars sized like upstream's text (title length in characters, fixes, roadmap rows after
+  // the stop row): blurred into bands while moving, and never DOM text, so dimming them cannot fail contrast.
+  // Each row is one node: its bars are an SVG background in the skin's colours (child nodes per bar made every
+  // HyperFrames check sample about 20% slower). Pad / gap as the stop row; portrait drops version and date
+  var LEN = [20, 23, 27, 22, 20, 18, 24, 21, 9, 18, 20, 22, 24, 20, 19, 21, 23, 22, 18, 12, 18, 19, 16, 11, 20, 19, 21, 15];
+  var FIX = [2, 6, 11, 16, 21, 26], PLAN = [18, 16, 16, 15, 13], html = "", W = col.clientWidth, pad = P ? 28 : 36, gap = P ? 20 : 28;
+  var rgb = function (c) { return "rgb(" + kRGB(root, c).map(Math.round).join(",") + ")"; };
+  var b1 = rgb("var(--csb-b1)"), b2 = rgb("var(--csb-b2)"), ink = rgb("var(--k-ink)"), KC = [rgb("var(--k-accent-2)"), rgb("color-mix(in srgb, var(--k-accent-2) 45%, var(--k-ink))"), ink, ink];
+  var bar = function (x, y, w, h, c, o) { return "<rect x='" + x + "' y='" + y + "' width='" + Math.max(0, w).toFixed(1) + "' height='" + h + "' rx='" + h / 2 + "' fill='" + c + "' fill-opacity='" + (o || 1) + "'/>"; };
+  for (i = 0; i < CFG.rows; i++) {
+    if (i === at) continue;
+    var pl = i > at, kd = pl ? 3 : FIX.indexOf(i) >= 0 ? 2 : i % 2, n = pl ? PLAN[(i - at - 1) % 5] : LEN[i % LEN.length];
+    var h = H(i), m = h / 2, x = pad, wp = [137, 151, 79, 137][kd], ko = kd > 1 ? 0.55 : 1, wd = pl ? 30 : (i * 11) % 27 > 8 ? 84 : 70, r = W - pad - (P ? 0 : wd + gap), g = "";
+    if (!P) { g += bar(x, m - 7, pl ? 24 : 76, 14, b2); x += 120 + gap; }
+    g += pl ? "<rect x='" + (x + 0.5) + "' y='" + (m - 21.5) + "' width='" + (wp - 1) + "' height='43' rx='21.5' fill='none' stroke='" + ink + "' stroke-opacity='0.12'/>" : bar(x, m - 22, wp, 44, KC[kd], 0.12 * ko);
+    g += bar(x + 18, m - 6, wp - 36, 12, KC[kd], 0.65 * ko);
+    x += wp + gap;
+    g += bar(x, base(i) > 72 ? m - 24 : m - 10, Math.min(n * 19, r - x), 20, pl ? b2 : b1);
+    if (base(i) > 72) g += bar(x, m + 10, (r - x) * (pl ? 0.4 : 0.92), 14, b2);
+    if (!P) g += bar(W - pad - wd, m - 7, wd, 14, b2);
+    html += '<div class="csb-r' + (pl ? " csb-pl" : "") + '" style="top:' + Y[i] + "px;height:" + h + "px;background-image:url(&quot;data:image/svg+xml;utf8," +
+      encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='" + W + "' height='" + h + "'>" + g + "</svg>") + '&quot;)"></div>';
+  }
+  list.innerHTML = html;
+
+  // ---- motion
+  var blur = kSpeedBlur(q(".csb-blur"), "csb", { amount: CFG.blur, max: CFG.max * K });
+  var grain = kGrain(q(".csb-grain"));
+  var BZ = MT.bezier(0.45, 0, 0.06, 1), badge = q(".csb-new");
+  var S = function (t) { return MT.interpolate(t, [CFG.s0, CFG.s1], [L.top, END], { easing: BZ, extrapolateLeft: "clamp", extrapolateRight: "clamp" }); };
+  var tl = MT.scene(CFG.end, function (t) {
+    // the list: one translate; vertical blur from its speed (central difference, as upstream)
+    var vy = MT.velocity(S, t);
+    col.style.transform = "translateY(" + (S(t) - END).toFixed(2) + "px)";
+    blur(0, vy);
+    // while the blur filter is on (sigma >= 0.35 px) the stop row's text is a smeared band, not copy: the
+    // contrast audit samples its box and finds the title's smear there, so it is set dressing until it stops
+    hero.toggleAttribute("data-layout-ignore", Math.min(CFG.max * K, (Math.abs(vy) / 30) * CFG.blur) >= 0.35);
+    // the stop row lifts (scale, deeper shadow, accent ring); the rest dims to 0.38
+    var p = MT.ramp(t, CFG.l0, CFG.l1 - CFG.l0, "out");
+    list.style.opacity = (1 - CFG.dim * p).toFixed(4);
+    hero.style.transform = "scale(" + (1 + CFG.lift * p).toFixed(4) + ")";
+    hero.style.boxShadow = "inset 0 1px 0 var(--csb-hi), " + kShadow(K * (2 + 26 * p), (1 + 0.6 * p) * STR) + ", 0 0 0 " + (2 * p).toFixed(2) + "px color-mix(in srgb, var(--k-accent) " + (90 * p).toFixed(1) + "%, transparent)";
+    // badge: its tint fades and it slides 8px in; the text cuts in once the tint is half there
+    // (half-transparent dark text on a light chip reads as low contrast)
+    badge.style.setProperty("--a", p.toFixed(4));
+    badge.style.transform = "translateX(" + ((1 - p) * 8 * K).toFixed(2) + "px)";
+    marks.forEach(function (u) { u.style.opacity = p >= 0.5 ? 1 : 0; });
+    grain(t);
+  });
+  window.__timelines["changelog-scroll-brake"] = tl;
+})();
+</script>
+    </template>
+  </body>
+</html>

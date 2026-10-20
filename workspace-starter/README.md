@@ -12,7 +12,7 @@ workspace-starter/
   手法库/           手法卡的索引、模板和一张示例卡
   待拆解视频/       你喜欢的参考视频放这里
   已拆解视频/       拆完的参考片移到这里，看片时拿来并排比
-  motion-cards/     动效卡库：114 张通用动效卡，每张是一份说明加一个可直接挂载的单文件 HyperFrames 子合成（见里面的 README 和 SPEC）
+  motion-cards/     动效卡库：263 张通用动效卡，每张是一份说明加一个可直接挂载的单文件 HyperFrames 子合成（见里面的 README 和 SPEC）
   频道复盘.md       每期发布数据一行
 ```
 

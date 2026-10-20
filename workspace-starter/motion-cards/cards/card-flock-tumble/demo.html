@@ -1,0 +1,478 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+{"id":"word","type":"string","label":"巨字（| 切意群）","default":"一站搞定"},
+{"id":"sub","type":"string","label":"标语，逐段升起（| 切意群；留空不要）","default":"三个页面，|一个入口"},
+{"id":"pages","type":"string","label":"三张页卡的标题，也是字墙（| 分隔；留空不要）","default":"收件箱|任务|首页"},
+{"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（只留页卡、烟环和字）"}]}
+  ]'
+>
+<head>
+<meta charset="UTF-8" />
+<title>card-flock-tumble · 三卡翻飞成烟环</title>
+<script src="../../lib/preview.js"></script>
+</head>
+<body>
+<template id="card-flock-tumble-template">
+<!-- Ported from video-shotcraft demos/transition/card-flock-tumble/CardFlockTumble.tsx
+     (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+     Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+     Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+     neutral --k-* palette, system fonts, generic copy; upstream mark and wordmark eyebrow removed, the motto is the
+     "sub" variable; the app UI (named inbox, shot list, home) redrawn as text-free bars with one title each, and the
+     outlined wall repeats those titles, not the slogan. White skin first: no screen blend, smoke ring accent > oklch
+     mid > accent-2, flash an 8% accent wash with an accent core (multiply), word solid ink, light and glow lowered
+     (bloom 13%, horizon 7%, card glow 10%, card shadow 26%, word glow 16/12%, vignette 0.16, grain 0.05 overlay);
+     dark skins keep the upstream strengths (vignette 0.55 for 0.5), screen glow, white core and gradient word.
+     CJK tracking 0.085 > 0em (Latin keeps 0.06 > -0.025em); portrait layout; 4.5 s > 4.7 s for a 1 s hold. Spline
+     keys, spin, collapse, back-page dim, flash decay, ring growth / turbulence / spin / opacity, slam, glow decay
+     and subline timing unchanged (three or more phrases share the 0.1 s stagger span). -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+@font-face { font-family: "fk-heavy"; font-weight: 700 900; src: local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"), local("PingFangSC-Semibold"), local("NotoSansSC-Black"); }
+#root {
+  --k-bg: var(--mc-bg, #ffffff);
+  --k-panel: var(--mc-panel, #f4f5f7);
+  --k-ink: var(--mc-ink, #15171c);
+  --k-muted: var(--mc-muted, #6b7280);
+  --k-accent: var(--mc-accent, #e8590c);
+  --k-accent-2: var(--mc-accent-2, #2563eb);
+  --k-on-accent: var(--mc-on-accent, #ffffff);
+  --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--k-font);
+  color: var(--k-ink);
+}
+/* ==== kit:derived@1 ==== */
+.fk { --fk-line: color-mix(in srgb, var(--k-ink) 12%, transparent); --fk-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2)); --fk-hi: color-mix(in srgb, white 80%, transparent); }
+.fk[data-tone="dark"] { --fk-shade: color-mix(in srgb, var(--k-bg) 30%, black); --fk-hi: color-mix(in srgb, white 6%, transparent); }
+/* ==== end kit:derived ==== */
+/* ==== kit:backdrop@1 ==== */
+.fk-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+.fk-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+/* ==== end kit:backdrop ==== */
+/* ==== kit:vignette@1 ==== */
+.fk-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--fk-shade);
+  background:
+    radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+    radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.fk[data-tone="dark"] .fk-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+/* ==== kit:light@1 ==== */
+.fk-light { mix-blend-mode: multiply; }
+.fk[data-tone="dark"] .fk-light { mix-blend-mode: screen; }
+/* ==== end kit:light ==== */
+/* ==== kit:grain@1 ==== */
+.fk-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+/* ==== kit:text@2 ==== */
+.fk-u { display: inline-block; white-space: pre; }
+.fk-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+/* ==== end kit:text ==== */
+/* ==== kit:fit@1 ==== */
+.fk-row { display: block; white-space: nowrap; }
+/* ==== end kit:fit ==== */
+/* light: coloured smoke, accent burst; dark: the upstream screen glow */
+.fk{position:absolute;inset:0;container-type:size;--fk-hv:fk-heavy,var(--k-font);--fk-mid:color-mix(in oklch,var(--k-accent),var(--k-accent-2));
+--fk-i1:color-mix(in srgb,var(--k-ink) 72%,var(--k-bg));--fk-i2:color-mix(in srgb,var(--k-ink) 34%,var(--k-bg));--fk-i3:color-mix(in srgb,var(--k-ink) 18%,var(--k-bg));--fk-p2:color-mix(in srgb,var(--k-panel),var(--k-ink) 4%);
+--fk-ba:13%;--fk-ha:7%;--fk-wc:color-mix(in srgb,var(--k-accent-2) 24%,transparent);--fk-ca:10%;--fk-cs:26%;--fk-s1:var(--k-accent);--fk-s2:var(--fk-mid);--fk-s3:var(--k-accent-2);
+--fk-halo:color-mix(in srgb,var(--fk-mid) 26%,transparent);--fk-hl:color-mix(in srgb,var(--k-bg) 62%,transparent);--fk-dk:color-mix(in srgb,color-mix(in srgb,var(--fk-mid),var(--k-ink) 45%) 34%,transparent);
+--fk-x0:color-mix(in srgb,var(--k-accent) 8%,transparent);--fk-x1:color-mix(in srgb,var(--k-accent) 55%,transparent);--fk-x2:color-mix(in srgb,var(--k-accent) 46%,transparent)}
+.fk[data-tone=dark]{--fk-ba:50%;--fk-ha:12%;--fk-wc:color-mix(in srgb,var(--k-ink) 18%,transparent);--fk-ca:32%;--fk-cs:60%;
+--fk-s1:color-mix(in srgb,var(--k-accent),white 55%);--fk-s2:color-mix(in srgb,var(--fk-mid),white 30%);--fk-s3:color-mix(in srgb,var(--k-accent-2),white 25%);
+--fk-halo:color-mix(in srgb,var(--fk-mid) 30%,transparent);--fk-hl:color-mix(in srgb,var(--fk-s2) 62%,transparent);--fk-dk:color-mix(in srgb,black 40%,transparent);
+--fk-x0:color-mix(in srgb,white 12%,transparent);--fk-x1:white;--fk-x2:color-mix(in srgb,color-mix(in srgb,white,var(--k-accent-2) 12%) 85%,transparent)}
+.fk-in{position:absolute;inset:0;--fk-cy:52.78%;--S:1}
+.fk-bg,.fk-bloom,.fk-flock,.fk-flash,.fk-wall{position:absolute;inset:0}
+.fk-flock{perspective-origin:50% var(--fk-cy)}
+.fk[data-tone=dark] .fk-bg{background:linear-gradient(180deg,color-mix(in srgb,var(--k-bg),var(--k-accent-2) 7%),var(--k-bg) 55%,color-mix(in srgb,var(--k-bg),black 45%))}
+.fk-bloom{opacity:.64;background:radial-gradient(ellipse 46% 52% at 50% var(--fk-cy),color-mix(in srgb,var(--k-accent) var(--fk-ba),transparent),color-mix(in srgb,var(--k-accent-2) calc(var(--fk-ba)*.28),transparent) 40%,transparent 72%)}
+.fk-hz{position:absolute;inset:74% 0 0;background:radial-gradient(ellipse 60% 57.7% at 50% 57.7%,color-mix(in srgb,var(--k-accent) var(--fk-ha),transparent),transparent 70%)}
+/* outlined title rows: ::before text, texture rather than copy */
+.fk-wall{opacity:0}
+.fk-wall i{position:absolute;left:0;top:5.56%;font:italic 900 300px/1 var(--fk-hv);white-space:nowrap;color:transparent;-webkit-text-stroke:2.5px var(--fk-wc)}
+.fk-wall i::before{content:attr(data-w)}
+.fk-wall i+i{top:59.26%;opacity:.67}
+.fk-wall i+i+i{display:none}
+/* 560 x 400 page laid out 1.75x, scaled back: sharp title */
+.fk-card{position:absolute;left:calc(50% - 490px);top:calc(var(--fk-cy) - 350px);width:980px;height:700px;border-radius:28px;overflow:hidden;opacity:0;background:linear-gradient(var(--k-bg),color-mix(in srgb,var(--k-bg),var(--k-accent-2) 3%));
+box-shadow:inset 0 1.75px 0 var(--fk-hi),0 0 0 1.75px var(--fk-line),0 0 122px color-mix(in srgb,var(--k-accent) var(--fk-ca),transparent),0 45px 122px color-mix(in srgb,var(--fk-shade) var(--fk-cs),transparent)}
+.fk-card svg{position:absolute;inset:0;width:100%;height:100%}
+.fk-tt{position:absolute;left:241.5px;top:29.75px;width:481px;font:700 47.25px/1.2 var(--fk-hv)}
+/* smoke ring: halo, body, light and dark patches (static: last frame) */
+.fk-ring{position:absolute;inset:0;width:100%;height:100%;--R:406px;--W:110px}
+.fk[data-tone=dark] .fk-ring{mix-blend-mode:screen}
+.fk-rot{transform-origin:50% var(--fk-cy);transform:rotate(24.85deg);opacity:.76}
+.fk-ring circle{cx:50%;cy:var(--fk-cy);r:var(--R);fill:none}
+.fk-c0{stroke:var(--fk-halo);stroke-width:calc(var(--W)*1.9);filter:blur(calc(22px*var(--S)))}
+.fk-c1{stroke:url(#fk-rg);stroke-width:var(--W);filter:blur(calc(9px*var(--S)));opacity:.88}
+.fk-ring .fk-c2{r:calc(var(--R)*.99);stroke:var(--fk-hl);stroke-width:calc(var(--W)*.42);filter:blur(calc(6px*var(--S)))}
+.fk-ring .fk-c3{r:calc(var(--R)*1.005);stroke:var(--fk-dk);stroke-width:calc(var(--W)*.4);filter:blur(calc(7px*var(--S)))}
+.fk stop{stop-opacity:.9}
+.fk-s1{stop-color:var(--fk-s1)}
+.fk-s2{stop-color:var(--fk-s2)}
+.fk-s3{stop-color:var(--fk-s3)}
+.fk-flash{opacity:0;background:var(--fk-x0)}
+.fk-flash i{position:absolute;left:50%;top:var(--fk-cy);width:calc(840px*var(--S));aspect-ratio:1;translate:-50% -50%;border-radius:50%;background:radial-gradient(circle,var(--fk-x1),var(--fk-x2) 9%,color-mix(in srgb,var(--fk-mid) 40%,transparent) 22%,color-mix(in srgb,var(--k-accent-2) 20%,transparent) 44%,transparent 70%)}
+.fk-word,.fk-sub{position:absolute;left:10%;right:10%;text-align:center;text-wrap:balance}
+.fk-word{top:calc(var(--fk-cy) - 141px);font:italic 900 282px/1 var(--fk-hv);transform:scale(1.042)}
+.fk[data-tone=dark] .fk-word .fk-u{-webkit-text-fill-color:transparent;-webkit-background-clip:text;background-clip:text;padding:0 .12em;margin:0 -.12em;
+background-image:linear-gradient(white 38%,color-mix(in srgb,white,var(--k-accent-2) 26%) 72%,color-mix(in srgb,white,var(--k-accent-2) 45%))}
+.fk-sub{top:calc(var(--fk-cy) + 200px);font-size:44px;font-weight:500;line-height:1.3;color:color-mix(in srgb,var(--k-ink) 85%,var(--k-bg))}
+@container (orientation:portrait){
+.fk-in{--fk-cy:40%;--S:.8}
+.fk-wall i{top:6%}
+.fk-wall i+i{top:39%}
+.fk-wall i+i+i{display:block;top:72%;opacity:1}
+.fk-ring{--R:325px;--W:88px}
+.fk-word{left:12%;right:12%;top:calc(var(--fk-cy) - 93px);font-size:186px}
+.fk-sub{top:calc(var(--fk-cy) + 132px)}
+}
+</style>
+
+<div id="root" data-composition-id="card-flock-tumble">
+<div class="fk">
+<div class="fk-in">
+<div class="fk-bg fk-backdrop"></div>
+<div class="fk-bloom fk-light"></div>
+<div class="fk-hz fk-light"></div>
+<div class="fk-wall" data-layout-allow-overflow><i></i><i></i><i></i></div>
+<svg class="fk-ring">
+<defs>
+<filter id="fk-fa" x="-60%" y="-60%" width="220%" height="220%"><feTurbulence type="fractalNoise" baseFrequency="0.013 0.016" numOctaves="4" seed="11" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="150" xChannelSelector="R" yChannelSelector="G"/></filter>
+<filter id="fk-fb" x="-60%" y="-60%" width="220%" height="220%"><feTurbulence type="fractalNoise" baseFrequency="0.021 0.018" numOctaves="4" seed="37" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="127.5" xChannelSelector="R" yChannelSelector="G"/></filter>
+<filter id="fk-fc" x="-60%" y="-60%" width="220%" height="220%"><feTurbulence type="fractalNoise" baseFrequency="0.019 0.023" numOctaves="3" seed="73" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="165" xChannelSelector="R" yChannelSelector="G"/></filter>
+<linearGradient id="fk-rg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="fk-s1"/><stop offset="0.38" class="fk-s2"/><stop offset="1" class="fk-s3"/></linearGradient>
+</defs>
+<g class="fk-rot" data-layout-allow-overflow><g filter="url(#fk-fa)"><circle class="fk-c0"/><circle class="fk-c1"/></g><g filter="url(#fk-fb)"><circle class="fk-c2"/></g><g filter="url(#fk-fc)"><circle class="fk-c3"/></g></g>
+</svg>
+<div class="fk-vig"></div>
+<div class="fk-grain"></div>
+<div class="fk-flock"></div>
+<div class="fk-flash fk-light"><i></i></div>
+<div class="fk-word">一站搞定</div>
+<div class="fk-sub">三个页面，一个入口</div>
+</div>
+</div>
+</div>
+
+<script>
+(function () {
+// seconds = upstream frames / 30; held to 4.7 s so the subline rests 1 s
+var CFG = {
+  slot: 4.7,
+  wall: 0.2, wallDur: 0.533,           // word wall up
+  fly: 0.333, flyDur: 1.467,           // one spline: edge-on, mid-flight, staircase
+  idle: 1.548, idleIn: 0.467,          // slow spin eases in
+  spin: [10.2, -3, 1.5],               // deg/s on ry, rx, rz
+  out: 2.067, outDur: 0.333,           // collapse into the centre
+  wallOut: 0.467,                      // wall pulled in
+  ring: 2.333, grow: 1.733, creep: 48, // ring grows, then creeps (px/s)
+  flashK: 0.1067,                      // flash decay
+  word: 2.467, slam: 0.467, fade: 0.167, push: 0.024, // word slam, then growth per s
+  sub: 3.067, subDur: 0.533, subGap: 0.1 // subline phrases: total stagger
+};
+// per orientation: centre, card spread and scale, ring scale, title and header (page px), wall rows, word size
+var LAND = { cy: 0.5, off: 30, fx: 1, fy: 1, k: 1, ring: 1, title: 27, hh: 50, rows: 2, word: 282, min: 160 };
+var PORT = { cy: 0.4, off: 0, fx: 0.45, fy: 2.4, k: 0.76, ring: 0.8, title: 33, hh: 56, rows: 3, word: 186, min: 120 };
+var v = { word: "一站搞定", sub: "三个页面，|一个入口", pages: "收件箱|任务|首页", backdrop: "on" };
+try {
+  var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+  for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+} catch (e) {}
+
+var root = document.querySelector(".fk");
+var q = function (s) { return root.querySelector(s); };
+var FW = root.clientWidth, FH = root.clientHeight;
+if (!FW || !FH) {
+  // not laid out yet: the host clip's declared size, then the window
+  var hc = root.closest("[data-width][data-height]");
+  FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+  FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+}
+var P = FH > FW, L = P ? PORT : LAND;
+root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== end kit:tone ====
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+      "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+      "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+      "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+      "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+}
+// ==== end kit:grain ====
+// ==== kit:text@2 ====
+var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+function kWords(s, key) {
+  s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+  var cut = function (x) {
+    if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+    return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+  };
+  var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+  var pre = "";
+  bits.forEach(function (x) {
+    var t = x.trim(), last = out[out.length - 1];
+    if (last && /^ /.test(x)) last.sp = true;
+    if (!t) return;
+    if (!/[\p{L}\p{N}]/u.test(t)) {
+      if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+      else { last.t += t; last.sp = / $/.test(x); }
+      return;
+    }
+    out.push({ t: pre + t, sp: / $/.test(x) });
+    pre = "";
+  });
+  if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+  if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+  if (out.length) out[out.length - 1].sp = false;
+  return out;
+}
+function kSplit(el, by, rise, text) {
+  var s = text != null ? String(text) : el.textContent, units = [];
+  var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+  el.textContent = "";
+  parts.forEach(function (p) {
+    var u = document.createElement("span"), box = u;
+    u.className = "fk-u"; u.textContent = p.t;
+    if (by === "line") u.style.display = "block";
+    if (!p.t.trim()) { el.appendChild(u); return; }
+    if (rise) { box = document.createElement("span"); box.className = "fk-cut"; box.style.display = u.style.display; box.appendChild(u); }
+    el.appendChild(box);
+    if (p.sp) el.appendChild(document.createTextNode(" "));
+    units.push(u);
+  });
+  return units;
+}
+function kReveal(tl, units, variant, at, o) {
+  o = o || {};
+  var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+  units.forEach(function (u, i) {
+    var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+    // only the "rise" variant is used by this card
+    tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+    tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+  });
+  return tl;
+}
+// ==== end kit:text ====
+// ==== kit:fit@1 ====
+function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+      var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+      if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+      row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+function kRows(el, cls) {
+  if (!el.children.length) return [];
+  var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+  var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+  kids.forEach(function (c, i) {
+    if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+    if (tops[i] != null) last = tops[i];
+    row.appendChild(c);
+  });
+  return [].slice.call(el.children);
+}
+// ==== end kit:fit ====
+
+var dark = kTone(root) === "dark", off = String(v.backdrop) === "off";
+if (getComputedStyle(root).getPropertyValue("--mc-font").trim()) root.style.setProperty("--fk-hv", "var(--k-font)");
+if (off) ["bg", "bloom", "hz", "wall", "vig", "grain"].forEach(function (n) { q(".fk-" + n).style.display = "none"; });
+var U = Math.min(FW, FH) / 1.08e3, CY = FH * L.cy + L.off * U, RS = L.ring * U;
+q(".fk-in").style.setProperty("--S", RS);
+
+// upstream poses [x, y, rx, ry, rz, scale]: edge-on, mid-flight, staircase, collapse
+var K = [
+  [[-8, -16, 9, 88, 12, 1.05], [-135, -92, 16, 44, -8, 1.38], [-108, -76, 4, 13, -2, 1.62], [-20, -12, 0, 55, 4, 0.12]],
+  [[0, 0, 8, 89, 12, 1], [-16, -7, 13, 38, -7, 1.42], [-5, -2, 3, 11, -2, 1.68], [0, 0, 0, 60, 4, 0.12]],
+  [[8, 16, 7, 90, 12, 0.95], [112, 78, 11, 34, -6, 1.46], [90, 70, 2, 9, -1, 1.74], [15, 10, 0, 65, 4, 0.12]]
+];
+var cr = function (a, b, c, d, u) { return 0.5 * (2 * b + (c - a) * u + (2 * a - 5 * b + 4 * c - d) * u * u + (3 * b - a - 3 * c + d) * u * u * u); };
+var spline = function (k, u) { var s = u < 0.55 ? 0 : 1, l = s ? (u - 0.55) / 0.45 : u / 0.55; return k[0].map(function (x, j) { return cr(x, k[s][j], k[s + 1][j], k[2][j], l); }); };
+var drift = function (t) { var d = Math.min(t, CFG.out) - CFG.idle, r = d > 0 ? Math.pow(Math.min(1, d / CFG.idleIn), 2) : 0; return CFG.spin.map(function (w) { return d * w * r; }); };
+// Catmull-Rom flight plus spin, then from that pose into the centre; + opacity
+var pose = function (i, t) {
+  var k = K[i], d = drift(t), p = t < CFG.out ? spline(k, 1 - Math.pow(1 - MT.clamp((t - CFG.fly) / CFG.flyDur, 0, 1), 3)) : k[2].slice(), r, c;
+  p[2] += d[1]; p[3] += d[0]; p[4] += d[2];
+  if (t < CFG.out) return p.concat(1);
+  r = MT.clamp((t - CFG.out) / CFG.outDur, 0, 1); c = Math.max(0, (r - 0.55) / 0.45);
+  return p.map(function (x, j) { return x + (k[3][j] - x) * r * r; }).concat(1 - c * c * c);
+};
+
+// a page as bars, no text: inbox, status table or dashboard. Spec: "x y w h rx colour [opacity]" or "o cx cy r colour [stroke]"
+var C = function (c) { return c === "n" ? "none" : "var(--" + { a: "k-accent", b: "k-accent-2", m: "fk-mid", 1: "fk-i1", 2: "fk-i2", 3: "fk-i3", l: "fk-line", w: "k-on-accent", i: "k-ink", p: "k-panel", q: "fk-p2", s: "fk-shade", k: "k-bg" }[c] + ")"; };
+var page = function (n, act, hh) {
+  var o = [], i, h = 17 + L.title * 0.6, y0 = hh + 27, cc = "abm", ta = dark ? "i" : "a"; // faint tints: no olive on dark skins
+  var d = function (spec, b) {
+    spec.split(";").forEach(function (e) {
+      var a = e.split(" ");
+      o.push(a[0] === "o" ? "<circle cx=" + a[1] + " cy=" + (+a[2] + b) + " r=" + a[3] + " style=fill:" + C(a[4]) + (a[5] ? ";stroke:" + C(a[5]) + ";stroke-width:1.5" : "")
+        : "<rect x=" + a[0] + " y=" + (+a[1] + b) + " width=" + a[2] + " height=" + a[3] + " rx=" + a[4] + " style=fill:" + C(a[5]) + (a[6] ? ";opacity:" + a[6] : ""), " />");
+    });
+  };
+  var chip = function (x, y, w, c) { d(x + " 0 " + w + " 19 6 " + (dark ? "i" : c) + " .13;o " + (x + 8) + " 9.5 2.5 " + c + ";" + (x + 14) + " 7 " + (w - 22) + " 5 2.5 " + c, y); };
+  d("0 0 118 400 0 p;117 0 1 400 0 l;14 15 17 17 5 a;38 20 50 8 4 1;o 23 380 9 b;37 377 42 6 3 2", 0);
+  for (i = 0; i < 5; i++) d((i === act ? "10 0 98 25 6 " + ta + " .12;" : "") + "16 8 9 9 " + (i % 2 ? 4.5 : 2.5) + (i === act ? " a;32 9 " : " 3;32 9 ") + (34 + (i * 7) % 13) + " 7 3.5 " + (i === act ? "a" : 2), 43 + i * 28);
+  for (i = 0; i < 3; i++) d("o " + (431 + i * 15) + " 0 10 " + cc[(i + n) % 3] + " k", h);
+  d("482 -11.5 58 23 7 a;490 -1 9 2 1 w;493.5 -4.5 2 9 1 w;504 -2 27 4 2 w", h);
+  d("138 8 " + (78 + n * 16) + " 7 3.5 3", hh);
+  if (n === 0) for (i = 0; i < 5; i++) d("o 151.5 23 13.5 " + cc[i % 3] + ";175 13 " + (62 + (i * 11) % 24) + " 8 4 1;175 27 " + (156 + (i * 29) % 50) + " 7 3.5 2;500 20 18 6 3 3;138 45 402 1 0 l" + (i < 2 ? ";o 532 23 3 a" : ""), y0 + i * 46);
+  else if (n === 1) {
+    d("163 9 30 6 3 3;416 9 44 6 3 3;138 23 402 1 0 l", y0);
+    for (i = 0; i < 5; i++) {
+      d((i ? "o 145 21 6.25 n 3" : "o 145 21 7 b") + ";163 17 " + (84 + (i * 17) % 42) + " 8 4 " + (i ? 1 : 3) + ";o 529 21 10.5 " + cc[(i + 2) % 3] + " k;138 41 402 1 0 l", y0 + 24 + i * 42);
+      chip(416, y0 + 35.5 + i * 42, i && i < 3 ? 74 : i ? 56 : 52, "baamm"[i]);
+    }
+  } else {
+    d("138 0 163 86 10 q;151 11 84 6 3 3;151 26 34 24 5 1;151 60 66 6 3 b;311 0 229 86 10 q;324 11 46 6 3 3", y0);
+    [0.42, 0.66, 0.5, 0.82, 0.58, 0.94, 0.72].forEach(function (b, j) { d((324 + j * 29.9) + " " + (75 - b * 54) + " 23.9 " + b * 54 + " 3 " + (j === 5 ? "a" : ta + " .2"), y0); });
+    for (i = 0; i < 3; i++) { d("138 4.5 3 18 1.5 " + (i > 1 ? "m" : "a") + ";151 10 " + (92 + i * 6) + " 8 4 1", y0 + 98 + i * 39); chip(470, y0 + 102 + i * 39, 70, i > 1 ? "m" : "a"); }
+  }
+  if (n < 2) d("0 0 560 400 0 s " + (n ? 0.1 : 0.2), 0);
+  return '<svg viewBox="0 0 560 400">' + o.join("") + "</svg>";
+};
+
+// titles cross in flight, sit under the next page and under the flash: on purpose
+var names = kWords(v.pages).map(function (u) { return u.t; }), flock = q(".fk-flock"), cards = [];
+flock.style.perspective = 1400 * L.k * U + "px";
+[1, 2, 0].forEach(function (act, i) {
+  var c = document.createElement("div"), tt;
+  c.className = "fk-card";
+  c.innerHTML = page(i, act, L.hh) + '<div class="fk-tt"></div>';
+  flock.appendChild(c);
+  tt = c.lastChild;
+  tt.style.fontSize = L.title * 1.75 + "px";
+  if (names[i]) kSplit(tt, "word", false, names[i]).forEach(function (u) { u.setAttribute("data-layout-allow-overlap", ""); u.setAttribute("data-layout-allow-occlusion", ""); });
+  kFit(tt, { lines: 1, min: 70 / (K[i][2][5] * L.k * U) });
+  cards.push(c);
+});
+var wall = q(".fk-wall"), rows = [].slice.call(wall.children, 0, L.rows), wt = names.join(" · ");
+if (!wt) wall.style.display = "none";
+rows.forEach(function (r) { r.setAttribute("data-w", Array(4).join(wt + " · ")); r.style.fontSize = 300 * U + "px"; });
+
+// the word fits so the 1.22x slam start stays in frame; CJK tracking stays >= 0
+var word = q(".fk-word"), sub = q(".fk-sub"), wtx = String(v.word).trim(), stx = String(v.sub).trim(), TR = kCJK.test(wtx) ? [0.085, 0] : [0.06, -0.025];
+word.style.fontSize = L.word * U + "px";
+word.style.letterSpacing = TR[1] + "em";
+if (wtx) { kSplit(word, "word", false, wtx); kFit(word, { lines: 1, min: L.min * U, width: Math.min(word.clientWidth, FW * 0.74) }); kRows(word, "fk-row"); }
+else word.style.display = "none";
+var WH = word.offsetHeight;
+word.style.top = CY - WH / 2 + "px";
+sub.style.top = CY + (wtx ? WH / 2 + parseFloat(word.style.fontSize) * 0.21 : -30) + "px";
+var subs = stx ? kSplit(sub, "word", true, stx) : []; // a rising phrase is clipped: the checker calls that occluded
+subs.forEach(function (u) { u.setAttribute("data-layout-allow-occlusion", ""); });
+if (stx) kFit(sub, { lines: 1, min: 40 }); else sub.style.display = "none";
+
+// per-mount ids: the filters change every frame
+var N = (window.__kxN = (window.__kxN || 0) + 1), svg = q(".fk-ring"), gs = svg.querySelectorAll("g g"), cs = svg.querySelectorAll("circle"), dm = svg.querySelectorAll("feDisplacementMap"), rot = q(".fk-rot");
+["fa", "fb", "fc", "rg"].forEach(function (s, j) { svg.querySelector("#fk-" + s).id += N; if (j < 3) gs[j].setAttribute("filter", "url(#fk-" + s + N + ")"); });
+cs[1].style.stroke = "url(#fk-rg" + N + ")";
+var flash = q(".fk-flash"), bloom = q(".fk-bloom");
+var grain = off ? function () {} : kGrain(q(".fk-grain"), { opacity: dark ? 0.08 : 0.05 }), GA = dark ? [55, 50] : [16, 12];
+
+function render(t) {
+  var i, p, f, g, R, w;
+  for (i = 0; i < 3; i++) {
+    p = pose(i, t);
+    cards[i].style.opacity = t < CFG.out + CFG.outDur ? p[6].toFixed(3) : 0;
+    cards[i].style.transform = "translate3d(" + (p[0] * L.fx * U).toFixed(2) + "px," + (p[1] * L.fy * U).toFixed(2) + "px,0) rotateX(" + p[2].toFixed(3) + "deg) rotateY(" + p[3].toFixed(3) + "deg) rotateZ(" + p[4].toFixed(3) + "deg) scale(" + (p[5] * L.k * U / 1.75).toFixed(5) + ")";
+  }
+  f = MT.ramp(t, CFG.out, CFG.wallOut, "exit");
+  wall.style.opacity = (MT.ramp(t, CFG.wall, CFG.wallDur, "out") * (1 - f)).toFixed(3);
+  wall.style.transform = "scale(" + MT.mix(1, 0.7, f).toFixed(4) + ")";
+  rows.forEach(function (r, j) { r.style.transform = "translateX(" + (((j % 2 ? 1 : -1) * t * 72 - [300, 1400, 800][j]) * U).toFixed(1) + "px)"; });
+  bloom.style.opacity = MT.mix(1, 0.64, MT.ramp(t, CFG.out, CFG.wallOut, "smooth")).toFixed(3);
+  // flash and ring from the collapse point
+  f = t - CFG.ring;
+  flash.style.opacity = f < -1 / 30 || f > 14 / 30 ? 0 : f < 0 ? 0.4 : Math.exp(-f / CFG.flashK).toFixed(3);
+  rot.style.opacity = f < 0 ? 0 : MT.interpolate(f, [0, 0.133, 1, 2], [0, 1, 0.94, 0.76], { extrapolateRight: "clamp" }).toFixed(3);
+  if (f >= 0) {
+    g = 1 - Math.pow(1 - Math.min(1, f / CFG.grow), 3); R = (46 + 330 * g + Math.max(0, f - CFG.grow) * CFG.creep) * RS;
+    w = R * MT.interpolate(f, [0, CFG.grow], [0.36, 0.27], { extrapolateRight: "clamp" });
+    rot.style.transform = "rotate(" + (f * 10.5).toFixed(2) + "deg)";
+    svg.style.setProperty("--R", R.toFixed(1) + "px"); svg.style.setProperty("--W", w.toFixed(1) + "px");
+    [1, 0.85, 1.1].forEach(function (k, j) { dm[j].setAttribute("scale", ((60 + g * 90) * RS * k).toFixed(1)); });
+  }
+  f = MT.ramp(t, CFG.word, CFG.slam, "snappy"); g = 0.6 + 0.4 * Math.exp(-Math.max(0, t - CFG.word) / 0.333);
+  word.style.opacity = MT.ramp(t, CFG.word, CFG.fade, "out").toFixed(3);
+  word.style.transform = "scale(" + (MT.mix(1.22, 1, f) + Math.max(0, t - CFG.word - CFG.slam) * CFG.push).toFixed(4) + ")";
+  word.style.letterSpacing = MT.mix(TR[0], TR[1], f).toFixed(4) + "em";
+  word.style.filter = "drop-shadow(0 0 " + (18 * g * U).toFixed(1) + "px color-mix(in srgb,var(--fk-mid) " + (GA[0] * g).toFixed(1) + "%,transparent)) drop-shadow(0 0 " + (60 * g * U).toFixed(1) + "px color-mix(in srgb,var(--k-accent) " + (GA[1] * g).toFixed(1) + "%,transparent))";
+  grain(t);
+}
+
+var tl = MT.scene(CFG.slot, render);
+// all phrases start within subGap, so any length lands by 3.7 s
+kReveal(tl, subs, "rise", CFG.sub, { each: CFG.subDur, gap: CFG.subGap / Math.max(1, subs.length - 1) });
+window.__timelines["card-flock-tumble"] = tl;
+})();
+</script>
+</template>
+</body>
+</html>

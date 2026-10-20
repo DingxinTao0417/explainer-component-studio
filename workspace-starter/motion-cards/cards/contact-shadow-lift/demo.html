@@ -1,0 +1,480 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"kicker","type":"string","label":"眉题（留空不要）","default":"三选一"},
+    {"id":"title","type":"string","label":"标题","default":"挑一个最合适的"},
+    {"id":"tags","type":"string","label":"三张卡的标签（用 | 分隔，第 3 张被选中）","default":"入门|进阶|完整"},
+    {"id":"values","type":"string","label":"三张卡的大数（用 | 分隔）","default":"8|12|24"},
+    {"id":"unit","type":"string","label":"大数后面的单位（留空不要）","default":"分钟"},
+    {"id":"notes","type":"string","label":"三张卡的说明（用 | 分隔）","default":"只讲最关键的一步|边做边讲，带一个例子|从头到尾做完整个流程"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>contact-shadow-lift · 接触阴影抬升</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="contact-shadow-lift-template">
+      <!-- Ported from video-shotcraft demos/ui-entrance/element-body-moves/ContactShadowLift.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette on a light desk, system fonts, generic Chinese copy (three option cards, no recipe
+           names), upstream mark replaced by a neutral one, 22 px beat numerals became plain bars, eyebrow in the body
+           face, title as one word-rise line; portrait stacks the cards as 720 px rows and the camera follows the lift
+           up and down. Kept: desk tilt 24 to 20 deg, perspective 2600, lift 96 px and scale 1.05, both shadow layers
+           with their blur / alpha / offset curves, scan and press timing, spring pick with breathing, ring, tick, dimming,
+           camera push 2.5%, backdrop, vignette and grain. -->
+      <style>
+    @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+    @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+    @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+    #root {
+      --k-bg: var(--mc-bg, #ffffff);
+      --k-panel: var(--mc-panel, #f4f5f7);
+      --k-ink: var(--mc-ink, #15171c);
+      --k-muted: var(--mc-muted, #6b7280);
+      --k-accent: var(--mc-accent, #e8590c);
+      --k-accent-2: var(--mc-accent-2, #2563eb);
+      --k-on-accent: var(--mc-on-accent, #ffffff);
+      --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      font-family: var(--k-font);
+      color: var(--k-ink);
+    }
+    .cs { position: absolute; inset: 0; container-type: size; --cs-soft: color-mix(in srgb, var(--k-muted) 60%, var(--k-ink)); }
+    /* ==== kit:derived@1 ==== */
+.cs {
+  --cs-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+  --cs-panel-2: color-mix(in srgb, var(--k-panel), var(--k-ink) 4%);
+  --cs-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+  --cs-hi: color-mix(in srgb, white 80%, transparent);
+}
+.cs[data-tone="dark"] {
+  --cs-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+  --cs-hi: color-mix(in srgb, white 6%, transparent);
+}
+/* ==== end kit:derived ==== */
+
+/* ==== kit:backdrop@1 ==== */
+.cs-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+.cs-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+/* ==== end kit:backdrop ==== */
+
+/* ==== kit:vignette@1 ==== */
+.cs-vig {
+  position: absolute; inset: 0; pointer-events: none;
+  --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--cs-shade);
+  background:
+radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.cs[data-tone="dark"] .cs-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+
+/* ==== kit:text@2 ==== */
+.cs-u { display: inline-block; white-space: pre; }
+.cs-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+/* ==== end kit:text ==== */
+
+
+/* ==== kit:grain@1 ==== */
+.cs-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+
+/* ==== kit:mark@1 ==== */
+.cs-mark { display: block; flex: none; }
+/* ==== end kit:mark ==== */
+    .cs-head { position: absolute; top: 92px; left: 8%; right: 8%; text-align: center; }
+    .cs-kick { font-size: 28px; font-weight: 700; line-height: 1.3; letter-spacing: 0.16em; color: var(--cs-soft); }
+    .cs-title { margin-top: 14px; font-size: 120px; font-weight: 700; line-height: 1.2; }
+    .cs-view { position: absolute; inset: 0; perspective: 2600px; perspective-origin: 50% 34%; }
+    /* landscape: three 420 x 620 cards on a 1440 px desk; the desk is tilted 20 deg and shifted to follow the lift (static = final frame) */
+    .cs-desk { position: absolute; left: 50%; top: 350px; width: 1440px; height: 620px; margin-left: -720px; transform-style: preserve-3d; transform-origin: 50% 60%; transform: translate(-40px, 0px) scale(1.025) rotateX(20deg); }
+    .cs-dots { position: absolute; inset: -520px -700px -480px -700px; background-image: radial-gradient(circle, color-mix(in srgb, var(--k-ink) 13%, transparent) 1.6px, transparent 2.2px); background-size: 44px 44px; background-position: -6px 14px; mask-image: radial-gradient(ellipse 50% 50% at 50% 52%, #000 30%, transparent 78%); }
+    .cs-slot { position: absolute; top: 0; width: 420px; height: 620px; transform-style: preserve-3d; --cs-r: 30px; }
+    .cs-slot[data-i="0"] { left: 0; }
+    .cs-slot[data-i="1"] { left: 480px; }
+    .cs-slot[data-i="2"] { left: 960px; }
+    .cs-amb, .cs-core, .cs-card { position: absolute; inset: 0; border-radius: var(--cs-r); }
+    /* shadows lie on the desk (z 0.5 and 1 px) and stay there while the card rises; rest values here, the final frame on card 3 */
+    .cs-amb { background: var(--cs-shade); opacity: 0.09; filter: blur(14px); transform: translate3d(10px, 16px, 0.5px); }
+    .cs-core { background: var(--cs-shade); opacity: 0.32; filter: blur(3px); transform: translate3d(2px, 4px, 1px) scale(0.99); }
+    .cs-slot[data-i="2"] .cs-amb { opacity: 0.244; filter: blur(61.5px); transform: translate3d(57.5px, 87.3px, 0.5px) scale(1.0713); }
+    .cs-slot[data-i="2"] .cs-core { opacity: 0.106; filter: blur(29.1px); transform: translate3d(23.4px, 46.8px, 1px) scale(1.0494); }
+    .cs-card { overflow: hidden; box-sizing: border-box; transform: translate3d(0, 0, 2px); background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-accent-2) 3%) 100%); border: 1px solid color-mix(in srgb, var(--k-ink) 8%, transparent); box-shadow: inset 0 1px 0 var(--cs-hi); }
+    .cs[data-tone="dark"] .cs-card { background: var(--k-panel); }
+    .cs-slot[data-i="2"] .cs-card { transform: translate3d(0, 0, 116px) scale(1.05); box-shadow: inset 0 1px 0 var(--cs-hi), inset 0 0 0 3px var(--k-accent); }
+    .cs-dim { position: absolute; inset: 0; background: color-mix(in srgb, var(--k-ink) 14%, var(--k-bg)); mix-blend-mode: multiply; opacity: 0; }
+    .cs-slot[data-i="0"] .cs-dim, .cs-slot[data-i="1"] .cs-dim { opacity: 0.22; }
+    .cs-face { position: absolute; inset: 0; padding: 44px 46px; box-sizing: border-box; display: flex; flex-direction: column; }
+    .cs-top { display: flex; align-items: center; justify-content: space-between; }
+    .cs-glyph { display: flex; align-items: center; justify-content: center; flex: none; width: 80px; height: 80px; border-radius: 22px; background: color-mix(in srgb, var(--k-ink) 7%, transparent); border: 1px solid color-mix(in srgb, var(--k-ink) 8%, transparent); stroke: var(--cs-soft); }
+    .cs-card[data-sel="1"] .cs-glyph { background: color-mix(in srgb, var(--k-accent) 7%, transparent); border-color: color-mix(in srgb, var(--k-accent) 8%, transparent); stroke: var(--k-accent); }
+    .cs-chk { position: absolute; top: 44px; right: 46px; display: flex; align-items: center; justify-content: center; width: 58px; height: 58px; border-radius: 50%; background: var(--k-accent); box-shadow: 0 8px 20px -6px color-mix(in srgb, var(--k-accent) 70%, transparent); }
+    .cs-chk svg { stroke: var(--k-on-accent); }
+    .cs-chk path { stroke-dasharray: 22; stroke-dashoffset: 0; }
+    .cs-txt { margin-top: 40px; }
+    .cs-tag { font-size: 28px; font-weight: 700; line-height: 1.3; letter-spacing: 0.14em; color: var(--cs-soft); }
+    .cs-val { display: flex; align-items: baseline; margin-top: 14px; }
+    .cs-num { font-size: 160px; font-weight: 800; line-height: 0.92; letter-spacing: -0.02em; }
+    .cs-unit { flex: none; max-width: 45%; margin-left: 12px; font-size: 40px; font-weight: 600; line-height: 1.2; color: var(--cs-soft); }
+    .cs-note { margin-top: 22px; font-size: 40px; font-weight: 500; line-height: 1.3; color: var(--cs-soft); }
+    .cs-chips { display: flex; gap: 10px; margin-top: auto; }
+    .cs-chips i { display: block; flex: 1; height: 44px; border-radius: 12px; background: color-mix(in srgb, var(--k-ink) 5%, transparent); }
+    .cs-chips i.on { background: color-mix(in srgb, var(--k-ink) 82%, transparent); }
+    .cs-card[data-sel="1"] .cs-chips i.on { background: var(--k-accent); }
+    /* portrait: the cards become 720 x 264 rows stacked under the title; glyph left, text right */
+    @container (orientation: portrait) {
+      .cs-head { top: 244px; left: 11%; right: 11%; }
+      .cs-title { font-size: 100px; }
+      .cs-view { perspective-origin: 50% 40%; }
+      .cs-desk { top: 470px; width: 720px; height: 848px; margin-left: -360px; transform: translate(0px, -40px) scale(1.025) rotateX(20deg); }
+      .cs-slot { width: 720px; height: 264px; --cs-r: 26px; }
+      .cs-slot[data-i="0"] { left: 0; top: 0; }
+      .cs-slot[data-i="1"] { left: 0; top: 292px; }
+      .cs-slot[data-i="2"] { left: 0; top: 584px; }
+      .cs-face { padding: 22px 32px; display: grid; grid-template-columns: 84px 1fr; grid-template-rows: auto auto; align-content: center; column-gap: 28px; }
+      .cs-top { display: contents; }
+      .cs-glyph { grid-column: 1; grid-row: 1 / span 2; align-self: center; width: 84px; height: 84px; border-radius: 24px; }
+      .cs-chk { top: 22px; right: 30px; width: 56px; height: 56px; }
+      .cs-txt { grid-column: 2; grid-row: 1; margin: 0; }
+      .cs-tag { line-height: 1.2; }
+      .cs-val { margin-top: 6px; }
+      .cs-num { font-size: 84px; }
+      .cs-note { margin-top: 6px; line-height: 1.25; }
+      .cs-chips { grid-column: 2; grid-row: 2; margin-top: 10px; }
+      .cs-chips i { height: 18px; border-radius: 9px; }
+      .cs-dots { inset: -420px -500px -300px -500px; }
+    }
+      </style>
+
+      <div id="root" data-composition-id="contact-shadow-lift">
+        <div class="cs">
+          <div class="cs-backdrop"></div>
+          <div class="cs-vig"></div>
+          <div class="cs-grain"></div>
+          <div class="cs-view">
+            <div class="cs-desk">
+              <div class="cs-dots" data-layout-allow-overflow></div>
+              <div class="cs-slot" data-i="0">
+                <div class="cs-amb"></div><div class="cs-core"></div>
+                <div class="cs-card">
+                  <div class="cs-dim"></div>
+                  <div class="cs-face">
+                    <div class="cs-top"><div class="cs-glyph"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h11M6 12h14M3 16h11M16 8.5l4 3.5-4 3.5"/></svg></div></div>
+                    <div class="cs-txt"><div class="cs-tag">入门</div><div class="cs-val"><span class="cs-num">8</span><span class="cs-unit">分钟</span></div><div class="cs-note">只讲最关键的一步</div></div>
+                    <div class="cs-chips"><i></i><i class="on"></i><i></i><i class="on"></i><i></i><i></i><i></i></div>
+                  </div>
+                </div>
+              </div>
+              <div class="cs-slot" data-i="1">
+                <div class="cs-amb"></div><div class="cs-core"></div>
+                <div class="cs-card">
+                  <div class="cs-dim"></div>
+                  <div class="cs-face">
+                    <div class="cs-top"><div class="cs-glyph"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/><circle cx="12" cy="12" r="2.4"/></svg></div></div>
+                    <div class="cs-txt"><div class="cs-tag">进阶</div><div class="cs-val"><span class="cs-num">12</span><span class="cs-unit">分钟</span></div><div class="cs-note">边做边讲，带一个例子</div></div>
+                    <div class="cs-chips"><i class="on"></i><i></i><i class="on"></i><i></i><i class="on"></i><i class="on"></i><i></i></div>
+                  </div>
+                </div>
+              </div>
+              <div class="cs-slot" data-i="2">
+                <div class="cs-amb"></div><div class="cs-core"></div>
+                <div class="cs-card" data-sel="1">
+                  <div class="cs-dim"></div>
+                  <div class="cs-face">
+                    <div class="cs-top"><div class="cs-glyph"><svg class="cs-mark" width="46" height="46" viewBox="0 0 128 128"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg></div></div>
+                    <div class="cs-chk"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+                    <div class="cs-txt"><div class="cs-tag">完整</div><div class="cs-val"><span class="cs-num">24</span><span class="cs-unit">分钟</span></div><div class="cs-note">从头到尾做完整个流程</div></div>
+                    <div class="cs-chips"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="cs-head">
+            <div class="cs-kick">三选一</div>
+            <div class="cs-title">挑一个最合适的</div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+  (function () {
+    // seconds. scans = when the first two cards are called out; pick = the last card is chosen and stays up.
+    // One scan: up 0.333 (out-cubic), hover to 0.8, fall 0.267 (in-cubic), press from 1.033, release 1.067 + 0.067, over at 1.133
+    var CFG = { dur: 5, scans: [0.533, 1.667], up: 0.333, hover: 0.8, fall: 0.267, hoverAmp: 0.05, press: 1.033, release: 1.067, relDur: 0.067, end: 1.133,
+      pick: 2.867, pickLift: 1.15, breatheAt: 0.533, breatheDur: 0.667, breathePeriod: 1.333, breatheAmp: 0.04, ringAt: 0.333, ringDur: 0.333, tickAt: 0.467,
+      tilt0: 24, tilt1: 20, push: 0.025, pushDur: 2.133, liftZ: 96, liftScale: 0.05, title: 0.067, titleGap: 0.133, titleDur: 0.6, kickDur: 0.467 };
+    // layout per orientation: the direction the camera follows the lifted card (px) and how many note lines fit; sizes live in the CSS
+    var LAND = { fx: 40, fy: 0, noteLines: 2 };
+    var PORT = { fx: 0, fy: 40, noteLines: 1 };
+    var v = { kicker: "三选一", title: "挑一个最合适的", tags: "入门|进阶|完整", values: "8|12|24", unit: "分钟", notes: "只讲最关键的一步|边做边讲，带一个例子|从头到尾做完整个流程", backdrop: "on" };
+    try {
+      var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+      for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+    } catch (e) {}
+
+    var root = document.querySelector(".cs");
+    var q = function (s, from) { return (from || root).querySelector(s); };
+    var FW = root.clientWidth, FH = root.clientHeight;
+    if (!FW || !FH) {
+      // not laid out yet: the host clip's declared size, then the window
+      var hc = root.closest("[data-width][data-height]");
+      FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+      FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+    }
+    var P = FH > FW, L = P ? PORT : LAND, U = Math.min(FW, FH) / 1.08e3;
+    root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+    // ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== end kit:tone ====
+
+// ==== kit:text@2 ====
+var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+function kWords(s, key) {
+  s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+  var cut = function (x) {
+    if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+    return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+  };
+  var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+  var pre = "";
+  bits.forEach(function (x) {
+    var t = x.trim(), last = out[out.length - 1];
+    if (last && /^ /.test(x)) last.sp = true;
+    if (!t) return;
+    if (!/[\p{L}\p{N}]/u.test(t)) {
+if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+else { last.t += t; last.sp = / $/.test(x); }
+return;
+    }
+    out.push({ t: pre + t, sp: / $/.test(x) });
+    pre = "";
+  });
+  if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+  if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+  if (out.length) out[out.length - 1].sp = false;
+  return out;
+}
+function kSplit(el, by, rise, text) {
+  var s = text != null ? String(text) : el.textContent, units = [];
+  var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+  el.textContent = "";
+  parts.forEach(function (p) {
+    var u = document.createElement("span"), box = u;
+    u.className = "cs-u"; u.textContent = p.t;
+    if (by === "line") u.style.display = "block";
+    if (!p.t.trim()) { el.appendChild(u); return; }
+    if (rise) { box = document.createElement("span"); box.className = "cs-cut"; box.style.display = u.style.display; box.appendChild(u); }
+    el.appendChild(box);
+    if (p.sp) el.appendChild(document.createTextNode(" "));
+    units.push(u);
+  });
+  return units;
+}
+function kReveal(tl, units, variant, at, o) {
+  o = o || {};
+  var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+  units.forEach(function (u, i) {
+    var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+    if (variant === "rise") {
+tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+    } else if (variant === "blur") {
+tl.fromTo(u, { opacity: 0, y: fs * 0.25, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: each, ease: ease }, t0);
+    } else if (variant === "drop") {
+tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each / 3, ease: "none" }, t0);
+tl.fromTo(u, { y: -fs * 0.6 }, { y: 0, duration: each, ease: "overshoot" }, t0);
+    } else if (variant === "scale") {
+tl.fromTo(u, { opacity: 0 }, { opacity: 1, duration: each * 0.1, ease: "power1.out" }, t0);
+tl.fromTo(u, { scale: 1.6, filter: "blur(8px)" }, { scale: 1, filter: "blur(0px)", duration: each, ease: ease }, t0);
+    } else {
+tl.fromTo(u, { opacity: 0, marginRight: "0.5em" }, { opacity: 1, marginRight: "0em", duration: each, ease: ease }, t0);
+    }
+  });
+  return tl;
+}
+// ==== end kit:text ====
+
+// ==== kit:fit@1 ====
+function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+"<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+"<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+"<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+"<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+}
+// ==== end kit:grain ====
+
+// ==== kit:mark@1 ====
+function kMark(size) {
+  return '<svg class="cs-mark" width="' + size + '" height="' + size + '" viewBox="0 0 128 128" aria-hidden="true">' +
+    '<rect class="cs-mark-box" x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/>' +
+    '<circle class="cs-mark-dot" cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/>' +
+    '<rect class="cs-mark-bar" x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg>';
+}
+// ==== end kit:mark ====
+
+    var dark = kTone(root) === "dark", SH = dark ? 2.2 : 1;
+    if (String(v.backdrop) === "off") ["backdrop", "vig", "grain", "dots"].forEach(function (c) { q(".cs-" + c).style.display = "none"; });
+    var grain = String(v.backdrop) === "off" ? function () {} : kGrain(q(".cs-grain"), { opacity: 0.045 });
+
+    // text: the static HTML already shows the defaults; variables replace them, then every slot is fitted by measuring
+    var kick = q(".cs-kick"), kt = String(v.kicker).trim();
+    if (kt) kick.textContent = kt; else kick.style.display = "none";
+    var title = q(".cs-title"), units = kSplit(title, "word", true, String(v.title));
+    kFit(title, { lines: 1, min: 72 });
+    // a word waits below its line, hidden by the clip-path cut: the checker still sees its box over the dots
+    units.forEach(function (u) { u.setAttribute("data-layout-allow-occlusion", ""); });
+    var list = function (s) { return String(s).split("|").map(function (x) { return x.trim(); }); };
+    var tags = list(v.tags), vals = list(v.values), notes = list(v.notes), unit = String(v.unit).trim();
+    var slots = [].slice.call(root.querySelectorAll(".cs-slot")).map(function (el, i) {
+      var o = { el: el, amb: q(".cs-amb", el), core: q(".cs-core", el), card: q(".cs-card", el), dim: q(".cs-dim", el), chk: q(".cs-chk", el) };
+      var tag = q(".cs-tag", el), num = q(".cs-num", el), un = q(".cs-unit", el), note = q(".cs-note", el), box = q(".cs-txt", el);
+      if (i === 2) q(".cs-glyph", el).innerHTML = kMark(46);
+      tag.textContent = tags[i] || ""; tag.style.display = tags[i] ? "" : "none";
+      num.textContent = vals[i] || ""; note.textContent = notes[i] || ""; note.style.display = notes[i] ? "" : "none";
+      un.textContent = unit; un.style.display = unit ? "" : "none";
+      var W = box.clientWidth || 328;
+      kFit(tag, { lines: 1, min: 28 });
+      if (unit) kFit(un, { lines: 1, min: 28, width: W * 0.45 });
+      kFit(num, { lines: 1, min: 72, width: W - (unit ? un.offsetWidth + 12 : 0) });
+      var r = kFit(note, { lines: L.noteLines, min: 40 });
+      // a note longer than the layout's lines takes the bars' room: the bars give way
+      if (r.lines > L.noteLines) q(".cs-chips", el).style.display = "none";
+      if (i === 2) o.path = q("path", o.chk);
+      return o;
+    });
+    var ent = units.map(function (u) { return u.offsetHeight * 1.05 + (parseFloat(getComputedStyle(u).fontSize) || 40) * 0.3; });
+
+    var oc = MT.ease("power3.out"), ic = MT.ease("power3.in"), c01 = function (x) { return MT.clamp(x, 0, 1); };
+    // a called-out card: lift 0 -> 1 -> 0 and its scale (the press at the end squeezes it to 0.99)
+    function scan(s) {
+      if (s < 0 || s >= CFG.end) return { lift: 0, s: 1 };
+      var lift = oc(c01(s / CFG.up)) - ic(c01((s - CFG.hover) / CFG.fall));
+      var sc = 1 + CFG.liftScale * lift;
+      if (s >= CFG.release) sc = 0.99 + 0.01 * oc(c01((s - CFG.release) / CFG.relDur)); else if (s >= CFG.press) sc = 0.99;
+      var hov = s >= CFG.up && s < CFG.hover ? Math.sin(((s - CFG.up) / (CFG.hover - CFG.up)) * Math.PI) : 0;
+      return { lift: lift + CFG.hoverAmp * hov, s: sc };
+    }
+    // the chosen card: spring up, then it hovers and breathes; it never comes back down
+    function pick(t) {
+      if (t < CFG.pick) return { lift: 0, s: 1 };
+      var k = MT.spring({ t: t, delay: CFG.pick, damping: 16, stiffness: 120 }), b0 = CFG.pick + CFG.breatheAt;
+      var br = t > b0 ? CFG.breatheAmp * Math.sin(((t - b0) / CFG.breathePeriod) * 2 * Math.PI) * MT.ramp(t, b0, CFG.breatheDur, "smooth") : 0;
+      return { lift: CFG.pickLift * k + br, s: 1 + CFG.liftScale * Math.min(1.2, k) };
+    }
+    var sh = function (n) { return n.toFixed(2); };
+    function render(t) {
+      var m = [scan(t - CFG.scans[0]), scan(t - CFG.scans[1]), pick(t)];
+      var lifts = m.map(function (x) { return c01(x.lift); });
+      // camera: the tilt eases back, the desk follows the lifted card (towards the middle), a slow push after the pick
+      var tilt = CFG.tilt0 + (CFG.tilt1 - CFG.tilt0) * MT.ramp(t, 0, CFG.dur, "smooth");
+      var follow = lifts.reduce(function (a, l, i) { return a + l * (1 - i); }, 0) * U;
+      var push = 1 + CFG.push * MT.ramp(t, CFG.pick, CFG.pushDur, "smooth");
+      q(".cs-desk").style.transform = "translate(" + sh(follow * L.fx) + "px, " + sh(follow * L.fy) + "px) scale(" + push.toFixed(5) + ") rotateX(" + tilt.toFixed(3) + "deg)";
+      slots.forEach(function (o, i) {
+        var l = Math.max(0, m[i].lift), others = Math.max(0, lifts[(i + 1) % 3], lifts[(i + 2) % 3]);
+        o.amb.style.opacity = Math.min(1, (0.09 + 0.13 * l) * SH).toFixed(3);
+        o.amb.style.filter = "blur(" + (14 + 40 * l).toFixed(1) + "px)";
+        o.amb.style.transform = "translate3d(" + (10 + 40 * l).toFixed(1) + "px," + (16 + 60 * l).toFixed(1) + "px,0.5px) scale(" + (1 + 0.06 * l).toFixed(4) + ")";
+        o.core.style.opacity = Math.min(1, (0.32 - 0.18 * l) * SH).toFixed(3);
+        o.core.style.filter = "blur(" + (3 + 22 * l).toFixed(1) + "px)";
+        o.core.style.transform = "translate3d(" + (2 + 18 * l).toFixed(1) + "px," + (4 + 36 * l).toFixed(1) + "px,1px) scale(" + (0.99 + 0.05 * l).toFixed(4) + ")";
+        o.card.style.transform = "translate3d(0,0," + sh(2 + CFG.liftZ * U * m[i].lift) + "px) scale(" + m[i].s.toFixed(4) + ")";
+        o.dim.style.opacity = (others * 0.22).toFixed(3);
+        if (i === 2) {
+          var sel = MT.ramp(t, CFG.pick + CFG.ringAt, CFG.ringDur, "out");
+          var chk = t < CFG.pick + CFG.tickAt ? 0 : MT.spring({ t: t, delay: CFG.pick + CFG.tickAt, damping: 13, stiffness: 220 });
+          o.card.setAttribute("data-sel", sel > 0.5 ? "1" : "0");
+          o.card.style.boxShadow = "inset 0 1px 0 var(--cs-hi), inset 0 0 0 " + (3 * sel).toFixed(2) + "px var(--k-accent)";
+          o.chk.style.transform = "scale(" + chk.toFixed(4) + ")";
+          o.chk.style.opacity = Math.min(1, chk * 2).toFixed(3);
+          o.path.style.strokeDashoffset = (22 * (1 - c01(chk * 1.2 - 0.2))).toFixed(2);
+        }
+      });
+      kick.style.opacity = MT.ramp(t, 0, CFG.kickDur, "out").toFixed(3);
+      units.forEach(function (u, i) {
+        var t0 = CFG.title + i * CFG.titleGap;
+        u.style.opacity = t >= t0 ? 1 : 0;
+        u.style.transform = "translate(0px," + sh(ent[i] * (1 - MT.ramp(t, t0, CFG.titleDur, "snappy"))) + "px)";
+      });
+      grain(t);
+    }
+    var tl = MT.scene(CFG.dur, render);
+    window.__timelines["contact-shadow-lift"] = tl;
+  })();
+      </script>
+    </template>
+  </body>
+</html>

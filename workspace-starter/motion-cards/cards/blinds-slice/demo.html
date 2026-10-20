@@ -1,0 +1,451 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"old_word","type":"string","label":"旧页大字（2–3 个字最好）","default":"原理"},
+    {"id":"old_tag","type":"string","label":"旧页小标题（留空不要）","default":"第 1 节"},
+    {"id":"old_body","type":"string","label":"旧页正文（用 | 分行，留空不要）","default":"先弄清它为什么|能这样工作"},
+    {"id":"new_word","type":"string","label":"新页大字","default":"动手"},
+    {"id":"new_tag","type":"string","label":"新页小标题（留空不要）","default":"第 2 节"},
+    {"id":"new_body","type":"string","label":"新页正文（用 | 分行，留空不要）","default":"再跟着做一遍|马上就能用上"},
+    {"id":"name","type":"string","label":"刊头名称（留空不要）","default":"示例应用"},
+    {"id":"issue","type":"string","label":"刊头右侧（留空不要）","default":"教程笔记 · 第 3 期"},
+    {"id":"from","type":"string","label":"旧页换成一张图（从项目根目录写起；留空画文字页）","default":""},
+    {"id":"to","type":"string","label":"新页换成一张图（从项目根目录写起；留空画文字页）","default":""},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（只留字和叶片）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>blinds-slice · 百叶翻页</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="blinds-slice-template">
+      <!-- Ported from video-shotcraft demos/transition/wipe-transitions/BlindsSlice.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette (paper page on the lit white backdrop, accent page instead of vermilion), system fonts,
+           generic Chinese copy, upstream wordmark and slogan replaced by a neutral mark and name; giant Latin words
+           with -0.065em tracking replaced by CJK words with 0 tracking and a round dot; masthead middle line dropped;
+           leaf faces shaded with a palette-derived groove colour; optional from/to images, backdrop off and portrait
+           (12 leaves of frame-width/12, perspective 0.99 x frame width) added; 12 leaves, t^0.78 stagger over 28 frames,
+           spring damping 13 / stiffness 75, 0.5 sin shade, 35-degree sheen, edge line, groove gradient, unmask after
+           the last leaf settles, masthead rule redraw, camera 1 -> 1.02 -> 1, vignette 0.2 and grain kept. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        @font-face { font-family: "Consolas"; src: local("Consolas"); }
+        /* the giant words are poster type: a real bold face, not a synthesized one */
+        @font-face { font-family: "bl-heavy"; font-weight: 700 900; src: local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"), local("PingFangSC-Semibold"), local("NotoSansSC-Black"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          --k-mono: var(--mc-mono, Consolas, monospace); /* kit:fonts@2 (mono line only) */
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* kit:derived@1 (shade line) + the groove behind the leaves: warm near-black, near-black on dark skins */
+        .bl {
+          position: absolute; inset: 0; container-type: size; overflow: hidden;
+          --bl-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+          --bl-groove: color-mix(in srgb, var(--k-ink) 88%, var(--k-accent));
+          --bl-sheen: color-mix(in srgb, white 90%, var(--k-accent));
+        }
+        .bl[data-tone="dark"] { --bl-shade: color-mix(in srgb, var(--k-bg) 30%, black); --bl-groove: color-mix(in srgb, var(--k-bg) 45%, black); }
+        .bl-cam, .bl-page, .bl-groove, .bl-leaves, .bl-paper { position: absolute; inset: 0; }
+        .bl-cam { transform-origin: 50% 50%; }
+        .bl-groove { opacity: 0; background: linear-gradient(180deg, var(--bl-groove) 0%, color-mix(in srgb, var(--bl-groove), black 38%) 100%); }
+        /* page A: paper on a lit white; page B: the accent, full bleed. 12 hairline columns = the 12 leaves */
+        .bl-page { --c-ink: var(--k-ink); --c-sub: var(--k-muted); --c-hi: var(--k-accent); --c-dot: var(--k-accent); --c-line: color-mix(in srgb, var(--k-ink) 7%, transparent); color: var(--c-ink); }
+        .bl-pb { --c-ink: var(--k-on-accent); --c-sub: var(--k-on-accent); --c-hi: var(--k-ink); --c-dot: var(--k-ink); --c-line: color-mix(in srgb, var(--k-on-accent) 14%, transparent); }
+        .bl-pb .bl-paper { background: linear-gradient(180deg, var(--k-accent), color-mix(in srgb, var(--k-accent), black 7%)); }
+        .bl-grid { position: absolute; inset: 0; background: linear-gradient(90deg, transparent calc(100% - 1px), var(--c-line) 0) 0 0 / calc(100% / 12) 100%; }
+        .bl-mast { position: absolute; left: 5%; right: 5%; top: 8.5%; height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 40px; }
+        .bl-name { display: flex; align-items: center; gap: 16px; min-width: 0; font-size: 34px; font-weight: 700; line-height: 1.2; }
+        .bl-name > span, .bl-issue { display: block; max-width: 640px; }
+        .bl-issue { font-size: 30px; font-weight: 500; line-height: 1.2; color: var(--c-sub); text-align: right; }
+        .bl-mark { display: block; flex: none; }
+        .bl-mb { fill: var(--k-accent); } .bl-md { fill: var(--k-on-accent); }
+        .bl-pb .bl-mb { fill: var(--k-on-accent); } .bl-pb .bl-md { fill: var(--k-accent); }
+        .bl-rule { position: absolute; left: 5%; right: 5%; top: 14.1%; height: 2px; background: var(--c-ink); transform-origin: 0 50%; }
+        .bl-col { position: absolute; left: 58.333%; top: 21.8%; width: 36%; }
+        .bl-tag { display: block; font-size: 40px; font-weight: 700; line-height: 1.2; letter-spacing: 0.12em; color: var(--c-hi); }
+        .bl-body { display: block; margin-top: 24px; font-size: 52px; font-weight: 600; line-height: 1.25; }
+        .bl-word { position: absolute; left: 4.375%; bottom: 13.9%; display: flex; align-items: baseline; font-family: bl-heavy, var(--k-font); font-weight: 900; line-height: 1.2; }
+        .bl-wt { display: block; font-size: 400px; white-space: nowrap; }
+        .bl-dot { display: block; flex: none; width: 0.16em; height: 0.16em; margin-left: 0.06em; border-radius: 50%; font-size: 400px; background: var(--c-dot); }
+        .bl-pn { position: absolute; right: 5%; bottom: 15.6%; font-family: var(--k-mono); font-size: 30px; line-height: 1.2; color: var(--c-sub); }
+        .bl-img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
+        .bl-pa, .bl-leaves { opacity: 0; }
+        /* one leaf: a double-sided panel turning about its own vertical axis; each face is a window on a full page */
+        .bl-leaf { position: absolute; top: 0; height: 100%; transform-style: preserve-3d; }
+        .bl-face { position: absolute; inset: 0; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+        .bl-back { transform: rotateY(180deg); }
+        .bl-face > .bl-page { right: auto; }
+        .bl-sh, .bl-sp, .bl-ed { position: absolute; top: 0; bottom: 0; opacity: 0; }
+        .bl-sh { left: 0; right: 0; background: linear-gradient(90deg, color-mix(in srgb, var(--bl-groove) 70%, transparent), var(--bl-groove)); }
+        .bl-back .bl-sh { background: linear-gradient(270deg, color-mix(in srgb, var(--bl-groove) 70%, transparent), var(--bl-groove)); }
+        .bl-sp { left: 0; right: 0; background: var(--bl-sheen); mix-blend-mode: screen; }
+        .bl-ed { left: 0; width: 2px; background: color-mix(in srgb, white 96%, var(--k-accent)); }
+        .bl-back .bl-ed { left: auto; right: 0; }
+        .bl-fx { position: absolute; inset: 0; pointer-events: none; }
+        /* backdrop off: transparent pages, both in ink; no groove, shading, vignette or grain */
+        .bl[data-bare] .bl-paper, .bl[data-bare] .bl-fx, .bl[data-bare] .bl-sh, .bl[data-bare] .bl-sp { display: none; }
+        .bl[data-bare] .bl-groove { background: none; }
+        .bl[data-bare] .bl-pb { --c-ink: var(--k-ink); --c-sub: var(--k-muted); --c-hi: var(--k-accent); --c-dot: var(--k-accent); --c-line: color-mix(in srgb, var(--k-ink) 7%, transparent); }
+        .bl[data-bare] .bl-pb .bl-mb { fill: var(--k-accent); } .bl[data-bare] .bl-pb .bl-md { fill: var(--k-on-accent); }
+        /* ==== kit:text@2 ==== */
+        .bl-u { display: inline-block; white-space: pre; }
+        .bl-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+        /* ==== end kit:text ==== */
+        /* ==== kit:fit@1 ==== */
+        .bl-row { display: block; white-space: nowrap; }
+        /* ==== end kit:fit ==== */
+        /* ==== kit:grain@1 ==== */
+        .bl-grain { position: absolute; inset: 0; pointer-events: none; }
+        /* ==== end kit:grain ==== */
+        /* ==== kit:backdrop@1 ==== */
+        .bl-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .bl-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        /* ==== end kit:backdrop ==== */
+        /* ==== kit:vignette@1 ==== */
+        .bl-vig {
+          position: absolute; inset: 0; pointer-events: none;
+          --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--bl-shade);
+          background:
+            radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+            radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+        }
+        .bl[data-tone="dark"] .bl-vig { --vs: 0.55; }
+        /* ==== end kit:vignette ==== */
+        .bl-vig { --vs: 0.2; --vin: 50%; }
+        .bl[data-tone="dark"] .bl-vig { --vs: 0.55; }
+        /* portrait: everything readable inside x 10%-90%, y 12%-68%; the page colour still bleeds to the edges */
+        @container (orientation: portrait) {
+          .bl-mast { left: 11%; right: 11%; top: 13%; gap: 24px; }
+          .bl-name { gap: 12px; font-size: 32px; }
+          .bl-name > span, .bl-issue { max-width: 400px; }
+          .bl-issue { font-size: 28px; }
+          .bl-rule { left: 11%; right: 11%; top: 16.6%; }
+          .bl-col { left: 11%; top: 20.6%; width: 78%; }
+          .bl-tag { margin-right: 200px; }
+          .bl-body { font-size: 48px; }
+          .bl-word { left: 11%; bottom: 33%; }
+          .bl-wt, .bl-dot { font-size: 300px; }
+          .bl-pn { right: 11%; bottom: auto; top: 20.6%; font-size: 30px; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="blinds-slice">
+        <div class="bl">
+          <div class="bl-cam" data-layout-allow-overflow>
+            <div class="bl-groove"></div>
+            <div class="bl-page bl-pb">
+              <div class="bl-paper"></div>
+              <div class="bl-grid"></div>
+              <div class="bl-fx bl-vig"></div>
+              <div class="bl-fx bl-grain"></div>
+              <div class="bl-mast">
+                <!-- kit:mark@1: kMark(48), inlined with class fills so the accent page can invert it -->
+                <div class="bl-name"><svg class="bl-mark" width="48" height="48" viewBox="0 0 128 128" aria-hidden="true"><rect class="bl-mb" x="8" y="8" width="112" height="112" rx="30"/><circle class="bl-md" cx="46" cy="46" r="16"/><rect class="bl-md" x="30" y="78" width="68" height="16" rx="8"/></svg><span>示例应用</span></div>
+                <div class="bl-issue">教程笔记 · 第 3 期</div>
+              </div>
+              <div class="bl-rule"></div>
+              <div class="bl-col"><div class="bl-tag">第 2 节</div><div class="bl-body"><span class="bl-u" style="display:block">再跟着做一遍</span><span class="bl-u" style="display:block">马上就能用上</span></div></div>
+              <div class="bl-word"><div class="bl-wt">动手</div><div class="bl-dot"></div></div>
+              <div class="bl-pn">02 / 02</div>
+            </div>
+            <div class="bl-leaves" data-layout-allow-overflow></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // seconds = upstream frames / 30; same clock in both orientations
+          var CFG = {
+            slot: 4.4, n: 12,
+            wave: 0.8, span: 28 / 30, pow: 0.78,           // leaf i starts at wave + span * (i / 11)^0.78
+            damping: 13, stiffness: 75,                     // per-leaf spring 0 -> 180 deg: 90 deg at +0.2 s, ~185 deg peak
+            rule: 2 / 30, ruleDur: 20 / 30,                 // after the unmask: masthead rule redrawn (snappy)
+            push: 0.006, push2: 0.014, settle: 2.0, settleDur: 34 / 30 // camera 1 -> 1.006 -> 1.02, back to 1
+          };
+          var LAND = { word: 400, wordMin: 160, bodyMin: 40 };
+          var PORT = { word: 300, wordMin: 120, bodyMin: 40 };
+          var v = { old_word: "原理", old_tag: "第 1 节", old_body: "先弄清它为什么|能这样工作", new_word: "动手", new_tag: "第 2 节", new_body: "再跟着做一遍|马上就能用上", name: "示例应用", issue: "教程笔记 · 第 3 期", from: "", to: "", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+          } catch (e) {}
+
+          var root = document.querySelector(".bl");
+          var q = function (s, el) { return (el || root).querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+          // ==== kit:tone@1 ====
+          function kRGB(el, color) {
+            var p = document.createElement("i");
+            p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+            el.appendChild(p);
+            var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+            el.removeChild(p);
+            return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+          }
+          function kTone(wrap) {
+            var c = kRGB(wrap, "var(--k-bg)");
+            var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+            wrap.setAttribute("data-tone", tone);
+            return tone;
+          }
+          // ==== end kit:tone ====
+          // ==== kit:text@2 ====
+          var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+          function kWords(s, key) {
+            s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+            var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+            var cut = function (x) {
+              if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+              return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+            };
+            var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+            var pre = "";
+            bits.forEach(function (x) {
+              var t = x.trim(), last = out[out.length - 1];
+              if (last && /^ /.test(x)) last.sp = true;
+              if (!t) return;
+              if (!/[\p{L}\p{N}]/u.test(t)) {
+                if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+                else { last.t += t; last.sp = / $/.test(x); }
+                return;
+              }
+              out.push({ t: pre + t, sp: / $/.test(x) });
+              pre = "";
+            });
+            if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+            if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+            if (out.length) out[out.length - 1].sp = false;
+            return out;
+          }
+          function kSplit(el, by, rise, text) {
+            var s = text != null ? String(text) : el.textContent, units = [];
+            var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+            el.textContent = "";
+            parts.forEach(function (p) {
+              var u = document.createElement("span"), box = u;
+              u.className = "bl-u"; u.textContent = p.t;
+              if (by === "line") u.style.display = "block";
+              if (!p.t.trim()) { el.appendChild(u); return; }
+              if (rise) { box = document.createElement("span"); box.className = "bl-cut"; box.style.display = u.style.display; box.appendChild(u); }
+              el.appendChild(box);
+              if (p.sp) el.appendChild(document.createTextNode(" "));
+              units.push(u);
+            });
+            return units;
+          }
+          // ==== end kit:text ====
+          // ==== kit:fit@1 ====
+          function kFit(el, o) {
+            o = o || {};
+            var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+            var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+            for (;;) {
+              el.style.fontSize = f + "px";
+              m = kLines(el);
+              if ((m.w <= W && m.n <= n) || f <= min) break;
+              f = Math.max(min, f - 2);
+            }
+            if (m.w > W) {
+              [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+              m = kLines(el);
+            }
+            return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+          }
+          function kLines(el) {
+            var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+            var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+            while ((t = it.nextNode())) {
+              if (!t.data.trim()) continue;
+              r.selectNodeContents(t);
+              [].forEach.call(r.getClientRects(), function (b) {
+                var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+                if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+                row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+              });
+            }
+            return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+          }
+          function kRows(el, cls) {
+            if (!el.children.length) return [];
+            var fs = parseFloat(getComputedStyle(el).fontSize), kids = [].slice.call(el.childNodes), row = null, last = null;
+            var tops = kids.map(function (c) { return c.nodeType === 1 ? c.offsetTop : null; });
+            kids.forEach(function (c, i) {
+              if (!row || (tops[i] != null && last != null && Math.abs(tops[i] - last) > fs * 0.5)) { row = el.appendChild(document.createElement("div")); row.className = cls; }
+              if (tops[i] != null) last = tops[i];
+              row.appendChild(c);
+            });
+            return [].slice.call(el.children);
+          }
+          // ==== end kit:fit ====
+          // ==== kit:grain@1 ====
+          function kGrain(layer, o) {
+            o = o || {};
+            var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+            var dark = tones && tones.getAttribute("data-tone") === "dark";
+            var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+              var f = "type='linear' slope='2.4' intercept='-0.7'";
+              var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+                "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+                "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+                "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+                "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+              return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+            });
+            layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+            layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+            layer.style.backgroundSize = size + "px " + size + "px";
+            return function (t) {
+              var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+              layer.style.backgroundImage = tiles[k % 6];
+              layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+            };
+          }
+          // ==== end kit:grain ====
+
+          kTone(root);
+          var bare = String(v.backdrop) === "off";
+          if (bare) root.setAttribute("data-bare", "");
+          var S = function (x) { return String(x == null ? "" : x).trim(); };
+
+          // a slot: hidden when empty, else split into lines at "|" (line units keep every typed space; nothing here
+          // animates word by word) and shrunk to fit its box, one line per part
+          function slot(el, text, o) {
+            if (!S(text)) { el.style.display = "none"; return; }
+            o.lines = Math.max(o.lines || 1, S(text).split("|").filter(function (s) { return s.trim(); }).length);
+            kSplit(el, "line", false, S(text));
+            return kFit(el, o);
+          }
+          function page(pg, w, tag, body, img) {
+            if (S(img)) {
+              // a picture page: the type layers go, the picture sits under the vignette and grain
+              [].forEach.call(pg.children, function (c) { if (!/bl-(fx)/.test(c.className)) c.style.display = "none"; });
+              var im = document.createElement("img");
+              im.className = "bl-img"; im.alt = ""; im.setAttribute("src", S(img));
+              pg.insertBefore(im, pg.firstChild);
+              return;
+            }
+            var mast = q(".bl-mast", pg), half = (mast.clientWidth - 24) / 2;
+            slot(q(".bl-name > span", pg), v.name, { lines: 1, min: 28, width: half - 64 });
+            slot(q(".bl-issue", pg), v.issue, { lines: 1, min: 28, width: half });
+            if (!S(v.name)) q(".bl-name", pg).style.display = "none";
+            slot(q(".bl-tag", pg), tag, { lines: 1, min: 40 });
+            slot(q(".bl-body", pg), body, { min: L.bodyMin });
+            // the giant word keeps clear of the page number (landscape) and of the 10% margins (portrait)
+            var wt = q(".bl-wt", pg), pn = q(".bl-pn", pg), wd = q(".bl-word", pg);
+            if (!S(w)) { wd.style.display = "none"; return; }
+            var room = (P ? FW * 0.78 : FW - wd.offsetLeft - pn.offsetWidth - FW * 0.05 - 60) - L.word * 0.22;
+            wt.style.maxWidth = room + "px"; // a word past the minimum size wraps inside the margins
+            var f = slot(wt, w, { min: L.wordMin, width: room, spare: 0.02 });
+            q(".bl-dot", pg).style.fontSize = f.size + "px";
+            // a word that wrapped drops the dot (it would sit outside the margin beside the block)
+            if (f.lines > 1) q(".bl-dot", pg).style.display = "none";
+          }
+          // page A is built from page B's markup (the static frame is page B)
+          var PB = q(".bl-pb"), PA = PB.cloneNode(true);
+          PA.className = "bl-page bl-pa";
+          q(".bl-paper", PA).className = "bl-paper bl-backdrop";
+          q(".bl-pn", PA).textContent = "01 / 02";
+          PB.parentNode.insertBefore(PA, PB);
+          page(PA, v.old_word, v.old_tag, v.old_body, v.from);
+          page(PB, v.new_word, v.new_tag, v.new_body, v.to);
+
+          // 12 leaves, frame-width / 12 each (= the 12 hairline columns); each face holds a full copy of its page
+          var leaves = q(".bl-leaves"), L3 = [], i;
+          leaves.style.perspective = (FW * 0.99).toFixed(0) + "px";
+          var face = function (pg, x, back) {
+            var f = document.createElement("div"), c = pg.cloneNode(true);
+            f.className = "bl-face" + (back ? " bl-back" : "");
+            c.style.opacity = 1;
+            c.style.width = FW + "px";
+            c.style.left = -x + "px";
+            // copies overlap, get shaded and sit off-centre by design: exempt their text (the flat pages are checked)
+            [].forEach.call(c.querySelectorAll("*"), function (e) { e.setAttribute("data-layout-allow-overlap", ""); e.setAttribute("data-layout-allow-occlusion", ""); e.setAttribute("data-layout-allow-caption-zone", ""); });
+            f.appendChild(c);
+            f.insertAdjacentHTML("beforeend", '<div class="bl-sh"></div><div class="bl-sp"></div><div class="bl-ed"></div>');
+            return f;
+          };
+          for (i = 0; i < CFG.n; i++) {
+            var x0 = Math.round((i * FW) / CFG.n), x1 = Math.round(((i + 1) * FW) / CFG.n), lf = document.createElement("div");
+            lf.className = "bl-leaf";
+            lf.style.left = x0 + "px";
+            lf.style.width = x1 - x0 + "px";
+            var fa = face(PA, x0, false), fb = face(PB, x0, true);
+            lf.appendChild(fa); lf.appendChild(fb);
+            leaves.appendChild(lf);
+            L3.push({ el: lf, f: fa.children, b: fb.children, s: CFG.wave + CFG.span * Math.pow(i / (CFG.n - 1), CFG.pow) });
+          }
+          var ang = function (t, s) { return t < s ? 0 : 180 * MT.spring({ t: t, delay: s, damping: CFG.damping, stiffness: CFG.stiffness }); };
+          // unmask: the first frame from which the last leaf stays within 0.3 deg of 180 for 4 frames (2.667 s)
+          var UNMASK = 80 / 30, last = L3[CFG.n - 1].s;
+          for (var fr = Math.ceil(last * 30); fr < 200; fr++) {
+            var ok = true;
+            for (var kk = 0; kk < 4; kk++) if (Math.abs(ang((fr + kk) / 30, last) - 180) > 0.3) ok = false;
+            if (ok) { UNMASK = fr / 30; break; }
+          }
+
+          var cam = q(".bl-cam"), groove = q(".bl-groove"), rule = q(".bl-rule", PB), D = Math.PI / 180;
+          // vignette and grain sit under each page's text (on top they would hide it from the checker); the leaf copies
+          // carry the vignette slice by slice, so the frame does not change when the flat page gives way to the leaves
+          var go = { opacity: root.getAttribute("data-tone") === "dark" ? 0.09 : 0.06 }, gA = kGrain(q(".bl-grain", PA), go), gB = kGrain(q(".bl-grain", PB), go);
+          // one face's light: shade 0.5 sin(th) away from the key light, a sheen near 35 deg, the lit edge line
+          function lit(kids, th, on) {
+            var r = th * D, sp = 0.22 * Math.max(0, Math.cos((th - 35) * (Math.PI / 70))) * Math.sin(Math.min(Math.PI, 2 * r));
+            kids[1].style.opacity = on ? (0.5 * Math.sin(r)).toFixed(3) : 0;
+            kids[2].style.opacity = on && sp > 0.005 ? sp.toFixed(3) : 0;
+            kids[3].style.opacity = on ? (0.7 * Math.sin(r)).toFixed(3) : 0;
+          }
+          function render(t) {
+            var c = 1 + CFG.push * MT.ramp(t, 0, CFG.wave, "smooth") + CFG.push2 * MT.ramp(t, CFG.wave, 26 / 30, "smooth") * (1 - MT.ramp(t, CFG.settle, CFG.settleDur, "smooth"));
+            cam.style.transform = "scale(" + c.toFixed(5) + ")";
+            var wave = t >= CFG.wave && t < UNMASK;
+            PA.style.opacity = t < CFG.wave ? 1 : 0;
+            PB.style.opacity = t >= UNMASK ? 1 : 0;
+            leaves.style.opacity = groove.style.opacity = wave ? 1 : 0;
+            if (rule) rule.style.transform = "scaleX(" + (t < UNMASK ? 1 : MT.ramp(t, UNMASK + CFG.rule, CFG.ruleDur, "snappy")).toFixed(4) + ")";
+            if (wave) {
+              for (var j = 0; j < CFG.n; j++) {
+                var th = ang(t, L3[j].s), front = th < 90;
+                L3[j].el.style.transform = "rotateY(" + (-th).toFixed(3) + "deg)";
+                lit(L3[j].f, th, front && th > 0.05);
+                lit(L3[j].b, Math.min(90, Math.abs(180 - th)), !front && Math.abs(180 - th) > 0.05);
+              }
+            }
+            gA(t); gB(t);
+          }
+
+          var tl = MT.scene(CFG.slot, render);
+          window.__timelines["blinds-slice"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

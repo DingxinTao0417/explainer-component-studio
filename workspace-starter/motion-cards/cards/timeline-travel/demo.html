@@ -1,0 +1,468 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"kicker","type":"string","label":"眉题（可留空）","default":"版本历程"},
+    {"id":"title","type":"string","label":"标题（可留空，可用 | 切词）","default":"一路更新到今天"},
+    {"id":"stops","type":"string","label":"刻度名（用 | 分隔，3–5 个；最后一个是急停推近的那一站）","default":"v1.0|v2.0|v3.0|今天"},
+    {"id":"dates","type":"string","label":"日期（和刻度一一对应，也是背景里的淡色大字，写短一点；可留空）","default":"2023|2024|2025|2026"},
+    {"id":"heads","type":"string","label":"卡片标题（和刻度一一对应）","default":"第一版上线|多人协作|一键导出|自动整理"},
+    {"id":"notes","type":"string","label":"卡片说明（和刻度一一对应，可留空）","default":"能建任务，也能分组|同一份文档一起改|做完直接存成文件|按主题自动归好类"},
+    {"id":"tags","type":"string","label":"卡片底行的小标签（和刻度一一对应，可留空）","default":"网页版|实时同步|三种导出格式|一句话就能用"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>timeline-travel · 时间轴急停</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="timeline-travel-template">
+<!-- Ported from video-shotcraft demos/data/timeline-travel/TimelineTravel.tsx
+     (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+     Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+     Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds
+     (160 to 159 frames); neutral --k-* palette (indigo accent, #10121a shadows and grey ramp replaced), system fonts;
+     upstream mark, release history and taglines replaced by a neutral mark and variables; 2-5 stops, each pop solved
+     from the camera curve on the 30 fps grid as upstream; text raised (header 30/56 to 32/60px, card 18-32 to 28-44px),
+     so cards are 540px wide (portrait 620px), as tall as the tallest one, axis at 2/3 height (700 to 720px) to keep the
+     card centre line; card text cuts in at a quarter height instead of fading; far labels are pseudo-element text,
+     -0.05 to -0.03em, shrunk to fit; grain under the timeline; bottom glow uses accent-2 on dark skins; axis and zoom
+     origin move only for tall copy; portrait layout. Kept: camera curve (frames 12-104, .15/.88 to .055/.9, quad in-out), 6-frame lead, spring 11/160/0.9 in
+     26 frames, push-in 1.28 over frames 104-114, 0.35 parallax, blur 0.16 per px/frame up to 9, shadow heights. -->
+<style>
+  @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+  @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+  @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+  #root {
+    --k-bg: var(--mc-bg, #ffffff);
+    --k-panel: var(--mc-panel, #f4f5f7);
+    --k-ink: var(--mc-ink, #15171c);
+    --k-muted: var(--mc-muted, #6b7280);
+    --k-accent: var(--mc-accent, #e8590c);
+    --k-accent-2: var(--mc-accent-2, #2563eb);
+    --k-on-accent: var(--mc-on-accent, #ffffff);
+    --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    font-family: var(--k-font);
+    color: var(--k-ink);
+  }
+  /* ==== kit:fonts@2 (mono only) ==== */
+  @font-face { font-family: "Consolas"; src: local("Consolas"); }
+  #root { --k-mono: var(--mc-mono, Consolas, monospace); }
+  /* ==== end kit:fonts ==== */
+  /* ==== kit:derived@1 (line 8% and lit edge 90% as upstream; --s shadow strength, --tint/--tg bottom glow: accent, accent-2 on dark so yellow does not turn olive) ==== */
+  .tt { position: absolute; inset: 0; container-type: size; --s: 1; --tint: 7%; --tg: var(--k-accent); --tt-card: var(--k-bg);
+    --tt-line: color-mix(in srgb, var(--k-ink) 8%, transparent);
+    --tt-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+    --tt-hi: color-mix(in srgb, white 90%, transparent); }
+  .tt[data-tone="dark"] { --s: 2.6; --tint: 14%; --tg: var(--k-accent-2); --tt-card: var(--k-panel);
+    --tt-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+    --tt-hi: color-mix(in srgb, white 6%, transparent); }
+  /* ==== end kit:derived ==== */
+  /* ==== kit:backdrop@1 (key light at 50% 22% and the accent glow at the bottom, as upstream) ==== */
+  .tt-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+  .tt-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 55% 60% at 50% 91.2%, color-mix(in srgb, var(--tg) var(--tint), transparent) 0%, transparent 70%), radial-gradient(ellipse 62% 70% at 50% 22%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+  /* ==== end kit:backdrop ==== */
+  /* ==== kit:vignette@1 ==== */
+  .tt-vig {
+    position: absolute; inset: 0; pointer-events: none;
+    --vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--tt-shade);
+    background:
+      radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+      radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+  }
+  .tt[data-tone="dark"] .tt-vig { --vs: 0.55; }
+  /* ==== end kit:vignette ==== */
+  /* ==== kit:grain@1 ==== */
+  .tt-grain { position: absolute; inset: 0; pointer-events: none; }
+  /* ==== end kit:grain ==== */
+  /* ==== kit:text@2 (units only) ==== */
+  .tt-u { display: inline-block; white-space: pre; }
+  /* ==== end kit:text ==== */
+
+  /* geometry tokens (the script sets the same numbers in px): stop spacing, axis line, zoom origin, card width.
+     They sit on the wrapper's children because @container rules never reach the container itself */
+  .tt > * { --gap: 72.92cqw; --ay: 66.67cqh; --zy: 62cqh; --cw: 540px; }
+  .tt-far, .tt-zoom, .tt-blur { position: absolute; inset: 0; }
+  .tt-far, .tt-zoom { transform-origin: 50% var(--zy); }
+  /* the static page is the settled frame: only the hero stop (4th) is in view, pushed in 1.28 (far layer 1.098) */
+  .tt-far { transform: scale(1.098); }
+  .tt-zoom { transform: scale(1.28); }
+  .tt-fm { position: absolute; left: 50%; top: calc(var(--ay) - 490px); transform: translateX(-50%); font-size: 280px; font-weight: 800; line-height: 1; letter-spacing: -0.03em; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .tt-fm::before { content: attr(data-t); color: color-mix(in srgb, var(--k-ink) 4%, transparent); }
+  .tt-world { position: absolute; left: 0; top: 0; height: 100%; width: calc(100cqw + 3 * var(--gap)); transform: translateX(calc(-3 * var(--gap))); }
+  .tt-axis { position: absolute; left: 10.42cqw; right: 10.42cqw; top: calc(var(--ay) - 1px); height: 2px; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--k-ink) 22%, transparent) 4% 96%, transparent); }
+  /* minor ticks (the speed reference): 4 per stop gap, none on the stops themselves */
+  .tt-ticks { position: absolute; left: 50cqw; top: calc(var(--ay) - 9px); height: 18px; width: calc(4.2 * var(--gap) + 2px); --tk: color-mix(in srgb, var(--k-ink) 20%, transparent);
+    background: repeating-linear-gradient(90deg, transparent 0 calc(var(--gap) * 0.2 - 1px), var(--tk) 0 calc(var(--gap) * 0.2 + 1px), transparent 0 calc(var(--gap) * 0.4 - 1px), var(--tk) 0 calc(var(--gap) * 0.4 + 1px),
+      transparent 0 calc(var(--gap) * 0.6 - 1px), var(--tk) 0 calc(var(--gap) * 0.6 + 1px), transparent 0 calc(var(--gap) * 0.8 - 1px), var(--tk) 0 calc(var(--gap) * 0.8 + 1px), transparent 0 var(--gap)); }
+  /* a stop is a zero-size anchor on the axis; node, stem, card and labels hang off it */
+  .tt-stop { position: absolute; left: calc(50cqw + var(--i) * var(--gap)); top: var(--ay); width: 0; height: 0; }
+  .tt-halo, .tt-core, .tt-stem { position: absolute; display: block; }
+  .tt-halo { left: -16px; top: -16px; width: 32px; height: 32px; border-radius: 50%; background: color-mix(in srgb, var(--k-ink) 6%, transparent); }
+  .tt-core { left: -8px; top: -8px; width: 16px; height: 16px; border-radius: 50%; box-sizing: border-box; border: 3px solid var(--k-ink); background: var(--k-ink); }
+  .tt-stem { left: -0.5px; bottom: 8px; width: 1px; height: 36px; background: color-mix(in srgb, var(--k-ink) 22%, transparent); transform-origin: 50% 100%; }
+  .tt-hero .tt-halo { background: color-mix(in srgb, var(--k-accent) 16%, transparent); }
+  .tt-hero .tt-core { border-color: var(--k-accent); background: var(--k-accent); }
+  .tt-hero .tt-stem { background: color-mix(in srgb, var(--k-accent) 50%, transparent); }
+  .tt-dim .tt-core { background: var(--k-bg); }
+  /* milestone card: the face fades, the text cuts in; both scale from the bottom edge */
+  .tt-card { position: absolute; left: calc(var(--cw) / -2); width: var(--cw); bottom: 44px; transform-origin: 50% 100%; }
+  .tt-face { position: absolute; inset: 0; border-radius: 18px; background: var(--tt-card); border: 1px solid var(--tt-line);
+    box-shadow: inset 0 1px 0 var(--tt-hi), 0 1px 2.4px color-mix(in srgb, var(--tt-shade) calc(var(--s) * 9%), transparent), 0 4.4px 10.4px -1.8px color-mix(in srgb, var(--tt-shade) calc(var(--s) * 10.8%), transparent); }
+  .tt-hero .tt-face { background: linear-gradient(180deg, var(--tt-card), color-mix(in srgb, var(--tt-card), var(--k-accent) 3%)); border-color: color-mix(in srgb, var(--k-accent) 35%, transparent);
+    box-shadow: inset 0 1px 0 var(--tt-hi), 0 1.6px 4.2px color-mix(in srgb, var(--tt-shade) calc(var(--s) * 8.9%), transparent), 0 9.9px 23.4px -4px color-mix(in srgb, var(--tt-shade) calc(var(--s) * 18.4%), transparent); }
+  .tt[data-tone="dark"] .tt-hero .tt-face { background: linear-gradient(180deg, var(--tt-card), color-mix(in srgb, var(--tt-card), white 4%)); }
+  .tt-body { position: relative; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; padding: 28px 30px; }
+  .tt-top { display: flex; align-items: center; gap: 12px; }
+  .tt-chip { flex: none; padding: 6px 14px; border-radius: 10px; font-family: var(--k-mono); font-size: 28px; font-weight: 700; line-height: 32px; background: color-mix(in srgb, var(--tt-card), var(--k-ink) 6%); color: var(--k-muted); }
+  .tt-hero .tt-chip { background: var(--k-accent); color: var(--k-on-accent); }
+  .tt-cdate { margin-left: auto; text-align: right; font-size: 28px; line-height: 1.2; color: var(--k-muted); font-variant-numeric: tabular-nums; }
+  .tt-ctitle { margin-top: 18px; font-size: 44px; font-weight: 700; line-height: 1.2; }
+  .tt-note { margin-top: 8px; font-size: 40px; line-height: 1.3; color: var(--k-muted); }
+  .tt-tag { margin-top: auto; padding-top: 18px; display: flex; align-items: center; gap: 12px; font-size: 32px; font-weight: 600; line-height: 1.2; color: var(--k-muted); }
+  .tt-tag::before { content: ""; flex: none; width: 10px; height: 10px; border-radius: 50%; background: color-mix(in srgb, var(--k-ink) 25%, transparent); }
+  .tt-hero .tt-tag { color: var(--k-accent); }
+  .tt-hero .tt-tag::before { background: var(--k-accent); }
+  .tt-lab { position: absolute; top: 34px; left: -180px; width: 360px; text-align: center; }
+  .tt-name { font-size: 40px; font-weight: 700; line-height: 1.2; }
+  .tt-hero .tt-name { color: var(--k-accent); }
+  .tt-when { margin-top: 2px; font-size: 28px; font-weight: 500; line-height: 1.2; color: var(--k-muted); font-variant-numeric: tabular-nums; }
+  /* fixed header, top left */
+  .tt-hd { position: absolute; left: 6.25cqw; right: 6.25cqw; top: 8.89cqh; }
+  .tt-eye { display: flex; align-items: center; gap: 14px; font-size: 32px; font-weight: 700; line-height: 1.3; letter-spacing: 0.06em; color: var(--k-accent); }
+  .tt-mark { display: block; flex: none; }
+  .tt-kick { min-width: 0; }
+  .tt-title { margin-top: 6px; font-size: 60px; font-weight: 800; line-height: 1.2; }
+  /* portrait: same spacing per frame width, axis at 47% so the pushed-in hero sits on the 40% line */
+  @container (orientation: portrait) {
+    .tt > * { --ay: 47cqh; --zy: 45.4cqh; --cw: 620px; }
+    .tt-hd { left: 10cqw; right: 10cqw; top: 13cqh; }
+    .tt-title { font-size: 72px; }
+  }
+</style>
+
+<div id="root" data-composition-id="timeline-travel">
+  <div class="tt">
+    <div class="tt-backdrop"></div>
+    <div class="tt-vig"></div>
+    <div class="tt-grain"></div>
+    <div class="tt-far"><span class="tt-fm" data-t="2026"></span></div>
+    <div class="tt-zoom">
+      <div class="tt-blur">
+        <div class="tt-world" data-layout-allow-overflow>
+          <div class="tt-axis"></div>
+          <div class="tt-ticks"></div>
+          <div class="tt-stop tt-hero" style="--i: 3"><i class="tt-halo"></i><i class="tt-core"></i><i class="tt-stem"></i>
+            <div class="tt-card"><i class="tt-face"></i><div class="tt-body"><div class="tt-top"><div class="tt-chip">今天</div><div class="tt-cdate">2026</div></div><div class="tt-ctitle">自动整理</div><div class="tt-note">按主题自动归好类</div><div class="tt-tag"><span class="tt-tx">一句话就能用</span></div></div></div>
+            <div class="tt-lab"><div class="tt-name">今天</div><div class="tt-when">2026</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tt-hd">
+      <div class="tt-eye"><svg class="tt-mark" width="40" height="40" viewBox="0 0 128 128" aria-hidden="true"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg><span class="tt-kick">版本历程</span></div>
+      <div class="tt-title">一路更新到今天</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // timing (s) = upstream frames / 30, shared by both orientations: hold, travel 12-104f, push in 104-114f.
+  // lead: a card starts 6f before the camera reaches its stop; its spring is squeezed into popF frames
+  var CFG = { go: 0.4, stop: 3.467, zoomDur: 0.333, zoom: 1.28, lead: 0.2, popF: 26, damp: 11, stiff: 160, mass: 0.9, lit: 0.2, head: 0.467, end: 5.3, par: 0.35, farOut: 0.62, blur: 0.16, blurMax: 9 };
+  // camera progress: travel fraction in -> distance out, each segment quad in-out (slow start, sprint, brake)
+  var KIN = [0, 0.15, 0.88, 1], KOUT = [0, 0.055, 0.9, 1];
+  // per orientation: stop spacing (x width), axis and push-in origin (x height), lowest text line, title lines
+  var LAND = { gap: 0.7292, ay: 0.6667, zy: 0.62, low: 0.97, lines: 1, min: 40 };
+  var PORT = { gap: 0.7292, ay: 0.47, zy: 0.454, low: 0.677, lines: 2, min: 72 };
+  var v = { kicker: "版本历程", title: "一路更新到今天", stops: "v1.0|v2.0|v3.0|今天", dates: "2023|2024|2025|2026", heads: "第一版上线|多人协作|一键导出|自动整理", notes: "能建任务，也能分组|同一份文档一起改|做完直接存成文件|按主题自动归好类", tags: "网页版|实时同步|三种导出格式|一句话就能用", backdrop: "on" };
+  try {
+    var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k];
+  } catch (e) {}
+
+  // ==== kit:tone@1 ====
+  function kRGB(el, color) {
+    var p = document.createElement("i");
+    p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+    el.appendChild(p);
+    var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+    el.removeChild(p);
+    return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+  }
+  function kTone(wrap) {
+    var c = kRGB(wrap, "var(--k-bg)");
+    var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+    wrap.setAttribute("data-tone", tone);
+    return tone;
+  }
+  // ==== end kit:tone ====
+
+  // ==== kit:grain@1 ====
+  function kGrain(layer, o) {
+    o = o || {};
+    var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+    var dark = tones && tones.getAttribute("data-tone") === "dark";
+    var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+      var f = "type='linear' slope='2.4' intercept='-0.7'";
+      var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+        "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+        "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+        "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+        "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+      return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+    });
+    layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+    layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+    layer.style.backgroundSize = size + "px " + size + "px";
+    return function (t) {
+      var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+      layer.style.backgroundImage = tiles[k % 6];
+      layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+    };
+  }
+  // ==== end kit:grain ====
+
+  // ==== kit:speedblur@1 ====
+  function kSpeedBlur(box, prefix, o) {
+    o = o || {};
+    var amount = o.amount || 0.45, max = o.max || 36;
+    var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+    svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+    var outer = document.createElement("div"), inner = document.createElement("div");
+    outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+    while (box.firstChild) inner.appendChild(box.firstChild);
+    outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+    var fe = svg.firstChild.firstChild;
+    return function (vx, vy) {
+      vy = vy || 0;
+      var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+      if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+      var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+      fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+      outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+      inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+      outer.style.filter = "url(#" + id + ")";
+    };
+  }
+  // ==== end kit:speedblur ====
+
+  // ==== kit:text@2 (kWords, kSplit) ====
+  var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+  function kWords(s, key) {
+    s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+    var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+    var cut = function (x) {
+      if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+      return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+    };
+    var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+    var pre = "";
+    bits.forEach(function (x) {
+      var t = x.trim(), last = out[out.length - 1];
+      if (last && /^ /.test(x)) last.sp = true;
+      if (!t) return;
+      if (!/[\p{L}\p{N}]/u.test(t)) {
+        if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+        else { last.t += t; last.sp = / $/.test(x); }
+        return;
+      }
+      out.push({ t: pre + t, sp: / $/.test(x) });
+      pre = "";
+    });
+    if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+    if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+    if (out.length) out[out.length - 1].sp = false;
+    return out;
+  }
+  function kSplit(el, by, rise, text) {
+    var s = text != null ? String(text) : el.textContent, units = [];
+    var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+    el.textContent = "";
+    parts.forEach(function (p) {
+      var u = document.createElement("span"), box = u;
+      u.className = "tt-u"; u.textContent = p.t;
+      if (by === "line") u.style.display = "block";
+      if (!p.t.trim()) { el.appendChild(u); return; }
+      if (rise) { box = document.createElement("span"); box.className = "tt-cut"; box.style.display = u.style.display; box.appendChild(u); }
+      el.appendChild(box);
+      if (p.sp) el.appendChild(document.createTextNode(" "));
+      units.push(u);
+    });
+    return units;
+  }
+  // ==== end kit:text ====
+
+  // ==== kit:fit@1 (kFit, kLines) ====
+  function kFit(el, o) {
+    o = o || {};
+    var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+    var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+    for (;;) {
+      el.style.fontSize = f + "px";
+      m = kLines(el);
+      if ((m.w <= W && m.n <= n) || f <= min) break;
+      f = Math.max(min, f - 2);
+    }
+    if (m.w > W) {
+      [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+      m = kLines(el);
+    }
+    return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+  }
+  function kLines(el) {
+    var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+    var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+    while ((t = it.nextNode())) {
+      if (!t.data.trim()) continue;
+      r.selectNodeContents(t);
+      [].forEach.call(r.getClientRects(), function (b) {
+        var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+        if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+        row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+      });
+    }
+    return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+  }
+  // ==== end kit:fit ====
+
+  var root = document.querySelector(".tt");
+  var q = function (s, el) { return (el || root).querySelector(s); };
+  var FW = root.clientWidth, FH = root.clientHeight;
+  if (!FW || !FH) {
+    // not laid out yet: the host clip's declared size, then the window
+    var hc = root.closest("[data-width][data-height]");
+    FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+    FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+  }
+  var P = FH > FW, L = P ? PORT : LAND;
+  root.setAttribute("data-orient", P ? "portrait" : "landscape");
+  kTone(root);
+  if (String(v.backdrop) === "off") [".tt-backdrop", ".tt-vig", ".tt-grain"].forEach(function (s) { q(s).style.display = "none"; });
+
+  // ---- text: lists split at "|", every slot through kSplit (typed spaces kept), empty slots hidden
+  var put = function (el, s) { s = String(s == null ? "" : s).trim(); el.style.display = s ? "" : "none"; if (s) kSplit(el, "word", false, s); return !!s; };
+  var list = function (s) { return String(s == null ? "" : s).split("|").map(function (x) { return x.trim(); }); };
+  var names = list(v.stops).filter(Boolean).slice(0, 5);
+  if (names.length < 2) names = list("v1.0|v2.0|v3.0|今天");
+  var N = names.length, dates = list(v.dates), heads = list(v.heads), notes = list(v.notes), tags = list(v.tags);
+  var hd = q(".tt-hd");
+  q(".tt-eye").style.display = put(q(".tt-kick"), v.kicker) ? "" : "none";
+  put(q(".tt-title"), v.title);
+  kFit(q(".tt-kick"), { width: hd.clientWidth - 54, min: 28 });
+  kFit(q(".tt-title"), { lines: L.lines, min: L.min });
+
+  // stops: the static hero stop is the pattern, one clone per stop; the last clone is the hero
+  var world = q(".tt-world"), proto = q(".tt-stop"), far = q(".tt-far"), S = [], i;
+  [].slice.call(world.querySelectorAll(".tt-stop")).forEach(function (s) { world.removeChild(s); });
+  far.textContent = "";
+  for (i = 0; i < N; i++) {
+    var el = world.appendChild(proto.cloneNode(true));
+    el.style.setProperty("--i", i);
+    el.classList.toggle("tt-hero", i === N - 1);
+    put(q(".tt-chip", el), names[i]);
+    put(q(".tt-name", el), names[i]);
+    put(q(".tt-cdate", el), dates[i]);
+    put(q(".tt-when", el), dates[i]);
+    put(q(".tt-ctitle", el), heads[i]);
+    put(q(".tt-note", el), notes[i]);
+    q(".tt-tag", el).style.display = put(q(".tt-tx", el), tags[i]) ? "" : "none";
+    var fm = far.appendChild(document.createElement("span"));
+    fm.className = "tt-fm";
+    fm.setAttribute("data-t", dates[i] || names[i]);
+    S.push({ el: el, card: q(".tt-card", el), halo: q(".tt-halo", el), stem: q(".tt-stem", el), face: q(".tt-face", el), body: q(".tt-body", el) });
+  }
+  var IN = S[0].card.clientWidth - 60;
+  S.forEach(function (s) {
+    var chip = q(".tt-chip", s.el);
+    kFit(chip, { width: IN * 0.6 - 28, min: 28 });
+    kFit(q(".tt-cdate", s.el), { width: IN - chip.offsetWidth - 12, min: 28 });
+    kFit(q(".tt-ctitle", s.el), { min: 40 });
+    kFit(q(".tt-note", s.el), { lines: 2, min: 40 });
+    kFit(q(".tt-tx", s.el), { width: IN - 22, min: 28 });
+    kFit(q(".tt-name", s.el), { min: 28 });
+    kFit(q(".tt-when", s.el), { min: 28 });
+  });
+  // every card takes the tallest card's height, so the tops line up
+  var H = Math.max.apply(null, S.map(function (s) { return s.card.offsetHeight; }));
+  S.forEach(function (s) { s.card.style.height = H + "px"; });
+
+  // ---- camera: progress 0-1 along the travel; pops on the 30 fps grid, as upstream (first frame at or past the stop)
+  var GAP = Math.round(L.gap * FW), TRAVEL = (N - 1) * GAP;
+  var cam = function (t) { return MT.interpolate(MT.interpolate(t, [CFG.go, CFG.stop], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }), KIN, KOUT, { easing: "power1.inOut" }); };
+  var camX = function (t) { return cam(t) * TRAVEL; };
+  var popAt = function (j) { for (var f = Math.round(CFG.go * 30); f < Math.round(CFG.stop * 30); f++) if (cam(f / 30) >= j / (N - 1) - 1e-6) break; return f / 30 - CFG.lead; };
+  // upstream's durationInFrames: the spring's own settle time (|1 - s| < 0.005 for 20 frames, Remotion's rule) squeezed into popF frames
+  var spf = function (f) { return MT.spring({ t: f / 30, damping: CFG.damp, stiffness: CFG.stiff, mass: CFG.mass }); };
+  var nat, f = 0, n;
+  while (Math.abs(1 - spf(f)) >= 0.005) f++;
+  for (nat = f, n = 0; n < 20; n++) if (Math.abs(1 - spf(++f)) >= 0.005) { n = 0; nat = f + 1; }
+  var spr = function (d) { return d <= 0 ? 0 : d * 30 > CFG.popF ? 1 : spf((d * 30 * nat) / CFG.popF); };
+  var zAt = function (t) { return 1 + (CFG.zoom - 1) * MT.ramp(t, CFG.stop, CFG.zoomDur, "power2.out"); };
+
+  // ---- layout: axis under the header with room for the tallest overshoot; push-in origin at the upstream line,
+  // moved only as far as needed to keep the pushed-in hero under the header and its labels above the low line
+  var hb = hd.offsetTop + hd.offsetHeight + 24, LB = 34 + q(".tt-lab", S[0].el).offsetHeight, LOW = L.low * FH;
+  var A = Math.round(Math.max(L.ay * FH, hb + 44 + 1.2 * H)), lo = -1e9, hi = 1e9, hp = popAt(N - 1);
+  for (f = Math.round(CFG.stop * 30) + 1; f <= Math.round(CFG.end * 30); f++) {
+    var z = zAt(f / 30) - 1;
+    hi = Math.min(hi, ((A - 44 - spr(f / 30 - hp) * H) * (z + 1) - hb) / z);
+    lo = Math.max(lo, ((A + LB) * (z + 1) - LOW) / z);
+  }
+  var Z = Math.round(Math.max(lo, Math.min(hi, L.zy * FH)));
+  var zoom = q(".tt-zoom"), ticks = q(".tt-ticks");
+  zoom.style.transformOrigin = far.style.transformOrigin = "50% " + Z + "px";
+  world.style.width = FW + TRAVEL + "px";
+  q(".tt-axis").style.top = A - 1 + "px";
+  ticks.style.cssText = "left:" + FW / 2 + "px;top:" + (A - 9) + "px;width:" + ((N + 0.2) * GAP + 2) + "px;--gap:" + GAP + "px";
+  S.forEach(function (s, j) { s.el.style.left = FW / 2 + j * GAP + "px"; s.el.style.top = A + "px"; s.pop = popAt(j); });
+  // far labels: one size for all, shrunk so the widest stays inside the frame at its widest parallax offset
+  var fms = [].slice.call(far.children), probe = far.appendChild(document.createElement("span")), fw = 0;
+  probe.className = "tt-fm";
+  fms.forEach(function (fm) { probe.textContent = fm.getAttribute("data-t"); fw = Math.max(fw, probe.offsetWidth); });
+  far.removeChild(probe);
+  var fs = Math.floor(280 * Math.min(1, (FW - 2 * CFG.farOut * CFG.par * GAP - 40) / Math.max(1, fw)));
+  fms.forEach(function (fm) { fm.style.fontSize = fs + "px"; fm.style.top = A - 490 + "px"; });
+
+  var blur = kSpeedBlur(q(".tt-blur"), "tt", { amount: CFG.blur, max: CFG.blurMax });
+  var grain = kGrain(q(".tt-grain"));
+  var tl = MT.scene(CFG.end, function (t) {
+    var X = camX(t), z = zAt(t), h = MT.ramp(t, 0, CFG.head, "power2.out");
+    // the world is the only thing that travels; it smears sideways while it is fast
+    world.style.transform = "translateX(" + (-X).toFixed(2) + "px)";
+    blur(-MT.velocity(camX, t), 0);
+    zoom.style.transform = "scale(" + z.toFixed(4) + ")";
+    far.style.transform = "scale(" + (1 + (z - 1) * CFG.par).toFixed(4) + ")";
+    // far labels move at 0.35 of the camera speed and fade with their distance from it
+    fms.forEach(function (fm, j) {
+      fm.style.opacity = Math.max(0, 1 - Math.abs(X - j * GAP) / GAP / CFG.farOut).toFixed(3);
+      fm.style.left = (FW / 2 + (j * GAP - X) * CFG.par).toFixed(1) + "px";
+    });
+    hd.style.opacity = h.toFixed(3);
+    hd.style.transform = "translateY(" + ((1 - h) * 8).toFixed(2) + "px)";
+    // each stop: node lights over 6 frames from its pop; stem and card spring up from the axis
+    S.forEach(function (s) {
+      var d = t - s.pop, p = spr(d), lit = MT.clamp(d / CFG.lit, 0, 1);
+      s.el.classList.toggle("tt-dim", lit <= 0.5);
+      s.halo.style.transform = "scale(" + (0.6 + 0.4 * lit).toFixed(3) + ")";
+      s.stem.style.transform = "scaleY(" + Math.min(1, p).toFixed(4) + ")";
+      s.card.style.transform = "scaleY(" + p.toFixed(4) + ") scaleX(" + (0.85 + 0.15 * p).toFixed(4) + ")";
+      s.face.style.opacity = Math.min(1, 2 * p).toFixed(3);
+      s.body.style.opacity = p >= 0.25 ? 1 : 0;
+    });
+    grain(t);
+  });
+  window.__timelines["timeline-travel"] = tl;
+})();
+</script>
+    </template>
+  </body>
+</html>

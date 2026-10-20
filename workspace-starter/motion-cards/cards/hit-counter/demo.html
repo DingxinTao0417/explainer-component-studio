@@ -1,0 +1,501 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"kicker","type":"string","label":"眉题（留空不要）","default":"本周更新"},
+    {"id":"items","type":"string","label":"三张卡的名字（| 分隔）","default":"自动整理|一键导出|多人协作"},
+    {"id":"hits","type":"string","label":"三击的数字（| 分隔，一个比一个大）","default":"−2 小时|−1 天|−3 天"},
+    {"id":"line","type":"string","label":"收尾一句（| 切意群，留空不要）","default":"每期视频|省下|一整周"},
+    {"id":"key","type":"string","label":"收尾句的重点词","default":"一整周"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>hit-counter · 连击计数</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="hit-counter-template">
+<!-- Ported from video-shotcraft demos/effects/impact-feedback/HitCounter.tsx
+ (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+ Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+ Changes (2026-10): Remotion/React -> HyperFrames MT, frames -> seconds; --k-* palette: white field + key light
+ (was cobalt), accent for the arcade yellow, ring / sparks / flash in accent and accent-2 (were white / yellow),
+ vignette 0.16 (was 0.42), card shadow x0.6 and landing shadow x0.45 on white; system fonts, generic copy; mark,
+ wordmark, "What's new", card description and footer note dropped (texture bars); ring and sparks under the
+ cards; damage numbers fitted to a box; portrait layout; hitstop, drop, squash, flash, ring, sparks, damage,
+ combo, footer and closing-line timing kept; hold 176 -> 159 f. -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+@font-face { font-family: "Consolas"; src: local("Consolas"); }
+@font-face { font-family: "hc-heavy"; font-weight: 700 900; src: local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"), local("PingFangSC-Semibold"), local("NotoSansSC-Black"); }
+#root {
+--k-bg: var(--mc-bg, #ffffff);
+--k-panel: var(--mc-panel, #f4f5f7);
+--k-ink: var(--mc-ink, #15171c);
+--k-muted: var(--mc-muted, #6b7280);
+--k-accent: var(--mc-accent, #e8590c);
+--k-accent-2: var(--mc-accent-2, #2563eb);
+--k-on-accent: var(--mc-on-accent, #ffffff);
+--k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+--k-mono: var(--mc-mono, Consolas, monospace);
+position: absolute;
+inset: 0;
+overflow: hidden;
+font-family: var(--k-font);
+color: var(--k-ink);
+}
+/* ==== kit:derived@1 ==== */
+.hc {
+--hc-line: color-mix(in srgb, var(--k-ink) 12%, transparent);
+--hc-shade: color-mix(in srgb, var(--k-ink) 85%, var(--k-accent-2));
+--hc-hi: color-mix(in srgb, white 80%, transparent);
+}
+.hc[data-tone="dark"] {
+--hc-shade: color-mix(in srgb, var(--k-bg) 30%, black);
+--hc-hi: color-mix(in srgb, white 6%, transparent);
+}
+/* ==== end kit:derived ==== */
+
+/* ==== kit:backdrop@1 ==== */
+.hc-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+.hc-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+/* ==== end kit:backdrop ==== */
+
+/* ==== kit:vignette@1 ==== */
+.hc-vig {
+position: absolute; inset: 0; pointer-events: none;
+--vs: 0.16; --vin: 45%; --vx: 50%; --vy: 46%; --vc: var(--hc-shade);
+background:
+  radial-gradient(ellipse 72% 72% at var(--vx) var(--vy), transparent var(--vin), color-mix(in srgb, var(--vc) calc(var(--vs) * 32%), transparent) calc(var(--vin) + (100% - var(--vin)) * 0.55), color-mix(in srgb, var(--vc) calc(var(--vs) * 100%), transparent) 100%),
+  radial-gradient(ellipse 100% 100% at var(--vx) var(--vy), transparent 60%, color-mix(in srgb, var(--vc) calc(var(--vs) * 60%), transparent) 100%);
+}
+.hc[data-tone="dark"] .hc-vig { --vs: 0.55; }
+/* ==== end kit:vignette ==== */
+
+/* ==== kit:grain@1 ==== */
+.hc-grain { position: absolute; inset: 0; pointer-events: none; }
+/* ==== end kit:grain ==== */
+
+/* ==== kit:text@2 ==== */
+.hc-u { display: inline-block; white-space: pre; }
+.hc-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+/* ==== end kit:text ==== */
+
+.hc { position: absolute; inset: 0; container-type: size; --hc-hv: hc-heavy, var(--k-font); --hc-card: var(--k-bg); }
+.hc[data-tone="dark"] { --hc-card: var(--k-panel); }
+/* slots and cards: left, top, width, height, gap */
+.hc-s { position: absolute; inset: 0; --sl: 180px; --st: 446px; --sw: 480px; --sh: 330px; --sg: 60px; }
+.hc-at { position: absolute; left: calc(var(--sl) + var(--i) * (var(--sw) + var(--sg))); top: var(--st); width: var(--sw); height: var(--sh); }
+/* stripes drift 2.2 px a frame (frozen in the hitstop); dots fade in toward the bottom */
+.hc-stripes { position: absolute; inset: -200px; opacity: 0.05; background: repeating-linear-gradient(-58deg, var(--k-ink) 0 2px, transparent 2px 46px); }
+.hc-dots { position: absolute; inset: 0; opacity: 0.1; background: radial-gradient(circle, var(--k-ink) 1.4px, transparent 1.6px) 0 0 / 18px 18px; mask-image: linear-gradient(180deg, transparent 40%, #000 100%); }
+.hc-head { position: absolute; left: 120px; top: 104px; width: 1000px; display: flex; align-items: center; gap: 18px; }
+.hc-head svg { flex: none; }
+.hc-kick { flex: 1 1 auto; min-width: 0; font-size: 40px; font-weight: 700; line-height: 1.25; }
+.hc-slot { border-radius: 26px; border: 2px dashed color-mix(in srgb, var(--k-ink) 24%, transparent); background: color-mix(in srgb, var(--k-ink) 4%, transparent); box-sizing: border-box; }
+.hc-slot::before { content: attr(data-n); position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font: 800 120px/1 var(--hc-hv); letter-spacing: -0.04em; color: color-mix(in srgb, var(--k-ink) 7%, transparent); }
+/* the slot's floor light after the hit (--g from the script): multiply on light skins, screen on dark */
+.hc-slot::after { content: ""; position: absolute; left: -120px; right: -120px; top: calc(100% - 80px); height: 200px; opacity: var(--g, 0); mix-blend-mode: multiply; background: radial-gradient(closest-side, color-mix(in srgb, var(--k-accent) 45%, transparent), transparent 70%); }
+.hc[data-tone="dark"] .hc-slot::after { mix-blend-mode: screen; }
+.hc-pre { position: absolute; border-radius: 30px; background: var(--hc-shade); opacity: 0; }
+.hc-ring { position: absolute; box-sizing: border-box; border: 5px solid var(--k-accent); opacity: 0; }
+.hc-sparks { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.hc-sparks line { stroke-linecap: round; }
+.hc-drop, .hc-fx { position: absolute; inset: 0; }
+.hc-card { box-sizing: border-box; border-radius: 26px; padding: 34px 38px 32px; display: flex; flex-direction: column; transform-origin: 50% 100%; background: var(--hc-card); border: 1px solid var(--hc-line); }
+.hc-card > * { position: relative; z-index: 1; }
+.hc-card::before { content: ""; position: absolute; inset: 0; border-radius: 25px; background: color-mix(in srgb, var(--k-accent) 28%, var(--hc-card)); opacity: var(--f, 0); }
+.hc-top { display: flex; align-items: center; }
+.hc-ic { width: 62px; height: 62px; border-radius: 18px; background: color-mix(in srgb, var(--k-accent-2) 10%, transparent); display: flex; align-items: center; justify-content: center; }
+.hc-ic svg { width: 34px; height: 34px; fill: none; stroke: var(--k-accent-2); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.hc-idx { margin-left: auto; font: 600 28px/1 var(--k-mono); color: var(--k-muted); }
+.hc-name { margin-top: 26px; font-size: 48px; font-weight: 700; line-height: 1.2; }
+.hc-bars i { display: block; height: 12px; border-radius: 6px; margin-top: 14px; background: color-mix(in srgb, var(--k-ink) 10%, transparent); }
+.hc-bars i + i { width: 62%; }
+.hc-foot { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--hc-line); }
+.hc-val { display: block; font: italic 800 40px/1.2 var(--hc-hv); letter-spacing: -0.02em; color: var(--k-accent-2); }
+.hc-dmg { position: absolute; text-align: center; font: italic 900 88px/1 var(--hc-hv); letter-spacing: -0.04em; color: var(--k-accent); text-shadow: 0.055em 0.055em 0 var(--hc-shade); transform-origin: 50% 100%; opacity: 0; }
+.hc-ctr { position: absolute; right: 96px; top: 40px; width: 400px; padding: 24px 24px 0 0; display: flex; flex-direction: column; align-items: flex-end; transform-origin: 90% 20%; transform: rotate(-6deg); }
+.hc-lab { font: italic 800 32px/1.2 var(--k-font); letter-spacing: 0.3em; color: var(--k-ink); }
+.hc-num { display: block; margin-top: 14px; font: italic 900 196px/0.9 var(--hc-hv); letter-spacing: -0.05em; white-space: nowrap; color: var(--k-accent); text-shadow: 0.036em 0.036em 0 var(--hc-shade); transform: skewX(-6deg); }
+.hc-ctr[data-on="0"] .hc-lab, .hc-ctr[data-on="0"] .hc-num { color: var(--k-muted); text-shadow: none; }
+.hc-heat { display: flex; gap: 8px; margin-top: 14px; }
+.hc-heat i { width: 56px; height: 10px; border-radius: 5px; background: var(--k-accent); box-shadow: 3px 3px 0 var(--hc-shade); }
+.hc-heat i.hc-off { background: color-mix(in srgb, var(--k-ink) 14%, transparent); box-shadow: none; }
+.hc-line { position: absolute; left: 160px; right: 160px; top: 866px; padding-bottom: 1.7em; text-align: center; font-size: 60px; font-weight: 700; line-height: 1.25; }
+.hc-key { color: color-mix(in srgb, var(--k-accent) 88%, var(--k-ink)); }
+.hc[data-backdrop="off"] .hc-deco { display: none; }
+/* portrait: three narrower slots in one row inside the 12%-68% band */
+@container (orientation: portrait) {
+.hc-s { --sl: 108px; --st: 640px; --sw: 268px; --sh: 360px; --sg: 30px; }
+.hc-head { left: 108px; top: 262px; width: 420px; }
+.hc-slot::before { font-size: 96px; }
+.hc-card { padding: 24px 22px 22px; }
+.hc-ic { width: 52px; height: 52px; border-radius: 15px; }
+.hc-ic svg { width: 30px; height: 30px; }
+.hc-name { margin-top: 18px; font-size: 40px; }
+.hc-bars i { height: 10px; margin-top: 10px; }
+.hc-ctr { right: 108px; top: 236px; width: 336px; }
+.hc-num { font-size: 157px; }
+.hc-line { left: 108px; right: 108px; top: 1040px; font-size: 64px; }
+}
+</style>
+
+<div id="root" data-composition-id="hit-counter">
+<div class="hc">
+<div class="hc-s">
+  <div class="hc-backdrop hc-deco"></div>
+  <div class="hc-stripes hc-deco"></div>
+  <div class="hc-dots hc-deco"></div>
+  <div class="hc-vig hc-deco"></div>
+  <div class="hc-grain hc-deco"></div>
+  <div class="hc-head"><svg class="hc-mark" width="52" height="52" viewBox="0 0 128 128" aria-hidden="true"><rect x="8" y="8" width="112" height="112" rx="30" style="fill:var(--k-accent)"/><circle cx="46" cy="46" r="16" style="fill:var(--k-on-accent)"/><rect x="30" y="78" width="68" height="16" rx="8" style="fill:var(--k-on-accent)"/></svg><div class="hc-kick" data-layout-allow-occlusion data-layout-allow-overlap>本周更新</div></div>
+  <div class="hc-at hc-slot" style="--i:0" data-n="01"></div>
+  <div class="hc-at hc-slot" style="--i:1" data-n="02"></div>
+  <div class="hc-at hc-slot" style="--i:2" data-n="03"></div>
+  <div class="hc-pre"></div><div class="hc-pre"></div><div class="hc-pre"></div>
+  <div class="hc-ring"></div><div class="hc-ring"></div><div class="hc-ring"></div>
+  <svg class="hc-sparks" aria-hidden="true"></svg>
+  <div class="hc-drop" data-layout-allow-overflow>
+    <div class="hc-at hc-card" style="--i:0"><div class="hc-top"><span class="hc-ic"><svg viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="17" rx="2.5"/><path d="M8 8.5h8M8 12h8M8 15.5h5"/></svg></span><span class="hc-idx">01</span></div><div class="hc-name">自动整理</div><div class="hc-bars"><i></i><i></i></div><div class="hc-foot"><span class="hc-val">−2 小时</span></div></div>
+  </div>
+  <div class="hc-drop" data-layout-allow-overflow>
+    <div class="hc-at hc-card" style="--i:1"><div class="hc-top"><span class="hc-ic"><svg viewBox="0 0 24 24"><path d="M3 12h1.5M7 8.5v7M11 4.5v15M15 8v8M19 10.5v3M21 12h.5"/></svg></span><span class="hc-idx">02</span></div><div class="hc-name">一键导出</div><div class="hc-bars"><i></i><i></i></div><div class="hc-foot"><span class="hc-val">−1 天</span></div></div>
+  </div>
+  <div class="hc-drop" data-layout-allow-overflow>
+    <div class="hc-at hc-card" style="--i:2"><div class="hc-top"><span class="hc-ic"><svg viewBox="0 0 24 24"><path d="M3 8.5L12 4l9 4.5-9 4.5-9-4.5z"/><path d="M3 12.5l9 4.5 9-4.5M3 16.5L12 21l9-4.5"/></svg></span><span class="hc-idx">03</span></div><div class="hc-name">多人协作</div><div class="hc-bars"><i></i><i></i></div><div class="hc-foot"><span class="hc-val">−3 天</span></div></div>
+  </div>
+  <div class="hc-fx" data-layout-allow-overlap>
+    <div class="hc-dmg">−2 小时</div>
+    <div class="hc-dmg">−1 天</div>
+    <div class="hc-dmg">−3 天</div>
+    <div class="hc-ctr" data-on="1"><span class="hc-lab">连击</span><span class="hc-num">×3</span><div class="hc-heat"><i></i><i></i><i></i></div></div>
+  </div>
+  <div class="hc-line">每期视频省下<span class="hc-key">一整周</span></div>
+</div>
+</div>
+</div>
+
+<script>
+(function () {
+// seconds = frames / 30, both orientations. hits: animation time, a clock that stops `stop` at every hit;
+// real hits land at 1.0 / 2.0 / 3.0 s (30 / 60 / 90 f)
+var CFG = {
+  dur: 5.3,
+  hits: [1, 58 / 30, 86 / 30], stop: 2 / 30,  // anim-time hits 30 / 58 / 86 f, frozen 2 f each
+  drop: 0.333, head: 0.467, stripe: 66,   // 10 f ease-in fall; eyebrow fade 14 f; stripes 2.2 px a frame
+  pulse: [1.3, 1.45, 1.6], tilt: [-2, -4, -6], csize: [140, 166, 196], c0: 130, ctau: 0.08, stamp: 0.233, lift: 0.14,
+  dmg: [88, 104, 124], pop: 0.167, rise: 150, riseDur: 0.533, hold: 0.133, fade: 0.4, life: 0.567,
+  squash: 0.07, squashTau: 0.053, stretch: 0.06, pinch: 0.025,
+  ring: 0.467, grow: [46, 56, 66], fx: 0.533, burst: 0.4, sparks: [10, 13, 16],
+  flash: 0.7, glowTau: 0.2, saved: 0.4, savedDur: 0.4, // footer value lands 12 f after its hit, over 12 f
+  line: 3.467, lineGap: 0.1, lineEach: 0.6    // closing line 14 f after the last real hit, 3 f apart
+};
+// damage / counter size factor, closing-line rows
+var LAND = { k: 1, lines: 1 };
+var PORT = { k: 0.8, lines: 2 };
+var v = { kicker: "本周更新", items: "自动整理|一键导出|多人协作", hits: "−2 小时|−1 天|−3 天", line: "每期视频|省下|一整周", key: "一整周", backdrop: "on" };
+try {
+  var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+  for (var k in got) if (got[k] !== undefined && got[k] !== null) v[k] = got[k]; // "" hides kicker / line
+} catch (e) {}
+
+var root = document.querySelector(".hc");
+var q = function (s) { return root.querySelector(s); };
+var qa = function (s) { return [].slice.call(root.querySelectorAll(s)); };
+var FW = root.clientWidth, FH = root.clientHeight;
+if (!FW || !FH) {
+  // not laid out yet: the host clip's declared size, then the window
+  var hc = root.closest("[data-width][data-height]");
+  FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+  FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+}
+var P = FH > FW, L = P ? PORT : LAND, U = Math.min(FW, FH) / 1000;
+root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+  var p = document.createElement("i");
+  p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+  el.appendChild(p);
+  var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+  el.removeChild(p);
+  return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+  var c = kRGB(wrap, "var(--k-bg)");
+  var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+  wrap.setAttribute("data-tone", tone);
+  return tone;
+}
+// ==== end kit:tone ====
+
+// ==== kit:hash@1 ====
+function kHash(n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+// ==== end kit:hash ====
+
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+  o = o || {};
+  var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+  var dark = tones && tones.getAttribute("data-tone") === "dark";
+  var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+    var f = "type='linear' slope='2.4' intercept='-0.7'";
+    var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+      "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+      "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+      "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+      "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+    return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+  });
+  layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+  layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+  layer.style.backgroundSize = size + "px " + size + "px";
+  return function (t) {
+    var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+    layer.style.backgroundImage = tiles[k % 6];
+    layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+  };
+}
+// ==== end kit:grain ====
+
+// ==== kit:speedblur@1 ====
+function kSpeedBlur(box, prefix, o) {
+  o = o || {};
+  var amount = o.amount || 0.45, max = o.max || 36;
+  var id = prefix + "-sb" + (window.__kxN = (window.__kxN || 0) + 1);
+  var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.style.position = "absolute";
+  svg.innerHTML = '<filter id="' + id + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter>';
+  var outer = document.createElement("div"), inner = document.createElement("div");
+  outer.style.cssText = inner.style.cssText = "position:absolute;inset:0";
+  while (box.firstChild) inner.appendChild(box.firstChild);
+  outer.appendChild(inner); box.appendChild(svg); box.appendChild(outer);
+  var fe = svg.firstChild.firstChild;
+  return function (vx, vy) {
+    vy = vy || 0;
+    var sd = Math.min(max, (Math.sqrt(vx * vx + vy * vy) / 30) * amount);
+    if (sd < 0.35) { outer.style.filter = outer.style.transform = inner.style.transform = ""; return; }
+    var deg = (Math.atan2(vy, vx) * 180) / Math.PI;
+    fe.setAttribute("stdDeviation", sd.toFixed(2) + " 0");
+    outer.style.transform = "rotate(" + deg.toFixed(2) + "deg)";
+    inner.style.transform = "rotate(" + (-deg).toFixed(2) + "deg)";
+    outer.style.filter = "url(#" + id + ")";
+  };
+}
+// ==== end kit:speedblur ====
+
+// ==== kit:text@2 ====
+var kCJK = /[\u2e80-\u9fff\uf900-\ufaff\uff00-\uffef]/;
+function kWords(s, key) {
+  s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  var bar = s.indexOf("|") >= 0, out = [], k = key && !bar ? s.indexOf(key) : -1;
+  var cut = function (x) {
+    if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+    return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+  };
+  var bits = bar ? s.split("|") : k >= 0 ? cut(s.slice(0, k)).concat([key], cut(s.slice(k + key.length))) : cut(s);
+  var pre = "";
+  bits.forEach(function (x) {
+    var t = x.trim(), last = out[out.length - 1];
+    if (last && /^ /.test(x)) last.sp = true;
+    if (!t) return;
+    if (!/[\p{L}\p{N}]/u.test(t)) {
+      if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+      else { last.t += t; last.sp = / $/.test(x); }
+      return;
+    }
+    out.push({ t: pre + t, sp: / $/.test(x) });
+    pre = "";
+  });
+  if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+  if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+  if (out.length) out[out.length - 1].sp = false;
+  return out;
+}
+function kSplit(el, by, rise, text) {
+  var s = text != null ? String(text) : el.textContent, units = [];
+  var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+  el.textContent = "";
+  parts.forEach(function (p) {
+    var u = document.createElement("span"), box = u;
+    u.className = "hc-u"; u.textContent = p.t;
+    if (by === "line") u.style.display = "block";
+    if (!p.t.trim()) { el.appendChild(u); return; }
+    if (rise) { box = document.createElement("span"); box.className = "hc-cut"; box.style.display = u.style.display; box.appendChild(u); }
+    el.appendChild(box);
+    if (p.sp) el.appendChild(document.createTextNode(" "));
+    units.push(u);
+  });
+  return units;
+}
+function kReveal(tl, units, variant, at, o) {
+  o = o || {};
+  var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+  units.forEach(function (u, i) {
+    var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+    if (variant === "rise") {
+      tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+      tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+    }
+  });
+  return tl;
+}
+// ==== end kit:text ====
+
+// ==== kit:fit@1 ====
+function kFit(el, o) {
+  o = o || {};
+  var f = o.max || parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+  var W = (o.width || el.clientWidth) * (1 - (o.spare == null ? 0.04 : o.spare)), m;
+  for (;;) {
+    el.style.fontSize = f + "px";
+    m = kLines(el);
+    if ((m.w <= W && m.n <= n) || f <= min) break;
+    f = Math.max(min, f - 2);
+  }
+  if (m.w > W) {
+    [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+    m = kLines(el);
+  }
+  return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+  var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+  var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+  while ((t = it.nextNode())) {
+    if (!t.data.trim()) continue;
+    r.selectNodeContents(t);
+    [].forEach.call(r.getClientRects(), function (b) {
+      var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+      if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+      row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+    });
+  }
+  return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+
+var dark = kTone(root) === "dark", SA = dark ? 1 : 0.6; // card shadow strength: lighter on white
+root.setAttribute("data-backdrop", String(v.backdrop) === "off" ? "off" : "on");
+if (getComputedStyle(root).getPropertyValue("--mc-font").trim()) root.style.setProperty("--hc-hv", "var(--k-font)");
+var grain = String(v.backdrop) === "off" ? null : kGrain(q(".hc-grain"), { opacity: dark ? 0.09 : 0.07, blend: "soft-light" });
+
+// text: every slot is measured (kFit); spaces the user typed stay
+var pick = function (s, d) { var a = kWords(s).map(function (u) { return u.t; }); return [0, 1, 2].map(function (i) { return a[i] || d[i]; }); };
+var names = pick(v.items, ["自动整理", "一键导出", "多人协作"]), vals = pick(v.hits, ["−2 小时", "−1 天", "−3 天"]);
+var fit = function (el, t, n, max) { el.textContent = t; kFit(el, { lines: n, min: 40, max: max }); };
+var head = q(".hc-head");
+if (String(v.kicker).trim()) fit(q(".hc-kick"), String(v.kicker).trim(), 1); else head.style.display = "none";
+var cards = qa(".hc-card"), slots = qa(".hc-slot"), dmgs = qa(".hc-dmg");
+cards.forEach(function (c, i) { fit(c.querySelector(".hc-name"), names[i], 2); fit(c.querySelector(".hc-val"), vals[i], 1); });
+// slot rects in layout px
+var R = slots.map(function (s) { return { x: s.offsetLeft, y: s.offsetTop, w: s.offsetWidth, h: s.offsetHeight }; });
+// damage box: as wide as the first slot's centre allows at the 1.45 pop
+var DW = Math.min(R[0].w * 1.6, 2 * (R[0].x + R[0].w / 2 - 40 * U)) / 1.45;
+dmgs.forEach(function (d, i) {
+  d.style.width = DW + "px";
+  d.style.left = R[i].x + R[i].w / 2 - DW / 2 + "px";
+  fit(d, vals[i], 1, CFG.dmg[i] * L.k);
+});
+var DS = dmgs.map(function (d) { return parseFloat(d.style.fontSize); });
+var line = q(".hc-line"), lineUnits = [];
+if (String(v.line).trim()) {
+  var key = String(v.key).trim(), lt = String(v.line);
+  if (key && lt.indexOf("|") < 0 && lt.indexOf(key) >= 0) lt = lt.replace(key, "|" + key + "|"); // keep the key whole
+  lineUnits = kSplit(line, "word", true, lt);
+  lineUnits.forEach(function (u) { if (key && u.textContent.indexOf(key) >= 0) u.classList.add("hc-key"); });
+  kFit(line, { lines: L.lines, min: 40 });
+} else line.style.display = "none";
+
+// sparks: n lines per hit, angles jittered by the upstream hash
+var NS = "http://www.w3.org/2000/svg", svg = q(".hc-sparks");
+svg.setAttribute("viewBox", "0 0 " + FW + " " + FH);
+var sparks = [0, 1, 2].map(function (i) {
+  var n = CFG.sparks[i], out = [];
+  for (var s = 0; s < n; s++) {
+    var ln = document.createElementNS(NS, "line");
+    ln.style.stroke = s % 3 === 0 ? "var(--k-accent-2)" : "var(--k-accent)";
+    svg.appendChild(ln);
+    out.push({ el: ln, ang: (s / n) * Math.PI * 2 + kHash(i * 31 + s) * 0.4, r0: 1.08 + kHash(s + i * 7) * 0.15, r1: 1.3 + kHash(s * 3 + i) * 0.35 + i * 0.06 });
+  }
+  return out;
+});
+var blurs = qa(".hc-drop").map(function (b) { return kSpeedBlur(b, "hc", { amount: 0.12, max: 24 }); });
+var pres = qa(".hc-pre"), rings = qa(".hc-ring"), foots = qa(".hc-foot");
+var ctr = q(".hc-ctr"), num = q(".hc-num"), heat = qa(".hc-heat i"), stripes = q(".hc-stripes");
+var inQuad = MT.bezier(0.55, 0.085, 0.68, 0.53), mix = MT.mix, ramp = MT.ramp;
+// snapped to 1e-6 s: a seek exactly on a hit frame counts as landed
+var r6 = function (x) { return Math.round(x * 1e6) / 1e6; }, HIT = CFG.hits.map(r6);
+var REAL = HIT.map(function (h, i) { return r6(h + i * CFG.stop); });
+// global hitstop: animation time stands still for `stop` after every real hit
+var anim = function (t) { var a = t; REAL.forEach(function (h) { a -= Math.min(Math.max(t - h, 0), CFG.stop); }); return r6(a); };
+var drops = R.map(function (r) { return -(r.y + r.h + 130 * U); }); // start fully above the frame
+
+var S = function (el, o) { for (var k in o) el.style[k] = o[k]; }, px = function (x) { return x.toFixed(1) + "px"; };
+var sh = function (x) { return "color-mix(in srgb, var(--hc-shade) " + Math.round(x * SA * 100) + "%, transparent)"; };
+
+function render(t) {
+  var A = anim(t), count = 0;
+  HIT.forEach(function (h) { if (A >= h) count++; });
+  if (grain) grain(t);
+  stripes.style.transform = "translateX(" + px((A * CFG.stripe) % 54.2) + ")";
+  head.style.opacity = ramp(t, 0, CFG.head, "out");
+  // combo counter: a size and a tilt up at every hit, then the pulse settles e^(-t / 2.4 f)
+  var ci = count - 1, size = (count ? CFG.csize[ci] : CFG.c0) * L.k, stamp = count ? 1 - ramp(A, HIT[ci], CFG.stamp, "out") : 0;
+  ctr.setAttribute("data-on", count ? 1 : 0);
+  ctr.style.transform = "scale(" + (count ? 1 + (CFG.pulse[ci] - 1) * Math.exp(-(A - HIT[ci]) / CFG.ctau) : 1).toFixed(4) + ") rotate(" + (count ? CFG.tilt[ci] : 0) + "deg)";
+  num.textContent = "×" + count;
+  S(num, { fontSize: size + "px", transform: "translateY(" + px(-stamp * CFG.lift * size) + ") skewX(-6deg)" });
+  heat.forEach(function (b, k) { b.className = k < count ? "" : "hc-off"; });
+  R.forEach(function (r, i) {
+    var h = HIT[i], s = r6(A - h), d = r6(t - REAL[i]), on = A >= h - CFG.drop;
+    var y = function (a) { return mix(drops[i], 0, ramp(a, h - CFG.drop, CFG.drop, inQuad)); };
+    var y0 = y(A), vy = s < 0 ? MT.velocity(y, A) : 0, sp = Math.min(1, vy / 30 / 200);
+    var sq = s >= 0 ? CFG.squash * Math.exp(-s / CFG.squashTau) : 0, e = s >= 0 ? 6 : mix(6, 60, y0 / drops[i]);
+    // stretched by speed in the fall, squashed on landing, shadow lifting with height
+    S(cards[i], {
+      opacity: on ? 1 : 0,
+      transform: "translateY(" + px(y0) + ") scale(" + (1 - sp * CFG.pinch + sq * 0.5).toFixed(4) + "," + (1 + sp * CFG.stretch - sq).toFixed(4) + ")",
+      boxShadow: "inset 0 1px 0 var(--hc-hi), 0 " + px(2 + e * 0.4) + " " + px(4 + e * 0.6) + " " + sh(0.25) + ", 0 " + px(10 + e * 0.8) + " " + px(30 + e * 1.4) + " -8px " + sh(0.5)
+    });
+    blurs[i](0, on ? vy : 0);
+    // flash and slot light run on real time: they play while everything else is frozen
+    cards[i].style.setProperty("--f", d < 0 ? 0 : d < CFG.stop ? CFG.flash : Math.max(0, CFG.flash * (1 - (d * 30 - 1) / 5)));
+    slots[i].style.setProperty("--g", d < 0 ? 0 : Math.exp(-d / CFG.glowTau));
+    var p = ramp(A, h + CFG.saved, CFG.savedDur, "snappy");
+    S(foots[i], { opacity: p, transform: "translateY(" + px(mix(10, 0, p)) + ")" });
+    // the card's shadow gathers in the slot before it lands
+    var n = ramp(A, h - CFG.drop, CFG.drop, inQuad);
+    S(pres[i], { opacity: n > 0 && s < 0 ? mix(0.05, 0.5, n) * (dark ? 1 : 0.45) : 0, left: px(r.x + n * 40 * U), top: px(r.y + 50 * U), width: px(r.w - n * 80 * U), height: px(r.h - 40 * U), filter: "blur(" + px(mix(44, 16, n) * U) + ")" });
+    // ring and sparks: 16 f after the hit, on animation time
+    var live = s >= 0 && s <= CFG.fx, rg = ramp(A, h, CFG.ring, "out"), g = mix(0, CFG.grow[i] * U, rg);
+    S(rings[i], { opacity: live ? (1 - rg) * 0.8 : 0, left: px(r.x - g), top: px(r.y - g * 0.7), width: px(r.w + g * 2), height: px(r.h + g * 1.4), borderRadius: px(26 + g * 0.6), borderWidth: px(mix(5, 1, rg) * U) });
+    var b = ramp(A, h, CFG.burst, "snappy"), cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+    sparks[i].forEach(function (k) {
+      var r0 = mix(1, k.r0, b), r1 = mix(1.04, k.r1, Math.min(1, b * 1.2)), co = Math.cos(k.ang) * r.w * 0.52, si = Math.sin(k.ang) * r.h * 0.56;
+      k.el.setAttribute("x1", cx + co * r0); k.el.setAttribute("y1", cy + si * r0);
+      k.el.setAttribute("x2", cx + co * r1); k.el.setAttribute("y2", cy + si * r1);
+      S(k.el, { strokeWidth: mix(7, 2, b) * U, opacity: live ? Math.min(1, b * 6) * (1 - b) : 0 });
+    });
+    // damage: pops 1.45 -> 1 on the card face, floats 150 px up, fades after 4 f
+    S(dmgs[i], {
+      opacity: s < 0 || s > CFG.life ? 0 : s < CFG.hold ? 1 : 1 - ramp(A, h + CFG.hold, CFG.fade, "swift"),
+      top: px(r.y + r.h * 0.62 - DS[i] + mix(0, -CFG.rise * L.k, ramp(A, h, CFG.riseDur, "out"))),
+      transform: "scale(" + mix(1.45, 1, ramp(A, h, CFG.pop, "snappy")).toFixed(3) + ") skewX(-8deg)"
+    });
+  });
+}
+
+var tl = MT.scene(CFG.dur, render);
+kReveal(tl, lineUnits, "rise", CFG.line, { gap: CFG.lineGap, each: CFG.lineEach });
+window.__timelines["hit-counter"] = tl;
+})();
+</script>
+</template>
+  </body>
+</html>

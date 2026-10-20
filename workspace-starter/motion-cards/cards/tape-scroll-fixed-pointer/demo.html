@@ -1,0 +1,286 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"label","type":"string","label":"眉题（量的是什么）","default":"每小时处理量"},
+    {"id":"title","type":"string","label":"标题（可用 | 切词）","default":"处理速度"},
+    {"id":"result","type":"string","label":"结论（停稳后逐字升起）","default":"涨到 3 倍"},
+    {"id":"from","type":"string","label":"旧上限","default":"140"},
+    {"id":"to","type":"string","label":"新上限（大于旧上限）","default":"420"},
+    {"id":"unit","type":"string","label":"读数单位（填一个空格就不显示）","default":"k"},
+    {"id":"limits","type":"string","label":"两条上限的名字（旧|新）","default":"旧上限|新上限"},
+    {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <title>tape-scroll-fixed-pointer · 滚带定针</title>
+    <script src="../../lib/preview.js"></script>
+  </head>
+  <body>
+    <template id="tape-scroll-fixed-pointer-template">
+      <!-- Ported from video-shotcraft demos/data/gauge-readout-moves/TapeScrollFixedPointer.tsx
+           (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+           Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+           Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+           neutral --k-* palette, system fonts, generic copy, upstream wordmark removed; readout path kept in px round
+           the two limits so any from / to keeps it; fixed-axis speed blur; portrait layout. -->
+      <style>
+        @font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+        @font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+        @font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+        #root {
+          --k-bg: var(--mc-bg, #ffffff);
+          --k-panel: var(--mc-panel, #f4f5f7);
+          --k-ink: var(--mc-ink, #15171c);
+          --k-muted: var(--mc-muted, #6b7280);
+          --k-accent: var(--mc-accent, #e8590c);
+          --k-accent-2: var(--mc-accent-2, #2563eb);
+          --k-on-accent: var(--mc-on-accent, #ffffff);
+          --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          font-family: var(--k-font);
+          color: var(--k-ink);
+        }
+        /* ==== kit:fonts@2 — serif and mono tokens (SPEC 二 font paragraph); this card uses the mono one only ==== */
+        @font-face { font-family: "Consolas"; src: local("Consolas"); }
+        #root { --k-mono: var(--mc-mono, Consolas, monospace); }
+        /* ==== end kit:fonts ==== */
+        /* ==== kit:backdrop@1 — white-first card background with some life (upstream Polish.Backdrop, light) ====
+           a barely-there vertical gradient from --k-bg plus a soft key light; put .tp-vig and .tp-grain after it */
+        .tp-backdrop { position: absolute; inset: 0; background: linear-gradient(180deg, var(--k-bg) 0%, color-mix(in srgb, var(--k-bg), var(--k-ink) 4%) 55%, color-mix(in srgb, var(--k-bg), var(--k-ink) 7%) 100%); }
+        .tp-backdrop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 70% at 32% 18%, color-mix(in srgb, var(--k-bg) 95%, transparent) 0%, transparent 72%); }
+        /* ==== end kit:backdrop ==== */
+
+        /* hairline; shadow colour: navy-tinted black, dark on any skin (so no light/dark switch is needed) */
+        .tp { position: absolute; inset: 0; container-type: size; --tp-line: color-mix(in srgb, var(--k-ink) 12%, transparent); --tp-shade: color-mix(in srgb, var(--k-accent-2) 18%, black); }
+        /* rise mask (as kit:text): clip-path, never overflow: hidden, which the checker reads as occluded text */
+        .tp-u { display: inline-block; white-space: pre; }
+        .tp-cut { display: inline-block; vertical-align: top; clip-path: inset(-0.06em -0.04em -0.22em -0.04em); }
+        .tp-cam, .tp-ticks, .tp-box { position: absolute; inset: 0; }
+        /* band: an ink veil (upstream's white sheen, inverted) so it reads on the white backdrop and on dark skins */
+        .tp-face { position: absolute; top: 0; bottom: 0; border-left: 1px solid var(--tp-line); border-right: 1px solid var(--tp-line);
+          background: linear-gradient(90deg, color-mix(in srgb, var(--k-ink) 6%, transparent) 0%, color-mix(in srgb, var(--k-ink) 3%, transparent) 60%, color-mix(in srgb, var(--k-ink) 4.5%, transparent) 100%); }
+        .tp-t { position: absolute; left: 0; top: 0; display: none; border-radius: 2px; }
+        .tp-n { position: absolute; left: 0; top: 0; display: none; width: 260px; height: 64px; line-height: 64px; text-align: right; font-size: 64px; font-weight: 600; font-variant-numeric: tabular-nums; color: color-mix(in srgb, var(--k-ink) 82%, var(--k-bg)); }
+        .tp-dash { position: absolute; left: 0; top: 0; height: 3px; background: repeating-linear-gradient(90deg, var(--k-muted) 0 14px, transparent 14px 24px); }
+        .tp-lab { position: absolute; left: 0; top: 0; white-space: nowrap; font-size: 40px; font-weight: 700; line-height: 52px; letter-spacing: 0.1em; }
+        /* window glow grows with the tape speed: --tp-g 0-1 is set per frame */
+        .tp-win { position: absolute; border-radius: 26px; background: linear-gradient(180deg, var(--k-accent) 0%, color-mix(in srgb, var(--k-accent), black 14%) 100%); --tp-g: 0;
+          box-shadow: inset 0 1px 0 color-mix(in srgb, white 35%, transparent), 0 24px 50px -16px color-mix(in srgb, var(--tp-shade) 45%, transparent), 0 4px 10px color-mix(in srgb, var(--tp-shade) 16%, transparent), 0 0 calc(30px + 50px * var(--tp-g)) color-mix(in srgb, var(--k-accent) calc(18% + 32% * var(--tp-g)), transparent);
+          display: flex; align-items: baseline; justify-content: flex-end; padding: 10px 48px 0 0; box-sizing: border-box; color: var(--k-on-accent); white-space: nowrap; }
+        .tp-win::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 45%; border-radius: 26px 26px 0 0; background: linear-gradient(180deg, color-mix(in srgb, white 16%, transparent), transparent); }
+        .tp-read { display: block; font-size: 128px; font-weight: 700; line-height: 140px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+        .tp-unit { display: block; margin-left: 10px; font-size: 48px; font-weight: 600; }
+        .tp-bar { position: absolute; height: 4px; border-radius: 2px; background: var(--k-accent); }
+        .tp-tri { position: absolute; left: 0; top: 0; overflow: visible; }
+        .tp-tri path { fill: var(--k-accent); stroke: var(--k-accent); stroke-linejoin: round; }
+        /* left column (landscape): label, title, result, chip + recap; portrait: the same stack above the tape */
+        .tp-copy { position: absolute; left: 150px; top: 300px; width: 760px; }
+        .tp-eye { display: flex; align-items: center; gap: 16px; font-size: 32px; font-weight: 700; line-height: 1.3; letter-spacing: 0.12em; color: var(--k-accent); white-space: nowrap; }
+        .tp-eye::before { content: ""; display: block; flex: none; width: 36px; height: 3px; border-radius: 2px; background: var(--k-accent); }
+        .tp-title, .tp-res { display: block; font-size: 124px; font-weight: 800; line-height: 1.2; white-space: nowrap; }
+        .tp-title { margin-top: 34px; }
+        .tp-res { color: var(--k-accent); }
+        .tp-row { display: flex; align-items: center; gap: 24px; margin-top: 40px; height: 60px; }
+        .tp-chip { display: flex; flex: none; align-items: center; gap: 10px; height: 60px; padding: 0 24px; border-radius: 30px; box-sizing: border-box; transform-origin: 0 50%; white-space: nowrap;
+          background: color-mix(in srgb, var(--k-accent-2) 12%, transparent); border: 1px solid color-mix(in srgb, var(--k-accent-2) 35%, transparent);
+          color: color-mix(in srgb, var(--k-accent-2), var(--k-ink) 35%); font-size: 34px; font-weight: 700; line-height: 1.2; }
+        .tp-chip::before { content: ""; display: block; width: 22px; height: 18px; background: currentColor; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+        .tp-recap { display: block; white-space: nowrap; font-family: var(--k-mono); font-size: 36px; line-height: 1.2; color: var(--k-muted); }
+        @container (orientation: portrait) {
+          .tp-copy { left: 120px; top: 250px; width: 840px; }
+          .tp-title, .tp-res { font-size: 88px; }
+          .tp-title { margin-top: 30px; }
+          .tp-row { margin-top: 28px; }
+        }
+      </style>
+
+      <div id="root" data-composition-id="tape-scroll-fixed-pointer">
+        <div class="tp">
+          <div class="tp-backdrop"></div>
+          <div class="tp-cam">
+            <div class="tp-face"></div>
+            <div class="tp-ticks"><div class="tp-box"></div></div>
+            <div class="tp-win"><span class="tp-read">420</span><span class="tp-unit">k</span></div>
+            <div class="tp-bar"></div>
+            <svg class="tp-tri tp-ptr" width="40" height="44" aria-hidden="true"><path d="M 2 4 L 30 22 L 2 40 Z" stroke-width="4" /></svg>
+          </div>
+          <div class="tp-copy">
+            <div class="tp-eye">每小时处理量</div>
+            <div class="tp-title">处理速度</div>
+            <div class="tp-res">涨到 3 倍</div>
+            <div class="tp-row"><div class="tp-chip">200%</div><div class="tp-recap">140k → 420k</div></div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          // timing (s) = upstream frames / 30, both orientations: hold, climb (swift), wait, limit breaks, pull back
+          // (smooth), sprint, brake on a spring (stiff, 1/6 overshoot), pinned at lock; then the conclusion rises
+          var CFG = { head: 0.6667, climb: 0.3333, climbEnd: 1.6, pull: 1.8667, sprint: 2.0333, brake: 2.7667, lock: 3.6667, brk: 1.7333, brkDur: 0.4667, lit: 3.4667, litDur: 0.3333,
+            title: 0.0667, titleEach: 0.6, titleGap: 0.1667, res: 3.2667, resEach: 0.4667, resGap: 0.0533, chip: 3.6, chipDur: 0.4667, recap: 3.8, recapDur: 0.5333, push: 3, pushDur: 2, stiff: 140, end: 5 };
+          // path in px round the limits (upstream 5 px/unit, 140 -> 420): start 400 under the old one, stop 90 under it
+          // (its line just above the window), pull back to 115, overshoot 120 past the new one
+          var PX = { span: 700, start: 400, stop: 90, pull: 115, over: 120 };
+          // layout per orientation (px); pointer line cy and mask stops (face, then ticks and text) as fractions of the height
+          var LAND = { cy: 0.5, tapeX: 1000, tapeW: 520, tick: 40, num: 310, winW: 400, lab: 28, face: [0, 0.22, 0.78, 1], fade: [0.02, 0.24, 0.76, 0.98], ox: 0.62 };
+          var PORT = { cy: 0.521, tapeX: 238, tapeW: 480, tick: 36, num: 290, winW: 380, lab: 24, face: [0.333, 0.396, 0.635, 0.693], fade: [0.344, 0.406, 0.625, 0.677], ox: 0.369 };
+          var v = { label: "每小时处理量", title: "处理速度", result: "涨到 3 倍", from: "140", to: "420", unit: "k", limits: "旧上限|新上限", backdrop: "on" };
+          try {
+            var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+            for (var k in got) if (got[k] !== undefined && got[k] !== null && got[k] !== "") v[k] = got[k];
+          } catch (e) {}
+
+
+          var root = document.querySelector(".tp");
+          var q = function (s) { return root.querySelector(s); };
+          var FW = root.clientWidth, FH = root.clientHeight;
+          if (!FW || !FH) {
+            // not laid out yet: the host clip's declared size, then the window
+            var hc = root.closest("[data-width][data-height]");
+            FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+            FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+          }
+          var P = FH > FW, L = P ? PORT : LAND;
+          root.setAttribute("data-orient", P ? "portrait" : "landscape");
+          if (String(v.backdrop) === "off") q(".tp-backdrop").style.display = "none";
+
+          // ---- numbers: px per unit from the old limit; tick step a 1/2/5 number near 50 px; readout digits as `to` is typed
+          var from = Math.max(1e-6, parseFloat(v.from) || 140), to = parseFloat(v.to) || from * 3;
+          if (to <= from) to = from * 1.5;
+          var PXU = PX.span / from, dig = (String(v.to).split(".")[1] || "").length;
+          var step = Math.pow(10, Math.floor(Math.log(50 / PXU) / Math.LN10)), sd = step < 1 ? String(step).split(".")[1].length : 0;
+          step *= 50 / PXU / step > 5 ? 10 : 50 / PXU / step > 2 ? 5 : 50 / PXU / step > 1 ? 2 : 1;
+          var unit = String(v.unit).trim(), lim = String(v.limits).split("|");
+          var A = from - PX.start / PXU, B = from - PX.stop / PXU, C = from - PX.pull / PXU, D = to + PX.over / PXU;
+          var lp = Math.log(1 / 6), damp = 2 * (-lp / Math.sqrt(Math.PI * Math.PI + lp * lp)) * Math.sqrt(CFG.stiff);
+          var sprint = MT.bezier(0.55, 0, 0.25, 1);
+          var val = function (t) {
+            if (t <= CFG.climb) return A;
+            if (t <= CFG.climbEnd) return MT.mix(A, B, MT.ramp(t, CFG.climb, CFG.climbEnd - CFG.climb, "swift"));
+            if (t <= CFG.pull) return B;
+            if (t <= CFG.sprint) return MT.mix(B, C, MT.ramp(t, CFG.pull, CFG.sprint - CFG.pull, "smooth"));
+            if (t <= CFG.brake) return MT.mix(C, D, sprint((t - CFG.sprint) / (CFG.brake - CFG.sprint)));
+            if (t >= CFG.lock) return to;
+            return MT.mix(D, to, MT.spring({ t: t - CFG.brake, stiffness: CFG.stiff, damping: damp, mass: 1 }));
+          };
+
+          // ---- layout
+          var cy = Math.round(L.cy * FH), tapeX = L.tapeX, tickR = tapeX + L.tapeW - L.tick, numR = tapeX + L.num, winX = tapeX - 30, winH = 150, labX = tapeX + L.tapeW + L.lab;
+          var css = function (el, o) { for (var k in o) el.style[k] = typeof o[k] === "number" ? o[k] + "px" : o[k]; return el; };
+          var mask = function (m) { return "linear-gradient(180deg, transparent " + m[0] * 100 + "%, #000 " + m[1] * 100 + "%, #000 " + m[2] * 100 + "%, transparent " + m[3] * 100 + "%)"; };
+          var face = css(q(".tp-face"), { left: tapeX, width: L.tapeW }), ticks = q(".tp-ticks");
+          face.style.webkitMaskImage = face.style.maskImage = mask(L.face);
+          ticks.style.webkitMaskImage = ticks.style.maskImage = mask(L.fade);
+          var win = css(q(".tp-win"), { left: winX, top: cy - winH / 2, width: L.winW, height: winH }), read = q(".tp-read");
+          q(".tp-unit").textContent = unit;
+          read.style.fontSize = Math.min(128, Math.floor((L.winW - 78 - unit.length * 29) / (D.toFixed(dig).length * 0.6))) + "px";
+          var bar = css(q(".tp-bar"), { left: winX + L.winW - 2, top: cy - 2, width: tickR - winX - L.winW + 2 }), ptr = css(q(".tp-ptr"), { left: winX + L.winW - 6, top: cy - 22 });
+          var cam = q(".tp-cam");
+          cam.style.transformOrigin = L.ox * 100 + "% " + (cy / FH) * 100 + "%";
+
+          // ---- the tape: a pool of tick and number nodes re-placed every frame, old-limit dashes, new-limit bug
+          var box = q(".tp-box"), mk = function (cls, html) { var e = document.createElement("div"); e.className = cls; if (html) e.innerHTML = html; box.appendChild(e); return e; };
+          var tk = [], nb = [];
+          for (var i = 0; i < 32; i++) tk.push(mk("tp-t"));
+          for (i = 0; i < 9; i++) nb.push(mk("tp-n"));
+          var dashL = mk("tp-dash"), dashR = mk("tp-dash"), oldLab = mk("tp-lab"), newLab = mk("tp-lab");
+          var bug = mk("tp-tri", '<svg width="44" height="56" style="overflow:visible"><path d="M 4 28 L 40 6 L 40 50 Z" stroke-width="6"/></svg>');
+          oldLab.textContent = lim[0] || ""; newLab.textContent = lim[1] || "";
+          oldLab.style.color = "var(--k-muted)";
+          // motion blur along the tape (always vertical, so one fixed-axis blur, no rotation): upstream SpeedBlur amount
+          // 0.12 px per px-per-frame, at most 12, none below 0.35; the filter id carries a per-mount number
+          var fid = "tp-vb" + (window.__tpN = (window.__tpN || 0) + 1);
+          box.insertAdjacentHTML("beforebegin", '<svg width="0" height="0" style="position:absolute"><filter id="' + fid + '" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="0 0"/></filter></svg>');
+          var fe = ticks.querySelector("feGaussianBlur");
+          // text on the tape fades with the mask (the checker reads opacity, not masks)
+          var prof = function (y) { var f = L.fade, a = f[0] * FH, b = f[1] * FH, c = f[2] * FH, d = f[3] * FH; return y <= a || y >= d ? 0 : y < b ? (y - a) / (b - a) : y > c ? (d - y) / (d - c) : 1; };
+
+          // ---- copy
+          q(".tp-eye").textContent = String(v.label);
+          var title = q(".tp-title"), res = q(".tp-res"), CW = q(".tp-copy").clientWidth || 760;
+          var em = function (s) { var w = 0; for (var c = 0; c < s.length; c++) w += s.charCodeAt(c) > 255 ? 1 : 0.6; return w; };
+          [[title, String(v.title)], [res, String(v.result)]].forEach(function (p) {
+            p[0].textContent = p[1];
+            var max = parseFloat(getComputedStyle(p[0]).fontSize);
+            p[0].style.fontSize = Math.min(max, Math.floor(CW / Math.max(1, em(p[1].replace(/\|/g, ""))))) + "px";
+          });
+          var chip = q(".tp-chip"), recap = q(".tp-recap");
+          chip.textContent = Math.round((to / from - 1) * 100) + "%";
+          recap.textContent = from.toFixed(dig) + unit + " → " + to.toFixed(dig) + unit;
+          var eye = q(".tp-eye");
+
+          var render = function (t) {
+            var x = val(t), vy = MT.velocity(function (s) { return val(s) * PXU; }, t), speed = Math.abs(vy) / 30;
+            var yOf = function (u) { return cy + (x - u) * PXU; };
+            var sb = Math.min(12, speed * 0.12), brk = MT.ramp(t, CFG.brk, CFG.brkDur, "out");
+            fe.setAttribute("stdDeviation", "0 " + sb.toFixed(2));
+            box.style.filter = sb < 0.35 ? "" : "url(#" + fid + ")";
+            // ticks every step, a long one every 5; numbers on the long ones, faded before they reach the window;
+            // a number within 32px of the old-limit line waits for it to break (the dashes would strike through it)
+            var k0 = Math.max(0, Math.ceil((x - (L.fade[3] * FH - cy) / PXU) / step)), k1 = (x + (cy - L.fade[0] * FH) / PXU) / step, j = 0, m = 0;
+            for (var k = k0; k <= k1 && j < tk.length; k++) {
+              var u = k * step, y = yOf(u), major = k % 5 === 0, w = major ? 150 : 70, h = major ? 4 : 2;
+              css(tk[j++], { display: "block", width: w, height: h, transform: "translate(" + (tickR - w) + "px," + (y - h / 2).toFixed(2) + "px)", background: major ? "var(--k-ink)" : "color-mix(in srgb, var(--k-ink) 32%, transparent)" });
+              if (major && m < nb.length) {
+                var near = MT.clamp((Math.abs(y - cy) - winH / 2 - 36) / 30, 0, 1) * prof(y) * (Math.abs(u - from) * PXU < 32 ? brk : 1), n = nb[m++];
+                n.textContent = u.toFixed(sd);
+                css(n, { display: near > 0 ? "block" : "none", opacity: near.toFixed(3), transform: "translate(" + (numR - 260) + "px," + (y - 32).toFixed(2) + "px)" });
+              }
+            }
+            for (; j < tk.length; j++) tk[j].style.display = "none";
+            for (; m < nb.length; m++) nb[m].style.display = "none";
+            // old limit: dashed line across the tape and its name; breaks (halves slide 80px apart) and fades
+            var oy = yOf(from), ok = brk < 1 && oy > 0 && oy < FH;
+            css(dashL, { display: ok ? "block" : "none", width: L.tapeW / 2 + 10, opacity: 1 - brk, transform: "translate(" + (tapeX - 10 - brk * 80) + "px," + (oy - 1.5).toFixed(2) + "px)" });
+            css(dashR, { display: ok ? "block" : "none", width: L.tapeW / 2 - 16, opacity: 1 - brk, transform: "translate(" + (tapeX + L.tapeW / 2 + brk * 80) + "px," + (oy - 1.5).toFixed(2) + "px)" });
+            css(oldLab, { display: ok ? "block" : "none", opacity: ((1 - brk) * prof(oy)).toFixed(3), transform: "translate(" + labX + "px," + (oy - 26).toFixed(2) + "px)" });
+            // new limit: accent bug on the tick edge, faded in once the old line is gone (a small jump would show it
+            // from frame 0, 50px from the old name); its name turns from muted to accent once it sits on the pointer
+            var ny = yOf(to), nk = ny > 0 && ny < FH, lit = MT.ramp(t, CFG.lit, CFG.litDur, "out"), nIn = MT.ramp(t, CFG.brk + CFG.brkDur, 0.2, "out");
+            css(bug, { display: nk ? "block" : "none", opacity: nIn.toFixed(3), transform: "translate(" + (tickR + 6) + "px," + (ny - 28).toFixed(2) + "px)" });
+            css(newLab, { display: nk ? "block" : "none", opacity: (prof(ny) * nIn).toFixed(3), color: "color-mix(in srgb, var(--k-accent) " + Math.round(55 + 45 * lit) + "%, var(--k-muted))", transform: "translate(" + labX + "px," + (ny - 26).toFixed(2) + "px)" });
+            // fixed layer: the window, its reading (blurred by speed) and its glow
+            var head = MT.ramp(t, 0, CFG.head, "snappy"), rb = Math.min(6, speed * 0.06), g = Math.min(1, speed / 60);
+            read.textContent = x.toFixed(dig);
+            read.style.filter = rb > 0.4 ? "blur(" + rb.toFixed(2) + "px)" : "";
+            win.style.opacity = bar.style.opacity = ptr.style.opacity = eye.style.opacity = head.toFixed(4);
+            win.style.setProperty("--tp-g", g.toFixed(3));
+            cam.style.transform = "scale(" + (1 + 0.025 * MT.ramp(t, CFG.push, CFG.pushDur, "smooth")).toFixed(4) + ")";
+            // after the brake: chip pops (overshoot), the recap slides in
+            var cp = MT.ramp(t, CFG.chip, CFG.chipDur, "overshoot"), rc = MT.ramp(t, CFG.recap, CFG.recapDur, "out");
+            chip.style.opacity = Math.min(1, cp * 1.5).toFixed(4);
+            chip.style.transform = "scale(" + MT.mix(0.6, 1, cp).toFixed(4) + ")";
+            recap.style.opacity = rc.toFixed(4);
+            recap.style.transform = "translateX(" + (-16 + 16 * rc).toFixed(2) + "px)";
+          };
+          var tl = MT.scene(CFG.end, render);
+          // upstream TextReveal "rise": each unit climbs out of its own cut (snappy); hidden until it starts, because
+          // the checker reads opacity, not clip-path. The title rises by words (cut with |), the result by characters
+          var rise = function (el, chars, at, each, gap) {
+            var parts = chars ? Array.from(el.textContent) : el.textContent.split("|"), us = [];
+            el.textContent = "";
+            parts.forEach(function (s) {
+              var c = document.createElement("span"), u = document.createElement("span");
+              c.className = "tp-cut"; u.className = "tp-u"; u.textContent = s;
+              c.appendChild(u); el.appendChild(c);
+              if (/\S/.test(s)) us.push(u);
+            });
+            us.forEach(function (u, i) {
+              var t0 = at + i * gap;
+              tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+              tl.fromTo(u, { y: u.offsetHeight * 1.05 + parseFloat(getComputedStyle(u).fontSize) * 0.3 }, { y: 0, duration: each, ease: "snappy" }, t0);
+            });
+          };
+          rise(title, false, CFG.title, CFG.titleEach, CFG.titleGap);
+          rise(res, true, CFG.res, CFG.resEach, CFG.resGap);
+          window.__timelines["tape-scroll-fixed-pointer"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

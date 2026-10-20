@@ -1,0 +1,495 @@
+<!doctype html>
+<html
+ lang="zh-CN"
+ data-composition-variables='[
+  {"id":"title","type":"string","label":"海报标题（| 分行，最多两行）","default":"换个角度|看清细节"},
+  {"id":"sub","type":"string","label":"海报副句（可空）","default":"全景、|特写、|微距，|一拍一格"},
+  {"id":"tags","type":"string","label":"三格小标签（| 分隔，可空）","default":"01 全景|02 特写|03 微距"},
+  {"id":"notes","type":"string","label":"三格旁白框（| 分隔，可空）","default":"先看整体|再看局部|最后看细节"},
+  {"id":"backdrop","type":"enum","label":"底","default":"on","options":[{"value":"on","label":"实底"},{"value":"off","label":"透明（压在画面上）"}]}
+ ]'
+>
+ <head>
+  <meta charset="UTF-8" />
+  <title>comic-panel-split · 漫画斜格三机位</title>
+  <script src="../../lib/preview.js"></script>
+ </head>
+ <body>
+<template id="comic-panel-split-template">
+<!-- Ported from video-shotcraft demos/rhythm/panel-grid-moves/ComicPanelSplit.tsx
+     (github.com/Vincentwei1021/video-shotcraft), Apache-2.0, Copyright 2026 Wei Yihao.
+     Licence and notice: motion-cards/THIRD_PARTY/video-shotcraft/.
+     Changes (2026-10): re-implemented from Remotion/React as a HyperFrames MT sub-composition, frames to seconds;
+     --k-* palette (paper panels, lens metal from --k-stage), system fonts, generic copy; wordmark and brand ring text
+     dropped, kicker on an accent strip; seams centred on the gutters; poster scrim fades in over 10f; motion blur per
+     axis; portrait stacks the panels; 5.5 s (hold 1.5 s, upstream 1.67). Beat, pop,
+     flash, seams, captions, push-ins, focus and iris, pull-back + eat, speed lines and title timing kept. -->
+<style>
+@font-face { font-family: "Microsoft YaHei"; src: local("Microsoft YaHei"), local("MicrosoftYaHei"); }
+@font-face { font-family: "PingFang SC"; src: local("PingFang SC"); }
+@font-face { font-family: "Noto Sans SC"; src: local("Noto Sans SC"), local("Noto Sans CJK SC"); }
+#root {
+ --k-bg: var(--mc-bg, #ffffff);
+ --k-panel: var(--mc-panel, #f4f5f7);
+ --k-ink: var(--mc-ink, #15171c);
+ --k-muted: var(--mc-muted, #6b7280);
+ --k-accent: var(--mc-accent, #e8590c);
+ --k-accent-2: var(--mc-accent-2, #2563eb);
+ --k-on-accent: var(--mc-on-accent, #ffffff);
+ --k-font: var(--mc-font, "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif);
+ --k-stage: var(--mc-stage, #0b0d12);
+ --k-on-stage: var(--mc-on-stage, #f3f5f8);
+ position: absolute; inset: 0; overflow: hidden; font-family: var(--k-font); color: var(--k-ink);
+}
+/* paper / inkd: the light / dark of bg and ink; m*: lens metal, dark in any skin */
+.cp{position:absolute;inset:0;container-type:size;--cp-paper:var(--k-bg);--cp-inkd:var(--k-ink);--cp-gl:20%;--cp-shade:color-mix(in srgb,var(--k-ink) 85%,var(--k-accent-2));
+ --cp-m0:var(--k-stage);--cp-m00:color-mix(in srgb,var(--k-stage),black 45%);--cp-m1:color-mix(in srgb,var(--k-stage),white 7%);--cp-m2:color-mix(in srgb,var(--k-stage),white 24%)}
+.cp[data-tone="dark"]{--cp-paper:var(--k-ink);--cp-inkd:var(--k-bg);--cp-gl:34%;--cp-shade:color-mix(in srgb,var(--k-bg) 30%,black)}
+.cp-p,.cp-pbg,.cp-glow,.cp-dots,.cp-dim,.cp-fl,.cp-sbox,.cp-s2,.cp-scrim,.cp-shot,.cp-lines,.cp-seams{position:absolute;left:0;top:0;width:100%;height:100%}
+.cp-p0,.cp-p1,.cp-p2,.cp-dim,.cp-fl,.cp-lines,.cp-cap{opacity:0}
+.cp-pbg{--lx:1360px;--ly:540px;background:linear-gradient(180deg,var(--k-bg),color-mix(in srgb,var(--k-bg),var(--k-ink) 4%) 55%,color-mix(in srgb,var(--k-bg),var(--k-ink) 8%))}
+.cp-glow{background:radial-gradient(ellipse 46% 56% at var(--lx) var(--ly),color-mix(in srgb,var(--k-accent) var(--cp-gl),transparent),color-mix(in srgb,var(--k-accent) calc(var(--cp-gl) * .24),transparent) 45%,transparent 75%)}
+.cp-dots{opacity:.6;background:radial-gradient(circle,color-mix(in srgb,var(--k-accent) 50%,transparent) 1.7px,transparent 2.3px) 0 0/13px 13px;
+ mask:radial-gradient(ellipse 60% 70% at var(--lx) var(--ly),transparent 20%,rgba(0,0,0,.55) 60%,transparent)}
+/* ==== kit:light@1 ==== */
+.cp-light{mix-blend-mode:multiply}
+.cp[data-tone="dark"] .cp-light{mix-blend-mode:screen}
+/* ==== end kit:light ==== */
+.cp-a{stop-color:var(--cp-m0)}.cp-b{stop-color:var(--cp-m1)}.cp-c{stop-color:var(--cp-m2)}.cp-d{stop-color:var(--cp-m00)}.cp-e{stop-color:color-mix(in srgb,var(--k-stage),var(--k-accent) 18%)}
+.cp-f{stop-color:color-mix(in srgb,var(--k-stage),var(--k-accent-2) 16%)}.cp-g{stop-color:color-mix(in srgb,var(--k-stage),var(--k-accent-2) 5%)}
+.cp-cs{fill:var(--cp-shade);fill-opacity:.6;filter:blur(20px)}
+.cp-dim{background:var(--cp-shade)}
+.cp-fl{background:var(--cp-paper)}
+.cp[data-off] .cp-pbg,.cp[data-off] .cp-vig,.cp[data-off] .cp-grain{display:none}
+.cp-lines{stroke-opacity:.5}
+.cp-cap{position:absolute;padding:14px 22px 16px}
+.cp-cbg{position:absolute;inset:0;background:var(--cp-paper);border:4px solid var(--cp-inkd);box-shadow:7px 7px 0 var(--cp-inkd)}
+.cp-kick{position:relative;display:inline-block;padding:2px 12px;font-size:28px;font-weight:700;line-height:1.3;letter-spacing:.06em;background:var(--k-accent);color:var(--k-on-accent)}
+.cp-note{position:relative;display:block;margin-top:8px;font-size:40px;font-weight:700;line-height:1.25;color:var(--cp-inkd)}
+.cp-p1 .cp-cap{left:88px;top:96px}
+.cp-p2 .cp-cap{left:800px;top:810px}
+.cp-p3 .cp-cap{right:92px;top:96px}
+.cp-sm .sh{stroke:var(--cp-shade);stroke-opacity:.55}
+.cp-sm .ed{stroke:var(--cp-inkd)}
+.cp-sm .co{stroke:var(--cp-paper)}
+.cp-seams{pointer-events:none}
+.cp-scrim{background:linear-gradient(var(--sd,90deg),color-mix(in srgb,var(--k-bg) 92%,transparent),color-mix(in srgb,var(--k-bg) 80%,transparent) 36%,transparent 56%)}
+.cp-head{position:absolute;left:120px;top:0;bottom:0;width:640px;display:flex;flex-direction:column;justify-content:center}
+.cp-title{display:block;font-size:150px;font-weight:700;line-height:1.2}
+.cp-l{display:block}
+.cp-sub{display:block;margin-top:30px;font-size:40px;line-height:1.35;color:color-mix(in srgb,var(--k-ink) 75%,var(--k-bg))}
+/* no-script final frame */
+.cp-p3 .cp-cam{transform:translate(1360px,540px) scale(2.4868)}
+@container (orientation: portrait) {
+ .cp-p1 .cp-cap{left:108px;top:260px}
+ .cp-p2 .cp-cap{left:auto;right:108px;top:700px}
+ .cp-p3 .cp-cap{right:auto;left:108px;top:1130px}
+ .cp-scrim{--sd:180deg}
+ .cp-head{left:108px;right:108px;width:auto;top:270px;bottom:auto;display:block}
+ .cp-title{font-size:112px}
+ .cp-sub{margin-top:24px}
+ .cp-p3 .cp-pbg{--lx:540px;--ly:1240px}
+ .cp-p3 .cp-cam{transform:translate(540px,1240px) scale(1.9793)}
+}
+/* ==== kit:text@2 ==== */
+.cp-u{display:inline-block;white-space:pre}
+.cp-cut{display:inline-block;vertical-align:top;clip-path:inset(-.06em -.04em -.22em -.04em)}
+/* ==== end kit:text ==== */
+/* ==== kit:grain@1 ==== */
+.cp-grain{position:absolute;inset:0;pointer-events:none}
+/* ==== end kit:grain ==== */
+/* ==== kit:vignette@1 ==== */
+.cp-vig{position:absolute;inset:0;pointer-events:none;--vs:.16;--vin:45%;--vx:50%;--vy:46%;--vc:var(--cp-shade);
+ background:radial-gradient(ellipse 72% 72% at var(--vx) var(--vy),transparent var(--vin),color-mix(in srgb,var(--vc) calc(var(--vs) * 32%),transparent) calc(var(--vin) + (100% - var(--vin)) * .55),color-mix(in srgb,var(--vc) calc(var(--vs) * 100%),transparent) 100%),
+ radial-gradient(ellipse 100% 100% at var(--vx) var(--vy),transparent 60%,color-mix(in srgb,var(--vc) calc(var(--vs) * 60%),transparent) 100%)}
+.cp[data-tone="dark"] .cp-vig{--vs:.55}
+/* ==== end kit:vignette ==== */
+</style>
+
+
+<div id="root" data-composition-id="comic-panel-split">
+<div class="cp">
+<!-- the lens in world units (r 300), <use>d by every shot: inline styles only, <use> copies drop classes -->
+<svg width="0" height="0"><defs>
+<linearGradient id="cpz-side" x2="0" y2="1"><stop class="cp-a"/><stop offset=".16" class="cp-c"/><stop offset=".3" class="cp-b"/><stop offset=".72" class="cp-a"/><stop offset=".9" class="cp-e"/><stop offset="1" class="cp-a"/></linearGradient>
+<radialGradient id="cpz-lip" cx="-.25" cy="-.35" r="1.2"><stop class="cp-c"/><stop offset=".5" class="cp-b"/><stop offset="1" class="cp-a"/></radialGradient>
+<radialGradient id="cpz-glass" cx=".42" cy=".4" r=".7"><stop class="cp-f"/><stop offset=".55" class="cp-g"/><stop offset="1" class="cp-d"/></radialGradient>
+<radialGradient id="cpz-deep" r=".5"><stop class="cp-e"/><stop offset=".6" class="cp-a"/><stop offset="1" class="cp-d"/></radialGradient>
+<filter id="cpz-soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5"/></filter>
+<filter id="cpz-seam" x="-50%" y="-10%" width="200%" height="120%"><feGaussianBlur stdDeviation="8"/></filter>
+<clipPath id="cpz-iris"><circle r="152"/></clipPath>
+<path id="cpz-name" d="M-186,0A186,186 0 1 1 186,0A186,186 0 1 1-186,0"/>
+<g id="cpz-face">
+<circle r="300" fill="url(#cpz-lip)"/><circle r="299" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="2"/>
+<g class="cp-ring" transform="rotate(8)" fill="none">
+<circle r="275" style="stroke:var(--cp-m1)" stroke-width="28"/>
+<circle r="275.5" stroke="rgba(255,255,255,.08)" stroke-width="25" pathLength="360" stroke-dasharray=".62 5.38"/>
+<circle r="275.5" stroke="rgba(0,0,0,.75)" stroke-width="25" pathLength="360" stroke-dasharray=".62 5.38" stroke-dashoffset="-3"/>
+<circle r="260" style="fill:var(--cp-m0)" stroke="rgba(255,255,255,.1)" stroke-width="1.5"/>
+<path d="M-223.6-125.7A256.5,256.5 0 0 1 243.5-80.7" style="stroke:color-mix(in srgb,var(--k-on-stage) 70%,var(--k-stage))" stroke-width="5" pathLength="132.31" stroke-dasharray=".31 10.69"/>
+<path d="M-233.4-102.6A255,255 0 0 1 233.4-102.6" style="stroke:var(--k-on-stage)" stroke-width="8" pathLength="132.54" stroke-dasharray=".54 21.46"/>
+<g style="fill:var(--k-on-stage);font:600 18px var(--k-font)" text-anchor="middle" dominant-baseline="central"><text transform="rotate(-66)" y="-240">0.3</text><text transform="rotate(-44)" y="-240">0.5</text><text transform="rotate(-22)" y="-240">0.7</text><text y="-240">1</text><text transform="rotate(22)" y="-240">2</text><text transform="rotate(44)" y="-240">5</text><text transform="rotate(66)" y="-240" style="fill:var(--k-accent);font-size:24px">∞</text></g>
+</g>
+<path d="M-9-300L9-300L0-287Z" style="fill:var(--k-accent)"/>
+<circle r="226" style="fill:var(--cp-m0)"/><circle r="223" fill="none" style="stroke:var(--k-accent)" stroke-width="5"/><circle r="219" style="fill:var(--cp-m1)"/>
+<text style="font:600 15px var(--k-font);letter-spacing:.32em;fill:color-mix(in srgb,var(--k-on-stage) 70%,var(--k-stage))"><textPath href="#cpz-name" startOffset="2%">35MM 1:1.2 · ASPHERICAL · MULTI-COATED · MANUAL FOCUS · 35MM 1:1.2 ·</textPath></text>
+<circle r="170" style="fill:var(--cp-m00)"/><circle r="164" fill="url(#cpz-glass)"/>
+<g clip-path="url(#cpz-iris)"><circle r="152" style="fill:var(--cp-m0)"/><g class="cp-bl" stroke="rgba(255,255,255,.1)" stroke-width="1.4"></g></g>
+<path class="cp-hole" d="M102.7,14.6L78.5,67.8L29.4,99.5L-29.1,99.5L-78.3,68L-102.6,14.9L-94.4-42.9L-56.2-87.2L-.1-103.7L55.9-87.3L94.3-43.2Z" fill="url(#cpz-deep)"/>
+<circle class="cp-rr" r="57" fill="none" style="stroke:var(--k-accent)" stroke-opacity=".22" stroke-width="3"/><circle class="cp-rr" r="31.1" fill="none" style="stroke:var(--k-accent-2)" stroke-opacity=".16" stroke-width="2"/>
+<g filter="url(#cpz-soft)" fill="none" stroke-linecap="round"><path d="M-120-60A135,135 0 0 1 20-132" style="stroke:var(--k-accent)" stroke-opacity=".55" stroke-width="10"/><path d="M70,110A130,130 0 0 0 128,20" style="stroke:var(--k-accent-2)" stroke-opacity=".4" stroke-width="8"/></g>
+<path d="M-98-88A132,132 0 0 1-30-124" fill="none" stroke="rgba(255,255,255,.75)" stroke-width="5" stroke-linecap="round"/>
+<rect x="-40" y="-150" width="120" height="46" rx="20" fill="rgba(255,255,255,.07)" transform="rotate(28)" filter="url(#cpz-soft)"/>
+<circle cx="-62" cy="-60" r="9" fill="rgba(255,255,255,.7)" filter="url(#cpz-soft)"/><circle r="164" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="2"/>
+</g>
+</defs></svg>
+<div class="cp-p cp-p3" data-layout-allow-overflow>
+<div class="cp-pbg"><i class="cp-glow cp-light"></i><i class="cp-dots cp-light"></i></div>
+<div class="cp-sbox"><svg class="cp-shot"><g class="cp-cam"><ellipse class="cp-cs" cy="340" rx="390" ry="50"/><use href="#cpz-face"/></g></svg></div>
+<svg class="cp-lines"></svg>
+<i class="cp-fl"></i>
+<div class="cp-cap"><i class="cp-cbg"></i><b class="cp-kick">03 微距</b><span class="cp-note">最后看细节</span></div>
+</div>
+<svg class="cp-seams"><g class="cp-sm" data-layout-allow-overflow><line class="sh" filter="url(#cpz-seam)"/><line class="ed"/><line class="co"/></g></svg>
+<div class="cp-s2" data-layout-allow-overflow><svg class="cp-seams"><g class="cp-sm"><line class="sh" filter="url(#cpz-seam)"/><line class="ed"/><line class="co"/></g></svg></div>
+<div class="cp-scrim"></div>
+<div class="cp-vig"></div>
+<div class="cp-grain"></div>
+<div class="cp-head">
+<div class="cp-title"><span class="cp-l">换个角度</span><span class="cp-l">看清细节</span></div>
+<div class="cp-sub">全景、特写、微距，一拍一格</div>
+</div>
+</div>
+</div>
+
+
+<script>
+(function () {
+// seconds (upstream frames / 30), both orientations
+var CFG = { dur: 5.5, split: 0.667, beat: 0.133, under: 0.067, pop: 0.167, flash: 0.133, seam: 0.1, cap: 0.233, capDur: 0.3,
+ lines: 0.4, hold: 1.167, focus: 1.033, ap: 1.1, apBack: 3.333, apBackDur: 1.667, exp: 2.133, pre: 0.067, expDur: 0.533,
+ capOut: 2.167, endPush: 2.667, endPushDur: 2.533, title: 2.733, line: 0.667, lineGap: 0.2, sub: 3.2, word: 0.467, wordGap: 0.1 };
+// px at 1920x1080 / 1080x1920 (x k): seams b1/b2, pop centres ox, caption widths; shots [fx, fy, cx, cy, s], screen = c + s * (world - f)
+var LAND = { b1: 750, b2: 1405, ox: [330, 962, 1610], cap: [560, 380, 400],
+ shots: [[-90, 0, 1040, 560, 1.12], [-90, 0, 360, 590, 0.68], [0, -240, 1010, 300, 2.3], [0, 0, 1640, 5.4e2, 2.2], [0, 0, 1360, 5.4e2, 2.45]],
+ lights: [[1100, 520], [380, 560], [1000, 900]] };
+var PORT = { b1: 680, b2: 1110, ox: [340, 760, 1400], cap: [600, 520, 520],
+ shots: [[-90, 0, 560, 800, 0.95], [-90, 0, 600, 390, 0.46], [0, -240, 560, 640, 2.6], [0, 0, 560, 1330, 1.85], [0, 0, 5.4e2, 1240, 1.95]],
+ lights: [[560, 780], [600, 390], [560, 1000]] };
+var v = { title: "换个角度|看清细节", sub: "全景、|特写、|微距，|一拍一格", tags: "01 全景|02 特写|03 微距", notes: "先看整体|再看局部|最后看细节", backdrop: "on" };
+try {
+ var got = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+ for (var key in got) if (got[key] !== undefined && got[key] !== null) v[key] = got[key];
+} catch (e) {}
+
+var root = document.querySelector(".cp");
+// svg ids per mount, so a second mount never draws this one's iris
+var N = (window.__cpN = (window.__cpN || 0) + 1), ID = "cpz" + N + "-";
+root.innerHTML = root.innerHTML.replace(/cpz-/g, ID);
+var q = function (s, el) { return (el || root).querySelector(s); };
+var FW = root.clientWidth, FH = root.clientHeight;
+if (!FW || !FH) {
+ // not laid out yet: the host clip's declared size, then the window
+ var hc = root.closest("[data-width][data-height]");
+ FW = hc ? +hc.getAttribute("data-width") : window.innerWidth;
+ FH = hc ? +hc.getAttribute("data-height") : window.innerHeight;
+}
+var P = FH > FW, L = P ? PORT : LAND;
+root.setAttribute("data-orient", P ? "portrait" : "landscape");
+
+// ==== kit:tone@1 ====
+function kRGB(el, color) {
+ var p = document.createElement("i");
+ p.style.cssText = "position:absolute;width:0;height:0;color:" + color;
+ el.appendChild(p);
+ var c = getComputedStyle(p).color, n = (c.match(/-?[\d.]+/g) || [0, 0, 0]).map(Number);
+ el.removeChild(p);
+ return /^color\(/.test(c) ? [n[0] * 255, n[1] * 255, n[2] * 255] : n.slice(0, 3);
+}
+function kTone(wrap) {
+ var c = kRGB(wrap, "var(--k-bg)");
+ var tone = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 < 0.45 ? "dark" : "light";
+ wrap.setAttribute("data-tone", tone);
+ return tone;
+}
+// ==== end kit:tone ====
+// ==== kit:text@2 (kWords without its key option; kReveal rise and blur only) ====
+var kCJK = /[⺀-鿿豈-﫿＀-￯]/;
+function kWords(s) {
+ s = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+ var bar = s.indexOf("|") >= 0, out = [];
+ var cut = function (x) {
+  if (/ /.test(s) || !kCJK.test(s) || typeof Intl.Segmenter !== "function") return x.split(/( )/);
+  return Array.from(new Intl.Segmenter("zh", { granularity: "word" }).segment(x), function (g) { return g.segment; });
+ };
+ var bits = bar ? s.split("|") : cut(s);
+ var pre = "";
+ bits.forEach(function (x) {
+  var t = x.trim(), last = out[out.length - 1];
+  if (last && /^ /.test(x)) last.sp = true;
+  if (!t) return;
+  if (!/[\p{L}\p{N}]/u.test(t)) {
+   if (!last || last.sp || /^[\p{Ps}\p{Pi}]+$/u.test(t)) pre += t;
+   else { last.t += t; last.sp = / $/.test(x); }
+   return;
+  }
+  out.push({ t: pre + t, sp: / $/.test(x) });
+  pre = "";
+ });
+ if (pre) out.length ? (out[out.length - 1].t += pre) : out.push({ t: pre, sp: false });
+ if (bar) out.forEach(function (u, i) { var n = out[i + 1]; if (n && !kCJK.test(u.t.slice(-1)) && !kCJK.test(n.t.charAt(0))) u.sp = true; });
+ if (out.length) out[out.length - 1].sp = false;
+ return out;
+}
+function kSplit(el, by, rise, text) {
+ var s = text != null ? String(text) : el.textContent, units = [];
+ var parts = by === "word" ? kWords(s) : (by === "line" ? s.split(/\n|\|/) : Array.from(s)).map(function (t) { return { t: t }; });
+ el.textContent = "";
+ parts.forEach(function (p) {
+  var u = document.createElement("span"), box = u;
+  u.className = "cp-u"; u.textContent = p.t;
+  if (by === "line") u.style.display = "block";
+  if (!p.t.trim()) { el.appendChild(u); return; }
+  if (rise) { box = document.createElement("span"); box.className = "cp-cut"; box.style.display = u.style.display; box.appendChild(u); }
+  el.appendChild(box);
+  if (p.sp) el.appendChild(document.createTextNode(" "));
+  units.push(u);
+ });
+ return units;
+}
+function kReveal(tl, units, variant, at, o) {
+ o = o || {};
+ var each = o.each || 0.6, gap = o.gap != null ? o.gap : 0.053, ease = o.ease || "snappy";
+ units.forEach(function (u, i) {
+  var t0 = at + i * gap, fs = parseFloat(getComputedStyle(u).fontSize) || 40;
+  if (variant === "rise") {
+   tl.set(u, { opacity: 0 }, 0).set(u, { opacity: 1 }, t0);
+   tl.fromTo(u, { y: u.offsetHeight * 1.05 + fs * 0.3 }, { y: 0, duration: each, ease: ease }, t0);
+  } else {
+   tl.fromTo(u, { opacity: 0, y: fs * 0.25, filter: "blur(14px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: each, ease: ease }, t0);
+  }
+ });
+ return tl;
+}
+// ==== end kit:text ====
+// ==== kit:fit@1 (kRows and the max / spare options not used) ====
+function kFit(el, o) {
+ o = o || {};
+ var f = parseFloat(getComputedStyle(el).fontSize), min = Math.min(f, o.min || 40), n = o.lines || 1;
+ var W = (o.width || el.clientWidth) * 0.96, m;
+ for (;;) {
+  el.style.fontSize = f + "px";
+  m = kLines(el);
+  if ((m.w <= W && m.n <= n) || f <= min) break;
+  f = Math.max(min, f - 2);
+ }
+ if (m.w > W) {
+  [].forEach.call(el.querySelectorAll("*"), function (c) { if (c.offsetWidth > W) c.style.whiteSpace = "normal"; });
+  m = kLines(el);
+ }
+ return { size: f, lines: m.n, fits: m.w <= W && m.n <= n };
+}
+function kLines(el) {
+ var k = el.offsetWidth ? el.getBoundingClientRect().width / el.offsetWidth : 1, fs = parseFloat(getComputedStyle(el).fontSize) * k;
+ var rows = [], r = document.createRange(), it = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), t;
+ while ((t = it.nextNode())) {
+  if (!t.data.trim()) continue;
+  r.selectNodeContents(t);
+  [].forEach.call(r.getClientRects(), function (b) {
+   var c = (b.top + b.bottom) / 2, row = rows.filter(function (w) { return Math.abs(w.c - c) < fs * 0.45; })[0];
+   if (!row) rows.push((row = { c: c, x0: b.left, x1: b.right }));
+   row.x0 = Math.min(row.x0, b.left); row.x1 = Math.max(row.x1, b.right);
+  });
+ }
+ return { n: rows.length, w: Math.max.apply(null, rows.map(function (w) { return (w.x1 - w.x0) / k; }).concat([0])) };
+}
+// ==== end kit:fit ====
+// ==== kit:grain@1 ====
+function kGrain(layer, o) {
+ o = o || {};
+ var size = o.size || 256, step = o.step || 2, tones = layer.closest("[data-tone]");
+ var dark = tones && tones.getAttribute("data-tone") === "dark";
+ var tiles = [0, 1, 2, 3, 4, 5].map(function (k) {
+  var f = "type='linear' slope='2.4' intercept='-0.7'";
+  var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + size + "' height='" + size + "'><filter id='g' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'>" +
+   "<feTurbulence type='fractalNoise' baseFrequency='" + (o.freq || 0.85) + "' numOctaves='2' seed='" + (k * 17 + 3) + "' stitchTiles='stitch'/>" +
+   "<feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/>" +
+   "<feComponentTransfer><feFuncR " + f + "/><feFuncG " + f + "/><feFuncB " + f + "/></feComponentTransfer></filter>" +
+   "<rect width='100%' height='100%' filter='url(#g)'/></svg>";
+  return 'url("data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '")';
+ });
+ layer.style.opacity = o.opacity != null ? o.opacity : dark ? 0.09 : 0.05;
+ layer.style.mixBlendMode = o.blend || (dark ? "soft-light" : "overlay");
+ layer.style.backgroundSize = size + "px " + size + "px";
+ return function (t) {
+  var k = Math.floor((Math.max(0, t) * 30) / step), h = function (n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+  layer.style.backgroundImage = tiles[k % 6];
+  layer.style.backgroundPosition = Math.floor(h(k * 3 + 1) * size) + "px " + Math.floor(h(k * 7 + 2) * size) + "px";
+ };
+}
+// ==== end kit:grain ====
+
+kTone(root);
+var NS = "http://www.w3.org/2000/svg", D = Math.PI / 180, M = MT.mix, R = MT.ramp;
+var el = function (p, t) { return p.appendChild(document.createElementNS(NS, t)); };
+var k = Math.min(FW, FH) / 1.08e3, U = P ? FH : FW, V = P ? FW : FH, SL = 230 * k, H = 9 * k, E = 40 * k, b1 = L.b1 * k, b2 = L.b2 * k;
+var f1 = function (x, y) { return x.toFixed(1) + "," + y.toFixed(1); }, pc = function (r, a) { return f1(r * Math.cos(a), r * Math.sin(a)); };
+var sa = function (e, o) { for (var n in o) e.setAttribute(n, o[n]); };
+var cut = function (j) { return CFG.split + j * CFG.beat; };
+// (u along the long side, w across) -> screen: portrait stacks the panels
+var pt = function (u, w) { return P ? [w, u] : [u, w]; };
+var poly = function (a) { return "polygon(" + a.map(function (p) { p = pt(p[0], p[1]); return p[0] + "px " + p[1] + "px"; }) + ")"; };
+var C = L.shots.map(function (a) { return { fx: a[0], fy: a[1], cx: a[2] * k, cy: a[3] * k, s: a[4] }; });
+
+// the lens 38 degrees off-axis: barrel, then the face squeezed to cos 38
+var cs = Math.cos(38 * D), len = 400 * Math.sin(38 * D), rx = 300 * cs, X = -len, rg = "", gr = "";
+for (var a = -84; a <= 84; a += 5) rg += "M" + f1(-rx * Math.cos(a * D) - len * 0.32, 300 * Math.sin(a * D)) + "h" + -len * 0.38;
+[0.3, 0.72, 0.84].forEach(function (f) { gr += "M" + -len * f + ",-300A" + rx + ",300 0 0 0 " + -len * f + ",300"; });
+el(q("defs"), "g").innerHTML = '<g id="' + ID + 'tilt" fill="none"><path d="M' + X + ",-300A" + rx + ",300 0 0 0 " + X + ',300H0V-300Z" fill="url(#' + ID + 'side)"/><ellipse cx="' + X + '" rx="' + rx * 0.9 +
+ '" ry="270" stroke="rgba(0,0,0,.6)" stroke-width="6"/><path stroke="rgba(0,0,0,.55)" stroke-width="2.2" d="' + rg + '"/><path stroke="rgba(0,0,0,.7)" stroke-width="4" d="' + gr +
+ '"/><path style="stroke:var(--k-accent)" stroke-width="5" d="M' + -len * 0.88 + ",-300A" + rx + ",300 0 0 0 " + -len * 0.88 + ',300"/><use href="#' + ID + 'face" transform="scale(' + cs + ' 1)"/></g>';
+
+// panels 0-2 before the poster panel 3 (0: the opening, then the dimmed picture being cut)
+var p3 = q(".cp-p3"), PN = [0, 1, 2].map(function (i) {
+ var d = root.insertBefore(document.createElement("div"), p3), l = L.lights[i];
+ d.className = "cp-p cp-p" + i;
+ d.setAttribute("data-layout-allow-overflow", "");
+ d.innerHTML = q(".cp-pbg", p3).outerHTML + '<svg class="cp-shot"><g class="cp-cam"><ellipse class="cp-cs" cx="' + (i < 2) * -120 + '" cy="340" rx="390" ry="50"/><use href="#' + ID + (i < 2 ? "tilt" : "face") + '"/></g></svg>' +
+  (i ? '<i class="cp-fl"></i>' + q(".cp-cap", p3).outerHTML : '<i class="cp-dim"></i>');
+ d.firstChild.style.cssText = "--lx:" + l[0] * k + "px;--ly:" + l[1] * k + "px";
+ return d;
+}).concat(p3);
+if (String(v.backdrop) === "off") root.setAttribute("data-off", "");
+PN[1].style.clipPath = poly([[-E, -E], [b1 - H, 0], [b1 - SL - H, V], [-E, V + E]]);
+PN[2].style.clipPath = poly([[b1 + H, 0], [b2 - H, 0], [b2 - SL - H, V], [b1 - SL + H, V]]);
+
+// captions: kicker and words, each optional; both empty hides the box
+var tags = String(v.tags).split("|"), notes = String(v.notes).split("|"), CAPS = [1, 2, 3].map(function (j) {
+ var c = q(".cp-cap", PN[j]), x = [q(".cp-kick", c), q(".cp-note", c)], t = [tags[j - 1], notes[j - 1]], w = L.cap[j - 1] * k;
+ c.style.maxWidth = w + "px";
+ c.style.transformOrigin = j > 2 && !P ? "100% 0" : "0 0";
+ x.forEach(function (e, n) {
+  t[n] = String(t[n] || "").trim();
+  if (!t[n]) return void (e.style.display = "none");
+  kSplit(e, "word", false, t[n]).forEach(function (u) { u.setAttribute("data-layout-allow-occlusion", ""); });
+  kFit(e, { lines: 2, min: n ? 40 : 28, width: w - 44 * k });
+ });
+ return t[0] || t[1] ? { c: c, x: x, at: cut(j - 1) + CFG.cap, r: [-2, 1.5, -1.5][j - 1] } : 0;
+});
+
+// poster headline: lines rise, the sub blurs in word by word
+var tEl = q(".cp-title"), sEl = q(".cp-sub"), hd = q(".cp-head"), HW = hd.clientWidth || FW * 0.33;
+var lines = String(v.title).trim() ? kSplit(tEl, "line", true, v.title) : [], words = String(v.sub).trim() ? kSplit(sEl, "word", false, v.sub) : [];
+lines.forEach(function (u) { u.setAttribute("data-layout-allow-occlusion", ""); });
+lines.length ? kFit(tEl, { lines: 2, min: 72, width: HW }) : (tEl.style.display = "none");
+words.length ? kFit(sEl, { lines: 2, min: 40, width: HW }) : (sEl.style.display = "none");
+// portrait: a taller headline pushes the poster lens down, clear of its barrel
+if (P) C[4].cy = Math.max(C[4].cy, hd.offsetTop + hd.offsetHeight + 620 * k);
+
+// iris: 11 blades from the aperture (0 = f/1.2, 1 = f/2)
+var ring = q(".cp-ring"), hole = q(".cp-hole"), rr = root.querySelectorAll(".cp-rr"), BL = [];
+for (var i = 0; i < 11; i++) BL.push(el(q(".cp-bl"), "path"));
+function lens(focus, ap) {
+ ring.setAttribute("transform", "rotate(" + focus + ")");
+ var op = M(128, 74, ap), pp = [], hd = "";
+ for (var i = 0; i < 11; i++) { var t = ((i * 360) / 11 + ap * 18) * D; pp.push([op * Math.cos(t), op * Math.sin(t)]); }
+ pp.forEach(function (p, i) {
+  var n = pp[(i + 1) % 11], a0 = Math.atan2(p[1], p[0]) + 1.05, a1 = Math.atan2(n[1], n[0]) + 1.05;
+  BL[i].setAttribute("d", "M" + f1(p[0], p[1]) + "L" + f1(n[0], n[1]) + "L" + pc(200, a1) + "L" + pc(200, a0) + "Z");
+  BL[i].style.fill = "color-mix(in srgb,var(--k-stage),white " + (6 + 6 * Math.cos((a0 + a1) / 2 + 2.3)) + "%)";
+  hd += (i ? "L" : "M") + f1(p[0], p[1]);
+ });
+ hole.setAttribute("d", hd + "Z");
+ sa(rr[0], { r: op * 0.55 });
+ sa(rr[1], { r: op * 0.3 });
+}
+
+// speed lines from the macro shot's centre (upstream's sin hash)
+var SLN = q(".cp-lines"), RAYS = [];
+for (i = 0; i < 40; i++) {
+ var hh = Math.sin(i * 91.7) * 43758.5, r = hh - Math.floor(hh), ln = el(SLN, "line"), ra = (i / 40) * 2 * Math.PI + r * 0.1;
+ sa(ln, { "stroke-width": 2 + r * 4, x2: C[3].cx + Math.cos(ra) * 1300 * k, y2: C[3].cy + Math.sin(ra) * 1300 * k });
+ ln.style.stroke = i % 3 ? "var(--k-ink)" : "var(--k-accent)";
+ RAYS.push([ln, ra, r]);
+}
+
+var cams = PN.map(function (d) { return q(".cp-cam", d); });
+var cam = function (i, c, s) { s *= k; cams[i].style.transform = "translate(" + (c.cx - s * c.fx) + "px," + (c.cy - s * c.fy) + "px) scale(" + s + ")"; };
+// eat: 2f pull-back of 3%, then the sweep
+function expand(t) {
+ var pre = R(t, CFG.exp, CFG.pre, "out"), go = R(t, CFG.exp + CFG.pre, CFG.expDur - CFG.pre, "snappy");
+ return t < CFG.exp ? 0 : -0.03 * pre * (1 - go) + go;
+}
+var edge = function (t) { return M(b2, -SL - E, expand(t)); };
+function cam3(t) {
+ var e = Math.max(0, expand(t)), a = C[3], b = C[4];
+ return { fx: 0, fy: 0, cx: M(a.cx, b.cx, e), cy: M(a.cy, b.cy, e), s: M(a.s + 0.06 * R(t, CFG.hold, CFG.exp - CFG.hold, "smooth"), b.s, e) * (1 + 0.015 * R(t, CFG.endPush, CFG.endPushDur, "smooth")) };
+}
+// a seam: shadow, ink edge, paper core
+var SM = root.querySelectorAll(".cp-sm");
+function seam(g, b, d) {
+ g.style.opacity = +(d > 0);
+ [].forEach.call(g.children, function (l, i) {
+  var o = i ? 0 : 4 * k, w0 = -20 * k, w1 = w0 + (V + E) * d, a = pt(b + o - (SL * w0) / V, w0), c = pt(b + o - (SL * w1) / V, w1);
+  sa(l, { x1: a[0], y1: a[1], x2: c[0], y2: c[1], "stroke-width": [34, 20, 11][i] * k });
+ });
+}
+// motion blur as upstream SpeedBlur (px/frame x amount, capped, none under 0.35), per axis: all moves are along x or y
+function mblur(box, n, amt, max) {
+ var fe = el(el(q("defs"), "filter"), "feGaussianBlur"), id = (fe.parentNode.id = ID + "mb" + n);
+ return function (vx, vy) {
+  var a = Math.min(max, (Math.abs(vx) / 30) * amt), b = Math.min(max, (Math.abs(vy) / 30) * amt);
+  fe.setAttribute("stdDeviation", a + " " + b);
+  box.style.filter = a + b < 0.35 ? "" : "url(#" + id + ")";
+ };
+}
+var blur3 = mblur(q(".cp-sbox"), 1, 0.14, 20), blurS = mblur(q(".cp-s2"), 2, 0.1, 18), grain = kGrain(q(".cp-grain"));
+
+var tl = MT.scene(CFG.dur, function (t) {
+ lens(-18 + 26 * R(t, CFG.focus, 1, "swift"), R(t, CFG.ap, 1, "swift") * (1 - 0.55 * R(t, CFG.apBack, CFG.apBackDur, "smooth")));
+ var h = R(t, CFG.hold, CFG.exp - CFG.hold, "smooth"), e = edge(t), done = t >= CFG.exp + CFG.expDur, c3 = cam3(t), tt = MT.clamp((t - cut(2)) / CFG.lines, 0, 1);
+ PN[0].style.opacity = +(t < cut(2) + CFG.under);
+ q(".cp-dim").style.opacity = t < CFG.split ? 0 : 0.72;
+ cam(0, C[0], C[0].s * (1 + 0.04 * R(t, 0, CFG.split, "linear")));
+ cam(1, C[1], C[1].s * (1 + 0.035 * h));
+ cam(2, C[2], C[2].s * (1 + 0.03 * h));
+ cam(3, c3, c3.s);
+ p3.firstElementChild.style.cssText = "--lx:" + c3.cx + "px;--ly:" + c3.cy + "px";
+ // hard cuts: a panel exists from its beat, pops 1.07 -> 1 and flashes once
+ for (var j = 1; j < 4; j++) {
+  var p = PN[j], c0 = cut(j - 1), on = t >= c0 && (j > 2 || !done), o = pt(L.ox[j - 1] * k, V / 2), cp = CAPS[j - 1], f;
+  p.style.opacity = +on;
+  p.style.transformOrigin = o[0] + "px " + o[1] + "px";
+  p.style.transform = "scale(" + M(1.07, 1, R(t, c0, CFG.pop, "snappy")) + ")";
+  q(".cp-fl", p).style.opacity = on * 0.55 * (1 - R(t, c0, CFG.flash, "out"));
+  if (cp) {
+   // the box fades, its words switch at half
+   f = t < cp.at ? 0 : R(t, cp.at, 0.1, "linear") * (j > 2 ? 1 - R(t, CFG.capOut, 0.2, "exit") : 1);
+   cp.c.style.opacity = 1;
+   cp.c.style.transform = "rotate(" + cp.r + "deg) scale(" + M(1.25, 1, R(t, cp.at, CFG.capDur, "overshoot")) + ")";
+   cp.c.firstChild.style.opacity = f;
+   cp.x.forEach(function (x) { x.style.opacity = +(f >= 0.5); });
+  }
+ }
+ p3.style.clipPath = done ? "none" : poly([[e + H, 0], [U + E, -E], [U + E, V + E], [e - SL + H, V]]);
+ SLN.style.opacity = t < cut(2) ? 0 : 1 - MT.EASE.out(tt);
+ RAYS.forEach(function (y) {
+  var r0 = (470 + y[2] * 160 + tt * 120) * k;
+  sa(y[0], { x1: C[3].cx + Math.cos(y[1]) * r0, y1: C[3].cy + Math.sin(y[1]) * r0 });
+ });
+ seam(SM[0], b1, e > b1 + H ? R(t, cut(1) - 0.033, CFG.seam, "out") : 0);
+ seam(SM[1], e, done ? 0 : R(t, cut(2) - 0.033, CFG.seam, "out"));
+ var vs = pt(MT.velocity(edge, t), 0);
+ blurS(vs[0], vs[1]);
+ blur3(MT.velocity(function (x) { return cam3(x).cx; }, t), MT.velocity(function (x) { return cam3(x).cy; }, t));
+ q(".cp-scrim").style.opacity = (lines.length || words.length) && R(t, CFG.endPush, 0.333, "out");
+ grain(t);
+});
+kReveal(tl, lines, "rise", CFG.title, { each: CFG.line, gap: CFG.lineGap });
+kReveal(tl, words, "blur", CFG.sub, { each: CFG.word, gap: CFG.wordGap });
+window.__timelines["comic-panel-split"] = tl;
+})();
+</script>
+</template>
+</body>
+</html>
